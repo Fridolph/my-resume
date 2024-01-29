@@ -1,1 +1,17 @@
+@import './reset.css';
+@import './var.css';
+@import '../assets/iconfont/iconfont.css';
 @tailwind base;
+
+
+#app {
+  min-height: 100vh;
+  width: 100%;
+  color: var(--fri-text-color);
+  font-family: 'Microsoft YaHei', 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--fri-text-color);
+  font-weight: bold;
+}

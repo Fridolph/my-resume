@@ -1,0 +1,111 @@
+html {
+  font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif, 'PingFang SC', 'Hiragino Sans GB', 'Heiti SC', 'Microsoft YaHei', 'WenQuanYi Micro Hei';
+  font-size: 16px;
+  word-spacing: 1px;
+  -ms-text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  box-sizing: border-box;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+ul,
+li,
+ol {
+  list-style: none;
+}
+
+i,
+strong,
+em {
+  font-style: normal;
+}
+
+a {
+  text-decoration: none;
+}
+
+.container-page {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.container-page .g-header,
+.container-page .g-footer {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 1;
+}
+
+.container-page .g-header {
+  top: 20px;
+  width: 90%;
+}
+
+.container-page .g-header h1 {
+  font-size: 24px;
+}
+
+.container-page .g-header .iconfont {
+  position: absolute;
+  left: -10px;
+  top: 0;
+  font-size: 24px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.container-page .g-footer {
+  bottom: 20px;
+  display: block;
+  width: 100%;
+}
+
+.container-page .g-footer h2 {
+  font-size: 12px;
+  color: #999;
+}
+
+.container-page .particles-js {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 9;
+  background-color: #f0f8ff;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: 50% 50%;
+}
+
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 1s ease;
+}
+
+.page-enter,
+.page-leave-active {
+  opacity: 0;
+}
+
+.test-enter-active,
+.test-leave-active {
+  transition: opacity .5s;
+}
+
+.test-enter,
+.test-leave-active {
+  opacity: 0;
+}
