@@ -159,10 +159,10 @@ LC 安全分析大屏 是用可视化的方式展示庞杂数据的产品，经�
 # 个人项目
 
 - [fridolph](https://github.com/Fridolph/Fridolph) 前端相关学习途径，综合性学习资料整理仓库
+- [my-resume](https://github.com/Fridolph/my-resume) 个人简历展示，Vite+Vue3+TailWindCSS 极速搭建，2024最新版已开源，放心Fork
 - [my-program](https://github.com/Fridolph/my-program) 上述学习仓库的一些实际案例，主要是一些较为简单的CSS、JS效果的细节实现，demo仓库
-- [my-project](https://github.com/Fridolph/my-project) 所做的项目（简单实战）都整理到这仓库
-- [myblog-hexo](https://github.com/Fridolph/Fridolph.github.io) 个人技术博客，Hexo搭建
-- [my-resume](https://github.com/Fridolph/my-resume) 个人简历展示，支持移动端
+- [my-element-plus](https://github.com/Fridolph/my-element-plus) Vue3 + Vite + TS4 打造自己的组件库，学习ElementPlus组件库
+- [FE-prepare-interview](https://github.com/Fridolph/FE-prepare-interview) 前端准备面试，搜集于社区，回馈造福于社区
 
 # 参与开源
 

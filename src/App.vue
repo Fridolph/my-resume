@@ -12,6 +12,8 @@
         <Education />
         <Skill />
         <Experience />
+        <Personal />
+        <Thanks />
       </Main>
     </section>
   </div>
@@ -26,5 +28,7 @@ import Wechat from './views/Wechat/Wechat.vue'
 import Education from './views/Education/Education.vue'
 import Skill from './views/Skill/Skill.vue'
 import Experience from './views/Experience/Experience.vue'
+import Personal from './views/Personal/Personal.vue'
+import Thanks from './views/Thanks/Thanks.vue'
 </script>
 
