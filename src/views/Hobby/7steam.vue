@@ -1,6 +1,6 @@
 <template>
   <div
-    class="group overflow-hidden relative ring-1 ring-slate-200 rounded flex items-center justify-center size-12 mr-3 mb-3 ">
+    class="group">
     <Iconfont
       class="size-12 absolute left-0 top-0.5 text-center origin-center duration-[500ms] ease-in group-hover:scale-[2] group-hover:opacity-0 group-hover:invisible"
       :size="30"

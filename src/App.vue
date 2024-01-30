@@ -7,12 +7,11 @@
       <DownloadTool />
       <Aside>
         <Avatar />
-        <div class="scrollbar overflow-x-hidden overflow-y-auto pr-[12px] hover:pr-[6px]">
+        <section class="scrollbar overflow-x-hidden overflow-y-auto pr-[12px] hover:pr-[6px]">
           <Baseinfo />
           <Contact />
           <Hobby />
-          <!-- <Wechat /> -->
-        </div>
+        </section>
       </Aside>
       <Main>
         <Education />

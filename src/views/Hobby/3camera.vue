@@ -1,6 +1,6 @@
 <template>
   <div
-    class="group overflow-hidden relative ring-1 ring-slate-200 rounded flex items-center justify-center size-12 mr-3 mb-3 transition-all  duration-600 ease-linear origin-center hover:bg-slate-500 hover:rounded-2xl hover:text-white">
+    class="group transition-all  duration-600 ease-linear origin-center hover:bg-slate-500 hover:rounded-2xl hover:text-white">
     <Iconfont
       class="size-12 absolute left-0 top-1 text-center origin-center duration-300 group-hover:opacity-0"
       :size="26"
