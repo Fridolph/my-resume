@@ -7,7 +7,7 @@
 > ps 本质是为了学习 TailWindCss 折腾的，毕竟不是写博客主题，以简约阅读为主
 > 如果您想魔改直接 Fork 即可。项目的目录结构、模块分层，为新入手 Vue3+TS 的同学提供参考
 
-在线浏览 <resume.fridolph.top>
+在线浏览 [resume.fridolph.top](https://resume.fridolph.top)
 
 ## npm install
 
