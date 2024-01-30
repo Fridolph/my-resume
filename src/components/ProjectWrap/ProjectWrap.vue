@@ -27,8 +27,6 @@
 import { Button } from 'fri-element-plus'
 import { ProjectWrapProps } from './types'
 import TitleDesc from '../TitleDesc/TitleDesc.vue'
-import { useI18n } from 'vue-i18n'
-const { t } = useI18n()
 
 withDefaults(defineProps<ProjectWrapProps>(), {
   showIcon: true,

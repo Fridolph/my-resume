@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import Iconfont from '../../Iconfont/Iconfont.vue'
 import { Tooltip } from 'fri-element-plus'
 import { useI18n } from 'vue-i18n'
