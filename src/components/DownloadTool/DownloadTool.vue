@@ -6,7 +6,7 @@
         content="下载pdf"
         :width="80">
         <Iconfont
-          size="22"
+          :size="22"
           name="xiazai"
           @click="downloadPdf" />
       </Tooltip>
@@ -18,7 +18,7 @@
         content="切换英文"
         :width="85">
         <Iconfont
-          size="22"
+          :size="22"
           name="zhongyingwen2zhongwen"
           @click="handleClick" />
       </Tooltip>
@@ -28,7 +28,7 @@
         content="To Chinese"
         :width="100">
         <Iconfont
-          size="22"
+          :size="22"
           name="a-zhongyingwenyingwen"
           @click="handleClick" />
       </Tooltip>

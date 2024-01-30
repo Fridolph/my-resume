@@ -5,6 +5,8 @@
     :show-lib="false"
     icon="shejiao">
     <TitleDesc
+      icon="shejiao"
+      :show-icon="false"
       title="wskp-UI"
       description="集UI规范、代码规范、demo及其他各项约定于一身的内网在线文档。这是利用闲余时间的自发项目，初衷是便于产品和设计同事查看，有了实物能更好沟通、及时反馈。参考 ant design 文档编写，使用 vuepress 搭建并部署到内网中。" />
 
@@ -23,10 +25,14 @@
       title-size="sm" />
 
     <TitleDesc
+      icon="shejiao"
+      :show-icon="false"
       title="wskp-mock"
       description="将 easy-mock 部署到内网，axios 模拟请求数据进行真实开发。" />
 
     <TitleDesc
+      icon="shejiao"
+      :show-icon="false"
       title="wskp-UI"
       :description="`部署在内网的一个自动打包、快速部署解决方案，方便开发和测试人员。<br/>可选择切换项目选择对应分支，自动打包生成Dist，并部署到内网，测试不同版本的项目。`" />
   </ProjectWrap>

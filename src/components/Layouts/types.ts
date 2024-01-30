@@ -1,6 +1,6 @@
 export interface SectionProps {
   title: string
   icon: string
-  isTitle: boolean
-  anchor: string
+  isTitle?: boolean
+  anchor?: string
 }

@@ -23,5 +23,3 @@
 import Section from '../../components/Layouts/Section.vue'
 import RowContent from '../../components/RowContent/RowContent.vue'
 </script>
-
-<style scoped></style>

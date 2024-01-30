@@ -9,11 +9,12 @@
         'text-xl': titleSize === 'xl',
         'text-2xl': titleSize === '2xl',
       }">
-      <Iconfont
-        class="relative -top-0.5"
-        v-if="showIcon"
-        :name="icon"
-        :size="16" />
+      <template v-if="showIcon">
+        <Iconfont
+          class="relative -top-0.5"
+          :name="icon"
+          :size="16" />
+      </template>
       <span class="ml-1 font-bold">{{ title }}</span>
     </h2>
     <p
@@ -26,6 +27,7 @@
 <script setup lang="ts">
 import Iconfont from '../Iconfont/Iconfont.vue'
 import { TitleDescProps } from './types'
+
 withDefaults(defineProps<TitleDescProps>(), {
   showIcon: true,
   titleSize: 'base',
