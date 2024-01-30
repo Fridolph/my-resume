@@ -10,7 +10,8 @@
   "dependencies": {
     "fri-element-plus": "^1.0.1",
     "pinia": "^2.1.7",
-    "vue": "^3.4.15"
+    "vue": "^3.4.15",
+    "vue-i18n": "^9.9.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.8",

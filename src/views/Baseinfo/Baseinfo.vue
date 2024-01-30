@@ -1,27 +1,29 @@
 <template>
   <Section
-    title="基本信息"
+    :title="t('baseinfo.title')"
     icon="mingpian">
     <RowContent
-      label="姓名"
-      text="付寅生" />
+      :label="t('baseinfo.r1')"
+      :text="t('baseinfo.r1v')" />
     <RowContent
-      label="学历 / 专业"
-      text="本科 / 通信工程" />
+      :label="t('baseinfo.r2')"
+      :text="t('baseinfo.r2v')" />
     <RowContent
-      label="工作经验"
-      text="八年" />
+      :label="t('baseinfo.r3')"
+      :text="t('baseinfo.r3v')" />
     <RowContent
-      label="所在地"
-      text="成都市高新区" />
+      :label="t('baseinfo.r4')"
+      :text="t('baseinfo.r4v')" />
 
     <RowContent
-      label="求职意向"
-      text="前端工程师 / 偏Vue" />
+      :label="t('baseinfo.r5')"
+      :text="t('baseinfo.r5v')" />
   </Section>
 </template>
 
 <script setup lang="ts">
 import Section from '../../components/Layouts/Section.vue'
 import RowContent from '../../components/RowContent/RowContent.vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 </script>

@@ -3,8 +3,13 @@
     <img
       class="rounded-full max-w-[260px] mb-3"
       src="/img/avatar.jpg" />
-    
-    <div>热爱Coding，生命不息，折腾不止</div>
-    <div>羽毛球狂人，冲刺中羽五级 ...</div>
+
+    <div>{{ t('avatar.p1') }}</div>
+    <div>{{ t('avatar.p2') }}</div>
   </div>
 </template>
+
+<script setup>
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+</script>

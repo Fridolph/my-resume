@@ -12,7 +12,7 @@
           size="small"
           type="primary"
           plain
-          >{{ label }}</Button
+          >{{ btnLabel }}</Button
         >
         <slot name="lib"></slot>
       </div>
@@ -27,11 +27,14 @@
 import { Button } from 'fri-element-plus'
 import { ProjectWrapProps } from './types'
 import TitleDesc from '../TitleDesc/TitleDesc.vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+
 withDefaults(defineProps<ProjectWrapProps>(), {
   showIcon: true,
   icon: 'xiangmu',
   showLib: true,
-  label: '技术栈'
+  btnLabel: '技术栈'
 })
 </script>
 

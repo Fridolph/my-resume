@@ -2,42 +2,29 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 // setup Store
-export const useCommonStore = defineStore('common', () => {
-  const lang = ref('chinese')
-  const isZw = computed(() => lang.value === 'chinese')
-
-  function toggleLang() {
-    console.log('改变前: ', lang.value, isZw.value);
-    if (lang.value === 'chinese') {
-      lang.value = 'english'
-    } else if (lang.value === 'english') {
-      lang.value = 'chinese'
-    }
-    console.log('改变后: ', lang.value, isZw.value);
-  }
-  
+const useStore = defineStore('common', () => {
   return {
-    lang,
-    isZw,
-    toggleLang,
+    
   }
 })
+
+export default useStore
 
 // Option Store 类似以前vue2的写法
 // import { defineStore } from 'pinia'
 // export const useCommonStore = defineStore('common', {
 //   state: () => ({
-//     lang: 'chinese'
+//     lang: 'zh'
 //   }),
 //   getters: {
-//     isZw: (state) => state.lang === 'chinese'
+//     isZw: (state) => state.lang === 'zh'
 //   },
 //   actions: {
 //     toggleLang() {
 //       if (this.isZw) {
-//         this.lang = 'english'
+//         this.lang = 'en'
 //       } else {
-//         this.lang = 'chinese'
+//         this.lang = 'zh'
 //       }
 //     },
 //   },

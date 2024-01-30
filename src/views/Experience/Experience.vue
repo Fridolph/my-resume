@@ -1,7 +1,7 @@
 <template>
   <Section
     anchor="Experience"
-    title="工作经历"
+    :title="t('work')"
     icon="gongzuoxinxi">
     <CompanyWskp />
     <div class="divide flex my-3"></div>
@@ -13,4 +13,6 @@
 import Section from '../../components/Layouts/Section.vue'
 import CompanyWskp from './company-wskp/index.vue'
 import CompanyAili from './company-aili/index.vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 </script>

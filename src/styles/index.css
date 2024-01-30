@@ -20,19 +20,31 @@ h6 {
   color: var(--fri-text-color);
   font-weight: bold;
 }
-
 .scrollbar {
   scroll-behavior: smooth;
 }
 
 .scrollbar::-webkit-scrollbar-track-piece {
-  background: rgba(216, 231, 240, 0.9);
+  background: rgba(218, 230, 238, 0.9);
 }
 
 .scrollbar::-webkit-scrollbar {
   width: 6px;
 }
 .scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(194, 207, 216, 0.8);
+  background: rgba(188, 198, 223, 0.8);
   border-radius: 20px;
+}
+@media (max-width: 640px) {
+  .scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .scrollbar::-webkit-scrollbar-track-piece {
+    background: rgba(194, 203, 209, 0.9);
+  }
+
+  .scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(141, 162, 177, 0.85);
+  }
 }

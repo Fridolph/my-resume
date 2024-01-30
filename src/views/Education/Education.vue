@@ -1,13 +1,14 @@
 <template>
   <Section
-    title="教育经历"
+    :title="t('education.title')"
     anchor="Education"
     icon="peixunjiaoyu">
     <RowContent
-      label="四川大学锦江学院 / 通信工程"
+      :label="t('education.r1')"
+      :label-width="400"
       :label-bold="true"
-      text="2012年9月——2016年6月"
-      align="right"
+      :text="t('education.r1v')"
+      align="right"      
       :is-wrap="true" />
   </Section>
 </template>
@@ -15,4 +16,6 @@
 <script setup lang="ts">
 import Section from '../../components/Layouts/Section.vue'
 import RowContent from '../../components/RowContent/RowContent.vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 </script>

@@ -2,18 +2,18 @@
   <div class="flex mb-4 flex-row justify-between">
     <template v-if="type === 'labelText'">
       <div
-        class="label min-w-20 mr-10"
+        class="label min-w-20 mr-3"
         :class="[labelBold ? 'font-bold' : '', isTitle ? 'text-lg' : 'text-sm']"
-        :style="`${labelWidth ? `width:${labelWidth}px` : ''}`">
-        {{ label }}
-      </div>
-      <div class="flex-1 text-left" :class="{'sm:text-right': isWrap}">
+        :style="`${labelWidth ? `min-width:${labelWidth}px` : ''}`"
+        >{{ label }}</div>
+      <div
+        class="flex-1 text-left min-w-[180px]"
+        :class="{ 'sm:text-right': isWrap }">
         <a
           v-if="link"
           :href="text"
           target="_blank"
-          >{{ text }}</a
-        >
+          >{{ text }}</a>
         <template v-else>
           {{ text }}
         </template>
@@ -30,7 +30,8 @@ withDefaults(defineProps<RowContentProps>(), {
   align: 'left',
   labelBold: false,
   isWrap: false,
-  isTitle: false
+  isTitle: false,
+  labelWidth: 100
 })
 </script>
 

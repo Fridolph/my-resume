@@ -4,5 +4,5 @@ export interface ProjectWrapProps {
   icon?: string
   showIcon?: boolean
   showLib?: boolean
-  label?: string
+  btnLabel?: string
 }

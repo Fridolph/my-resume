@@ -1,6 +1,6 @@
 <template>
   <Section
-    title="兴趣爱好"
+    :title="t('hobbies')"
     icon="xingquaihao">
     <div class="flex flex-wrap justify-start">
       <Yumaoqiu />
@@ -25,4 +25,6 @@ import Movie from './5movie.vue'
 import Singer from './6singer.vue'
 import Steam from './7steam.vue'
 import Book from './8book.vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 </script>

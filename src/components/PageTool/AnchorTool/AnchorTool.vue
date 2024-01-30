@@ -9,35 +9,36 @@
       v-model="checked"
       @change="onChange" />
     <div
+      :class="{'peer-checked:w-[380px]': isZw, 'peer-checked:w-[420px]': !isZw}"
       class="nav__content relative flex flex-row w-8 h-full transition-width duration-700 peer-checked:w-[380px]">
       <ul
-        class="nav__list relative w-[610px] h-full px-5 text-[0px] flex flex-row translate-x-5 *:align-top *:px-2 *:text-center *:text-sm *:leading-8 *:font-bold *:cursor-pointer">
+        class="nav__list relative w-[510px] h-full px-5 text-[0px] flex flex-row translate-x-5 *:align-top *:px-2 *:text-center *:text-sm *:leading-8 *:font-bold *:cursor-pointer">
         <li class="nav__item">
           <a
             href="#Education"
             class="nav__item-text block h-full w-max leading-8 -rotate-[20deg] opacity-100 transition-all duration-700 ease-[cubic-bezier(0.48, 0.43, 0.7, 2.5)]"
-            >教育经历</a
+            >{{ t('anchor.a1') }}</a
           >
         </li>
         <li class="nav__item">
           <a
             href="#Skill"
             class="nav__item-text block h-full w-max leading-8 -rotate-[20deg] opacity-100 transition-all duration-700 ease-[cubic-bezier(0.48, 0.43, 0.7, 2.5)]"
-            >专业技能</a
+            >{{ t('anchor.a2') }}</a
           >
         </li>
         <li class="nav__item">
           <a
             href="#Experience"
             class="nav__item-text block h-full w-max leading-8 -rotate-[20deg] opacity-100 transition-all duration-700 ease-[cubic-bezier(0.48, 0.43, 0.7, 2.5)]"
-            >工作经历</a
+            >{{ t('anchor.a3') }}</a
           >
         </li>
         <li class="nav__item">
           <a
             href="#Personal"
             class="nav__item-text block h-full w-max leading-8 -rotate-[20deg] opacity-100 transition-all duration-700 ease-[cubic-bezier(0.48, 0.43, 0.7, 2.5)]"
-            >个人项目</a
+            >{{ t('anchor.a4') }}</a
           >
         </li>
       </ul>
@@ -49,7 +50,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+const { t, locale } = useI18n()
+
+const isZw = computed(() => locale.value === 'zh')
+console.log('isZw: ', isZw.value);
 
 const checked = ref(false)
 
