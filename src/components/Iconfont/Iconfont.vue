@@ -1,5 +1,6 @@
 <template>
   <span
+    v-bind="$attrs"
     :class="`iconfont icon-${name} align-middle`"
     :style="`font-size: ${size}px; color: ${color}`"></span>
 </template>

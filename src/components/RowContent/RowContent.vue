@@ -11,6 +11,7 @@
         <a
           v-if="link"
           :href="text"
+          target="_blank"
           >{{ text }}</a
         >
         <template v-else>

@@ -5,7 +5,7 @@
 - **工作经验：** 8年
 - **技术博客：** [http://blog.fridolph.top](http://blog.fridolph.top)
 - **Github：** [http://github.com/fridolph](http://github.com/fridolph)
-- **现居：** 成都市高新区世纪城
+- **现居：** 成都市高新区
 - **状态：** 已离职，可约面试和尽快入职
 - **手机：** 16602835945
 - **微信：** Fridolph
@@ -158,10 +158,10 @@ LC 安全分析大屏 是用可视化的方式展示庞杂数据的产品，经�
 
 # 个人项目
 
-- [fridolph](https://github.com/Fridolph/Fridolph) 前端相关学习途径，综合性学习资料整理仓库
 - [my-resume](https://github.com/Fridolph/my-resume) 个人简历展示，Vite+Vue3+TailWindCSS 极速搭建，2024最新版已开源，放心Fork
-- [my-program](https://github.com/Fridolph/my-program) 上述学习仓库的一些实际案例，主要是一些较为简单的CSS、JS效果的细节实现，demo仓库
 - [my-element-plus](https://github.com/Fridolph/my-element-plus) Vue3 + Vite + TS4 打造自己的组件库，学习ElementPlus组件库
+- [my-program](https://github.com/Fridolph/my-program) 上述学习仓库的一些实际案例，主要是一些较为简单的CSS、JS效果的细节实现，demo仓库
+- [fridolph](https://github.com/Fridolph/Fridolph) 前端相关学习途径，综合性学习资料整理仓库
 - [FE-prepare-interview](https://github.com/Fridolph/FE-prepare-interview) 前端准备面试，搜集于社区，回馈造福于社区
 
 # 参与开源
@@ -169,7 +169,6 @@ LC 安全分析大屏 是用可视化的方式展示庞杂数据的产品，经�
 - [hexo-theme-melody](https://github.com/Molunerfinn/hexo-theme-melody) Hexo主题，优化了样式与动效过渡，自定心型效果，添加前端优化 dns 预解析
 - [hexo-theme-butterfly](https://github.com/jerryc127/hexo-theme-butterfly) Hexo主题，标签云可选Count，右键自定义菜单
 - [FE-star](https://github.com/FE-star) 前端进阶学习小组 - 进阶知识点整理与学习提高
-
 
 # 致谢
 

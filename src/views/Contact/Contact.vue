@@ -21,7 +21,6 @@
 
 <script setup lang="ts">
 import Section from '../../components/Layouts/Section.vue'
-import Iconfont from '../../components/Iconfont/Iconfont.vue'
 import RowContent from '../../components/RowContent/RowContent.vue'
 </script>
 

@@ -1,5 +1,6 @@
 <template>
   <Section
+    anchor="Experience"
     title="工作经历"
     icon="gongzuoxinxi">
     <CompanyWskp />

@@ -1,6 +1,7 @@
 <template>
   <Section
     title="专业技能"
+    anchor="Skill"
     icon="zhuanyezhishijineng">
     <ListWrap
       title="前端"

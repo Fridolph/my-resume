@@ -10,6 +10,13 @@
     <RowContent
       label="工作经验"
       text="八年" />
+    <RowContent
+      label="所在地"
+      text="成都市高新区" />
+    
+      <RowContent
+      label="求职意向"
+      text="前端工程师 / 偏Vue" />
   </Section>
 </template>
 

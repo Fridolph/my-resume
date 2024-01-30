@@ -1,6 +1,7 @@
 <template>
   <Section
     title="教育经历"
+    anchor="Education"
     icon="peixunjiaoyu">
     <RowContent
       label="四川大学锦江学院 / 通信工程"

@@ -1,5 +1,6 @@
 <template>
   <Section
+    anchor="Personal"
     :title="`个人项目 & 参与开源`"
     icon="github-fill">
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
@@ -139,36 +140,12 @@
         link="https://github.com/Fridolph/FE-prepare-interview">
         <div class="flex flex-row">
           <div class="flex flex-wrap gap-y-2">
-            <Button
-              size="small"
-              type="info"
-              >项目经验</Button
-            >
-            <Button
-              size="small"
-              type="info"
-              >Vue源码</Button
-            >
-            <Button
-              size="small"
-              type="info"
-              >Promise</Button
-            >
-            <Button
-              size="small"
-              type="info"
-              >ES规范</Button
-            >
-            <Button
-              size="small"
-              type="info"
-              >http</Button
-            >
-            <Button
-              size="small"
-              type="info"
-              >性能优化</Button
-            >
+            <Button size="small">Vue源码</Button>
+            <Button size="small">Promise</Button>
+            <Button size="small">ES规范</Button>
+            <Button size="small">http</Button>
+            <Button size="small">项目经验</Button>
+            <Button size="small">性能优化</Button>
           </div>
           <a
             class="flex items-center justify-center p-4 cursor-pointer"
