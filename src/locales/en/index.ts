@@ -129,10 +129,11 @@ export default {
   aili: {
     name: 'Sichuan Aili Technology Co., Ltd.',
     time: '2016.01——2017.07',
-    r1: '- Responsible for the front-end interface and related development of the Global Etiquette Knowledge Platform and Sichuan Aili Technology Official Website Project',
-    r2: '- Cut the drawings according to the design drawings, and complete the development of relevant static pages in module units of pages',
-    r3: '- Componentize each sub-module of the page and maintain the container components and their display components',
-    r4: '- Each sub-page undergoes mobile responsive adaptation and other compatibility processing',
+    r1: "- Participated in the development of the company's main project interface and the development of the Aili official website pages.",
+    r2: '- Accurately replicated the provided design drawings to ensure consistency between the front-end pages and the design drawings.',
+    r3: '- Decomposed the sub-modules of the pages into reusable components to improve development efficiency and code maintainability.',
+    r4: '- Responsively adapted front-end pages for mainstream mobile devices.',
+    r5: 'Worked closely with the backend development team to complete the integration of front-end pages with backend interfaces.',
     pj: 'Global Etiquette Knowledge Platform',
     pjDesc:
       'Traditional content-based community comprehensive website, similar to Jianshu and Xiaohongshu. ',

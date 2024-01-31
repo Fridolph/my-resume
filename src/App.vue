@@ -33,7 +33,6 @@ import Avatar from './views/Avatar/Avatar.vue'
 import Baseinfo from './views/Baseinfo/Baseinfo.vue'
 import Contact from './views/Contact/Contact.vue'
 import Hobby from './views/Hobby/Hobby.vue'
-// import Wechat from './views/Wechat/Wechat.vue'
 // -------------------------------------------
 import Main from './components/Layouts/Main.vue'
 import Education from './views/Education/Education.vue'
