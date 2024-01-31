@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@layer components {
+  .hobby-fromBottom {
+    @apply translate-y-full transition-transform ease-in-out duration-500 group-hover:translate-y-0;
+  }
+  .hobby-fromTop {
+    @apply -translate-y-full transition-transform ease-in-out duration-500 group-hover:translate-y-0;
+  }
+  .hobby-fromLeft {
+    @apply -translate-x-full transition-transform ease-in-out duration-500 group-hover:translate-x-0;
+  }
+  .hobby-fromRight {
+    @apply translate-x-full transition-transform ease-in-out duration-500 group-hover:translate-x-0;
+  }
+  .hobby-fadeIn {
+    @apply transition-opacity ease-in-out duration-500 opacity-0 group-hover:opacity-100;
+  }
+}

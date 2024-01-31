@@ -37,7 +37,7 @@
 
       <RepositoryItem
         name="my-resume"
-        transitionType="formLeft"
+        transitionType="fromLeft"
         :description="t('personal.r2')"
         link="https://github.com/Fridolph/my-resume/">
         <div class="flex flex-row">
