@@ -1,6 +1,6 @@
 <template>
   <div
-    class="transition-all duration-300 ease-linear origin-center hover:bg-slate-500 hover:rounded-full hover:text-white">
+    class="group transition-all duration-300 ease-linear origin-center hover:bg-slate-500 hover:rounded-full hover:text-white">
     <Iconfont
       class="size-12 absolute left-0 top-1 rotate-0 text-center transition-all origin-center group-hover:animate-[singerShake_3s_ease-in-out_infinite]"
       :size="28"
