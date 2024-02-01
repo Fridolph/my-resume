@@ -3,7 +3,7 @@
     <a
       v-if="anchor"
       :id="anchor"
-      class="block border-b text-[16px] font-bold antialiased mb-4 align-middle">
+      class="my-section-title hover:text-[var(--fri-text-color)]">
       <Iconfont
         :name="icon"
         :size="30" />
@@ -12,7 +12,7 @@
     <div
       v-else
       :href="`#${anchor}`"
-      class="block border-b text-[16px] font-bold antialiased mb-4 align-middle">
+      class="my-section-title">
       <Iconfont
         :name="icon"
         :size="30" />

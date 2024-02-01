@@ -4,8 +4,18 @@
       class="rounded-full max-w-[260px] mb-3"
       src="/img/avatar.jpg" />
 
-    <div>{{ t('avatar.p1') }}</div>
-    <div>{{ t('avatar.p2') }}</div>
+    <div class="group leading-none tracking-tight text-center mb-2">
+      <span
+        class="my-text-clip"
+        >{{ t('avatar.p1') }}</span
+      >
+    </div>
+    <div class="group leading-none tracking-tight text-center text-zinc-300">
+      <span
+        class="my-text-clip from-sky-400 to-violet-800"
+        >{{ t('avatar.p2') }}</span
+      >
+    </div>
   </div>
 </template>
 

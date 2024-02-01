@@ -8,7 +8,7 @@ export default {
   },
   avatar: {
     p1: '热爱Coding，生命不息，折腾不止',
-    p2: '羽毛球狂人，冲刺中羽五级 ...',
+    p2: '羽毛球爱好者，快乐挥拍，球场飞翔',
   },
   baseinfo: {
     title: '基本信息',
