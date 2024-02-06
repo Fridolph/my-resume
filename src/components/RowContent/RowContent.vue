@@ -1,5 +1,5 @@
 <template>
-  <div class="flex mb-4 flex-row justify-between">
+  <div class="flex mb-4 flex-row justify-between" :class="{'flex-col': isWrap}">
     <template v-if="type === 'labelText'">
       <div
         class="label min-w-20 mr-3"

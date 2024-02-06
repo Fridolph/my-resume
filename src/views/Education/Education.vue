@@ -5,11 +5,12 @@
     icon="peixunjiaoyu">
     <RowContent
       :label="t('education.r1')"
-      :label-width="400"
+      :label-width="190"
       :label-bold="true"
+      :is-wrap="true"
       :text="t('education.r1v')"
       align="right"      
-      :is-wrap="true" />
+     />
   </Section>
 </template>
 
