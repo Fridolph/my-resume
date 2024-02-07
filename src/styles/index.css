@@ -9,6 +9,7 @@
   font-family: 'Microsoft YaHei', 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande',
     'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
   user-select: none;
+  transition: color 1s ease-in-out;
 }
 
 .dark #app {
