@@ -5,42 +5,12 @@
     :btn-label="t('stack')"
     :description="t('proEdr.description')">
     <template #lib>
-      <Button
-        plain
-        type="info"
-        size="small"
-        >Vue2</Button
-      >
-      <Button
-        plain
-        type="info"
-        size="small"
-        >iView</Button
-      >
-      <Button
-        plain
-        type="info"
-        size="small"
-        >Vxe-Table</Button
-      >
-      <Button
-        plain
-        type="info"
-        size="small"
-        >Vue-i18n</Button
-      >
-      <Button
-        plain
-        type="info"
-        size="small"
-        >ECharts</Button
-      >
-      <Button
-        plain
-        type="info"
-        size="small"
-        >D3.js</Button
-      >
+      <button class="my-btn info">Vue2</button>
+      <button class="my-btn info">iView</button>
+      <button class="my-btn info">Vxe-Table</button>
+      <button class="my-btn info">Vue-i18n</button>
+      <button class="my-btn info">ECharts</button>
+      <button class="my-btn info">D3.js</button>
     </template>
     <ListWrap
       :title="t('contributions')"
@@ -60,7 +30,6 @@
 import { computed } from 'vue'
 import ProjectWrap from '../../../components/ProjectWrap/ProjectWrap.vue'
 import ListWrap from '../../../components/ListWrap/ListWrap.vue'
-import { Button } from 'fri-element-plus'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 

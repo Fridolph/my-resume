@@ -1,9 +1,14 @@
 :root {
+  /* base */
+  --font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "\5fae\8f6f\96c5\9ed1", Arial, sans-serif;
+
   /* theme-light */
   --page-bg: #c5dae2;
   --bg-hover: #f5f5f5;
   --text: #607d8b;
   --text-hover: #00bdea;
+  --link: #409eff;
+  --link-hover: #3188df;
   --main-bg: white;
   --aside-bg: #f5f5f5;
   --scroll-piece: rgba(218, 230, 238, 0.9);
@@ -11,6 +16,7 @@
   --border: #e5e7eb;
   --focus-border: #bae6fd;
   --card-bg: #f0f9ff;
+  --warning: #cb9012;
 
   /* dark-mode */
   --dark-page-bg: #1f2635;

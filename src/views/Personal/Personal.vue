@@ -10,7 +10,7 @@
         link="https://github.com/Fridolph/Fridolph">
         <div class="flex flex-row">
           <div class="flex-1">
-            {{ t('personal.recommend')}}
+            {{ t('personal.recommend') }}
             <a
               class="block"
               target="_blank"
@@ -76,7 +76,7 @@
         link="https://github.com/Fridolph/my-program">
         <div class="flex flex-row">
           <div class="flex-1">
-            {{ t('personal.recommend')}}
+            {{ t('personal.recommend') }}
             <a
               class="block"
               target="_blank"
@@ -140,12 +140,12 @@
         link="https://github.com/Fridolph/FE-prepare-interview">
         <div class="flex flex-row">
           <div class="flex flex-wrap gap-y-2">
-            <Button size="small">{{t('personal.b1')}}</Button>
-            <Button size="small">Promise</Button>
-            <Button size="small">{{t('personal.b3')}}</Button>
-            <Button size="small">http</Button>
-            <Button size="small">{{t('personal.b5')}}</Button>
-            <Button size="small">{{t('personal.b6')}}</Button>
+            <button class="my-btn">{{ t('personal.b1') }}</button>
+            <button class="my-btn">Promise</button>
+            <button class="my-btn">{{ t('personal.b3') }}</button>
+            <button class="my-btn">http</button>
+            <button class="my-btn">{{ t('personal.b5') }}</button>
+            <button class="my-btn">{{ t('personal.b6') }}</button>
           </div>
           <a
             class="flex items-center justify-center p-4 cursor-pointer"
@@ -165,7 +165,6 @@
 import Section from '../../components/Layouts/Section.vue'
 import RepositoryItem from '../../components/RepositoryItem/RepositoryItem.vue'
 import Iconfont from '../../components/Iconfont/Iconfont.vue'
-import { Button } from 'fri-element-plus'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 </script>

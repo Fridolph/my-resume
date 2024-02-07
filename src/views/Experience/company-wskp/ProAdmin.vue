@@ -5,11 +5,11 @@
     :btn-label="t('stack')"
     :description="t('proAdmin.description')">
     <template #lib>
-      <Button plain type="info" size="small">Vue3</Button>
-      <Button plain type="info" size="small">TypeScript</Button>
-      <Button plain type="info" size="small">ECharts</Button>
-      <Button plain type="info" size="small">Naive UI</Button>
-      <Button plain type="info" size="small">Vue-i18n</Button>
+      <button class="my-btn info">Vue3</button>
+      <button class="my-btn info">TypeScript</button>
+      <button class="my-btn info">ECharts</button>
+      <button class="my-btn info">Naive UI</button>
+      <button class="my-btn info">Vue-i18n</button>
     </template>
     <ListWrap
       :title="t('contributions')"
@@ -29,7 +29,6 @@
 import { computed } from 'vue'
 import ProjectWrap from '../../../components/ProjectWrap/ProjectWrap.vue'
 import ListWrap from '../../../components/ListWrap/ListWrap.vue'
-import { Button } from 'fri-element-plus'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 

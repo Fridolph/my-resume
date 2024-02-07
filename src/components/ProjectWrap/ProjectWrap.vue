@@ -8,12 +8,7 @@
 
     <template v-if="showLib">
       <div class="h-[60px] sm:h-auto flex flex-wrap my-1 mb-3 px-3">
-        <Button
-          size="small"
-          type="primary"
-          plain
-          >{{ btnLabel }}</Button
-        >
+        <button class="my-btn primary">{{ btnLabel }}</button>
         <slot name="lib"></slot>
       </div>
     </template>
@@ -24,7 +19,6 @@
 </template>
 
 <script setup lang="ts">
-import { Button } from 'fri-element-plus'
 import { ProjectWrapProps } from './types'
 import TitleDesc from '../TitleDesc/TitleDesc.vue'
 

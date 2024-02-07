@@ -1,40 +1,21 @@
 <template>
-  <div class="hover:text-sky-400">
-    <Tooltip
+  <div class="transition-colors duration-500 hover:text-sky-400">
+    <Iconfont
       v-show="isZh"
-      content="切换英文"
-      :width="85">
-      <Iconfont
-        :size="22"
-        name="zhongyingwen2zhongwen"
-        @click="toggleLang" />
-    </Tooltip>
+      :size="22"
+      name="zhongyingwen2zhongwen"
+      @click="toggleLang" />
 
-    <Tooltip
+    <Iconfont
       v-show="!isZh"
-      content="To Chinese"
-      :width="100">
-      <Iconfont
-        :size="22"
-        name="a-zhongyingwenyingwen"
-        @click="toggleLang" />
-    </Tooltip>
+      :size="22"
+      name="a-zhongyingwenyingwen"
+      @click="toggleLang" />
   </div>
 </template>
 
 <script setup lang="ts">
 import Iconfont from '../../Iconfont/Iconfont.vue'
-import { Tooltip } from 'fri-element-plus'
 import useLocale from '../../../hooks/useLocale'
-
 const { toggleLang, isZh } = useLocale()
 </script>
-
-<style scoped>
-.dark {
-  :deep(.vk-tooltip__popper) {
-    background-color: var(--dark-page-bg);
-    border-color: var(--dark-border);
-  }
-}
-</style>

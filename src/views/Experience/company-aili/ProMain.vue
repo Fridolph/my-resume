@@ -5,64 +5,19 @@
     :btn-label="t('stack')"
     :description="t('aili.pjDesc')">
     <template #lib>
-      <Button
-        plain
-        type="info"
-        size="small"
-        >jQuery</Button
-      >
-      <Button
-        plain
-        type="info"
-        size="small"
-        >jQuery Plugins</Button
-      >
-      <Button
-        plain
-        type="info"
-        size="small"
-        >BootStrap</Button
-      >
-      <Button
-        plain
-        type="info"
-        size="small"
-        >ECharts</Button
-      >
+      <button class="my-btn info">jQuery</button>
+      <button class="my-btn info">jQuery Plugins</button>
+      <button class="my-btn info">BootStrap</button>
+      <button class="my-btn info">ECharts</button>
     </template>
 
     <p class="pl-3">{{ t('aili.para') }}</p>
     <div class="pl-3 my-3">
-      <Button
-        plain
-        type="warning"
-        size="small"
-        >{{ t('refactor') }}</Button
-      >
-      <Button
-        plain
-        type="info"
-        size="small"
-        >Webpack</Button
-      >
-      <Button
-        plain
-        type="info"
-        size="small"
-        >React</Button
-      >
-      <Button
-        plain
-        type="info"
-        size="small"
-        >react-router</Button
-      >
-      <Button
-        plain
-        type="info"
-        size="small"
-        >Redux</Button
-      >
+      <button class="my-btn warning">{{ t('refactor') }}</button>
+      <button class="my-btn info">Webpack</button>
+      <button class="my-btn info">React</button>
+      <button class="my-btn info">react-router</button>
+      <button class="my-btn info">Redux</button>
     </div>
     <ListWrap
       :title="t('contributions')"
@@ -88,7 +43,6 @@
 import { computed } from 'vue'
 import ProjectWrap from '../../../components/ProjectWrap/ProjectWrap.vue'
 import ListWrap from '../../../components/ListWrap/ListWrap.vue'
-import { Button } from 'fri-element-plus'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
@@ -102,9 +56,3 @@ const growList = computed(() => [
   t('aili.g5'),
 ])
 </script>
-
-<style scoped>
-:deep(button) {
-  margin-bottom: 10px;
-}
-</style>

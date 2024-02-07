@@ -1,0 +1,63 @@
+body {
+  font-family: var(--font-family);
+  font-size: 14px;
+}
+
+a {
+  color: var(--link);
+  text-decoration: none;
+
+  &:hover,
+  &:focus {
+    color: var(--link-hover);
+  }
+
+  &:active {
+    color: var(--link-hover);
+  }
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: inherit;
+  &:first-child {
+    margin-top: 0;
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  font-size: inherit;
+}
+
+p {
+  line-height: 1.8;
+
+  &:first-child {
+    margin-top: 0;
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+hr {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
