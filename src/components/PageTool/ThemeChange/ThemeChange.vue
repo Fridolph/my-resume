@@ -17,12 +17,10 @@
 
 <script setup lang="ts">
 import { toRefs } from 'vue'
-import { useCommonStore } from '@/store/common'
+import { useCommonStore } from '../../../store/common'
 import Iconfont from '../../Iconfont/Iconfont.vue'
-
 const store = useCommonStore()
-const { theme, isDark } = toRefs(store)
-
+const { isDark } = toRefs(store)
 const handleSwitch = () => {
   store.switchTheme()
 }

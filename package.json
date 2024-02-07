@@ -30,8 +30,11 @@
     "terser": "^5.27.0",
     "typescript": "^5.3.3",
     "vite": "^5.0.12",
+    "vite-plugin-bundle-prefetch": "^0.0.4",
+    "vite-plugin-chunk-split": "^0.5.0",
     "vite-plugin-compression2": "^0.11.0",
     "vite-plugin-eslint": "^1.8.1",
+    "vite-plugin-importus": "^1.0.5",
     "vue-tsc": "^1.8.27"
   }
 }
