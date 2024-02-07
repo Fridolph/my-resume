@@ -3,7 +3,7 @@ import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
 import { compression } from 'vite-plugin-compression2'
 import { chunkSplitPlugin } from 'vite-plugin-chunk-split'
-import vitePluginImportus from 'vite-plugin-importus'
+// import vitePluginImportus from 'vite-plugin-importus'
 import prefetchPlugin from 'vite-plugin-bundle-prefetch';
 
 // https://vitejs.dev/config/
@@ -21,8 +21,8 @@ export default defineConfig({
     chunkSplitPlugin({
       strategy: 'default',
       customSplitting: {
-        // `react` and `react-dom` 会被打包到一个名为`render-vendor`的 chunk 里面(包括它们的一些依赖，如 object-assign)
-        'vue-vendor': [/vue/, /pinia/],
+        // `vue` 会被打包到一个名为`vue-vendor`的 chunk 里面(包括它们的一些依赖，如 object-assign)
+        'vue-vendor': [/vue/],
         'tailwind-vendor': [/tailwindcss/],
         'fri-vendor': [/fri-element-plus/],
         // 源码中目录的代码都会打包进 [name] 这个 chunk 中
