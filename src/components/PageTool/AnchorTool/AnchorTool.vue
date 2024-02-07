@@ -1,6 +1,6 @@
 <template>
   <nav
-    class="z-10 invisible md:visible group overflow-hidden absolute right-[112px] -top-10 min-w-8 rounded w-auto h-8 bg-white dark:bg-[var(--dark-bg-hover)] -translate-x-1/2"
+    class="z-10 invisible md:visible group overflow-hidden absolute right-[112px] -top-10 min-w-8 rounded w-auto h-8 bg-white dark:bg-[var(--dark-bg-hover)] -translate-x-1/2 dark-transition"
     :class="{ 'is-checked': checked }">
     <input
       type="checkbox"
@@ -9,7 +9,7 @@
       v-model="checked"
       @change="onChange" />
     <div
-      :class="{'peer-checked:w-[380px]': isZw, 'peer-checked:w-[420px]': !isZw}"
+      :class="{ 'peer-checked:w-[380px]': isZw, 'peer-checked:w-[420px]': !isZw }"
       class="nav__content relative flex flex-row w-8 h-full transition-width duration-700 peer-checked:w-[380px]">
       <ul
         class="nav__list relative w-[510px] h-full px-5 text-[0px] flex flex-row translate-x-5 *:align-top *:px-2 *:text-center *:text-sm *:leading-8 *:font-bold *:cursor-pointer">
@@ -55,8 +55,6 @@ import { useI18n } from 'vue-i18n'
 const { t, locale } = useI18n()
 
 const isZw = computed(() => locale.value === 'zh')
-console.log('isZw: ', isZw.value);
-
 const checked = ref(false)
 
 const onChange = () => {

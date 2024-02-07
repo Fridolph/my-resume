@@ -23,21 +23,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import Iconfont from '../../Iconfont/Iconfont.vue'
 import { Tooltip } from 'fri-element-plus'
-import { useI18n } from 'vue-i18n'
+import useLocale from '../../../hooks/useLocale'
 
-const { locale } = useI18n();
-const isZh = computed(() => locale.value === 'zh')
-
-function toggleLang() {
-  if (isZh.value) {
-    locale.value = 'en'
-  } else {
-    locale.value = 'zh'
-  }
-}
+const { toggleLang, isZh } = useLocale()
 </script>
 
 <style scoped>
