@@ -1,6 +1,6 @@
 <template>
   <div
-    class="group overflow-hidden relative ring-1 ring-slate-200 rounded p-2 transition-all hover:ring-sky-200 hover:ring-2">
+    class="group overflow-hidden relative ring-1 ring-[var(--border)] dark:ring-[var(--dark-border)] rounded p-2 transition-all hover:ring-[var(--focus-border)] hover:ring-2 dark:hover:ring-[var(--dark-focus-border)]">
     <div class="group flex flex-col">
       <a
         :href="link"
@@ -12,7 +12,7 @@
     </div>
 
     <div
-      class="absolute w-full h-full p-2 z-10 left-0 right-0 top-0 bottom-0 rounded bg-sky-50"
+      class="absolute w-full h-full p-2 z-10 left-0 right-0 top-0 bottom-0 rounded bg-[var(--card-bg)] dark:bg-[var(--dark-card-bg)]"
       :class="{
         'hobby-fromBottom': transitionType === 'fromBottom',
         'hobby-fromTop': transitionType === 'fromTop',

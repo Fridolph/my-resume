@@ -1,5 +1,27 @@
 :root {
-  --fri-text-color: #607d8b;
-  --fri-hover-color: #00bdea;
-  --fri-bg-color: #c5dae2;
+  /* theme-light */
+  --page-bg: #c5dae2;
+  --bg-hover: #f5f5f5;
+  --text: #607d8b;
+  --text-hover: #00bdea;
+  --main-bg: white;
+  --aside-bg: #f5f5f5;
+  --scroll-piece: rgba(218, 230, 238, 0.9);
+  --scroll-thumb: rgba(188, 198, 223, 0.8);
+  --border: #e5e7eb;
+  --focus-border: #bae6fd;
+  --card-bg: #f0f9ff;
+
+  /* dark-mode */
+  --dark-page-bg: #1f2635;
+  --dark-bg-hover: #151e31;
+  --dark-text: rgb(145, 158, 175);
+  --dark-text-hover: rgb(185, 196, 212);;
+  --dark-main-bg: #151e29;
+  --dark-aside-bg: #101625;
+  --dark-scroll-piece: rgba(18, 40, 54, 0.9);
+  --dark-scroll-thumb: rgba(82, 86, 95, 0.8);
+  --dark-border: rgb(13, 39, 53);
+  --dark-focus-border: rgb(21, 53, 70);
+  --dark-card-bg: #0a2c42;
 }

@@ -1,6 +1,6 @@
 <template>
   <nav
-    class="z-10 invisible md:visible group overflow-hidden absolute right-[76px] -top-10 min-w-8 rounded w-auto h-8 bg-white -translate-x-1/2"
+    class="z-10 invisible md:visible group overflow-hidden absolute right-[112px] -top-10 min-w-8 rounded w-auto h-8 bg-white dark:bg-[var(--dark-bg-hover)] -translate-x-1/2"
     :class="{ 'is-checked': checked }">
     <input
       type="checkbox"
@@ -107,7 +107,7 @@ const onChange = () => {
   width: 18px;
   height: 3px;
   border-radius: 2px;
-  background: var(--fri-text-color);
+  background: var(--text);
   transform-origin: 50% 50%;
   transition: transform 1s cubic-bezier(0.48, 0.43, 0.29, 1.3), background-color 0.3s;
 }

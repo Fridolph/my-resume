@@ -1,14 +1,18 @@
 @import './var.css';
-@import './tailwind.css';
 @import '../assets/iconfont/iconfont.css';
+@import './tailwind.css';
 
 #app {
   min-height: 100vh;
   width: 100%;
-  color: var(--fri-text-color);
+  color: var(--text);
   font-family: 'Microsoft YaHei', 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande',
     'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
   user-select: none;
+}
+
+.dark #app {
+  color: var(--dark-text);
 }
 
 h1,
@@ -17,7 +21,7 @@ h3,
 h4,
 h5,
 h6 {
-  color: var(--fri-text-color);
+  color: var(--text);
   font-weight: bold;
 }
 .scrollbar {
@@ -25,15 +29,21 @@ h6 {
 }
 
 .scrollbar::-webkit-scrollbar-track-piece {
-  background: rgba(218, 230, 238, 0.9);
+  background: var(--scroll-piece);
 }
 
 .scrollbar::-webkit-scrollbar {
   width: 6px;
 }
 .scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(188, 198, 223, 0.8);
+  background: var(--scroll-thumb);
   border-radius: 20px;
+}
+.dark .scrollbar::-webkit-scrollbar-track-piece {
+  background: var(--dark-scroll-piece);
+}
+.dark .scrollbar::-webkit-scrollbar-thumb {
+  background: var(--dark-scroll-thumb);
 }
 @media (max-width: 640px) {
   .scrollbar::-webkit-scrollbar {
@@ -41,10 +51,10 @@ h6 {
   }
 
   .scrollbar::-webkit-scrollbar-track-piece {
-    background: rgba(194, 203, 209, 0.9);
+    background: var(--scroll-piece);
   }
 
   .scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(141, 162, 177, 0.85);
+    background: var(--scroll-thumb);
   }
 }

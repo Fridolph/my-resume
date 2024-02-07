@@ -39,3 +39,12 @@ function toggleLang() {
   }
 }
 </script>
+
+<style scoped>
+.dark {
+  :deep(.vk-tooltip__popper) {
+    background-color: var(--dark-page-bg);
+    border-color: var(--dark-border);
+  }
+}
+</style>

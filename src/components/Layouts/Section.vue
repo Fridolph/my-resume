@@ -3,7 +3,7 @@
     <a
       v-if="anchor"
       :id="anchor"
-      class="my-section-title hover:text-[var(--fri-text-color)]">
+      class="my-section-title hover:text-[var(--text)]">
       <Iconfont
         :name="icon"
         :size="30" />

@@ -2,7 +2,7 @@
   <Section
     :title="t('hobbies')"
     icon="xingquaihao">
-    <div class="flex flex-wrap justify-start *:overflow-hidden *:relative *:ring-1 *:ring-slate-200 *:rounded *:flex *:items-center *:justify-center *:size-12 *:mr-3 *:mb-3">
+    <div class="flex flex-wrap justify-start *:overflow-hidden *:relative *:ring-1 *:ring-[var(--border)] dark:*:ring-[var(--focus-border)] *:rounded *:flex *:items-center *:justify-center *:size-12 *:mr-3 *:mb-3 *:dark:hover:text-white">
       <Yumaoqiu />
       <Steam />
       <Book />

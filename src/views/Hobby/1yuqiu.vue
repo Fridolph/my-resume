@@ -1,6 +1,6 @@
 <template>
   <div
-    class="group transition-color duration-300 origin-center hover:bg-slate-100">
+    class="group transition-color duration-300 origin-center dark:hover:text-white">
     <Iconfont
       class="size-12 absolute left-0 top-0 rotate-[260deg] -translate-x-1 -translate-y-6 transition-all delay-200 duration-500 group-hover:-left-[100px] group-hover:rotate-180"
       :size="16"

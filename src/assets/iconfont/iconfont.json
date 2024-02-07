@@ -6,6 +6,20 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "23505849",
+      "name": "light-bulb",
+      "font_class": "light-bulb",
+      "unicode": "e617",
+      "unicode_decimal": 58903
+    },
+    {
+      "icon_id": "34453009",
+      "name": "night-mode-fill",
+      "font_class": "night-mode-fill",
+      "unicode": "e83d",
+      "unicode_decimal": 59453
+    },
+    {
       "icon_id": "3996305",
       "name": "下载",
       "font_class": "xiazai",

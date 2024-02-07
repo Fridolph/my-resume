@@ -1,10 +1,11 @@
 <template>
   <div
-    class="w-full min-h-screen md:flex md:justify-center md:align-middle p-0 bg-[#c5dae2] md:py-[5vh] md:px-[5vw]">
+    class="w-full min-h-screen md:flex md:justify-center md:align-middle p-0 bg-[var(--page-bg)] md:py-[5vh] md:px-[5vw] dark:bg-[var(--dark-page-bg)]">
     <section
       class="sm:w-full md:w-full max-w-[1600px] flex flex-col md:flex-row justify-center align-middle text-color shadow-2xl">
       <AnchorTool />
       <DownloadTool />
+      <ThemeChange />
       <Aside>
         <Avatar />
         <section class="scrollbar overflow-x-hidden overflow-y-auto pr-[12px] hover:pr-[6px]">
@@ -27,6 +28,7 @@
 import { onMounted } from 'vue'
 import AnchorTool from './components/PageTool/AnchorTool/AnchorTool.vue'
 import DownloadTool from './components/PageTool/Down_Lang/index.vue'
+import ThemeChange from './components/PageTool/ThemeChange/ThemeChange.vue'
 // ----------------------------------------------
 import Aside from './components/Layouts/Aside.vue'
 import Avatar from './views/Avatar/Avatar.vue'
