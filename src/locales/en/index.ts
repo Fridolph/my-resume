@@ -34,6 +34,12 @@ export default {
     title: 'Education',
     r1: 'Sichuan University Jinjiang College / Communication Engineering',
     r1v: '2012.09——2016.06',
+    verify: 'Verifify ChSi',
+    alt: 'Online code',
+    p1: '1. Inspection of verification report -> ',
+    p2: '2. Use App to scan the QR code',
+    check: 'View screenshot',
+    updated: '(Updated on Feb 18, 2024)'
   },
   skill: {
     title: 'Professional skills',

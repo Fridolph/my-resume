@@ -1,5 +1,5 @@
 <template>
-  <div class="transition-colors duration-500 hover:text-sky-400">
+  <div class="dark-transition hover:text-sky-400">
     <Iconfont
       v-show="isZh"
       :size="22"

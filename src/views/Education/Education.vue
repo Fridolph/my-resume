@@ -11,12 +11,15 @@
       :text="t('education.r1v')"
       align="right"      
      />
+     
+     <ChsiUtil />
   </Section>
 </template>
 
 <script setup lang="ts">
 import Section from '../../components/Layouts/Section.vue'
 import RowContent from '../../components/RowContent/RowContent.vue'
+import ChsiUtil from './ChsiUtil.vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 </script>

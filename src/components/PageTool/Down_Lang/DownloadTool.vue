@@ -1,5 +1,5 @@
 <template>
-  <div class="flex item-center transition-colors duration-500 justify-center hover:text-sky-400">
+  <div class="flex item-center justify-center hover:text-sky-400 dark-transition">
     <Iconfont
       :size="22"
       name="xiazai"
