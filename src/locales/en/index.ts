@@ -48,10 +48,10 @@ export default {
     fe2: '2. Be familiar with JavaScript and TypeScript, pay attention to ESNext features;',
     fe3: '3. Be familiar with packaging tools such as Webpack and Vite;',
     fe4: '4. Familiar with Vue related technology stack and development, Learn about React development. ',
-    fe5: '5. Working in the network security industry, familiar with Web security knowledge. ',
+    fe5: '5. Familiar with web security and front-end performance optimization practices.',
     other: 'Related tools',
-    o1: '1. Familiar with Node.js and common modules;',
-    o2: '2. Be familiar with common Linux commands. Complete deployment work independently;',
+    o1: '1. Familiar with Node.js and write unit tests and server-side scripts.',
+    o2: '2. Understand the Linux development environment and capable of independently completing deployment tasks.',
     o3: '3. Follow Lint to write code that conforms to team specifications;',
     o4: '4. Familiar with the version management tool git;',
     o5: '5. Make good use of scientific search, plug-ins, and efficiency. ',
@@ -130,7 +130,7 @@ export default {
     g3: '- Pay more attention to feedback and user experience',
     mockDesc:
       'Deploy easy-mock to the intranet, and axios simulates request data for real development. ',
-    deployDesc: `An automatic packaging and rapid deployment solution deployed on the intranet to facilitate developers and testers. <br/>You can choose to switch projects and select the corresponding branch, automatically package and generate Dist, and deploy it to the intranet to test different versions of the project. `,
+    deployDesc: `Automated packaging and rapid deployment solution, convenient for developers and testers. After selecting the project and branch configurations, it automatically packages and generates the Dist, automatically assigns IP and ports, and deploys to the intranet for quick demonstration and testing. `,
   },
   aili: {
     name: 'Sichuan Aili Technology Co., Ltd.',

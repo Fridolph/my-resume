@@ -34,7 +34,7 @@
     <TitleDesc
       icon="shejiao"
       :show-icon="false"
-      title="wskp-UI"
+      title="wskp-deploy"
       :description="t('team.deployDesc')" />
   </ProjectWrap>
 </template>

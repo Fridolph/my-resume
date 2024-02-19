@@ -21,12 +21,12 @@
 2. 熟悉 `JavaScript`、`TypeScript`， 持续关注 `ESNext` 特性；
 3. 熟悉 `Webpack`、`Vite` 等打包工具及其构建流程；
 4. 熟悉 `Vue` 及相关技术栈的开发，了解 `React` 技术栈；
-5. 网络安全行业，熟悉 `Web安全` 知识。
+5. 熟悉 `Web安全` 及前端 `性能优化` 实践。
 
 ## 其他
 
-1. 熟悉 `Node.js` 及常用模块；
-2. 熟悉 `Linux` 常用命令，独立完成部署；
+1. 了解 `Node.js`，编写单元测试和 Server 端脚本；
+2. 了解 `Linux` 开发环境，能独立完成部署工作；
 3. 遵循 `lint` 编写符合团队规范的代码；
 4. 熟悉版本管理工具 `git`；
 5. 善用科学搜索、插件，高效主义。
@@ -134,7 +134,7 @@ wskp-ui 是一个使用 VuePress 搭建的综合性内网在线文档，它集�
 
 ### wskp-deploy
 
-搭建在内网的简易部署系统，初衷为测试不同版本、定制分支下的页面展示。
+一个简易的自动打包快速部署方案，方便开发和测试人员。选择好项目及分支等配置后，自动打包生成 Dist，自动分配 IP 和端口并部署到内网，便于快速演示和测试。
 
 ## 四川爱礼科技有限公司 (2016.01 —— 2017.07)
 
@@ -181,7 +181,7 @@ wskp-ui 是一个使用 VuePress 搭建的综合性内网在线文档，它集�
 - [my-resume](https://github.com/Fridolph/my-resume) 个人简历展示, Vite + Vue3 + TS + TailWindCSS，欢迎 Fork 使用
 - [my-element-plus](https://github.com/Fridolph/my-element-plus) Vue3 + Vite + TS4 学习 ElementPlus 组件库
 - [fridolph](https://github.com/Fridolph/Fridolph) 该项目整理个人关于前端相关学习资源、教程、文章、书籍等，也作为写博客的参考
-- [my-program](https://github.com/Fridolph/my-program) 上述学习仓库的一些实际案例，主要展示了一些较为简单的CSS、JavaScript效果的细节实现
+- [my-program](https://github.com/Fridolph/my-program) 上述学习仓库的一些实际案例，主要展示了一些较为简单的 CSS、JavaScript 效果的细节实现
 - [FE-prepare-interview](https://github.com/Fridolph/FE-prepare-interview) 前端面试宝典，搜集了社区中的面试题、知识点、经验分享等。搜集于社区，回馈于社区
 
 # 致谢

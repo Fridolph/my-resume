@@ -11,8 +11,9 @@
       :text="t('education.r1v')"
       align="right"      
      />
-     
-     <ChsiUtil />
+    
+    <!-- 投简历遇到HR需要验证学信网的，看个人情况吧，不需要直接注释掉 -->
+    <ChsiUtil />
   </Section>
 </template>
 
