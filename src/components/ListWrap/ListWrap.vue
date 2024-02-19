@@ -4,6 +4,7 @@
     class="mb-3"
     :class="{ 'pl-3': inner }">
     <dt
+      v-if="title"
       class="mb-2"
       :class="titleClass">
       {{ title }}
@@ -20,7 +21,8 @@
     v-if="type === 'ul'"
     class="mb-3"
     :class="{ 'pl-3': inner }">
-    <li 
+    <li
+      v-if="title"
       class="mb-2" 
       :class="titleClass">
       {{ title }}
