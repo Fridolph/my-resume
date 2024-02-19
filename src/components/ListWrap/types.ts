@@ -1,5 +1,6 @@
 export interface ListWrapProps {
   title: string
+  type: 'dl' | 'ul',
   list: string[]
   bold?: boolean
   inner?: boolean

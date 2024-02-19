@@ -12,14 +12,18 @@
       <button class="my-btn info">Vue-i18n</button>
     </template>
     <ListWrap
+      type="ul"
       :title="t('contributions')"
       :list="adminList"
+      title-size="base"
       inner
       bold />
 
     <ListWrap
+      type="ul"
       :title="t('hard')"
       :list="hardList"
+      title-size="base"
       inner
       bold />
   </ProjectWrap>

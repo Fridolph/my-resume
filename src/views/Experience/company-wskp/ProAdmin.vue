@@ -17,11 +17,11 @@
       inner
       bold />
 
-    <ListWrap
+    <!-- <ListWrap
       :title="t('hard')"
       :list="hardList"
       inner
-      bold />
+      bold /> -->
   </ProjectWrap>
 </template>
 
@@ -37,12 +37,15 @@ const adminList = computed(() => [
   t('proAdmin.c2'),
   t('proAdmin.c3'),
   t('proAdmin.c4'),
+  t('proAdmin.c5'),
+  t('proAdmin.c6'),
 ])
 
-const hardList = computed(() => [
-  t('proAdmin.h1'),
-  t('proAdmin.h2'),
-  t('proAdmin.h3'),
-  t('proAdmin.h4'),
-])
+// 难点 没有体现出来，老师建议去掉，也是，简历里避免这样的凑字数
+// const hardList = computed(() => [
+//   t('proAdmin.h1'),
+//   t('proAdmin.h2'),
+//   t('proAdmin.h3'),
+//   t('proAdmin.h4'),
+// ])
 </script>

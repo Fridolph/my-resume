@@ -40,13 +40,12 @@ const edrList = computed(() => [
   t('proEdr.c4'),
   t('proEdr.c5'),
   t('proEdr.c6'),
+  t('proEdr.c7'),
 ])
 
 const hardList = computed(() => [
   t('proEdr.h1'),
   t('proEdr.h2'),
   t('proEdr.h3'),
-  t('proEdr.h4'),
-  t('proEdr.h5'),
 ])
 </script>

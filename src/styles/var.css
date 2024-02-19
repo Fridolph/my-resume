@@ -5,10 +5,10 @@
   /* theme-light */
   --page-bg: #c5dae2;
   --bg-hover: #f5f5f5;
-  --text: #607d8b;
+  --text: #718d9b;
   --text-hover: #00bdea;
-  --link: #409eff;
-  --link-hover: #3188df;
+  --link: #579fe9;
+  --link-hover: #1e6ab7;
   --main-bg: white;
   --aside-bg: #f5f5f5;
   --scroll-piece: rgba(218, 230, 238, 0.9);
@@ -22,7 +22,9 @@
   --dark-page-bg: #1f2635;
   --dark-bg-hover: #151e31;
   --dark-text: rgb(145, 158, 175);
-  --dark-text-hover: rgb(185, 196, 212);;
+  --dark-text-hover: rgb(185, 196, 212);
+  --link: #1e6ab7;
+  --link-hover: #579fe9;
   --dark-main-bg: #151e29;
   --dark-aside-bg: #131822;
   --dark-scroll-piece: rgba(18, 40, 54, 0.9);

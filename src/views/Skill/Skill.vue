@@ -3,15 +3,10 @@
     :title="t('skill.title')"
     anchor="Skill"
     icon="zhuanyezhishijineng">
-    <ListWrap
-      :title="t('skill.fe')"
+    <ListWrap      
+      type="ul"
       :list="feList"
-      bold />
-
-    <ListWrap
-      :title="t('skill.other')"
-      :list="otherList"
-      bold />
+      bold />    
   </Section>
 </template>
 
@@ -23,18 +18,12 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
 const feList = computed(() => [
-  t('skill.fe1'),
-  t('skill.fe2'),
-  t('skill.fe3'),
-  t('skill.fe4'),
-  t('skill.fe5'),
-])
-
-const otherList = computed(() => [
-  t('skill.o1'),
-  t('skill.o2'),
-  t('skill.o3'),
-  t('skill.o4'),
-  t('skill.o5'),
+  t('skill.p1'),
+  t('skill.p2'),
+  t('skill.p3'),
+  t('skill.p4'),
+  t('skill.p5'),
+  t('skill.p6'),
+  t('skill.p7'),
 ])
 </script>

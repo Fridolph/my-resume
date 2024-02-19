@@ -20,18 +20,21 @@
       <button class="my-btn info">Redux</button>
     </div>
     <ListWrap
+      type="ul"
       :title="t('contributions')"
       :list="mainList"
       inner
       bold />
 
     <ListWrap
+      type="ul"
       :title="t('hard')"
       :list="hardList"
       inner
       bold />
 
     <ListWrap
+      type="ul"
       :title="t('team.grow')"
       :list="growList"
       inner

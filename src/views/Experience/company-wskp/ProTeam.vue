@@ -11,7 +11,7 @@
       title="wskp-UI"
       :description="t('team.wskpuiDesc')" />
 
-    <ListWrap
+    <ListWrap      
       :title="t('team.main')"
       :list="teamContent"
       inner
@@ -19,6 +19,7 @@
       title-size="sm" />
 
     <ListWrap
+      type="ul"
       :title="t('team.grow')"
       :list="teamReward"
       inner

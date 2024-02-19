@@ -43,30 +43,32 @@ export default {
   },
   skill: {
     title: 'Professional skills',
-    fe: 'Front end',
-    fe1: '1. Proficient in HTML and CSS to write code that conforms to Web standards;',
-    fe2: '2. Be familiar with JavaScript and TypeScript, pay attention to ESNext features;',
-    fe3: '3. Be familiar with packaging tools such as Webpack and Vite;',
-    fe4: '4. Familiar with Vue related technology stack and development, Learn about React development. ',
-    fe5: '5. Familiar with web security and front-end performance optimization practices.',
-    other: 'Related tools',
-    o1: '1. Familiar with Node.js and write unit tests and server-side scripts.',
-    o2: '2. Understand the Linux development environment and capable of independently completing deployment tasks.',
-    o3: '3. Follow Lint to write code that conforms to team specifications;',
-    o4: '4. Familiar with the version management tool git;',
-    o5: '5. Make good use of scientific search, plug-ins, and efficiency. ',
+
+    p1: `Proficient in HTML, CSS, JS, ES6, and TS syntax, familiar with the HTTP protocol.`,
+
+    p2: `Familiar with the Vue ecosystem, including ElementUI, iView, NaiveUI, and the new features and Composition API of Vue3.`,
+
+    p3: `Familiar with routine Webpack and Vite configuration, loaders, plugins, as well as performance optimization settings.`,
+
+    p4: `Experienced in front-end unit testing, established Vue component unit testing standards and processes for the team.`,
+
+    p5: `Understand Gitlab CI configuration process and collaborate with Jenkins to complete the deployment and launch of front-end projects.`,
+
+    p6: `Worked on government projects with strict and comprehensive practices in web security.`,
+
+    p7: `Familiar with common Linux commands and development environments.`,
   },
   work: 'Work Experience',
   responsibilities: 'Job content and responsibilities',
   wskp: {
     name: 'OneScorpion Technology Co., Ltd.',
     time: 'July 2017 - January 2024',
-    d1: '1. Responsible for building the front-end architecture of the project, determining the technical framework, and clarifying team development specifications;',
-    d2: '2. Organize product requirements documents and write development documents;',
-    d3: '3. Cooperate with designers in front-end development to complete the needs and functions of products and customers;',
-    d4: '4. Negotiate the data interface with the back-end engineer to complete the front-end and back-end data interaction;',
-    d5: '5. Complete project-related requirement development, self-test and Code Review, and provide timely feedback on test-related issues;',
-    d6: '6. Team Leader, team building and resource sharing. ',
+    d1: 'Responsible for building the front-end architecture of the project, determining the technical framework, and clarifying team development specifications;',
+    d2: 'Organize product requirements documents and write development documents;',
+    d3: 'Cooperate with designers in front-end development to complete the needs and functions of products and customers;',
+    d4: 'Negotiate the data interface with the back-end engineer to complete the front-end and back-end data interaction;',
+    d5: 'Complete project-related requirement development, self-test and Code Review, and provide timely feedback on test-related issues;',
+    d6: 'Team Leader, team building and resource sharing. ',
   },
   stack: 'Technology',
   refactor: 'Refactor',
@@ -75,59 +77,69 @@ export default {
   proEdr: {
     name: 'Terminal detection and response platform',
     description:
-      'A complete ToB front-end project development experience. This project mainly elaborates on the EDR concept itself, displays basic user data from various dimensions, and summarizes threat chains through screening and analysis for reference by security personnel.',
-    c1: '- Responsible for the front-end architecture of the project, project construction, improving basic modules, util, writing documentation and sample code',
-    c2: '- Home page security concept display and configurable display',
-    c3: '- Asset details display, websocket obtains online terminal related information and displays it',
-    c4: '- Encapsulates business components such as interface requests, advanced search, filters, and PowerShell',
-    c5: '- Front-end filtering and pre-caching solution for large amounts of data such as alarm lists, process information, etc.',
-    c6: '- ToB project private deployment solution related performance optimization',
-    //
-    h1: '-Advanced search, customized search, data linkage (filter)',
-    h2: '- Deliver and display terminal data (asset details) through websocket real-time communication',
-    h3: '- Complex table customization and good display (alarm data)',
-    h4: '- Processing of large amounts of data on a single interface (whole network list)',
-    h5: '- Custom page and html, pdf, excel export function (custom report)',
+      'The project explains the concept of EDR, which monitors processes and files on user terminals in real-time through probes and reports the data back to the server in real-time for aggregation. Finally, the aggregated data is displayed on the web interface for security analysts to review. It has achieved early warning and prediction of malicious code, significantly improving the security level for clients. As the front-end leader, my primary responsibility is the development and maintenance of the web front-end part of the project.',
+      
+    c1: `Responsible for the front-end architecture of the project, including refining the basic modules and utils, writing detailed documentation and example code, guiding <b>the team to follow best practices and development processes</b>.`,
+
+    c2: `Implemented a home page security overview and configurable display, enhancing <b>user experience and customer satisfaction</b>.`,
+    
+    c3: `Completed the asset detail page, obtaining and displaying online terminal information through <b>Websocket</b>, improving performance and real-time responsiveness.`,
+    
+    c4: `Encapsulated business components like API requests, advanced search, filters, PowerShell, etc., <b>increasing development efficiency</b>.`,
+    
+    c5: `Designed front-end filtering and pre-caching solutions for pages like alerts and processes which request large amounts of data, boosting page loading speed and performance.`,
+    
+    c6: `Customized pages and added export functions for html, pdf, and excel (custom reports).`,
+    
+    c7: `Responsible for the <b>private deployment</b> solution of this ToB project and related performance optimizations.`,
+    
+    h1: `Designing advanced search and filters was complex due to the multitude of form items, the need for data linkage, and the necessity to consider security to block some sensitive data <b>complexities in design</b>.`,
+    
+    h2: `Used third-party <b>vxe-table</b> to implement complex tables, taking into account large amounts of interface data, extensive content to display, numerous columns, and intense user interactions, with customization in mind.`,
+    
+    h3: `When a single alert interface had too much data (over 1k entries), the display and rendering post-processing was considered, using <b>Web Worker</b> for parallel processing to enhance performance.`,
   },
   proAdmin: {
     name: 'Integrated management system',
     description: `The company's core project, this system is used to manage user permissions and customize the display of functional modules.`,
-    c1: '- Upgrade the project structure to Vue3 and complete the relevant configuration and construction work',
-    c2: '- Cooperate with UI colleagues to determine UI libraries, define theme variables, and write component specifications',
-    c3: '- Encapsulates components such as common forms, upload files, and advanced searches',
-    c4: '- Core module function implementation, system permissions and jump logic',
-    h1: 'Filtering, processing and display of complex list information',
-    h2: 'Customized form, verification, data linkage and display',
-    h3: 'User-customized smtp service related settings and activation',
-    h4: 'Linkage between search and display of lists, charts, templates and search terms',
+    c1: `Led and completed the upgrade of the project architecture to Vue3, including related configuration and build work, improving development efficiency.`,
+    c2: `Defined theme variables and wrote standard component specifications for the team, enhancing the readability and consistency of team code.`,
+    c3: `Component encapsulation: common forms, file upload, and advanced search, etc., which improved development efficiency and maintained user interface consistency.`,
+    c4: `Designed and developed the system authorization module, including routing and menu permissions.`,
+    c5: `Designed roles such as administrators and client leaders; different roles were assigned different permissions to ensure system security.`,
+    c6: `Customized forms and their validations, achieving display and linkage effects with searches and related lists, charts, templates, etc.`
+    // h1: 'Filtering, processing and display of complex list information',
+    // h2: 'Customized form, verification, data linkage and display',
+    // h3: 'User-customized smtp service related settings and activation',
+    // h4: 'Linkage between search and display of lists, charts, templates and search terms',
   },
   proLarge: {
     name: 'Security analysis big screen',
     description:
       'Combined with the EDR project, a visual chart is finally used to explain to users whether the current network environment is safe.',
-    d1: '- Use CSS and Svg as possible to improve loading speed',
-    d2: '- Display processing of non-core display under lg size',
-    d3: '- ATT&CK heat map regular display',
-    h1: '- Related performance optimization',
-    h2: '- ECharts and d3 draw each sub-module',
-    h3: '- Each chart rendering is updated in real time',
-    h4: '- Layout responsive',
+    d1: 'Use CSS and Svg as possible to improve loading speed',
+    d2: 'Display processing of non-core display under lg size',
+    d3: 'ATT&CK heat map regular display',
+    h1: 'Related performance optimization',
+    h2: 'ECharts and d3 draw each sub-module',
+    h3: 'Each chart rendering is updated in real time',
+    h4: 'Layout responsive',
   },
   team: {
     name: 'Team building',
     wskpuiDesc:
       'Intranet online documentation. The original intention is to make it easier for product and design colleagues to review. Having a physical object allows for better communication and timely feedback.',
     main: 'Core content',
-    m1: '- The team develops UI specifications; clarifies public variable names, theme color values, etc.;',
-    m2: '- Front-end code specifications (including ESlint, Prettier and other configurations, module, component naming, writing and other conventions);',
-    m3: '- theme related theme variables, normalize, mixin, etc.;',
-    m4: '- Secondary encapsulation of business components, providing demo examples for products and UI;',
-    m5: '- Unit testing at the granularity of basic components;',
-    m6: '- A supporting vuepress document that is as detailed as possible to facilitate future generations. ',
+    m1: 'The team develops UI specifications; clarifies public variable names, theme color values, etc.;',
+    m2: 'Front-end code specifications (including ESlint, Prettier and other configurations, module, component naming, writing and other conventions);',
+    m3: 'theme related theme variables, normalize, mixin, etc.;',
+    m4: 'Secondary encapsulation of business components, providing demo examples for products and UI;',
+    m5: 'Unit testing at the granularity of basic components;',
+    m6: 'A supporting vuepress document that is as detailed as possible to facilitate future generations. ',
     grow: 'Growth',
-    g1: '- Sense of team participation, members gain a sense of accomplishment',
-    g2: '- Review each submission and learn from each other',
-    g3: '- Pay more attention to feedback and user experience',
+    g1: 'Sense of team participation, members gain a sense of accomplishment',
+    g2: 'Review each submission and learn from each other',
+    g3: 'Pay more attention to feedback and user experience',
     mockDesc:
       'Deploy easy-mock to the intranet, and axios simulates request data for real development. ',
     deployDesc: `Automated packaging and rapid deployment solution, convenient for developers and testers. After selecting the project and branch configurations, it automatically packages and generates the Dist, automatically assigns IP and ports, and deploys to the intranet for quick demonstration and testing. `,

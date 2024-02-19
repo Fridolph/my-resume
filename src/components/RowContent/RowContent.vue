@@ -12,6 +12,7 @@
         <a
           v-if="link"
           :href="text"
+          class="text-[var(--link)]"
           target="_blank"
           >{{ text }}</a>
         <template v-else>
