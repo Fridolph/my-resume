@@ -14,12 +14,13 @@ ps 您可点击链接查看我的在线版简历，阅读更轻松 ^\_^ [https:/
 # 专业技能
 
 1. 掌握 HTML、CSS、JS、`ES6` 及 `TS` 语法，熟悉 `HTTP` 协议；
-2. 熟悉 `Vue` 全家桶，ElementUI、iView、NaiveUI，熟悉 `Vue3` 新特性及 `Composition API`；
-3. 熟悉 `Webpack`、`Vite` 常规配置、loader、plugin，以及性能优化相关配置；
-4. 熟悉前端`单元测试`，为团队制定 Vue 组件单元测试规范及流程；
-5. 了解 `Gitlab CI` 流程配置，并配合 Jenkins 完成前端项目的部署和上线工作；
-6. 做政府项目，对于 `Web 安全`有比较严格和全面的实践；
-7. 熟悉 `Linux` 常见命令及开发环境。
+2. 熟悉 `Vue` 全家桶，ElementUI、iView、NaiveUI、TailWindCSS，熟悉 `Vue3` 新特性及 `Composition API`；
+3. 熟悉 `Webpack`、`Vite` 常规配置、loader、plugin及性能优化相关配置；
+4. 熟悉前端单元测试，为团队制定 `Vue 组件单元测试`规范及流程；
+5. 做政府项目，对于 `Web 安全`有比较严格和全面的实践；
+6. 熟悉 `Linux` 常见命令及开发环境；
+7. 了解 `Gitlab CI` 流程配置，并配合 Jenkins 完成前端项目的部署和上线工作；
+8. 了解 `Node.js`，能用 `Koa`、`NestJS` 做一些基础的服务端开发。
 
 # 工作经历
 
@@ -154,14 +155,22 @@ wskp-ui 是一个使用 VuePress 搭建的综合性内网在线文档，它集�
 - 改变传统 DOM 操作的思维方式，理解状态改变视图的核心思想
 - 改变了传统 DOM 操作的思维方式，开始理解并实践状态改变视图的核心思想
 
-# 个人 & 开源
+# 其他
+
+## 个人项目
 
 - [my-resume](https://github.com/Fridolph/my-resume) 个人简历展示, Vite + Vue3 + TS + TailWindCSS，欢迎 Fork 使用
 - [my-element-plus](https://github.com/Fridolph/my-element-plus) Vue3 + Vite + TS4 学习 ElementPlus 组件库
-- [fridolph](https://github.com/Fridolph/Fridolph) 该项目整理个人关于前端相关学习资源、教程、文章、书籍等，也作为写博客的参考
 - [my-program](https://github.com/Fridolph/my-program) 上述学习仓库的一些实际案例，主要展示了一些较为简单的 CSS、JavaScript 效果的细节实现
+- [fridolph](https://github.com/Fridolph/Fridolph) 该项目整理个人关于前端相关学习资源、教程、文章、书籍等，也作为写博客的参考
+- [FE-parepare-interview](https://github.com/Fridolph/FE-prepare-interview) 在线vitepress文档，前端综合知识体系相关整理
 
-## 最近发表博客
+## 参与开源
+
+- [MDN - 感知性能](https://developer.mozilla.org/zh-CN/docs/Learn/Performance/Perceived_performance) 添加主题
+- [hexo-theme-butterfly](https://github.com/jerryc127/hexo-theme-butterfly) 添加预请求；优化标题样式。
+
+## 最近文章
 
 - [TailWindCSS + Vite + Vue3 打造个性化在线简历项目，从开发到上线](https://juejin.cn/post/7334929489195909170)
 - [什么是 Accessibility - 无障碍](https://blog.fridolph.top/2024/01/26/32647990-bc5d-11ee-b11d-1ddb3fe7683d/)
