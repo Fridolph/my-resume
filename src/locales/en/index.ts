@@ -57,6 +57,8 @@ export default {
     p6: `Worked on government projects with strict and comprehensive practices in web security.`,
 
     p7: `Familiar with common Linux commands and development environments.`,
+
+    p8: `Familiar with Node.js, capable of performing some basic server-side development using Koa and NestJS.`
   },
   work: 'Work Experience',
   responsibilities: 'Job content and responsibilities',
@@ -184,6 +186,10 @@ export default {
     b3: 'ESNext',
     b5: 'Safe',
     b6: 'Performance',
+    open: 'Open source',
+    l1desc: ' , add a article.',
+    l2desc: '，add `prefetch`; Optimize heading styles.',
+    article: 'Recent articles',
   },
   thanks: {
     title: 'Acknowledgments',
