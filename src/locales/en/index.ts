@@ -52,13 +52,15 @@ export default {
 
     p4: `Experienced in front-end unit testing, established Vue component unit testing standards and processes for the team.`,
 
-    p5: `Understand Gitlab CI configuration process and collaborate with Jenkins to complete the deployment and launch of front-end projects.`,
+    p5: `Familiar with "Responsive Design," possesses a deep understanding of responsive design for mobile and desktop devices across various screen sizes.`,
 
-    p6: `Worked on government projects with strict and comprehensive practices in web security.`,
+    p6: `Understand Gitlab CI configuration process and collaborate with Jenkins to complete the deployment and launch of front-end projects.`,
 
-    p7: `Familiar with common Linux commands and development environments.`,
+    p7: `Worked on government projects with strict and comprehensive practices in web security.`,
 
-    p8: `Familiar with Node.js, capable of performing some basic server-side development using Koa and NestJS.`
+    p8: `Familiar with common Linux commands and development environments.`,
+
+    p9: `Familiar with Node.js, capable of performing some basic server-side development using Koa and NestJS.`,
   },
   work: 'Work Experience',
   responsibilities: 'Job content and responsibilities',
