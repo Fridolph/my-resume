@@ -25,6 +25,7 @@ const feList = computed(() => [
   t('skill.p5'),
   t('skill.p6'),
   t('skill.p7'),
-  t('skill.p8'),
+  t('skill.p8'), 
+  t('skill.p9'), 
 ])
 </script>

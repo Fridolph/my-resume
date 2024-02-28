@@ -168,7 +168,7 @@ export default {
     b5: '项目经验',
     b6: '性能优化',
     open: '参与开源',
-    l1desc: '，添加该主题',
+    l1desc: '，翻译文章，根据个人理解进行润色，通过PR',
     l2desc: '，添加 prefetch；优化标题样式',
     article: '最近文章',
   },

@@ -15,12 +15,12 @@
 
 1. 掌握 HTML、CSS、`JavaScript`、`ES6` 及 `TypeScript` 语法，熟悉 `HTTP` 协议；
 2. 熟悉 `Vue` 全家桶，ElementUI、iView、NaiveUI、TailWindCSS，熟悉 `Vue3` 新特性及 `Composition API`；
-3. 熟悉 `Webpack`、`Vite` 常规配置、loader、plugin 及性能优化相关配置；
+3. 熟悉 `Webpack`、`Vite` 常规配置、loader、plugin 及`性能优化`相关配置；
 4. 熟悉前端单元测试，为团队制定 `Vue 组件单元测试`规范及流程；
 5. 做政府项目，对于 `Web 安全`有比较严格和全面的实践；
-6. 熟悉`响应式设计`，对移动端及 PC 各尺寸下的响应式设计有比较深入的理解；
+6. 熟悉`响应式设计`，对`移动端`及 PC 端各尺寸下的响应式设计有比较深入的理解；
 7. 熟悉 `Linux` 常见命令及开发环境；
-8. 了解 `Node.js`，能用 `Koa`、`NestJS` 做一些基础的服务端开发；
+8. 了解 `Node.js`，能用 `Koa`、`NestJS` 做基础的服务端开发；
 9. 了解 `Gitlab CI` 流程配置，并配合 Jenkins 完成前端项目的`部署`和`上线`工作；
 
 # 工作经历
@@ -168,7 +168,7 @@ wskp-ui 是一个使用 VuePress 搭建的综合性内网在线文档，它集�
 ## 参与开源
 
 - [my-resume](https://github.com/Fridolph/my-resume) 同下面文章, Vite + Vue3 + TS + TailWindCSS 搭建
-- [MDN - 感知性能](https://developer.mozilla.org/zh-CN/docs/Learn/Performance/Perceived_performance) 添加主题
+- [MDN - 感知性能](https://developer.mozilla.org/zh-CN/docs/Learn/Performance/Perceived_performance) 翻译文章，并根据个人理解进行润色，通过PR
 - [hexo-theme-butterfly](https://github.com/jerryc127/hexo-theme-butterfly) 添加预请求；优化标题样式。
 
 ## 最近文章
