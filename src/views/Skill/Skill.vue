@@ -2,11 +2,13 @@
   <Section
     :title="t('skill.title')"
     anchor="Skill"
-    icon="zhuanyezhishijineng">
-    <ListWrap      
+    icon="zhuanyezhishijineng"
+  >
+    <ListWrap
       type="ul"
       :list="feList"
-      bold />    
+      bold
+    />
   </Section>
 </template>
 
@@ -25,7 +27,9 @@ const feList = computed(() => [
   t('skill.p5'),
   t('skill.p6'),
   t('skill.p7'),
-  t('skill.p8'), 
-  t('skill.p9'), 
+  t('skill.p8'),
+  t('skill.p9'),
+  t('skill.p10'),
+  t('skill.p11'),
 ])
 </script>
