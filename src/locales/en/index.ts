@@ -39,7 +39,7 @@ export default {
     p1: '1. Inspection of verification report -> ',
     p2: '2. Use App to scan the QR code',
     check: 'View screenshot',
-    updated: '(Updated on Feb 18, 2024)'
+    updated: '(Updated on Feb 18, 2024)',
   },
   skill: {
     title: 'Professional skills',
@@ -48,22 +48,57 @@ export default {
 
     p2: `Familiar with the Vue ecosystem, including ElementUI, iView, NaiveUI, and the new features and Composition API of Vue3.`,
 
-    p3: `Familiar with routine Webpack and Vite configuration, loaders, plugins, as well as performance optimization settings.`,
+    p3: `Familiar with <b>TailWindCSS</b>, preprocessors Sass, Less, Stylus and PostCSS.`,
 
-    p4: `Experienced in front-end unit testing, established Vue component unit testing standards and processes for the team.`,
+    p4: `Familiar with native WeChat Mini Programs and using <b>uni-app</b> for development.`,
 
-    p5: `Familiar with "Responsive Design," possesses a deep understanding of responsive design for mobile and desktop devices across various screen sizes.`,
+    p5: `Familiar with routine Webpack and Vite configuration, loaders, plugins, as well as performance optimization settings.`,
 
-    p6: `Understand Gitlab CI configuration process and collaborate with Jenkins to complete the deployment and launch of front-end projects.`,
+    p6: `Experienced in front-end unit testing, established Vue component unit testing standards and processes for the team.`,
 
-    p7: `Worked on government projects with strict and comprehensive practices in web security.`,
+    p7: `Familiar with "Responsive Design," possesses a deep understanding of responsive design for mobile and desktop devices across various screen sizes.`,
 
-    p8: `Familiar with common Linux commands and development environments.`,
+    p8: `Understand Gitlab CI configuration process and collaborate with Jenkins to complete the deployment and launch of front-end projects.`,
 
-    p9: `Familiar with Node.js, capable of performing some basic server-side development using Koa and NestJS.`,
+    p9: `Worked on government projects with strict and comprehensive practices in web security.`,
+
+    p10: `Familiar with common Linux commands and development environments.`,
+
+    p11: `Familiar with Node.js, capable of performing some basic server-side development using Koa and NestJS.`,
   },
   work: 'Work Experience',
   responsibilities: 'Job content and responsibilities',
+  yxkj: {
+    name: 'Chengdu Yixie Technology Co., Ltd.',
+    time: 'March 2024 - August 2024',
+    d1: 'Participate in requirements analysis and planning, develop and monitor project plans and schedules, and manage teams.',
+    d2: 'Lead and coordinate team members to ensure projects are completed on time, continuously track progress, solve problems, and maintain project quality.',
+    d3: 'Formulate and implement project architecture upgrade strategies to promote synchronization of technology frontiers and consistency of team technical standards.',
+    d4: 'Promote the practice of best programming habits and reduce the accumulation of technical debt by improving code quality and system security.',
+    d5: 'Regularly organize CodeReview and technical sharing sessions to promote team growth.',
+    results: 'Main results',
+    l1: 'Improved team performance: Planned and implemented the second and third quarter plans for 2024, improving the overall performance of the team.',
+    l2: 'Front-end systematization construction: Establish and enrich the Yuque knowledge base to lay a solid foundation for subsequent management and sharing.',
+    l3: 'Quality assurance: Regularly organize code reviews and technical sharing to improve team communication atmosphere.',
+    l4: 'Business Contribution: Responsible for and participated in the iterative development of the compliance center, contributing 3 business components.',
+    l5: 'Other practices: Responsible for researching and promoting the uni-app reconstruction plan of the Xuanhu applet.',
+  },
+  proSaas: {
+    name: 'YYK SaaS Platform',
+    description:
+      'A business promotion solution for pharmaceutical and medical device companies, supporting multi-organization and multi-task settlement management to ensure full-chain compliance.',
+    d1: 'Successfully refactored the Vue2 code and components in the system to Vue3 + TS, and upgraded to the latest antdVue version to solve compatibility challenges.',
+    d2: 'By introducing pnpm and converting the project structure to monorepo, unified branch management and optimized dependency management are achieved.',
+    d3: 'Improve code readability and maintainability by adding JSDoc comments and optimizing routing and permission validation logic.',
+    d4: 'Designed and implemented reusable business components such as "combined cards", "mode entry", and "combined search", and successfully integrated them into the component library.',
+  },
+  proXhyx: {
+    name: 'XuanHu News',
+    descriptiton:
+      'An interactive communication platform for doctors, designed to incentivize value creation and enhance user engagement.',
+    d1: 'Responsible for the development and optimization of the "Real World RWS" and "Lottery" modules in the mini program.',
+    d2: 'Participated in the research and promotion of the mini program uni-app reconstruction plan (Vue3 + TS + tailwind + uView UI).',
+  },
   wskp: {
     name: 'OneScorpion Technology Co., Ltd.',
     time: 'July 2017 - January 2024',
@@ -82,25 +117,25 @@ export default {
     name: 'Terminal detection and response platform',
     description:
       'The project explains the concept of EDR, which monitors processes and files on user terminals in real-time through probes and reports the data back to the server in real-time for aggregation. Finally, the aggregated data is displayed on the web interface for security analysts to review. It has achieved early warning and prediction of malicious code, significantly improving the security level for clients. As the front-end leader, my primary responsibility is the development and maintenance of the web front-end part of the project.',
-      
+
     c1: `Responsible for the front-end architecture of the project, including refining the basic modules and utils, writing detailed documentation and example code, guiding <b>the team to follow best practices and development processes</b>.`,
 
     c2: `Implemented a home page security overview and configurable display, enhancing <b>user experience and customer satisfaction</b>.`,
-    
+
     c3: `Completed the asset detail page, obtaining and displaying online terminal information through <b>Websocket</b>, improving performance and real-time responsiveness.`,
-    
+
     c4: `Encapsulated business components like API requests, advanced search, filters, PowerShell, etc., <b>increasing development efficiency</b>.`,
-    
+
     c5: `Designed front-end filtering and pre-caching solutions for pages like alerts and processes which request large amounts of data, boosting page loading speed and performance.`,
-    
+
     c6: `Customized pages and added export functions for html, pdf, and excel (custom reports).`,
-    
+
     c7: `Responsible for the <b>private deployment</b> solution of this ToB project and related performance optimizations.`,
-    
+
     h1: `Designing advanced search and filters was complex due to the multitude of form items, the need for data linkage, and the necessity to consider security to block some sensitive data <b>complexities in design</b>.`,
-    
+
     h2: `Used third-party <b>vxe-table</b> to implement complex tables, taking into account large amounts of interface data, extensive content to display, numerous columns, and intense user interactions, with customization in mind.`,
-    
+
     h3: `When a single alert interface had too much data (over 1k entries), the display and rendering post-processing was considered, using <b>Web Worker</b> for parallel processing to enhance performance.`,
   },
   proAdmin: {
@@ -111,7 +146,7 @@ export default {
     c3: `Component encapsulation: common forms, file upload, and advanced search, etc., which improved development efficiency and maintained user interface consistency.`,
     c4: `Designed and developed the system authorization module, including routing and menu permissions.`,
     c5: `Designed roles such as administrators and client leaders; different roles were assigned different permissions to ensure system security.`,
-    c6: `Customized forms and their validations, achieving display and linkage effects with searches and related lists, charts, templates, etc.`
+    c6: `Customized forms and their validations, achieving display and linkage effects with searches and related lists, charts, templates, etc.`,
     // h1: 'Filtering, processing and display of complex list information',
     // h2: 'Customized form, verification, data linkage and display',
     // h3: 'User-customized smtp service related settings and activation',
@@ -171,7 +206,6 @@ export default {
     g3: '- Master the application of responsive layout, transition and animation',
     g4: '- Change the way of thinking of traditional DOM operations and understand the core idea of state change view',
     g5: '- Understand and master the idea of componentization through learning and using React',
-    
   },
   personal: {
     title: 'Project & Open-Source',
@@ -196,6 +230,6 @@ export default {
   thanks: {
     title: 'Acknowledgments',
     p1: 'Thank you for taking the time to read my resume. My name is Yinsheng Fu.  ^_^ ',
-    p2: 'A front-end engineer who likes badminton, I look forward to the opportunity to work with you!'
-  }
+    p2: 'A front-end engineer who likes badminton, I look forward to the opportunity to work with you!',
+  },
 }
