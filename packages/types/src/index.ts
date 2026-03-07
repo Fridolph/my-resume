@@ -108,6 +108,25 @@ export interface ResumeDocument {
   locales: Record<WebLocale, ResumeLocaleContent>
 }
 
+export interface ProjectLocaleContent {
+  locale: WebLocale
+  title: string
+  description: string
+  summary: string
+}
+
+export interface ProjectRecord {
+  id: EntityId
+  slug: string
+  status: PublishStatus
+  sortOrder: number
+  cover: string
+  externalUrl: string
+  tags: string[]
+  updatedAt: string
+  locales: Record<WebLocale, ProjectLocaleContent>
+}
+
 export interface WebStatItem {
   label: string
   value: string
