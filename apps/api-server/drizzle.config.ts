@@ -20,7 +20,7 @@ const workspaceRoot = resolveWorkspaceRoot()
 
 export default defineConfig({
   dialect: 'sqlite',
-  schema: resolve(workspaceRoot, 'packages/database/src/schema/site-settings.ts'),
+  schema: resolve(workspaceRoot, 'packages/database/src/schema/*.ts'),
   out: resolve(workspaceRoot, 'packages/database/drizzle'),
   dbCredentials: {
     url: resolve(workspaceRoot, 'data/platform.sqlite')

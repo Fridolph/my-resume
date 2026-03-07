@@ -1,73 +1,7 @@
-import type { PermissionKey, RoleKey, UserRecord, UserStatus } from '@repo/types'
+import type { RoleKey, UserRecord, UserStatus } from '@repo/types'
 
-const rolePermissions: Record<RoleKey, PermissionKey[]> = {
-  admin: [
-    'dashboard.read',
-    'user.read',
-    'user.write',
-    'translation.read',
-    'translation.write',
-    'resume.read',
-    'resume.write',
-    'project.read',
-    'project.write',
-    'site.write'
-  ],
-  editor: [
-    'dashboard.read',
-    'translation.read',
-    'resume.read',
-    'resume.write',
-    'project.read',
-    'project.write'
-  ],
-  translator: [
-    'dashboard.read',
-    'translation.read',
-    'translation.write'
-  ]
-}
-
-function createUserRecord(input: {
-  id: string
-  name: string
-  email: string
-  role: RoleKey
-  status: UserStatus
-}): UserRecord {
-  return {
-    ...input,
-    permissions: rolePermissions[input.role],
-    updatedAt: new Date().toISOString()
-  }
-}
-
-const initialUsers: UserRecord[] = [
-  createUserRecord({
-    id: 'u_admin',
-    name: 'Fridolph Admin',
-    email: 'admin@fridolph.local',
-    role: 'admin',
-    status: 'active'
-  }),
-  createUserRecord({
-    id: 'u_editor',
-    name: 'Fridolph Editor',
-    email: 'editor@fridolph.local',
-    role: 'editor',
-    status: 'active'
-  }),
-  createUserRecord({
-    id: 'u_translator',
-    name: 'Fridolph Translator',
-    email: 'translator@fridolph.local',
-    role: 'translator',
-    status: 'disabled'
-  })
-]
-
-export function useUserManagement() {
-  const users = useState<UserRecord[]>('admin-users', () => structuredClone(initialUsers))
+export function useUserManagement(initialUsers?: UserRecord[] | null) {
+  const users = useState<UserRecord[]>('admin-users', () => structuredClone(initialUsers ?? []))
   const keyword = ref('')
   const selectedRole = ref<'all' | RoleKey>('all')
   const selectedStatus = ref<'all' | UserStatus>('all')
@@ -98,6 +32,10 @@ export function useUserManagement() {
     disabled: users.value.filter(user => user.status === 'disabled').length
   }))
 
+  function replaceUsers(nextUsers: UserRecord[]) {
+    users.value = structuredClone(nextUsers)
+  }
+
   function resetForm() {
     form.name = ''
     form.email = ''
@@ -125,7 +63,7 @@ export function useUserManagement() {
     resetForm()
   }
 
-  function saveUser() {
+  function buildUserInput() {
     if (!form.name.trim() || !form.email.trim()) {
       throw createError({
         statusCode: 400,
@@ -133,63 +71,19 @@ export function useUserManagement() {
       })
     }
 
-    if (editingUserId.value) {
-      users.value = users.value.map((user) => {
-        if (user.id !== editingUserId.value) {
-          return user
-        }
-        return createUserRecord({
-          id: user.id,
-          name: form.name.trim(),
-          email: form.email.trim(),
-          role: form.role,
-          status: form.status
-        })
-      })
-    } else {
-      users.value = [
-        createUserRecord({
-          id: `user_${crypto.randomUUID()}`,
-          name: form.name.trim(),
-          email: form.email.trim(),
-          role: form.role,
-          status: form.status
-        }),
-        ...users.value
-      ]
+    return {
+      name: form.name.trim(),
+      email: form.email.trim(),
+      role: form.role,
+      status: form.status
     }
-
-    closeForm()
   }
 
-  function toggleUserStatus(userId: string) {
-    users.value = users.value.map((user) => {
-      if (user.id !== userId) {
-        return user
-      }
-      return createUserRecord({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        status: user.status === 'active' ? 'disabled' : 'active'
-      })
-    })
-  }
-
-  function updateUserRole(userId: string, role: RoleKey) {
-    users.value = users.value.map((user) => {
-      if (user.id !== userId) {
-        return user
-      }
-      return createUserRecord({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role,
-        status: user.status
-      })
-    })
+  function upsertUser(nextUser: UserRecord) {
+    const exists = users.value.some(user => user.id === nextUser.id)
+    users.value = exists
+      ? users.value.map(user => user.id === nextUser.id ? nextUser : user)
+      : [nextUser, ...users.value]
   }
 
   return {
@@ -202,11 +96,11 @@ export function useUserManagement() {
     form,
     isFormOpen,
     editingUserId,
+    replaceUsers,
     openCreateForm,
     openEditForm,
     closeForm,
-    saveUser,
-    toggleUserStatus,
-    updateUserRole
+    buildUserInput,
+    upsertUser
   }
 }
