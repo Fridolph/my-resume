@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const { locale, t } = useWebLocale()
 await useSiteSettingsQuery()
+await usePublicTranslationsQuery()
 const { siteName, siteDescription, defaultOgImage } = useSiteSeoConfig()
 
 useHead(() => ({

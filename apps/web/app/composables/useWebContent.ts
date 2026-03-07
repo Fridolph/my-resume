@@ -1,13 +1,14 @@
 import type {
+  HomePageContent,
   ProjectDetailContent,
   ProjectsPageContent,
   ProjectRecord,
   ResumeDocument,
   ResumePageContent,
+  SiteSettingsRecord,
   WebLocale,
   WebStatItem
 } from '@repo/types'
-import { getHomePageContent } from '@repo/sdk'
 
 function buildResumeSections(document: ResumeDocument, locale: WebLocale): ResumePageContent {
   const content = document.locales[locale]
@@ -99,7 +100,7 @@ function buildProjectStats(project: ProjectRecord, locale: WebLocale): WebStatIt
     {
       label: locale === 'zh-CN' ? '技术标签' : 'Tags',
       value: String(project.tags.length),
-      hint: locale === 'zh-CN' ? project.tags.join(' / ') : project.tags.join(' / ')
+      hint: project.tags.join(' / ')
     }
   ]
 }
@@ -116,10 +117,78 @@ function buildProjectDetail(project: ProjectRecord, locale: WebLocale): ProjectD
   }
 }
 
-export function useHomePageContent() {
-  const { locale } = useWebLocale()
+function buildHomePageContent(input: {
+  locale: WebLocale
+  siteSettings: SiteSettingsRecord
+  projects: ProjectRecord[]
+  t: (key: string) => string
+}): HomePageContent {
+  const publishedProjects = input.projects.filter(project => project.status === 'published')
 
-  return useAsyncData('web-home-content', () => getHomePageContent(locale.value), {
+  return {
+    intro: {
+      badge: input.t('home.intro.badge'),
+      title: input.t('home.intro.title') || input.siteSettings.seo.title,
+      description: input.t('home.intro.description')
+    },
+    stats: [
+      {
+        label: input.t('home.stats.projects.label'),
+        value: String(publishedProjects.length),
+        hint: input.t('home.stats.projects.hint')
+      },
+      {
+        label: input.t('home.stats.locales.label'),
+        value: '2',
+        hint: input.t('home.stats.locales.hint')
+      },
+      {
+        label: input.t('home.stats.source.label'),
+        value: 'API Server',
+        hint: input.t('home.stats.source.hint')
+      }
+    ],
+    features: [
+      {
+        title: input.t('home.features.resume.title'),
+        description: input.t('home.features.resume.description'),
+        to: '/resume',
+        badge: 'Resume'
+      },
+      {
+        title: input.t('home.features.projects.title'),
+        description: input.t('home.features.projects.description'),
+        to: '/projects',
+        badge: 'Projects'
+      },
+      {
+        title: input.t('home.features.i18n.title'),
+        description: input.t('home.features.i18n.description'),
+        to: '/projects',
+        badge: 'i18n'
+      }
+    ]
+  }
+}
+
+export function useHomePageContent() {
+  const { locale, t } = useWebLocale()
+  const apiClient = usePlatformApiClient()
+  const siteSettings = useState<SiteSettingsRecord | null>('web-site-settings', () => null)
+
+  return useAsyncData('web-home-content', async () => {
+    const [siteSettingsRecord, projectRecords] = await Promise.all([
+      siteSettings.value ? Promise.resolve(siteSettings.value) : apiClient.getSiteSettings(),
+      apiClient.listProjects()
+    ])
+
+    return buildHomePageContent({
+      locale: locale.value,
+      siteSettings: siteSettingsRecord,
+      projects: projectRecords,
+      t
+    })
+  }, {
     watch: [locale]
   })
 }

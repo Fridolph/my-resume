@@ -1,4 +1,4 @@
-import type { WebLocale } from '@repo/types'
+import type { TranslationRecord, WebLocale } from '@repo/types'
 
 type WebCopyDictionary = Record<string, string>
 
@@ -43,7 +43,22 @@ const webMessages: Record<WebLocale, WebCopyDictionary> = {
     'state.error.projectDetail.description': '请稍后重试，或检查详情数据读取逻辑。',
     'project.detail.summaryTitle': '页面说明',
     'project.detail.summaryDescription': '当前详情页已经改为数据驱动渲染，后续可以直接替换为后台项目详情响应。',
-    'project.detail.back': '返回项目列表'
+    'project.detail.back': '返回项目列表',
+    'home.intro.badge': 'Public Content API',
+    'home.intro.title': 'Fridolph Web',
+    'home.intro.description': '首页已开始消费后台真实内容，公开站点与管理后台正在逐步打通。',
+    'home.stats.projects.label': '已发布项目',
+    'home.stats.projects.hint': '仅统计后台已发布项目。',
+    'home.stats.locales.label': '公开语言',
+    'home.stats.locales.hint': '当前公开站点支持的语言数量。',
+    'home.stats.source.label': '内容来源',
+    'home.stats.source.hint': '首页数据正在逐步切换到 API Server。',
+    'home.features.resume.title': '在线简历',
+    'home.features.resume.description': '前台简历页已读取后台真实简历文档。',
+    'home.features.projects.title': '项目列表',
+    'home.features.projects.description': '公开项目列表与详情页已切换到后台项目数据。',
+    'home.features.i18n.title': '公开文案',
+    'home.features.i18n.description': '站点公开文案开始支持后台翻译结果覆盖。'
   },
   'en-US': {
     'app.name': 'Fridolph Web',
@@ -80,8 +95,42 @@ const webMessages: Record<WebLocale, WebCopyDictionary> = {
     'state.error.projectDetail.description': 'Please retry later or inspect the detail data layer.',
     'project.detail.summaryTitle': 'Page Notes',
     'project.detail.summaryDescription': 'The detail page is now data-driven and can later switch directly to backend project responses.',
-    'project.detail.back': 'Back to Projects'
+    'project.detail.back': 'Back to Projects',
+    'home.intro.badge': 'Public Content API',
+    'home.intro.title': 'Fridolph Web',
+    'home.intro.description': 'The homepage now begins to consume real backend content, gradually connecting the public site with the admin system.',
+    'home.stats.projects.label': 'Published Projects',
+    'home.stats.projects.hint': 'Only published admin projects are counted.',
+    'home.stats.locales.label': 'Public Locales',
+    'home.stats.locales.hint': 'Number of locales currently available on the public site.',
+    'home.stats.source.label': 'Content Source',
+    'home.stats.source.hint': 'Homepage content is being migrated to the API Server.',
+    'home.features.resume.title': 'Resume',
+    'home.features.resume.description': 'The public resume page now reads the real admin resume document.',
+    'home.features.projects.title': 'Projects',
+    'home.features.projects.description': 'Public project list and detail pages now use real admin project data.',
+    'home.features.i18n.title': 'Public Copy',
+    'home.features.i18n.description': 'Public-facing copy now supports overrides from admin-managed translations.'
   }
+}
+
+function buildRemoteMessageMap(records: TranslationRecord[]) {
+  return records.reduce<Record<WebLocale, WebCopyDictionary>>((accumulator, record) => {
+    const locale = record.locale as WebLocale
+    if (locale !== 'zh-CN' && locale !== 'en-US') {
+      return accumulator
+    }
+
+    if (!accumulator[locale]) {
+      accumulator[locale] = {}
+    }
+
+    accumulator[locale][record.key] = record.value
+    return accumulator
+  }, {
+    'zh-CN': {},
+    'en-US': {}
+  })
 }
 
 export function useWebLocale() {
@@ -90,6 +139,7 @@ export function useWebLocale() {
   })
 
   const locale = useState<WebLocale>('web-locale', () => localeCookie.value ?? 'zh-CN')
+  const remoteTranslations = useState<TranslationRecord[]>('web-public-translations', () => [])
 
   if (locale.value !== localeCookie.value) {
     localeCookie.value = locale.value
@@ -101,6 +151,8 @@ export function useWebLocale() {
       locale.value = storedLocale
     }
   }
+
+  const remoteMessageMap = computed(() => buildRemoteMessageMap(remoteTranslations.value))
 
   function setLocale(value: WebLocale) {
     locale.value = value
@@ -116,7 +168,10 @@ export function useWebLocale() {
   }
 
   function t(key: string) {
-    return webMessages[locale.value][key] ?? webMessages['zh-CN'][key] ?? key
+    return remoteMessageMap.value[locale.value][key]
+      ?? webMessages[locale.value][key]
+      ?? webMessages['zh-CN'][key]
+      ?? key
   }
 
   const currentLocaleLabel = computed(() => {
