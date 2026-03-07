@@ -1,9 +1,9 @@
-import { createTranslationsApiClient } from '@repo/sdk'
+import { createResumeApiClient } from '@repo/sdk'
 
 export function usePlatformApiClient() {
   const runtimeConfig = useRuntimeConfig()
 
-  return createTranslationsApiClient({
+  return createResumeApiClient({
     baseUrl: runtimeConfig.public.apiBaseUrl
   })
 }

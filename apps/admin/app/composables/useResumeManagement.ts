@@ -182,8 +182,8 @@ function createLocaleCoverage(content: ResumeLocaleContent) {
   }
 }
 
-export function useResumeManagement() {
-  const resumeDocument = useState<ResumeDocument>('admin-resume-document', () => structuredClone(initialResumeDocument))
+export function useResumeManagement(initialDocument?: ResumeDocument | null) {
+  const resumeDocument = useState<ResumeDocument>('admin-resume-document', () => structuredClone(initialDocument ?? initialResumeDocument))
   const selectedLocale = ref<WebLocale>('zh-CN')
 
   const localeOptions = [
@@ -208,12 +208,14 @@ export function useResumeManagement() {
     contactCount: currentLocaleContent.value.contacts.length
   }))
 
-  const localeCoverage = computed(() => {
-    return Object.values(resumeDocument.value.locales).map(createLocaleCoverage)
-  })
+  const localeCoverage = computed(() => Object.values(resumeDocument.value.locales).map(createLocaleCoverage))
 
   function touchDocument() {
     resumeDocument.value.updatedAt = new Date().toISOString()
+  }
+
+  function replaceResumeDocument(nextDocument: ResumeDocument) {
+    resumeDocument.value = structuredClone(nextDocument)
   }
 
   function setPublishStatus(status: PublishStatus) {
@@ -275,7 +277,7 @@ export function useResumeManagement() {
     touchDocument()
   }
 
-  function saveResume() {
+  function buildResumeDocument() {
     const baseInfo = currentLocaleContent.value.baseInfo
     if (!baseInfo.fullName.trim() || !baseInfo.headline.trim()) {
       throw createError({
@@ -285,6 +287,7 @@ export function useResumeManagement() {
     }
 
     touchDocument()
+    return structuredClone(resumeDocument.value)
   }
 
   return {
@@ -295,6 +298,7 @@ export function useResumeManagement() {
     currentLocaleContent,
     stats,
     localeCoverage,
+    replaceResumeDocument,
     setPublishStatus,
     addEducation,
     removeEducation,
@@ -305,6 +309,6 @@ export function useResumeManagement() {
     setSkillGroupItems,
     addContact,
     removeContact,
-    saveResume
+    buildResumeDocument
   }
 }

@@ -12,6 +12,12 @@ if (!hasPermission('resume.read')) {
   await navigateTo('/unauthorized')
 }
 
+const apiClient = usePlatformApiClient()
+
+const { data, pending, error, refresh } = await useAsyncData('admin-resume-api', async () => {
+  return await apiClient.getResumeDocument()
+})
+
 const canWriteResume = hasPermission('resume.write')
 
 const {
@@ -32,15 +38,24 @@ const {
   setSkillGroupItems,
   addContact,
   removeContact,
-  saveResume
-} = useResumeManagement()
+  replaceResumeDocument,
+  buildResumeDocument
+} = useResumeManagement(data.value)
 
-function handleSaveResume() {
+watch(data, (value) => {
+  if (value) {
+    replaceResumeDocument(value)
+  }
+}, { immediate: true })
+
+async function handleSaveResume() {
   try {
-    saveResume()
+    const saved = await apiClient.updateResumeDocument(buildResumeDocument())
+    replaceResumeDocument(saved)
+    await refresh()
     toast.add({
       title: '简历内容已保存',
-      description: `${selectedLocale.value} 的简历内容已同步到本地管理状态。`,
+      description: `${selectedLocale.value} 的简历内容已同步到真实数据层。`,
       color: 'success'
     })
   } catch (error) {
@@ -53,28 +68,54 @@ function handleSaveResume() {
   }
 }
 
-function handlePublishStatusChange(status: PublishStatus) {
+async function handlePublishStatusChange(status: PublishStatus) {
   setPublishStatus(status)
-  toast.add({
+
+  try {
+    const saved = await apiClient.updateResumeDocument(buildResumeDocument())
+    replaceResumeDocument(saved)
+    await refresh()
+    toast.add({
     title: '发布状态已更新',
-    description: `当前简历状态已切换为 ${status}。`,
-    color: 'success'
-  })
+      description: `当前简历状态已切换为 ${status}。`,
+      color: 'success'
+    })
+  } catch (saveError) {
+    const message = saveError instanceof Error ? saveError.message : '状态更新失败，请稍后重试。'
+    toast.add({
+      title: '状态更新失败',
+      description: message,
+      color: 'error'
+    })
+  }
 }
 </script>
 
 <template>
   <UContainer class="py-10">
-    <div class="space-y-6">
+    <template v-if="pending">
+      <UCard>
+        <p class="text-sm text-muted">
+          正在加载简历文档…
+        </p>
+      </UCard>
+    </template>
+
+    <template v-else-if="error || !data">
+      <UAlert title="简历文档加载失败" description="请检查 P3 简历模块 API 接入。" color="error" variant="subtle" />
+    </template>
+
+    <template v-else>
+      <div class="space-y-6">
       <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div class="space-y-2">
-          <UBadge label="A5 简历管理模块" variant="subtle" color="primary" class="w-fit" />
+          <UBadge label="P3 简历管理迁移" variant="subtle" color="primary" class="w-fit" />
           <div class="space-y-1">
             <h1 class="text-2xl font-semibold text-highlighted">
               简历管理
             </h1>
             <p class="max-w-3xl text-sm text-muted">
-              当前阶段已建立基础信息、教育经历、工作经历、技能分组、联系方式、多语言切换和发布状态的统一管理界面，用于承接前台简历内容的数据来源。
+              当前阶段已切换为通过 API Server 维护简历文档，基础信息、多语言内容、发布状态和结构化条目都会进入真实持久化链路。
             </p>
           </div>
         </div>
@@ -363,6 +404,7 @@ function handlePublishStatusChange(status: PublishStatus) {
           </div>
         </UCard>
       </div>
-    </div>
+      </div>
+    </template>
   </UContainer>
 </template>
