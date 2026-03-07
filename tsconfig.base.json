@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "jsx": "preserve",
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true,
+    "allowJs": false,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@repo/types": ["packages/types/src/index.ts"],
+      "@repo/content-schema": ["packages/content-schema/src/index.ts"],
+      "@repo/sdk": ["packages/sdk/src/index.ts"],
+      "@repo/ui": ["packages/ui/src/index.ts"]
+    }
+  }
+}
