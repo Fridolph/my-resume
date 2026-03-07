@@ -1,13 +1,30 @@
 import 'reflect-metadata'
-import { Logger, ValidationPipe } from '@nestjs/common'
+import { BadRequestException, Logger, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
+import { ApiExceptionFilter } from './common/api-exception.filter.js'
+import { ApiResponseInterceptor } from './common/api-response.interceptor.js'
 import { AppModule } from './app.module.js'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
   app.enableCors()
   app.setGlobalPrefix('api')
-  app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }))
+  app.useGlobalPipes(new ValidationPipe({
+    transform: true,
+    whitelist: true,
+    exceptionFactory: (errors) => {
+      return new BadRequestException({
+        message: '请求参数校验失败',
+        validationErrors: errors.map(error => ({
+          property: error.property,
+          constraints: error.constraints ?? {},
+          children: error.children ?? []
+        }))
+      })
+    }
+  }))
+  app.useGlobalInterceptors(new ApiResponseInterceptor())
+  app.useGlobalFilters(new ApiExceptionFilter())
 
   const port = Number(process.env.PORT ?? 3001)
   await app.listen(port)

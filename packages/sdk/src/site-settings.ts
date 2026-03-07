@@ -1,11 +1,25 @@
-import type { SiteSettingsRecord } from '@repo/types'
+import type { ApiResponse, SiteSettingsRecord } from '@repo/types'
 
 export interface PlatformApiClientOptions {
   baseUrl: string
   fetcher?: typeof fetch
 }
 
-async function requestJson<T>(
+export class PlatformApiError extends Error {
+  code: string
+  statusCode: number
+  details?: unknown
+
+  constructor(input: { code: string, message: string, statusCode: number, details?: unknown }) {
+    super(input.message)
+    this.name = 'PlatformApiError'
+    this.code = input.code
+    this.statusCode = input.statusCode
+    this.details = input.details
+  }
+}
+
+export async function requestApi<T>(
   path: string,
   init: RequestInit | undefined,
   options: PlatformApiClientOptions
@@ -19,21 +33,30 @@ async function requestJson<T>(
     }
   })
 
-  if (!response.ok) {
-    const message = await response.text()
-    throw new Error(message || `Request failed with status ${response.status}`)
+  const payload = await response.json() as ApiResponse<T>
+
+  if (!response.ok || !payload.success) {
+    const errorPayload = 'error' in payload
+      ? payload.error
+      : {
+          code: 'HTTP_ERROR',
+          message: `Request failed with status ${response.status}`,
+          statusCode: response.status
+        }
+
+    throw new PlatformApiError(errorPayload)
   }
 
-  return await response.json() as T
+  return payload.data
 }
 
 export function createPlatformApiClient(options: PlatformApiClientOptions) {
   return {
     async getSiteSettings() {
-      return await requestJson<SiteSettingsRecord>('site-settings', undefined, options)
+      return await requestApi<SiteSettingsRecord>('site-settings', undefined, options)
     },
     async updateSiteSettings(record: SiteSettingsRecord) {
-      return await requestJson<SiteSettingsRecord>('site-settings', {
+      return await requestApi<SiteSettingsRecord>('site-settings', {
         method: 'PUT',
         body: JSON.stringify(record)
       }, options)

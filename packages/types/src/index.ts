@@ -15,6 +15,32 @@ export type TranslationNamespace = 'common' | 'resume' | 'project' | 'seo'
 export type WebLocale = 'zh-CN' | 'en-US'
 export type ThemePreference = 'system' | 'light' | 'dark'
 
+export interface ApiResponseMeta {
+  path: string
+  timestamp: string
+}
+
+export interface ApiSuccessResponse<T> {
+  success: true
+  data: T
+  meta: ApiResponseMeta
+}
+
+export interface ApiErrorPayload {
+  code: string
+  message: string
+  statusCode: number
+  details?: unknown
+}
+
+export interface ApiErrorResponse {
+  success: false
+  error: ApiErrorPayload
+  meta: ApiResponseMeta
+}
+
+export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse
+
 export type PermissionKey =
   | 'dashboard.read'
   | 'user.read'
