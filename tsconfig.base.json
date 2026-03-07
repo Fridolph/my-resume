@@ -13,10 +13,21 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
-      "@repo/types": ["packages/types/src/index.ts"],
-      "@repo/content-schema": ["packages/content-schema/src/index.ts"],
-      "@repo/sdk": ["packages/sdk/src/index.ts"],
-      "@repo/ui": ["packages/ui/src/index.ts"]
+      "@repo/types": [
+        "packages/types/src/index.ts"
+      ],
+      "@repo/content-schema": [
+        "packages/content-schema/src/index.ts"
+      ],
+      "@repo/sdk": [
+        "packages/sdk/src/index.ts"
+      ],
+      "@repo/ui": [
+        "packages/ui/src/index.ts"
+      ],
+      "@repo/database": [
+        "packages/database/src/index.ts"
+      ]
     }
   }
 }

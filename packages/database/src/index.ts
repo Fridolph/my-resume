@@ -1,3 +1,4 @@
-export * from './client'
-export * from './schema'
-export * from './site-settings'
+export * from './client.js'
+export * from './migrate.js'
+export * from './schema/index.js'
+export * from './site-settings.js'

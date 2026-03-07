@@ -7,6 +7,9 @@
     "dev:admin": "pnpm --dir apps/admin dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "dev:api": "pnpm --dir apps/api-server dev",
+    "db:generate": "pnpm --dir packages/database db:generate",
+    "db:migrate": "pnpm --dir packages/database db:migrate"
   }
 }

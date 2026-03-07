@@ -1,56 +1,68 @@
-import { existsSync, mkdirSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
+import { existsSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
+import { drizzle } from 'drizzle-orm/sqlite-proxy'
+import * as schema from './schema/index.js'
+import { ensureDirectory, resolveWorkspaceRoot } from './workspace.js'
 
-function resolveWorkspaceRoot() {
-  let current = process.cwd()
+export const DATABASE_PATH = resolve(resolveWorkspaceRoot(), 'data/platform.sqlite')
+export const MIGRATIONS_PATH = resolve(resolveWorkspaceRoot(), 'packages/database/drizzle')
 
-  while (!existsSync(resolve(current, 'pnpm-workspace.yaml'))) {
-    const parent = resolve(current, '..')
-    if (parent === current) {
-      throw new Error('Unable to locate workspace root from current working directory.')
-    }
-    current = parent
-  }
+function createSqliteConnection() {
+  ensureDirectory(DATABASE_PATH)
+  const connection = new DatabaseSync(DATABASE_PATH)
 
-  return current
-}
-
-const DATABASE_PATH = resolve(resolveWorkspaceRoot(), 'data/platform.sqlite')
-
-function createDatabase() {
-  mkdirSync(dirname(DATABASE_PATH), { recursive: true })
-  const sqlite = new DatabaseSync(DATABASE_PATH)
-
-  sqlite.exec(`
+  connection.exec(`
     PRAGMA journal_mode = WAL;
     PRAGMA busy_timeout = 5000;
+    PRAGMA foreign_keys = ON;
   `)
 
-  sqlite.exec(`
-    CREATE TABLE IF NOT EXISTS site_settings (
-      id TEXT PRIMARY KEY NOT NULL,
-      default_locale TEXT NOT NULL,
-      social_links TEXT NOT NULL,
-      download_links TEXT NOT NULL,
-      seo TEXT NOT NULL,
-      updated_at TEXT NOT NULL
-    );
-  `)
-
-  return sqlite
+  return connection
 }
 
-type DatabaseClient = ReturnType<typeof createDatabase>
+type SqliteConnection = ReturnType<typeof createSqliteConnection>
 
 declare global {
-  var __repo_sqlite__: DatabaseClient | undefined
+  var __repo_sqlite_connection__: SqliteConnection | undefined
 }
 
-const sqlite = globalThis.__repo_sqlite__ ?? createDatabase()
+export const sqlite = globalThis.__repo_sqlite_connection__ ?? createSqliteConnection()
 
-if (!globalThis.__repo_sqlite__) {
-  globalThis.__repo_sqlite__ = sqlite
+if (!globalThis.__repo_sqlite_connection__) {
+  globalThis.__repo_sqlite_connection__ = sqlite
 }
 
-export { DATABASE_PATH, sqlite }
+async function sqliteCallback(query: string, params: any[], method: 'run' | 'all' | 'values' | 'get') {
+  const statement = sqlite.prepare(query)
+
+  if (method === 'run') {
+    statement.run(...params)
+    return { rows: [] }
+  }
+
+  if (method === 'get') {
+    const row = statement.get(...params) as Record<string, unknown> | undefined
+    return { rows: row ? Object.values(row) : [] }
+  }
+
+  if (method === 'values') {
+    const rows = statement.all(...params) as Record<string, unknown>[]
+    return { rows: rows.map(row => Object.values(row)) }
+  }
+
+  const rows = statement.all(...params) as Record<string, unknown>[]
+  return { rows: rows.map(row => Object.values(row)) }
+}
+
+export const db = drizzle(sqliteCallback, { schema })
+
+export function getDatabaseHealthSnapshot() {
+  return {
+    dialect: 'sqlite',
+    orm: 'drizzle-orm',
+    runtimeDriver: 'node:sqlite',
+    databasePath: DATABASE_PATH,
+    databaseFileExists: existsSync(DATABASE_PATH)
+  }
+}

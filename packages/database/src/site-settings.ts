@@ -1,6 +1,8 @@
 import type { SiteSettingsRecord } from '@repo/types'
-import { sqlite } from './client'
-import type { SiteSettingsRow } from './schema'
+import { eq } from 'drizzle-orm'
+import { db } from './client.js'
+import type { SiteSettingsInsert, SiteSettingsRow } from './schema/index.js'
+import { siteSettings } from './schema/index.js'
 
 const defaultSiteSettings: SiteSettingsRecord = {
   id: 'site_settings_main',
@@ -41,46 +43,45 @@ const defaultSiteSettings: SiteSettingsRecord = {
 function fromRow(row: SiteSettingsRow): SiteSettingsRecord {
   return {
     id: row.id,
-    defaultLocale: row.default_locale as SiteSettingsRecord['defaultLocale'],
-    socialLinks: JSON.parse(row.social_links),
-    downloadLinks: JSON.parse(row.download_links),
+    defaultLocale: row.defaultLocale as SiteSettingsRecord['defaultLocale'],
+    socialLinks: JSON.parse(row.socialLinks),
+    downloadLinks: JSON.parse(row.downloadLinks),
     seo: JSON.parse(row.seo),
-    updatedAt: row.updated_at
+    updatedAt: row.updatedAt
   }
 }
 
-function toRow(record: SiteSettingsRecord): SiteSettingsRow {
+function toRow(record: SiteSettingsRecord): SiteSettingsInsert {
   return {
     id: record.id,
-    default_locale: record.defaultLocale,
-    social_links: JSON.stringify(record.socialLinks),
-    download_links: JSON.stringify(record.downloadLinks),
+    defaultLocale: record.defaultLocale,
+    socialLinks: JSON.stringify(record.socialLinks),
+    downloadLinks: JSON.stringify(record.downloadLinks),
     seo: JSON.stringify(record.seo),
-    updated_at: record.updatedAt
+    updatedAt: record.updatedAt
   }
 }
 
 export async function ensureSiteSettingsSeed() {
-  const existing = sqlite.prepare('SELECT id FROM site_settings WHERE id = ?').get(defaultSiteSettings.id) as { id: string } | undefined
+  const existing = await db.select({ id: siteSettings.id })
+    .from(siteSettings)
+    .where(eq(siteSettings.id, defaultSiteSettings.id))
+    .limit(1)
 
-  if (!existing) {
-    const row = toRow(defaultSiteSettings)
-    sqlite.prepare(`
-      INSERT INTO site_settings (id, default_locale, social_links, download_links, seo, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(row.id, row.default_locale, row.social_links, row.download_links, row.seo, row.updated_at)
+  if (existing.length === 0) {
+    await db.insert(siteSettings).values(toRow(defaultSiteSettings))
   }
 }
 
 export async function getSiteSettingsRecord() {
   await ensureSiteSettingsSeed()
-  const row = sqlite.prepare(`
-    SELECT id, default_locale, social_links, download_links, seo, updated_at
-    FROM site_settings
-    WHERE id = ?
-  `).get(defaultSiteSettings.id) as SiteSettingsRow | undefined
 
-  return fromRow(row ?? toRow(defaultSiteSettings))
+  const [record] = await db.select()
+    .from(siteSettings)
+    .where(eq(siteSettings.id, defaultSiteSettings.id))
+    .limit(1)
+
+  return record ? fromRow(record) : defaultSiteSettings
 }
 
 export async function updateSiteSettingsRecord(record: SiteSettingsRecord) {
@@ -91,12 +92,18 @@ export async function updateSiteSettingsRecord(record: SiteSettingsRecord) {
 
   const row = toRow(nextRecord)
 
-  await ensureSiteSettingsSeed()
-  sqlite.prepare(`
-    UPDATE site_settings
-    SET default_locale = ?, social_links = ?, download_links = ?, seo = ?, updated_at = ?
-    WHERE id = ?
-  `).run(row.default_locale, row.social_links, row.download_links, row.seo, row.updated_at, row.id)
+  await db.insert(siteSettings)
+    .values(row)
+    .onConflictDoUpdate({
+      target: siteSettings.id,
+      set: {
+        defaultLocale: row.defaultLocale,
+        socialLinks: row.socialLinks,
+        downloadLinks: row.downloadLinks,
+        seo: row.seo,
+        updatedAt: row.updatedAt
+      }
+    })
 
   return nextRecord
 }
