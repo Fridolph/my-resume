@@ -1,4 +1,4 @@
-import type { ApiResponse, SiteSettingsRecord } from '@repo/types'
+import type { ApiResponse, AuthLoginInput, AuthLoginResult, SiteSettingsRecord, UserSession } from '@repo/types'
 
 export interface PlatformApiClientOptions {
   baseUrl: string
@@ -27,6 +27,7 @@ export async function requestApi<T>(
   const fetcher = options.fetcher ?? fetch
   const response = await fetcher(new URL(path, `${options.baseUrl}/`).toString(), {
     ...init,
+    credentials: init?.credentials ?? 'include',
     headers: {
       'content-type': 'application/json',
       ...(init?.headers ?? {})
@@ -52,6 +53,20 @@ export async function requestApi<T>(
 
 export function createPlatformApiClient(options: PlatformApiClientOptions) {
   return {
+    async login(input: AuthLoginInput) {
+      return await requestApi<AuthLoginResult>('auth/login', {
+        method: 'POST',
+        body: JSON.stringify(input)
+      }, options)
+    },
+    async logout() {
+      return await requestApi<{ success: boolean }>('auth/logout', {
+        method: 'POST'
+      }, options)
+    },
+    async getCurrentUser() {
+      return await requestApi<UserSession>('auth/me', undefined, options)
+    },
     async getSiteSettings() {
       return await requestApi<SiteSettingsRecord>('site-settings', undefined, options)
     },

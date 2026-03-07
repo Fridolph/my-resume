@@ -109,6 +109,16 @@ export interface UserSession {
   permissions: PermissionKey[]
 }
 
+export interface AuthLoginInput {
+  email: string
+  password: string
+}
+
+export interface AuthLoginResult {
+  session: UserSession
+  expiresAt: string
+}
+
 export interface UserRecord {
   id: EntityId
   name: string

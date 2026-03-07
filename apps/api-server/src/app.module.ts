@@ -6,8 +6,9 @@ import { UsersModule } from './modules/users/users.module.js'
 import { TranslationsModule } from './modules/translations/translations.module.js'
 import { ResumeModule } from './modules/resume/resume.module.js'
 import { ProjectsModule } from './modules/projects/projects.module.js'
+import { AuthModule } from './modules/auth/auth.module.js'
 
 @Module({
-  imports: [DatabaseModule, HealthModule, SiteSettingsModule, UsersModule, TranslationsModule, ResumeModule, ProjectsModule]
+  imports: [DatabaseModule, HealthModule, SiteSettingsModule, UsersModule, TranslationsModule, ResumeModule, ProjectsModule, AuthModule]
 })
 export class AppModule {}
