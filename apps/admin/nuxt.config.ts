@@ -8,6 +8,7 @@ export default defineNuxtConfig({
     '@repo/types': fileURLToPath(new URL('../../packages/types/src', import.meta.url)),
     '@repo/content-schema': fileURLToPath(new URL('../../packages/content-schema/src', import.meta.url)),
     '@repo/sdk': fileURLToPath(new URL('../../packages/sdk/src', import.meta.url)),
+    '@repo/database': fileURLToPath(new URL('../../packages/database/src', import.meta.url)),
     '@repo/ui': fileURLToPath(new URL('../../packages/ui/src', import.meta.url))
   },
 

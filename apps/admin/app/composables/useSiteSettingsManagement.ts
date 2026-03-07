@@ -5,6 +5,22 @@ import type {
   WebLocale
 } from '@repo/types'
 
+function createEmptySettings(): SiteSettingsRecord {
+  return {
+    id: 'site_settings_main',
+    defaultLocale: 'zh-CN',
+    socialLinks: [],
+    downloadLinks: [],
+    seo: {
+      title: '',
+      description: '',
+      ogImage: '',
+      siteUrl: ''
+    },
+    updatedAt: new Date().toISOString()
+  }
+}
+
 function createSocialLink(input?: Partial<SiteSocialLink>): SiteSocialLink {
   return {
     id: input?.id ?? `social_${crypto.randomUUID()}`,
@@ -21,44 +37,8 @@ function createDownloadLink(input?: Partial<SiteDownloadLink>): SiteDownloadLink
   }
 }
 
-const initialSiteSettings: SiteSettingsRecord = {
-  id: 'site_settings_main',
-  defaultLocale: 'zh-CN',
-  socialLinks: [
-    createSocialLink({
-      id: 'social_github',
-      label: 'GitHub',
-      url: 'https://github.com/Fridolph'
-    }),
-    createSocialLink({
-      id: 'social_x',
-      label: 'X / Twitter',
-      url: 'https://x.com/fridolph'
-    })
-  ],
-  downloadLinks: [
-    createDownloadLink({
-      id: 'download_resume_pdf',
-      label: '中文简历 PDF',
-      url: 'https://fridolph.com/downloads/resume-zh.pdf'
-    }),
-    createDownloadLink({
-      id: 'download_resume_en_pdf',
-      label: 'English Resume PDF',
-      url: 'https://fridolph.com/downloads/resume-en.pdf'
-    })
-  ],
-  seo: {
-    title: 'Fridolph Web',
-    description: '个人内容展示站，承载主页、简历、项目与多语言内容。',
-    ogImage: 'https://fridolph.com/og-default.svg',
-    siteUrl: 'https://fridolph.com'
-  },
-  updatedAt: new Date().toISOString()
-}
-
-export function useSiteSettingsManagement() {
-  const settings = useState<SiteSettingsRecord>('admin-site-settings', () => structuredClone(initialSiteSettings))
+export function useSiteSettingsManagement(initialSettings?: SiteSettingsRecord | null) {
+  const settings = useState<SiteSettingsRecord>('admin-site-settings', () => structuredClone(initialSettings ?? createEmptySettings()))
 
   const localeOptions: Array<{ label: string, value: WebLocale }> = [
     { label: '简体中文', value: 'zh-CN' },
@@ -71,6 +51,10 @@ export function useSiteSettingsManagement() {
     seoFieldCount: 4,
     defaultLocale: settings.value.defaultLocale
   }))
+
+  function replaceSettings(nextSettings: SiteSettingsRecord) {
+    settings.value = structuredClone(nextSettings)
+  }
 
   function touchSettings() {
     settings.value.updatedAt = new Date().toISOString()
@@ -101,26 +85,25 @@ export function useSiteSettingsManagement() {
     touchSettings()
   }
 
-  function saveSettings() {
+  function validateSettings() {
     if (!settings.value.seo.title.trim() || !settings.value.seo.siteUrl.trim()) {
       throw createError({
         statusCode: 400,
         statusMessage: '请至少填写站点标题和站点地址'
       })
     }
-
-    touchSettings()
   }
 
   return {
     settings,
     localeOptions,
     stats,
+    replaceSettings,
     setDefaultLocale,
     addSocialLink,
     removeSocialLink,
     addDownloadLink,
     removeDownloadLink,
-    saveSettings
+    validateSettings
   }
 }
