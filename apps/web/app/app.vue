@@ -26,7 +26,7 @@ useSeoMeta({
       <UHeader title="Fridolph Web">
         <template #left>
           <div class="flex items-center gap-3">
-            <UBadge label="W3" color="primary" variant="subtle" />
+            <UBadge label="W4" color="primary" variant="subtle" />
             <WebNavigation />
           </div>
         </template>

@@ -53,3 +53,67 @@ export interface TranslationRecord {
   missing: boolean
   updatedAt: string
 }
+
+export interface WebStatItem {
+  label: string
+  value: string
+  hint?: string
+}
+
+export interface WebFeatureItem {
+  title: string
+  description: string
+  to: string
+  badge?: string
+}
+
+export interface ResumeSectionItem {
+  title: string
+  description: string
+  highlights: string[]
+}
+
+export interface ProjectItem {
+  title: string
+  slug: string
+  description: string
+  tags: string[]
+}
+
+export interface HomePageContent {
+  intro: {
+    badge: string
+    title: string
+    description: string
+  }
+  stats: WebStatItem[]
+  features: WebFeatureItem[]
+}
+
+export interface ResumePageContent {
+  intro: {
+    badge: string
+    title: string
+    description: string
+  }
+  sections: ResumeSectionItem[]
+}
+
+export interface ProjectsPageContent {
+  intro: {
+    badge: string
+    title: string
+    description: string
+  }
+  projects: ProjectItem[]
+}
+
+export interface ProjectDetailContent {
+  slug: string
+  intro: {
+    badge: string
+    title: string
+    description: string
+  }
+  stats: WebStatItem[]
+}
