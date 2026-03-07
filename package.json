@@ -11,5 +11,13 @@
     "dev:api": "pnpm --dir apps/api-server dev",
     "db:generate": "pnpm --dir packages/database db:generate",
     "db:migrate": "pnpm --dir packages/database db:migrate"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.6.2",
+    "drizzle-orm": "^0.44.5"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "drizzle-kit": "^0.31.4"
   }
 }
