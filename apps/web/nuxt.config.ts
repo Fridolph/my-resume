@@ -8,7 +8,6 @@ export default defineNuxtConfig({
     '@repo/types': fileURLToPath(new URL('../../packages/types/src', import.meta.url)),
     '@repo/content-schema': fileURLToPath(new URL('../../packages/content-schema/src', import.meta.url)),
     '@repo/sdk': fileURLToPath(new URL('../../packages/sdk/src', import.meta.url)),
-    '@repo/database': fileURLToPath(new URL('../../packages/database/src', import.meta.url)),
     '@repo/ui': fileURLToPath(new URL('../../packages/ui/src', import.meta.url))
   },
 
@@ -25,6 +24,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
+      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:3011/api',
       siteUrl: 'https://fridolph.com',
       siteName: 'Fridolph Web',
       siteDescription: '个人内容展示站，承载主页、简历、项目与多语言内容。',

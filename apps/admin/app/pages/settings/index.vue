@@ -12,8 +12,10 @@ if (!hasPermission('site.write')) {
   await navigateTo('/unauthorized')
 }
 
-const { data, pending, error, refresh } = await useFetch('/api/site-settings', {
-  key: 'admin-site-settings-api'
+const apiClient = usePlatformApiClient()
+
+const { data, pending, error, refresh } = await useAsyncData('admin-site-settings-api', async () => {
+  return await apiClient.getSiteSettings()
 })
 
 const {
@@ -38,10 +40,7 @@ watch(data, (value) => {
 async function handleSaveSettings() {
   try {
     validateSettings()
-    const saved = await $fetch('/api/site-settings', {
-      method: 'PUT',
-      body: settings.value
-    })
+    const saved = await apiClient.updateSiteSettings(settings.value)
     replaceSettings(saved)
     await refresh()
     toast.add({
@@ -93,7 +92,7 @@ function handleLocaleChange(locale: WebLocale) {
                 站点设置
               </h1>
               <p class="max-w-3xl text-sm text-muted">
-                当前阶段已建立默认语言、社交链接、下载资源和 SEO 默认配置管理界面，并在 P1 中切换为真实 SQLite 数据层与 API 读写样板。
+                当前阶段已建立默认语言、社交链接、下载资源和 SEO 默认配置管理界面，并在 P2 中切换为通过 API Server 读写的正式链路。
               </p>
             </div>
           </div>
@@ -127,7 +126,7 @@ function handleLocaleChange(locale: WebLocale) {
                 默认语言与阶段说明
               </h2>
               <p class="text-sm text-muted">
-                当前页面已经切换到真实 API 读写，是第二阶段 P1 的第一个打通样板。
+                当前页面已经切换到 `api-server` 正式接口，是第二阶段 P2 的首个三端迁移样板。
               </p>
             </div>
           </template>
