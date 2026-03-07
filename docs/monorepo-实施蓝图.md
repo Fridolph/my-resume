@@ -313,7 +313,7 @@ my-resume-platform/
 
 ### 1. 推荐目录结构
 
-可以放在 `apps/admin/server/` 或未来单独拆到 `apps/api/`。第一阶段建议如下：
+可以放在 `apps/admin/server/` 或未来单独拆到 `apps/api-server/`。第一阶段建议如下：
 
 ```txt
 server/

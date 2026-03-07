@@ -561,7 +561,7 @@ apps/admin/
 推荐直接放在应用内：
 
 - `apps/admin/server/api/*`
-- 或者抽到未来的 `apps/api`
+- 或者抽到未来的 `apps/api-server`
 
 ### 2. API 分层原则
 
