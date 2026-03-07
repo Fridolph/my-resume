@@ -9,7 +9,67 @@ export interface Locale {
 
 export type PublishStatus = 'draft' | 'reviewing' | 'published' | 'archived'
 
-export type RoleKey = 'admin' | 'editor' | 'translator'
+export const roleKeys = ['super-admin', 'admin', 'editor', 'translator', 'viewer'] as const
+export type RoleKey = (typeof roleKeys)[number]
+
+export const permissionKeys = [
+  'dashboard.read',
+  'user.read',
+  'user.write',
+  'translation.read',
+  'translation.write',
+  'resume.read',
+  'resume.write',
+  'project.read',
+  'project.write',
+  'site.read',
+  'site.write'
+] as const
+export type PermissionKey = (typeof permissionKeys)[number]
+
+export const rolePermissions: Record<RoleKey, PermissionKey[]> = {
+  'super-admin': [...permissionKeys],
+  admin: [
+    'dashboard.read',
+    'user.read',
+    'user.write',
+    'translation.read',
+    'translation.write',
+    'resume.read',
+    'resume.write',
+    'project.read',
+    'project.write',
+    'site.read',
+    'site.write'
+  ],
+  editor: [
+    'dashboard.read',
+    'translation.read',
+    'resume.read',
+    'resume.write',
+    'project.read',
+    'project.write',
+    'site.read'
+  ],
+  translator: [
+    'dashboard.read',
+    'translation.read',
+    'translation.write',
+    'site.read'
+  ],
+  viewer: [
+    'dashboard.read',
+    'translation.read',
+    'resume.read',
+    'project.read',
+    'site.read'
+  ]
+}
+
+export function getRolePermissions(role: RoleKey) {
+  return [...rolePermissions[role]]
+}
+
 export type UserStatus = 'active' | 'disabled'
 export type TranslationNamespace = 'common' | 'resume' | 'project' | 'seo'
 export type WebLocale = 'zh-CN' | 'en-US'
@@ -40,18 +100,6 @@ export interface ApiErrorResponse {
 }
 
 export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse
-
-export type PermissionKey =
-  | 'dashboard.read'
-  | 'user.read'
-  | 'user.write'
-  | 'translation.read'
-  | 'translation.write'
-  | 'resume.read'
-  | 'resume.write'
-  | 'project.read'
-  | 'project.write'
-  | 'site.write'
 
 export interface UserSession {
   id: EntityId

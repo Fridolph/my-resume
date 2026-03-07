@@ -1,36 +1,9 @@
-import type { PermissionKey, RoleKey, UserRecord, UserStatus } from '@repo/types'
+import { getRolePermissions } from '@repo/types'
+import type { RoleKey, UserRecord, UserStatus } from '@repo/types'
 import { asc, eq } from 'drizzle-orm'
 import { db } from './client.js'
 import type { UserInsert, UserRow } from './schema/index.js'
 import { users } from './schema/index.js'
-
-const rolePermissions: Record<RoleKey, PermissionKey[]> = {
-  admin: [
-    'dashboard.read',
-    'user.read',
-    'user.write',
-    'translation.read',
-    'translation.write',
-    'resume.read',
-    'resume.write',
-    'project.read',
-    'project.write',
-    'site.write'
-  ],
-  editor: [
-    'dashboard.read',
-    'translation.read',
-    'resume.read',
-    'resume.write',
-    'project.read',
-    'project.write'
-  ],
-  translator: [
-    'dashboard.read',
-    'translation.read',
-    'translation.write'
-  ]
-}
 
 function createUserRecord(input: {
   id: string
@@ -41,12 +14,19 @@ function createUserRecord(input: {
 }): UserRecord {
   return {
     ...input,
-    permissions: rolePermissions[input.role],
+    permissions: getRolePermissions(input.role),
     updatedAt: new Date().toISOString()
   }
 }
 
 const initialUsers: UserRecord[] = [
+  createUserRecord({
+    id: 'u_super_admin',
+    name: 'Fridolph Super Admin',
+    email: 'root@fridolph.local',
+    role: 'super-admin',
+    status: 'active'
+  }),
   createUserRecord({
     id: 'u_admin',
     name: 'Fridolph Admin',
@@ -67,6 +47,13 @@ const initialUsers: UserRecord[] = [
     email: 'translator@fridolph.local',
     role: 'translator',
     status: 'disabled'
+  }),
+  createUserRecord({
+    id: 'u_viewer',
+    name: 'Fridolph Viewer',
+    email: 'viewer@fridolph.local',
+    role: 'viewer',
+    status: 'active'
   })
 ]
 
@@ -77,7 +64,7 @@ function fromRow(row: UserRow): UserRecord {
     email: row.email,
     role: row.role as RoleKey,
     status: row.status as UserStatus,
-    permissions: JSON.parse(row.permissions),
+    permissions: getRolePermissions(row.role as RoleKey),
     updatedAt: row.updatedAt
   }
 }
@@ -89,16 +76,16 @@ function toRow(record: UserRecord): UserInsert {
     email: record.email,
     role: record.role,
     status: record.status,
-    permissions: JSON.stringify(rolePermissions[record.role]),
+    permissions: JSON.stringify(getRolePermissions(record.role)),
     updatedAt: record.updatedAt
   }
 }
 
 export async function ensureUsersSeed() {
-  const existing = await db.select({ id: users.id }).from(users).limit(1)
-
-  if (existing.length === 0) {
-    await db.insert(users).values(initialUsers.map(toRow))
+  for (const record of initialUsers) {
+    await db.insert(users)
+      .values(toRow(record))
+      .onConflictDoNothing()
   }
 }
 

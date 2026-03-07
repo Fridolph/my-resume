@@ -9,6 +9,14 @@ export function usePermissions() {
     return permissions.value.includes(permission)
   }
 
+  function hasAnyPermission(requiredPermissions: PermissionKey[]) {
+    return requiredPermissions.some(hasPermission)
+  }
+
+  function hasAllPermissions(requiredPermissions: PermissionKey[]) {
+    return requiredPermissions.every(hasPermission)
+  }
+
   function requirePermission(permission: PermissionKey) {
     if (!hasPermission(permission)) {
       return navigateTo('/unauthorized')
@@ -18,6 +26,8 @@ export function usePermissions() {
   return {
     permissions,
     hasPermission,
+    hasAnyPermission,
+    hasAllPermissions,
     requirePermission
   }
 }

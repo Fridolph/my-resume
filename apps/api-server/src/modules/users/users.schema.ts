@@ -1,10 +1,11 @@
+import { roleKeys } from '@repo/types'
 import { z } from 'zod'
 
 export const userSchema = z.object({
   id: z.string(),
   name: z.string().min(1),
   email: z.string().email(),
-  role: z.enum(['admin', 'editor', 'translator']),
+  role: z.enum(roleKeys),
   status: z.enum(['active', 'disabled'])
 })
 

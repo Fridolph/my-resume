@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { roleKeys } from '@repo/types'
 import type { RoleKey, UserRecord } from '@repo/types'
 
 definePageMeta({
@@ -19,11 +20,20 @@ const { data, pending, error, refresh } = await useAsyncData('admin-users-api', 
 })
 
 const canWriteUsers = hasPermission('user.write')
+const roleLabelMap: Record<RoleKey, string> = {
+  'super-admin': '超级管理员',
+  admin: '管理员',
+  editor: '编辑',
+  translator: '翻译',
+  viewer: '查看者'
+}
+
 const roleOptions: Array<{ label: string, value: 'all' | RoleKey }> = [
   { label: '全部角色', value: 'all' },
-  { label: '管理员', value: 'admin' },
-  { label: '编辑', value: 'editor' },
-  { label: '翻译', value: 'translator' }
+  ...roleKeys.map(role => ({
+    label: roleLabelMap[role],
+    value: role
+  }))
 ]
 const statusOptions = [
   { label: '全部状态', value: 'all' },
@@ -130,13 +140,13 @@ async function handleRoleChange(user: UserRecord, role: RoleKey) {
       <div class="space-y-6">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div class="space-y-2">
-            <UBadge label="P3 用户管理迁移" variant="subtle" color="primary" class="w-fit" />
+            <UBadge label="P5-1 角色与权限模型" variant="subtle" color="primary" class="w-fit" />
             <div class="space-y-1">
               <h1 class="text-2xl font-semibold text-highlighted">
                 用户管理
               </h1>
               <p class="max-w-2xl text-sm text-muted">
-                当前阶段已切换为通过 API Server 读取与维护用户数据，用于验证 P3 第一个后台核心内容模块的真实持久化能力。
+                当前用户模块已开始使用统一角色与权限模型，后续会继续衔接真实鉴权、权限守卫与接口边界控制。
               </p>
             </div>
           </div>
@@ -212,7 +222,7 @@ async function handleRoleChange(user: UserRecord, role: RoleKey) {
                 {{ editingUserId ? '编辑用户' : '创建用户' }}
               </h2>
               <p class="text-sm text-muted">
-                当前阶段已切换到真实 API，创建和编辑都会写入 SQLite。
+                当前阶段已切换到真实 API，角色与权限集合已开始收口到统一模型。
               </p>
             </div>
           </template>
@@ -228,9 +238,7 @@ async function handleRoleChange(user: UserRecord, role: RoleKey) {
 
             <UFormField label="角色">
               <select v-model="form.role" class="w-full rounded-md border border-default bg-default px-3 py-2 text-sm text-default">
-                <option value="admin">管理员</option>
-                <option value="editor">编辑</option>
-                <option value="translator">翻译</option>
+                <option v-for="role in roleKeys" :key="role" :value="role">{{ roleLabelMap[role] }}</option>
               </select>
             </UFormField>
 
@@ -259,7 +267,7 @@ async function handleRoleChange(user: UserRecord, role: RoleKey) {
                     <h2 class="text-base font-semibold text-highlighted">
                       {{ user.name }}
                     </h2>
-                    <UBadge :label="user.role" color="neutral" variant="subtle" />
+                    <UBadge :label="roleLabelMap[user.role]" color="neutral" variant="subtle" />
                     <UBadge :label="user.status" :color="user.status === 'active' ? 'success' : 'warning'" variant="subtle" />
                   </div>
                   <p class="text-sm text-muted">
@@ -298,9 +306,9 @@ async function handleRoleChange(user: UserRecord, role: RoleKey) {
                 </h3>
                 <div class="flex flex-wrap gap-2">
                   <UButton
-                    v-for="role in ['admin', 'editor', 'translator']"
+                    v-for="role in roleKeys"
                     :key="role"
-                    :label="role"
+                    :label="roleLabelMap[role]"
                     size="xs"
                     :variant="user.role === role ? 'solid' : 'subtle'"
                     color="neutral"

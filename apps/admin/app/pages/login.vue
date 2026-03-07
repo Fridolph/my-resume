@@ -50,12 +50,12 @@ async function handleSubmit() {
       <UCard>
         <template #header>
           <div class="space-y-2">
-            <UBadge label="A2 登录与权限框架" variant="subtle" color="primary" class="w-fit" />
+            <UBadge label="P5-1 角色模型预演" variant="subtle" color="primary" class="w-fit" />
             <h1 class="text-3xl font-bold text-highlighted">
               登录到 Fridolph Admin
             </h1>
             <p class="text-sm text-muted">
-              当前阶段使用本地 mock 账号完成后台登录、路由守卫与权限判断闭环，下一阶段再接入真实鉴权服务。
+              当前阶段先用本地演示账号验证统一角色与权限模型，下一步再接入 `api-server` 真实鉴权服务。
             </p>
           </div>
         </template>

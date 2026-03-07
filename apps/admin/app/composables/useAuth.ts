@@ -1,34 +1,14 @@
+import { getRolePermissions } from '@repo/types'
 import type { RoleKey, UserSession } from '@repo/types'
 
-const rolePermissions: Record<RoleKey, UserSession['permissions']> = {
-  admin: [
-    'dashboard.read',
-    'user.read',
-    'user.write',
-    'translation.read',
-    'translation.write',
-    'resume.read',
-    'resume.write',
-    'project.read',
-    'project.write',
-    'site.write'
-  ],
-  editor: [
-    'dashboard.read',
-    'translation.read',
-    'resume.read',
-    'resume.write',
-    'project.read',
-    'project.write'
-  ],
-  translator: [
-    'dashboard.read',
-    'translation.read',
-    'translation.write'
-  ]
-}
-
 const mockUsers = [
+  {
+    id: 'u_super_admin',
+    name: 'Fridolph Super Admin',
+    email: 'root@fridolph.local',
+    password: 'root123',
+    role: 'super-admin'
+  },
   {
     id: 'u_admin',
     name: 'Fridolph Admin',
@@ -49,6 +29,13 @@ const mockUsers = [
     email: 'translator@fridolph.local',
     password: 'translator123',
     role: 'translator'
+  },
+  {
+    id: 'u_viewer',
+    name: 'Fridolph Viewer',
+    email: 'viewer@fridolph.local',
+    password: 'viewer123',
+    role: 'viewer'
   }
 ] as const satisfies Array<{
   id: string
@@ -64,7 +51,7 @@ function buildSession(user: (typeof mockUsers)[number]): UserSession {
     name: user.name,
     email: user.email,
     role: user.role,
-    permissions: rolePermissions[user.role]
+    permissions: getRolePermissions(user.role)
   }
 }
 
