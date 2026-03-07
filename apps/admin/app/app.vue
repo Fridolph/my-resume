@@ -31,7 +31,7 @@ const isLoginPage = computed(() => route.path === '/login')
       <UHeader title="Fridolph Admin">
         <template #left>
           <div class="flex items-center gap-3">
-            <UBadge label="A6" color="primary" variant="subtle" />
+            <UBadge label="A7" color="primary" variant="subtle" />
             <UNavigationMenu
               v-if="isAuthenticated && !isLoginPage"
               :items="[
@@ -60,7 +60,7 @@ const isLoginPage = computed(() => route.path === '/login')
       <UFooter>
         <template #left>
           <p class="text-sm text-muted">
-            Admin milestone A6 · Project Management Module
+            Admin milestone A7 · Site Settings and Wrap-up
           </p>
         </template>
       </UFooter>

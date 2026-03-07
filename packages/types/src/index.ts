@@ -127,6 +127,34 @@ export interface ProjectRecord {
   locales: Record<WebLocale, ProjectLocaleContent>
 }
 
+export interface SiteSocialLink {
+  id: EntityId
+  label: string
+  url: string
+}
+
+export interface SiteDownloadLink {
+  id: EntityId
+  label: string
+  url: string
+}
+
+export interface SiteSeoDefaults {
+  title: string
+  description: string
+  ogImage: string
+  siteUrl: string
+}
+
+export interface SiteSettingsRecord {
+  id: EntityId
+  defaultLocale: WebLocale
+  socialLinks: SiteSocialLink[]
+  downloadLinks: SiteDownloadLink[]
+  seo: SiteSeoDefaults
+  updatedAt: string
+}
+
 export interface WebStatItem {
   label: string
   value: string
