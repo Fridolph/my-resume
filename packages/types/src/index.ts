@@ -12,6 +12,8 @@ export type PublishStatus = 'draft' | 'reviewing' | 'published' | 'archived'
 export type RoleKey = 'admin' | 'editor' | 'translator'
 export type UserStatus = 'active' | 'disabled'
 export type TranslationNamespace = 'common' | 'resume' | 'project' | 'seo'
+export type WebLocale = 'zh-CN' | 'en-US'
+export type ThemePreference = 'system' | 'light' | 'dark'
 
 export type PermissionKey =
   | 'dashboard.read'

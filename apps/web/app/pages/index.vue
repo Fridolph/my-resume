@@ -1,9 +1,10 @@
 <script setup lang="ts">
+const { t } = useWebLocale()
 const { data: pageData, pending, error } = await useHomePageContent()
 
 usePageSeo({
   title: 'Fridolph Web',
-  description: '个人内容展示站首页，承载个人简介、简历入口与项目展示入口。',
+  description: t('page.home.description'),
   path: '/'
 })
 </script>
@@ -13,13 +14,13 @@ usePageSeo({
     <template v-if="pending">
       <UCard>
         <p class="text-sm text-muted">
-          正在加载首页内容…
+          {{ t('state.loading.home') }}
         </p>
       </UCard>
     </template>
 
     <template v-else-if="error || !pageData">
-      <UAlert color="error" variant="subtle" title="首页内容加载失败" description="请稍后重试，或检查内容读取层实现。" />
+      <UAlert :title="t('state.error.home.title')" :description="t('state.error.home.description')" color="error" variant="subtle" />
     </template>
 
     <template v-else>

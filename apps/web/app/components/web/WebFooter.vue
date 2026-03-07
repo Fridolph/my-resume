@@ -1,12 +1,20 @@
+<script setup lang="ts">
+const { t, currentLocaleLabel } = useWebLocale()
+const { currentThemeLabel } = useWebTheme()
+</script>
+
 <template>
   <UFooter>
     <template #left>
       <div class="space-y-1">
         <p class="text-sm text-muted">
-          Web milestone W4 · Content Access Layer
+          {{ t('footer.milestone') }}
         </p>
         <p class="text-xs text-muted">
-          当前阶段已接入内容 DTO、SDK Mock 与页面级加载/错误态，页面开始转向数据驱动渲染。
+          {{ t('footer.description') }}
+        </p>
+        <p class="text-xs text-muted">
+          {{ t('common.currentLocale') }}：{{ currentLocaleLabel }} · {{ t('common.currentTheme') }}：{{ currentThemeLabel }}
         </p>
       </div>
     </template>

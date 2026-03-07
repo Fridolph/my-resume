@@ -1,9 +1,10 @@
 <script setup lang="ts">
+const { t } = useWebLocale()
 const { data: pageData, pending, error } = await useResumePageContent()
 
 usePageSeo({
-  title: '在线简历 · Fridolph Web',
-  description: '在线简历页面骨架，后续将接入结构化简历数据与多语言内容。',
+  title: t('page.resume.title'),
+  description: t('page.resume.description'),
   path: '/resume'
 })
 </script>
@@ -13,13 +14,13 @@ usePageSeo({
     <template v-if="pending">
       <UCard>
         <p class="text-sm text-muted">
-          正在加载简历内容…
+          {{ t('state.loading.resume') }}
         </p>
       </UCard>
     </template>
 
     <template v-else-if="error || !pageData">
-      <UAlert color="error" variant="subtle" title="简历内容加载失败" description="请稍后重试，或检查简历数据读取逻辑。" />
+      <UAlert :title="t('state.error.resume.title')" :description="t('state.error.resume.description')" color="error" variant="subtle" />
     </template>
 
     <template v-else>

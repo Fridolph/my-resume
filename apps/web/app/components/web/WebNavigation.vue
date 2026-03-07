@@ -1,11 +1,13 @@
 <script setup lang="ts">
-const items = [
-  { label: '首页', to: '/' },
-  { label: '简历', to: '/resume' },
-  { label: '项目', to: '/projects' }
-]
+const { t, locale } = useWebLocale()
+
+const items = computed(() => [
+  { label: t('nav.home'), to: '/' },
+  { label: t('nav.resume'), to: '/resume' },
+  { label: t('nav.projects'), to: '/projects' }
+])
 </script>
 
 <template>
-  <UNavigationMenu :items="items" />
+  <UNavigationMenu :key="locale" :items="items" />
 </template>

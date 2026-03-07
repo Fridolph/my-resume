@@ -6,17 +6,33 @@ import {
 } from '@repo/sdk'
 
 export function useHomePageContent() {
-  return useAsyncData('web-home-content', () => getHomePageContent())
+  const { locale } = useWebLocale()
+
+  return useAsyncData('web-home-content', () => getHomePageContent(locale.value), {
+    watch: [locale]
+  })
 }
 
 export function useResumePageContent() {
-  return useAsyncData('web-resume-content', () => getResumePageContent())
+  const { locale } = useWebLocale()
+
+  return useAsyncData('web-resume-content', () => getResumePageContent(locale.value), {
+    watch: [locale]
+  })
 }
 
 export function useProjectsPageContent() {
-  return useAsyncData('web-projects-content', () => getProjectsPageContent())
+  const { locale } = useWebLocale()
+
+  return useAsyncData('web-projects-content', () => getProjectsPageContent(locale.value), {
+    watch: [locale]
+  })
 }
 
 export function useProjectDetailContent(slug: string) {
-  return useAsyncData(`web-project-detail-${slug}`, () => getProjectDetailContent(slug))
+  const { locale } = useWebLocale()
+
+  return useAsyncData(`web-project-detail-${slug}`, () => getProjectDetailContent(slug, locale.value), {
+    watch: [locale]
+  })
 }
