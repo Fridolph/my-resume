@@ -1,11 +1,20 @@
 <script setup lang="ts">
 const { t } = useWebLocale()
+const { siteName, siteDescription, resolveUrl } = useSiteSeoConfig()
 const { data: pageData, pending, error } = await useHomePageContent()
 
 usePageSeo({
-  title: 'Fridolph Web',
+  title: siteName.value,
   description: t('page.home.description'),
-  path: '/'
+  path: '/',
+  type: 'website',
+  structuredData: {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: siteName.value,
+    description: siteDescription.value,
+    url: resolveUrl('/')
+  }
 })
 </script>
 

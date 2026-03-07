@@ -2,12 +2,21 @@
 const route = useRoute()
 const slug = String(route.params.slug || 'unknown-project')
 const { t } = useWebLocale()
+const { resolveUrl } = useSiteSeoConfig()
 const { data: pageData, pending, error } = await useProjectDetailContent(slug)
 
 usePageSeo({
-  title: `${slug} · Fridolph Web`,
-  description: t('page.projectDetail.description'),
-  path: `/projects/${slug}`
+  title: pageData.value?.intro.title ? `${pageData.value.intro.title} · Fridolph Web` : `${slug} · Fridolph Web`,
+  description: pageData.value?.intro.description ?? t('page.projectDetail.description'),
+  path: `/projects/${slug}`,
+  type: 'article',
+  structuredData: {
+    '@context': 'https://schema.org',
+    '@type': 'CreativeWork',
+    name: pageData.value?.intro.title ?? slug,
+    url: resolveUrl(`/projects/${slug}`),
+    description: pageData.value?.intro.description ?? t('page.projectDetail.description')
+  }
 })
 </script>
 

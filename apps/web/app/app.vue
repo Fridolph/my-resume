@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { locale, t } = useWebLocale()
+const { siteName, siteDescription, defaultOgImage } = useSiteSeoConfig()
 
 useHead(() => ({
   htmlAttrs: {
@@ -14,10 +15,12 @@ useHead(() => ({
 }))
 
 useSeoMeta({
-  title: t('app.name'),
-  description: t('app.description'),
-  ogTitle: t('app.name'),
-  ogDescription: t('app.description'),
+  title: siteName,
+  description: siteDescription,
+  ogTitle: siteName,
+  ogDescription: siteDescription,
+  ogImage: defaultOgImage,
+  twitterImage: defaultOgImage,
   twitterCard: 'summary_large_image'
 })
 </script>
@@ -28,7 +31,7 @@ useSeoMeta({
       <UHeader :title="t('app.name')">
         <template #left>
           <div class="flex items-center gap-3">
-            <UBadge label="W5" color="primary" variant="subtle" />
+            <UBadge label="W6" color="primary" variant="subtle" />
             <WebNavigation />
           </div>
         </template>

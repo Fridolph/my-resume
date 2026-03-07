@@ -1,0 +1,12 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" rx="32" fill="#0F172A"/>
+  <rect x="48" y="48" width="1104" height="534" rx="24" fill="#111827" stroke="#334155"/>
+  <circle cx="132" cy="120" r="18" fill="#22C55E"/>
+  <circle cx="186" cy="120" r="18" fill="#38BDF8"/>
+  <circle cx="240" cy="120" r="18" fill="#A78BFA"/>
+  <text x="80" y="220" fill="#F8FAFC" font-size="64" font-family="Inter, Arial, sans-serif" font-weight="700">Fridolph Web</text>
+  <text x="80" y="290" fill="#94A3B8" font-size="32" font-family="Inter, Arial, sans-serif">Nuxt 4 · Monorepo · Content Platform</text>
+  <text x="80" y="390" fill="#E2E8F0" font-size="28" font-family="Inter, Arial, sans-serif">SEO-ready public site with resume, projects, i18n and admin-managed content.</text>
+  <rect x="80" y="452" width="180" height="56" rx="16" fill="#16A34A" fill-opacity="0.18"/>
+  <text x="116" y="488" fill="#86EFAC" font-size="28" font-family="Inter, Arial, sans-serif" font-weight="600">W6 SEO Ready</text>
+</svg>

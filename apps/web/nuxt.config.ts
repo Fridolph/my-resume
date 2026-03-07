@@ -22,16 +22,38 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  runtimeConfig: {
+    public: {
+      siteUrl: 'https://fridolph.com',
+      siteName: 'Fridolph Web',
+      siteDescription: '个人内容展示站，承载主页、简历、项目与多语言内容。',
+      defaultLocale: 'zh-CN',
+      locales: [
+        { code: 'zh-CN', iso: 'zh-CN', name: '简体中文' },
+        { code: 'en-US', iso: 'en-US', name: 'English' }
+      ]
+    }
+  },
+
   app: {
     head: {
       htmlAttrs: {
         lang: 'zh-CN'
-      }
+      },
+      meta: [
+        { name: 'format-detection', content: 'telephone=no' },
+        { name: 'theme-color', content: '#0f172a' }
+      ]
     }
   },
 
   routeRules: {
-    '/': { prerender: true }
+    '/': { prerender: true },
+    '/resume': { prerender: true },
+    '/projects': { prerender: true },
+    '/robots.txt': { prerender: true },
+    '/sitemap.xml': { prerender: true },
+    '/projects/**': { swr: 3600 }
   },
 
   compatibilityDate: '2025-01-15',

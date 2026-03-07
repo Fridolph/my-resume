@@ -1,11 +1,20 @@
 <script setup lang="ts">
 const { t } = useWebLocale()
+const { siteName, resolveUrl } = useSiteSeoConfig()
 const { data: pageData, pending, error } = await useProjectsPageContent()
 
 usePageSeo({
   title: t('page.projects.title'),
   description: t('page.projects.description'),
-  path: '/projects'
+  path: '/projects',
+  type: 'website',
+  structuredData: {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: `${siteName.value} Projects`,
+    url: resolveUrl('/projects'),
+    description: t('page.projects.description')
+  }
 })
 </script>
 

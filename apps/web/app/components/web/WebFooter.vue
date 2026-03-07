@@ -16,6 +16,9 @@ const { currentThemeLabel } = useWebTheme()
         <p class="text-xs text-muted">
           {{ t('common.currentLocale') }}：{{ currentLocaleLabel }} · {{ t('common.currentTheme') }}：{{ currentThemeLabel }}
         </p>
+        <p class="text-xs text-muted">
+          SEO endpoints：`/robots.txt` · `/sitemap.xml`
+        </p>
       </div>
     </template>
   </UFooter>

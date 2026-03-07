@@ -1,11 +1,20 @@
 <script setup lang="ts">
 const { t } = useWebLocale()
+const { siteName, resolveUrl } = useSiteSeoConfig()
 const { data: pageData, pending, error } = await useResumePageContent()
 
 usePageSeo({
   title: t('page.resume.title'),
   description: t('page.resume.description'),
-  path: '/resume'
+  path: '/resume',
+  type: 'profile',
+  structuredData: {
+    '@context': 'https://schema.org',
+    '@type': 'ProfilePage',
+    name: `${siteName.value} Resume`,
+    url: resolveUrl('/resume'),
+    description: t('page.resume.description')
+  }
 })
 </script>
 
