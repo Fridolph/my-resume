@@ -20,6 +20,11 @@ const quickLinks = [
     to: '/translations'
   },
   {
+    title: '简历管理',
+    description: '维护基础信息、教育经历、工作经历、技能和联系方式，并验证多语言简历编辑方式。',
+    to: '/resume'
+  },
+  {
     title: '站点设置',
     description: '验证仅管理员可访问的页面权限。',
     to: '/settings'
@@ -32,13 +37,13 @@ const quickLinks = [
     <div class="flex flex-col gap-6">
       <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div class="space-y-3">
-          <UBadge label="A4 已接入文案管理模块" variant="subtle" color="primary" class="w-fit" />
+          <UBadge label="A5 已接入简历管理模块" variant="subtle" color="primary" class="w-fit" />
           <div class="space-y-2">
             <h1 class="text-4xl font-bold tracking-tight text-highlighted sm:text-5xl">
               欢迎回来，{{ session?.name }}
             </h1>
             <p class="max-w-2xl text-lg text-muted">
-              当前账号角色为 {{ session?.role }}。现在后台已经具备登录、登出、路由守卫、基础权限判断、用户管理和文案管理模块入口。
+              当前账号角色为 {{ session?.role }}。现在后台已经具备登录、登出、路由守卫、基础权限判断、用户管理、文案管理与简历管理模块入口。
             </p>
           </div>
         </div>

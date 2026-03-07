@@ -56,6 +56,58 @@ export interface TranslationRecord {
   updatedAt: string
 }
 
+export interface ResumeBaseInfo {
+  fullName: string
+  headline: string
+  location: string
+  summary: string
+}
+
+export interface ResumeEducationItem {
+  id: EntityId
+  school: string
+  degree: string
+  period: string
+  summary: string
+}
+
+export interface ResumeExperienceItem {
+  id: EntityId
+  company: string
+  role: string
+  period: string
+  summary: string
+}
+
+export interface ResumeSkillGroup {
+  id: EntityId
+  title: string
+  items: string[]
+}
+
+export interface ResumeContactItem {
+  id: EntityId
+  label: string
+  value: string
+  href?: string
+}
+
+export interface ResumeLocaleContent {
+  locale: WebLocale
+  baseInfo: ResumeBaseInfo
+  education: ResumeEducationItem[]
+  experiences: ResumeExperienceItem[]
+  skillGroups: ResumeSkillGroup[]
+  contacts: ResumeContactItem[]
+}
+
+export interface ResumeDocument {
+  id: EntityId
+  status: PublishStatus
+  updatedAt: string
+  locales: Record<WebLocale, ResumeLocaleContent>
+}
+
 export interface WebStatItem {
   label: string
   value: string

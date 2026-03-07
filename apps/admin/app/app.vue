@@ -31,13 +31,14 @@ const isLoginPage = computed(() => route.path === '/login')
       <UHeader title="Fridolph Admin">
         <template #left>
           <div class="flex items-center gap-3">
-            <UBadge label="A4" color="primary" variant="subtle" />
+            <UBadge label="A5" color="primary" variant="subtle" />
             <UNavigationMenu
               v-if="isAuthenticated && !isLoginPage"
               :items="[
                 { label: '首页', to: '/' },
                 { label: '用户', to: '/users' },
                 { label: '文案', to: '/translations' },
+                { label: '简历', to: '/resume' },
                 { label: '设置', to: '/settings' }
               ]"
             />
@@ -58,7 +59,7 @@ const isLoginPage = computed(() => route.path === '/login')
       <UFooter>
         <template #left>
           <p class="text-sm text-muted">
-            Admin milestone A4 · i18n Translation Module
+            Admin milestone A5 · Resume Management Module
           </p>
         </template>
       </UFooter>
