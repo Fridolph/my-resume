@@ -12,6 +12,12 @@ if (!hasPermission('project.read')) {
   await navigateTo('/unauthorized')
 }
 
+const apiClient = usePlatformApiClient()
+
+const { data, pending, error, refresh } = await useAsyncData('admin-projects-api', async () => {
+  return await apiClient.listProjects()
+})
+
 const canWriteProjects = hasPermission('project.write')
 
 const {
@@ -29,19 +35,49 @@ const {
   selectProject,
   openCreateProject,
   closeEditor,
-  saveProject,
+  replaceProjects,
+  buildProjectInput,
   updateTags,
   setProjectStatus,
   moveProject,
-  removeProject
-} = useProjectManagement()
+  removeProjectLocally,
+  upsertProject
+} = useProjectManagement(data.value)
 
-function handleSaveProject() {
+watch(data, (value) => {
+  if (value) {
+    replaceProjects(value)
+  }
+}, { immediate: true })
+
+async function handleSaveProject() {
   try {
-    saveProject()
+    const payload = buildProjectInput()
+    const saved = payload.id.startsWith('project_') && !data.value?.some(project => project.id === payload.id)
+      ? await apiClient.createProject({
+          slug: payload.slug,
+          status: payload.status,
+          sortOrder: payload.sortOrder,
+          cover: payload.cover,
+          externalUrl: payload.externalUrl,
+          tags: payload.tags,
+          locales: payload.locales
+        })
+      : await apiClient.updateProject(payload.id, {
+          slug: payload.slug,
+          status: payload.status,
+          sortOrder: payload.sortOrder,
+          cover: payload.cover,
+          externalUrl: payload.externalUrl,
+          tags: payload.tags,
+          locales: payload.locales
+        })
+
+    upsertProject(saved)
+    await refresh()
     toast.add({
       title: '项目已保存',
-      description: `${selectedLocale.value} 语言下的项目内容已同步到本地管理状态。`,
+      description: `${selectedLocale.value} 语言下的项目内容已同步到真实数据层。`,
       color: 'success'
     })
   } catch (error) {
@@ -54,17 +90,64 @@ function handleSaveProject() {
   }
 }
 
-function handleStatusChange(status: PublishStatus) {
+async function handleStatusChange(status: PublishStatus) {
   setProjectStatus(status)
-  toast.add({
+
+  try {
+    const payload = buildProjectInput()
+    const saved = await apiClient.updateProject(payload.id, {
+      slug: payload.slug,
+      status: payload.status,
+      sortOrder: payload.sortOrder,
+      cover: payload.cover,
+      externalUrl: payload.externalUrl,
+      tags: payload.tags,
+      locales: payload.locales
+    })
+    upsertProject(saved)
+    await refresh()
+    toast.add({
     title: '项目状态已更新',
-    description: `当前项目状态已切换为 ${status}。`,
-    color: 'success'
-  })
+      description: `当前项目状态已切换为 ${status}。`,
+      color: 'success'
+    })
+  } catch (saveError) {
+    const message = saveError instanceof Error ? saveError.message : '状态更新失败，请稍后重试。'
+    toast.add({
+      title: '项目状态更新失败',
+      description: message,
+      color: 'error'
+    })
+  }
 }
 
-function handleMove(project: ProjectRecord, direction: 'up' | 'down') {
-  moveProject(project.id, direction)
+async function handleMove(project: ProjectRecord, direction: 'up' | 'down') {
+  const moved = moveProject(project.id, direction)
+
+  if (!moved) {
+    return
+  }
+
+  await apiClient.updateProject(moved.current.id, {
+    slug: moved.current.slug,
+    status: moved.current.status,
+    sortOrder: moved.current.sortOrder,
+    cover: moved.current.cover,
+    externalUrl: moved.current.externalUrl,
+    tags: moved.current.tags,
+    locales: moved.current.locales
+  })
+  await apiClient.updateProject(moved.target.id, {
+    slug: moved.target.slug,
+    status: moved.target.status,
+    sortOrder: moved.target.sortOrder,
+    cover: moved.target.cover,
+    externalUrl: moved.target.externalUrl,
+    tags: moved.target.tags,
+    locales: moved.target.locales
+  })
+  await refresh()
+
   toast.add({
     title: '项目顺序已更新',
     description: `${project.slug} 已完成排序调整。`,
@@ -72,8 +155,10 @@ function handleMove(project: ProjectRecord, direction: 'up' | 'down') {
   })
 }
 
-function handleRemoveProject(project: ProjectRecord) {
-  removeProject(project.id)
+async function handleRemoveProject(project: ProjectRecord) {
+  await apiClient.deleteProject(project.id)
+  removeProjectLocally(project.id)
+  await refresh()
   toast.add({
     title: '项目已移除',
     description: `${project.slug} 已从本地项目列表中删除。`,
@@ -84,16 +169,29 @@ function handleRemoveProject(project: ProjectRecord) {
 
 <template>
   <UContainer class="py-10">
-    <div class="space-y-6">
+    <template v-if="pending">
+      <UCard>
+        <p class="text-sm text-muted">
+          正在加载项目列表…
+        </p>
+      </UCard>
+    </template>
+
+    <template v-else-if="error || !data">
+      <UAlert title="项目列表加载失败" description="请检查 P3 项目模块 API 接入。" color="error" variant="subtle" />
+    </template>
+
+    <template v-else>
+      <div class="space-y-6">
       <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div class="space-y-2">
-          <UBadge label="A6 项目管理模块" variant="subtle" color="primary" class="w-fit" />
+          <UBadge label="P3 项目管理迁移" variant="subtle" color="primary" class="w-fit" />
           <div class="space-y-1">
             <h1 class="text-2xl font-semibold text-highlighted">
               项目管理
             </h1>
             <p class="max-w-3xl text-sm text-muted">
-              当前阶段已建立项目列表、项目编辑表单、项目排序、标签维护、多语言说明、封面链接、外链和发布状态管理，用于为前台项目展示页提供结构化数据来源。
+              当前阶段已切换为通过 API Server 维护项目列表，项目编辑、排序、删除、标签、多语言说明和发布状态都会进入真实持久化链路。
             </p>
           </div>
         </div>
@@ -239,7 +337,7 @@ function handleRemoveProject(project: ProjectRecord) {
               编辑项目
             </h2>
             <p class="text-sm text-muted">
-              当前阶段使用本地文档模型维护项目内容，后续可替换为真实项目管理 API。
+              当前阶段已使用真实项目管理 API 维护项目内容，后续可继续扩展为项目详情与公开查询接口。
             </p>
           </div>
         </template>
@@ -313,6 +411,7 @@ function handleRemoveProject(project: ProjectRecord) {
           </div>
         </template>
       </UCard>
-    </div>
+      </div>
+    </template>
   </UContainer>
 </template>

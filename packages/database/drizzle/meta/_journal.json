@@ -29,6 +29,13 @@
       "when": 1772898600000,
       "tag": "0003_resume_documents",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1772903100000,
+      "tag": "0004_projects",
+      "breakpoints": true
     }
   ]
 }

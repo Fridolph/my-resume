@@ -5,8 +5,9 @@ import { SiteSettingsModule } from './modules/site-settings/site-settings.module
 import { UsersModule } from './modules/users/users.module.js'
 import { TranslationsModule } from './modules/translations/translations.module.js'
 import { ResumeModule } from './modules/resume/resume.module.js'
+import { ProjectsModule } from './modules/projects/projects.module.js'
 
 @Module({
-  imports: [DatabaseModule, HealthModule, SiteSettingsModule, UsersModule, TranslationsModule, ResumeModule]
+  imports: [DatabaseModule, HealthModule, SiteSettingsModule, UsersModule, TranslationsModule, ResumeModule, ProjectsModule]
 })
 export class AppModule {}

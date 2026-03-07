@@ -20,8 +20,8 @@ function createProjectRecord(input?: Partial<ProjectRecord>): ProjectRecord {
     slug: input?.slug ?? '',
     status: input?.status ?? 'draft',
     sortOrder: input?.sortOrder ?? 0,
-    cover: input?.cover ?? '',
-    externalUrl: input?.externalUrl ?? '',
+    cover: input?.cover ?? 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80',
+    externalUrl: input?.externalUrl ?? 'https://example.com/project',
     tags: input?.tags ?? [],
     updatedAt: input?.updatedAt ?? new Date().toISOString(),
     locales: input?.locales ?? {
@@ -52,53 +52,11 @@ const initialProjects: ProjectRecord[] = [
         summary: 'Used to host the public web experience, admin workflows, and localized content.'
       })
     }
-  }),
-  createProjectRecord({
-    id: 'project_design_system',
-    slug: 'design-system-draft',
-    status: 'reviewing',
-    sortOrder: 2,
-    cover: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80',
-    externalUrl: 'https://example.com/design-system',
-    tags: ['Design Tokens', 'Reusable UI', 'Theme'],
-    locales: {
-      'zh-CN': createLocaleContent('zh-CN', {
-        title: 'Design System Draft',
-        description: '预留 UI 设计系统沉淀方向。',
-        summary: '用于验证设计系统说明、组件文档和视觉 token 的组织方式。'
-      }),
-      'en-US': createLocaleContent('en-US', {
-        title: 'Design System Draft',
-        description: 'A reserved direction for a design system and reusable UI documentation.',
-        summary: 'Validates how tokens, reusable UI, and design-system notes can be managed.'
-      })
-    }
-  }),
-  createProjectRecord({
-    id: 'project_i18n_hub',
-    slug: 'i18n-content-hub',
-    status: 'draft',
-    sortOrder: 3,
-    cover: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
-    externalUrl: 'https://example.com/i18n-hub',
-    tags: ['i18n', 'CMS', 'Content Workflow'],
-    locales: {
-      'zh-CN': createLocaleContent('zh-CN', {
-        title: 'i18n Content Hub',
-        description: '预留文案与内容管理中心方向。',
-        summary: '用于验证翻译结果、内容版本和项目详情的统一管理方式。'
-      }),
-      'en-US': createLocaleContent('en-US', {
-        title: 'i18n Content Hub',
-        description: 'A reserved direction for translation workflow and content management.',
-        summary: 'Validates how translations, content versions, and project details can be managed together.'
-      })
-    }
   })
 ]
 
-export function useProjectManagement() {
-  const projects = useState<ProjectRecord[]>('admin-projects', () => structuredClone(initialProjects))
+export function useProjectManagement(initialProjectsValue?: ProjectRecord[] | null) {
+  const projects = useState<ProjectRecord[]>('admin-projects', () => structuredClone(initialProjectsValue ?? initialProjects))
   const keyword = ref('')
   const selectedLocale = ref<WebLocale>('zh-CN')
   const selectedStatus = ref<'all' | PublishStatus>('all')
@@ -168,6 +126,11 @@ export function useProjectManagement() {
     project.updatedAt = new Date().toISOString()
   }
 
+  function replaceProjects(nextProjects: ProjectRecord[]) {
+    projects.value = structuredClone(nextProjects)
+    selectedProjectId.value = nextProjects[0]?.id ?? null
+  }
+
   function selectProject(id: string) {
     selectedProjectId.value = id
     isEditorOpen.value = true
@@ -204,9 +167,12 @@ export function useProjectManagement() {
     isEditorOpen.value = false
   }
 
-  function saveProject() {
+  function buildProjectInput() {
     if (!editorProject.value || !editorLocaleContent.value) {
-      return
+      throw createError({
+        statusCode: 400,
+        statusMessage: '当前没有可保存的项目'
+      })
     }
 
     if (!editorProject.value.slug.trim() || !editorLocaleContent.value.title.trim()) {
@@ -218,6 +184,17 @@ export function useProjectManagement() {
 
     editorProject.value.tags = editorProject.value.tags.map(tag => tag.trim()).filter(Boolean)
     touchProject(editorProject.value)
+
+    return {
+      id: editorProject.value.id,
+      slug: editorProject.value.slug.trim(),
+      status: editorProject.value.status,
+      sortOrder: editorProject.value.sortOrder,
+      cover: editorProject.value.cover.trim(),
+      externalUrl: editorProject.value.externalUrl.trim(),
+      tags: [...editorProject.value.tags],
+      locales: structuredClone(editorProject.value.locales)
+    }
   }
 
   function updateTags(value: string) {
@@ -248,14 +225,14 @@ export function useProjectManagement() {
     const targetIndex = direction === 'up' ? index - 1 : index + 1
 
     if (index < 0 || targetIndex < 0 || targetIndex >= ordered.length) {
-      return
+      return null
     }
 
     const current = ordered[index]
     const target = ordered[targetIndex]
 
     if (!current || !target) {
-      return
+      return null
     }
 
     const temp = current.sortOrder
@@ -264,15 +241,27 @@ export function useProjectManagement() {
     touchProject(current)
     touchProject(target)
     projects.value = [...ordered]
+
+    return {
+      current: structuredClone(current),
+      target: structuredClone(target)
+    }
   }
 
-  function removeProject(id: string) {
+  function removeProjectLocally(id: string) {
     const nextProjects = projects.value.filter(project => project.id !== id)
     projects.value = nextProjects
     selectedProjectId.value = nextProjects[0]?.id ?? null
     if (!selectedProjectId.value) {
       isEditorOpen.value = false
     }
+  }
+
+  function upsertProject(nextProject: ProjectRecord) {
+    const exists = projects.value.some(project => project.id === nextProject.id)
+    projects.value = exists
+      ? projects.value.map(project => project.id === nextProject.id ? nextProject : project)
+      : [...projects.value, nextProject]
   }
 
   return {
@@ -290,13 +279,15 @@ export function useProjectManagement() {
     editorProject,
     editorLocaleContent,
     localeCoverage,
+    replaceProjects,
     selectProject,
     openCreateProject,
     closeEditor,
-    saveProject,
+    buildProjectInput,
     updateTags,
     setProjectStatus,
     moveProject,
-    removeProject
+    removeProjectLocally,
+    upsertProject
   }
 }
