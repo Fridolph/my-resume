@@ -1,9 +1,9 @@
-import { createUsersApiClient } from '@repo/sdk'
+import { createTranslationsApiClient } from '@repo/sdk'
 
 export function usePlatformApiClient() {
   const runtimeConfig = useRuntimeConfig()
 
-  return createUsersApiClient({
+  return createTranslationsApiClient({
     baseUrl: runtimeConfig.public.apiBaseUrl
   })
 }

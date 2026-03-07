@@ -15,6 +15,13 @@
       "when": 1772889000000,
       "tag": "0001_users",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1772893200000,
+      "tag": "0002_translations",
+      "breakpoints": true
     }
   ]
 }
