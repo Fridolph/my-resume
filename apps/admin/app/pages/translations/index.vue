@@ -3,6 +3,7 @@ import type { PublishStatus, TranslationNamespace, TranslationRecord, Translatio
 
 const { getStatusColor, getStatusLabel, getSelectableStatusOptions, getPrimaryTransitionAction, getActorLabel, getPublishedAtLabel, getVersionChangeTypeLabel } = useContentWorkflow()
 const { formatDateTime } = useDateTimeFormatter()
+const { getTranslationVersionInsights } = useContentVersionInsights()
 
 definePageMeta({
   middleware: 'auth'
@@ -205,13 +206,23 @@ async function handlePrimaryTransition(record: TranslationRecord) {
     </template>
 
     <template v-else-if="error || !data">
-      <UAlert title="文案列表加载失败" description="请检查 P3 文案模块 API 接入。" color="error" variant="subtle" />
+      <UAlert
+        title="文案列表加载失败"
+        description="请检查 P3 文案模块 API 接入。"
+        color="error"
+        variant="subtle"
+      />
     </template>
 
     <template v-else>
       <div class="space-y-6">
         <div class="space-y-2">
-          <UBadge label="P3 i18n 文案迁移" variant="subtle" color="primary" class="w-fit" />
+          <UBadge
+            label="P3 i18n 文案迁移"
+            variant="subtle"
+            color="primary"
+            class="w-fit"
+          />
           <div class="space-y-1">
             <h1 class="text-2xl font-semibold text-highlighted">
               文案管理
@@ -224,20 +235,36 @@ async function handlePrimaryTransition(record: TranslationRecord) {
 
         <div class="grid gap-4 md:grid-cols-4">
           <UCard>
-            <template #header>总文案数</template>
-            <p class="text-2xl font-semibold text-highlighted">{{ stats.total }}</p>
+            <template #header>
+              总文案数
+            </template>
+            <p class="text-2xl font-semibold text-highlighted">
+              {{ stats.total }}
+            </p>
           </UCard>
           <UCard>
-            <template #header>缺失项</template>
-            <p class="text-2xl font-semibold text-highlighted">{{ stats.missing }}</p>
+            <template #header>
+              缺失项
+            </template>
+            <p class="text-2xl font-semibold text-highlighted">
+              {{ stats.missing }}
+            </p>
           </UCard>
           <UCard>
-            <template #header>草稿</template>
-            <p class="text-2xl font-semibold text-highlighted">{{ stats.draft }}</p>
+            <template #header>
+              草稿
+            </template>
+            <p class="text-2xl font-semibold text-highlighted">
+              {{ stats.draft }}
+            </p>
           </UCard>
           <UCard>
-            <template #header>已发布</template>
-            <p class="text-2xl font-semibold text-highlighted">{{ stats.published }}</p>
+            <template #header>
+              已发布
+            </template>
+            <p class="text-2xl font-semibold text-highlighted">
+              {{ stats.published }}
+            </p>
           </UCard>
         </div>
 
@@ -255,28 +282,53 @@ async function handlePrimaryTransition(record: TranslationRecord) {
 
           <div class="grid gap-4 lg:grid-cols-[2fr_1fr_1fr_1fr]">
             <UFormField label="关键字搜索">
-              <UInput v-model="keyword" icon="i-lucide-search" placeholder="按 key 或 value 搜索" />
+              <UInput
+                v-model="keyword"
+                icon="i-lucide-search"
+                placeholder="按 key 或 value 搜索"
+              />
             </UFormField>
 
             <UFormField label="命名空间">
-              <select v-model="selectedNamespace" class="w-full rounded-md border border-default bg-default px-3 py-2 text-sm text-default">
-                <option v-for="option in namespaceOptions" :key="option.value" :value="option.value">
+              <select
+                v-model="selectedNamespace"
+                class="w-full rounded-md border border-default bg-default px-3 py-2 text-sm text-default"
+              >
+                <option
+                  v-for="option in namespaceOptions"
+                  :key="option.value"
+                  :value="option.value"
+                >
                   {{ option.label }}
                 </option>
               </select>
             </UFormField>
 
             <UFormField label="语言">
-              <select v-model="selectedLocale" class="w-full rounded-md border border-default bg-default px-3 py-2 text-sm text-default">
-                <option v-for="option in localeOptions" :key="option.value" :value="option.value">
+              <select
+                v-model="selectedLocale"
+                class="w-full rounded-md border border-default bg-default px-3 py-2 text-sm text-default"
+              >
+                <option
+                  v-for="option in localeOptions"
+                  :key="option.value"
+                  :value="option.value"
+                >
                   {{ option.label }}
                 </option>
               </select>
             </UFormField>
 
             <UFormField label="状态">
-              <select v-model="selectedStatus" class="w-full rounded-md border border-default bg-default px-3 py-2 text-sm text-default">
-                <option v-for="option in statusOptions" :key="option.value" :value="option.value">
+              <select
+                v-model="selectedStatus"
+                class="w-full rounded-md border border-default bg-default px-3 py-2 text-sm text-default"
+              >
+                <option
+                  v-for="option in statusOptions"
+                  :key="option.value"
+                  :value="option.value"
+                >
                   {{ option.label }}
                 </option>
               </select>
@@ -297,13 +349,20 @@ async function handlePrimaryTransition(record: TranslationRecord) {
           </template>
 
           <div class="grid gap-4 md:grid-cols-2">
-            <UCard v-for="coverage in localeCoverage" :key="coverage.locale">
+            <UCard
+              v-for="coverage in localeCoverage"
+              :key="coverage.locale"
+            >
               <template #header>
                 <div class="flex items-center justify-between gap-3">
                   <h3 class="text-base font-semibold text-highlighted">
                     {{ coverage.locale }}
                   </h3>
-                  <UBadge :label="coverage.missing ? `缺失 ${coverage.missing}` : '已覆盖'" :color="coverage.missing ? 'warning' : 'success'" variant="subtle" />
+                  <UBadge
+                    :label="coverage.missing ? `缺失 ${coverage.missing}` : '已覆盖'"
+                    :color="coverage.missing ? 'warning' : 'success'"
+                    variant="subtle"
+                  />
                 </div>
               </template>
 
@@ -315,7 +374,10 @@ async function handlePrimaryTransition(record: TranslationRecord) {
         </UCard>
 
         <div class="grid gap-4">
-          <UCard v-for="record in filteredTranslations" :key="record.id">
+          <UCard
+            v-for="record in filteredTranslations"
+            :key="record.id"
+          >
             <template #header>
               <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div class="space-y-1">
@@ -323,10 +385,27 @@ async function handlePrimaryTransition(record: TranslationRecord) {
                     <h2 class="text-base font-semibold text-highlighted">
                       {{ record.key }}
                     </h2>
-                    <UBadge :label="record.namespace" color="neutral" variant="subtle" />
-                    <UBadge :label="record.locale" color="neutral" variant="subtle" />
-                    <UBadge :label="getStatusLabel(record.status)" :color="getStatusColor(record.status)" variant="subtle" />
-                    <UBadge v-if="record.missing" label="缺失" color="error" variant="subtle" />
+                    <UBadge
+                      :label="record.namespace"
+                      color="neutral"
+                      variant="subtle"
+                    />
+                    <UBadge
+                      :label="record.locale"
+                      color="neutral"
+                      variant="subtle"
+                    />
+                    <UBadge
+                      :label="getStatusLabel(record.status)"
+                      :color="getStatusColor(record.status)"
+                      variant="subtle"
+                    />
+                    <UBadge
+                      v-if="record.missing"
+                      label="缺失"
+                      color="error"
+                      variant="subtle"
+                    />
                   </div>
                   <p class="text-xs text-muted">
                     更新时间：{{ formatDateTime(record.updatedAt) }}
@@ -340,9 +419,19 @@ async function handlePrimaryTransition(record: TranslationRecord) {
                 </div>
 
                 <div class="flex flex-wrap gap-2">
-                  <UButton label="查看版本" color="neutral" variant="subtle" @click="toggleTranslationVersions(record.id)" />
+                  <UButton
+                    label="查看版本"
+                    color="neutral"
+                    variant="subtle"
+                    @click="toggleTranslationVersions(record.id)"
+                  />
                   <template v-if="canWriteTranslations">
-                    <UButton label="编辑文案" color="neutral" variant="subtle" @click="openEditor(record)" />
+                    <UButton
+                      label="编辑文案"
+                      color="neutral"
+                      variant="subtle"
+                      @click="openEditor(record)"
+                    />
                     <UButton
                       v-if="getPrimaryTransitionAction(record.status)"
                       :label="getPrimaryTransitionAction(record.status)?.label"
@@ -365,32 +454,117 @@ async function handlePrimaryTransition(record: TranslationRecord) {
                 </p>
               </div>
 
-              <div v-if="expandedVersionId === record.id" class="space-y-3 rounded-md border border-default bg-elevated/20 p-4">
-                <p class="text-sm font-medium text-default">版本历史</p>
+              <div
+                v-if="expandedVersionId === record.id"
+                class="space-y-3 rounded-md border border-default bg-elevated/20 p-4"
+              >
+                <p class="text-sm font-medium text-default">
+                  版本历史
+                </p>
 
-                <p v-if="translationVersionsPending[record.id]" class="text-sm text-muted">
+                <p
+                  v-if="translationVersionsPending[record.id]"
+                  class="text-sm text-muted"
+                >
                   正在加载文案版本…
                 </p>
 
-                <div v-else class="space-y-3">
-                  <UCard v-for="version in translationVersions[record.id] ?? []" :key="version.id">
+                <div
+                  v-else
+                  class="space-y-3"
+                >
+                  <UCard
+                    v-for="version in translationVersions[record.id] ?? []"
+                    :key="version.id"
+                  >
                     <template #header>
                       <div class="flex flex-wrap items-center gap-2">
-                        <UBadge :label="`版本 v${version.version}`" color="primary" variant="subtle" />
-                        <UBadge :label="getStatusLabel(version.status)" :color="getStatusColor(version.status)" variant="subtle" />
-                        <UBadge :label="getVersionChangeTypeLabel(version.changeType)" color="neutral" variant="subtle" />
+                        <UBadge
+                          :label="`版本 v${version.version}`"
+                          color="primary"
+                          variant="subtle"
+                        />
+                        <UBadge
+                          :label="getStatusLabel(version.status)"
+                          :color="getStatusColor(version.status)"
+                          variant="subtle"
+                        />
+                        <UBadge
+                          :label="getVersionChangeTypeLabel(version.changeType)"
+                          color="neutral"
+                          variant="subtle"
+                        />
                       </div>
                     </template>
 
                     <div class="space-y-3 text-sm text-muted">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <UBadge
+                          :label="getTranslationVersionInsights(version, record).changeLabel"
+                          :color="getTranslationVersionInsights(version, record).changeColor"
+                          variant="subtle"
+                        />
+                        <UBadge
+                          v-for="highlight in getTranslationVersionInsights(version, record).highlights"
+                          :key="highlight"
+                          :label="highlight"
+                          color="warning"
+                          variant="subtle"
+                        />
+                      </div>
+
+                      <div class="grid gap-3 md:grid-cols-2">
+                        <div
+                          v-for="item in getTranslationVersionInsights(version, record).summaryItems"
+                          :key="item.label"
+                          class="rounded-md border border-default bg-elevated/30 p-3"
+                        >
+                          <p class="text-xs text-muted">
+                            {{ item.label }}
+                          </p>
+                          <p class="font-medium text-default">
+                            {{ item.value }}
+                          </p>
+                          <p class="text-xs text-muted">
+                            {{ item.hint }}
+                          </p>
+                        </div>
+                      </div>
+
                       <div class="space-y-1">
                         <p>创建人：{{ getActorLabel(version.createdBy) }}</p>
                         <p>创建时间：{{ formatDateTime(version.createdAt) }}</p>
-                        <p>版本文案：{{ version.snapshot.value || '暂无' }}</p>
                       </div>
 
-                      <div v-if="canWriteTranslations" class="flex justify-end">
-                        <UButton label="恢复此版本" color="warning" variant="subtle" @click="handleRestoreTranslationVersion(record, version.id)" />
+                      <div class="grid gap-3 md:grid-cols-2">
+                        <div class="space-y-1">
+                          <p class="text-xs text-muted">
+                            历史文案
+                          </p>
+                          <p class="rounded-md border border-default bg-elevated/30 px-3 py-3 text-sm text-default">
+                            {{ version.snapshot.value || '暂无' }}
+                          </p>
+                        </div>
+                        <div class="space-y-1">
+                          <p class="text-xs text-muted">
+                            当前文案
+                          </p>
+                          <p class="rounded-md border border-default bg-elevated/30 px-3 py-3 text-sm text-default">
+                            {{ record.value || '暂无' }}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div
+                        v-if="canWriteTranslations"
+                        class="flex justify-end"
+                      >
+                        <UButton
+                          label="恢复此版本"
+                          color="warning"
+                          variant="subtle"
+                          @click="handleRestoreTranslationVersion(record, version.id)"
+                        />
                       </div>
                     </div>
                   </UCard>
@@ -414,12 +588,23 @@ async function handlePrimaryTransition(record: TranslationRecord) {
 
           <div class="space-y-4">
             <UFormField label="文案内容">
-              <UTextarea v-model="form.value" :rows="5" placeholder="请输入翻译内容" />
+              <UTextarea
+                v-model="form.value"
+                :rows="5"
+                placeholder="请输入翻译内容"
+              />
             </UFormField>
 
             <UFormField label="发布状态">
-              <select v-model="form.status" class="w-full rounded-md border border-default bg-default px-3 py-2 text-sm text-default">
-                <option v-for="option in editorStatusOptions" :key="option.value" :value="option.value">
+              <select
+                v-model="form.status"
+                class="w-full rounded-md border border-default bg-default px-3 py-2 text-sm text-default"
+              >
+                <option
+                  v-for="option in editorStatusOptions"
+                  :key="option.value"
+                  :value="option.value"
+                >
                   {{ option.label }}
                 </option>
               </select>
@@ -428,8 +613,16 @@ async function handlePrimaryTransition(record: TranslationRecord) {
 
           <template #footer>
             <div class="flex gap-3">
-              <UButton label="保存文案" @click="handleSaveTranslation" />
-              <UButton label="取消" color="neutral" variant="subtle" @click="closeEditor" />
+              <UButton
+                label="保存文案"
+                @click="handleSaveTranslation"
+              />
+              <UButton
+                label="取消"
+                color="neutral"
+                variant="subtle"
+                @click="closeEditor"
+              />
             </div>
           </template>
         </UCard>

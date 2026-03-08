@@ -3,6 +3,7 @@ import type { ProjectRecord, ProjectVersionRecord, PublishStatus } from '@repo/t
 
 const { getStatusColor, getStatusLabel, getSelectableStatusOptions, getActorLabel, getPublishedAtLabel, getVersionChangeTypeLabel } = useContentWorkflow()
 const { formatDateTime } = useDateTimeFormatter()
+const { getProjectVersionInsights } = useContentVersionInsights()
 
 definePageMeta({
   middleware: 'auth'
@@ -203,7 +204,6 @@ async function handleRemoveProject(project: ProjectRecord) {
   })
 }
 
-
 async function handleRestoreProjectVersion(versionId: string) {
   if (!editorProject.value) {
     return
@@ -240,127 +240,74 @@ async function handleRestoreProjectVersion(versionId: string) {
     </template>
 
     <template v-else-if="error || !data">
-      <UAlert title="项目列表加载失败" description="请检查 P3 项目模块 API 接入。" color="error" variant="subtle" />
+      <UAlert
+        title="项目列表加载失败"
+        description="请检查 P3 项目模块 API 接入。"
+        color="error"
+        variant="subtle"
+      />
     </template>
 
     <template v-else>
       <div class="space-y-6">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div class="space-y-2">
-          <UBadge label="P3 项目管理迁移" variant="subtle" color="primary" class="w-fit" />
-          <div class="space-y-1">
-            <h1 class="text-2xl font-semibold text-highlighted">
-              项目管理
-            </h1>
-            <p class="max-w-3xl text-sm text-muted">
-              当前阶段已切换为通过 API Server 维护项目列表，项目编辑、排序、删除、标签、多语言说明和发布状态都会进入真实持久化链路。
-            </p>
-          </div>
-        </div>
-
-        <UButton
-          v-if="canWriteProjects"
-          label="新建项目"
-          icon="i-lucide-folder-plus"
-          @click="openCreateProject"
-        />
-      </div>
-
-      <div class="grid gap-4 md:grid-cols-4">
-        <UCard>
-          <template #header>项目总数</template>
-          <p class="text-2xl font-semibold text-highlighted">{{ stats.total }}</p>
-        </UCard>
-        <UCard>
-          <template #header>已发布</template>
-          <p class="text-2xl font-semibold text-highlighted">{{ stats.published }}</p>
-        </UCard>
-        <UCard>
-          <template #header>审核中</template>
-          <p class="text-2xl font-semibold text-highlighted">{{ stats.reviewing }}</p>
-        </UCard>
-        <UCard>
-          <template #header>草稿</template>
-          <p class="text-2xl font-semibold text-highlighted">{{ stats.draft }}</p>
-        </UCard>
-      </div>
-
-      <UCard>
-        <template #header>
-          <div class="space-y-1">
-            <h2 class="text-base font-semibold text-highlighted">
-              查询、语言与状态
-            </h2>
-            <p class="text-sm text-muted">
-              用于验证项目管理页面的列表筛选、多语言切换和状态控制边界。
-            </p>
-          </div>
-        </template>
-
-        <div class="grid gap-4 lg:grid-cols-[1.6fr_1fr_1fr]">
-          <UFormField label="关键字搜索">
-            <UInput v-model="keyword" placeholder="按 slug、标题、描述或标签搜索" icon="i-lucide-search" />
-          </UFormField>
-
-          <UFormField label="编辑语言">
-            <select v-model="selectedLocale" class="w-full rounded-md border border-default bg-default px-3 py-2 text-sm text-default">
-              <option v-for="option in localeOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-          </UFormField>
-
-          <UFormField label="状态筛选">
-            <select v-model="selectedStatus" class="w-full rounded-md border border-default bg-default px-3 py-2 text-sm text-default">
-              <option v-for="option in statusOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-          </UFormField>
-        </div>
-      </UCard>
-
-      <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <div class="space-y-4">
-          <UCard v-for="project in filteredProjects" :key="project.id">
-            <template #header>
-              <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div class="space-y-1">
-                  <div class="flex flex-wrap items-center gap-2">
-                    <h2 class="text-base font-semibold text-highlighted">
-                      {{ project.locales[selectedLocale].title }}
-                    </h2>
-                    <UBadge :label="project.slug" color="neutral" variant="subtle" />
-                    <UBadge :label="getStatusLabel(project.status)" :color="getStatusColor(project.status)" variant="subtle" />
-                    <UBadge :label="`排序 #${project.sortOrder}`" color="neutral" variant="subtle" />
-                  </div>
-                  <p class="text-sm text-muted">
-                    {{ project.locales[selectedLocale].description }}
-                  </p>
-                  <p class="text-xs text-muted">
-                    更新时间：{{ formatDateTime(project.updatedAt) }}
-                  </p>
-                  <p class="text-xs text-muted">
-                    更新人：{{ getActorLabel(project.updatedBy) }}
-                  </p>
-                </div>
-
-                <div class="flex flex-wrap gap-2" v-if="canWriteProjects">
-                  <UButton label="上移" color="neutral" variant="subtle" @click="handleMove(project, 'up')" />
-                  <UButton label="下移" color="neutral" variant="subtle" @click="handleMove(project, 'down')" />
-                  <UButton label="编辑" color="neutral" variant="subtle" @click="selectProject(project.id)" />
-                </div>
-              </div>
-            </template>
-
-            <div class="space-y-3">
-              <div class="flex flex-wrap gap-2">
-                <UBadge v-for="tag in project.tags" :key="tag" :label="tag" color="neutral" variant="subtle" />
-              </div>
-              <p class="text-sm text-muted">
-                {{ project.locales[selectedLocale].summary }}
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div class="space-y-2">
+            <UBadge
+              label="P3 项目管理迁移"
+              variant="subtle"
+              color="primary"
+              class="w-fit"
+            />
+            <div class="space-y-1">
+              <h1 class="text-2xl font-semibold text-highlighted">
+                项目管理
+              </h1>
+              <p class="max-w-3xl text-sm text-muted">
+                当前阶段已切换为通过 API Server 维护项目列表，项目编辑、排序、删除、标签、多语言说明和发布状态都会进入真实持久化链路。
               </p>
             </div>
+          </div>
+
+          <UButton
+            v-if="canWriteProjects"
+            label="新建项目"
+            icon="i-lucide-folder-plus"
+            @click="openCreateProject"
+          />
+        </div>
+
+        <div class="grid gap-4 md:grid-cols-4">
+          <UCard>
+            <template #header>
+              项目总数
+            </template>
+            <p class="text-2xl font-semibold text-highlighted">
+              {{ stats.total }}
+            </p>
+          </UCard>
+          <UCard>
+            <template #header>
+              已发布
+            </template>
+            <p class="text-2xl font-semibold text-highlighted">
+              {{ stats.published }}
+            </p>
+          </UCard>
+          <UCard>
+            <template #header>
+              审核中
+            </template>
+            <p class="text-2xl font-semibold text-highlighted">
+              {{ stats.reviewing }}
+            </p>
+          </UCard>
+          <UCard>
+            <template #header>
+              草稿
+            </template>
+            <p class="text-2xl font-semibold text-highlighted">
+              {{ stats.draft }}
+            </p>
           </UCard>
         </div>
 
@@ -368,154 +315,409 @@ async function handleRestoreProjectVersion(versionId: string) {
           <template #header>
             <div class="space-y-1">
               <h2 class="text-base font-semibold text-highlighted">
-                多语言覆盖概览
+                查询、语言与状态
               </h2>
               <p class="text-sm text-muted">
-                用于快速查看每个项目在不同语言下的字段完整度。
+                用于验证项目管理页面的列表筛选、多语言切换和状态控制边界。
               </p>
             </div>
           </template>
 
-          <div class="space-y-3">
-            <UCard v-for="coverage in localeCoverage" :key="coverage.id">
-              <template #header>
-                <div class="space-y-1">
-                  <p class="font-medium text-default">{{ coverage.slug }}</p>
-                </div>
-              </template>
-
-              <div class="space-y-2 text-sm text-muted">
-                <div v-for="localeInfo in coverage.localeMap" :key="`${coverage.id}-${localeInfo.locale}`" class="flex items-center justify-between gap-3">
-                  <span>{{ localeInfo.locale }}</span>
-                  <UBadge :label="`${localeInfo.missingFields} 个缺失字段`" :color="localeInfo.missingFields === 0 ? 'success' : 'warning'" variant="subtle" />
-                </div>
-              </div>
-            </UCard>
-          </div>
-        </UCard>
-      </div>
-
-      <UCard v-if="isEditorOpen && editorProject && editorLocaleContent && canWriteProjects">
-        <template #header>
-          <div class="space-y-1">
-            <h2 class="text-base font-semibold text-highlighted">
-              编辑项目
-            </h2>
-            <p class="text-sm text-muted">
-              当前阶段已使用真实项目管理 API 维护项目内容，后续可继续扩展为项目详情与公开查询接口。
-            </p>
-          </div>
-        </template>
-
-        <div class="grid gap-6 xl:grid-cols-[1fr_1fr]">
-          <div class="space-y-4">
-            <UFormField label="Slug">
-              <UInput v-model="editorProject.slug" placeholder="请输入项目 slug" />
-            </UFormField>
-
-            <UFormField label="当前语言标题">
-              <UInput v-model="editorLocaleContent.title" placeholder="请输入项目标题" />
-            </UFormField>
-
-            <UFormField label="当前语言描述">
-              <UTextarea v-model="editorLocaleContent.description" :rows="3" placeholder="请输入项目描述" />
-            </UFormField>
-
-            <UFormField label="当前语言摘要">
-              <UTextarea v-model="editorLocaleContent.summary" :rows="4" placeholder="请输入项目摘要" />
-            </UFormField>
-
-            <UFormField label="项目标签 / 技术栈（每行一条）">
-              <UTextarea
-                :model-value="editorProject.tags.join('\n')"
-                :rows="5"
-                placeholder="Nuxt 4\nMonorepo\nNuxt UI"
-                @update:model-value="updateTags(String($event))"
+          <div class="grid gap-4 lg:grid-cols-[1.6fr_1fr_1fr]">
+            <UFormField label="关键字搜索">
+              <UInput
+                v-model="keyword"
+                placeholder="按 slug、标题、描述或标签搜索"
+                icon="i-lucide-search"
               />
             </UFormField>
-          </div>
 
-          <div class="space-y-4">
-            <UFormField label="封面图链接">
-              <UInput v-model="editorProject.cover" placeholder="请输入封面图链接" />
-            </UFormField>
-
-            <UFormField label="项目外链">
-              <UInput v-model="editorProject.externalUrl" placeholder="请输入项目外链" />
-            </UFormField>
-
-            <UFormField label="发布状态">
+            <UFormField label="编辑语言">
               <select
-                :value="editorProject.status"
+                v-model="selectedLocale"
                 class="w-full rounded-md border border-default bg-default px-3 py-2 text-sm text-default"
-                @change="handleStatusChange(($event.target as HTMLSelectElement).value as PublishStatus)"
               >
-                <option v-for="option in projectStatusOptions" :key="option.value" :value="option.value">
+                <option
+                  v-for="option in localeOptions"
+                  :key="option.value"
+                  :value="option.value"
+                >
                   {{ option.label }}
                 </option>
               </select>
             </UFormField>
 
-            <UFormField label="排序值">
-              <UInput v-model.number="editorProject.sortOrder" type="number" min="1" />
+            <UFormField label="状态筛选">
+              <select
+                v-model="selectedStatus"
+                class="w-full rounded-md border border-default bg-default px-3 py-2 text-sm text-default"
+              >
+                <option
+                  v-for="option in statusOptions"
+                  :key="option.value"
+                  :value="option.value"
+                >
+                  {{ option.label }}
+                </option>
+              </select>
             </UFormField>
+          </div>
+        </UCard>
 
-            <div class="rounded-lg border border-default bg-elevated/40 p-4 text-sm text-muted space-y-2">
-              <p>当前语言：{{ selectedLocale }}</p>
-              <p>更新时间：{{ formatDateTime(editorProject.updatedAt) }}</p>
-              <p>更新人：{{ getActorLabel(editorProject.updatedBy) }}</p>
-              <p>审核人：{{ getActorLabel(editorProject.reviewedBy) }}</p>
-              <p>发布时间：{{ getPublishedAtLabel(editorProject.publishedAt) }}</p>
-              <p>封面图：{{ editorProject.cover || '未填写' }}</p>
-            </div>
-
-            <UCard>
+        <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+          <div class="space-y-4">
+            <UCard
+              v-for="project in filteredProjects"
+              :key="project.id"
+            >
               <template #header>
-                <div class="space-y-1">
-                  <h3 class="text-base font-semibold text-highlighted">版本历史</h3>
-                  <p class="text-sm text-muted">查看当前项目的历史快照，为后续回滚能力做准备。</p>
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div class="space-y-1">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <h2 class="text-base font-semibold text-highlighted">
+                        {{ project.locales[selectedLocale].title }}
+                      </h2>
+                      <UBadge
+                        :label="project.slug"
+                        color="neutral"
+                        variant="subtle"
+                      />
+                      <UBadge
+                        :label="getStatusLabel(project.status)"
+                        :color="getStatusColor(project.status)"
+                        variant="subtle"
+                      />
+                      <UBadge
+                        :label="`排序 #${project.sortOrder}`"
+                        color="neutral"
+                        variant="subtle"
+                      />
+                    </div>
+                    <p class="text-sm text-muted">
+                      {{ project.locales[selectedLocale].description }}
+                    </p>
+                    <p class="text-xs text-muted">
+                      更新时间：{{ formatDateTime(project.updatedAt) }}
+                    </p>
+                    <p class="text-xs text-muted">
+                      更新人：{{ getActorLabel(project.updatedBy) }}
+                    </p>
+                  </div>
+
+                  <div
+                    v-if="canWriteProjects"
+                    class="flex flex-wrap gap-2"
+                  >
+                    <UButton
+                      label="上移"
+                      color="neutral"
+                      variant="subtle"
+                      @click="handleMove(project, 'up')"
+                    />
+                    <UButton
+                      label="下移"
+                      color="neutral"
+                      variant="subtle"
+                      @click="handleMove(project, 'down')"
+                    />
+                    <UButton
+                      label="编辑"
+                      color="neutral"
+                      variant="subtle"
+                      @click="selectProject(project.id)"
+                    />
+                  </div>
                 </div>
               </template>
 
-              <div v-if="projectVersionsPending" class="text-sm text-muted">
-                正在加载项目版本…
-              </div>
-
-              <div v-else class="space-y-3">
-                <UCard v-for="version in projectVersions" :key="version.id">
-                  <template #header>
-                    <div class="flex flex-wrap items-center gap-2">
-                      <UBadge :label="`版本 v${version.version}`" color="primary" variant="subtle" />
-                      <UBadge :label="getStatusLabel(version.status)" :color="getStatusColor(version.status)" variant="subtle" />
-                      <UBadge :label="getVersionChangeTypeLabel(version.changeType)" color="neutral" variant="subtle" />
-                    </div>
-                  </template>
-
-                  <div class="space-y-3 text-sm text-muted">
-                    <div class="space-y-1">
-                      <p>创建人：{{ getActorLabel(version.createdBy) }}</p>
-                      <p>创建时间：{{ formatDateTime(version.createdAt) }}</p>
-                      <p>标题（{{ selectedLocale }}）：{{ version.snapshot.locales[selectedLocale]?.title || '暂无' }}</p>
-                    </div>
-
-                    <div class="flex justify-end">
-                      <UButton label="恢复此版本" color="warning" variant="subtle" @click="handleRestoreProjectVersion(version.id)" />
-                    </div>
-                  </div>
-                </UCard>
+              <div class="space-y-3">
+                <div class="flex flex-wrap gap-2">
+                  <UBadge
+                    v-for="tag in project.tags"
+                    :key="tag"
+                    :label="tag"
+                    color="neutral"
+                    variant="subtle"
+                  />
+                </div>
+                <p class="text-sm text-muted">
+                  {{ project.locales[selectedLocale].summary }}
+                </p>
               </div>
             </UCard>
           </div>
+
+          <UCard>
+            <template #header>
+              <div class="space-y-1">
+                <h2 class="text-base font-semibold text-highlighted">
+                  多语言覆盖概览
+                </h2>
+                <p class="text-sm text-muted">
+                  用于快速查看每个项目在不同语言下的字段完整度。
+                </p>
+              </div>
+            </template>
+
+            <div class="space-y-3">
+              <UCard
+                v-for="coverage in localeCoverage"
+                :key="coverage.id"
+              >
+                <template #header>
+                  <div class="space-y-1">
+                    <p class="font-medium text-default">
+                      {{ coverage.slug }}
+                    </p>
+                  </div>
+                </template>
+
+                <div class="space-y-2 text-sm text-muted">
+                  <div
+                    v-for="localeInfo in coverage.localeMap"
+                    :key="`${coverage.id}-${localeInfo.locale}`"
+                    class="flex items-center justify-between gap-3"
+                  >
+                    <span>{{ localeInfo.locale }}</span>
+                    <UBadge
+                      :label="`${localeInfo.missingFields} 个缺失字段`"
+                      :color="localeInfo.missingFields === 0 ? 'success' : 'warning'"
+                      variant="subtle"
+                    />
+                  </div>
+                </div>
+              </UCard>
+            </div>
+          </UCard>
         </div>
 
-        <template #footer>
-          <div class="flex flex-wrap gap-3">
-            <UButton label="保存项目" icon="i-lucide-save" @click="handleSaveProject" />
-            <UButton label="删除项目" color="error" variant="subtle" @click="handleRemoveProject(editorProject)" />
-            <UButton label="关闭编辑区" color="neutral" variant="subtle" @click="closeEditor" />
+        <UCard v-if="isEditorOpen && editorProject && editorLocaleContent && canWriteProjects">
+          <template #header>
+            <div class="space-y-1">
+              <h2 class="text-base font-semibold text-highlighted">
+                编辑项目
+              </h2>
+              <p class="text-sm text-muted">
+                当前阶段已使用真实项目管理 API 维护项目内容，后续可继续扩展为项目详情与公开查询接口。
+              </p>
+            </div>
+          </template>
+
+          <div class="grid gap-6 xl:grid-cols-[1fr_1fr]">
+            <div class="space-y-4">
+              <UFormField label="Slug">
+                <UInput
+                  v-model="editorProject.slug"
+                  placeholder="请输入项目 slug"
+                />
+              </UFormField>
+
+              <UFormField label="当前语言标题">
+                <UInput
+                  v-model="editorLocaleContent.title"
+                  placeholder="请输入项目标题"
+                />
+              </UFormField>
+
+              <UFormField label="当前语言描述">
+                <UTextarea
+                  v-model="editorLocaleContent.description"
+                  :rows="3"
+                  placeholder="请输入项目描述"
+                />
+              </UFormField>
+
+              <UFormField label="当前语言摘要">
+                <UTextarea
+                  v-model="editorLocaleContent.summary"
+                  :rows="4"
+                  placeholder="请输入项目摘要"
+                />
+              </UFormField>
+
+              <UFormField label="项目标签 / 技术栈（每行一条）">
+                <UTextarea
+                  :model-value="editorProject.tags.join('\n')"
+                  :rows="5"
+                  placeholder="Nuxt 4\nMonorepo\nNuxt UI"
+                  @update:model-value="updateTags(String($event))"
+                />
+              </UFormField>
+            </div>
+
+            <div class="space-y-4">
+              <UFormField label="封面图链接">
+                <UInput
+                  v-model="editorProject.cover"
+                  placeholder="请输入封面图链接"
+                />
+              </UFormField>
+
+              <UFormField label="项目外链">
+                <UInput
+                  v-model="editorProject.externalUrl"
+                  placeholder="请输入项目外链"
+                />
+              </UFormField>
+
+              <UFormField label="发布状态">
+                <select
+                  :value="editorProject.status"
+                  class="w-full rounded-md border border-default bg-default px-3 py-2 text-sm text-default"
+                  @change="handleStatusChange(($event.target as HTMLSelectElement).value as PublishStatus)"
+                >
+                  <option
+                    v-for="option in projectStatusOptions"
+                    :key="option.value"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
+                </select>
+              </UFormField>
+
+              <UFormField label="排序值">
+                <UInput
+                  v-model.number="editorProject.sortOrder"
+                  type="number"
+                  min="1"
+                />
+              </UFormField>
+
+              <div class="rounded-lg border border-default bg-elevated/40 p-4 text-sm text-muted space-y-2">
+                <p>当前语言：{{ selectedLocale }}</p>
+                <p>更新时间：{{ formatDateTime(editorProject.updatedAt) }}</p>
+                <p>更新人：{{ getActorLabel(editorProject.updatedBy) }}</p>
+                <p>审核人：{{ getActorLabel(editorProject.reviewedBy) }}</p>
+                <p>发布时间：{{ getPublishedAtLabel(editorProject.publishedAt) }}</p>
+                <p>封面图：{{ editorProject.cover || '未填写' }}</p>
+              </div>
+
+              <UCard>
+                <template #header>
+                  <div class="space-y-1">
+                    <h3 class="text-base font-semibold text-highlighted">
+                      版本历史
+                    </h3>
+                    <p class="text-sm text-muted">
+                      查看当前项目的历史快照，为后续回滚能力做准备。
+                    </p>
+                  </div>
+                </template>
+
+                <div
+                  v-if="projectVersionsPending"
+                  class="text-sm text-muted"
+                >
+                  正在加载项目版本…
+                </div>
+
+                <div
+                  v-else
+                  class="space-y-3"
+                >
+                  <UCard
+                    v-for="version in projectVersions"
+                    :key="version.id"
+                  >
+                    <template #header>
+                      <div class="flex flex-wrap items-center gap-2">
+                        <UBadge
+                          :label="`版本 v${version.version}`"
+                          color="primary"
+                          variant="subtle"
+                        />
+                        <UBadge
+                          :label="getStatusLabel(version.status)"
+                          :color="getStatusColor(version.status)"
+                          variant="subtle"
+                        />
+                        <UBadge
+                          :label="getVersionChangeTypeLabel(version.changeType)"
+                          color="neutral"
+                          variant="subtle"
+                        />
+                      </div>
+                    </template>
+
+                    <div class="space-y-3 text-sm text-muted">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <UBadge
+                          :label="getProjectVersionInsights(version, editorProject, selectedLocale).changeLabel"
+                          :color="getProjectVersionInsights(version, editorProject, selectedLocale).changeColor"
+                          variant="subtle"
+                        />
+                        <UBadge
+                          v-for="highlight in getProjectVersionInsights(version, editorProject, selectedLocale).highlights"
+                          :key="highlight"
+                          :label="highlight"
+                          color="warning"
+                          variant="subtle"
+                        />
+                      </div>
+
+                      <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                        <div
+                          v-for="item in getProjectVersionInsights(version, editorProject, selectedLocale).summaryItems"
+                          :key="item.label"
+                          class="rounded-md border border-default bg-elevated/30 p-3"
+                        >
+                          <p class="text-xs text-muted">
+                            {{ item.label }}
+                          </p>
+                          <p class="font-medium text-default">
+                            {{ item.value }}
+                          </p>
+                          <p class="text-xs text-muted">
+                            {{ item.hint }}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div class="space-y-1">
+                        <p>创建人：{{ getActorLabel(version.createdBy) }}</p>
+                        <p>创建时间：{{ formatDateTime(version.createdAt) }}</p>
+                        <p>历史标题（{{ selectedLocale }}）：{{ version.snapshot.locales[selectedLocale]?.title || '暂无' }}</p>
+                        <p>当前标题（{{ selectedLocale }}）：{{ editorProject.locales[selectedLocale]?.title || '暂无' }}</p>
+                      </div>
+
+                      <div class="flex justify-end">
+                        <UButton
+                          label="恢复此版本"
+                          color="warning"
+                          variant="subtle"
+                          @click="handleRestoreProjectVersion(version.id)"
+                        />
+                      </div>
+                    </div>
+                  </UCard>
+                </div>
+              </UCard>
+            </div>
           </div>
-        </template>
-      </UCard>
+
+          <template #footer>
+            <div class="flex flex-wrap gap-3">
+              <UButton
+                label="保存项目"
+                icon="i-lucide-save"
+                @click="handleSaveProject"
+              />
+              <UButton
+                label="删除项目"
+                color="error"
+                variant="subtle"
+                @click="handleRemoveProject(editorProject)"
+              />
+              <UButton
+                label="关闭编辑区"
+                color="neutral"
+                variant="subtle"
+                @click="closeEditor"
+              />
+            </div>
+          </template>
+        </UCard>
       </div>
     </template>
   </UContainer>
