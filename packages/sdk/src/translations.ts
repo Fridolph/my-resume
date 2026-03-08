@@ -1,4 +1,4 @@
-import type { PublishStatus, TranslationNamespace, TranslationRecord, WebLocale } from '@repo/types'
+import type { PublishStatus, TranslationNamespace, TranslationRecord, TranslationVersionRecord, WebLocale } from '@repo/types'
 import type { PlatformApiClientOptions } from './site-settings.js'
 import { requestApi } from './site-settings.js'
 import { createUsersApiClient } from './users.js'
@@ -18,6 +18,9 @@ export function createTranslationsApiClient(options: PlatformApiClientOptions) {
     ...baseClient,
     async listTranslations() {
       return await requestApi<TranslationRecord[]>('translations', undefined, options)
+    },
+    async listTranslationVersions(translationId: string) {
+      return await requestApi<TranslationVersionRecord[]>(`translations/${translationId}/versions`, undefined, options)
     },
     async updateTranslation(translationId: string, input: UpdateTranslationInput) {
       return await requestApi<TranslationRecord>(`translations/${translationId}`, {

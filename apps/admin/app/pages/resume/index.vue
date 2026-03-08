@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { PublishStatus } from '@repo/types'
+import type { PublishStatus, ResumeVersionRecord } from '@repo/types'
 
-const { getStatusColor, getStatusLabel, getSelectableStatusOptions, getActorLabel, getPublishedAtLabel } = useContentWorkflow()
+const { getStatusColor, getStatusLabel, getSelectableStatusOptions, getActorLabel, getPublishedAtLabel, getVersionChangeTypeLabel } = useContentWorkflow()
 
 definePageMeta({
   middleware: 'auth'
@@ -19,6 +19,12 @@ const apiClient = usePlatformApiClient()
 const { data, pending, error, refresh } = await useAsyncData('admin-resume-api', async () => {
   return await apiClient.getResumeDocument()
 })
+
+const { data: versionData, pending: versionsPending, refresh: refreshVersions } = await useAsyncData('admin-resume-versions', async () => {
+  return await apiClient.listResumeVersions()
+})
+
+const resumeVersions = computed<ResumeVersionRecord[]>(() => versionData.value ?? [])
 
 const canWriteResume = hasPermission('resume.write')
 
@@ -57,7 +63,7 @@ async function handleSaveResume() {
   try {
     const saved = await apiClient.updateResumeDocument(buildResumeDocument())
     replaceResumeDocument(saved)
-    await refresh()
+    await Promise.all([refresh(), refreshVersions()])
     toast.add({
       title: '简历内容已保存',
       description: `${selectedLocale.value} 的简历内容已同步到真实数据层。`,
@@ -80,7 +86,7 @@ async function handlePublishStatusChange(status: PublishStatus) {
   try {
     const saved = await apiClient.updateResumeDocument(buildResumeDocument())
     replaceResumeDocument(saved)
-    await refresh()
+    await Promise.all([refresh(), refreshVersions()])
     toast.add({
       title: '发布状态已更新',
       description: `当前简历状态已切换为${getStatusLabel(status)}。`,
@@ -224,6 +230,41 @@ async function handlePublishStatusChange(status: PublishStatus) {
               </div>
             </UCard>
           </div>
+        </div>
+      </UCard>
+
+      <UCard>
+        <template #header>
+          <div class="space-y-1">
+            <h2 class="text-base font-semibold text-highlighted">
+              版本历史
+            </h2>
+            <p class="text-sm text-muted">
+              当前展示简历文档的历史快照，用于支撑后续回滚与审计能力。
+            </p>
+          </div>
+        </template>
+
+        <div v-if="versionsPending" class="text-sm text-muted">
+          正在加载版本历史…
+        </div>
+
+        <div v-else class="space-y-3">
+          <UCard v-for="version in resumeVersions" :key="version.id">
+            <template #header>
+              <div class="flex flex-wrap items-center gap-2">
+                <UBadge :label="`版本 v${version.version}`" color="primary" variant="subtle" />
+                <UBadge :label="getStatusLabel(version.status)" :color="getStatusColor(version.status)" variant="subtle" />
+                <UBadge :label="getVersionChangeTypeLabel(version.changeType)" color="neutral" variant="subtle" />
+              </div>
+            </template>
+
+            <div class="space-y-1 text-sm text-muted">
+              <p>创建人：{{ getActorLabel(version.createdBy) }}</p>
+              <p>创建时间：{{ new Date(version.createdAt).toLocaleString() }}</p>
+              <p>标题（{{ selectedLocale }}）：{{ version.snapshot.locales[selectedLocale]?.baseInfo.headline || '暂无' }}</p>
+            </div>
+          </UCard>
         </div>
       </UCard>
 

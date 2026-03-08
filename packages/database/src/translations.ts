@@ -2,6 +2,7 @@ import type { TranslationNamespace, TranslationRecord, UserSession, WebLocale } 
 import { asc, eq } from 'drizzle-orm'
 import { db } from './client.js'
 import { createSystemActor, resolveContentAuditFields } from './content-audit.js'
+import { createContentVersionSnapshot, ensureSeedContentVersionSnapshot } from './content-versions.js'
 import type { TranslationInsert, TranslationRow } from './schema/index.js'
 import { translations } from './schema/index.js'
 
@@ -116,13 +117,35 @@ export async function ensureTranslationsSeed() {
     await db.insert(translations)
       .values(toRow(record))
       .onConflictDoNothing()
+
+    await ensureSeedContentVersionSnapshot({
+      moduleType: 'translation',
+      entityId: record.id,
+      status: record.status,
+      snapshot: record,
+      createdBy: record.updatedBy,
+      createdAt: record.updatedAt
+    })
   }
 }
 
 export async function listTranslations() {
   await ensureTranslationsSeed()
   const rows = await db.select().from(translations).orderBy(asc(translations.updatedAt), asc(translations.key))
-  return rows.map(fromRow)
+  const translationList = rows.map(fromRow)
+
+  for (const record of translationList) {
+    await ensureSeedContentVersionSnapshot({
+      moduleType: 'translation',
+      entityId: record.id,
+      status: record.status,
+      snapshot: record,
+      createdBy: record.updatedBy,
+      createdAt: record.updatedAt
+    })
+  }
+
+  return translationList
 }
 
 export async function updateTranslation(
@@ -164,6 +187,16 @@ export async function updateTranslation(
   await db.update(translations)
     .set(toRow(nextRecord))
     .where(eq(translations.id, translationId))
+
+  await createContentVersionSnapshot({
+    moduleType: 'translation',
+    entityId: nextRecord.id,
+    status: nextRecord.status,
+    changeType: 'update',
+    snapshot: nextRecord,
+    createdBy: nextRecord.updatedBy,
+    createdAt: nextRecord.updatedAt
+  })
 
   return nextRecord
 }

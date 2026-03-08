@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { PublishStatus, TranslationNamespace, TranslationRecord, WebLocale } from '@repo/types'
+import type { PublishStatus, TranslationNamespace, TranslationRecord, TranslationVersionRecord, WebLocale } from '@repo/types'
 
-const { getStatusColor, getStatusLabel, getSelectableStatusOptions, getPrimaryTransitionAction, getActorLabel, getPublishedAtLabel } = useContentWorkflow()
+const { getStatusColor, getStatusLabel, getSelectableStatusOptions, getPrimaryTransitionAction, getActorLabel, getPublishedAtLabel, getVersionChangeTypeLabel } = useContentWorkflow()
 
 definePageMeta({
   middleware: 'auth'
@@ -74,6 +74,34 @@ const editorStatusOptions = computed(() => {
   return getSelectableStatusOptions(editingRecord.value?.status ?? form.status)
 })
 
+const expandedVersionId = ref<string | null>(null)
+const translationVersions = ref<Record<string, TranslationVersionRecord[]>>({})
+const translationVersionsPending = ref<Record<string, boolean>>({})
+
+async function toggleTranslationVersions(translationId: string) {
+  if (expandedVersionId.value === translationId) {
+    expandedVersionId.value = null
+    return
+  }
+
+  expandedVersionId.value = translationId
+
+  if (translationVersions.value[translationId]) {
+    return
+  }
+
+  translationVersionsPending.value = { ...translationVersionsPending.value, [translationId]: true }
+
+  try {
+    translationVersions.value = {
+      ...translationVersions.value,
+      [translationId]: await apiClient.listTranslationVersions(translationId)
+    }
+  } finally {
+    translationVersionsPending.value = { ...translationVersionsPending.value, [translationId]: false }
+  }
+}
+
 async function handleSaveTranslation() {
   try {
     if (!editingId.value) {
@@ -84,6 +112,10 @@ async function handleSaveTranslation() {
     const saved = await apiClient.updateTranslation(editingId.value, payload)
     upsertTranslation(saved)
     await refresh()
+    translationVersions.value = {
+      ...translationVersions.value,
+      [editingId.value]: await apiClient.listTranslationVersions(editingId.value)
+    }
     closeEditor()
     toast.add({
       title: '文案已保存',
@@ -117,6 +149,10 @@ async function handlePrimaryTransition(record: TranslationRecord) {
     })
     upsertTranslation(saved)
     await refresh()
+    translationVersions.value = {
+      ...translationVersions.value,
+      [record.id]: await apiClient.listTranslationVersions(record.id)
+    }
     toast.add({
       title: '状态已更新',
       description: `${record.key} 已进入${getStatusLabel(action.to)}。`,
@@ -278,26 +314,57 @@ async function handlePrimaryTransition(record: TranslationRecord) {
                   </p>
                 </div>
 
-                <div v-if="canWriteTranslations" class="flex flex-wrap gap-2">
-                  <UButton label="编辑文案" color="neutral" variant="subtle" @click="openEditor(record)" />
-                  <UButton
-                    v-if="getPrimaryTransitionAction(record.status)"
-                    :label="getPrimaryTransitionAction(record.status)?.label"
-                    color="neutral"
-                    variant="subtle"
-                    @click="handlePrimaryTransition(record)"
-                  />
+                <div class="flex flex-wrap gap-2">
+                  <UButton label="查看版本" color="neutral" variant="subtle" @click="toggleTranslationVersions(record.id)" />
+                  <template v-if="canWriteTranslations">
+                    <UButton label="编辑文案" color="neutral" variant="subtle" @click="openEditor(record)" />
+                    <UButton
+                      v-if="getPrimaryTransitionAction(record.status)"
+                      :label="getPrimaryTransitionAction(record.status)?.label"
+                      color="neutral"
+                      variant="subtle"
+                      @click="handlePrimaryTransition(record)"
+                    />
+                  </template>
                 </div>
               </div>
             </template>
 
-            <div class="space-y-2">
-              <p class="text-sm font-medium text-default">
-                当前文案
-              </p>
-              <p class="rounded-md border border-default bg-elevated/40 px-3 py-3 text-sm text-muted">
-                {{ record.value || '当前语言暂无文案，等待补充。' }}
-              </p>
+            <div class="space-y-3">
+              <div class="space-y-2">
+                <p class="text-sm font-medium text-default">
+                  当前文案
+                </p>
+                <p class="rounded-md border border-default bg-elevated/40 px-3 py-3 text-sm text-muted">
+                  {{ record.value || '当前语言暂无文案，等待补充。' }}
+                </p>
+              </div>
+
+              <div v-if="expandedVersionId === record.id" class="space-y-3 rounded-md border border-default bg-elevated/20 p-4">
+                <p class="text-sm font-medium text-default">版本历史</p>
+
+                <p v-if="translationVersionsPending[record.id]" class="text-sm text-muted">
+                  正在加载文案版本…
+                </p>
+
+                <div v-else class="space-y-3">
+                  <UCard v-for="version in translationVersions[record.id] ?? []" :key="version.id">
+                    <template #header>
+                      <div class="flex flex-wrap items-center gap-2">
+                        <UBadge :label="`版本 v${version.version}`" color="primary" variant="subtle" />
+                        <UBadge :label="getStatusLabel(version.status)" :color="getStatusColor(version.status)" variant="subtle" />
+                        <UBadge :label="getVersionChangeTypeLabel(version.changeType)" color="neutral" variant="subtle" />
+                      </div>
+                    </template>
+
+                    <div class="space-y-1 text-sm text-muted">
+                      <p>创建人：{{ getActorLabel(version.createdBy) }}</p>
+                      <p>创建时间：{{ new Date(version.createdAt).toLocaleString() }}</p>
+                      <p>版本文案：{{ version.snapshot.value || '暂无' }}</p>
+                    </div>
+                  </UCard>
+                </div>
+              </div>
             </div>
           </UCard>
         </div>

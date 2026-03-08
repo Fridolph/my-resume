@@ -1,4 +1,4 @@
-import type { ProjectRecord } from '@repo/types'
+import type { ProjectRecord, ProjectVersionRecord } from '@repo/types'
 import type { PlatformApiClientOptions } from './site-settings.js'
 import { requestApi } from './site-settings.js'
 import { createResumeApiClient } from './resume.js'
@@ -28,6 +28,9 @@ export function createProjectsApiClient(options: PlatformApiClientOptions) {
         method: 'POST',
         body: JSON.stringify(input)
       }, options)
+    },
+    async listProjectVersions(projectId: string) {
+      return await requestApi<ProjectVersionRecord[]>(`projects/${projectId}/versions`, undefined, options)
     },
     async updateProject(projectId: string, input: UpdateProjectInput) {
       return await requestApi<ProjectRecord>(`projects/${projectId}`, {

@@ -26,6 +26,13 @@ export class ProjectsController {
   }
 
   @UseGuards(ApiAuthGuard)
+  @RequirePermissions('project.read')
+  @Get(':projectId/versions')
+  async listProjectVersions(@Param('projectId') projectId: string) {
+    return await this.projectsService.listProjectVersions(projectId)
+  }
+
+  @UseGuards(ApiAuthGuard)
   @RequirePermissions('project.write')
   @Put(':projectId')
   async updateProject(@Param('projectId') projectId: string, @Body() body: unknown, @CurrentUser() currentUser: UserSession) {

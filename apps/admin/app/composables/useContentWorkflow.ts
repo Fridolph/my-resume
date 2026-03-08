@@ -1,4 +1,4 @@
-import type { ContentActorSummary, PublishStatus } from '@repo/types'
+import type { ContentActorSummary, ContentVersionChangeType, PublishStatus } from '@repo/types'
 import { getAllowedPublishStatusTransitions, publishStatusLabels } from '@repo/types'
 
 const publishStatusColors: Record<PublishStatus, 'warning' | 'success' | 'error' | 'info'> = {
@@ -13,6 +13,12 @@ const primaryTransitionMap: Record<PublishStatus, { to: PublishStatus, label: st
   reviewing: { to: 'published', label: '批准发布' },
   published: { to: 'draft', label: '撤回草稿' },
   archived: { to: 'draft', label: '恢复草稿' }
+}
+
+const contentVersionChangeTypeLabels: Record<ContentVersionChangeType, string> = {
+  seed: '种子版本',
+  create: '创建版本',
+  update: '更新版本'
 }
 
 export function useContentWorkflow() {
@@ -47,12 +53,17 @@ export function useContentWorkflow() {
     return value ? new Date(value).toLocaleString() : '暂无'
   }
 
+  function getVersionChangeTypeLabel(type: ContentVersionChangeType) {
+    return contentVersionChangeTypeLabels[type]
+  }
+
   return {
     getStatusLabel,
     getStatusColor,
     getSelectableStatusOptions,
     getPrimaryTransitionAction,
     getActorLabel,
-    getPublishedAtLabel
+    getPublishedAtLabel,
+    getVersionChangeTypeLabel
   }
 }

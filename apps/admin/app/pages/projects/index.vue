@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { ProjectRecord, PublishStatus } from '@repo/types'
+import type { ProjectRecord, ProjectVersionRecord, PublishStatus } from '@repo/types'
 
-const { getStatusColor, getStatusLabel, getSelectableStatusOptions, getActorLabel, getPublishedAtLabel } = useContentWorkflow()
+const { getStatusColor, getStatusLabel, getSelectableStatusOptions, getActorLabel, getPublishedAtLabel, getVersionChangeTypeLabel } = useContentWorkflow()
 
 definePageMeta({
   middleware: 'auth'
@@ -56,6 +56,28 @@ const projectStatusOptions = computed(() => {
   return editorProject.value ? getSelectableStatusOptions(editorProject.value.status) : []
 })
 
+const projectVersions = ref<ProjectVersionRecord[]>([])
+const projectVersionsPending = ref(false)
+
+async function loadProjectVersions(projectId: string) {
+  projectVersionsPending.value = true
+
+  try {
+    projectVersions.value = await apiClient.listProjectVersions(projectId)
+  } finally {
+    projectVersionsPending.value = false
+  }
+}
+
+watch(() => editorProject.value?.id, async (projectId) => {
+  if (!projectId) {
+    projectVersions.value = []
+    return
+  }
+
+  await loadProjectVersions(projectId)
+}, { immediate: true })
+
 async function handleSaveProject() {
   try {
     const payload = buildProjectInput()
@@ -80,7 +102,7 @@ async function handleSaveProject() {
         })
 
     upsertProject(saved)
-    await refresh()
+    await Promise.all([refresh(), loadProjectVersions(saved.id)])
     toast.add({
       title: '项目已保存',
       description: `${selectedLocale.value} 语言下的项目内容已同步到真实数据层。`,
@@ -112,7 +134,7 @@ async function handleStatusChange(status: PublishStatus) {
       locales: payload.locales
     })
     upsertProject(saved)
-    await refresh()
+    await Promise.all([refresh(), loadProjectVersions(saved.id)])
     toast.add({
       title: '项目状态已更新',
       description: `当前项目状态已切换为${getStatusLabel(status)}。`,
@@ -157,6 +179,10 @@ async function handleMove(project: ProjectRecord, direction: 'up' | 'down') {
     locales: moved.target.locales
   })
   await refresh()
+
+  if (editorProject.value?.id === moved.current.id || editorProject.value?.id === moved.target.id) {
+    await loadProjectVersions(editorProject.value.id)
+  }
 
   toast.add({
     title: '项目顺序已更新',
@@ -416,6 +442,37 @@ async function handleRemoveProject(project: ProjectRecord) {
               <p>发布时间：{{ getPublishedAtLabel(editorProject.publishedAt) }}</p>
               <p>封面图：{{ editorProject.cover || '未填写' }}</p>
             </div>
+
+            <UCard>
+              <template #header>
+                <div class="space-y-1">
+                  <h3 class="text-base font-semibold text-highlighted">版本历史</h3>
+                  <p class="text-sm text-muted">查看当前项目的历史快照，为后续回滚能力做准备。</p>
+                </div>
+              </template>
+
+              <div v-if="projectVersionsPending" class="text-sm text-muted">
+                正在加载项目版本…
+              </div>
+
+              <div v-else class="space-y-3">
+                <UCard v-for="version in projectVersions" :key="version.id">
+                  <template #header>
+                    <div class="flex flex-wrap items-center gap-2">
+                      <UBadge :label="`版本 v${version.version}`" color="primary" variant="subtle" />
+                      <UBadge :label="getStatusLabel(version.status)" :color="getStatusColor(version.status)" variant="subtle" />
+                      <UBadge :label="getVersionChangeTypeLabel(version.changeType)" color="neutral" variant="subtle" />
+                    </div>
+                  </template>
+
+                  <div class="space-y-1 text-sm text-muted">
+                    <p>创建人：{{ getActorLabel(version.createdBy) }}</p>
+                    <p>创建时间：{{ new Date(version.createdAt).toLocaleString() }}</p>
+                    <p>标题（{{ selectedLocale }}）：{{ version.snapshot.locales[selectedLocale]?.title || '暂无' }}</p>
+                  </div>
+                </UCard>
+              </div>
+            </UCard>
           </div>
         </div>
 

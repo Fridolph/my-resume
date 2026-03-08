@@ -2,6 +2,7 @@ import type { ProjectLocaleContent, ProjectRecord, UserSession, WebLocale } from
 import { asc, eq } from 'drizzle-orm'
 import { db } from './client.js'
 import { createSystemActor, resolveContentAuditFields } from './content-audit.js'
+import { createContentVersionSnapshot, ensureSeedContentVersionSnapshot } from './content-versions.js'
 import type { ProjectInsert, ProjectRow } from './schema/index.js'
 import { projects } from './schema/index.js'
 
@@ -161,6 +162,17 @@ export async function ensureProjectsSeed() {
   if (existing.length === 0) {
     await db.insert(projects).values(initialProjects.map(toRow))
   }
+
+  for (const project of initialProjects) {
+    await ensureSeedContentVersionSnapshot({
+      moduleType: 'project',
+      entityId: project.id,
+      status: project.status,
+      snapshot: project,
+      createdBy: project.updatedBy,
+      createdAt: project.updatedAt
+    })
+  }
 }
 
 export async function listProjects() {
@@ -168,12 +180,22 @@ export async function listProjects() {
   const rows = await db.select().from(projects).orderBy(asc(projects.sortOrder), asc(projects.updatedAt))
   const projectList = rows.map(fromRow)
   const hasDuplicateSortOrder = new Set(projectList.map(project => project.sortOrder)).size !== projectList.length
+  const normalizedProjects = hasDuplicateSortOrder
+    ? await normalizeProjectSortOrders(projectList)
+    : projectList
 
-  if (hasDuplicateSortOrder) {
-    return await normalizeProjectSortOrders(projectList)
+  for (const project of normalizedProjects) {
+    await ensureSeedContentVersionSnapshot({
+      moduleType: 'project',
+      entityId: project.id,
+      status: project.status,
+      snapshot: project,
+      createdBy: project.updatedBy,
+      createdAt: project.updatedAt
+    })
   }
 
-  return projectList
+  return normalizedProjects
 }
 
 export async function createProject(record: Omit<ProjectRecord, 'updatedAt' | 'updatedBy' | 'reviewedBy' | 'publishedAt'>, actor: Pick<UserSession, 'id' | 'name' | 'email'>) {
@@ -194,7 +216,19 @@ export async function createProject(record: Omit<ProjectRecord, 'updatedAt' | 'u
 
   await db.insert(projects).values(toRow(nextRecord))
   await normalizeProjectSortOrders(await listProjects())
-  return (await listProjects()).find(project => project.id === nextRecord.id) ?? nextRecord
+  const savedProject = (await listProjects()).find(project => project.id === nextRecord.id) ?? nextRecord
+
+  await createContentVersionSnapshot({
+    moduleType: 'project',
+    entityId: savedProject.id,
+    status: savedProject.status,
+    changeType: 'create',
+    snapshot: savedProject,
+    createdBy: savedProject.updatedBy,
+    createdAt: savedProject.updatedAt
+  })
+
+  return savedProject
 }
 
 export async function updateProject(projectId: string, record: Omit<ProjectRecord, 'updatedAt' | 'id' | 'updatedBy' | 'reviewedBy' | 'publishedAt'>, actor: Pick<UserSession, 'id' | 'name' | 'email'>) {
@@ -229,7 +263,19 @@ export async function updateProject(projectId: string, record: Omit<ProjectRecor
     .where(eq(projects.id, projectId))
 
   await normalizeProjectSortOrders(await listProjects())
-  return (await listProjects()).find(project => project.id === projectId) ?? nextRecord
+  const savedProject = (await listProjects()).find(project => project.id === projectId) ?? nextRecord
+
+  await createContentVersionSnapshot({
+    moduleType: 'project',
+    entityId: savedProject.id,
+    status: savedProject.status,
+    changeType: 'update',
+    snapshot: savedProject,
+    createdBy: savedProject.updatedBy,
+    createdAt: savedProject.updatedAt
+  })
+
+  return savedProject
 }
 
 export async function deleteProject(projectId: string) {

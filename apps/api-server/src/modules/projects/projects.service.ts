@@ -1,11 +1,15 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
-import { createProject, deleteProject, listProjects, updateProject } from '@repo/database'
-import { canTransitionPublishStatus, publishStatusLabels, type ProjectRecord, type UserSession } from '@repo/types'
+import { createProject, deleteProject, listContentVersions, listProjects, updateProject } from '@repo/database'
+import { canTransitionPublishStatus, publishStatusLabels, type ProjectRecord, type ProjectVersionRecord, type UserSession } from '@repo/types'
 
 @Injectable()
 export class ProjectsService {
   async listProjects() {
     return await listProjects()
+  }
+
+  async listProjectVersions(projectId: string) {
+    return await listContentVersions('project', projectId) as ProjectVersionRecord[]
   }
 
   async createProject(record: Omit<ProjectRecord, 'updatedAt' | 'id' | 'updatedBy' | 'reviewedBy' | 'publishedAt'>, currentUser: UserSession) {

@@ -1,11 +1,15 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
-import { getResumeDocument, updateResumeDocument } from '@repo/database'
-import { canTransitionPublishStatus, publishStatusLabels, type ResumeDocument, type UserSession } from '@repo/types'
+import { getResumeDocument, listContentVersions, updateResumeDocument } from '@repo/database'
+import { canTransitionPublishStatus, publishStatusLabels, type ResumeDocument, type ResumeVersionRecord, type UserSession } from '@repo/types'
 
 @Injectable()
 export class ResumeService {
   async getResumeDocument() {
     return await getResumeDocument()
+  }
+
+  async listResumeVersions() {
+    return await listContentVersions('resume', 'resume_main') as ResumeVersionRecord[]
   }
 
   async updateResumeDocument(record: ResumeDocument, currentUser: UserSession) {

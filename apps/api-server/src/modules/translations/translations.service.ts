@@ -1,11 +1,15 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
-import { listTranslations, updateTranslation } from '@repo/database'
-import { canTransitionPublishStatus, publishStatusLabels, type TranslationRecord, type UserSession } from '@repo/types'
+import { listContentVersions, listTranslations, updateTranslation } from '@repo/database'
+import { canTransitionPublishStatus, publishStatusLabels, type TranslationRecord, type TranslationVersionRecord, type UserSession } from '@repo/types'
 
 @Injectable()
 export class TranslationsService {
   async listTranslations() {
     return await listTranslations()
+  }
+
+  async listTranslationVersions(translationId: string) {
+    return await listContentVersions('translation', translationId) as TranslationVersionRecord[]
   }
 
   async updateTranslation(

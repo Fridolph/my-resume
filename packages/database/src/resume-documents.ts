@@ -10,6 +10,7 @@ import type {
 import { eq } from 'drizzle-orm'
 import { db } from './client.js'
 import { createSystemActor, resolveContentAuditFields } from './content-audit.js'
+import { createContentVersionSnapshot, ensureSeedContentVersionSnapshot } from './content-versions.js'
 import type { ResumeDocumentInsert, ResumeDocumentRow } from './schema/index.js'
 import { resumeDocuments } from './schema/index.js'
 
@@ -200,6 +201,15 @@ export async function ensureResumeDocumentSeed() {
   if (existing.length === 0) {
     await db.insert(resumeDocuments).values(toRow(defaultResumeDocument))
   }
+
+  await ensureSeedContentVersionSnapshot({
+    moduleType: 'resume',
+    entityId: defaultResumeDocument.id,
+    status: defaultResumeDocument.status,
+    snapshot: defaultResumeDocument,
+    createdBy: defaultResumeDocument.updatedBy,
+    createdAt: defaultResumeDocument.updatedAt
+  })
 }
 
 export async function getResumeDocument() {
@@ -210,7 +220,18 @@ export async function getResumeDocument() {
     .where(eq(resumeDocuments.id, defaultResumeDocument.id))
     .limit(1)
 
-  return row ? fromRow(row) : defaultResumeDocument
+  const document = row ? fromRow(row) : defaultResumeDocument
+
+  await ensureSeedContentVersionSnapshot({
+    moduleType: 'resume',
+    entityId: document.id,
+    status: document.status,
+    snapshot: document,
+    createdBy: document.updatedBy,
+    createdAt: document.updatedAt
+  })
+
+  return document
 }
 
 export async function updateResumeDocument(record: ResumeDocument, actor: Pick<UserSession, 'id' | 'name' | 'email'>) {
@@ -249,6 +270,16 @@ export async function updateResumeDocument(record: ResumeDocument, actor: Pick<U
         updatedAt: row.updatedAt
       }
     })
+
+  await createContentVersionSnapshot({
+    moduleType: 'resume',
+    entityId: nextRecord.id,
+    status: nextRecord.status,
+    changeType: 'update',
+    snapshot: nextRecord,
+    createdBy: nextRecord.updatedBy,
+    createdAt: nextRecord.updatedAt
+  })
 
   return nextRecord
 }

@@ -18,6 +18,13 @@ export class ResumeController {
   }
 
   @UseGuards(ApiAuthGuard)
+  @RequirePermissions('resume.read')
+  @Get('versions')
+  async listResumeVersions() {
+    return await this.resumeService.listResumeVersions()
+  }
+
+  @UseGuards(ApiAuthGuard)
   @RequirePermissions('resume.write')
   @Put()
   async updateResumeDocument(@Body() body: unknown, @CurrentUser() currentUser: UserSession) {

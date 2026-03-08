@@ -18,6 +18,13 @@ export class TranslationsController {
   }
 
   @UseGuards(ApiAuthGuard)
+  @RequirePermissions('translation.read')
+  @Get(':translationId/versions')
+  async listTranslationVersions(@Param('translationId') translationId: string) {
+    return await this.translationsService.listTranslationVersions(translationId)
+  }
+
+  @UseGuards(ApiAuthGuard)
   @RequirePermissions('translation.write')
   @Put(':translationId')
   async updateTranslation(@Param('translationId') translationId: string, @Body() body: unknown, @CurrentUser() currentUser: UserSession) {

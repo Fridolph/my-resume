@@ -158,6 +158,21 @@ export interface ContentAuditFields {
   publishedAt: string | null
 }
 
+export type ContentModuleType = 'translation' | 'resume' | 'project'
+export type ContentVersionChangeType = 'seed' | 'create' | 'update'
+
+export interface ContentVersionRecord<TSnapshot = unknown> {
+  id: EntityId
+  moduleType: ContentModuleType
+  entityId: EntityId
+  version: number
+  status: PublishStatus
+  changeType: ContentVersionChangeType
+  snapshot: TSnapshot
+  createdBy: ContentActorSummary | null
+  createdAt: string
+}
+
 export interface UserRecord {
   id: EntityId
   name: string
@@ -249,6 +264,10 @@ export interface ProjectRecord extends ContentAuditFields {
   updatedAt: string
   locales: Record<WebLocale, ProjectLocaleContent>
 }
+
+export type TranslationVersionRecord = ContentVersionRecord<TranslationRecord>
+export type ResumeVersionRecord = ContentVersionRecord<ResumeDocument>
+export type ProjectVersionRecord = ContentVersionRecord<ProjectRecord>
 
 export interface SiteSocialLink {
   id: EntityId
