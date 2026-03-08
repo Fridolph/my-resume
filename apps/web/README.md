@@ -1,60 +1,53 @@
-# Nuxt Starter Template
+# Web App
 
-[![Nuxt UI](https://img.shields.io/badge/Made%20with-Nuxt%20UI-00DC82?logo=nuxt&labelColor=020420)](https://ui.nuxt.com)
+`apps/web` 是当前 monorepo 中的 Nuxt 4 展示端，负责公开站点页面展示。
 
-Use this template to get started with [Nuxt UI](https://ui.nuxt.com) quickly.
+## 主要职责
 
-- [Live demo](https://starter-template.nuxt.dev/)
-- [Documentation](https://ui.nuxt.com/docs/getting-started/installation/nuxt)
+- 首页、简历页、项目列表页、项目详情页
+- 公开多语言文案读取
+- 公开 SEO 能力与内容站能力
+- 消费 `api-server` 的 `/api/public/*` 接口
 
-<a href="https://starter-template.nuxt.dev/" target="_blank">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://ui.nuxt.com/assets/templates/nuxt/starter-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="https://ui.nuxt.com/assets/templates/nuxt/starter-light.png">
-    <img alt="Nuxt Starter Template" src="https://ui.nuxt.com/assets/templates/nuxt/starter-light.png" width="830" height="466">
-  </picture>
-</a>
+## 本地默认地址
 
-> The starter template for Vue is on https://github.com/nuxt-ui-templates/starter-vue.
+- `http://localhost:3000`
 
-## Quick Start
+## 关键环境变量
 
-```bash [Terminal]
-npm create nuxt@latest -- -t github:nuxt-ui-templates/starter
-```
+优先使用：
 
-## Deploy your own
+- `NUXT_PUBLIC_PUBLIC_API_BASE_URL=http://localhost:3011/api/public`
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-name=starter&repository-url=https%3A%2F%2Fgithub.com%2Fnuxt-ui-templates%2Fstarter&demo-image=https%3A%2F%2Fui.nuxt.com%2Fassets%2Ftemplates%2Fnuxt%2Fstarter-dark.png&demo-url=https%3A%2F%2Fstarter-template.nuxt.dev%2F&demo-title=Nuxt%20Starter%20Template&demo-description=A%20minimal%20template%20to%20get%20started%20with%20Nuxt%20UI.)
+兼容旧变量：
 
-## Setup
+- `NUXT_PUBLIC_API_BASE_URL`
 
-Make sure to install the dependencies:
+## 启动命令
+
+从仓库根目录执行：
 
 ```bash
-pnpm install
+pnpm dev:web
 ```
 
-## Development Server
-
-Start the development server on `http://localhost:3000`:
+或在当前目录执行：
 
 ```bash
 pnpm dev
 ```
 
-## Production
+## 验证页面
 
-Build the application for production:
+- `/`
+- `/resume`
+- `/projects`
+- `/projects/[slug]`
 
-```bash
-pnpm build
-```
+## 依赖说明
 
-Locally preview production build:
+`apps/web` 依赖：
 
-```bash
-pnpm preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+- `apps/api-server` 已启动
+- 公开 API 地址配置正确
+- 数据库中已有可公开内容与激活发布批次

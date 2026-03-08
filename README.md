@@ -1,82 +1,158 @@
-# 心路历程
+# My Resume Platform
 
-最用心的一个项目（要恰饭敢不认真嘛）添加详尽文档，若对您有帮助，卑微求个 Star 不过分吧 T_T
+一个基于 monorepo 的个人内容平台，当前包含三端统一架构：
 
-一开始单纯为找工作，随便折腾下，学点新东西，TailWindCSS 最近很火，一直想练练手。随着细节完善就想着干脆掘金发个帖好了，记录 TSS 的学习过程，再一想这不是为找工作嘛，简历公开就公开吧，于是就有了这个项目。
+- `apps/web`：Nuxt 4 展示端
+- `apps/admin`：Nuxt 4 管理后台前端
+- `apps/api-server`：NestJS API Server
+- `packages/database`：`SQLite + Drizzle ORM`
 
-> ps 本质是为了学习 TailWindCss 折腾的，毕竟不是写博客主题，以简约阅读为主
-> 如果您想改成自己的建议直接 Fork。项目的目录结构、模块分层，为新入手 Vue3+TS 的同学提供参考
-> 其他的看掘金帖子上的内容就好，那上面很全，这里捡重要的说
+当前第二阶段已经完成核心内容链路、权限边界、版本与发布流，并正在收口测试、环境与部署文档。
 
-在线浏览 [resume.fridolph.top](https://resume.fridolph.top)
+## 技术栈
 
-## 简历进行了较大的修改，所以也对应一些组件的修改
+- 前端：`Nuxt 4`、`TypeScript`、`@nuxt/ui`
+- 后端：`NestJS`
+- 数据库：`SQLite`
+- ORM：`Drizzle ORM`
+- 包管理：`pnpm workspace`
 
-- 扩展了 list type，支持 ul dl ，就不用手动写 - 和 1. 序号了 （之前没想这么多，经提醒，是挺脑壳大）
-- 增加了一个学信网的验证，看个人把，不需要注释掉就好
-- 大多是简历润色 = = 需要的可根据最新修改（确实比我的编得好太了，感谢大佬）参考下
-- personal 多了个 最新文章 ，感觉有这个需求嘛
-- 暂时够用，其他请自行修改了
+## 仓库结构
 
-## pnpm install
-
-> 注：本项目使用 pnpm 作为包管理工具，请升级 Node 版本到 16.22.2 以上
-
-<img
-alt="Static Badge"
-src="https://img.shields.io/badge/%E8%84%9A%E6%89%8B%E6%9E%B6-vite-red" />
-<img
-alt="Static Badge"
-src="https://img.shields.io/badge/%E5%89%8D%E7%AB%AF%E6%A1%86%E6%9E%B6-Vue3-%236495ed" />
-<img
-alt="Static Badge"
-src="https://img.shields.io/badge/UI-TailWind-green" />
-<img
-alt="Static Badge"
-src="https://img.shields.io/badge/%E8%84%9A%E6%9C%AC%E8%AF%AD%E8%A8%80-TypeScript-%25236495ed" />
-<img
-alt="Static Badge"
-src="https://img.shields.io/badge/UI-fri_element_plus-%238a2be2" />
-
-本以为会用到 postcss，结果还真没在 template 里写 css = = 习惯了 TW 是真的爽。~~fri-element-plus 是之前练手的一个组件库项目顺便实践一下，看管们可自行去掉~~
-在优化实践章节已去掉。
-
-## 配置参考
-
-### postcss.config.cjs
-
-参考官网配置即可 <https://tailwindcss.com/docs/installation>
-
-```js
-module.exports = {
-  plugins: [
-    require('postcss-import'),
-    require('postcss-nested'),
-    require('autoprefixer'),
-    require('tailwindcss'),
-    require('tailwindcss/nesting'),
-  ],
-}
+```text
+apps/
+  web/         展示端
+  admin/       管理后台前端
+  api-server/  NestJS API 服务
+packages/
+  database/    数据库 schema、client、migration
+  sdk/         前后端共享 API Client
+  types/       共享类型定义
+  ui/          共享 UI 组件/样式资产
+  content-schema/
 ```
 
-### vite.config.js
+## 本地默认端口
 
-为打包后的文件提供传统浏览器兼容性支持
+- `web`：`http://localhost:3000`
+- `admin`：`http://localhost:3002`
+- `api-server`：`http://127.0.0.1:3011`
 
-> Vite 社区还有很多实用插件，可自行尝试
+## 环境变量
 
-- compression 打包生成 .gz
-- chunkSplitPlugin 打包不同的 vendor
-- prefetchPlugin 打包后的 .html 添加 prefetch
+复制示例文件：
 
-### 关于一些坑
+```bash
+cp .env.example .env
+```
 
-1. 关于下载：把 public 里的 .md .pdf 换成你自己的即可。检查好简历内容，避免尴尬情况发生。
+当前本地开发主要使用以下变量：
 
-2. 如果不需要国际化，可切换到另一分支。
+- `PORT`：`api-server` 监听端口，默认 `3011`
+- `REPO_DATABASE_PATH`：SQLite 数据库文件路径，默认 `./data/platform.sqlite`
+- `NUXT_PUBLIC_PUBLIC_API_BASE_URL`：`web` 端公开 API 基地址
+- `NUXT_PUBLIC_ADMIN_API_BASE_URL`：`admin` 端后台 API 基地址
 
-3. 服务器上大多不支持中文，用英文字母+数字命名可避免一些潜在的坑
+> 兼容说明：`apps/web` 与 `apps/admin` 仍兼容旧变量 `NUXT_PUBLIC_API_BASE_URL`，但后续建议分别使用新的变量名。
 
-4. 安装问题 看下是不是 taobao 源的锅，注：已经换地址了，老地址不能用
+## 安装依赖
 
-5. 暂时想到这些，祝大家大吉大利，找到满意的工作
+```bash
+pnpm install
+```
+
+## 数据库初始化
+
+首次启动前建议先执行：
+
+```bash
+pnpm db:migrate
+```
+
+常用数据库命令：
+
+```bash
+pnpm db:generate
+pnpm db:migrate
+pnpm --dir apps/api-server db:studio
+pnpm --dir apps/api-server db:status
+```
+
+## 启动三端
+
+推荐开三个终端分别执行：
+
+```bash
+pnpm dev:api
+pnpm dev:web
+pnpm dev:admin
+```
+
+## 常用命令
+
+```bash
+pnpm typecheck
+pnpm lint
+pnpm --dir apps/api-server test:run
+```
+
+## 推荐启动顺序
+
+1. `pnpm install`
+2. `cp .env.example .env`
+3. `pnpm db:migrate`
+4. `pnpm dev:api`
+5. `pnpm dev:web`
+6. `pnpm dev:admin`
+
+## 联调检查
+
+- 打开 `http://localhost:3000` 检查展示端
+- 打开 `http://localhost:3002` 检查后台登录页
+- 打开 `http://127.0.0.1:3011/api/public/release` 检查公开发布接口
+
+## 常见排查
+
+### 1. 端口被占用
+
+优先检查：
+
+- `3000`
+- `3002`
+- `3011`
+
+可以使用：
+
+```bash
+lsof -nP -iTCP:3000 -sTCP:LISTEN
+lsof -nP -iTCP:3002 -sTCP:LISTEN
+lsof -nP -iTCP:3011 -sTCP:LISTEN
+```
+
+### 2. 后台或前台请求地址不对
+
+检查 `.env` 中：
+
+- `NUXT_PUBLIC_PUBLIC_API_BASE_URL`
+- `NUXT_PUBLIC_ADMIN_API_BASE_URL`
+
+### 3. 数据库无法访问或迁移失败
+
+检查：
+
+- `REPO_DATABASE_PATH` 路径是否正确
+- `data/` 目录是否存在
+- migration 是否已执行
+
+### 4. Drizzle Studio 无法启动
+
+优先确认：
+
+- `apps/api-server/drizzle.config.ts` 存在
+- 在 `apps/api-server` 目录执行 `pnpm db:studio`
+
+## 文档索引
+
+- 第二阶段架构方案：`docs/phase-2/2026-03-07-第二阶段三端统一架构方案.md`
+- 第二阶段里程碑：`docs/phase-2/里程碑规划.md`
+- 当前阶段博客记录：`docs/phase-2/`
