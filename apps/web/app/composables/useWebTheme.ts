@@ -14,21 +14,16 @@ export function useWebTheme() {
   const preference = useState<ThemePreference>('web-theme-preference', () => themeCookie.value ?? 'system')
   const { t } = useWebLocale()
 
-  if (preference.value !== themeCookie.value) {
-    themeCookie.value = preference.value
-  }
-
-  if (colorMode.preference !== preference.value) {
-    colorMode.preference = preference.value
-  }
-
-  if (import.meta.client) {
+  onMounted(() => {
     const storedPreference = localStorage.getItem('web-theme') as ThemePreference | null
-    if (storedPreference === 'system' || storedPreference === 'light' || storedPreference === 'dark') {
-      preference.value = storedPreference
-      colorMode.preference = storedPreference
+
+    if ((storedPreference === 'system' || storedPreference === 'light' || storedPreference === 'dark') && storedPreference !== preference.value) {
+      setThemePreference(storedPreference)
+      return
     }
-  }
+
+    colorMode.preference = preference.value
+  })
 
   function setThemePreference(value: ThemePreference) {
     preference.value = value

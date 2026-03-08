@@ -2,6 +2,7 @@
 import type { PublishStatus, ResumeVersionRecord } from '@repo/types'
 
 const { getStatusColor, getStatusLabel, getSelectableStatusOptions, getActorLabel, getPublishedAtLabel, getVersionChangeTypeLabel } = useContentWorkflow()
+const { formatDateTime } = useDateTimeFormatter()
 
 definePageMeta({
   middleware: 'auth'
@@ -247,7 +248,7 @@ async function handleRestoreResumeVersion(versionId: string) {
                 <p>最近更新人：{{ getActorLabel(resumeDocument.updatedBy) }}</p>
                 <p>审核人：{{ getActorLabel(resumeDocument.reviewedBy) }}</p>
                 <p>发布时间：{{ getPublishedAtLabel(resumeDocument.publishedAt) }}</p>
-                <p>最后更新时间：{{ new Date(resumeDocument.updatedAt).toLocaleString() }}</p>
+                <p>最后更新时间：{{ formatDateTime(resumeDocument.updatedAt) }}</p>
               </div>
             </UCard>
           </div>
@@ -283,7 +284,7 @@ async function handleRestoreResumeVersion(versionId: string) {
             <div class="space-y-3 text-sm text-muted">
               <div class="space-y-1">
                 <p>创建人：{{ getActorLabel(version.createdBy) }}</p>
-                <p>创建时间：{{ new Date(version.createdAt).toLocaleString() }}</p>
+                <p>创建时间：{{ formatDateTime(version.createdAt) }}</p>
                 <p>标题（{{ selectedLocale }}）：{{ version.snapshot.locales[selectedLocale]?.baseInfo.headline || '暂无' }}</p>
               </div>
 

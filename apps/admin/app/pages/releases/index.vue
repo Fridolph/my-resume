@@ -6,6 +6,7 @@ definePageMeta({
 })
 
 const toast = useToast()
+const { formatDateTime } = useDateTimeFormatter()
 const { hasPermission } = usePermissions()
 
 if (!hasPermission('site.read')) {
@@ -101,8 +102,8 @@ async function handleActivateRelease(releaseId: string) {
             <p>简历版本：{{ activeRelease.resumeVersionId }}</p>
             <p>文案数量：{{ activeRelease.translationVersionIds.length }}</p>
             <p>项目数量：{{ activeRelease.projectVersionIds.length }}</p>
-            <p>创建时间：{{ new Date(activeRelease.createdAt).toLocaleString() }}</p>
-            <p>激活时间：{{ activeRelease.activatedAt ? new Date(activeRelease.activatedAt).toLocaleString() : '暂无' }}</p>
+            <p>创建时间：{{ formatDateTime(activeRelease.createdAt) }}</p>
+            <p>激活时间：{{ formatDateTime(activeRelease.activatedAt) }}</p>
           </div>
         </UCard>
 
@@ -130,8 +131,8 @@ async function handleActivateRelease(releaseId: string) {
               <p>项目数量：{{ release.projectVersionIds.length }}</p>
               <p>创建人：{{ release.createdBy?.name || '暂无' }}</p>
               <p>激活人：{{ release.activatedBy?.name || '暂无' }}</p>
-              <p>创建时间：{{ new Date(release.createdAt).toLocaleString() }}</p>
-              <p>更新时间：{{ new Date(release.updatedAt).toLocaleString() }}</p>
+              <p>创建时间：{{ formatDateTime(release.createdAt) }}</p>
+              <p>更新时间：{{ formatDateTime(release.updatedAt) }}</p>
             </div>
           </UCard>
         </div>

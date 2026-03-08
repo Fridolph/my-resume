@@ -2,6 +2,7 @@
 import type { ProjectRecord, ProjectVersionRecord, PublishStatus } from '@repo/types'
 
 const { getStatusColor, getStatusLabel, getSelectableStatusOptions, getActorLabel, getPublishedAtLabel, getVersionChangeTypeLabel } = useContentWorkflow()
+const { formatDateTime } = useDateTimeFormatter()
 
 definePageMeta({
   middleware: 'auth'
@@ -337,7 +338,7 @@ async function handleRestoreProjectVersion(versionId: string) {
                     {{ project.locales[selectedLocale].description }}
                   </p>
                   <p class="text-xs text-muted">
-                    更新时间：{{ new Date(project.updatedAt).toLocaleString() }}
+                    更新时间：{{ formatDateTime(project.updatedAt) }}
                   </p>
                   <p class="text-xs text-muted">
                     更新人：{{ getActorLabel(project.updatedBy) }}
@@ -461,7 +462,7 @@ async function handleRestoreProjectVersion(versionId: string) {
 
             <div class="rounded-lg border border-default bg-elevated/40 p-4 text-sm text-muted space-y-2">
               <p>当前语言：{{ selectedLocale }}</p>
-              <p>更新时间：{{ new Date(editorProject.updatedAt).toLocaleString() }}</p>
+              <p>更新时间：{{ formatDateTime(editorProject.updatedAt) }}</p>
               <p>更新人：{{ getActorLabel(editorProject.updatedBy) }}</p>
               <p>审核人：{{ getActorLabel(editorProject.reviewedBy) }}</p>
               <p>发布时间：{{ getPublishedAtLabel(editorProject.publishedAt) }}</p>
@@ -493,7 +494,7 @@ async function handleRestoreProjectVersion(versionId: string) {
                   <div class="space-y-3 text-sm text-muted">
                     <div class="space-y-1">
                       <p>创建人：{{ getActorLabel(version.createdBy) }}</p>
-                      <p>创建时间：{{ new Date(version.createdAt).toLocaleString() }}</p>
+                      <p>创建时间：{{ formatDateTime(version.createdAt) }}</p>
                       <p>标题（{{ selectedLocale }}）：{{ version.snapshot.locales[selectedLocale]?.title || '暂无' }}</p>
                     </div>
 

@@ -6,6 +6,7 @@ definePageMeta({
 })
 
 const toast = useToast()
+const { formatDateTime } = useDateTimeFormatter()
 const { hasPermission } = usePermissions()
 const canWriteSettings = hasPermission('site.write')
 
@@ -158,7 +159,7 @@ function handleLocaleChange(locale: WebLocale) {
                 <p>当前样板模块：站点配置。</p>
                 <p>数据库方案：SQLite。</p>
                 <p>数据访问层：Drizzle ORM。</p>
-                <p>最后更新时间：{{ new Date(settings.updatedAt).toLocaleString() }}</p>
+                <p>最后更新时间：{{ formatDateTime(settings.updatedAt) }}</p>
               </div>
             </div>
           </UCard>

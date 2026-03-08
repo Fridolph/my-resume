@@ -7,6 +7,7 @@ definePageMeta({
 })
 
 const toast = useToast()
+const { formatDateTime } = useDateTimeFormatter()
 const { hasPermission } = usePermissions()
 
 if (!hasPermission('user.read')) {
@@ -274,7 +275,7 @@ async function handleRoleChange(user: UserRecord, role: RoleKey) {
                     {{ user.email }}
                   </p>
                   <p class="text-xs text-muted">
-                    更新时间：{{ new Date(user.updatedAt).toLocaleString() }}
+                    更新时间：{{ formatDateTime(user.updatedAt) }}
                   </p>
                 </div>
 

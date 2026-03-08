@@ -2,6 +2,7 @@
 import type { PublishStatus, TranslationNamespace, TranslationRecord, TranslationVersionRecord, WebLocale } from '@repo/types'
 
 const { getStatusColor, getStatusLabel, getSelectableStatusOptions, getPrimaryTransitionAction, getActorLabel, getPublishedAtLabel, getVersionChangeTypeLabel } = useContentWorkflow()
+const { formatDateTime } = useDateTimeFormatter()
 
 definePageMeta({
   middleware: 'auth'
@@ -328,7 +329,7 @@ async function handlePrimaryTransition(record: TranslationRecord) {
                     <UBadge v-if="record.missing" label="缺失" color="error" variant="subtle" />
                   </div>
                   <p class="text-xs text-muted">
-                    更新时间：{{ new Date(record.updatedAt).toLocaleString() }}
+                    更新时间：{{ formatDateTime(record.updatedAt) }}
                   </p>
                   <p class="text-xs text-muted">
                     更新人：{{ getActorLabel(record.updatedBy) }}
@@ -384,7 +385,7 @@ async function handlePrimaryTransition(record: TranslationRecord) {
                     <div class="space-y-3 text-sm text-muted">
                       <div class="space-y-1">
                         <p>创建人：{{ getActorLabel(version.createdBy) }}</p>
-                        <p>创建时间：{{ new Date(version.createdAt).toLocaleString() }}</p>
+                        <p>创建时间：{{ formatDateTime(version.createdAt) }}</p>
                         <p>版本文案：{{ version.snapshot.value || '暂无' }}</p>
                       </div>
 

@@ -23,6 +23,8 @@ const contentVersionChangeTypeLabels: Record<ContentVersionChangeType, string> =
 }
 
 export function useContentWorkflow() {
+  const { formatDateTime } = useDateTimeFormatter()
+
   function getStatusLabel(status: PublishStatus) {
     return publishStatusLabels[status]
   }
@@ -51,7 +53,7 @@ export function useContentWorkflow() {
   }
 
   function getPublishedAtLabel(value: string | null | undefined) {
-    return value ? new Date(value).toLocaleString() : '暂无'
+    return formatDateTime(value)
   }
 
   function getVersionChangeTypeLabel(type: ContentVersionChangeType) {

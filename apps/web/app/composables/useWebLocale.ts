@@ -141,16 +141,16 @@ export function useWebLocale() {
   const locale = useState<WebLocale>('web-locale', () => localeCookie.value ?? 'zh-CN')
   const remoteTranslations = useState<TranslationRecord[]>('web-public-translations', () => [])
 
-  if (locale.value !== localeCookie.value) {
-    localeCookie.value = locale.value
-  }
-
-  if (import.meta.client) {
+  onMounted(() => {
     const storedLocale = localStorage.getItem('web-locale') as WebLocale | null
-    if (storedLocale === 'zh-CN' || storedLocale === 'en-US') {
-      locale.value = storedLocale
+
+    if ((storedLocale === 'zh-CN' || storedLocale === 'en-US') && storedLocale !== locale.value) {
+      setLocale(storedLocale)
+      return
     }
-  }
+
+    document.documentElement.lang = locale.value
+  })
 
   const remoteMessageMap = computed(() => buildRemoteMessageMap(remoteTranslations.value))
 
