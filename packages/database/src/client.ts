@@ -5,12 +5,18 @@ import { drizzle } from 'drizzle-orm/sqlite-proxy'
 import * as schema from './schema/index.js'
 import { ensureDirectory, resolveWorkspaceRoot } from './workspace.js'
 
-export const DATABASE_PATH = resolve(resolveWorkspaceRoot(), 'data/platform.sqlite')
+function resolveDatabasePath() {
+  return process.env.REPO_DATABASE_PATH?.trim()
+    ? resolve(process.env.REPO_DATABASE_PATH)
+    : resolve(resolveWorkspaceRoot(), 'data/platform.sqlite')
+}
+
+export const DATABASE_PATH = resolveDatabasePath()
 export const MIGRATIONS_PATH = resolve(resolveWorkspaceRoot(), 'packages/database/drizzle')
 
-function createSqliteConnection() {
-  ensureDirectory(DATABASE_PATH)
-  const connection = new DatabaseSync(DATABASE_PATH)
+function createSqliteConnection(databasePath: string) {
+  ensureDirectory(databasePath)
+  const connection = new DatabaseSync(databasePath)
 
   connection.exec(`
     PRAGMA journal_mode = WAL;
@@ -24,13 +30,17 @@ function createSqliteConnection() {
 type SqliteConnection = ReturnType<typeof createSqliteConnection>
 
 declare global {
-  var __repo_sqlite_connection__: SqliteConnection | undefined
+  var __repo_sqlite_connection_map__: Map<string, SqliteConnection> | undefined
 }
 
-export const sqlite = globalThis.__repo_sqlite_connection__ ?? createSqliteConnection()
+const sqliteConnectionMap = globalThis.__repo_sqlite_connection_map__ ?? new Map<string, SqliteConnection>()
 
-if (!globalThis.__repo_sqlite_connection__) {
-  globalThis.__repo_sqlite_connection__ = sqlite
+globalThis.__repo_sqlite_connection_map__ = sqliteConnectionMap
+
+export const sqlite = sqliteConnectionMap.get(DATABASE_PATH) ?? createSqliteConnection(DATABASE_PATH)
+
+if (!sqliteConnectionMap.has(DATABASE_PATH)) {
+  sqliteConnectionMap.set(DATABASE_PATH, sqlite)
 }
 
 async function sqliteCallback(query: string, params: any[], method: 'run' | 'all' | 'values' | 'get') {
@@ -56,6 +66,17 @@ async function sqliteCallback(query: string, params: any[], method: 'run' | 'all
 }
 
 export const db = drizzle(sqliteCallback, { schema })
+
+export function closeDatabaseConnection(databasePath = DATABASE_PATH) {
+  const connection = sqliteConnectionMap.get(databasePath)
+
+  if (!connection) {
+    return
+  }
+
+  connection.close()
+  sqliteConnectionMap.delete(databasePath)
+}
 
 export function getDatabaseHealthSnapshot() {
   return {

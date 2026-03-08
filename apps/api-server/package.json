@@ -12,7 +12,9 @@
     "db:studio": "drizzle-kit studio --config=drizzle.config.ts",
     "db:status": "drizzle-kit check --config=drizzle.config.ts",
     "db:rebuild-native": "pnpm rebuild better-sqlite3",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest",
+    "test:run": "vitest run"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.6",
@@ -27,11 +29,15 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@nestjs/testing": "^11.1.16",
     "@types/express": "^5.0.6",
     "@types/node": "^24.0.0",
+    "@types/supertest": "^7.2.0",
     "drizzle-kit": "^0.31.4",
+    "supertest": "^7.2.2",
     "tsx": "^4.20.5",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   },
   "packageManager": "pnpm@10.6.5"
 }
