@@ -22,6 +22,11 @@ export function createTranslationsApiClient(options: PlatformApiClientOptions) {
     async listTranslationVersions(translationId: string) {
       return await requestApi<TranslationVersionRecord[]>(`translations/${translationId}/versions`, undefined, options)
     },
+    async restoreTranslationVersion(translationId: string, versionId: string) {
+      return await requestApi<TranslationRecord>(`translations/${translationId}/versions/${versionId}/restore`, {
+        method: 'POST'
+      }, options)
+    },
     async updateTranslation(translationId: string, input: UpdateTranslationInput) {
       return await requestApi<TranslationRecord>(`translations/${translationId}`, {
         method: 'PUT',

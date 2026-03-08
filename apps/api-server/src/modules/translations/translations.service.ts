@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
-import { listContentVersions, listTranslations, updateTranslation } from '@repo/database'
+import { getContentVersionById, listContentVersions, listTranslations, restoreTranslationVersion, updateTranslation } from '@repo/database'
 import { canTransitionPublishStatus, publishStatusLabels, type TranslationRecord, type TranslationVersionRecord, type UserSession } from '@repo/types'
 
 @Injectable()
@@ -10,6 +10,16 @@ export class TranslationsService {
 
   async listTranslationVersions(translationId: string) {
     return await listContentVersions('translation', translationId) as TranslationVersionRecord[]
+  }
+
+  async restoreTranslationVersion(translationId: string, versionId: string, currentUser: UserSession) {
+    const version = await getContentVersionById<'translation'>(versionId)
+
+    if (!version || version.moduleType != 'translation' || version.entityId !== translationId) {
+      throw new NotFoundException(`Translation version ${versionId} not found`)
+    }
+
+    return await restoreTranslationVersion(version.snapshot, currentUser)
   }
 
   async updateTranslation(

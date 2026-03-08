@@ -231,7 +231,7 @@ export async function createProject(record: Omit<ProjectRecord, 'updatedAt' | 'u
   return savedProject
 }
 
-export async function updateProject(projectId: string, record: Omit<ProjectRecord, 'updatedAt' | 'id' | 'updatedBy' | 'reviewedBy' | 'publishedAt'>, actor: Pick<UserSession, 'id' | 'name' | 'email'>) {
+export async function updateProject(projectId: string, record: Omit<ProjectRecord, 'updatedAt' | 'id' | 'updatedBy' | 'reviewedBy' | 'publishedAt'>, actor: Pick<UserSession, 'id' | 'name' | 'email'>, changeType: 'update' | 'restore' = 'update') {
   const currentProject = (await listProjects()).find(project => project.id === projectId)
 
   if (!currentProject) {
@@ -269,7 +269,7 @@ export async function updateProject(projectId: string, record: Omit<ProjectRecor
     moduleType: 'project',
     entityId: savedProject.id,
     status: savedProject.status,
-    changeType: 'update',
+    changeType,
     snapshot: savedProject,
     createdBy: savedProject.updatedBy,
     createdAt: savedProject.updatedAt
@@ -281,4 +281,17 @@ export async function updateProject(projectId: string, record: Omit<ProjectRecor
 export async function deleteProject(projectId: string) {
   await db.delete(projects).where(eq(projects.id, projectId))
   await normalizeProjectSortOrders(await listProjects())
+}
+
+
+export async function restoreProjectVersion(record: ProjectRecord, actor: Pick<UserSession, 'id' | 'name' | 'email'>) {
+  return await updateProject(record.id, {
+    slug: record.slug,
+    status: record.status,
+    sortOrder: record.sortOrder,
+    cover: record.cover,
+    externalUrl: record.externalUrl,
+    tags: record.tags,
+    locales: record.locales
+  }, actor, 'restore')
 }

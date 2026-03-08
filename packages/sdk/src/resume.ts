@@ -14,6 +14,11 @@ export function createResumeApiClient(options: PlatformApiClientOptions) {
     async listResumeVersions() {
       return await requestApi<ResumeVersionRecord[]>('resume/versions', undefined, options)
     },
+    async restoreResumeVersion(versionId: string) {
+      return await requestApi<ResumeDocument>(`resume/versions/${versionId}/restore`, {
+        method: 'POST'
+      }, options)
+    },
     async updateResumeDocument(record: ResumeDocument) {
       return await requestApi<ResumeDocument>('resume', {
         method: 'PUT',

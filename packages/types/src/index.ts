@@ -159,7 +159,7 @@ export interface ContentAuditFields {
 }
 
 export type ContentModuleType = 'translation' | 'resume' | 'project'
-export type ContentVersionChangeType = 'seed' | 'create' | 'update'
+export type ContentVersionChangeType = 'seed' | 'create' | 'update' | 'restore'
 
 export interface ContentVersionRecord<TSnapshot = unknown> {
   id: EntityId

@@ -102,6 +102,30 @@ async function toggleTranslationVersions(translationId: string) {
   }
 }
 
+async function handleRestoreTranslationVersion(record: TranslationRecord, versionId: string) {
+  try {
+    const restored = await apiClient.restoreTranslationVersion(record.id, versionId)
+    upsertTranslation(restored)
+    await refresh()
+    translationVersions.value = {
+      ...translationVersions.value,
+      [record.id]: await apiClient.listTranslationVersions(record.id)
+    }
+    toast.add({
+      title: '文案版本已恢复',
+      description: `${record.key} 已恢复到所选历史版本。`,
+      color: 'success'
+    })
+  } catch (restoreError) {
+    const message = restoreError instanceof Error ? restoreError.message : '恢复失败，请稍后重试。'
+    toast.add({
+      title: '恢复失败',
+      description: message,
+      color: 'error'
+    })
+  }
+}
+
 async function handleSaveTranslation() {
   try {
     if (!editingId.value) {
@@ -357,10 +381,16 @@ async function handlePrimaryTransition(record: TranslationRecord) {
                       </div>
                     </template>
 
-                    <div class="space-y-1 text-sm text-muted">
-                      <p>创建人：{{ getActorLabel(version.createdBy) }}</p>
-                      <p>创建时间：{{ new Date(version.createdAt).toLocaleString() }}</p>
-                      <p>版本文案：{{ version.snapshot.value || '暂无' }}</p>
+                    <div class="space-y-3 text-sm text-muted">
+                      <div class="space-y-1">
+                        <p>创建人：{{ getActorLabel(version.createdBy) }}</p>
+                        <p>创建时间：{{ new Date(version.createdAt).toLocaleString() }}</p>
+                        <p>版本文案：{{ version.snapshot.value || '暂无' }}</p>
+                      </div>
+
+                      <div v-if="canWriteTranslations" class="flex justify-end">
+                        <UButton label="恢复此版本" color="warning" variant="subtle" @click="handleRestoreTranslationVersion(record, version.id)" />
+                      </div>
                     </div>
                   </UCard>
                 </div>

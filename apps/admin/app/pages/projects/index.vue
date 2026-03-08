@@ -201,6 +201,31 @@ async function handleRemoveProject(project: ProjectRecord) {
     color: 'success'
   })
 }
+
+
+async function handleRestoreProjectVersion(versionId: string) {
+  if (!editorProject.value) {
+    return
+  }
+
+  try {
+    const restored = await apiClient.restoreProjectVersion(editorProject.value.id, versionId)
+    upsertProject(restored)
+    await Promise.all([refresh(), loadProjectVersions(restored.id)])
+    toast.add({
+      title: '项目版本已恢复',
+      description: `${restored.slug} 已恢复到所选历史版本。`,
+      color: 'success'
+    })
+  } catch (restoreError) {
+    const message = restoreError instanceof Error ? restoreError.message : '恢复失败，请稍后重试。'
+    toast.add({
+      title: '恢复失败',
+      description: message,
+      color: 'error'
+    })
+  }
+}
 </script>
 
 <template>
@@ -465,10 +490,16 @@ async function handleRemoveProject(project: ProjectRecord) {
                     </div>
                   </template>
 
-                  <div class="space-y-1 text-sm text-muted">
-                    <p>创建人：{{ getActorLabel(version.createdBy) }}</p>
-                    <p>创建时间：{{ new Date(version.createdAt).toLocaleString() }}</p>
-                    <p>标题（{{ selectedLocale }}）：{{ version.snapshot.locales[selectedLocale]?.title || '暂无' }}</p>
+                  <div class="space-y-3 text-sm text-muted">
+                    <div class="space-y-1">
+                      <p>创建人：{{ getActorLabel(version.createdBy) }}</p>
+                      <p>创建时间：{{ new Date(version.createdAt).toLocaleString() }}</p>
+                      <p>标题（{{ selectedLocale }}）：{{ version.snapshot.locales[selectedLocale]?.title || '暂无' }}</p>
+                    </div>
+
+                    <div class="flex justify-end">
+                      <UButton label="恢复此版本" color="warning" variant="subtle" @click="handleRestoreProjectVersion(version.id)" />
+                    </div>
                   </div>
                 </UCard>
               </div>

@@ -234,7 +234,7 @@ export async function getResumeDocument() {
   return document
 }
 
-export async function updateResumeDocument(record: ResumeDocument, actor: Pick<UserSession, 'id' | 'name' | 'email'>) {
+export async function updateResumeDocument(record: ResumeDocument, actor: Pick<UserSession, 'id' | 'name' | 'email'>, changeType: 'update' | 'restore' = 'update') {
   const currentDocument = await getResumeDocument()
   const timestamp = new Date().toISOString()
   const audit = resolveContentAuditFields({
@@ -275,11 +275,16 @@ export async function updateResumeDocument(record: ResumeDocument, actor: Pick<U
     moduleType: 'resume',
     entityId: nextRecord.id,
     status: nextRecord.status,
-    changeType: 'update',
+    changeType,
     snapshot: nextRecord,
     createdBy: nextRecord.updatedBy,
     createdAt: nextRecord.updatedAt
   })
 
   return nextRecord
+}
+
+
+export async function restoreResumeDocumentVersion(record: ResumeDocument, actor: Pick<UserSession, 'id' | 'name' | 'email'>) {
+  return await updateResumeDocument(record, actor, 'restore')
 }

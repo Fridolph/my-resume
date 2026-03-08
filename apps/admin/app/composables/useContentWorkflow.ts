@@ -18,7 +18,8 @@ const primaryTransitionMap: Record<PublishStatus, { to: PublishStatus, label: st
 const contentVersionChangeTypeLabels: Record<ContentVersionChangeType, string> = {
   seed: '种子版本',
   create: '创建版本',
-  update: '更新版本'
+  update: '更新版本',
+  restore: '恢复版本'
 }
 
 export function useContentWorkflow() {

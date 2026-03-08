@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
-import { createProject, deleteProject, listContentVersions, listProjects, updateProject } from '@repo/database'
+import { createProject, deleteProject, getContentVersionById, listContentVersions, listProjects, restoreProjectVersion, updateProject } from '@repo/database'
 import { canTransitionPublishStatus, publishStatusLabels, type ProjectRecord, type ProjectVersionRecord, type UserSession } from '@repo/types'
 
 @Injectable()
@@ -10,6 +10,16 @@ export class ProjectsService {
 
   async listProjectVersions(projectId: string) {
     return await listContentVersions('project', projectId) as ProjectVersionRecord[]
+  }
+
+  async restoreProjectVersion(projectId: string, versionId: string, currentUser: UserSession) {
+    const version = await getContentVersionById<'project'>(versionId)
+
+    if (!version || version.moduleType != 'project' || version.entityId !== projectId) {
+      throw new NotFoundException(`Project version ${versionId} not found`)
+    }
+
+    return await restoreProjectVersion(version.snapshot, currentUser)
   }
 
   async createProject(record: Omit<ProjectRecord, 'updatedAt' | 'id' | 'updatedBy' | 'reviewedBy' | 'publishedAt'>, currentUser: UserSession) {

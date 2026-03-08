@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Inject, Param, Put, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Inject, Param, Post, Put, UseGuards } from '@nestjs/common'
 import type { UserSession } from '@repo/types'
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js'
 import { RequirePermissions } from '../../common/decorators/require-permissions.decorator.js'
@@ -30,5 +30,12 @@ export class TranslationsController {
   async updateTranslation(@Param('translationId') translationId: string, @Body() body: unknown, @CurrentUser() currentUser: UserSession) {
     const parsed = updateTranslationSchema.parse(body)
     return await this.translationsService.updateTranslation(translationId, parsed, currentUser)
+  }
+
+  @UseGuards(ApiAuthGuard)
+  @RequirePermissions('translation.write')
+  @Post(':translationId/versions/:versionId/restore')
+  async restoreTranslationVersion(@Param('translationId') translationId: string, @Param('versionId') versionId: string, @CurrentUser() currentUser: UserSession) {
+    return await this.translationsService.restoreTranslationVersion(translationId, versionId, currentUser)
   }
 }

@@ -102,6 +102,27 @@ async function handlePublishStatusChange(status: PublishStatus) {
     })
   }
 }
+
+
+async function handleRestoreResumeVersion(versionId: string) {
+  try {
+    const restored = await apiClient.restoreResumeVersion(versionId)
+    replaceResumeDocument(restored)
+    await Promise.all([refresh(), refreshVersions()])
+    toast.add({
+      title: '简历版本已恢复',
+      description: '当前简历已恢复到所选历史版本。',
+      color: 'success'
+    })
+  } catch (restoreError) {
+    const message = restoreError instanceof Error ? restoreError.message : '恢复失败，请稍后重试。'
+    toast.add({
+      title: '恢复失败',
+      description: message,
+      color: 'error'
+    })
+  }
+}
 </script>
 
 <template>
@@ -259,10 +280,16 @@ async function handlePublishStatusChange(status: PublishStatus) {
               </div>
             </template>
 
-            <div class="space-y-1 text-sm text-muted">
-              <p>创建人：{{ getActorLabel(version.createdBy) }}</p>
-              <p>创建时间：{{ new Date(version.createdAt).toLocaleString() }}</p>
-              <p>标题（{{ selectedLocale }}）：{{ version.snapshot.locales[selectedLocale]?.baseInfo.headline || '暂无' }}</p>
+            <div class="space-y-3 text-sm text-muted">
+              <div class="space-y-1">
+                <p>创建人：{{ getActorLabel(version.createdBy) }}</p>
+                <p>创建时间：{{ new Date(version.createdAt).toLocaleString() }}</p>
+                <p>标题（{{ selectedLocale }}）：{{ version.snapshot.locales[selectedLocale]?.baseInfo.headline || '暂无' }}</p>
+              </div>
+
+              <div v-if="canWriteResume" class="flex justify-end">
+                <UButton label="恢复此版本" color="warning" variant="subtle" @click="handleRestoreResumeVersion(version.id)" />
+              </div>
             </div>
           </UCard>
         </div>

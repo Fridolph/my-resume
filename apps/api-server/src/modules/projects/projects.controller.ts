@@ -42,6 +42,13 @@ export class ProjectsController {
 
   @UseGuards(ApiAuthGuard)
   @RequirePermissions('project.write')
+  @Post(':projectId/versions/:versionId/restore')
+  async restoreProjectVersion(@Param('projectId') projectId: string, @Param('versionId') versionId: string, @CurrentUser() currentUser: UserSession) {
+    return await this.projectsService.restoreProjectVersion(projectId, versionId, currentUser)
+  }
+
+  @UseGuards(ApiAuthGuard)
+  @RequirePermissions('project.write')
   @Delete(':projectId')
   async deleteProject(@Param('projectId') projectId: string) {
     return await this.projectsService.deleteProject(projectId)

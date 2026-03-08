@@ -105,3 +105,13 @@ export async function listContentVersions<TModuleType extends ContentModuleType>
 
   return rows.map(row => fromRow<TModuleType>(row))
 }
+
+
+export async function getContentVersionById<TModuleType extends ContentModuleType>(versionId: string) {
+  const [row] = await db.select()
+    .from(contentVersions)
+    .where(eq(contentVersions.id, versionId))
+    .limit(1)
+
+  return row ? fromRow<TModuleType>(row) : null
+}

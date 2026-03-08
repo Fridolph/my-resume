@@ -32,6 +32,11 @@ export function createProjectsApiClient(options: PlatformApiClientOptions) {
     async listProjectVersions(projectId: string) {
       return await requestApi<ProjectVersionRecord[]>(`projects/${projectId}/versions`, undefined, options)
     },
+    async restoreProjectVersion(projectId: string, versionId: string) {
+      return await requestApi<ProjectRecord>(`projects/${projectId}/versions/${versionId}/restore`, {
+        method: 'POST'
+      }, options)
+    },
     async updateProject(projectId: string, input: UpdateProjectInput) {
       return await requestApi<ProjectRecord>(`projects/${projectId}`, {
         method: 'PUT',

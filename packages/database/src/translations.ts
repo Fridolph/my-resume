@@ -151,7 +151,8 @@ export async function listTranslations() {
 export async function updateTranslation(
   translationId: string,
   record: Omit<TranslationRecord, 'updatedAt' | 'id' | 'missing' | 'updatedBy' | 'reviewedBy' | 'publishedAt'>,
-  actor: Pick<UserSession, 'id' | 'name' | 'email'>
+  actor: Pick<UserSession, 'id' | 'name' | 'email'>,
+  changeType: 'update' | 'restore' = 'update'
 ) {
   const currentRecord = (await listTranslations()).find(item => item.id === translationId)
 
@@ -192,11 +193,22 @@ export async function updateTranslation(
     moduleType: 'translation',
     entityId: nextRecord.id,
     status: nextRecord.status,
-    changeType: 'update',
+    changeType,
     snapshot: nextRecord,
     createdBy: nextRecord.updatedBy,
     createdAt: nextRecord.updatedAt
   })
 
   return nextRecord
+}
+
+
+export async function restoreTranslationVersion(record: TranslationRecord, actor: Pick<UserSession, 'id' | 'name' | 'email'>) {
+  return await updateTranslation(record.id, {
+    namespace: record.namespace,
+    key: record.key,
+    locale: record.locale as WebLocale,
+    value: record.value,
+    status: record.status
+  }, actor, 'restore')
 }
