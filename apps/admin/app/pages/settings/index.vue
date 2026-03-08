@@ -7,8 +7,9 @@ definePageMeta({
 
 const toast = useToast()
 const { hasPermission } = usePermissions()
+const canWriteSettings = hasPermission('site.write')
 
-if (!hasPermission('site.write')) {
+if (!hasPermission('site.read')) {
   await navigateTo('/unauthorized')
 }
 
@@ -86,19 +87,27 @@ function handleLocaleChange(locale: WebLocale) {
       <div class="space-y-6">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div class="space-y-2">
-            <UBadge label="A7 站点配置与收尾" variant="subtle" color="primary" class="w-fit" />
+            <UBadge label="P5-5 页面权限收口" variant="subtle" color="primary" class="w-fit" />
             <div class="space-y-1">
               <h1 class="text-2xl font-semibold text-highlighted">
                 站点设置
               </h1>
               <p class="max-w-3xl text-sm text-muted">
-                当前阶段已建立默认语言、社交链接、下载资源和 SEO 默认配置管理界面，并在 P2 中切换为通过 API Server 读写的正式链路。
+                当前页面已按真实权限拆分为“可查看”和“可编辑”两层能力，便于只读账号与高权限账号使用同一页面。
               </p>
             </div>
           </div>
 
-          <UButton label="保存站点配置" icon="i-lucide-save" @click="handleSaveSettings" />
+          <UButton v-if="canWriteSettings" label="保存站点配置" icon="i-lucide-save" @click="handleSaveSettings" />
         </div>
+
+        <UAlert
+          v-if="!canWriteSettings"
+          title="当前账号为只读访问"
+          description="你可以查看站点设置，但没有修改权限。若需要编辑，请切换到具备 site.write 权限的账号。"
+          color="warning"
+          variant="subtle"
+        />
 
         <div class="grid gap-4 md:grid-cols-4">
           <UCard>
@@ -119,144 +128,146 @@ function handleLocaleChange(locale: WebLocale) {
           </UCard>
         </div>
 
-        <UCard>
-          <template #header>
-            <div class="space-y-1">
-              <h2 class="text-base font-semibold text-highlighted">
-                默认语言与阶段说明
-              </h2>
-              <p class="text-sm text-muted">
-                当前页面已经切换到 `api-server` 正式接口，是第二阶段 P2 的首个三端迁移样板。
-              </p>
-            </div>
-          </template>
-
-          <div class="grid gap-4 lg:grid-cols-[1fr_1.4fr]">
-            <UFormField label="站点默认语言">
-              <select
-                :value="settings.defaultLocale"
-                class="w-full rounded-md border border-default bg-default px-3 py-2 text-sm text-default"
-                @change="handleLocaleChange(($event.target as HTMLSelectElement).value as WebLocale)"
-              >
-                <option v-for="option in localeOptions" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </option>
-              </select>
-            </UFormField>
-
-            <div class="rounded-lg border border-default bg-elevated/40 p-4 text-sm text-muted space-y-2">
-              <p>当前样板模块：站点配置。</p>
-              <p>数据库方案：SQLite。</p>
-              <p>数据访问层：Drizzle ORM。</p>
-              <p>最后更新时间：{{ new Date(settings.updatedAt).toLocaleString() }}</p>
-            </div>
-          </div>
-        </UCard>
-
-        <div class="grid gap-6 xl:grid-cols-[1fr_1fr]">
+        <fieldset :disabled="!canWriteSettings" class="space-y-6 disabled:opacity-100">
           <UCard>
             <template #header>
-              <div class="flex items-center justify-between gap-3">
-                <div class="space-y-1">
-                  <h2 class="text-base font-semibold text-highlighted">
-                    社交链接配置
-                  </h2>
-                  <p class="text-sm text-muted">
-                    当前配置将通过真实数据层持久化到 SQLite。
-                  </p>
-                </div>
-
-                <UButton label="新增社交链接" color="neutral" variant="subtle" @click="addSocialLink" />
+              <div class="space-y-1">
+                <h2 class="text-base font-semibold text-highlighted">
+                  默认语言与阶段说明
+                </h2>
+                <p class="text-sm text-muted">
+                  当前页面已经切换到 `api-server` 正式接口，并开始按真实权限拆分读写边界。
+                </p>
               </div>
             </template>
 
-            <div class="space-y-4">
-              <UCard v-for="item in settings.socialLinks" :key="item.id">
-                <div class="grid gap-4 md:grid-cols-2">
-                  <UFormField label="名称">
-                    <UInput v-model="item.label" placeholder="例如 GitHub" />
-                  </UFormField>
-                  <UFormField label="链接">
-                    <UInput v-model="item.url" placeholder="请输入社交链接地址" />
-                  </UFormField>
-                </div>
+            <div class="grid gap-4 lg:grid-cols-[1fr_1.4fr]">
+              <UFormField label="站点默认语言">
+                <select
+                  :value="settings.defaultLocale"
+                  class="w-full rounded-md border border-default bg-default px-3 py-2 text-sm text-default"
+                  @change="handleLocaleChange(($event.target as HTMLSelectElement).value as WebLocale)"
+                >
+                  <option v-for="option in localeOptions" :key="option.value" :value="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+              </UFormField>
 
-                <template #footer>
-                  <div class="flex justify-end">
-                    <UButton label="删除" color="error" variant="subtle" @click="removeSocialLink(item.id)" />
-                  </div>
-                </template>
-              </UCard>
+              <div class="rounded-lg border border-default bg-elevated/40 p-4 text-sm text-muted space-y-2">
+                <p>当前样板模块：站点配置。</p>
+                <p>数据库方案：SQLite。</p>
+                <p>数据访问层：Drizzle ORM。</p>
+                <p>最后更新时间：{{ new Date(settings.updatedAt).toLocaleString() }}</p>
+              </div>
             </div>
           </UCard>
+
+          <div class="grid gap-6 xl:grid-cols-[1fr_1fr]">
+            <UCard>
+              <template #header>
+                <div class="flex items-center justify-between gap-3">
+                  <div class="space-y-1">
+                    <h2 class="text-base font-semibold text-highlighted">
+                      社交链接配置
+                    </h2>
+                    <p class="text-sm text-muted">
+                      当前配置将通过真实数据层持久化到 SQLite。
+                    </p>
+                  </div>
+
+                  <UButton v-if="canWriteSettings" label="新增社交链接" color="neutral" variant="subtle" @click="addSocialLink" />
+                </div>
+              </template>
+
+              <div class="space-y-4">
+                <UCard v-for="item in settings.socialLinks" :key="item.id">
+                  <div class="grid gap-4 md:grid-cols-2">
+                    <UFormField label="名称">
+                      <UInput v-model="item.label" placeholder="例如 GitHub" />
+                    </UFormField>
+                    <UFormField label="链接">
+                      <UInput v-model="item.url" placeholder="请输入社交链接地址" />
+                    </UFormField>
+                  </div>
+
+                  <template #footer>
+                    <div class="flex justify-end">
+                      <UButton v-if="canWriteSettings" label="删除" color="error" variant="subtle" @click="removeSocialLink(item.id)" />
+                    </div>
+                  </template>
+                </UCard>
+              </div>
+            </UCard>
+
+            <UCard>
+              <template #header>
+                <div class="flex items-center justify-between gap-3">
+                  <div class="space-y-1">
+                    <h2 class="text-base font-semibold text-highlighted">
+                      下载资源配置
+                    </h2>
+                    <p class="text-sm text-muted">
+                      当前配置将通过真实数据层持久化到 SQLite。
+                    </p>
+                  </div>
+
+                  <UButton v-if="canWriteSettings" label="新增下载资源" color="neutral" variant="subtle" @click="addDownloadLink" />
+                </div>
+              </template>
+
+              <div class="space-y-4">
+                <UCard v-for="item in settings.downloadLinks" :key="item.id">
+                  <div class="grid gap-4 md:grid-cols-2">
+                    <UFormField label="名称">
+                      <UInput v-model="item.label" placeholder="例如 中文简历 PDF" />
+                    </UFormField>
+                    <UFormField label="链接">
+                      <UInput v-model="item.url" placeholder="请输入下载地址" />
+                    </UFormField>
+                  </div>
+
+                  <template #footer>
+                    <div class="flex justify-end">
+                      <UButton v-if="canWriteSettings" label="删除" color="error" variant="subtle" @click="removeDownloadLink(item.id)" />
+                    </div>
+                  </template>
+                </UCard>
+              </div>
+            </UCard>
+          </div>
 
           <UCard>
             <template #header>
-              <div class="flex items-center justify-between gap-3">
-                <div class="space-y-1">
-                  <h2 class="text-base font-semibold text-highlighted">
-                    下载资源配置
-                  </h2>
-                  <p class="text-sm text-muted">
-                    当前配置将通过真实数据层持久化到 SQLite。
-                  </p>
-                </div>
-
-                <UButton label="新增下载资源" color="neutral" variant="subtle" @click="addDownloadLink" />
+              <div class="space-y-1">
+                <h2 class="text-base font-semibold text-highlighted">
+                  SEO 默认配置
+                </h2>
+                <p class="text-sm text-muted">
+                  用于统一管理公开站点的默认标题、描述、OG 图和站点域名。
+                </p>
               </div>
             </template>
 
-            <div class="space-y-4">
-              <UCard v-for="item in settings.downloadLinks" :key="item.id">
-                <div class="grid gap-4 md:grid-cols-2">
-                  <UFormField label="名称">
-                    <UInput v-model="item.label" placeholder="例如 中文简历 PDF" />
-                  </UFormField>
-                  <UFormField label="链接">
-                    <UInput v-model="item.url" placeholder="请输入下载地址" />
-                  </UFormField>
-                </div>
+            <div class="grid gap-4 md:grid-cols-2">
+              <UFormField label="站点标题">
+                <UInput v-model="settings.seo.title" placeholder="请输入站点标题" />
+              </UFormField>
 
-                <template #footer>
-                  <div class="flex justify-end">
-                    <UButton label="删除" color="error" variant="subtle" @click="removeDownloadLink(item.id)" />
-                  </div>
-                </template>
-              </UCard>
+              <UFormField label="站点域名">
+                <UInput v-model="settings.seo.siteUrl" placeholder="请输入站点域名" />
+              </UFormField>
+
+              <UFormField label="默认描述" class="md:col-span-2">
+                <UTextarea v-model="settings.seo.description" :rows="4" placeholder="请输入默认 SEO 描述" />
+              </UFormField>
+
+              <UFormField label="默认 OG 图地址" class="md:col-span-2">
+                <UInput v-model="settings.seo.ogImage" placeholder="请输入 OG 图链接" />
+              </UFormField>
             </div>
           </UCard>
-        </div>
-
-        <UCard>
-          <template #header>
-            <div class="space-y-1">
-              <h2 class="text-base font-semibold text-highlighted">
-                SEO 默认配置
-              </h2>
-              <p class="text-sm text-muted">
-                用于统一管理公开站点的默认标题、描述、OG 图和站点域名。
-              </p>
-            </div>
-          </template>
-
-          <div class="grid gap-4 md:grid-cols-2">
-            <UFormField label="站点标题">
-              <UInput v-model="settings.seo.title" placeholder="请输入站点标题" />
-            </UFormField>
-
-            <UFormField label="站点域名">
-              <UInput v-model="settings.seo.siteUrl" placeholder="请输入站点域名" />
-            </UFormField>
-
-            <UFormField label="默认描述" class="md:col-span-2">
-              <UTextarea v-model="settings.seo.description" :rows="4" placeholder="请输入默认 SEO 描述" />
-            </UFormField>
-
-            <UFormField label="默认 OG 图地址" class="md:col-span-2">
-              <UInput v-model="settings.seo.ogImage" placeholder="请输入 OG 图链接" />
-            </UFormField>
-          </div>
-        </UCard>
+        </fieldset>
       </div>
     </template>
   </UContainer>

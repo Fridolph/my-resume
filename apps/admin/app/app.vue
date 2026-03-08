@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const route = useRoute()
 const { isAuthenticated } = useAuth()
+const { visibleRouteItems } = useAdminAccess()
 
 useHead({
   meta: [
@@ -23,6 +24,12 @@ useSeoMeta({
 })
 
 const isLoginPage = computed(() => route.path === '/login')
+const navigationItems = computed(() => {
+  return visibleRouteItems.value.map(item => ({
+    label: item.title,
+    to: item.to
+  }))
+})
 </script>
 
 <template>
@@ -31,17 +38,10 @@ const isLoginPage = computed(() => route.path === '/login')
       <UHeader title="Fridolph Admin">
         <template #left>
           <div class="flex items-center gap-3">
-            <UBadge label="P5-3" color="primary" variant="subtle" />
+            <UBadge label="P5-5" color="primary" variant="subtle" />
             <UNavigationMenu
               v-if="isAuthenticated && !isLoginPage"
-              :items="[
-                { label: '首页', to: '/' },
-                { label: '用户', to: '/users' },
-                { label: '文案', to: '/translations' },
-                { label: '简历', to: '/resume' },
-                { label: '项目', to: '/projects' },
-                { label: '设置', to: '/settings' }
-              ]"
+              :items="navigationItems"
             />
           </div>
         </template>
@@ -60,7 +60,7 @@ const isLoginPage = computed(() => route.path === '/login')
       <UFooter>
         <template #left>
           <p class="text-sm text-muted">
-            Admin milestone P5-3 · Real Session Login via API Server
+            Admin milestone P5-5 · Page-level Permission Control
           </p>
         </template>
       </UFooter>

@@ -4,37 +4,15 @@ definePageMeta({
 })
 
 const { session, logout } = useAuth()
+const { visibleRouteItems } = useAdminAccess()
 
 function handleLogout() {
   void logout()
 }
-const quickLinks = [
-  {
-    title: '用户管理',
-    description: '验证登录态、权限判断与用户管理模块。',
-    to: '/users'
-  },
-  {
-    title: '文案管理',
-    description: '验证 namespace、locale、发布状态和缺失文案的管理入口。',
-    to: '/translations'
-  },
-  {
-    title: '简历管理',
-    description: '维护基础信息、教育经历、工作经历、技能和联系方式，并验证多语言简历编辑方式。',
-    to: '/resume'
-  },
-  {
-    title: '项目管理',
-    description: '维护项目列表、排序、标签、多语言说明、外链与封面字段，并验证发布状态流转。',
-    to: '/projects'
-  },
-  {
-    title: '站点设置',
-    description: '维护默认语言、社交链接、下载资源与 SEO 默认配置，并完成后台第一阶段收尾。',
-    to: '/settings'
-  }
-]
+
+const quickLinks = computed(() => {
+  return visibleRouteItems.value.filter(item => item.to !== '/')
+})
 </script>
 
 <template>
@@ -42,13 +20,13 @@ const quickLinks = [
     <div class="flex flex-col gap-6">
       <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div class="space-y-3">
-          <UBadge label="P5-3 已接入真实服务端登录态" variant="subtle" color="primary" class="w-fit" />
+          <UBadge label="P5-5 页面权限判断已接入真实会话" variant="subtle" color="primary" class="w-fit" />
           <div class="space-y-2">
             <h1 class="text-4xl font-bold tracking-tight text-highlighted sm:text-5xl">
               欢迎回来，{{ session?.name }}
             </h1>
             <p class="max-w-2xl text-lg text-muted">
-              当前账号角色为 {{ session?.role }}。现在后台已经切换到真实服务端 session 登录态，并具备登录、登出、路由守卫、基础权限判断、用户管理、文案管理、简历管理、项目管理与站点配置模块入口。
+              当前账号角色为 {{ session?.role }}。现在后台首页、导航和页面入口会根据真实权限集合动态显示，只展示当前账号真正可访问的模块。
             </p>
           </div>
         </div>
