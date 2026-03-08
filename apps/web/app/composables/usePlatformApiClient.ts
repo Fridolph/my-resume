@@ -1,9 +1,9 @@
-import { createProjectsApiClient } from '@repo/sdk'
+import { createPublicContentApiClient } from '@repo/sdk'
 
 export function usePlatformApiClient() {
   const runtimeConfig = useRuntimeConfig()
 
-  return createProjectsApiClient({
-    baseUrl: runtimeConfig.public.apiBaseUrl
+  return createPublicContentApiClient({
+    baseUrl: runtimeConfig.public.publicApiBaseUrl
   })
 }

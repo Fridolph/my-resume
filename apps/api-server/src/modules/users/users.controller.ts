@@ -4,7 +4,7 @@ import { ApiAuthGuard } from '../../common/guards/api-auth.guard.js'
 import { createUserSchema, updateUserSchema } from './users.schema.js'
 import { UsersService } from './users.service.js'
 
-@Controller('users')
+@Controller('admin/users')
 export class UsersController {
   constructor(@Inject(UsersService) private readonly usersService: UsersService) {}
 

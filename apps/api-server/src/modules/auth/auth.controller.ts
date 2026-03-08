@@ -7,7 +7,7 @@ import { AuthService } from './auth.service.js'
 
 import { AUTH_COOKIE_MAX_AGE, AUTH_COOKIE_NAME, readAuthCookie } from '../../common/auth/auth-cookie.js'
 
-@Controller('auth')
+@Controller('admin/auth')
 export class AuthController {
   constructor(@Inject(AuthService) private readonly authService: AuthService) {}
 

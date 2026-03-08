@@ -1,15 +1,15 @@
 import { Body, Controller, Delete, Get, Inject, Param, Post, Put, UseGuards } from '@nestjs/common'
-import { Public } from '../../common/decorators/public.decorator.js'
 import { RequirePermissions } from '../../common/decorators/require-permissions.decorator.js'
 import { ApiAuthGuard } from '../../common/guards/api-auth.guard.js'
 import { createProjectSchema, updateProjectSchema } from './projects.schema.js'
 import { ProjectsService } from './projects.service.js'
 
-@Controller('projects')
+@Controller('admin/projects')
 export class ProjectsController {
   constructor(@Inject(ProjectsService) private readonly projectsService: ProjectsService) {}
 
-  @Public()
+  @UseGuards(ApiAuthGuard)
+  @RequirePermissions('project.read')
   @Get()
   async listProjects() {
     return await this.projectsService.listProjects()

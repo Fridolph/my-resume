@@ -5,7 +5,7 @@ export function usePlatformApiClient() {
   const requestHeaders = import.meta.server ? useRequestHeaders(['cookie']) : {}
 
   return createProjectsApiClient({
-    baseUrl: runtimeConfig.public.apiBaseUrl,
+    baseUrl: runtimeConfig.public.adminApiBaseUrl,
     fetcher: (input, init) => {
       return fetch(input, {
         ...init,
