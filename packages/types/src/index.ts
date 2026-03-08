@@ -59,6 +59,7 @@ export const rolePermissions: Record<RoleKey, PermissionKey[]> = {
   ],
   viewer: [
     'dashboard.read',
+    'user.read',
     'translation.read',
     'resume.read',
     'project.read',

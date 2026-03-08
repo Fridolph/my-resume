@@ -1,4 +1,7 @@
-import { Body, Controller, Get, Inject, Put } from '@nestjs/common'
+import { Body, Controller, Get, Inject, Put, UseGuards } from '@nestjs/common'
+import { Public } from '../../common/decorators/public.decorator.js'
+import { RequirePermissions } from '../../common/decorators/require-permissions.decorator.js'
+import { ApiAuthGuard } from '../../common/guards/api-auth.guard.js'
 import type { ResumeDocument } from '@repo/types'
 import { resumeDocumentSchema } from './resume.schema.js'
 import { ResumeService } from './resume.service.js'
@@ -7,11 +10,14 @@ import { ResumeService } from './resume.service.js'
 export class ResumeController {
   constructor(@Inject(ResumeService) private readonly resumeService: ResumeService) {}
 
+  @Public()
   @Get()
   async getResumeDocument() {
     return await this.resumeService.getResumeDocument()
   }
 
+  @UseGuards(ApiAuthGuard)
+  @RequirePermissions('resume.write')
   @Put()
   async updateResumeDocument(@Body() body: unknown) {
     const parsed = resumeDocumentSchema.parse(body) as ResumeDocument
