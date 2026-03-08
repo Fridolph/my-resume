@@ -1,4 +1,4 @@
-import type { PublishStatus } from '@repo/types'
+import type { ContentActorSummary, PublishStatus } from '@repo/types'
 import { getAllowedPublishStatusTransitions, publishStatusLabels } from '@repo/types'
 
 const publishStatusColors: Record<PublishStatus, 'warning' | 'success' | 'error' | 'info'> = {
@@ -35,10 +35,24 @@ export function useContentWorkflow() {
     return primaryTransitionMap[status]
   }
 
+  function getActorLabel(actor: ContentActorSummary | null | undefined) {
+    if (!actor) {
+      return '暂无'
+    }
+
+    return `${actor.name} · ${actor.email}`
+  }
+
+  function getPublishedAtLabel(value: string | null | undefined) {
+    return value ? new Date(value).toLocaleString() : '暂无'
+  }
+
   return {
     getStatusLabel,
     getStatusColor,
     getSelectableStatusOptions,
-    getPrimaryTransitionAction
+    getPrimaryTransitionAction,
+    getActorLabel,
+    getPublishedAtLabel
   }
 }

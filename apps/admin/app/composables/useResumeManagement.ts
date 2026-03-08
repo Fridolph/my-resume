@@ -49,6 +49,9 @@ function createContactItem(input?: Partial<ResumeContactItem>): ResumeContactIte
 const initialResumeDocument: ResumeDocument = {
   id: 'resume_main',
   status: 'draft',
+  updatedBy: null,
+  reviewedBy: null,
+  publishedAt: null,
   updatedAt: new Date().toISOString(),
   locales: {
     'zh-CN': {

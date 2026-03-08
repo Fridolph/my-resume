@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { PublishStatus } from '@repo/types'
 
-const { getStatusColor, getStatusLabel, getSelectableStatusOptions } = useContentWorkflow()
+const { getStatusColor, getStatusLabel, getSelectableStatusOptions, getActorLabel, getPublishedAtLabel } = useContentWorkflow()
 
 definePageMeta({
   middleware: 'auth'
@@ -189,8 +189,9 @@ async function handlePublishStatusChange(status: PublishStatus) {
             </select>
           </UFormField>
 
-          <div class="grid gap-2 md:grid-cols-2">
-            <UCard v-for="coverage in localeCoverage" :key="coverage.locale">
+          <div class="grid gap-4 xl:grid-cols-[1.2fr_1fr]">
+            <div class="grid gap-2 md:grid-cols-2">
+              <UCard v-for="coverage in localeCoverage" :key="coverage.locale">
               <template #header>
                 <div class="flex items-center justify-between gap-2">
                   <p class="font-medium text-default">{{ coverage.locale }}</p>
@@ -203,6 +204,23 @@ async function handlePublishStatusChange(status: PublishStatus) {
                 <p>工作经历：{{ coverage.experienceCount }}</p>
                 <p>技能分组：{{ coverage.skillGroupCount }}</p>
                 <p>联系方式：{{ coverage.contactCount }}</p>
+              </div>
+            </UCard>
+            </div>
+
+            <UCard>
+              <template #header>
+                <div class="space-y-1">
+                  <h3 class="text-base font-semibold text-highlighted">审计信息</h3>
+                  <p class="text-sm text-muted">用于追踪最近更新人、审核人与发布时间。</p>
+                </div>
+              </template>
+
+              <div class="space-y-2 text-sm text-muted">
+                <p>最近更新人：{{ getActorLabel(resumeDocument.updatedBy) }}</p>
+                <p>审核人：{{ getActorLabel(resumeDocument.reviewedBy) }}</p>
+                <p>发布时间：{{ getPublishedAtLabel(resumeDocument.publishedAt) }}</p>
+                <p>最后更新时间：{{ new Date(resumeDocument.updatedAt).toLocaleString() }}</p>
               </div>
             </UCard>
           </div>

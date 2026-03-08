@@ -1,4 +1,6 @@
 import { Body, Controller, Get, Inject, Param, Put, UseGuards } from '@nestjs/common'
+import type { UserSession } from '@repo/types'
+import { CurrentUser } from '../../common/decorators/current-user.decorator.js'
 import { RequirePermissions } from '../../common/decorators/require-permissions.decorator.js'
 import { ApiAuthGuard } from '../../common/guards/api-auth.guard.js'
 import { updateTranslationSchema } from './translations.schema.js'
@@ -18,8 +20,8 @@ export class TranslationsController {
   @UseGuards(ApiAuthGuard)
   @RequirePermissions('translation.write')
   @Put(':translationId')
-  async updateTranslation(@Param('translationId') translationId: string, @Body() body: unknown) {
+  async updateTranslation(@Param('translationId') translationId: string, @Body() body: unknown, @CurrentUser() currentUser: UserSession) {
     const parsed = updateTranslationSchema.parse(body)
-    return await this.translationsService.updateTranslation(translationId, parsed)
+    return await this.translationsService.updateTranslation(translationId, parsed, currentUser)
   }
 }

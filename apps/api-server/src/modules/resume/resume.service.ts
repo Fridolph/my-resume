@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { getResumeDocument, updateResumeDocument } from '@repo/database'
-import { canTransitionPublishStatus, publishStatusLabels, type ResumeDocument } from '@repo/types'
+import { canTransitionPublishStatus, publishStatusLabels, type ResumeDocument, type UserSession } from '@repo/types'
 
 @Injectable()
 export class ResumeService {
@@ -8,7 +8,7 @@ export class ResumeService {
     return await getResumeDocument()
   }
 
-  async updateResumeDocument(record: ResumeDocument) {
+  async updateResumeDocument(record: ResumeDocument, currentUser: UserSession) {
     const currentDocument = await getResumeDocument()
 
     if (!canTransitionPublishStatus(currentDocument.status, record.status)) {
@@ -18,6 +18,6 @@ export class ResumeService {
       })
     }
 
-    return await updateResumeDocument(record)
+    return await updateResumeDocument(record, currentUser)
   }
 }

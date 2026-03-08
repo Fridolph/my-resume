@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { listTranslations, updateTranslation } from '@repo/database'
-import { canTransitionPublishStatus, publishStatusLabels, type TranslationRecord } from '@repo/types'
+import { canTransitionPublishStatus, publishStatusLabels, type TranslationRecord, type UserSession } from '@repo/types'
 
 @Injectable()
 export class TranslationsService {
@@ -10,7 +10,8 @@ export class TranslationsService {
 
   async updateTranslation(
     translationId: string,
-    record: Omit<TranslationRecord, 'updatedAt' | 'id' | 'missing'>
+    record: Omit<TranslationRecord, 'updatedAt' | 'id' | 'missing' | 'updatedBy' | 'reviewedBy' | 'publishedAt'>,
+    currentUser: UserSession
   ) {
     const translations = await listTranslations()
     const current = translations.find(item => item.id === translationId)
@@ -26,9 +27,6 @@ export class TranslationsService {
       })
     }
 
-    return await updateTranslation(translationId, {
-      ...current,
-      ...record
-    })
+    return await updateTranslation(translationId, record, currentUser)
   }
 }

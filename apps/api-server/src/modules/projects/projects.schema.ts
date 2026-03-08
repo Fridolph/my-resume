@@ -7,6 +7,12 @@ const projectLocaleContentSchema = z.object({
   summary: z.string()
 })
 
+const contentActorSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string().email()
+})
+
 export const projectSchema = z.object({
   id: z.string(),
   slug: z.string().min(1),
@@ -18,8 +24,11 @@ export const projectSchema = z.object({
   locales: z.object({
     'zh-CN': projectLocaleContentSchema,
     'en-US': projectLocaleContentSchema
-  })
+  }),
+  updatedBy: contentActorSchema.nullable().optional(),
+  reviewedBy: contentActorSchema.nullable().optional(),
+  publishedAt: z.string().nullable().optional()
 })
 
-export const createProjectSchema = projectSchema.omit({ id: true })
-export const updateProjectSchema = projectSchema.omit({ id: true })
+export const createProjectSchema = projectSchema.omit({ id: true, updatedBy: true, reviewedBy: true, publishedAt: true })
+export const updateProjectSchema = projectSchema.omit({ id: true, updatedBy: true, reviewedBy: true, publishedAt: true })

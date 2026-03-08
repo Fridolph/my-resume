@@ -1,5 +1,11 @@
 import { z } from 'zod'
 
+const contentActorSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string().email()
+})
+
 const resumeBaseInfoSchema = z.object({
   fullName: z.string().min(1),
   headline: z.string().min(1),
@@ -49,6 +55,9 @@ export const resumeDocumentSchema = z.object({
   id: z.string(),
   status: z.enum(['draft', 'reviewing', 'published', 'archived']),
   updatedAt: z.string(),
+  updatedBy: contentActorSchema.nullable().optional(),
+  reviewedBy: contentActorSchema.nullable().optional(),
+  publishedAt: z.string().nullable().optional(),
   locales: z.object({
     'zh-CN': resumeLocaleContentSchema,
     'en-US': resumeLocaleContentSchema

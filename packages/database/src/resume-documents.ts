@@ -1,14 +1,15 @@
 import type {
-  PublishStatus,
   ResumeContactItem,
   ResumeDocument,
   ResumeEducationItem,
   ResumeExperienceItem,
   ResumeLocaleContent,
-  ResumeSkillGroup
+  ResumeSkillGroup,
+  UserSession
 } from '@repo/types'
 import { eq } from 'drizzle-orm'
 import { db } from './client.js'
+import { createSystemActor, resolveContentAuditFields } from './content-audit.js'
 import type { ResumeDocumentInsert, ResumeDocumentRow } from './schema/index.js'
 import { resumeDocuments } from './schema/index.js'
 
@@ -52,6 +53,9 @@ function createContactItem(input?: Partial<ResumeContactItem>): ResumeContactIte
 const defaultResumeDocument: ResumeDocument = {
   id: 'resume_main',
   status: 'draft',
+  updatedBy: createSystemActor(),
+  reviewedBy: null,
+  publishedAt: null,
   updatedAt: new Date().toISOString(),
   locales: {
     'zh-CN': {
@@ -166,8 +170,11 @@ const defaultResumeDocument: ResumeDocument = {
 function fromRow(row: ResumeDocumentRow): ResumeDocument {
   return {
     id: row.id,
-    status: row.status as PublishStatus,
+    status: row.status as ResumeDocument['status'],
     locales: JSON.parse(row.locales) as Record<'zh-CN' | 'en-US', ResumeLocaleContent>,
+    updatedBy: row.updatedBy ? JSON.parse(row.updatedBy) : null,
+    reviewedBy: row.reviewedBy ? JSON.parse(row.reviewedBy) : null,
+    publishedAt: row.publishedAt ?? null,
     updatedAt: row.updatedAt
   }
 }
@@ -177,6 +184,9 @@ function toRow(record: ResumeDocument): ResumeDocumentInsert {
     id: record.id,
     status: record.status,
     locales: JSON.stringify(record.locales),
+    updatedBy: record.updatedBy ? JSON.stringify(record.updatedBy) : null,
+    reviewedBy: record.reviewedBy ? JSON.stringify(record.reviewedBy) : null,
+    publishedAt: record.publishedAt,
     updatedAt: record.updatedAt
   }
 }
@@ -203,10 +213,25 @@ export async function getResumeDocument() {
   return row ? fromRow(row) : defaultResumeDocument
 }
 
-export async function updateResumeDocument(record: ResumeDocument) {
+export async function updateResumeDocument(record: ResumeDocument, actor: Pick<UserSession, 'id' | 'name' | 'email'>) {
+  const currentDocument = await getResumeDocument()
+  const timestamp = new Date().toISOString()
+  const audit = resolveContentAuditFields({
+    currentStatus: currentDocument.status,
+    nextStatus: record.status,
+    currentPublishedAt: currentDocument.publishedAt,
+    currentUpdatedBy: currentDocument.updatedBy,
+    currentReviewedBy: currentDocument.reviewedBy,
+    actor,
+    timestamp
+  })
+
   const nextRecord: ResumeDocument = {
     ...record,
-    updatedAt: new Date().toISOString()
+    updatedBy: audit.updatedBy,
+    reviewedBy: audit.reviewedBy,
+    publishedAt: audit.publishedAt,
+    updatedAt: timestamp
   }
 
   const row = toRow(nextRecord)
@@ -218,6 +243,9 @@ export async function updateResumeDocument(record: ResumeDocument) {
       set: {
         status: row.status,
         locales: row.locales,
+        updatedBy: row.updatedBy,
+        reviewedBy: row.reviewedBy,
+        publishedAt: row.publishedAt,
         updatedAt: row.updatedAt
       }
     })

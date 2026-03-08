@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { createProject, deleteProject, listProjects, updateProject } from '@repo/database'
-import { canTransitionPublishStatus, publishStatusLabels, type ProjectRecord } from '@repo/types'
+import { canTransitionPublishStatus, publishStatusLabels, type ProjectRecord, type UserSession } from '@repo/types'
 
 @Injectable()
 export class ProjectsService {
@@ -8,14 +8,14 @@ export class ProjectsService {
     return await listProjects()
   }
 
-  async createProject(record: Omit<ProjectRecord, 'updatedAt' | 'id'>) {
+  async createProject(record: Omit<ProjectRecord, 'updatedAt' | 'id' | 'updatedBy' | 'reviewedBy' | 'publishedAt'>, currentUser: UserSession) {
     return await createProject({
       id: `project_${crypto.randomUUID()}`,
       ...record
-    })
+    }, currentUser)
   }
 
-  async updateProject(projectId: string, record: Omit<ProjectRecord, 'updatedAt' | 'id'>) {
+  async updateProject(projectId: string, record: Omit<ProjectRecord, 'updatedAt' | 'id' | 'updatedBy' | 'reviewedBy' | 'publishedAt'>, currentUser: UserSession) {
     const currentProject = (await listProjects()).find(project => project.id === projectId)
 
     if (!currentProject) {
@@ -29,7 +29,7 @@ export class ProjectsService {
       })
     }
 
-    return await updateProject(projectId, record)
+    return await updateProject(projectId, record, currentUser)
   }
 
   async deleteProject(projectId: string) {

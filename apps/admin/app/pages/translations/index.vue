@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { PublishStatus, TranslationNamespace, TranslationRecord, WebLocale } from '@repo/types'
 
-const { getStatusColor, getStatusLabel, getSelectableStatusOptions, getPrimaryTransitionAction } = useContentWorkflow()
+const { getStatusColor, getStatusLabel, getSelectableStatusOptions, getPrimaryTransitionAction, getActorLabel, getPublishedAtLabel } = useContentWorkflow()
 
 definePageMeta({
   middleware: 'auth'
@@ -269,6 +269,12 @@ async function handlePrimaryTransition(record: TranslationRecord) {
                   </div>
                   <p class="text-xs text-muted">
                     更新时间：{{ new Date(record.updatedAt).toLocaleString() }}
+                  </p>
+                  <p class="text-xs text-muted">
+                    更新人：{{ getActorLabel(record.updatedBy) }}
+                  </p>
+                  <p class="text-xs text-muted">
+                    审核人：{{ getActorLabel(record.reviewedBy) }} · 发布时间：{{ getPublishedAtLabel(record.publishedAt) }}
                   </p>
                 </div>
 

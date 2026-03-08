@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ProjectRecord, PublishStatus } from '@repo/types'
 
-const { getStatusColor, getStatusLabel, getSelectableStatusOptions } = useContentWorkflow()
+const { getStatusColor, getStatusLabel, getSelectableStatusOptions, getActorLabel, getPublishedAtLabel } = useContentWorkflow()
 
 definePageMeta({
   middleware: 'auth'
@@ -288,6 +288,9 @@ async function handleRemoveProject(project: ProjectRecord) {
                   <p class="text-xs text-muted">
                     更新时间：{{ new Date(project.updatedAt).toLocaleString() }}
                   </p>
+                  <p class="text-xs text-muted">
+                    更新人：{{ getActorLabel(project.updatedBy) }}
+                  </p>
                 </div>
 
                 <div class="flex flex-wrap gap-2" v-if="canWriteProjects">
@@ -405,9 +408,12 @@ async function handleRemoveProject(project: ProjectRecord) {
               <UInput v-model.number="editorProject.sortOrder" type="number" min="1" />
             </UFormField>
 
-            <div class="rounded-lg border border-default bg-elevated/40 p-4 text-sm text-muted">
+            <div class="rounded-lg border border-default bg-elevated/40 p-4 text-sm text-muted space-y-2">
               <p>当前语言：{{ selectedLocale }}</p>
               <p>更新时间：{{ new Date(editorProject.updatedAt).toLocaleString() }}</p>
+              <p>更新人：{{ getActorLabel(editorProject.updatedBy) }}</p>
+              <p>审核人：{{ getActorLabel(editorProject.reviewedBy) }}</p>
+              <p>发布时间：{{ getPublishedAtLabel(editorProject.publishedAt) }}</p>
               <p>封面图：{{ editorProject.cover || '未填写' }}</p>
             </div>
           </div>

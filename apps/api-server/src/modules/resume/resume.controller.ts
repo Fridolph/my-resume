@@ -1,7 +1,8 @@
 import { Body, Controller, Get, Inject, Put, UseGuards } from '@nestjs/common'
+import type { ResumeDocument, UserSession } from '@repo/types'
+import { CurrentUser } from '../../common/decorators/current-user.decorator.js'
 import { RequirePermissions } from '../../common/decorators/require-permissions.decorator.js'
 import { ApiAuthGuard } from '../../common/guards/api-auth.guard.js'
-import type { ResumeDocument } from '@repo/types'
 import { resumeDocumentSchema } from './resume.schema.js'
 import { ResumeService } from './resume.service.js'
 
@@ -19,8 +20,8 @@ export class ResumeController {
   @UseGuards(ApiAuthGuard)
   @RequirePermissions('resume.write')
   @Put()
-  async updateResumeDocument(@Body() body: unknown) {
+  async updateResumeDocument(@Body() body: unknown, @CurrentUser() currentUser: UserSession) {
     const parsed = resumeDocumentSchema.parse(body) as ResumeDocument
-    return await this.resumeService.updateResumeDocument(parsed)
+    return await this.resumeService.updateResumeDocument(parsed, currentUser)
   }
 }

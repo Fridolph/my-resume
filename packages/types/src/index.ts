@@ -146,6 +146,18 @@ export interface AuthLoginResult {
   expiresAt: string
 }
 
+export interface ContentActorSummary {
+  id: EntityId
+  name: string
+  email: string
+}
+
+export interface ContentAuditFields {
+  updatedBy: ContentActorSummary | null
+  reviewedBy: ContentActorSummary | null
+  publishedAt: string | null
+}
+
 export interface UserRecord {
   id: EntityId
   name: string
@@ -156,7 +168,7 @@ export interface UserRecord {
   updatedAt: string
 }
 
-export interface TranslationRecord {
+export interface TranslationRecord extends ContentAuditFields {
   id: EntityId
   namespace: TranslationNamespace
   key: string
@@ -212,7 +224,7 @@ export interface ResumeLocaleContent {
   contacts: ResumeContactItem[]
 }
 
-export interface ResumeDocument {
+export interface ResumeDocument extends ContentAuditFields {
   id: EntityId
   status: PublishStatus
   updatedAt: string
@@ -226,7 +238,7 @@ export interface ProjectLocaleContent {
   summary: string
 }
 
-export interface ProjectRecord {
+export interface ProjectRecord extends ContentAuditFields {
   id: EntityId
   slug: string
   status: PublishStatus

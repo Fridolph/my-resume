@@ -1,4 +1,4 @@
-import { sqliteTable, text, uniqueIndex, integer } from 'drizzle-orm/sqlite-core'
+import { integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
 
 export const projects = sqliteTable('projects', {
   id: text('id').primaryKey(),
@@ -9,9 +9,12 @@ export const projects = sqliteTable('projects', {
   externalUrl: text('external_url').notNull(),
   tags: text('tags').notNull(),
   locales: text('locales').notNull(),
+  updatedBy: text('updated_by'),
+  reviewedBy: text('reviewed_by'),
+  publishedAt: text('published_at'),
   updatedAt: text('updated_at').notNull()
-}, table => ({
-  slugUnique: uniqueIndex('projects_slug_unique').on(table.slug)
+}, (table) => ({
+  projectSlugUnique: uniqueIndex('projects_slug_unique').on(table.slug)
 }))
 
 export type ProjectRow = typeof projects.$inferSelect

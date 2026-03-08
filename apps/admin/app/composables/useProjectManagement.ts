@@ -23,6 +23,9 @@ function createProjectRecord(input?: Partial<ProjectRecord>): ProjectRecord {
     cover: input?.cover ?? 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80',
     externalUrl: input?.externalUrl ?? 'https://example.com/project',
     tags: input?.tags ?? [],
+    updatedBy: input?.updatedBy ?? null,
+    reviewedBy: input?.reviewedBy ?? null,
+    publishedAt: input?.publishedAt ?? null,
     updatedAt: input?.updatedAt ?? new Date().toISOString(),
     locales: input?.locales ?? {
       'zh-CN': createLocaleContent('zh-CN'),

@@ -43,6 +43,13 @@
       "when": 1772902000000,
       "tag": "0005_auth_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1772934000000,
+      "tag": "0006_content_audit_fields",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
+import { int, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
 
 export const translations = sqliteTable('translations', {
   id: text('id').primaryKey(),
@@ -7,14 +7,13 @@ export const translations = sqliteTable('translations', {
   locale: text('locale').notNull(),
   value: text('value').notNull(),
   status: text('status').notNull(),
-  missing: integer('missing', { mode: 'boolean' }).notNull(),
+  missing: int('missing', { mode: 'boolean' }).notNull(),
+  updatedBy: text('updated_by'),
+  reviewedBy: text('reviewed_by'),
+  publishedAt: text('published_at'),
   updatedAt: text('updated_at').notNull()
-}, table => ({
-  namespaceKeyLocaleUnique: uniqueIndex('translations_namespace_key_locale_unique').on(
-    table.namespace,
-    table.key,
-    table.locale
-  )
+}, (table) => ({
+  translationUniqueKey: uniqueIndex('translations_namespace_key_locale_unique').on(table.namespace, table.key, table.locale)
 }))
 
 export type TranslationRow = typeof translations.$inferSelect
