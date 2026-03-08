@@ -49,6 +49,13 @@ const adminRouteAccessItems: AdminRouteAccessItem[] = [
     to: '/settings',
     readPermission: 'site.read',
     writePermission: 'site.write'
+  },
+  {
+    title: '统一发布',
+    description: '管理公开站点当前生效的统一发布批次。',
+    to: '/releases',
+    readPermission: 'site.read',
+    writePermission: 'site.write'
   }
 ]
 

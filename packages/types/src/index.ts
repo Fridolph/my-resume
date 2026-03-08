@@ -269,6 +269,29 @@ export type TranslationVersionRecord = ContentVersionRecord<TranslationRecord>
 export type ResumeVersionRecord = ContentVersionRecord<ResumeDocument>
 export type ProjectVersionRecord = ContentVersionRecord<ProjectRecord>
 
+export type ContentReleaseStatus = 'draft' | 'active' | 'archived'
+
+export interface ContentReleaseRecord {
+  id: EntityId
+  name: string
+  status: ContentReleaseStatus
+  resumeVersionId: EntityId
+  translationVersionIds: EntityId[]
+  projectVersionIds: EntityId[]
+  createdBy: ContentActorSummary | null
+  activatedBy: ContentActorSummary | null
+  activatedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PublicReleaseSnapshot {
+  release: ContentReleaseRecord
+  resume: ResumeDocument
+  translations: TranslationRecord[]
+  projects: ProjectRecord[]
+}
+
 export interface SiteSocialLink {
   id: EntityId
   label: string

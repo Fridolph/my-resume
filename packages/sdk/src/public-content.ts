@@ -1,9 +1,12 @@
-import type { ProjectRecord, ResumeDocument, SiteSettingsRecord, TranslationRecord, WebLocale } from '@repo/types'
+import type { ProjectRecord, PublicReleaseSnapshot, ResumeDocument, SiteSettingsRecord, TranslationRecord, WebLocale } from '@repo/types'
 import type { PlatformApiClientOptions } from './site-settings.js'
 import { requestApi } from './site-settings.js'
 
 export function createPublicContentApiClient(options: PlatformApiClientOptions) {
   return {
+    async getActiveRelease() {
+      return await requestApi<PublicReleaseSnapshot>('release', undefined, options)
+    },
     async getSiteSettings() {
       return await requestApi<SiteSettingsRecord>('site-settings', undefined, options)
     },

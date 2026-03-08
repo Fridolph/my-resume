@@ -7,8 +7,9 @@ import { TranslationsModule } from './modules/translations/translations.module.j
 import { ResumeModule } from './modules/resume/resume.module.js'
 import { ProjectsModule } from './modules/projects/projects.module.js'
 import { AuthModule } from './modules/auth/auth.module.js'
+import { ReleasesModule } from './modules/releases/releases.module.js'
 
 @Module({
-  imports: [DatabaseModule, HealthModule, SiteSettingsModule, UsersModule, TranslationsModule, ResumeModule, ProjectsModule, AuthModule]
+  imports: [DatabaseModule, HealthModule, SiteSettingsModule, UsersModule, TranslationsModule, ResumeModule, ProjectsModule, AuthModule, ReleasesModule]
 })
 export class AppModule {}
