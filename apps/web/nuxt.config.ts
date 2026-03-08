@@ -24,7 +24,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      publicApiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:3011/api/public',
+      publicApiBaseUrl: process.env.NUXT_PUBLIC_PUBLIC_API_BASE_URL || process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:3011/api/public',
       siteUrl: 'https://fridolph.com',
       siteName: 'Fridolph Web',
       siteDescription: '个人内容展示站，承载主页、简历、项目与多语言内容。',

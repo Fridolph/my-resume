@@ -10,7 +10,9 @@
     "typecheck": "pnpm -r typecheck",
     "dev:api": "pnpm --dir apps/api-server dev",
     "db:generate": "pnpm --dir packages/database db:generate",
-    "db:migrate": "pnpm --dir packages/database db:migrate"
+    "db:migrate": "pnpm --dir packages/database db:migrate",
+    "db:studio": "pnpm --dir apps/api-server db:studio",
+    "db:status": "pnpm --dir apps/api-server db:status"
   },
   "dependencies": {
     "better-sqlite3": "^12.6.2",

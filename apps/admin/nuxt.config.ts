@@ -24,7 +24,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      adminApiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:3011/api/admin'
+      adminApiBaseUrl: process.env.NUXT_PUBLIC_ADMIN_API_BASE_URL || process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:3011/api/admin'
     }
   },
 

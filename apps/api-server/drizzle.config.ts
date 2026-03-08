@@ -17,12 +17,15 @@ function resolveWorkspaceRoot() {
 }
 
 const workspaceRoot = resolveWorkspaceRoot()
+const databasePath = process.env.REPO_DATABASE_PATH
+  ? resolve(workspaceRoot, process.env.REPO_DATABASE_PATH)
+  : resolve(workspaceRoot, 'data/platform.sqlite')
 
 export default defineConfig({
   dialect: 'sqlite',
   schema: resolve(workspaceRoot, 'packages/database/src/schema/*.ts'),
   out: resolve(workspaceRoot, 'packages/database/drizzle'),
   dbCredentials: {
-    url: resolve(workspaceRoot, 'data/platform.sqlite')
+    url: databasePath
   }
 })
