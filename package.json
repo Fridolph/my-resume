@@ -12,7 +12,11 @@
     "db:generate": "pnpm --dir packages/database db:generate",
     "db:migrate": "pnpm --dir packages/database db:migrate",
     "db:studio": "pnpm --dir apps/api-server db:studio",
-    "db:status": "pnpm --dir apps/api-server db:status"
+    "db:status": "pnpm --dir apps/api-server db:status",
+    "check:api": "pnpm --dir apps/api-server test:run",
+    "check:web": "pnpm --dir apps/web test:e2e",
+    "check:admin": "pnpm --dir apps/admin test:e2e",
+    "check:phase3": "pnpm check:api && pnpm check:web && pnpm check:admin"
   },
   "dependencies": {
     "better-sqlite3": "^12.6.2",
