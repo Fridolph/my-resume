@@ -5,10 +5,23 @@ import { ApiExceptionFilter } from './common/api-exception.filter.js'
 import { ApiResponseInterceptor } from './common/api-response.interceptor.js'
 import { AppModule } from './app.module.js'
 
+function resolveCorsOrigin() {
+  const configuredOrigins = process.env.CORS_ORIGIN
+    ?.split(',')
+    .map(origin => origin.trim())
+    .filter(Boolean)
+
+  if (!configuredOrigins?.length) {
+    return true
+  }
+
+  return configuredOrigins
+}
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
   app.enableCors({
-    origin: true,
+    origin: resolveCorsOrigin(),
     credentials: true
   })
   app.setGlobalPrefix('api')

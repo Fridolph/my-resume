@@ -49,9 +49,11 @@ cp .env.example .env
 当前本地开发主要使用以下变量：
 
 - `PORT`：`api-server` 监听端口，默认 `3011`
+- `CORS_ORIGIN`：线上允许访问 API 的来源列表，多个域名用逗号分隔
 - `REPO_DATABASE_PATH`：SQLite 数据库文件路径，默认 `./data/platform.sqlite`
 - `NUXT_PUBLIC_PUBLIC_API_BASE_URL`：`web` 端公开 API 基地址
 - `NUXT_PUBLIC_ADMIN_API_BASE_URL`：`admin` 端后台 API 基地址
+- `NUXT_PUBLIC_SITE_URL`：`web` 端线上站点域名
 
 > 兼容说明：`apps/web` 与 `apps/admin` 仍兼容旧变量 `NUXT_PUBLIC_API_BASE_URL`，但后续建议分别使用新的变量名。
 
@@ -156,3 +158,9 @@ lsof -nP -iTCP:3011 -sTCP:LISTEN
 - 第二阶段架构方案：`docs/phase-2/2026-03-07-第二阶段三端统一架构方案.md`
 - 第二阶段里程碑：`docs/phase-2/里程碑规划.md`
 - 当前阶段博客记录：`docs/phase-2/`
+
+
+## 部署参考
+
+- 第二阶段部署设计：`docs/phase-2/2026-03-08-P7-4-部署方案与上线前检查项设计.md`
+- 上线前检查清单：`docs/phase-2/上线前检查清单.md`
