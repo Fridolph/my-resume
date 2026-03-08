@@ -8,12 +8,14 @@ definePageMeta({
 const toast = useToast()
 const { formatDateTime } = useDateTimeFormatter()
 const { hasPermission } = usePermissions()
+const { createReadOnlyNotice, confirmOperation } = useOperationGuidance()
 
 if (!hasPermission('site.read')) {
   await navigateTo('/unauthorized')
 }
 
 const canWriteReleases = hasPermission('site.write')
+const releaseReadOnlyNotice = createReadOnlyNotice('统一发布中心')
 const apiClient = usePlatformApiClient()
 
 const { data, pending, error, refresh } = await useAsyncData('admin-content-releases', async () => {
@@ -67,6 +69,15 @@ const releaseSummaryItems = computed(() => {
 })
 
 async function handlePublishRelease() {
+  const confirmed = await confirmOperation({
+    title: '确认创建并激活新批次？',
+    description: '系统会基于当前公开内容生成新的统一发布批次，并立即切换 Web 站点读取目标。'
+  })
+
+  if (!confirmed) {
+    return
+  }
+
   try {
     await apiClient.publishContentRelease()
     await refresh()
@@ -86,6 +97,15 @@ async function handlePublishRelease() {
 }
 
 async function handleActivateRelease(releaseId: string) {
+  const confirmed = await confirmOperation({
+    title: '确认切换公开批次？',
+    description: '切换后，Web 公开站点会立即改为读取所选批次的简历、项目和文案版本。'
+  })
+
+  if (!confirmed) {
+    return
+  }
+
   try {
     await apiClient.activateContentRelease(releaseId)
     await refresh()
@@ -109,26 +129,55 @@ async function handleActivateRelease(releaseId: string) {
   <UContainer class="py-10">
     <template v-if="pending">
       <UCard>
-        <p class="text-sm text-muted">正在加载统一发布批次…</p>
+        <p class="text-sm text-muted">
+          正在加载统一发布批次…
+        </p>
       </UCard>
     </template>
 
     <template v-else-if="error">
-      <UAlert title="统一发布批次加载失败" description="请检查 P6-5 发布中心 API 链路。" color="error" variant="subtle" />
+      <UAlert
+        title="统一发布批次加载失败"
+        description="请检查 P6-5 发布中心 API 链路。"
+        color="error"
+        variant="subtle"
+      />
     </template>
 
     <template v-else>
       <div class="space-y-6">
+        <UAlert
+          v-if="!canWriteReleases"
+          :title="releaseReadOnlyNotice.title"
+          :description="releaseReadOnlyNotice.description"
+          color="warning"
+          variant="subtle"
+        />
+
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div class="space-y-2">
-            <UBadge label="T3-1 发布中心增强" color="primary" variant="subtle" class="w-fit" />
+            <UBadge
+              label="T3-1 发布中心增强"
+              color="primary"
+              variant="subtle"
+              class="w-fit"
+            />
             <div class="space-y-1">
-              <h1 class="text-2xl font-semibold text-highlighted">统一发布中心</h1>
-              <p class="max-w-3xl text-sm text-muted">当前页面用于管理公开站点真正生效的发布批次，并更直观地展示当前公开站点到底正在消费哪一批内容版本。</p>
+              <h1 class="text-2xl font-semibold text-highlighted">
+                统一发布中心
+              </h1>
+              <p class="max-w-3xl text-sm text-muted">
+                当前页面用于管理公开站点真正生效的发布批次，并更直观地展示当前公开站点到底正在消费哪一批内容版本。
+              </p>
             </div>
           </div>
 
-          <UButton v-if="canWriteReleases" label="创建并激活新批次" icon="i-lucide-rocket" @click="handlePublishRelease" />
+          <UButton
+            v-if="canWriteReleases"
+            label="创建并激活新批次"
+            icon="i-lucide-rocket"
+            @click="handlePublishRelease"
+          />
         </div>
 
         <UAlert
@@ -139,42 +188,78 @@ async function handleActivateRelease(releaseId: string) {
         />
 
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <UCard v-for="item in releaseSummaryItems" :key="item.label">
+          <UCard
+            v-for="item in releaseSummaryItems"
+            :key="item.label"
+          >
             <div class="space-y-1">
-              <p class="text-sm text-muted">{{ item.label }}</p>
-              <p class="text-xl font-semibold text-highlighted">{{ item.value }}</p>
-              <p class="text-xs text-muted">{{ item.hint }}</p>
+              <p class="text-sm text-muted">
+                {{ item.label }}
+              </p>
+              <p class="text-xl font-semibold text-highlighted">
+                {{ item.value }}
+              </p>
+              <p class="text-xs text-muted">
+                {{ item.hint }}
+              </p>
             </div>
           </UCard>
         </div>
 
-        <UCard v-if="activeRelease" class="border border-primary/30">
+        <UCard
+          v-if="activeRelease"
+          class="border border-primary/30"
+        >
           <template #header>
             <div class="space-y-1">
               <div class="flex flex-wrap items-center gap-2">
-                <h2 class="text-base font-semibold text-highlighted">当前激活批次</h2>
-                <UBadge label="公开站点正在使用" color="success" variant="subtle" />
+                <h2 class="text-base font-semibold text-highlighted">
+                  当前激活批次
+                </h2>
+                <UBadge
+                  label="公开站点正在使用"
+                  color="success"
+                  variant="subtle"
+                />
               </div>
-              <p class="text-sm text-muted">当前 Web 公开站点正在消费这一批次的内容版本，切换批次后首页、简历页、项目页与公开文案都会跟着变化。</p>
+              <p class="text-sm text-muted">
+                当前 Web 公开站点正在消费这一批次的内容版本，切换批次后首页、简历页、项目页与公开文案都会跟着变化。
+              </p>
             </div>
           </template>
 
           <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <div class="space-y-1 text-sm text-muted">
-              <p class="text-xs">批次名称</p>
-              <p class="font-medium text-default">{{ activeRelease.name }}</p>
+              <p class="text-xs">
+                批次名称
+              </p>
+              <p class="font-medium text-default">
+                {{ activeRelease.name }}
+              </p>
             </div>
             <div class="space-y-1 text-sm text-muted">
-              <p class="text-xs">简历版本</p>
-              <p class="font-medium text-default">{{ activeRelease.resumeVersionId }}</p>
+              <p class="text-xs">
+                简历版本
+              </p>
+              <p class="font-medium text-default">
+                {{ activeRelease.resumeVersionId }}
+              </p>
             </div>
             <div class="space-y-1 text-sm text-muted">
-              <p class="text-xs">公开项目数量</p>
-              <p class="font-medium text-default">{{ activeRelease.projectVersionIds.length }}</p>
+              <p class="text-xs">
+                公开项目数量
+              </p>
+              <p class="font-medium text-default">
+                {{ activeRelease.projectVersionIds.length }}
+              </p>
             </div>
             <div class="space-y-1 text-sm text-muted">
-              <p class="text-xs">公开文案数量</p>
-              <p class="font-medium text-default">{{ activeRelease.translationVersionIds.length }}</p>
+              <p class="text-xs">
+                公开文案数量
+              </p>
+              <p class="font-medium text-default">
+                {{ activeRelease.translationVersionIds.length }}
+              </p>
             </div>
           </div>
 
@@ -191,18 +276,32 @@ async function handleActivateRelease(releaseId: string) {
         </UCard>
 
         <div class="grid gap-4">
-          <UCard v-for="release in releases" :key="release.id">
+          <UCard
+            v-for="release in releases"
+            :key="release.id"
+          >
             <template #header>
               <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div class="space-y-1">
                   <div class="flex flex-wrap items-center gap-2">
-                    <h2 class="text-base font-semibold text-highlighted">{{ release.name }}</h2>
-                    <UBadge :label="release.status === 'active' ? '当前激活' : release.status === 'archived' ? '历史归档' : release.status" :color="release.status === 'active' ? 'success' : 'neutral'" variant="subtle" />
+                    <h2 class="text-base font-semibold text-highlighted">
+                      {{ release.name }}
+                    </h2>
+                    <UBadge
+                      :label="release.status === 'active' ? '当前激活' : release.status === 'archived' ? '历史归档' : release.status"
+                      :color="release.status === 'active' ? 'success' : 'neutral'"
+                      variant="subtle"
+                    />
                   </div>
-                  <p class="text-xs text-muted">ID：{{ release.id }}</p>
+                  <p class="text-xs text-muted">
+                    ID：{{ release.id }}
+                  </p>
                 </div>
 
-                <div v-if="canWriteReleases" class="flex gap-2">
+                <div
+                  v-if="canWriteReleases"
+                  class="flex gap-2"
+                >
                   <UButton
                     v-if="release.status !== 'active'"
                     label="切换为当前公开批次"
@@ -210,27 +309,49 @@ async function handleActivateRelease(releaseId: string) {
                     variant="subtle"
                     @click="handleActivateRelease(release.id)"
                   />
-                  <UButton v-else label="当前已生效" color="success" variant="subtle" disabled />
+                  <UButton
+                    v-else
+                    label="当前已生效"
+                    color="success"
+                    variant="subtle"
+                    disabled
+                  />
                 </div>
               </div>
             </template>
 
             <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4 text-sm text-muted">
               <div class="space-y-1">
-                <p class="text-xs">简历版本</p>
-                <p class="text-default">{{ release.resumeVersionId }}</p>
+                <p class="text-xs">
+                  简历版本
+                </p>
+                <p class="text-default">
+                  {{ release.resumeVersionId }}
+                </p>
               </div>
               <div class="space-y-1">
-                <p class="text-xs">项目版本数</p>
-                <p class="text-default">{{ release.projectVersionIds.length }}</p>
+                <p class="text-xs">
+                  项目版本数
+                </p>
+                <p class="text-default">
+                  {{ release.projectVersionIds.length }}
+                </p>
               </div>
               <div class="space-y-1">
-                <p class="text-xs">文案版本数</p>
-                <p class="text-default">{{ release.translationVersionIds.length }}</p>
+                <p class="text-xs">
+                  文案版本数
+                </p>
+                <p class="text-default">
+                  {{ release.translationVersionIds.length }}
+                </p>
               </div>
               <div class="space-y-1">
-                <p class="text-xs">最近更新时间</p>
-                <p class="text-default">{{ formatDateTime(release.updatedAt) }}</p>
+                <p class="text-xs">
+                  最近更新时间
+                </p>
+                <p class="text-default">
+                  {{ formatDateTime(release.updatedAt) }}
+                </p>
               </div>
             </div>
 

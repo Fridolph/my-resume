@@ -4,6 +4,7 @@ import type { PublishStatus, TranslationNamespace, TranslationRecord, Translatio
 const { getStatusColor, getStatusLabel, getSelectableStatusOptions, getPrimaryTransitionAction, getActorLabel, getPublishedAtLabel, getVersionChangeTypeLabel } = useContentWorkflow()
 const { formatDateTime } = useDateTimeFormatter()
 const { getTranslationVersionInsights } = useContentVersionInsights()
+const { createReadOnlyNotice, confirmOperation, getRestoreRestriction } = useOperationGuidance()
 
 definePageMeta({
   middleware: 'auth'
@@ -23,6 +24,7 @@ const { data, pending, error, refresh } = await useAsyncData('admin-translations
 })
 
 const canWriteTranslations = hasPermission('translation.write')
+const translationReadOnlyNotice = createReadOnlyNotice('文案模块')
 const namespaceOptions: Array<{ label: string, value: 'all' | TranslationNamespace }> = [
   { label: '全部命名空间', value: 'all' },
   { label: 'common', value: 'common' },
@@ -80,6 +82,10 @@ const expandedVersionId = ref<string | null>(null)
 const translationVersions = ref<Record<string, TranslationVersionRecord[]>>({})
 const translationVersionsPending = ref<Record<string, boolean>>({})
 
+function getTranslationRestoreRestriction(version: TranslationVersionRecord, record: TranslationRecord) {
+  return getRestoreRestriction(getTranslationVersionInsights(version, record).changed, '文案内容')
+}
+
 async function toggleTranslationVersions(translationId: string) {
   if (expandedVersionId.value === translationId) {
     expandedVersionId.value = null
@@ -104,9 +110,24 @@ async function toggleTranslationVersions(translationId: string) {
   }
 }
 
-async function handleRestoreTranslationVersion(record: TranslationRecord, versionId: string) {
+async function handleRestoreTranslationVersion(record: TranslationRecord, version: TranslationVersionRecord) {
+  const restriction = getTranslationRestoreRestriction(version, record)
+
+  if (restriction.disabled) {
+    return
+  }
+
+  const confirmed = await confirmOperation({
+    title: '确认恢复此文案版本？',
+    description: `恢复后会用版本 v${version.version} 覆盖当前文案 ${record.key}，并生成新的恢复版本记录。`
+  })
+
+  if (!confirmed) {
+    return
+  }
+
   try {
-    const restored = await apiClient.restoreTranslationVersion(record.id, versionId)
+    const restored = await apiClient.restoreTranslationVersion(record.id, version.id)
     upsertTranslation(restored)
     await refresh()
     translationVersions.value = {
@@ -165,6 +186,15 @@ async function handlePrimaryTransition(record: TranslationRecord) {
     return
   }
 
+  const confirmed = await confirmOperation({
+    title: `确认${action.label}？`,
+    description: `${record.key} 将从${getStatusLabel(record.status)}切换为${getStatusLabel(action.to)}。`
+  })
+
+  if (!confirmed) {
+    return
+  }
+
   try {
     const saved = await apiClient.updateTranslation(record.id, {
       namespace: record.namespace,
@@ -216,6 +246,14 @@ async function handlePrimaryTransition(record: TranslationRecord) {
 
     <template v-else>
       <div class="space-y-6">
+        <UAlert
+          v-if="!canWriteTranslations"
+          :title="translationReadOnlyNotice.title"
+          :description="translationReadOnlyNotice.description"
+          color="warning"
+          variant="subtle"
+        />
+
         <div class="space-y-2">
           <UBadge
             label="P3 i18n 文案迁移"
@@ -557,14 +595,18 @@ async function handlePrimaryTransition(record: TranslationRecord) {
 
                       <div
                         v-if="canWriteTranslations"
-                        class="flex justify-end"
+                        class="flex flex-col items-end gap-2"
                       >
                         <UButton
                           label="恢复此版本"
                           color="warning"
                           variant="subtle"
-                          @click="handleRestoreTranslationVersion(record, version.id)"
+                          :disabled="getTranslationRestoreRestriction(version, record).disabled"
+                          @click="handleRestoreTranslationVersion(record, version)"
                         />
+                        <p class="text-xs text-muted">
+                          {{ getTranslationRestoreRestriction(version, record).reason }}
+                        </p>
                       </div>
                     </div>
                   </UCard>

@@ -4,6 +4,7 @@ import type { PublishStatus, ResumeVersionRecord } from '@repo/types'
 const { getStatusColor, getStatusLabel, getSelectableStatusOptions, getActorLabel, getPublishedAtLabel, getVersionChangeTypeLabel } = useContentWorkflow()
 const { formatDateTime } = useDateTimeFormatter()
 const { getResumeVersionInsights } = useContentVersionInsights()
+const { createReadOnlyNotice, confirmOperation, getRestoreRestriction } = useOperationGuidance()
 
 definePageMeta({
   middleware: 'auth'
@@ -29,6 +30,7 @@ const { data: versionData, pending: versionsPending, refresh: refreshVersions } 
 const resumeVersions = computed<ResumeVersionRecord[]>(() => versionData.value ?? [])
 
 const canWriteResume = hasPermission('resume.write')
+const resumeReadOnlyNotice = createReadOnlyNotice('简历模块')
 
 const {
   resumeDocument,
@@ -61,6 +63,10 @@ const resumeStatusOptions = computed(() => {
   return getSelectableStatusOptions(resumeDocument.value.status)
 })
 
+function getResumeRestoreRestriction(version: ResumeVersionRecord) {
+  return getRestoreRestriction(getResumeVersionInsights(version, resumeDocument.value, selectedLocale.value).changed, '简历内容')
+}
+
 async function handleSaveResume() {
   try {
     const saved = await apiClient.updateResumeDocument(buildResumeDocument())
@@ -82,6 +88,15 @@ async function handleSaveResume() {
 }
 
 async function handlePublishStatusChange(status: PublishStatus) {
+  const confirmed = await confirmOperation({
+    title: '确认切换简历状态？',
+    description: `当前简历会从${getStatusLabel(resumeDocument.value.status)}切换为${getStatusLabel(status)}。`
+  })
+
+  if (!confirmed) {
+    return
+  }
+
   const previousStatus = resumeDocument.value.status
   setPublishStatus(status)
 
@@ -105,9 +120,24 @@ async function handlePublishStatusChange(status: PublishStatus) {
   }
 }
 
-async function handleRestoreResumeVersion(versionId: string) {
+async function handleRestoreResumeVersion(version: ResumeVersionRecord) {
+  const restriction = getResumeRestoreRestriction(version)
+
+  if (restriction.disabled) {
+    return
+  }
+
+  const confirmed = await confirmOperation({
+    title: '确认恢复此简历版本？',
+    description: `恢复后会使用版本 v${version.version} 覆盖当前简历，并生成新的恢复版本记录。`
+  })
+
+  if (!confirmed) {
+    return
+  }
+
   try {
-    const restored = await apiClient.restoreResumeVersion(versionId)
+    const restored = await apiClient.restoreResumeVersion(version.id)
     replaceResumeDocument(restored)
     await Promise.all([refresh(), refreshVersions()])
     toast.add({
@@ -147,6 +177,14 @@ async function handleRestoreResumeVersion(versionId: string) {
 
     <template v-else>
       <div class="space-y-6">
+        <UAlert
+          v-if="!canWriteResume"
+          :title="resumeReadOnlyNotice.title"
+          :description="resumeReadOnlyNotice.description"
+          color="warning"
+          variant="subtle"
+        />
+
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div class="space-y-2">
             <UBadge
@@ -408,14 +446,18 @@ async function handleRestoreResumeVersion(versionId: string) {
 
                 <div
                   v-if="canWriteResume"
-                  class="flex justify-end"
+                  class="flex flex-col items-end gap-2"
                 >
                   <UButton
                     label="恢复此版本"
                     color="warning"
                     variant="subtle"
-                    @click="handleRestoreResumeVersion(version.id)"
+                    :disabled="getResumeRestoreRestriction(version).disabled"
+                    @click="handleRestoreResumeVersion(version)"
                   />
+                  <p class="text-xs text-muted">
+                    {{ getResumeRestoreRestriction(version).reason }}
+                  </p>
                 </div>
               </div>
             </UCard>

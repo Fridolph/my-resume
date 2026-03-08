@@ -4,6 +4,7 @@ import type { ProjectRecord, ProjectVersionRecord, PublishStatus } from '@repo/t
 const { getStatusColor, getStatusLabel, getSelectableStatusOptions, getActorLabel, getPublishedAtLabel, getVersionChangeTypeLabel } = useContentWorkflow()
 const { formatDateTime } = useDateTimeFormatter()
 const { getProjectVersionInsights } = useContentVersionInsights()
+const { createReadOnlyNotice, confirmOperation, getRestoreRestriction, getMoveRestriction } = useOperationGuidance()
 
 definePageMeta({
   middleware: 'auth'
@@ -23,8 +24,10 @@ const { data, pending, error, refresh } = await useAsyncData('admin-projects-api
 })
 
 const canWriteProjects = hasPermission('project.write')
+const projectReadOnlyNotice = createReadOnlyNotice('项目模块')
 
 const {
+  projects,
   keyword,
   selectedLocale,
   selectedStatus,
@@ -60,6 +63,24 @@ const projectStatusOptions = computed(() => {
 
 const projectVersions = ref<ProjectVersionRecord[]>([])
 const projectVersionsPending = ref(false)
+
+function getProjectRestoreRestriction(version: ProjectVersionRecord) {
+  if (!editorProject.value) {
+    return getRestoreRestriction(false, '项目内容')
+  }
+
+  return getRestoreRestriction(getProjectVersionInsights(version, editorProject.value, selectedLocale.value).changed, '项目内容')
+}
+
+function getProjectMoveAction(projectId: string, direction: 'up' | 'down') {
+  const orderedIds = [...projects.value]
+    .sort((left, right) => left.sortOrder - right.sortOrder)
+    .map(project => project.id)
+  const index = orderedIds.indexOf(projectId)
+  const isEdgeItem = direction === 'up' ? index <= 0 : index === orderedIds.length - 1
+
+  return getMoveRestriction(isEdgeItem, direction)
+}
 
 async function loadProjectVersions(projectId: string) {
   projectVersionsPending.value = true
@@ -121,6 +142,19 @@ async function handleSaveProject() {
 }
 
 async function handleStatusChange(status: PublishStatus) {
+  if (!editorProject.value) {
+    return
+  }
+
+  const confirmed = await confirmOperation({
+    title: '确认切换项目状态？',
+    description: `${editorProject.value.slug} 将从${getStatusLabel(editorProject.value.status)}切换为${getStatusLabel(status)}。`
+  })
+
+  if (!confirmed) {
+    return
+  }
+
   const previousStatus = editorProject.value?.status
   setProjectStatus(status)
 
@@ -156,6 +190,12 @@ async function handleStatusChange(status: PublishStatus) {
 }
 
 async function handleMove(project: ProjectRecord, direction: 'up' | 'down') {
+  const restriction = getProjectMoveAction(project.id, direction)
+
+  if (restriction.disabled) {
+    return
+  }
+
   const moved = moveProject(project.id, direction)
 
   if (!moved) {
@@ -194,6 +234,15 @@ async function handleMove(project: ProjectRecord, direction: 'up' | 'down') {
 }
 
 async function handleRemoveProject(project: ProjectRecord) {
+  const confirmed = await confirmOperation({
+    title: '确认删除当前项目？',
+    description: `${project.slug} 会从后台项目列表中移除，当前操作不可直接撤销。`
+  })
+
+  if (!confirmed) {
+    return
+  }
+
   await apiClient.deleteProject(project.id)
   removeProjectLocally(project.id)
   await refresh()
@@ -204,13 +253,28 @@ async function handleRemoveProject(project: ProjectRecord) {
   })
 }
 
-async function handleRestoreProjectVersion(versionId: string) {
+async function handleRestoreProjectVersion(version: ProjectVersionRecord) {
   if (!editorProject.value) {
     return
   }
 
+  const restriction = getProjectRestoreRestriction(version)
+
+  if (restriction.disabled) {
+    return
+  }
+
+  const confirmed = await confirmOperation({
+    title: '确认恢复此项目版本？',
+    description: `恢复后会使用版本 v${version.version} 覆盖当前项目 ${editorProject.value.slug}，并生成新的恢复版本记录。`
+  })
+
+  if (!confirmed) {
+    return
+  }
+
   try {
-    const restored = await apiClient.restoreProjectVersion(editorProject.value.id, versionId)
+    const restored = await apiClient.restoreProjectVersion(editorProject.value.id, version.id)
     upsertProject(restored)
     await Promise.all([refresh(), loadProjectVersions(restored.id)])
     toast.add({
@@ -250,6 +314,14 @@ async function handleRestoreProjectVersion(versionId: string) {
 
     <template v-else>
       <div class="space-y-6">
+        <UAlert
+          v-if="!canWriteProjects"
+          :title="projectReadOnlyNotice.title"
+          :description="projectReadOnlyNotice.description"
+          color="warning"
+          variant="subtle"
+        />
+
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div class="space-y-2">
             <UBadge
@@ -406,26 +478,33 @@ async function handleRestoreProjectVersion(versionId: string) {
 
                   <div
                     v-if="canWriteProjects"
-                    class="flex flex-wrap gap-2"
+                    class="space-y-2"
                   >
-                    <UButton
-                      label="上移"
-                      color="neutral"
-                      variant="subtle"
-                      @click="handleMove(project, 'up')"
-                    />
-                    <UButton
-                      label="下移"
-                      color="neutral"
-                      variant="subtle"
-                      @click="handleMove(project, 'down')"
-                    />
-                    <UButton
-                      label="编辑"
-                      color="neutral"
-                      variant="subtle"
-                      @click="selectProject(project.id)"
-                    />
+                    <div class="flex flex-wrap gap-2">
+                      <UButton
+                        label="上移"
+                        color="neutral"
+                        variant="subtle"
+                        :disabled="getProjectMoveAction(project.id, 'up').disabled"
+                        @click="handleMove(project, 'up')"
+                      />
+                      <UButton
+                        label="下移"
+                        color="neutral"
+                        variant="subtle"
+                        :disabled="getProjectMoveAction(project.id, 'down').disabled"
+                        @click="handleMove(project, 'down')"
+                      />
+                      <UButton
+                        label="编辑"
+                        color="neutral"
+                        variant="subtle"
+                        @click="selectProject(project.id)"
+                      />
+                    </div>
+                    <p class="text-xs text-muted">
+                      {{ getProjectMoveAction(project.id, 'up').disabled ? getProjectMoveAction(project.id, 'up').reason : getProjectMoveAction(project.id, 'down').reason }}
+                    </p>
                   </div>
                 </div>
               </template>
@@ -681,13 +760,17 @@ async function handleRestoreProjectVersion(versionId: string) {
                         <p>当前标题（{{ selectedLocale }}）：{{ editorProject.locales[selectedLocale]?.title || '暂无' }}</p>
                       </div>
 
-                      <div class="flex justify-end">
+                      <div class="flex flex-col items-end gap-2">
                         <UButton
                           label="恢复此版本"
                           color="warning"
                           variant="subtle"
-                          @click="handleRestoreProjectVersion(version.id)"
+                          :disabled="getProjectRestoreRestriction(version).disabled"
+                          @click="handleRestoreProjectVersion(version)"
                         />
+                        <p class="text-xs text-muted">
+                          {{ getProjectRestoreRestriction(version).reason }}
+                        </p>
                       </div>
                     </div>
                   </UCard>
