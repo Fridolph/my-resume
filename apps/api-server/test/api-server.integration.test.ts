@@ -170,4 +170,182 @@ describe('API Server critical workflow', () => {
     expect(publicResume.status).toBe(200)
     expect(publicResume.body.data.status).toBe('published')
   })
+
+  it('enforces permission boundaries across different roles', async () => {
+    const translatorAgent = request.agent(app.getHttpServer())
+    const translatorLogin = await translatorAgent
+      .post('/api/admin/auth/login')
+      .send({
+        email: 'translator@fridolph.local',
+        password: 'translator123'
+      })
+
+    expect(translatorLogin.status).toBe(200)
+
+    const translatorTranslations = await translatorAgent.get('/api/admin/translations')
+    expect(translatorTranslations.status).toBe(200)
+
+    const translatorUsers = await translatorAgent.get('/api/admin/users')
+    expect(translatorUsers.status).toBe(403)
+    expect(translatorUsers.body.error.code).toBe('FORBIDDEN')
+
+    const viewerAgent = request.agent(app.getHttpServer())
+    const viewerLogin = await viewerAgent
+      .post('/api/admin/auth/login')
+      .send({
+        email: 'viewer@fridolph.local',
+        password: 'viewer123'
+      })
+
+    expect(viewerLogin.status).toBe(200)
+
+    const translations = await viewerAgent.get('/api/admin/translations')
+    expect(translations.status).toBe(200)
+
+    const record = translations.body.data.find((item: { locale: string }) => item.locale === 'zh-CN') ?? translations.body.data[0]
+    const viewerUpdate = await viewerAgent
+      .put(`/api/admin/translations/${record.id}`)
+      .send({
+        namespace: record.namespace,
+        key: record.key,
+        locale: record.locale,
+        value: record.value,
+        status: record.status
+      })
+
+    expect(viewerUpdate.status).toBe(403)
+    expect(viewerUpdate.body.error.code).toBe('FORBIDDEN')
+  })
+
+  it('updates translation versions and republishes public translations', async () => {
+    const translations = await agent.get('/api/admin/translations')
+
+    expect(translations.status).toBe(200)
+
+    const record = translations.body.data.find((item: { locale: string, status: string, missing: boolean }) => item.locale === 'zh-CN' && item.status === 'published' && !item.missing)
+      ?? translations.body.data[0]
+
+    const versionsBefore = await agent.get(`/api/admin/translations/${record.id}/versions`)
+    expect(versionsBefore.status).toBe(200)
+
+    const updatedValue = `${record.value} [api-test]`
+    const updated = await agent
+      .put(`/api/admin/translations/${record.id}`)
+      .send({
+        namespace: record.namespace,
+        key: record.key,
+        locale: record.locale,
+        value: updatedValue,
+        status: record.status
+      })
+
+    expect(updated.status).toBe(200)
+    expect(updated.body.data.value).toContain('[api-test]')
+    expect(updated.body.data.updatedBy.email).toBe('root@fridolph.local')
+
+    const versionsAfter = await agent.get(`/api/admin/translations/${record.id}/versions`)
+    expect(versionsAfter.status).toBe(200)
+    expect(versionsAfter.body.data[0].changeType).toBe('update')
+    expect(versionsAfter.body.data.length).toBeGreaterThan(versionsBefore.body.data.length)
+
+    const release = await agent.post('/api/admin/releases/publish')
+    expect(release.status).toBe(201)
+
+    const publicTranslations = await request(app.getHttpServer())
+      .get('/api/public/translations')
+      .query({ locale: record.locale })
+
+    expect(publicTranslations.status).toBe(200)
+    expect(publicTranslations.body.data.some((item: { key: string, value: string }) => item.key === record.key && item.value === updatedValue)).toBe(true)
+  })
+
+  it('creates, publishes and removes project records through the public release chain', async () => {
+    const uniqueSlug = `playwright-project-${Date.now()}`
+    const created = await agent
+      .post('/api/admin/projects')
+      .send({
+        slug: uniqueSlug,
+        status: 'draft',
+        sortOrder: 999,
+        cover: 'https://example.com/cover.png',
+        externalUrl: 'https://example.com/project',
+        tags: ['Playwright', 'API'],
+        locales: {
+          'zh-CN': {
+            locale: 'zh-CN',
+            title: 'Playwright 项目',
+            description: '用于测试 API 项目链路。',
+            summary: '验证创建、发布、公开读取与删除。'
+          },
+          'en-US': {
+            locale: 'en-US',
+            title: 'Playwright Project',
+            description: 'Used to test the API project workflow.',
+            summary: 'Covers create, publish, public read, and delete.'
+          }
+        }
+      })
+
+    expect(created.status).toBe(201)
+    expect(created.body.data.slug).toBe(uniqueSlug)
+    expect(created.body.data.updatedBy.email).toBe('root@fridolph.local')
+
+    const reviewing = await agent
+      .put(`/api/admin/projects/${created.body.data.id}`)
+      .send({
+        slug: created.body.data.slug,
+        status: 'reviewing',
+        sortOrder: created.body.data.sortOrder,
+        cover: created.body.data.cover,
+        externalUrl: created.body.data.externalUrl,
+        tags: created.body.data.tags,
+        locales: created.body.data.locales
+      })
+
+    expect(reviewing.status).toBe(200)
+    expect(reviewing.body.data.status).toBe('reviewing')
+
+    const published = await agent
+      .put(`/api/admin/projects/${created.body.data.id}`)
+      .send({
+        slug: reviewing.body.data.slug,
+        status: 'published',
+        sortOrder: reviewing.body.data.sortOrder,
+        cover: reviewing.body.data.cover,
+        externalUrl: reviewing.body.data.externalUrl,
+        tags: reviewing.body.data.tags,
+        locales: reviewing.body.data.locales
+      })
+
+    expect(published.status).toBe(200)
+    expect(published.body.data.status).toBe('published')
+    expect(published.body.data.publishedAt).toBeTruthy()
+
+    const projectVersions = await agent.get(`/api/admin/projects/${created.body.data.id}/versions`)
+    expect(projectVersions.status).toBe(200)
+    expect(projectVersions.body.data.length).toBeGreaterThanOrEqual(3)
+
+    const release = await agent.post('/api/admin/releases/publish')
+    expect(release.status).toBe(201)
+
+    const publicProjects = await request(app.getHttpServer())
+      .get('/api/public/projects')
+
+    expect(publicProjects.status).toBe(200)
+    expect(publicProjects.body.data.some((item: { slug: string }) => item.slug === uniqueSlug)).toBe(true)
+
+    const removed = await agent.delete(`/api/admin/projects/${created.body.data.id}`)
+    expect(removed.status).toBe(200)
+    expect(removed.body.data.success).toBe(true)
+
+    const releaseAfterDelete = await agent.post('/api/admin/releases/publish')
+    expect(releaseAfterDelete.status).toBe(201)
+
+    const publicProjectsAfterDelete = await request(app.getHttpServer())
+      .get('/api/public/projects')
+
+    expect(publicProjectsAfterDelete.status).toBe(200)
+    expect(publicProjectsAfterDelete.body.data.some((item: { slug: string }) => item.slug === uniqueSlug)).toBe(false)
+  })
+
 })
