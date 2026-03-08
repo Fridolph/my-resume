@@ -42,13 +42,13 @@ const quickLinks = [
     <div class="flex flex-col gap-6">
       <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div class="space-y-3">
-          <UBadge label="A7 已接入站点配置与第一阶段收尾模块" variant="subtle" color="primary" class="w-fit" />
+          <UBadge label="P5-3 已接入真实服务端登录态" variant="subtle" color="primary" class="w-fit" />
           <div class="space-y-2">
             <h1 class="text-4xl font-bold tracking-tight text-highlighted sm:text-5xl">
               欢迎回来，{{ session?.name }}
             </h1>
             <p class="max-w-2xl text-lg text-muted">
-              当前账号角色为 {{ session?.role }}。现在后台已经具备登录、登出、路由守卫、基础权限判断、用户管理、文案管理、简历管理、项目管理与站点配置模块入口。
+              当前账号角色为 {{ session?.role }}。现在后台已经切换到真实服务端 session 登录态，并具备登录、登出、路由守卫、基础权限判断、用户管理、文案管理、简历管理、项目管理与站点配置模块入口。
             </p>
           </div>
         </div>

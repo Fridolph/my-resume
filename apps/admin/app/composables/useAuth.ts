@@ -1,67 +1,39 @@
-import { getRolePermissions } from '@repo/types'
-import type { RoleKey, UserSession } from '@repo/types'
+import type { UserSession } from '@repo/types'
+import { PlatformApiError } from '@repo/sdk'
 
-const mockUsers = [
-  {
-    id: 'u_super_admin',
-    name: 'Fridolph Super Admin',
-    email: 'root@fridolph.local',
-    password: 'root123',
-    role: 'super-admin'
-  },
-  {
-    id: 'u_admin',
-    name: 'Fridolph Admin',
-    email: 'admin@fridolph.local',
-    password: 'admin123',
-    role: 'admin'
-  },
-  {
-    id: 'u_editor',
-    name: 'Fridolph Editor',
-    email: 'editor@fridolph.local',
-    password: 'editor123',
-    role: 'editor'
-  },
-  {
-    id: 'u_translator',
-    name: 'Fridolph Translator',
-    email: 'translator@fridolph.local',
-    password: 'translator123',
-    role: 'translator'
-  },
-  {
-    id: 'u_viewer',
-    name: 'Fridolph Viewer',
-    email: 'viewer@fridolph.local',
-    password: 'viewer123',
-    role: 'viewer'
-  }
-] as const satisfies Array<{
-  id: string
-  name: string
-  email: string
-  password: string
-  role: RoleKey
-}>
+let refreshSessionPromise: Promise<UserSession | null> | null = null
 
-function buildSession(user: (typeof mockUsers)[number]): UserSession {
-  return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    permissions: getRolePermissions(user.role)
+const demoAccounts = [
+  {
+    label: 'Fridolph Super Admin · super-admin',
+    description: 'root@fridolph.local / root123'
+  },
+  {
+    label: 'Fridolph Admin · admin',
+    description: 'admin@fridolph.local / admin123'
+  },
+  {
+    label: 'Fridolph Editor · editor',
+    description: 'editor@fridolph.local / editor123'
+  },
+  {
+    label: 'Fridolph Translator · translator',
+    description: 'translator@fridolph.local / translator123'
+  },
+  {
+    label: 'Fridolph Viewer · viewer',
+    description: 'viewer@fridolph.local / viewer123'
   }
-}
+]
 
 export function useAuth() {
+  const apiClient = usePlatformApiClient()
   const sessionCookie = useCookie<UserSession | null>('admin-session', {
     default: () => null,
     sameSite: 'lax'
   })
-
   const session = useState<UserSession | null>('admin-session-state', () => sessionCookie.value ?? null)
+  const ready = useState<boolean>('admin-auth-ready', () => false)
 
   watch(
     session,
@@ -73,32 +45,58 @@ export function useAuth() {
 
   const isAuthenticated = computed(() => Boolean(session.value))
 
-  async function login(email: string, password: string) {
-    await new Promise(resolve => setTimeout(resolve, 150))
-
-    const matchedUser = mockUsers.find(user => user.email === email && user.password === password)
-
-    if (!matchedUser) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: '邮箱或密码不正确'
-      })
+  async function refreshSession(force = false) {
+    if (!force && ready.value) {
+      return session.value
     }
 
-    session.value = buildSession(matchedUser)
-    return session.value
+    if (!force && refreshSessionPromise) {
+      return await refreshSessionPromise
+    }
+
+    refreshSessionPromise = (async () => {
+      try {
+        const currentUser = await apiClient.getCurrentUser()
+        session.value = currentUser
+        ready.value = true
+        return currentUser
+      } catch (error) {
+        if (error instanceof PlatformApiError && error.statusCode === 401) {
+          session.value = null
+          ready.value = true
+          return null
+        }
+
+        throw error
+      } finally {
+        refreshSessionPromise = null
+      }
+    })()
+
+    return await refreshSessionPromise
   }
 
-  function logout() {
+  async function login(email: string, password: string) {
+    const result = await apiClient.login({ email, password })
+    session.value = result.session
+    ready.value = true
+    return result.session
+  }
+
+  async function logout() {
+    await apiClient.logout()
     session.value = null
+    ready.value = true
     return navigateTo('/login')
   }
 
   return {
     session,
+    ready,
     isAuthenticated,
     login,
     logout,
-    mockUsers
+    refreshSession,
+    demoAccounts
   }
 }

@@ -5,20 +5,13 @@ definePageMeta({
 
 const route = useRoute()
 const toast = useToast()
-const { login, mockUsers } = useAuth()
+const { login, demoAccounts } = useAuth()
 
 const form = reactive({
-  email: 'admin@fridolph.local',
-  password: 'admin123'
+  email: 'root@fridolph.local',
+  password: 'root123'
 })
 const loading = ref(false)
-
-const demoAccounts = computed(() =>
-  mockUsers.map(user => ({
-    label: `${user.name} · ${user.role}`,
-    description: `${user.email} / ${user.password}`
-  }))
-)
 
 async function handleSubmit() {
   loading.value = true
@@ -27,7 +20,7 @@ async function handleSubmit() {
     await login(form.email, form.password)
     toast.add({
       title: '登录成功',
-      description: '已进入管理后台。',
+      description: '已通过 api-server 建立真实登录态，并进入管理后台。',
       color: 'success'
     })
     await navigateTo(String(route.query.redirect || '/'))
@@ -50,12 +43,12 @@ async function handleSubmit() {
       <UCard>
         <template #header>
           <div class="space-y-2">
-            <UBadge label="P5-1 角色模型预演" variant="subtle" color="primary" class="w-fit" />
+            <UBadge label="P5-3 Admin 真实登录态" variant="subtle" color="primary" class="w-fit" />
             <h1 class="text-3xl font-bold text-highlighted">
               登录到 Fridolph Admin
             </h1>
             <p class="text-sm text-muted">
-              当前阶段先用本地演示账号验证统一角色与权限模型，下一步再接入 `api-server` 真实鉴权服务。
+              当前阶段已切换为通过 `api-server` 的基础鉴权接口建立真实后台登录态，后续继续接入权限守卫与接口边界控制。
             </p>
           </div>
         </template>
@@ -71,7 +64,7 @@ async function handleSubmit() {
 
           <div class="flex items-center gap-3">
             <UButton type="submit" label="登录后台" :loading="loading" size="xl" />
-            <span class="text-sm text-muted">登录后可访问首页、用户页、文案页与设置页。</span>
+            <span class="text-sm text-muted">登录后将通过服务端 session 访问首页、用户页、文案页与设置页。</span>
           </div>
         </form>
       </UCard>
