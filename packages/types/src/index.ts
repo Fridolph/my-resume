@@ -9,6 +9,32 @@ export interface Locale {
 
 export type PublishStatus = 'draft' | 'reviewing' | 'published' | 'archived'
 
+export const publishStatusTransitionMap: Record<PublishStatus, PublishStatus[]> = {
+  draft: ['reviewing', 'archived'],
+  reviewing: ['draft', 'published', 'archived'],
+  published: ['draft', 'archived'],
+  archived: ['draft']
+}
+
+export const publishStatusLabels: Record<PublishStatus, string> = {
+  draft: '草稿',
+  reviewing: '审核中',
+  published: '已发布',
+  archived: '已归档'
+}
+
+export function getAllowedPublishStatusTransitions(currentStatus: PublishStatus) {
+  return [...publishStatusTransitionMap[currentStatus]]
+}
+
+export function canTransitionPublishStatus(currentStatus: PublishStatus, nextStatus: PublishStatus) {
+  if (currentStatus === nextStatus) {
+    return true
+  }
+
+  return publishStatusTransitionMap[currentStatus].includes(nextStatus)
+}
+
 export const roleKeys = ['super-admin', 'admin', 'editor', 'translator', 'viewer'] as const
 export type RoleKey = (typeof roleKeys)[number]
 

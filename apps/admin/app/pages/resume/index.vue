@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { PublishStatus } from '@repo/types'
 
+const { getStatusColor, getStatusLabel, getSelectableStatusOptions } = useContentWorkflow()
+
 definePageMeta({
   middleware: 'auth'
 })
@@ -24,7 +26,6 @@ const {
   resumeDocument,
   selectedLocale,
   localeOptions,
-  publishStatusOptions,
   currentLocaleContent,
   stats,
   localeCoverage,
@@ -48,6 +49,10 @@ watch(data, (value) => {
   }
 }, { immediate: true })
 
+const resumeStatusOptions = computed(() => {
+  return getSelectableStatusOptions(resumeDocument.value.status)
+})
+
 async function handleSaveResume() {
   try {
     const saved = await apiClient.updateResumeDocument(buildResumeDocument())
@@ -69,6 +74,7 @@ async function handleSaveResume() {
 }
 
 async function handlePublishStatusChange(status: PublishStatus) {
+  const previousStatus = resumeDocument.value.status
   setPublishStatus(status)
 
   try {
@@ -76,11 +82,12 @@ async function handlePublishStatusChange(status: PublishStatus) {
     replaceResumeDocument(saved)
     await refresh()
     toast.add({
-    title: '发布状态已更新',
-      description: `当前简历状态已切换为 ${status}。`,
+      title: '发布状态已更新',
+      description: `当前简历状态已切换为${getStatusLabel(status)}。`,
       color: 'success'
     })
   } catch (saveError) {
+    setPublishStatus(previousStatus)
     const message = saveError instanceof Error ? saveError.message : '状态更新失败，请稍后重试。'
     toast.add({
       title: '状态更新失败',
@@ -121,7 +128,7 @@ async function handlePublishStatusChange(status: PublishStatus) {
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
-          <UBadge :label="resumeDocument.status" :color="resumeDocument.status === 'published' ? 'success' : 'warning'" variant="subtle" />
+          <UBadge :label="getStatusLabel(resumeDocument.status)" :color="getStatusColor(resumeDocument.status)" variant="subtle" />
           <UButton v-if="canWriteResume" label="保存当前语言内容" icon="i-lucide-save" @click="handleSaveResume" />
         </div>
       </div>
@@ -176,7 +183,7 @@ async function handlePublishStatusChange(status: PublishStatus) {
               class="w-full rounded-md border border-default bg-default px-3 py-2 text-sm text-default"
               @change="handlePublishStatusChange(($event.target as HTMLSelectElement).value as PublishStatus)"
             >
-              <option v-for="option in publishStatusOptions" :key="option.value" :value="option.value">
+              <option v-for="option in resumeStatusOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
               </option>
             </select>

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { PublishStatus, TranslationNamespace, TranslationRecord, WebLocale } from '@repo/types'
 
+const { getStatusColor, getStatusLabel, getSelectableStatusOptions, getPrimaryTransitionAction } = useContentWorkflow()
+
 definePageMeta({
   middleware: 'auth'
 })
@@ -33,13 +35,14 @@ const localeOptions: Array<{ label: string, value: 'all' | WebLocale }> = [
 ]
 const statusOptions: Array<{ label: string, value: 'all' | PublishStatus }> = [
   { label: '全部状态', value: 'all' },
-  { label: 'draft', value: 'draft' },
-  { label: 'reviewing', value: 'reviewing' },
-  { label: 'published', value: 'published' },
-  { label: 'archived', value: 'archived' }
+  { label: '草稿', value: 'draft' },
+  { label: '审核中', value: 'reviewing' },
+  { label: '已发布', value: 'published' },
+  { label: '已归档', value: 'archived' }
 ]
 
 const {
+  translations,
   filteredTranslations,
   keyword,
   selectedNamespace,
@@ -62,6 +65,14 @@ watch(data, (value) => {
     replaceTranslations(value)
   }
 }, { immediate: true })
+
+const editingRecord = computed(() => {
+  return translations.value.find(record => record.id === editingId.value) ?? null
+})
+
+const editorStatusOptions = computed(() => {
+  return getSelectableStatusOptions(editingRecord.value?.status ?? form.status)
+})
 
 async function handleSaveTranslation() {
   try {
@@ -89,22 +100,36 @@ async function handleSaveTranslation() {
   }
 }
 
-async function handleToggleStatus(record: TranslationRecord) {
-  const nextStatus: PublishStatus = record.status === 'published' ? 'draft' : 'published'
-  const saved = await apiClient.updateTranslation(record.id, {
-    namespace: record.namespace,
-    key: record.key,
-    locale: record.locale as WebLocale,
-    value: record.value,
-    status: nextStatus
-  })
-  upsertTranslation(saved)
-  await refresh()
-  toast.add({
-    title: '状态已更新',
-    description: `${record.key} 已切换为 ${nextStatus}。`,
-    color: 'success'
-  })
+async function handlePrimaryTransition(record: TranslationRecord) {
+  const action = getPrimaryTransitionAction(record.status)
+
+  if (!action) {
+    return
+  }
+
+  try {
+    const saved = await apiClient.updateTranslation(record.id, {
+      namespace: record.namespace,
+      key: record.key,
+      locale: record.locale as WebLocale,
+      value: record.value,
+      status: action.to
+    })
+    upsertTranslation(saved)
+    await refresh()
+    toast.add({
+      title: '状态已更新',
+      description: `${record.key} 已进入${getStatusLabel(action.to)}。`,
+      color: 'success'
+    })
+  } catch (saveError) {
+    const message = saveError instanceof Error ? saveError.message : '状态更新失败，请稍后重试。'
+    toast.add({
+      title: '状态更新失败',
+      description: message,
+      color: 'error'
+    })
+  }
 }
 </script>
 
@@ -239,7 +264,7 @@ async function handleToggleStatus(record: TranslationRecord) {
                     </h2>
                     <UBadge :label="record.namespace" color="neutral" variant="subtle" />
                     <UBadge :label="record.locale" color="neutral" variant="subtle" />
-                    <UBadge :label="record.status" :color="record.status === 'published' ? 'success' : 'warning'" variant="subtle" />
+                    <UBadge :label="getStatusLabel(record.status)" :color="getStatusColor(record.status)" variant="subtle" />
                     <UBadge v-if="record.missing" label="缺失" color="error" variant="subtle" />
                   </div>
                   <p class="text-xs text-muted">
@@ -250,10 +275,11 @@ async function handleToggleStatus(record: TranslationRecord) {
                 <div v-if="canWriteTranslations" class="flex flex-wrap gap-2">
                   <UButton label="编辑文案" color="neutral" variant="subtle" @click="openEditor(record)" />
                   <UButton
-                    :label="record.status === 'published' ? '转为草稿' : '发布'"
+                    v-if="getPrimaryTransitionAction(record.status)"
+                    :label="getPrimaryTransitionAction(record.status)?.label"
                     color="neutral"
                     variant="subtle"
-                    @click="handleToggleStatus(record)"
+                    @click="handlePrimaryTransition(record)"
                   />
                 </div>
               </div>
@@ -289,10 +315,9 @@ async function handleToggleStatus(record: TranslationRecord) {
 
             <UFormField label="发布状态">
               <select v-model="form.status" class="w-full rounded-md border border-default bg-default px-3 py-2 text-sm text-default">
-                <option value="draft">draft</option>
-                <option value="reviewing">reviewing</option>
-                <option value="published">published</option>
-                <option value="archived">archived</option>
+                <option v-for="option in editorStatusOptions" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </option>
               </select>
             </UFormField>
           </div>

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { ProjectRecord, PublishStatus } from '@repo/types'
 
+const { getStatusColor, getStatusLabel, getSelectableStatusOptions } = useContentWorkflow()
+
 definePageMeta({
   middleware: 'auth'
 })
@@ -50,6 +52,10 @@ watch(data, (value) => {
   }
 }, { immediate: true })
 
+const projectStatusOptions = computed(() => {
+  return editorProject.value ? getSelectableStatusOptions(editorProject.value.status) : []
+})
+
 async function handleSaveProject() {
   try {
     const payload = buildProjectInput()
@@ -91,6 +97,7 @@ async function handleSaveProject() {
 }
 
 async function handleStatusChange(status: PublishStatus) {
+  const previousStatus = editorProject.value?.status
   setProjectStatus(status)
 
   try {
@@ -107,11 +114,14 @@ async function handleStatusChange(status: PublishStatus) {
     upsertProject(saved)
     await refresh()
     toast.add({
-    title: '项目状态已更新',
-      description: `当前项目状态已切换为 ${status}。`,
+      title: '项目状态已更新',
+      description: `当前项目状态已切换为${getStatusLabel(status)}。`,
       color: 'success'
     })
   } catch (saveError) {
+    if (previousStatus) {
+      setProjectStatus(previousStatus)
+    }
     const message = saveError instanceof Error ? saveError.message : '状态更新失败，请稍后重试。'
     toast.add({
       title: '项目状态更新失败',
@@ -269,7 +279,7 @@ async function handleRemoveProject(project: ProjectRecord) {
                       {{ project.locales[selectedLocale].title }}
                     </h2>
                     <UBadge :label="project.slug" color="neutral" variant="subtle" />
-                    <UBadge :label="project.status" :color="project.status === 'published' ? 'success' : 'warning'" variant="subtle" />
+                    <UBadge :label="getStatusLabel(project.status)" :color="getStatusColor(project.status)" variant="subtle" />
                     <UBadge :label="`排序 #${project.sortOrder}`" color="neutral" variant="subtle" />
                   </div>
                   <p class="text-sm text-muted">
@@ -385,7 +395,7 @@ async function handleRemoveProject(project: ProjectRecord) {
                 class="w-full rounded-md border border-default bg-default px-3 py-2 text-sm text-default"
                 @change="handleStatusChange(($event.target as HTMLSelectElement).value as PublishStatus)"
               >
-                <option v-for="option in statusOptions.filter(item => item.value !== 'all')" :key="option.value" :value="option.value">
+                <option v-for="option in projectStatusOptions" :key="option.value" :value="option.value">
                   {{ option.label }}
                 </option>
               </select>
