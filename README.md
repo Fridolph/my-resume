@@ -35,7 +35,7 @@ packages/
 ## 本地默认端口
 
 - `web`：`http://localhost:3000`
-- `admin`：`http://localhost:3002`
+- `admin`：默认 `http://localhost:3002`，若端口被占用会自动切换到其它可用端口
 - `api-server`：`http://127.0.0.1:3011`
 
 ## 环境变量
@@ -110,7 +110,7 @@ pnpm --dir apps/api-server test:run
 ## 联调检查
 
 - 打开 `http://localhost:3000` 检查展示端
-- 打开 `http://localhost:3002` 检查后台登录页
+- 打开终端输出中的 Admin 地址检查后台登录页（默认是 `http://localhost:3002`，端口被占用时会自动切换）
 - 打开 `http://127.0.0.1:3011/api/public/release` 检查公开发布接口
 
 ## 常见排查
@@ -120,7 +120,7 @@ pnpm --dir apps/api-server test:run
 优先检查：
 
 - `3000`
-- `3002`
+- `3002`（admin 默认端口，已支持自动切换）
 - `3011`
 
 可以使用：
