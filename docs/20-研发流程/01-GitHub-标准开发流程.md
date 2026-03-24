@@ -7,7 +7,7 @@
 ### 长期分支
 
 - `main`：稳定、可展示、可对外说明
-- `dev`：日常开发主线
+- `development`：日常开发主线
 
 ### 短期分支
 
@@ -36,11 +36,11 @@ Issue 必须包含：
 - 测试计划
 - 日志输出要求
 
-### 3. 从 `dev` 开分支
+### 3. 从 `development` 开分支
 
 ```bash
-git checkout dev
-git pull origin dev
+git checkout development
+git pull origin development
 git checkout -b feat/m1-issue-01-workspace-bootstrap
 ```
 
@@ -83,7 +83,7 @@ Review 阶段必须回答两个问题：
 ### 9. 提交 PR
 
 - 分支推送到远端
-- 创建 PR 到 `dev`
+- 创建 PR 到 `development`
 - 等 CI 通过
 - Review 后合并
 - 关闭对应 Issue
@@ -92,7 +92,7 @@ Review 阶段必须回答两个问题：
 
 - 当前里程碑所有 Issue 完成后
 - 统一检查文档、日志、变更边界
-- 再将该里程碑成果稳定合并到 `dev`
+- 再将该里程碑成果稳定合并到 `development`
 
 ### 11. 发布到 `main`
 
@@ -100,8 +100,8 @@ Review 阶段必须回答两个问题：
 
 ## Merge 策略建议
 
-- 功能分支 → `dev`：使用 `squash merge`
-- `dev` → `main`：仅在阶段稳定后进行
+- 功能分支 → `development`：使用 `squash merge`
+- `development` → `main`：仅在阶段稳定后进行
 
 ## Commit 建议
 

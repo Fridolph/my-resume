@@ -39,7 +39,7 @@
 
 ### 3. 分支规范
 
-- 永远从 `dev` 开分支。
+- 永远从 `development` 开分支。
 - 禁止直接在 `main` 上开发。
 - 分支命名建议：
   - `feat/m1-issue-01-workspace-bootstrap`
@@ -96,15 +96,15 @@
   - `feat(m2): add auth role model`
   - `docs(m1): add monorepo rationale`
   - `test(m3): cover publish flow`
-- PR 合并到 `dev` 前必须通过 CI。
-- 一个里程碑内的多个任务完成后，再按顺序合并到 `dev`。
+- PR 合并到 `development` 前必须通过 CI。
+- 一个里程碑内的多个任务完成后，再按顺序合并到 `development`。
 - `main` 只接受阶段性稳定内容。
 
 ## Git Flow 约定
 
 - 长期分支：
   - `main`：稳定、可展示、可对外说明
-  - `dev`：当前开发主线
+  - `development`：当前开发主线
 - 短期分支：
   - `feat/*`
   - `fix/*`
@@ -112,8 +112,8 @@
   - `chore/*`
 - 里程碑结束时：
   - 先确保对应 Issue 全部关闭
-  - 再把该里程碑分支内容整理合并到 `dev`
-  - 稳定后再从 `dev` 进入 `main`
+  - 再把该里程碑分支内容整理合并到 `development`
+  - 稳定后再从 `development` 进入 `main`
 
 ## 文档要求
 
