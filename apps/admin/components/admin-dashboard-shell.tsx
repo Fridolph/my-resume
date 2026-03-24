@@ -3,19 +3,24 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
-import { fetchCurrentUser } from '../lib/auth-api';
+import { fetchCurrentUser, postProtectedAction } from '../lib/auth-api';
 import { AuthUserView } from '../lib/auth-types';
 import { DEFAULT_API_BASE_URL } from '../lib/env';
 import {
   clearAccessToken,
   readAccessToken,
 } from '../lib/session-storage';
+import { RoleActionPanel } from './role-action-panel';
 
 export function AdminDashboardShell() {
   const [status, setStatus] = useState<'loading' | 'ready' | 'unauthorized'>(
     'loading',
   );
   const [currentUser, setCurrentUser] = useState<AuthUserView | null>(null);
+  const [pendingAction, setPendingAction] = useState<
+    'publish' | 'ai-analysis' | null
+  >(null);
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const accessToken = readAccessToken();
@@ -61,6 +66,37 @@ export function AdminDashboardShell() {
     );
   }
 
+  async function handleProtectedAction(pathname: '/auth/demo/publish' | '/auth/demo/ai-analysis') {
+    const accessToken = readAccessToken();
+
+    if (!accessToken) {
+      setStatus('unauthorized');
+      return;
+    }
+
+    const nextPendingAction =
+      pathname === '/auth/demo/publish' ? 'publish' : 'ai-analysis';
+
+    setPendingAction(nextPendingAction);
+    setFeedbackMessage(null);
+
+    try {
+      const result = await postProtectedAction({
+        apiBaseUrl: DEFAULT_API_BASE_URL,
+        accessToken,
+        pathname,
+      });
+
+      setFeedbackMessage(result.message);
+    } catch (error) {
+      setFeedbackMessage(
+        error instanceof Error ? error.message : '操作失败，请稍后重试',
+      );
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
   return (
     <main className="page-shell single-card">
       <section className="card stack">
@@ -92,6 +128,14 @@ export function AdminDashboardShell() {
             </strong>
           </div>
         </div>
+
+        <RoleActionPanel
+          currentUser={currentUser}
+          feedbackMessage={feedbackMessage}
+          onPublish={() => handleProtectedAction('/auth/demo/publish')}
+          onTriggerAi={() => handleProtectedAction('/auth/demo/ai-analysis')}
+          pendingAction={pendingAction}
+        />
 
         <button
           onClick={() => {

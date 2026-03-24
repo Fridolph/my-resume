@@ -152,6 +152,20 @@ input {
   font-size: 0.9rem;
 }
 
+.readonly-box {
+  padding: 1rem;
+  border-radius: 16px;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  color: #9a3412;
+}
+
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
 @media (max-width: 960px) {
   .page-shell {
     grid-template-columns: minmax(0, 1fr);
@@ -160,6 +174,10 @@ input {
   }
 
   .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .action-grid {
     grid-template-columns: 1fr;
   }
 }

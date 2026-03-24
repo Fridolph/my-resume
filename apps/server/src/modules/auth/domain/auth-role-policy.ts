@@ -9,6 +9,8 @@ export interface RoleCapabilities {
   canTriggerAiAnalysis: boolean;
 }
 
+export type RoleCapabilityKey = keyof RoleCapabilities;
+
 const ROLE_CAPABILITIES: Record<UserRole, RoleCapabilities> = {
   [UserRole.ADMIN]: {
     canAccessAdminSurface: true,

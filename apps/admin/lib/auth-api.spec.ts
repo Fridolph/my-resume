@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { fetchCurrentUser, loginWithPassword } from './auth-api';
+import {
+  fetchCurrentUser,
+  loginWithPassword,
+  postProtectedAction,
+} from './auth-api';
 
 describe('auth api client', () => {
   beforeEach(() => {
@@ -78,5 +82,34 @@ describe('auth api client', () => {
       }),
     );
     expect(currentUser.username).toBe('viewer');
+  });
+
+  it('should post protected action with bearer token', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          message: 'ok',
+        }),
+      }),
+    );
+
+    const response = await postProtectedAction({
+      apiBaseUrl: 'http://localhost:3001',
+      accessToken: 'demo-token',
+      pathname: '/auth/demo/publish',
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:3001/auth/demo/publish',
+      expect.objectContaining({
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer demo-token',
+        },
+      }),
+    );
+    expect(response.message).toBe('ok');
   });
 });
