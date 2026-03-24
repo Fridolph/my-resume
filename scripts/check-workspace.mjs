@@ -24,6 +24,7 @@ const requiredPaths = [
   'packages/config/eslint.base.cjs',
   'packages/config/env',
   'packages/config/env/README.md',
+  'docs/10-架构设计/04-空应用脚手架策略说明.md',
   'src/App.vue',
   'vite.config.ts'
 ]
