@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: ['main', 'dev']
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Run lint if present
+        run: |
+          if node -e "const p=require('./package.json'); process.exit(p.scripts?.lint ? 0 : 1)"; then
+            pnpm run lint
+          else
+            echo "lint script missing, skip"
+          fi
+
+      - name: Run test if present
+        run: |
+          if node -e "const p=require('./package.json'); process.exit(p.scripts?.test ? 0 : 1)"; then
+            pnpm run test
+          else
+            echo "test script missing, skip"
+          fi
+
+      - name: Run typecheck if present
+        run: |
+          if node -e "const p=require('./package.json'); process.exit(p.scripts?.typecheck ? 0 : 1)"; then
+            pnpm run typecheck
+          else
+            echo "typecheck script missing, skip"
+          fi
+
+      - name: Build if present
+        run: |
+          if node -e "const p=require('./package.json'); process.exit(p.scripts?.build ? 0 : 1)"; then
+            pnpm run build
+          else
+            echo "build script missing, skip"
+          fi
