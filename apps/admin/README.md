@@ -1,15 +1,15 @@
 # apps/admin
 
-后台管理端占位目录。
+`apps/admin` 是后台管理端的最小 Next.js App Router 应用。
 
-## 未来职责
+## 当前阶段职责
 
-- 管理员登录后编辑简历内容
-- 触发发布、导出与 AI 分析
-- 调用统一业务后端 `apps/server`
+- 承接最小登录页
+- 调用 `apps/server` 的 `/auth/login` 与 `/auth/me`
+- 提供最小受保护页面壳
 
 ## 当前阶段不做
 
-- 不创建 `Next.js` 工程
-- 不实现后台页面与表单
-- 不接入权限与鉴权逻辑
+- 不实现完整后台 UI
+- 不接内容管理
+- 不在 Next Route Handlers 中编写业务逻辑
