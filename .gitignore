@@ -11,6 +11,8 @@ node_modules
 dist
 dist-ssr
 .turbo
+.next
+*.tsbuildinfo
 *.local
 
 # Editor directories and files
