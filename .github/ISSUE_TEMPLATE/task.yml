@@ -1,0 +1,30 @@
+name: Chore or Docs Task
+description: Create a non-feature implementation task
+title: "[Task] "
+labels:
+  - task
+body:
+  - type: textarea
+    id: background
+    attributes:
+      label: Background
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Output
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Definition of Done
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification
+    validations:
+      required: true

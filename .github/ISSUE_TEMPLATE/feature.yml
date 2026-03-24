@@ -1,0 +1,56 @@
+name: Feature Task
+description: Create a milestone-scoped feature issue
+title: "[Feature] "
+labels:
+  - feature
+body:
+  - type: textarea
+    id: background
+    attributes:
+      label: Background
+      description: What context led to this task?
+      placeholder: Describe the current state and why this feature is needed.
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should be achieved in this issue?
+    validations:
+      required: true
+  - type: textarea
+    id: non_goal
+    attributes:
+      label: Non-goals
+      description: What is explicitly out of scope?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Change Scope
+      description: Which modules, files, or behaviors are expected to change?
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: What conditions must be true to close this issue?
+    validations:
+      required: true
+  - type: textarea
+    id: tests
+    attributes:
+      label: Test Plan
+      description: Which tests or verifications should be added or updated?
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Dev Log / Tutorial Output
+      description: What should be recorded for the tutorial/blog afterwards?
+    validations:
+      required: true
