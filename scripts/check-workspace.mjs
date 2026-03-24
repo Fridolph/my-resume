@@ -20,6 +20,10 @@ const requiredPaths = [
   'packages/api-client/README.md',
   'packages/config',
   'packages/config/README.md',
+  'packages/config/tsconfig.base.json',
+  'packages/config/eslint.base.cjs',
+  'packages/config/env',
+  'packages/config/env/README.md',
   'src/App.vue',
   'vite.config.ts'
 ]
