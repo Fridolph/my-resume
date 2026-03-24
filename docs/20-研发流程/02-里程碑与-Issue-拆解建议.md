@@ -10,17 +10,17 @@
 - 目标：只引入 workspace 基础结构，不迁移业务
 - 验收：能解释为什么这么拆，不要求功能迁移完成
 
-### issue-02 仓库规范与 AGENTS
+### issue-02 apps 与 packages 占位骨架
 
-- 目标：建立协作、分支、日志、TDD、Review 和提交流程规范
+- 目标：建立 `apps/web`、`apps/admin`、`apps/server` 与 `packages/*` 的最小占位结构
 
-### issue-03 GitHub 模板与流程
+### issue-03 共享配置占位
 
-- 目标：建立 issue / PR / CI 模板
+- 目标：逐步引入共享 `tsconfig`、`eslint`、环境变量约束骨架
 
-### issue-04 monorepo 说明文档
+### issue-04 空应用脚手架策略说明
 
-- 目标：写清为什么使用 monorepo，而不是直接大迁移
+- 目标：写清何时创建真实 `Next.js` / `NestJS` 应用，而不是在 M1 一次性生成
 
 ## M2 鉴权与角色
 
