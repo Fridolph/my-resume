@@ -24,48 +24,56 @@
 
 ## M2 鉴权与角色
 
-### issue-05 角色模型定义
+### issue-05 apps/server 最小 NestJS 脚手架
 
-- `admin` / `viewer`
+- 目标：为后续鉴权与角色能力提供唯一业务后端入口
 
-### issue-06 登录流程设计
+### issue-06 鉴权领域与角色模型
 
-- 先做最小闭环
+- 目标：定义 `admin` / `viewer`、用户实体与权限边界
 
-### issue-07 viewer 只读体验
+### issue-07 JWT 登录最小闭环
 
-- 明确哪些能力允许看，哪些不允许触发
+- 目标：完成登录、令牌签发、最小鉴权闭环
+
+### issue-08 apps/admin 最小登录壳
+
+- 目标：创建后台登录壳，只承接最小登录与鉴权状态
+
+### issue-09 viewer 只读守卫与体验
+
+- 目标：明确哪些能力只读、哪些能力禁止触发真实操作
 
 ## M3 简历内容与发布流
 
-### issue-08 双语内容模型
+### issue-10 双语内容模型
 
-### issue-09 草稿与发布态
+### issue-11 草稿与发布态
 
-### issue-10 web 公开读取已发布版本
+### issue-12 web 公开读取已发布版本
 
 ## M4 AI 工具链
 
-### issue-11 provider 适配器接口
+### issue-13 provider 适配器接口
 
-### issue-12 文件提取入口
+### issue-14 文件提取入口
 
-### issue-13 缓存分析报告
+### issue-15 缓存分析报告
 
-### issue-14 admin 触发 / viewer 只读
+### issue-16 admin 触发 / viewer 只读
 
 ## M5 导出与下载
 
-### issue-15 markdown 导出
+### issue-17 markdown 导出
 
-### issue-16 pdf 导出
+### issue-18 pdf 导出
 
-### issue-17 web/admin 下载入口
+### issue-19 web/admin 下载入口
 
 ## M6 测试、CI/CD、部署
 
-### issue-18 单元测试基建
+### issue-20 单元测试基建
 
-### issue-19 GitHub Actions
+### issue-21 GitHub Actions
 
-### issue-20 Vercel + 云服务器部署文档
+### issue-22 Vercel + 云服务器部署文档
