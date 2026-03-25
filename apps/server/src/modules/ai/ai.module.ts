@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 
 import { AuthModule } from '../auth/auth.module';
 import { AiFileController } from './ai-file.controller';
+import { AiReportController } from './ai-report.controller';
+import { AnalysisReportCacheService } from './analysis-report-cache.service';
 import { resolveAiRuntimeConfig } from './config/ai-config';
 import { AiService } from './ai.service';
 import { FileExtractionService } from './file-extraction.service';
@@ -10,7 +12,7 @@ import { createAiProvider } from './providers/ai-provider.factory';
 
 @Module({
   imports: [AuthModule],
-  controllers: [AiFileController],
+  controllers: [AiFileController, AiReportController],
   providers: [
     {
       provide: AI_RUNTIME_CONFIG,
@@ -26,8 +28,9 @@ import { createAiProvider } from './providers/ai-provider.factory';
       useFactory: createAiProvider,
     },
     AiService,
+    AnalysisReportCacheService,
     FileExtractionService,
   ],
-  exports: [AiService, FileExtractionService],
+  exports: [AiService, AnalysisReportCacheService, FileExtractionService],
 })
 export class AiModule {}
