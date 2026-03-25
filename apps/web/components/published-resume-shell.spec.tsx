@@ -31,27 +31,86 @@ const publishedResume = {
       links: [],
       interests: [],
     },
-    education: [],
-    experiences: [],
     projects: [
       {
         name: {
-          zh: '个人简历 Monorepo',
-          en: 'Personal Resume Monorepo',
+          zh: 'my-resume 在线简历',
+          en: 'my-resume Online Resume',
         },
         role: {
-          zh: '作者',
-          en: 'Author',
+          zh: '作者 / 维护者',
+          en: 'Author / Maintainer',
         },
-        startDate: '2026-03',
-        endDate: '进行中',
+        startDate: '2024-02',
+        endDate: '至今',
         summary: {
-          zh: '逐步构建三端项目。',
-          en: 'Incrementally building a three-surface project.',
+          zh: '使用 Vite、Vue3、TypeScript 与 TailwindCSS 搭建的在线简历项目。',
+          en: 'An online resume project built with Vite, Vue 3, TypeScript, and Tailwind CSS.',
         },
-        highlights: [],
+        highlights: [
+          {
+            zh: '持续以教程和开源形式迭代。',
+            en: 'Iterated publicly through tutorials and open source.',
+          },
+        ],
         technologies: ['Next.js', 'NestJS'],
         links: [],
+      },
+    ],
+    education: [
+      {
+        schoolName: {
+          zh: '四川大学锦江学院',
+          en: 'Sichuan University Jinjiang College',
+        },
+        degree: {
+          zh: '本科',
+          en: 'Bachelor',
+        },
+        fieldOfStudy: {
+          zh: '通信工程',
+          en: 'Communication Engineering',
+        },
+        startDate: '2012-09',
+        endDate: '2016-06',
+        location: {
+          zh: '四川 眉山',
+          en: 'Meishan, Sichuan',
+        },
+        highlights: [],
+      },
+    ],
+    experiences: [
+      {
+        companyName: {
+          zh: '成都一蟹科技有限公司',
+          en: 'Chengdu Yixie Technology Co., Ltd.',
+        },
+        role: {
+          zh: '前端主管',
+          en: 'Frontend Lead',
+        },
+        employmentType: {
+          zh: '全职',
+          en: 'Full-time',
+        },
+        startDate: '2024-03',
+        endDate: '2024-08',
+        location: {
+          zh: '成都',
+          en: 'Chengdu',
+        },
+        summary: {
+          zh: '负责需求规划、团队协作、技术升级与质量建设。',
+          en: 'Led requirement planning, team collaboration, technical upgrades, and quality practices.',
+        },
+        highlights: [
+          {
+            zh: '定期组织 Code Review 和技术分享。',
+            en: 'Organized regular code reviews and technical sharing sessions.',
+          },
+        ],
+        technologies: ['Vue 3', 'TypeScript'],
       },
     ],
     skills: [
@@ -63,12 +122,23 @@ const publishedResume = {
         keywords: ['TypeScript', 'React'],
       },
     ],
-    highlights: [],
+    highlights: [
+      {
+        title: {
+          zh: '开源参与',
+          en: 'Open Source Contributions',
+        },
+        description: {
+          zh: '持续沉淀文章、开源和知识文档。',
+          en: 'Continuously shares articles, open-source work, and knowledge docs.',
+        },
+      },
+    ],
   },
 };
 
 describe('PublishedResumeShell', () => {
-  it('should render zh content by default and switch to en', async () => {
+  it('should render modular zh sections by default and switch to en', async () => {
     const user = userEvent.setup();
 
     render(<PublishedResumeShell publishedResume={publishedResume} />);
@@ -77,6 +147,13 @@ describe('PublishedResumeShell', () => {
     expect(
       screen.getByText('专注前端工程化与 Node.js 后端。'),
     ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '职业经历' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '代表项目' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '教育背景' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '技能结构' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '补充亮点' })).toBeInTheDocument();
+    expect(screen.getByText('成都一蟹科技有限公司')).toBeInTheDocument();
+    expect(screen.getByText('四川大学锦江学院')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'EN' }));
 
@@ -86,6 +163,11 @@ describe('PublishedResumeShell', () => {
     expect(
       screen.getByText('Focused on frontend engineering and Node.js backend development.'),
     ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Work Experience' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Selected Projects' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Education' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Skill Structure' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Additional Highlights' })).toBeInTheDocument();
   });
 
   it('should toggle light and dark theme on the document element', async () => {
