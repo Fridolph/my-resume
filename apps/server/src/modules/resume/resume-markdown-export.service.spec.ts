@@ -13,9 +13,10 @@ describe('ResumeMarkdownExportService', () => {
 
     expect(markdown).toContain('# 付寅生');
     expect(markdown).toContain('## 个人简介');
-    expect(markdown).toContain('全栈开发工程师');
-    expect(markdown).toContain('### 示例科技');
-    expect(markdown).toContain('Vue 3 / React / TypeScript / NestJS');
+    expect(markdown).toContain('前端工程师 / 前端负责人');
+    expect(markdown).toContain('### 成都一蟹科技有限公司');
+    expect(markdown).toContain('### 云药客 SaaS 系统');
+    expect(markdown).toContain('Vite / Webpack / pnpm / Monorepo');
   });
 
   it('should render english markdown when locale is en', () => {
@@ -25,8 +26,9 @@ describe('ResumeMarkdownExportService', () => {
 
     expect(markdown).toContain('# Yinsheng Fu');
     expect(markdown).toContain('## Summary');
-    expect(markdown).toContain('Full-Stack Engineer');
-    expect(markdown).toContain('### Example Tech');
-    expect(markdown).toContain('Focused on frontend engineering');
+    expect(markdown).toContain('Frontend Engineer / Frontend Lead');
+    expect(markdown).toContain('### Chengdu Yixie Technology Co., Ltd.');
+    expect(markdown).toContain('### YYK SaaS Platform');
+    expect(markdown).toContain('frontend engineering');
   });
 });
