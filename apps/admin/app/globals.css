@@ -25,7 +25,8 @@ a {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
 }
 
@@ -50,6 +51,16 @@ input {
   border-radius: 12px;
   padding: 0.85rem 0.9rem;
   background: #fff;
+}
+
+textarea {
+  width: 100%;
+  border: 1px solid #d7deea;
+  border-radius: 12px;
+  padding: 0.85rem 0.9rem;
+  background: #fff;
+  resize: vertical;
+  min-height: 120px;
 }
 
 .page-shell {
@@ -166,6 +177,12 @@ input {
   gap: 1rem;
 }
 
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
 @media (max-width: 960px) {
   .page-shell {
     grid-template-columns: minmax(0, 1fr);
@@ -178,6 +195,10 @@ input {
   }
 
   .action-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid {
     grid-template-columns: 1fr;
   }
 }

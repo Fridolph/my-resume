@@ -15,6 +15,7 @@ import {
   readAccessToken,
 } from '../lib/session-storage';
 import { ExportEntryPanel } from './export-entry-panel';
+import { ResumeDraftEditorPanel } from './resume-draft-editor-panel';
 import { RoleActionPanel } from './role-action-panel';
 
 export function AdminDashboardShell() {
@@ -135,7 +136,7 @@ export function AdminDashboardShell() {
           <p className="eyebrow">受保护页面</p>
           <h1>后台最小控制台壳</h1>
           <p className="muted">
-            这里只验证登录态与角色信息，内容管理功能放到后续 issue。
+            当前已接入最小草稿编辑闭环，继续保持“草稿保存”和“公开发布”分离。
           </p>
         </div>
 
@@ -159,6 +160,12 @@ export function AdminDashboardShell() {
             </strong>
           </div>
         </div>
+
+        <ResumeDraftEditorPanel
+          accessToken={readAccessToken() ?? ''}
+          apiBaseUrl={DEFAULT_API_BASE_URL}
+          canEdit={Boolean(currentUser.capabilities.canEditResume)}
+        />
 
         <RoleActionPanel
           currentUser={currentUser}
