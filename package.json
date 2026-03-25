@@ -9,6 +9,12 @@
     "build": "vue-tsc && vite build",
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit",
+    "test": "turbo run test",
+    "test:unit": "turbo run test --filter=@my-resume/server --filter=@my-resume/web --filter=@my-resume/admin",
+    "test:e2e": "pnpm --filter @my-resume/server test:e2e",
+    "test:ci": "pnpm test:unit && pnpm test:e2e",
+    "typecheck:all": "turbo run typecheck",
+    "build:all": "turbo run build",
     "test:workspace": "node scripts/check-workspace.mjs"
   },
   "dependencies": {
@@ -31,6 +37,7 @@
     "postcss-nesting": "^12.0.2",
     "tailwindcss": "^3.4.1",
     "terser": "^5.27.0",
+    "turbo": "^2.8.20",
     "typescript": "5.4.5",
     "vite": "^5.0.12",
     "vite-plugin-bundle-prefetch": "^0.0.4",
