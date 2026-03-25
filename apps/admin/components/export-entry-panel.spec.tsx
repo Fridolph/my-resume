@@ -7,7 +7,7 @@ describe('ExportEntryPanel', () => {
   it('should render markdown and pdf download links for admin surface', () => {
     render(
       <ExportEntryPanel
-        apiBaseUrl="http://localhost:3001"
+        apiBaseUrl="http://localhost:5577"
         locale="zh"
         role="admin"
       />,
@@ -17,11 +17,11 @@ describe('ExportEntryPanel', () => {
       screen.getByRole('link', { name: '下载 Markdown' }),
     ).toHaveAttribute(
       'href',
-      'http://localhost:3001/resume/published/export/markdown?locale=zh',
+      'http://localhost:5577/resume/published/export/markdown?locale=zh',
     );
     expect(screen.getByRole('link', { name: '下载 PDF' })).toHaveAttribute(
       'href',
-      'http://localhost:3001/resume/published/export/pdf?locale=zh',
+      'http://localhost:5577/resume/published/export/pdf?locale=zh',
     );
     expect(
       screen.getByText('当前后台下载入口仅导出已发布版本，草稿仍以后台编辑流为准。'),
@@ -31,7 +31,7 @@ describe('ExportEntryPanel', () => {
   it('should show viewer read-only guidance', () => {
     render(
       <ExportEntryPanel
-        apiBaseUrl="http://localhost:3001"
+        apiBaseUrl="http://localhost:5577"
         locale="zh"
         role="viewer"
       />,

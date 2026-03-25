@@ -4,6 +4,7 @@ import {
   fetchCurrentUser,
   loginWithPassword,
   postProtectedAction,
+  publishResume,
 } from './auth-api';
 
 describe('auth api client', () => {
@@ -34,13 +35,13 @@ describe('auth api client', () => {
     );
 
     const loginResult = await loginWithPassword({
-      apiBaseUrl: 'http://localhost:3001',
+      apiBaseUrl: 'http://localhost:5577',
       username: 'admin',
       password: 'admin123456',
     });
 
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:3001/auth/login',
+      'http://localhost:5577/auth/login',
       expect.objectContaining({
         method: 'POST',
       }),
@@ -69,12 +70,12 @@ describe('auth api client', () => {
     );
 
     const currentUser = await fetchCurrentUser({
-      apiBaseUrl: 'http://localhost:3001',
+      apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
     });
 
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:3001/auth/me',
+      'http://localhost:5577/auth/me',
       expect.objectContaining({
         headers: {
           Authorization: 'Bearer demo-token',
@@ -96,13 +97,13 @@ describe('auth api client', () => {
     );
 
     const response = await postProtectedAction({
-      apiBaseUrl: 'http://localhost:3001',
+      apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
       pathname: '/auth/demo/publish',
     });
 
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:3001/auth/demo/publish',
+      'http://localhost:5577/auth/demo/publish',
       expect.objectContaining({
         method: 'POST',
         headers: {
@@ -111,5 +112,40 @@ describe('auth api client', () => {
       }),
     );
     expect(response.message).toBe('ok');
+  });
+
+  it('should publish resume with bearer token', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          status: 'published',
+          publishedAt: '2026-03-25T07:52:00.000Z',
+          resume: {
+            meta: {
+              slug: 'standard-resume',
+            },
+          },
+        }),
+      }),
+    );
+
+    const response = await publishResume({
+      apiBaseUrl: 'http://localhost:5577',
+      accessToken: 'demo-token',
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5577/resume/publish',
+      expect.objectContaining({
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer demo-token',
+        },
+      }),
+    );
+    expect(response.status).toBe('published');
+    expect(response.resume.meta.slug).toBe('standard-resume');
   });
 });
