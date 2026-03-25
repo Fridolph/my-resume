@@ -2,12 +2,27 @@ name: CI
 
 on:
   push:
-    branches: ['main', 'dev']
+    branches:
+      - main
+      - development
   pull_request:
+    branches:
+      - main
+      - development
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
-  quality:
+  quality-gate:
+    name: Quality Gate
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -25,36 +40,13 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
-      - name: Run lint if present
-        run: |
-          if node -e "const p=require('./package.json'); process.exit(p.scripts?.lint ? 0 : 1)"; then
-            pnpm run lint
-          else
-            echo "lint script missing, skip"
-          fi
+      - name: Run test CI entrypoint
+        run: pnpm test:ci
 
-      - name: Run test if present
-        run: |
-          if node -e "const p=require('./package.json'); process.exit(p.scripts?.test ? 0 : 1)"; then
-            pnpm run test
-          else
-            echo "test script missing, skip"
-          fi
+      - name: Run workspace typecheck
+        run: pnpm typecheck:all
 
-      - name: Run typecheck if present
-        run: |
-          if node -e "const p=require('./package.json'); process.exit(p.scripts?.typecheck ? 0 : 1)"; then
-            pnpm run typecheck
-          else
-            echo "typecheck script missing, skip"
-          fi
-
-      - name: Build if present
-        run: |
-          if node -e "const p=require('./package.json'); process.exit(p.scripts?.build ? 0 : 1)"; then
-            pnpm run build
-          else
-            echo "build script missing, skip"
-          fi
+      - name: Run workspace build
+        run: pnpm build:all
