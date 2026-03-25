@@ -1,40 +1,23 @@
+@import '../../../packages/ui/src/display.css';
+
 :root {
   color-scheme: light;
-  font-family:
-    Inter, -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue',
-    sans-serif;
-  background: #f5f7fb;
-  color: #111827;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  min-height: 100vh;
-  background:
-    radial-gradient(circle at top, rgba(59, 130, 246, 0.12), transparent 30%),
-    #f5f7fb;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-button,
-input,
-textarea {
-  font: inherit;
+  --display-color-page-bg: #f5f7fb;
+  --display-color-surface: rgba(255, 255, 255, 0.92);
+  --display-color-surface-muted: #f8fafc;
+  --display-color-text: #111827;
+  --display-color-text-muted: #64748b;
+  --display-color-border: rgba(148, 163, 184, 0.18);
+  --display-color-accent: #2563eb;
+  --display-color-accent-contrast: #ffffff;
+  --display-shadow-card: 0 24px 50px rgba(15, 23, 42, 0.08);
 }
 
 button {
   border: 0;
-  border-radius: 12px;
-  background: #2563eb;
-  color: #fff;
+  border-radius: var(--display-radius-control);
+  background: var(--display-color-accent);
+  color: var(--display-color-accent-contrast);
   cursor: pointer;
   padding: 0.85rem 1rem;
   font-weight: 600;
@@ -48,7 +31,7 @@ button:disabled {
 input {
   width: 100%;
   border: 1px solid #d7deea;
-  border-radius: 12px;
+  border-radius: var(--display-radius-control);
   padding: 0.85rem 0.9rem;
   background: #fff;
 }
@@ -56,7 +39,7 @@ input {
 textarea {
   width: 100%;
   border: 1px solid #d7deea;
-  border-radius: 12px;
+  border-radius: var(--display-radius-control);
   padding: 0.85rem 0.9rem;
   background: #fff;
   resize: vertical;
@@ -78,10 +61,10 @@ textarea {
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 24px;
-  box-shadow: 0 24px 50px rgba(15, 23, 42, 0.08);
+  background: var(--display-color-surface);
+  border: 1px solid var(--display-color-border);
+  border-radius: var(--display-radius-card);
+  box-shadow: var(--display-shadow-card);
   padding: 1.5rem;
 }
 
@@ -98,7 +81,7 @@ textarea {
 
 .muted,
 .muted-list {
-  color: #64748b;
+  color: var(--display-color-text-muted);
 }
 
 .muted-list {
@@ -106,15 +89,6 @@ textarea {
   padding-left: 1.2rem;
   display: grid;
   gap: 0.5rem;
-}
-
-.eyebrow {
-  margin: 0 0 0.35rem;
-  color: #2563eb;
-  font-size: 0.85rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
 }
 
 .error-text {
@@ -136,7 +110,7 @@ textarea {
   justify-content: center;
   align-items: center;
   min-height: 44px;
-  border-radius: 12px;
+  border-radius: var(--display-radius-control);
   background: #0f172a;
   color: #fff;
   padding: 0.85rem 1rem;
@@ -154,7 +128,7 @@ textarea {
   gap: 0.35rem;
   padding: 1rem;
   border-radius: 16px;
-  background: #f8fafc;
+  background: var(--display-color-surface-muted);
   border: 1px solid #e2e8f0;
 }
 

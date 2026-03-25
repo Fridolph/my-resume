@@ -1,3 +1,5 @@
+@import '../../../packages/ui/src/display.css';
+
 :root {
   color-scheme: light;
   --background: #f5f7fb;
@@ -10,9 +12,15 @@
   --accent-soft: #eff6ff;
   --accent-contrast: #ffffff;
   --shadow: 0 24px 50px rgba(15, 23, 42, 0.08);
-  font-family:
-    Inter, -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue',
-    sans-serif;
+  --display-color-page-bg: var(--background);
+  --display-color-surface: var(--surface);
+  --display-color-surface-muted: var(--surface-muted);
+  --display-color-text: var(--text);
+  --display-color-text-muted: var(--text-muted);
+  --display-color-border: var(--border);
+  --display-color-accent: var(--accent);
+  --display-color-accent-contrast: var(--accent-contrast);
+  --display-shadow-card: var(--shadow);
 }
 
 html[data-theme='dark'] {
@@ -29,33 +37,6 @@ html[data-theme='dark'] {
   --shadow: 0 24px 50px rgba(2, 6, 23, 0.5);
 }
 
-* {
-  box-sizing: border-box;
-}
-
-html,
-body {
-  margin: 0;
-  min-height: 100%;
-}
-
-body {
-  min-height: 100vh;
-  background:
-    radial-gradient(circle at top, rgba(59, 130, 246, 0.12), transparent 30%),
-    var(--background);
-  color: var(--text);
-}
-
-button,
-a {
-  color: inherit;
-}
-
-button {
-  font: inherit;
-}
-
 .page-shell {
   width: min(1080px, 100%);
   margin: 0 auto;
@@ -67,10 +48,10 @@ button {
 .hero-card,
 .section-card,
 .empty-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 24px;
-  box-shadow: var(--shadow);
+  background: var(--display-color-surface);
+  border: 1px solid var(--display-color-border);
+  border-radius: var(--display-radius-card);
+  box-shadow: var(--display-shadow-card);
 }
 
 .hero-card {
@@ -91,15 +72,6 @@ button {
   gap: 0.6rem;
 }
 
-.eyebrow {
-  margin: 0;
-  color: var(--accent);
-  font-size: 0.85rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
 .headline {
   margin: 0;
   font-size: clamp(2rem, 4vw, 3.2rem);
@@ -107,10 +79,9 @@ button {
 }
 
 .subtitle,
-.muted,
 .section-subtitle,
 .meta-text {
-  color: var(--text-muted);
+  color: var(--display-color-text-muted);
 }
 
 .subtitle,
@@ -130,24 +101,24 @@ button {
   display: inline-flex;
   gap: 0.5rem;
   padding: 0.35rem;
-  border-radius: 999px;
-  background: var(--surface-muted);
-  border: 1px solid var(--border);
+  border-radius: var(--display-radius-pill);
+  background: var(--display-color-surface-muted);
+  border: 1px solid var(--display-color-border);
 }
 
 .toggle-button {
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--display-radius-pill);
   padding: 0.65rem 0.95rem;
   background: transparent;
-  color: var(--text-muted);
+  color: var(--display-color-text-muted);
   cursor: pointer;
   font-weight: 600;
 }
 
 .toggle-button.is-active {
-  background: var(--accent);
-  color: var(--accent-contrast);
+  background: var(--display-color-accent);
+  color: var(--display-color-accent-contrast);
 }
 
 .hero-meta {
@@ -163,9 +134,9 @@ button {
   gap: 0.35rem;
   min-height: 40px;
   padding: 0.65rem 0.9rem;
-  border-radius: 999px;
-  background: var(--surface-muted);
-  border: 1px solid var(--border);
+  border-radius: var(--display-radius-pill);
+  background: var(--display-color-surface-muted);
+  border: 1px solid var(--display-color-border);
 }
 
 .link-grid,
@@ -221,8 +192,8 @@ button {
   gap: 0.55rem;
   padding: 1rem;
   border-radius: 18px;
-  background: var(--surface-muted);
-  border: 1px solid var(--border);
+  background: var(--display-color-surface-muted);
+  border: 1px solid var(--display-color-border);
 }
 
 .item-header {
@@ -242,7 +213,7 @@ button {
 }
 
 .item-subtitle {
-  color: var(--text-muted);
+  color: var(--display-color-text-muted);
   font-size: 0.94rem;
 }
 

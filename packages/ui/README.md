@@ -1,6 +1,11 @@
 # packages/ui
 
-共享 UI 包占位目录。
+共享 UI 包目录。
+
+## 当前已落地
+
+- `src/display.css`：共享展示层 tokens 与最小基础样式
+- 为 `web / admin` 统一字体、卡片半径、阴影、弱文案和 eyebrow 等基础表达
 
 ## 未来职责
 
