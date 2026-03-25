@@ -308,7 +308,9 @@ export function createExampleStandardResume(): StandardResume {
   };
 }
 
-export function validateStandardResume(resume: StandardResume): ResumeValidationResult {
+export function validateStandardResume(
+  resume: StandardResume,
+): ResumeValidationResult {
   const errors: string[] = [];
 
   if (!isLocalizedText(resume.profile.fullName)) {
