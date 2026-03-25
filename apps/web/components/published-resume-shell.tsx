@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
+import { DEFAULT_API_BASE_URL } from '../lib/env';
 import {
   LocalizedText,
   ResumeLocale,
@@ -35,8 +36,10 @@ function renderSkillGroup(
 }
 
 export function PublishedResumeShell({
+  apiBaseUrl = DEFAULT_API_BASE_URL,
   publishedResume,
 }: {
+  apiBaseUrl?: string;
   publishedResume: ResumePublishedSnapshot | null;
 }) {
   const [locale, setLocale] = useState<ResumeLocale>('zh');
@@ -85,6 +88,8 @@ export function PublishedResumeShell({
   }
 
   const profile = rawProfile;
+  const markdownExportUrl = `${apiBaseUrl.replace(/\/$/, '')}/resume/published/export/markdown?locale=${locale}`;
+  const pdfExportUrl = `${apiBaseUrl.replace(/\/$/, '')}/resume/published/export/pdf?locale=${locale}`;
 
   return (
     <main className="page-shell">
@@ -142,6 +147,15 @@ export function PublishedResumeShell({
             {locale === 'zh' ? '已发布于' : 'Published at'}{' '}
             <span className="meta-text">{publishedResume.publishedAt}</span>
           </span>
+        </div>
+
+        <div className="link-grid">
+          <a className="link-pill" href={markdownExportUrl}>
+            {locale === 'zh' ? '导出 Markdown' : 'Export Markdown'}
+          </a>
+          <a className="link-pill" href={pdfExportUrl}>
+            {locale === 'zh' ? '导出 PDF' : 'Export PDF'}
+          </a>
         </div>
 
         {localizedProfile.links.length > 0 ? (

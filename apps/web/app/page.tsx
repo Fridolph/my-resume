@@ -7,5 +7,10 @@ export default async function WebHomePage() {
     apiBaseUrl: DEFAULT_API_BASE_URL,
   });
 
-  return <PublishedResumeShell publishedResume={publishedResume} />;
+  return (
+    <PublishedResumeShell
+      apiBaseUrl={DEFAULT_API_BASE_URL}
+      publishedResume={publishedResume}
+    />
+  );
 }
