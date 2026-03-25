@@ -10,6 +10,7 @@ import {
   clearAccessToken,
   readAccessToken,
 } from '../lib/session-storage';
+import { ExportEntryPanel } from './export-entry-panel';
 import { RoleActionPanel } from './role-action-panel';
 
 export function AdminDashboardShell() {
@@ -135,6 +136,12 @@ export function AdminDashboardShell() {
           onPublish={() => handleProtectedAction('/auth/demo/publish')}
           onTriggerAi={() => handleProtectedAction('/auth/demo/ai-analysis')}
           pendingAction={pendingAction}
+        />
+
+        <ExportEntryPanel
+          apiBaseUrl={DEFAULT_API_BASE_URL}
+          locale="zh"
+          role={currentUser.role}
         />
 
         <button

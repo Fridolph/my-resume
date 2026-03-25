@@ -102,6 +102,41 @@ describe('PublishedResumeShell', () => {
     expect(document.documentElement.dataset.theme).toBe('light');
   });
 
+  it('should render export links and switch locale in download urls', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <PublishedResumeShell
+        apiBaseUrl="http://localhost:3001"
+        publishedResume={publishedResume}
+      />,
+    );
+
+    expect(
+      screen.getByRole('link', { name: '导出 Markdown' }),
+    ).toHaveAttribute(
+      'href',
+      'http://localhost:3001/resume/published/export/markdown?locale=zh',
+    );
+    expect(screen.getByRole('link', { name: '导出 PDF' })).toHaveAttribute(
+      'href',
+      'http://localhost:3001/resume/published/export/pdf?locale=zh',
+    );
+
+    await user.click(screen.getByRole('button', { name: 'EN' }));
+
+    expect(
+      screen.getByRole('link', { name: 'Export Markdown' }),
+    ).toHaveAttribute(
+      'href',
+      'http://localhost:3001/resume/published/export/markdown?locale=en',
+    );
+    expect(screen.getByRole('link', { name: 'Export PDF' })).toHaveAttribute(
+      'href',
+      'http://localhost:3001/resume/published/export/pdf?locale=en',
+    );
+  });
+
   it('should render empty state when no published content is available', () => {
     render(<PublishedResumeShell publishedResume={null} />);
 
