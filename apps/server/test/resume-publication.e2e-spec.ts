@@ -25,6 +25,12 @@ describe('Resume publication flow (e2e)', () => {
     return request(app.getHttpServer()).get('/resume/published').expect(404);
   });
 
+  it('should hide unpublished markdown export from the public endpoint', () => {
+    return request(app.getHttpServer())
+      .get('/resume/published/export/markdown')
+      .expect(404);
+  });
+
   it('should allow admin to update draft and publish it', async () => {
     const loginResponse = await request(app.getHttpServer())
       .post('/auth/login')
@@ -98,6 +104,18 @@ describe('Resume publication flow (e2e)', () => {
       zh: '已发布候选稿',
       en: 'Publish Candidate',
     });
+
+    const markdownResponse = await request(app.getHttpServer())
+      .get('/resume/published/export/markdown?locale=en')
+      .expect(200);
+
+    expect(markdownResponse.headers['content-type']).toContain('text/markdown');
+    expect(markdownResponse.headers['content-disposition']).toContain(
+      'standard-resume-en.md',
+    );
+    expect(markdownResponse.text).toContain('# Yinsheng Fu');
+    expect(markdownResponse.text).toContain('## Summary');
+    expect(markdownResponse.text).toContain('Publish Candidate');
   });
 
   it('should keep viewer read-only for draft and publish actions', async () => {
@@ -121,5 +139,26 @@ describe('Resume publication flow (e2e)', () => {
       .post('/resume/publish')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(403);
+  });
+
+  it('should reject unsupported markdown export locale', async () => {
+    const loginResponse = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({
+        username: 'admin',
+        password: 'admin123456',
+      })
+      .expect(200);
+
+    const accessToken = loginResponse.body.accessToken as string;
+
+    await request(app.getHttpServer())
+      .post('/resume/publish')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .get('/resume/published/export/markdown?locale=ja')
+      .expect(400);
   });
 });
