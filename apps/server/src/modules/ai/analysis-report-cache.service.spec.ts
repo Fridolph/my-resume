@@ -53,4 +53,11 @@ describe('AnalysisReportCacheService', () => {
     expect(report.reportId).toBe(created.report.reportId);
     expect(report.locale).toBe('en');
   });
+
+  it('should expose seeded demo reports for viewer read-only experience', () => {
+    const reports = service.listReports();
+
+    expect(reports.length).toBeGreaterThanOrEqual(3);
+    expect(reports[0]).toHaveProperty('reportId');
+  });
 });

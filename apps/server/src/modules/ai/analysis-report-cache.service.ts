@@ -23,7 +23,7 @@ export interface AnalysisReport {
   inputPreview: string;
   summary: string;
   sections: AnalysisReportSection[];
-  generator: 'mock-cache';
+  generator: 'mock-cache' | 'ai-provider';
   createdAt: string;
 }
 
@@ -36,6 +36,15 @@ export interface GetOrCreateReportInput {
 export interface CachedAnalysisReportResult {
   cached: boolean;
   report: AnalysisReport;
+}
+
+interface StoreGeneratedReportInput extends GetOrCreateReportInput {
+  generatedText: string;
+  providerSummary: {
+    provider: string;
+    model: string;
+    mode: string;
+  };
 }
 
 const SUPPORTED_SCENARIOS = new Set<AnalysisScenario>([
@@ -282,7 +291,7 @@ export class AnalysisReportCacheService {
 
   getOrCreateReport(input: GetOrCreateReportInput): CachedAnalysisReportResult {
     const scenario = this.validateScenario(input.scenario);
-    const locale = input.locale ?? 'zh';
+    const locale = this.validateLocale(input.locale ?? 'zh');
     const normalizedContent = normalizeContent(input.content);
 
     if (!normalizedContent) {
@@ -323,7 +332,82 @@ export class AnalysisReportCacheService {
     };
   }
 
+  storeGeneratedReport(input: StoreGeneratedReportInput): AnalysisReport {
+    const scenario = this.validateScenario(input.scenario);
+    const locale = this.validateLocale(input.locale ?? 'zh');
+    const normalizedContent = normalizeContent(input.content);
+
+    if (!normalizedContent) {
+      throw new BadRequestException('Content is required');
+    }
+
+    const sourceHash = computeHash(normalizedContent);
+    const cacheKey = `${scenario}:${locale}:${sourceHash}`;
+    const report: AnalysisReport = {
+      reportId: `${scenario}-${sourceHash.slice(0, 12)}`,
+      cacheKey,
+      scenario,
+      locale,
+      sourceHash,
+      inputPreview: buildInputPreview(normalizedContent),
+      summary: input.generatedText.trim(),
+      sections: [
+        {
+          key: 'analysis-result',
+          title: locale === 'en' ? 'Analysis Result' : '分析结果',
+          bullets: [input.generatedText.trim()],
+        },
+        {
+          key: 'provider',
+          title: locale === 'en' ? 'Provider Info' : 'Provider 信息',
+          bullets: [
+            `${input.providerSummary.provider} / ${input.providerSummary.model}`,
+            locale === 'en'
+              ? `Runtime mode: ${input.providerSummary.mode}`
+              : `运行模式：${input.providerSummary.mode}`,
+          ],
+        },
+        {
+          key: 'next-step',
+          title: locale === 'en' ? 'Next Step' : '下一步',
+          bullets: [
+            locale === 'en'
+              ? 'Viewer can now read this cached result without triggering a new request.'
+              : '当前结果已进入缓存，viewer 可直接只读查看。',
+            locale === 'en'
+              ? 'This endpoint stays as the admin trigger boundary for later real AI integration.'
+              : '该入口作为后续真实 AI 接入前的管理员触发边界。',
+          ],
+        },
+      ],
+      generator: 'ai-provider',
+      createdAt: new Date().toISOString(),
+    };
+
+    this.cache.set(cacheKey, report);
+    this.reportIndex.set(report.reportId, report);
+
+    return report;
+  }
+
+  listReports() {
+    this.ensureDemoReports();
+
+    return Array.from(this.reportIndex.values())
+      .sort((left, right) => left.reportId.localeCompare(right.reportId))
+      .map((report) => ({
+        reportId: report.reportId,
+        scenario: report.scenario,
+        locale: report.locale,
+        summary: report.summary,
+        generator: report.generator,
+        createdAt: report.createdAt,
+      }));
+  }
+
   getReportById(reportId: string): AnalysisReport {
+    this.ensureDemoReports();
+
     const report = this.reportIndex.get(reportId);
 
     if (!report) {
@@ -341,5 +425,35 @@ export class AnalysisReportCacheService {
     }
 
     return scenario as AnalysisScenario;
+  }
+
+  private validateLocale(locale: string): AnalysisLocale {
+    if (locale !== 'zh' && locale !== 'en') {
+      throw new BadRequestException(`Unsupported locale: ${locale}`);
+    }
+
+    return locale;
+  }
+
+  private ensureDemoReports() {
+    if (this.reportIndex.size > 0) {
+      return;
+    }
+
+    this.getOrCreateReport({
+      scenario: 'jd-match',
+      content: 'NestJS React TypeScript Redis BullMQ',
+      locale: 'zh',
+    });
+    this.getOrCreateReport({
+      scenario: 'resume-review',
+      content: 'Resume review for bilingual full-stack engineer',
+      locale: 'en',
+    });
+    this.getOrCreateReport({
+      scenario: 'offer-compare',
+      content: 'Growth ownership salary team culture',
+      locale: 'zh',
+    });
   }
 }
