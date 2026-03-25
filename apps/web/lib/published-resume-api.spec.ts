@@ -51,11 +51,11 @@ describe('published resume api', () => {
     );
 
     const result = await fetchPublishedResume({
-      apiBaseUrl: 'http://localhost:3001',
+      apiBaseUrl: 'http://localhost:5577',
     });
 
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:3001/resume/published',
+      'http://localhost:5577/resume/published',
       expect.objectContaining({
         cache: 'no-store',
       }),
@@ -74,7 +74,7 @@ describe('published resume api', () => {
     );
 
     const result = await fetchPublishedResume({
-      apiBaseUrl: 'http://localhost:3001',
+      apiBaseUrl: 'http://localhost:5577',
     });
 
     expect(result).toBeNull();

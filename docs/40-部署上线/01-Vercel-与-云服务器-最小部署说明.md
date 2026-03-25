@@ -54,7 +54,7 @@ pnpm build:all
 NODE_ENV=production
 
 # server
-PORT=3001
+PORT=5577
 JWT_SECRET=replace-with-your-own-secret
 
 # AI provider
@@ -209,7 +209,7 @@ cp .env.example .env.production.local
 然后至少修改：
 
 - `NODE_ENV=production`
-- `PORT=3001`
+- `PORT=5577`
 - `JWT_SECRET`
 - AI provider 对应密钥
 
@@ -244,7 +244,7 @@ server {
   server_name api.resume.example.com;
 
   location / {
-    proxy_pass http://127.0.0.1:3001;
+    proxy_pass http://127.0.0.1:5577;
     proxy_http_version 1.1;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;

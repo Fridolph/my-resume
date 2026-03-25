@@ -107,7 +107,7 @@ describe('PublishedResumeShell', () => {
 
     render(
       <PublishedResumeShell
-        apiBaseUrl="http://localhost:3001"
+        apiBaseUrl="http://localhost:5577"
         publishedResume={publishedResume}
       />,
     );
@@ -116,11 +116,11 @@ describe('PublishedResumeShell', () => {
       screen.getByRole('link', { name: '导出 Markdown' }),
     ).toHaveAttribute(
       'href',
-      'http://localhost:3001/resume/published/export/markdown?locale=zh',
+      'http://localhost:5577/resume/published/export/markdown?locale=zh',
     );
     expect(screen.getByRole('link', { name: '导出 PDF' })).toHaveAttribute(
       'href',
-      'http://localhost:3001/resume/published/export/pdf?locale=zh',
+      'http://localhost:5577/resume/published/export/pdf?locale=zh',
     );
 
     await user.click(screen.getByRole('button', { name: 'EN' }));
@@ -129,11 +129,11 @@ describe('PublishedResumeShell', () => {
       screen.getByRole('link', { name: 'Export Markdown' }),
     ).toHaveAttribute(
       'href',
-      'http://localhost:3001/resume/published/export/markdown?locale=en',
+      'http://localhost:5577/resume/published/export/markdown?locale=en',
     );
     expect(screen.getByRole('link', { name: 'Export PDF' })).toHaveAttribute(
       'href',
-      'http://localhost:3001/resume/published/export/pdf?locale=en',
+      'http://localhost:5577/resume/published/export/pdf?locale=en',
     );
   });
 

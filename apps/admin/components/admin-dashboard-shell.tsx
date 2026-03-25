@@ -3,7 +3,11 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
-import { fetchCurrentUser, postProtectedAction } from '../lib/auth-api';
+import {
+  fetchCurrentUser,
+  postProtectedAction,
+  publishResume,
+} from '../lib/auth-api';
 import { AuthUserView } from '../lib/auth-types';
 import { DEFAULT_API_BASE_URL } from '../lib/env';
 import {
@@ -67,7 +71,7 @@ export function AdminDashboardShell() {
     );
   }
 
-  async function handleProtectedAction(pathname: '/auth/demo/publish' | '/auth/demo/ai-analysis') {
+  async function handlePublish() {
     const accessToken = readAccessToken();
 
     if (!accessToken) {
@@ -75,17 +79,43 @@ export function AdminDashboardShell() {
       return;
     }
 
-    const nextPendingAction =
-      pathname === '/auth/demo/publish' ? 'publish' : 'ai-analysis';
+    setPendingAction('publish');
+    setFeedbackMessage(null);
 
-    setPendingAction(nextPendingAction);
+    try {
+      const result = await publishResume({
+        apiBaseUrl: DEFAULT_API_BASE_URL,
+        accessToken,
+      });
+
+      setFeedbackMessage(
+        `简历已发布：${result.resume.meta.slug}，请刷新公开站查看最新内容。`,
+      );
+    } catch (error) {
+      setFeedbackMessage(
+        error instanceof Error ? error.message : '操作失败，请稍后重试',
+      );
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
+  async function handleAiAction() {
+    const accessToken = readAccessToken();
+
+    if (!accessToken) {
+      setStatus('unauthorized');
+      return;
+    }
+
+    setPendingAction('ai-analysis');
     setFeedbackMessage(null);
 
     try {
       const result = await postProtectedAction({
         apiBaseUrl: DEFAULT_API_BASE_URL,
         accessToken,
-        pathname,
+        pathname: '/auth/demo/ai-analysis',
       });
 
       setFeedbackMessage(result.message);
@@ -133,8 +163,8 @@ export function AdminDashboardShell() {
         <RoleActionPanel
           currentUser={currentUser}
           feedbackMessage={feedbackMessage}
-          onPublish={() => handleProtectedAction('/auth/demo/publish')}
-          onTriggerAi={() => handleProtectedAction('/auth/demo/ai-analysis')}
+          onPublish={handlePublish}
+          onTriggerAi={handleAiAction}
           pendingAction={pendingAction}
         />
 
