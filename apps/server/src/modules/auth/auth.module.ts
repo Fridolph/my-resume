@@ -10,7 +10,10 @@ import { RoleCapabilitiesGuard } from './guards/role-capabilities.guard';
 @Module({
   imports: [
     JwtModule.register({
-      secret: process.env.AUTH_JWT_SECRET ?? 'my-resume-dev-jwt-secret',
+      secret:
+        process.env.JWT_SECRET ??
+        process.env.AUTH_JWT_SECRET ??
+        'my-resume-dev-jwt-secret',
       signOptions: {
         expiresIn: '1h',
       },
