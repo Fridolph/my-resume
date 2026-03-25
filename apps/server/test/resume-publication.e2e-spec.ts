@@ -116,6 +116,15 @@ describe('Resume publication flow (e2e)', () => {
     expect(markdownResponse.text).toContain('# Yinsheng Fu');
     expect(markdownResponse.text).toContain('## Summary');
     expect(markdownResponse.text).toContain('Publish Candidate');
+
+    const pdfResponse = await request(app.getHttpServer())
+      .get('/resume/published/export/pdf?locale=zh')
+      .expect(200);
+
+    expect(pdfResponse.headers['content-type']).toContain('application/pdf');
+    expect(pdfResponse.headers['content-disposition']).toContain(
+      'standard-resume-zh.pdf',
+    );
   });
 
   it('should keep viewer read-only for draft and publish actions', async () => {
@@ -159,6 +168,27 @@ describe('Resume publication flow (e2e)', () => {
 
     await request(app.getHttpServer())
       .get('/resume/published/export/markdown?locale=ja')
+      .expect(400);
+  });
+
+  it('should reject unsupported pdf export locale', async () => {
+    const loginResponse = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({
+        username: 'admin',
+        password: 'admin123456',
+      })
+      .expect(200);
+
+    const accessToken = loginResponse.body.accessToken as string;
+
+    await request(app.getHttpServer())
+      .post('/resume/publish')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .get('/resume/published/export/pdf?locale=ja')
       .expect(400);
   });
 });

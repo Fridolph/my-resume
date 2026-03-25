@@ -20,6 +20,7 @@ import { RoleCapabilitiesGuard } from '../auth/guards/role-capabilities.guard';
 import { ResumeLocale, validateStandardResume } from './domain/standard-resume';
 import type { StandardResume } from './domain/standard-resume';
 import { ResumeMarkdownExportService } from './resume-markdown-export.service';
+import { ResumePdfExportService } from './resume-pdf-export.service';
 import { ResumePublicationService } from './resume-publication.service';
 
 @Controller('resume')
@@ -27,6 +28,7 @@ export class ResumeController {
   constructor(
     private readonly resumePublicationService: ResumePublicationService,
     private readonly resumeMarkdownExportService: ResumeMarkdownExportService,
+    private readonly resumePdfExportService: ResumePdfExportService,
   ) {}
 
   @Get('published')
@@ -67,6 +69,35 @@ export class ResumeController {
     );
 
     response.status(HttpStatus.OK).send(markdown);
+  }
+
+  @Get('published/export/pdf')
+  async exportPublishedResumePdf(
+    @Query('locale') localeQuery: string | undefined,
+    @Res() response: Response,
+  ) {
+    const published = this.resumePublicationService.getPublished();
+
+    if (!published) {
+      throw new NotFoundException('Published resume is not available');
+    }
+
+    const locale = this.resolveExportLocale(
+      localeQuery,
+      published.resume.meta.defaultLocale,
+    );
+    const pdfBuffer = await this.resumePdfExportService.render(
+      published.resume,
+      locale,
+    );
+
+    response.setHeader('Content-Type', 'application/pdf');
+    response.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${published.resume.meta.slug}-${locale}.pdf"`,
+    );
+
+    response.status(HttpStatus.OK).send(pdfBuffer);
   }
 
   @Get('draft')
