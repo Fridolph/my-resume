@@ -1,5 +1,11 @@
 'use client';
 
+import {
+  DisplayPill,
+  DisplaySectionIntro,
+  DisplayStatCard,
+  DisplaySurfaceCard,
+} from '@my-resume/ui/display';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
@@ -53,22 +59,27 @@ export function AdminDashboardShell() {
   }, []);
 
   if (status === 'loading') {
-    return <main className="page-shell single-card">正在加载后台壳...</main>;
+    return (
+      <main className="page-shell single-card">
+        <DisplaySurfaceCard className="card">正在加载后台壳...</DisplaySurfaceCard>
+      </main>
+    );
   }
 
   if (status === 'unauthorized' || !currentUser) {
     return (
       <main className="page-shell single-card">
-        <section className="card stack">
-          <div>
-            <p className="eyebrow">未登录</p>
-            <h1>请先登录后台</h1>
-            <p className="muted">当前页面是最小受保护壳，需要先获取 JWT。</p>
-          </div>
+        <DisplaySurfaceCard className="card stack">
+          <DisplaySectionIntro
+            description="当前页面是最小受保护壳，需要先获取 JWT。"
+            eyebrow="未登录"
+            title="请先登录后台"
+            titleAs="h1"
+          />
           <Link className="link-button" href="/">
             返回登录页
           </Link>
-        </section>
+        </DisplaySurfaceCard>
       </main>
     );
   }
@@ -176,16 +187,15 @@ export function AdminDashboardShell() {
 
   return (
     <main className="dashboard-shell">
-      <section className="card dashboard-hero">
+      <DisplaySurfaceCard className="card dashboard-hero">
         <div className="page-header">
-          <div className="page-header-copy">
-            <p className="eyebrow">受保护页面</p>
-            <h1>后台控制台</h1>
-            <p className="muted">
-              当前阶段先把“草稿编辑、手动发布、角色边界、导出入口”收进一张可解释的后台首页，
-              为后续信息架构升级和教学演示打底。
-            </p>
-          </div>
+          <DisplaySectionIntro
+            className="page-header-copy"
+            description="当前阶段先把“草稿编辑、手动发布、角色边界、导出入口”收进一张可解释的后台首页，为后续信息架构升级和教学演示打底。"
+            eyebrow="受保护页面"
+            title="后台控制台"
+            titleAs="h1"
+          />
           <div className="dashboard-hero-actions">
             <ThemeModeToggle />
             <button
@@ -202,37 +212,45 @@ export function AdminDashboardShell() {
         </div>
 
         <div className="dashboard-badge-row">
-          <span className="display-pill dashboard-badge">当前账号：{currentUser.username}</span>
-          <span className="display-pill dashboard-badge">当前角色：{currentUser.role}</span>
-          <span className="display-pill dashboard-badge">公开站只读已发布版本</span>
-          <span className="display-pill dashboard-badge">单后端业务入口：apps/server</span>
+          <DisplayPill className="dashboard-badge">
+            当前账号：{currentUser.username}
+          </DisplayPill>
+          <DisplayPill className="dashboard-badge">
+            当前角色：{currentUser.role}
+          </DisplayPill>
+          <DisplayPill className="dashboard-badge">
+            公开站只读已发布版本
+          </DisplayPill>
+          <DisplayPill className="dashboard-badge">
+            单后端业务入口：apps/server
+          </DisplayPill>
         </div>
 
         <div className="dashboard-overview-grid">
           {capabilityCards.map((card) => (
-            <div className="info-item dashboard-overview-card" key={card.label}>
-              <span>{card.label}</span>
-              <strong>{card.value}</strong>
-              <p className="muted">{card.description}</p>
-            </div>
+            <DisplayStatCard
+              className="dashboard-overview-card"
+              description={card.description}
+              key={card.label}
+              label={card.label}
+              value={card.value}
+            />
           ))}
         </div>
-      </section>
+      </DisplaySurfaceCard>
 
       <section className="dashboard-main-grid">
         <div className="dashboard-column stack">
-          <section className="card stack">
-            <div>
-              <p className="eyebrow">工作区概览</p>
-              <h2>内容工作区</h2>
-              <p className="muted">
-                当前先聚焦 profile 草稿编辑，保持“先保存草稿，再手动发布”的主线节奏。
-              </p>
-            </div>
+          <DisplaySurfaceCard className="card stack">
+            <DisplaySectionIntro
+              description="当前先聚焦 profile 草稿编辑，保持“先保存草稿，再手动发布”的主线节奏。"
+              eyebrow="工作区概览"
+              title="内容工作区"
+            />
             <div className="dashboard-inline-note">
               这一区域只负责内容维护，不直接承载公开站语义和 AI 业务逻辑。
             </div>
-          </section>
+          </DisplaySurfaceCard>
 
           <ResumeDraftEditorPanel
             accessToken={readAccessToken() ?? ''}
@@ -242,24 +260,16 @@ export function AdminDashboardShell() {
         </div>
 
         <aside className="dashboard-column stack">
-          <section className="card stack">
-            <div>
-              <p className="eyebrow">会话信息</p>
-              <h2>会话与边界</h2>
-              <p className="muted">
-                当前后台只做单管理员 / viewer 教学型权限边界，不扩展到复杂多角色后台。
-              </p>
-            </div>
+          <DisplaySurfaceCard className="card stack">
+            <DisplaySectionIntro
+              description="当前后台只做单管理员 / viewer 教学型权限边界，不扩展到复杂多角色后台。"
+              eyebrow="会话信息"
+              title="会话与边界"
+            />
 
             <div className="info-grid">
-              <div className="info-item">
-                <span>当前账号</span>
-                <strong>{currentUser.username}</strong>
-              </div>
-              <div className="info-item">
-                <span>角色身份</span>
-                <strong>{currentUser.role}</strong>
-              </div>
+              <DisplayStatCard label="当前账号" value={currentUser.username} />
+              <DisplayStatCard label="角色身份" value={currentUser.role} />
             </div>
 
             <p className="muted">
@@ -271,7 +281,7 @@ export function AdminDashboardShell() {
             <div className="dashboard-inline-note">
               业务规则继续只由 `apps/server` 提供，后台页面只负责组织信息与触发入口。
             </div>
-          </section>
+          </DisplaySurfaceCard>
 
           <RoleActionPanel
             currentUser={currentUser}
@@ -281,14 +291,12 @@ export function AdminDashboardShell() {
             pendingAction={pendingAction}
           />
 
-          <section className="card stack">
-            <div>
-              <p className="eyebrow">发布流提示</p>
-              <h2>流程提示</h2>
-              <p className="muted">
-                把当前后台里最重要的几步写清楚，方便演示、截图和后续教学交接。
-              </p>
-            </div>
+          <DisplaySurfaceCard className="card stack">
+            <DisplaySectionIntro
+              description="把当前后台里最重要的几步写清楚，方便演示、截图和后续教学交接。"
+              eyebrow="发布流提示"
+              title="流程提示"
+            />
 
             <ol className="workflow-list">
               {workflowSteps.map((step) => (
@@ -298,7 +306,7 @@ export function AdminDashboardShell() {
                 </li>
               ))}
             </ol>
-          </section>
+          </DisplaySurfaceCard>
 
           <ExportEntryPanel
             apiBaseUrl={DEFAULT_API_BASE_URL}

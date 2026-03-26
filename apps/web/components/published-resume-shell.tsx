@@ -1,5 +1,6 @@
 'use client';
 
+import { DisplayStatCard } from '@my-resume/ui/display';
 import { useThemeMode } from '@my-resume/ui/theme';
 import { useState } from 'react';
 
@@ -78,11 +79,13 @@ export function PublishedResumeShell({
         </div>
         <div className="signal-grid">
           {signalCards.map((card) => (
-            <article className="signal-card" key={card.label}>
-              <span className="signal-label">{card.label}</span>
-              <strong className="signal-value">{card.value}</strong>
-              <p className="signal-description">{card.description}</p>
-            </article>
+            <DisplayStatCard
+              className="signal-card"
+              description={card.description}
+              key={card.label}
+              label={card.label}
+              value={card.value}
+            />
           ))}
         </div>
       </section>

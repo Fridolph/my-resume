@@ -1,3 +1,5 @@
+import { DisplaySectionIntro, DisplaySurfaceCard } from '@my-resume/ui/display';
+
 import { resumeLabels } from './published-resume-utils';
 
 export function PublishedResumeEmptyState() {
@@ -5,11 +7,14 @@ export function PublishedResumeEmptyState() {
 
   return (
     <main className="page-shell">
-      <section className="empty-card">
-        <p className="eyebrow">{labels.pageEyebrow}</p>
-        <h1>{labels.emptyTitle}</h1>
-        <p className="muted">{labels.emptyDescription}</p>
-      </section>
+      <DisplaySurfaceCard className="empty-card">
+        <DisplaySectionIntro
+          description={labels.emptyDescription}
+          eyebrow={labels.pageEyebrow}
+          title={labels.emptyTitle}
+          titleAs="h1"
+        />
+      </DisplaySurfaceCard>
     </main>
   );
 }

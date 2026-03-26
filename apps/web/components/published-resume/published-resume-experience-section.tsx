@@ -1,3 +1,5 @@
+import { DisplayPill } from '@my-resume/ui/display';
+
 import {
   ResumeExperienceItem,
   ResumeLocale,
@@ -69,9 +71,9 @@ export function PublishedResumeExperienceSection({
             {experience.technologies.length > 0 ? (
               <div className="tag-grid">
                 {experience.technologies.map((tech) => (
-                  <span className="meta-pill" key={tech}>
+                  <DisplayPill key={tech}>
                     {tech}
-                  </span>
+                  </DisplayPill>
                 ))}
               </div>
             ) : null}

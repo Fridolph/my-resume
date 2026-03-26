@@ -48,10 +48,6 @@ textarea {
 }
 
 .card {
-  background: var(--display-color-surface);
-  border: 1px solid var(--display-color-border);
-  border-radius: var(--display-radius-card);
-  box-shadow: var(--display-shadow-card);
   padding: 1.5rem;
 }
 
@@ -114,20 +110,6 @@ textarea {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
-}
-
-.info-item {
-  display: grid;
-  gap: 0.35rem;
-  padding: 1rem;
-  border-radius: 16px;
-  background: var(--display-color-surface-muted);
-  border: 1px solid var(--display-color-border);
-}
-
-.info-item span {
-  color: var(--display-color-text-muted);
-  font-size: 0.9rem;
 }
 
 .readonly-box {

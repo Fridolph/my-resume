@@ -1,3 +1,5 @@
+import { DisplayPill } from '@my-resume/ui/display';
+
 import {
   ResumeLocale,
   ResumeProjectItem,
@@ -56,9 +58,9 @@ export function PublishedResumeProjectsSection({
             {project.technologies.length > 0 ? (
               <div className="tag-grid">
                 {project.technologies.map((tech) => (
-                  <span className="meta-pill" key={tech}>
+                  <DisplayPill key={tech}>
                     {tech}
-                  </span>
+                  </DisplayPill>
                 ))}
               </div>
             ) : null}
@@ -66,15 +68,13 @@ export function PublishedResumeProjectsSection({
             {project.links.length > 0 ? (
               <div className="link-grid">
                 {project.links.map((link) => (
-                  <a
-                    className="link-pill"
+                  <DisplayPill
+                    external
                     href={link.url}
                     key={link.url}
-                    rel="noreferrer"
-                    target="_blank"
                   >
                     {readLocalizedText(link.label, locale)}
-                  </a>
+                  </DisplayPill>
                 ))}
               </div>
             ) : null}

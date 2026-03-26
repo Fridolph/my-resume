@@ -1,3 +1,4 @@
+import { DisplaySectionIntro, DisplaySurfaceCard } from '@my-resume/ui/display';
 import { ReactNode } from 'react';
 
 interface PublishedResumeSectionCardProps {
@@ -14,13 +15,13 @@ export function PublishedResumeSectionCard({
   children,
 }: PublishedResumeSectionCardProps) {
   return (
-    <section className="section-card">
-      <div className="section-header">
-        <p className="eyebrow">{eyebrow}</p>
-        <h2 className="section-title">{title}</h2>
-        {description ? <p className="section-subtitle">{description}</p> : null}
-      </div>
+    <DisplaySurfaceCard className="section-card">
+      <DisplaySectionIntro
+        description={description}
+        eyebrow={eyebrow}
+        title={title}
+      />
       {children}
-    </section>
+    </DisplaySurfaceCard>
   );
 }

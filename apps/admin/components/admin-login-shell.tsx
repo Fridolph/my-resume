@@ -1,5 +1,6 @@
 'use client';
 
+import { DisplaySectionIntro, DisplaySurfaceCard } from '@my-resume/ui/display';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -65,7 +66,9 @@ export function AdminLoginShell() {
   }
 
   if (checkingSession) {
-    return <section className="card">正在检查登录状态...</section>;
+    return (
+      <DisplaySurfaceCard className="card">正在检查登录状态...</DisplaySurfaceCard>
+    );
   }
 
   return (
@@ -76,12 +79,13 @@ export function AdminLoginShell() {
         pending={pending}
       />
 
-      <section className="card stack">
+      <DisplaySurfaceCard className="card stack">
         <div className="page-header">
-          <div className="page-header-copy">
-            <p className="eyebrow">当前说明</p>
-            <h2>最小后台登录说明</h2>
-          </div>
+          <DisplaySectionIntro
+            className="page-header-copy"
+            eyebrow="当前说明"
+            title="最小后台登录说明"
+          />
           <ThemeModeToggle />
         </div>
         <ul className="muted-list">
@@ -101,7 +105,7 @@ export function AdminLoginShell() {
             </Link>
           </div>
         ) : null}
-      </section>
+      </DisplaySurfaceCard>
     </main>
   );
 }

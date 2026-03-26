@@ -1,4 +1,9 @@
 import { buildPublishedResumeExportUrl } from '@my-resume/api-client';
+import {
+  DisplayPill,
+  DisplaySectionIntro,
+  DisplaySurfaceCard,
+} from '@my-resume/ui/display';
 import type { ThemeMode } from '@my-resume/ui/theme';
 
 import { ResumeLocale, ResumePublishedSnapshot } from '../../lib/published-resume-types';
@@ -42,7 +47,7 @@ export function PublishedResumeHero({
   );
 
   return (
-    <section className="hero-card">
+    <DisplaySurfaceCard className="hero-card">
       <div className="hero-header">
         <div className="hero-copy">
           <p className="eyebrow">{labels.pageEyebrow}</p>
@@ -89,65 +94,67 @@ export function PublishedResumeHero({
           </div>
 
           <div className="hero-edition-card">
-            <p className="eyebrow">{labels.standardEditionEyebrow}</p>
-            <h2 className="hero-edition-title">{labels.standardEditionTitle}</h2>
-            <p className="section-subtitle">{labels.standardEditionDescription}</p>
+            <DisplaySectionIntro
+              description={labels.standardEditionDescription}
+              eyebrow={labels.standardEditionEyebrow}
+              title={labels.standardEditionTitle}
+              titleAs="h2"
+            />
             <div className="link-grid">
-              <a className="link-pill" href={markdownExportUrl}>
+              <DisplayPill href={markdownExportUrl}>
                 {labels.exportMarkdown}
-              </a>
-              <a className="link-pill" href={pdfExportUrl}>
+              </DisplayPill>
+              <DisplayPill href={pdfExportUrl}>
                 {labels.exportPdf}
-              </a>
+              </DisplayPill>
             </div>
           </div>
         </aside>
       </div>
 
       <div className="hero-meta">
-        <span className="meta-pill">{readLocalizedText(profile.location, locale)}</span>
-        <span className="meta-pill">{profile.email}</span>
-        <span className="meta-pill">{profile.phone}</span>
-        <span className="meta-pill">{profile.website}</span>
-        <span className="meta-pill">
+        <DisplayPill>{readLocalizedText(profile.location, locale)}</DisplayPill>
+        <DisplayPill>{profile.email}</DisplayPill>
+        <DisplayPill>{profile.phone}</DisplayPill>
+        <DisplayPill>{profile.website}</DisplayPill>
+        <DisplayPill>
           {labels.publishedAt}{' '}
           <span className="meta-text">
             {formatPublishedAt(publishedResume.publishedAt, locale)}
           </span>
-        </span>
+        </DisplayPill>
       </div>
 
       {profile.links.length > 0 ? (
         <div className="link-grid">
           {profile.links.map((link) => (
-            <a
-              className="link-pill"
+            <DisplayPill
+              external
               href={link.url}
               key={link.url}
-              rel="noreferrer"
-              target="_blank"
             >
               {readLocalizedText(link.label, locale)}
-            </a>
+            </DisplayPill>
           ))}
         </div>
       ) : null}
 
       {localizedInterests.length > 0 ? (
         <div className="hero-block">
-          <div className="section-header compact">
-            <p className="eyebrow">{labels.interestsEyebrow}</p>
-            <h2 className="section-title">{labels.interestsTitle}</h2>
-          </div>
+          <DisplaySectionIntro
+            compact
+            eyebrow={labels.interestsEyebrow}
+            title={labels.interestsTitle}
+          />
           <div className="tag-grid">
             {localizedInterests.map((interest) => (
-              <span className="meta-pill" key={interest}>
+              <DisplayPill key={interest}>
                 {interest}
-              </span>
+              </DisplayPill>
             ))}
           </div>
         </div>
       ) : null}
-    </section>
+    </DisplaySurfaceCard>
   );
 }
