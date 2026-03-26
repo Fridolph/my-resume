@@ -1,12 +1,9 @@
 import { join, resolve } from 'path';
-
-function resolveRepoRoot(): string {
-  return resolve(__dirname, '../../../../');
-}
+import { resolveRepoRoot } from './repo-root';
 
 export function buildServerEnvFilePaths(nodeEnv: string | undefined): string[] {
   const envName = nodeEnv?.trim() || 'development';
-  const repoRoot = resolveRepoRoot();
+  const repoRoot = resolveRepoRoot(__dirname);
 
   return [
     join(repoRoot, `.env.${envName}.local`),
