@@ -22,8 +22,8 @@ export function RoleActionPanel({
   return (
     <section className="card stack">
       <div>
-        <p className="eyebrow">角色体验</p>
-        <h2>viewer / admin 能力边界</h2>
+        <p className="eyebrow">角色动作</p>
+        <h2>动作中心</h2>
         <p className="muted">
           当前阶段用最小演示动作验证“viewer 只读、admin 可写”。
         </p>

@@ -104,6 +104,12 @@ textarea {
   font-weight: 600;
 }
 
+.secondary-button {
+  background: var(--display-color-surface-muted);
+  color: var(--display-color-text);
+  border: 1px solid var(--display-color-border);
+}
+
 .info-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -161,6 +167,87 @@ textarea {
   margin: 0;
 }
 
+.dashboard-shell {
+  min-height: 100vh;
+  width: min(1180px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 3rem;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.dashboard-hero {
+  gap: 1.25rem;
+}
+
+.dashboard-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.dashboard-badge-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.dashboard-badge {
+  padding: 0.7rem 0.95rem;
+}
+
+.dashboard-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.dashboard-overview-card p {
+  margin: 0;
+}
+
+.dashboard-main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.95fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.dashboard-column {
+  align-content: start;
+}
+
+.dashboard-inline-note {
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  border: 1px dashed var(--display-color-border);
+  color: var(--display-color-text-muted);
+  background: color-mix(
+    in srgb,
+    var(--display-color-surface-muted) 84%,
+    transparent
+  );
+}
+
+.workflow-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.workflow-item {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+  border-radius: 18px;
+  background: var(--display-color-surface-muted);
+  border: 1px solid var(--display-color-border);
+}
+
 @media (max-width: 960px) {
   .page-shell {
     grid-template-columns: minmax(0, 1fr);
@@ -182,5 +269,18 @@ textarea {
 
   .page-header {
     flex-direction: column;
+  }
+
+  .dashboard-shell {
+    width: min(100%, calc(100% - 2rem));
+  }
+
+  .dashboard-main-grid,
+  .dashboard-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-hero-actions {
+    justify-content: flex-start;
   }
 }
