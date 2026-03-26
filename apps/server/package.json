@@ -7,6 +7,10 @@
   "license": "MIT",
   "scripts": {
     "build": "nest build",
+    "db:check": "ts-node -P tsconfig.json src/database/check-database.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push --force",
+    "db:studio": "drizzle-kit studio",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -21,6 +25,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@libsql/client": "^0.17.2",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.3",
     "@nestjs/core": "^11.0.1",
@@ -28,6 +33,7 @@
     "@nestjs/platform-express": "^11.0.1",
     "docx": "^9.6.1",
     "dotenv": "^17.3.1",
+    "drizzle-orm": "^0.45.1",
     "mammoth": "^1.12.0",
     "multer": "^2.1.1",
     "pdf-parse": "^2.4.5",
@@ -47,6 +53,7 @@
     "@types/node": "^22.10.7",
     "@types/pdfkit": "^0.17.5",
     "@types/supertest": "^6.0.2",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",

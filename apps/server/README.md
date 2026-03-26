@@ -4,29 +4,35 @@
 
 ## 当前阶段
 
-- 当前里程碑：`M2 / issue-05`
-- 当前目标：创建最小 `NestJS` 脚手架
-- 当前状态：仅保留默认 `AppModule` / `AppController` / `AppService`
+- 当前里程碑：`M8 / issue-36`
+- 当前目标：补齐 `Drizzle + SQLite/libsql` 最小数据库骨架
+- 当前状态：在既有 `NestJS` 业务后端上逐步引入持久化基础设施
 
 ## 后续职责
 
 - 承接鉴权与角色模型
+- 提供数据库、队列、导出等基础设施能力
 - 提供登录、权限守卫与后续业务 API
 - 作为 `apps/admin` 与 `apps/web` 的统一业务后端
 
 ## 当前边界
 
-- 不接数据库
-- 不接 Redis
-- 不实现登录
-- 不实现角色权限
-- 不接 AI、文件、导出等模块
+- 当前只接数据库最小骨架，不改造业务表
+- 当前不接 Redis
+- 不在本任务里改造 AI、文件、导出业务逻辑
+- 简历草稿 / 发布态的真正表结构放到后续 issue 落地
 
 ## 本地运行
 
 ```bash
 pnpm install
 pnpm --filter @my-resume/server start:dev
+```
+
+数据库基础检查：
+
+```bash
+pnpm --filter @my-resume/server db:check
 ```
 
 默认端口：
