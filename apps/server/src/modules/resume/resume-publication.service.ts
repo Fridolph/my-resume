@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 
 import {
   createExampleStandardResume,
   StandardResume,
 } from './domain/standard-resume';
+import { ResumePublicationRepository } from './resume-publication.repository';
 
 export interface ResumeDraftSnapshot {
   status: 'draft';
@@ -23,49 +24,71 @@ function cloneStandardResume(resume: StandardResume): StandardResume {
 
 @Injectable()
 export class ResumePublicationService {
-  private draftSnapshot: ResumeDraftSnapshot = {
-    status: 'draft',
-    resume: createExampleStandardResume(),
-    updatedAt: new Date().toISOString(),
-  };
+  constructor(
+    @Inject(ResumePublicationRepository)
+    private readonly resumePublicationRepository: ResumePublicationRepository,
+  ) {}
 
-  private publishedSnapshot: ResumePublishedSnapshot | null = null;
+  async getDraft(): Promise<ResumeDraftSnapshot> {
+    const existingDraft = await this.resumePublicationRepository.findDraft();
 
-  getDraft(): ResumeDraftSnapshot {
+    if (!existingDraft) {
+      const seededDraft = await this.resumePublicationRepository.saveDraft(
+        createExampleStandardResume(),
+      );
+
+      return {
+        status: 'draft',
+        resume: cloneStandardResume(seededDraft.resumeJson),
+        updatedAt: seededDraft.updatedAt.toISOString(),
+      };
+    }
+
     return {
-      ...this.draftSnapshot,
-      resume: cloneStandardResume(this.draftSnapshot.resume),
+      status: 'draft',
+      resume: cloneStandardResume(existingDraft.resumeJson),
+      updatedAt: existingDraft.updatedAt.toISOString(),
     };
   }
 
-  getPublished(): ResumePublishedSnapshot | null {
-    if (!this.publishedSnapshot) {
+  async getPublished(): Promise<ResumePublishedSnapshot | null> {
+    const publishedSnapshot =
+      await this.resumePublicationRepository.findLatestPublishedSnapshot();
+
+    if (!publishedSnapshot) {
       return null;
     }
 
     return {
-      ...this.publishedSnapshot,
-      resume: cloneStandardResume(this.publishedSnapshot.resume),
-    };
-  }
-
-  updateDraft(resume: StandardResume): ResumeDraftSnapshot {
-    this.draftSnapshot = {
-      status: 'draft',
-      resume: cloneStandardResume(resume),
-      updatedAt: new Date().toISOString(),
-    };
-
-    return this.getDraft();
-  }
-
-  publish(): ResumePublishedSnapshot {
-    this.publishedSnapshot = {
       status: 'published',
-      resume: cloneStandardResume(this.draftSnapshot.resume),
-      publishedAt: new Date().toISOString(),
+      resume: cloneStandardResume(publishedSnapshot.resumeJson),
+      publishedAt: publishedSnapshot.publishedAt.toISOString(),
     };
+  }
 
-    return this.getPublished() as ResumePublishedSnapshot;
+  async updateDraft(resume: StandardResume): Promise<ResumeDraftSnapshot> {
+    const savedDraft = await this.resumePublicationRepository.saveDraft(
+      cloneStandardResume(resume),
+    );
+
+    return {
+      status: 'draft',
+      resume: cloneStandardResume(savedDraft.resumeJson),
+      updatedAt: savedDraft.updatedAt.toISOString(),
+    };
+  }
+
+  async publish(): Promise<ResumePublishedSnapshot> {
+    const draft = await this.getDraft();
+    const publishedSnapshot =
+      await this.resumePublicationRepository.createPublishedSnapshot(
+        cloneStandardResume(draft.resume),
+      );
+
+    return {
+      status: 'published',
+      resume: cloneStandardResume(publishedSnapshot.resumeJson),
+      publishedAt: publishedSnapshot.publishedAt.toISOString(),
+    };
   }
 }
