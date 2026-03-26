@@ -168,6 +168,8 @@ describe('PublishedResumeShell', () => {
     expect(screen.getByRole('heading', { name: '教育背景' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '技能结构' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '补充亮点' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '公开简历速览' })).toBeInTheDocument();
+    expect(screen.getByText('标准双语公开版')).toBeInTheDocument();
     expect(screen.getByText('成都一蟹科技有限公司')).toBeInTheDocument();
     expect(screen.getByText('四川大学锦江学院')).toBeInTheDocument();
 
@@ -184,6 +186,8 @@ describe('PublishedResumeShell', () => {
     expect(screen.getByRole('heading', { name: 'Education' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Skill Structure' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Additional Highlights' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Public Resume Overview' })).toBeInTheDocument();
+    expect(screen.getByText('Standard Bilingual Edition')).toBeInTheDocument();
   });
 
   it('should toggle light and dark theme on the document element', async () => {
