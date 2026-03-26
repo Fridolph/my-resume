@@ -36,8 +36,8 @@ export class ResumeController {
   ) {}
 
   @Get('published')
-  getPublishedResume() {
-    const published = this.resumePublicationService.getPublished();
+  async getPublishedResume() {
+    const published = await this.resumePublicationService.getPublished();
 
     if (!published) {
       throw new NotFoundException('Published resume is not available');
@@ -47,11 +47,11 @@ export class ResumeController {
   }
 
   @Get('published/export/markdown')
-  exportPublishedResumeMarkdown(
+  async exportPublishedResumeMarkdown(
     @Query('locale') localeQuery: string | undefined,
     @Res() response: Response,
   ) {
-    const published = this.resumePublicationService.getPublished();
+    const published = await this.resumePublicationService.getPublished();
 
     if (!published) {
       throw new NotFoundException('Published resume is not available');
@@ -80,7 +80,7 @@ export class ResumeController {
     @Query('locale') localeQuery: string | undefined,
     @Res() response: Response,
   ) {
-    const published = this.resumePublicationService.getPublished();
+    const published = await this.resumePublicationService.getPublished();
 
     if (!published) {
       throw new NotFoundException('Published resume is not available');
@@ -107,7 +107,7 @@ export class ResumeController {
   @Get('draft')
   @UseGuards(JwtAuthGuard, RoleCapabilitiesGuard)
   @RequireCapability('canEditResume')
-  getDraftResume() {
+  async getDraftResume() {
     return this.resumePublicationService.getDraft();
   }
 
@@ -115,7 +115,7 @@ export class ResumeController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard, RoleCapabilitiesGuard)
   @RequireCapability('canEditResume')
-  updateDraftResume(@Body() resume: StandardResume) {
+  async updateDraftResume(@Body() resume: StandardResume) {
     const validationResult = validateStandardResume(resume);
 
     if (!validationResult.valid) {
@@ -129,7 +129,7 @@ export class ResumeController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard, RoleCapabilitiesGuard)
   @RequireCapability('canPublishResume')
-  publishResume() {
+  async publishResume() {
     return this.resumePublicationService.publish();
   }
 
