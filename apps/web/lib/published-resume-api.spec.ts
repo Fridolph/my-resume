@@ -17,6 +17,12 @@ describe('published resume api', () => {
           status: 'published',
           publishedAt: '2026-03-25T00:00:00.000Z',
           resume: {
+            meta: {
+              slug: 'standard-resume' as const,
+              version: 1 as const,
+              defaultLocale: 'zh' as const,
+              locales: ['zh', 'en'] as const,
+            },
             profile: {
               fullName: {
                 zh: '付寅生',

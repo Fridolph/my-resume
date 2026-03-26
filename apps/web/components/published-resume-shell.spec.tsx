@@ -2,12 +2,19 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
+import type { ResumePublishedSnapshot } from '../lib/published-resume-types';
 import { PublishedResumeShell } from './published-resume-shell';
 
-const publishedResume = {
+const publishedResume: ResumePublishedSnapshot = {
   status: 'published' as const,
   publishedAt: '2026-03-25T00:00:00.000Z',
   resume: {
+    meta: {
+      slug: 'standard-resume' as const,
+      version: 1 as const,
+      defaultLocale: 'zh' as const,
+      locales: ['zh', 'en'] as const,
+    },
     profile: {
       fullName: {
         zh: '付寅生',

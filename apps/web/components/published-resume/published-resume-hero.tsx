@@ -1,3 +1,5 @@
+import { buildPublishedResumeExportUrl } from '@my-resume/api-client';
+
 import { ResumeLocale, ResumePublishedSnapshot } from '../../lib/published-resume-types';
 import {
   formatPublishedAt,
@@ -25,8 +27,16 @@ export function PublishedResumeHero({
 }: PublishedResumeHeroProps) {
   const labels = resumeLabels[locale];
   const profile = publishedResume.resume.profile;
-  const markdownExportUrl = `${apiBaseUrl.replace(/\/$/, '')}/resume/published/export/markdown?locale=${locale}`;
-  const pdfExportUrl = `${apiBaseUrl.replace(/\/$/, '')}/resume/published/export/pdf?locale=${locale}`;
+  const markdownExportUrl = buildPublishedResumeExportUrl({
+    apiBaseUrl,
+    format: 'markdown',
+    locale,
+  });
+  const pdfExportUrl = buildPublishedResumeExportUrl({
+    apiBaseUrl,
+    format: 'pdf',
+    locale,
+  });
   const localizedInterests = profile.interests.map((item) =>
     readLocalizedText(item, locale),
   );

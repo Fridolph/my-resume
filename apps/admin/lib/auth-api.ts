@@ -1,3 +1,5 @@
+import { publishResume as publishResumeRequest, type ResumePublishedSnapshot } from '@my-resume/api-client';
+
 import { AuthUserView, LoginResult } from './auth-types';
 
 interface LoginWithPasswordInput {
@@ -17,16 +19,6 @@ interface PostProtectedActionInput extends FetchCurrentUserInput {
 
 interface ProtectedActionResponse {
   message: string;
-}
-
-interface PublishResumeResponse {
-  status: 'published';
-  publishedAt: string;
-  resume: {
-    meta: {
-      slug: string;
-    };
-  };
 }
 
 function joinApiUrl(apiBaseUrl: string, pathname: string): string {
@@ -93,17 +85,6 @@ export async function postProtectedAction(
 
 export async function publishResume(
   input: FetchCurrentUserInput,
-): Promise<PublishResumeResponse> {
-  const response = await fetch(joinApiUrl(input.apiBaseUrl, '/resume/publish'), {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${input.accessToken}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error('发布失败，请确认当前账号拥有发布权限');
-  }
-
-  return (await response.json()) as PublishResumeResponse;
+): Promise<ResumePublishedSnapshot> {
+  return publishResumeRequest(input);
 }
