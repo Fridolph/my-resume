@@ -1,18 +1,12 @@
 'use client';
 
+import { buildPublishedResumeExportUrl, type ResumeLocale } from '@my-resume/api-client';
+
 type ExportEntryPanelProps = {
   apiBaseUrl: string;
-  locale: 'zh' | 'en';
+  locale: ResumeLocale;
   role: 'admin' | 'viewer';
 };
-
-function buildExportUrl(
-  apiBaseUrl: string,
-  format: 'markdown' | 'pdf',
-  locale: 'zh' | 'en',
-): string {
-  return `${apiBaseUrl.replace(/\/$/, '')}/resume/published/export/${format}?locale=${locale}`;
-}
 
 export function ExportEntryPanel({
   apiBaseUrl,
@@ -30,10 +24,24 @@ export function ExportEntryPanel({
       </div>
 
       <div className="toolbar-group">
-        <a href={buildExportUrl(apiBaseUrl, 'markdown', locale)}>
+        <a
+          href={buildPublishedResumeExportUrl({
+            apiBaseUrl,
+            format: 'markdown',
+            locale,
+          })}
+        >
           下载 Markdown
         </a>
-        <a href={buildExportUrl(apiBaseUrl, 'pdf', locale)}>下载 PDF</a>
+        <a
+          href={buildPublishedResumeExportUrl({
+            apiBaseUrl,
+            format: 'pdf',
+            locale,
+          })}
+        >
+          下载 PDF
+        </a>
       </div>
 
       <p className="muted">

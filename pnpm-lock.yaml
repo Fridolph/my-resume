@@ -90,6 +90,9 @@ importers:
 
   apps/admin:
     dependencies:
+      '@my-resume/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
       next:
         specifier: ^15.5.2
         version: 15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -251,6 +254,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@my-resume/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
       next:
         specifier: ^15.5.2
         version: 15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -279,6 +285,15 @@ importers:
       jsdom:
         specifier: ^26.1.0
         version: 26.1.0
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/node@25.5.0)(jsdom@26.1.0)(terser@5.46.1)
+
+  packages/api-client:
+    devDependencies:
       typescript:
         specifier: ^5.9.2
         version: 5.9.3
@@ -3566,7 +3581,6 @@ packages:
 
   libsql@0.5.29:
     resolution: {integrity: sha512-8lMP8iMgiBzzoNbAPQ59qdVcj6UaE/Vnm+fiwX4doX4Narook0a4GPKWBEv+CR8a1OwbfkgL18uBfBjWdF0Fzg==}
-    cpu: [x64, arm64, wasm32, arm]
     os: [darwin, linux, win32]
 
   lie@3.3.0:
@@ -6528,13 +6542,13 @@ snapshots:
     optionalDependencies:
       vite: 5.4.21(@types/node@20.19.37)(terser@5.46.1)
 
-  '@vitest/mocker@3.2.4(vite@5.4.21(@types/node@25.5.0)(terser@5.46.1))':
+  '@vitest/mocker@3.2.4(vite@5.4.21(@types/node@22.19.15)(terser@5.46.1))':
     dependencies:
       '@vitest/spy': 3.2.4
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 5.4.21(@types/node@25.5.0)(terser@5.46.1)
+      vite: 5.4.21(@types/node@22.19.15)(terser@5.46.1)
 
   '@vitest/pretty-format@3.2.4':
     dependencies:
@@ -9354,7 +9368,7 @@ snapshots:
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/expect': 3.2.4
-      '@vitest/mocker': 3.2.4(vite@5.4.21(@types/node@20.19.37)(terser@5.46.1))
+      '@vitest/mocker': 3.2.4(vite@5.4.21(@types/node@22.19.15)(terser@5.46.1))
       '@vitest/pretty-format': 3.2.4
       '@vitest/runner': 3.2.4
       '@vitest/snapshot': 3.2.4
@@ -9393,7 +9407,7 @@ snapshots:
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/expect': 3.2.4
-      '@vitest/mocker': 3.2.4(vite@5.4.21(@types/node@25.5.0)(terser@5.46.1))
+      '@vitest/mocker': 3.2.4(vite@5.4.21(@types/node@20.19.37)(terser@5.46.1))
       '@vitest/pretty-format': 3.2.4
       '@vitest/runner': 3.2.4
       '@vitest/snapshot': 3.2.4
