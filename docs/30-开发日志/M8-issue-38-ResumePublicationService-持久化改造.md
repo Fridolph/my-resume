@@ -195,6 +195,21 @@
 - 在同一数据库文件上重建 service 实例
 - 直接验证草稿与发布内容是否仍然可读
 
+### 3. CI 下的 e2e 共享数据库污染
+
+问题：
+
+本地单独跑 service 测试和 e2e 都能通过，但 PR CI 暴露出两个隐藏问题：
+
+- e2e 初始化缺少 `resume_drafts` / `resume_publication_snapshots`
+- 多个 e2e 文件共享同一个 sqlite 文件时，容易出现状态串扰或锁冲突
+
+处理：
+
+- 在 `resume-publication.e2e` 中补齐最小建表逻辑
+- 为该 e2e 文件切换到临时独立 sqlite 文件
+- 每次用例前清空相关表，确保未发布与已发布场景都能稳定复现
+
 ## 可沉淀为教程/博客的点
 
 - 如何把一个内存态 service 平滑迁移到 repository + database
