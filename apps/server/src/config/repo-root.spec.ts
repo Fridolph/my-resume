@@ -1,21 +1,24 @@
+import { join, resolve } from 'path';
 import { describe, expect, it } from 'vitest';
 
 import { resolveRepoRoot } from './repo-root';
 
 describe('resolveRepoRoot', () => {
+  const repoRoot = resolve(process.cwd(), '../..');
+
   it('should resolve repo root from source directory', () => {
-    const repoRoot = resolveRepoRoot(
-      '/Users/fri/Desktop/personal/my-resume/apps/server/src/config',
+    const resolvedRepoRoot = resolveRepoRoot(
+      join(repoRoot, 'apps/server/src/config'),
     );
 
-    expect(repoRoot).toBe('/Users/fri/Desktop/personal/my-resume');
+    expect(resolvedRepoRoot).toBe(repoRoot);
   });
 
   it('should resolve repo root from compiled dist directory', () => {
-    const repoRoot = resolveRepoRoot(
-      '/Users/fri/Desktop/personal/my-resume/apps/server/dist/src/config',
+    const resolvedRepoRoot = resolveRepoRoot(
+      join(repoRoot, 'apps/server/dist/src/config'),
     );
 
-    expect(repoRoot).toBe('/Users/fri/Desktop/personal/my-resume');
+    expect(resolvedRepoRoot).toBe(repoRoot);
   });
 });

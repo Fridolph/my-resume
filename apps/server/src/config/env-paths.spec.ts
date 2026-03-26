@@ -1,3 +1,4 @@
+import { join, resolve } from 'path';
 import { describe, expect, it } from 'vitest';
 
 import { buildServerEnvFilePaths } from './env-paths';
@@ -14,8 +15,10 @@ describe('buildServerEnvFilePaths', () => {
   });
 
   it('should resolve the actual repository root instead of apps directory', () => {
-    expect(resolveRepoRoot('/Users/fri/Desktop/personal/my-resume/apps/server/dist/src/config')).toBe(
-      '/Users/fri/Desktop/personal/my-resume',
-    );
+    expect(
+      resolveRepoRoot(
+        join(resolve(process.cwd(), '../..'), 'apps/server/dist/src/config'),
+      ),
+    ).toBe(resolve(process.cwd(), '../..'));
   });
 });
