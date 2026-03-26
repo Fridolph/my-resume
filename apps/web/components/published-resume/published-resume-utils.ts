@@ -34,6 +34,21 @@ export function formatPublishedAt(
 export const resumeLabels = {
   zh: {
     pageEyebrow: '公开简历',
+    standardEditionEyebrow: '当前版本',
+    standardEditionTitle: '标准双语公开版',
+    standardEditionDescription:
+      '当前只维护一份可公开展示的标准简历，草稿保存与公开发布继续分离。',
+    resumeSignalsEyebrow: '履历信号',
+    resumeSignalsTitle: '公开简历速览',
+    experienceCountLabel: '职业经历',
+    experienceCountDescription: '段可追踪的核心职业经历。',
+    projectsCountLabel: '代表项目',
+    projectsCountDescription: '个沉淀到公开版里的代表项目。',
+    skillsCountLabel: '技能分组',
+    skillsCountDescription: '组便于阅读与导出的技能结构。',
+    publicationStateLabel: '发布状态',
+    publicationStateValue: '已发布',
+    publicationStateDescription: '公开站当前正在读取最近一次手动发布版本。',
     emptyTitle: '当前还没有已发布的公开简历内容。',
     emptyDescription:
       '请先通过后台更新草稿并执行发布动作，公开站才会读取到最新已发布版本。',
@@ -60,6 +75,22 @@ export const resumeLabels = {
   },
   en: {
     pageEyebrow: 'Published Resume',
+    standardEditionEyebrow: 'Edition',
+    standardEditionTitle: 'Standard Bilingual Edition',
+    standardEditionDescription:
+      'The project currently maintains one public standard resume while draft editing and publication stay separated.',
+    resumeSignalsEyebrow: 'Reading Signals',
+    resumeSignalsTitle: 'Public Resume Overview',
+    experienceCountLabel: 'Experience',
+    experienceCountDescription: 'core work chapters currently on the public page.',
+    projectsCountLabel: 'Projects',
+    projectsCountDescription: 'selected builds carried into the standard edition.',
+    skillsCountLabel: 'Skill Groups',
+    skillsCountDescription: 'structured groups ready for reading and export.',
+    publicationStateLabel: 'Release State',
+    publicationStateValue: 'Published',
+    publicationStateDescription:
+      'The public site is reading the most recent manually published snapshot.',
     emptyTitle: 'There is no published resume content yet.',
     emptyDescription:
       'Please update the draft and publish it from the admin dashboard before the public site can read the latest version.',

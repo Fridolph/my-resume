@@ -51,41 +51,57 @@ export function PublishedResumeHero({
           <p className="subtitle">{readLocalizedText(profile.summary, locale)}</p>
         </div>
 
-        <div className="toolbar">
-          <div aria-label="语言切换" className="toolbar-group" role="group">
-            <button
-              className={`toggle-button ${locale === 'zh' ? 'is-active' : ''}`}
-              onClick={() => onChangeLocale('zh')}
-              type="button"
-            >
-              中文
-            </button>
-            <button
-              className={`toggle-button ${locale === 'en' ? 'is-active' : ''}`}
-              onClick={() => onChangeLocale('en')}
-              type="button"
-            >
-              EN
-            </button>
+        <aside className="hero-aside">
+          <div className="toolbar">
+            <div aria-label="语言切换" className="toolbar-group" role="group">
+              <button
+                className={`toggle-button ${locale === 'zh' ? 'is-active' : ''}`}
+                onClick={() => onChangeLocale('zh')}
+                type="button"
+              >
+                中文
+              </button>
+              <button
+                className={`toggle-button ${locale === 'en' ? 'is-active' : ''}`}
+                onClick={() => onChangeLocale('en')}
+                type="button"
+              >
+                EN
+              </button>
+            </div>
+
+            <div aria-label="主题切换" className="toolbar-group" role="group">
+              <button
+                className={`toggle-button ${theme === 'light' ? 'is-active' : ''}`}
+                onClick={() => onChangeTheme('light')}
+                type="button"
+              >
+                Light
+              </button>
+              <button
+                className={`toggle-button ${theme === 'dark' ? 'is-active' : ''}`}
+                onClick={() => onChangeTheme('dark')}
+                type="button"
+              >
+                Dark
+              </button>
+            </div>
           </div>
 
-          <div aria-label="主题切换" className="toolbar-group" role="group">
-            <button
-              className={`toggle-button ${theme === 'light' ? 'is-active' : ''}`}
-              onClick={() => onChangeTheme('light')}
-              type="button"
-            >
-              Light
-            </button>
-            <button
-              className={`toggle-button ${theme === 'dark' ? 'is-active' : ''}`}
-              onClick={() => onChangeTheme('dark')}
-              type="button"
-            >
-              Dark
-            </button>
+          <div className="hero-edition-card">
+            <p className="eyebrow">{labels.standardEditionEyebrow}</p>
+            <h2 className="hero-edition-title">{labels.standardEditionTitle}</h2>
+            <p className="section-subtitle">{labels.standardEditionDescription}</p>
+            <div className="link-grid">
+              <a className="link-pill" href={markdownExportUrl}>
+                {labels.exportMarkdown}
+              </a>
+              <a className="link-pill" href={pdfExportUrl}>
+                {labels.exportPdf}
+              </a>
+            </div>
           </div>
-        </div>
+        </aside>
       </div>
 
       <div className="hero-meta">
@@ -99,15 +115,6 @@ export function PublishedResumeHero({
             {formatPublishedAt(publishedResume.publishedAt, locale)}
           </span>
         </span>
-      </div>
-
-      <div className="link-grid">
-        <a className="link-pill" href={markdownExportUrl}>
-          {labels.exportMarkdown}
-        </a>
-        <a className="link-pill" href={pdfExportUrl}>
-          {labels.exportPdf}
-        </a>
       </div>
 
       {profile.links.length > 0 ? (

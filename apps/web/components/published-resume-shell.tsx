@@ -12,6 +12,10 @@ import { PublishedResumeHero } from './published-resume/published-resume-hero';
 import { PublishedResumeHighlightsSection } from './published-resume/published-resume-highlights-section';
 import { PublishedResumeProjectsSection } from './published-resume/published-resume-projects-section';
 import { PublishedResumeSkillsSection } from './published-resume/published-resume-skills-section';
+import {
+  formatPublishedAt,
+  resumeLabels,
+} from './published-resume/published-resume-utils';
 
 export function PublishedResumeShell({
   apiBaseUrl = DEFAULT_API_BASE_URL,
@@ -27,8 +31,34 @@ export function PublishedResumeShell({
     return <PublishedResumeEmptyState />;
   }
 
+  const labels = resumeLabels[locale];
   const { education, experiences, highlights, projects, skills } =
     publishedResume.resume;
+  const signalCards = [
+    {
+      label: labels.experienceCountLabel,
+      value: String(experiences.length).padStart(2, '0'),
+      description: labels.experienceCountDescription,
+    },
+    {
+      label: labels.projectsCountLabel,
+      value: String(projects.length).padStart(2, '0'),
+      description: labels.projectsCountDescription,
+    },
+    {
+      label: labels.skillsCountLabel,
+      value: String(skills.length).padStart(2, '0'),
+      description: labels.skillsCountDescription,
+    },
+    {
+      label: labels.publicationStateLabel,
+      value: labels.publicationStateValue,
+      description: `${labels.publicationStateDescription} ${formatPublishedAt(
+        publishedResume.publishedAt,
+        locale,
+      )}`,
+    },
+  ];
 
   return (
     <main className="page-shell" data-template="standard">
@@ -41,8 +71,24 @@ export function PublishedResumeShell({
         theme={theme}
       />
 
+      <section className="signal-shell">
+        <div className="signal-header">
+          <p className="eyebrow">{labels.resumeSignalsEyebrow}</p>
+          <h2 className="signal-title">{labels.resumeSignalsTitle}</h2>
+        </div>
+        <div className="signal-grid">
+          {signalCards.map((card) => (
+            <article className="signal-card" key={card.label}>
+              <span className="signal-label">{card.label}</span>
+              <strong className="signal-value">{card.value}</strong>
+              <p className="signal-description">{card.description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section className="content-grid">
-        <div className="section-stack">
+        <div className="section-stack primary-stack">
           <PublishedResumeExperienceSection
             experiences={experiences}
             locale={locale}
@@ -50,7 +96,7 @@ export function PublishedResumeShell({
           <PublishedResumeProjectsSection locale={locale} projects={projects} />
         </div>
 
-        <div className="section-stack">
+        <div className="section-stack secondary-stack">
           <PublishedResumeEducationSection
             education={education}
             locale={locale}
