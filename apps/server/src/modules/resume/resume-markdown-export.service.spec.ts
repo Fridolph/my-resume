@@ -1,4 +1,4 @@
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 
 import { createExampleStandardResume } from './domain/standard-resume';
 import { ResumeMarkdownExportService } from './resume-markdown-export.service';

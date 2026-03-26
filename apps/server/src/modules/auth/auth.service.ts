@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import { buildRoleCapabilities } from './domain/auth-role-policy';
@@ -43,7 +43,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(@Inject(JwtService) private readonly jwtService: JwtService) {}
 
   async login(loginDto: LoginDto): Promise<LoginResult> {
     const authUser = this.validateCredentials(loginDto);

@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   NotFoundException,
   Post,
   Put,
@@ -26,8 +27,11 @@ import { ResumePublicationService } from './resume-publication.service';
 @Controller('resume')
 export class ResumeController {
   constructor(
+    @Inject(ResumePublicationService)
     private readonly resumePublicationService: ResumePublicationService,
+    @Inject(ResumeMarkdownExportService)
     private readonly resumeMarkdownExportService: ResumeMarkdownExportService,
+    @Inject(ResumePdfExportService)
     private readonly resumePdfExportService: ResumePdfExportService,
   ) {}
 

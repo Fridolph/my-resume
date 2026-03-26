@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import PDFDocument from 'pdfkit';
 
 import { ResumeLocale, StandardResume } from './domain/standard-resume';
@@ -7,6 +7,7 @@ import { ResumeMarkdownExportService } from './resume-markdown-export.service';
 @Injectable()
 export class ResumePdfExportService {
   constructor(
+    @Inject(ResumeMarkdownExportService)
     private readonly resumeMarkdownExportService: ResumeMarkdownExportService,
   ) {}
 

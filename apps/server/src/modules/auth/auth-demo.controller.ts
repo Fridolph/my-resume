@@ -3,6 +3,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -17,7 +18,7 @@ import { RoleCapabilitiesGuard } from './guards/role-capabilities.guard';
 @Controller('auth/demo')
 @UseGuards(JwtAuthGuard)
 export class AuthDemoController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(@Inject(AuthService) private readonly authService: AuthService) {}
 
   @Get('viewer-experience')
   getViewerExperience(@CurrentAuthUser() authUser: AuthUser) {

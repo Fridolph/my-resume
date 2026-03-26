@@ -1,10 +1,10 @@
-import { describe, expect, it, jest } from '@jest/globals';
+import { describe, expect, it, vi } from 'vitest';
 
 import { OpenAiCompatibleAiProvider } from './openai-compatible-ai.provider';
 
 describe('OpenAiCompatibleAiProvider', () => {
   it('should call the chat completions endpoint with unified payload', async () => {
-    const fetchMock = jest.fn<typeof fetch>().mockResolvedValue({
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue({
       ok: true,
       json: async () => ({
         id: 'chatcmpl-demo',

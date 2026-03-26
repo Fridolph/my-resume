@@ -1,4 +1,4 @@
-import { describe, expect, it, jest } from '@jest/globals';
+import { describe, expect, it, vi } from 'vitest';
 
 import { AiService } from './ai.service';
 import { createAiProvider } from './providers/ai-provider.factory';
@@ -11,7 +11,7 @@ describe('AiService', () => {
         mode: 'mock',
         model: 'mock-resume-advisor',
       },
-      jest.fn<typeof fetch>(),
+      vi.fn<typeof fetch>(),
     );
     const aiService = new AiService(provider);
 
@@ -29,7 +29,7 @@ describe('AiService', () => {
         mode: 'mock',
         model: 'mock-resume-advisor',
       },
-      jest.fn<typeof fetch>(),
+      vi.fn<typeof fetch>(),
     );
     const aiService = new AiService(provider);
 

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Controller,
+  Inject,
   Post,
   UploadedFile,
   UseGuards,
@@ -14,7 +15,10 @@ import { FileExtractionService } from './file-extraction.service';
 @Controller('ai')
 @UseGuards(JwtAuthGuard)
 export class AiFileController {
-  constructor(private readonly fileExtractionService: FileExtractionService) {}
+  constructor(
+    @Inject(FileExtractionService)
+    private readonly fileExtractionService: FileExtractionService,
+  ) {}
 
   @Post('extract-text')
   @UseInterceptors(FileInterceptor('file'))
