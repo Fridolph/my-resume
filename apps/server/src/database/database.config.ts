@@ -1,15 +1,12 @@
 import { mkdirSync } from 'fs';
 import { dirname, join, resolve } from 'path';
+import { resolveRepoRoot } from '../config/repo-root';
 
 export interface DatabaseRuntimeConfig {
   url: string;
   authToken?: string;
   isRemote: boolean;
   dialect: 'libsql';
-}
-
-function resolveRepoRoot(): string {
-  return resolve(__dirname, '../../../../');
 }
 
 function firstDefinedValue(
@@ -48,7 +45,7 @@ export function ensureLocalDatabaseDirectory(url: string): void {
 
 export function resolveDatabaseConfig(
   env: NodeJS.ProcessEnv,
-  repoRoot = resolveRepoRoot(),
+  repoRoot = resolveRepoRoot(__dirname),
 ): DatabaseRuntimeConfig {
   const url =
     firstDefinedValue(
