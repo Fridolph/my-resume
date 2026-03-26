@@ -109,3 +109,30 @@
 ### issue-22 Vercel + 云服务器部署文档
 
 - 目标：打通 `web/admin` 前端部署与 `server` 云主机部署文档
+
+## M8 数据持久化与共享契约
+
+### issue-36 Drizzle / libsql 最小接入与环境边界
+
+- 目标：为 `apps/server` 接入 `Drizzle ORM + SQLite/libsql` 的最小运行骨架
+- 说明：当前只解决连接、配置、迁移入口与环境变量边界，不扩展业务改造
+
+### issue-37 简历草稿 / 发布快照表设计
+
+- 目标：为标准双语简历建立最小持久化表结构，覆盖 `draft / published`
+- 说明：只服务当前单份标准简历，不提前设计 JD 变体、多租户或复杂版本系统
+
+### issue-38 ResumePublicationService 持久化改造
+
+- 目标：把当前内存态发布流改造成基于数据库仓储的实现
+- 说明：保持现有接口语义稳定，优先完成“可替换、可解释、可测试”的服务重构
+
+### issue-39 packages/api-client 最小共享契约
+
+- 目标：抽离 `admin / web / server` 共用的最小 DTO、错误语义与请求封装
+- 说明：先解决重复类型和契约漂移，不一次性做成完整 SDK
+
+### issue-40 admin / web 切换到共享契约并完成冒烟验证
+
+- 目标：让 `apps/admin` 与 `apps/web` 消费共享契约并完成保存 / 发布 / 公开读取冒烟链路
+- 说明：本任务以联调与收束为主，不展开新的 UI 改版
