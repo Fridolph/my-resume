@@ -17,6 +17,7 @@ import {
 import { ExportEntryPanel } from './export-entry-panel';
 import { ResumeDraftEditorPanel } from './resume-draft-editor-panel';
 import { RoleActionPanel } from './role-action-panel';
+import { ThemeModeToggle } from './theme-mode-toggle';
 
 export function AdminDashboardShell() {
   const [status, setStatus] = useState<'loading' | 'ready' | 'unauthorized'>(
@@ -132,12 +133,15 @@ export function AdminDashboardShell() {
   return (
     <main className="page-shell single-card">
       <section className="card stack">
-        <div>
-          <p className="eyebrow">受保护页面</p>
-          <h1>后台最小控制台壳</h1>
-          <p className="muted">
-            当前已接入最小草稿编辑闭环，继续保持“草稿保存”和“公开发布”分离。
-          </p>
+        <div className="page-header">
+          <div className="page-header-copy">
+            <p className="eyebrow">受保护页面</p>
+            <h1>后台最小控制台壳</h1>
+            <p className="muted">
+              当前已接入最小草稿编辑闭环，继续保持“草稿保存”和“公开发布”分离。
+            </p>
+          </div>
+          <ThemeModeToggle />
         </div>
 
         <div className="info-grid">

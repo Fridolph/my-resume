@@ -9,6 +9,7 @@ import { AuthUserView } from '../lib/auth-types';
 import { DEFAULT_API_BASE_URL } from '../lib/env';
 import { readAccessToken, writeAccessToken } from '../lib/session-storage';
 import { LoginForm } from './login-form';
+import { ThemeModeToggle } from './theme-mode-toggle';
 
 export function AdminLoginShell() {
   const router = useRouter();
@@ -76,9 +77,12 @@ export function AdminLoginShell() {
       />
 
       <section className="card stack">
-        <div>
-          <p className="eyebrow">当前说明</p>
-          <h2>最小后台登录说明</h2>
+        <div className="page-header">
+          <div className="page-header-copy">
+            <p className="eyebrow">当前说明</p>
+            <h2>最小后台登录说明</h2>
+          </div>
+          <ThemeModeToggle />
         </div>
         <ul className="muted-list">
           <li>业务逻辑继续只走 `apps/server`，不写 Next Route Handlers 业务接口。</li>

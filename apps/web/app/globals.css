@@ -1,42 +1,5 @@
 @import '../../../packages/ui/src/display.css';
 
-:root {
-  color-scheme: light;
-  --background: #f5f7fb;
-  --surface: rgba(255, 255, 255, 0.92);
-  --surface-muted: #f8fafc;
-  --text: #0f172a;
-  --text-muted: #64748b;
-  --border: rgba(148, 163, 184, 0.2);
-  --accent: #2563eb;
-  --accent-soft: #eff6ff;
-  --accent-contrast: #ffffff;
-  --shadow: 0 24px 50px rgba(15, 23, 42, 0.08);
-  --display-color-page-bg: var(--background);
-  --display-color-surface: var(--surface);
-  --display-color-surface-muted: var(--surface-muted);
-  --display-color-text: var(--text);
-  --display-color-text-muted: var(--text-muted);
-  --display-color-border: var(--border);
-  --display-color-accent: var(--accent);
-  --display-color-accent-contrast: var(--accent-contrast);
-  --display-shadow-card: var(--shadow);
-}
-
-html[data-theme='dark'] {
-  color-scheme: dark;
-  --background: #020617;
-  --surface: rgba(15, 23, 42, 0.92);
-  --surface-muted: #0f172a;
-  --text: #e2e8f0;
-  --text-muted: #94a3b8;
-  --border: rgba(51, 65, 85, 0.92);
-  --accent: #60a5fa;
-  --accent-soft: rgba(37, 99, 235, 0.15);
-  --accent-contrast: #020617;
-  --shadow: 0 24px 50px rgba(2, 6, 23, 0.5);
-}
-
 .page-shell {
   width: min(1080px, 100%);
   margin: 0 auto;
@@ -91,34 +54,7 @@ html[data-theme='dark'] {
 }
 
 .toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  justify-content: flex-end;
-}
-
-.toolbar-group {
-  display: inline-flex;
-  gap: 0.5rem;
-  padding: 0.35rem;
-  border-radius: var(--display-radius-pill);
-  background: var(--display-color-surface-muted);
-  border: 1px solid var(--display-color-border);
-}
-
-.toggle-button {
-  border: 0;
-  border-radius: var(--display-radius-pill);
-  padding: 0.65rem 0.95rem;
-  background: transparent;
-  color: var(--display-color-text-muted);
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.toggle-button.is-active {
-  background: var(--display-color-accent);
-  color: var(--display-color-accent-contrast);
+  align-items: flex-start;
 }
 
 .hero-meta {

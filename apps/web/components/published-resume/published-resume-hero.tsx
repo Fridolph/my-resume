@@ -1,11 +1,11 @@
 import { buildPublishedResumeExportUrl } from '@my-resume/api-client';
+import type { ThemeMode } from '@my-resume/ui/theme';
 
 import { ResumeLocale, ResumePublishedSnapshot } from '../../lib/published-resume-types';
 import {
   formatPublishedAt,
   readLocalizedText,
   resumeLabels,
-  ThemeMode,
 } from './published-resume-utils';
 
 interface PublishedResumeHeroProps {

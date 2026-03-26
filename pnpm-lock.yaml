@@ -93,6 +93,9 @@ importers:
       '@my-resume/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
+      '@my-resume/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       next:
         specifier: ^15.5.2
         version: 15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -257,6 +260,9 @@ importers:
       '@my-resume/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
+      '@my-resume/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       next:
         specifier: ^15.5.2
         version: 15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -301,7 +307,30 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@25.5.0)(jsdom@26.1.0)(terser@5.46.1)
 
-  packages/ui: {}
+  packages/ui:
+    dependencies:
+      react:
+        specifier: ^19.1.1
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.1.1
+        version: 19.2.4(react@19.2.4)
+    devDependencies:
+      '@types/react':
+        specifier: ^19.1.9
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.1.7
+        version: 19.2.3(@types/react@19.2.14)
+      jsdom:
+        specifier: ^26.1.0
+        version: 26.1.0
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/node@25.5.0)(jsdom@26.1.0)(terser@5.46.1)
 
 packages:
 
@@ -6542,13 +6571,13 @@ snapshots:
     optionalDependencies:
       vite: 5.4.21(@types/node@20.19.37)(terser@5.46.1)
 
-  '@vitest/mocker@3.2.4(vite@5.4.21(@types/node@22.19.15)(terser@5.46.1))':
+  '@vitest/mocker@3.2.4(vite@5.4.21(@types/node@25.5.0)(terser@5.46.1))':
     dependencies:
       '@vitest/spy': 3.2.4
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 5.4.21(@types/node@22.19.15)(terser@5.46.1)
+      vite: 5.4.21(@types/node@25.5.0)(terser@5.46.1)
 
   '@vitest/pretty-format@3.2.4':
     dependencies:
@@ -9368,7 +9397,7 @@ snapshots:
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/expect': 3.2.4
-      '@vitest/mocker': 3.2.4(vite@5.4.21(@types/node@22.19.15)(terser@5.46.1))
+      '@vitest/mocker': 3.2.4(vite@5.4.21(@types/node@20.19.37)(terser@5.46.1))
       '@vitest/pretty-format': 3.2.4
       '@vitest/runner': 3.2.4
       '@vitest/snapshot': 3.2.4
@@ -9407,7 +9436,7 @@ snapshots:
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/expect': 3.2.4
-      '@vitest/mocker': 3.2.4(vite@5.4.21(@types/node@20.19.37)(terser@5.46.1))
+      '@vitest/mocker': 3.2.4(vite@5.4.21(@types/node@25.5.0)(terser@5.46.1))
       '@vitest/pretty-format': 3.2.4
       '@vitest/runner': 3.2.4
       '@vitest/snapshot': 3.2.4

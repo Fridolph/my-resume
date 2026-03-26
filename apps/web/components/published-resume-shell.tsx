@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useThemeMode } from '@my-resume/ui/theme';
+import { useState } from 'react';
 
 import { DEFAULT_API_BASE_URL } from '../lib/env';
 import { ResumeLocale, ResumePublishedSnapshot } from '../lib/published-resume-types';
@@ -11,7 +12,6 @@ import { PublishedResumeHero } from './published-resume/published-resume-hero';
 import { PublishedResumeHighlightsSection } from './published-resume/published-resume-highlights-section';
 import { PublishedResumeProjectsSection } from './published-resume/published-resume-projects-section';
 import { PublishedResumeSkillsSection } from './published-resume/published-resume-skills-section';
-import { ThemeMode } from './published-resume/published-resume-utils';
 
 export function PublishedResumeShell({
   apiBaseUrl = DEFAULT_API_BASE_URL,
@@ -21,11 +21,7 @@ export function PublishedResumeShell({
   publishedResume: ResumePublishedSnapshot | null;
 }) {
   const [locale, setLocale] = useState<ResumeLocale>('zh');
-  const [theme, setTheme] = useState<ThemeMode>('light');
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-  }, [theme]);
+  const { theme, setTheme } = useThemeMode();
 
   if (!publishedResume) {
     return <PublishedResumeEmptyState />;

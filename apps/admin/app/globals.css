@@ -1,18 +1,5 @@
 @import '../../../packages/ui/src/display.css';
 
-:root {
-  color-scheme: light;
-  --display-color-page-bg: #f5f7fb;
-  --display-color-surface: rgba(255, 255, 255, 0.92);
-  --display-color-surface-muted: #f8fafc;
-  --display-color-text: #111827;
-  --display-color-text-muted: #64748b;
-  --display-color-border: rgba(148, 163, 184, 0.18);
-  --display-color-accent: #2563eb;
-  --display-color-accent-contrast: #ffffff;
-  --display-shadow-card: 0 24px 50px rgba(15, 23, 42, 0.08);
-}
-
 button {
   border: 0;
   border-radius: var(--display-radius-control);
@@ -30,18 +17,18 @@ button:disabled {
 
 input {
   width: 100%;
-  border: 1px solid #d7deea;
+  border: 1px solid var(--display-color-border);
   border-radius: var(--display-radius-control);
   padding: 0.85rem 0.9rem;
-  background: #fff;
+  background: var(--display-color-control-bg);
 }
 
 textarea {
   width: 100%;
-  border: 1px solid #d7deea;
+  border: 1px solid var(--display-color-border);
   border-radius: var(--display-radius-control);
   padding: 0.85rem 0.9rem;
-  background: #fff;
+  background: var(--display-color-control-bg);
   resize: vertical;
   min-height: 120px;
 }
@@ -101,8 +88,8 @@ textarea {
   gap: 0.75rem;
   padding: 1rem;
   border-radius: 16px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
+  background: var(--display-color-accent-soft);
+  border: 1px solid var(--display-color-border);
 }
 
 .link-button {
@@ -111,8 +98,8 @@ textarea {
   align-items: center;
   min-height: 44px;
   border-radius: var(--display-radius-control);
-  background: #0f172a;
-  color: #fff;
+  background: var(--display-color-strong-surface);
+  color: var(--display-color-strong-contrast);
   padding: 0.85rem 1rem;
   font-weight: 600;
 }
@@ -129,20 +116,20 @@ textarea {
   padding: 1rem;
   border-radius: 16px;
   background: var(--display-color-surface-muted);
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--display-color-border);
 }
 
 .info-item span {
-  color: #64748b;
+  color: var(--display-color-text-muted);
   font-size: 0.9rem;
 }
 
 .readonly-box {
   padding: 1rem;
   border-radius: 16px;
-  background: #fff7ed;
-  border: 1px solid #fdba74;
-  color: #9a3412;
+  background: var(--display-color-warning-bg);
+  border: 1px solid var(--display-color-warning-border);
+  color: var(--display-color-warning-text);
 }
 
 .action-grid {
@@ -155,6 +142,23 @@ textarea {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.page-header-copy {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.page-header-copy h1,
+.page-header-copy h2 {
+  margin: 0;
 }
 
 @media (max-width: 960px) {
@@ -174,5 +178,9 @@ textarea {
 
   .form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .page-header {
+    flex-direction: column;
   }
 }

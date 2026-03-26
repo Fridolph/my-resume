@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { ThemeModeProvider } from '@my-resume/ui/theme';
 import { describe, expect, it } from 'vitest';
 
 import type { ResumePublishedSnapshot } from '../lib/published-resume-types';
@@ -145,10 +146,18 @@ const publishedResume: ResumePublishedSnapshot = {
 };
 
 describe('PublishedResumeShell', () => {
+  function renderShell() {
+    return render(
+      <ThemeModeProvider>
+        <PublishedResumeShell publishedResume={publishedResume} />
+      </ThemeModeProvider>,
+    );
+  }
+
   it('should render modular zh sections by default and switch to en', async () => {
     const user = userEvent.setup();
 
-    render(<PublishedResumeShell publishedResume={publishedResume} />);
+    renderShell();
 
     expect(screen.getByRole('heading', { name: '付寅生' })).toBeInTheDocument();
     expect(
@@ -180,25 +189,29 @@ describe('PublishedResumeShell', () => {
   it('should toggle light and dark theme on the document element', async () => {
     const user = userEvent.setup();
 
-    render(<PublishedResumeShell publishedResume={publishedResume} />);
+    renderShell();
 
     expect(document.documentElement.dataset.theme).toBe('light');
 
     await user.click(screen.getByRole('button', { name: 'Dark' }));
     expect(document.documentElement.dataset.theme).toBe('dark');
+    expect(window.localStorage.getItem('my-resume-theme-mode')).toBe('dark');
 
     await user.click(screen.getByRole('button', { name: 'Light' }));
     expect(document.documentElement.dataset.theme).toBe('light');
+    expect(window.localStorage.getItem('my-resume-theme-mode')).toBe('light');
   });
 
   it('should render export links and switch locale in download urls', async () => {
     const user = userEvent.setup();
 
     render(
-      <PublishedResumeShell
-        apiBaseUrl="http://localhost:5577"
-        publishedResume={publishedResume}
-      />,
+      <ThemeModeProvider>
+        <PublishedResumeShell
+          apiBaseUrl="http://localhost:5577"
+          publishedResume={publishedResume}
+        />
+      </ThemeModeProvider>,
     );
 
     expect(
@@ -227,7 +240,11 @@ describe('PublishedResumeShell', () => {
   });
 
   it('should render empty state when no published content is available', () => {
-    render(<PublishedResumeShell publishedResume={null} />);
+    render(
+      <ThemeModeProvider>
+        <PublishedResumeShell publishedResume={null} />
+      </ThemeModeProvider>,
+    );
 
     expect(
       screen.getByText('当前还没有已发布的公开简历内容。'),
