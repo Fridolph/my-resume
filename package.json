@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit",
     "test": "turbo run test",
-    "test:unit": "turbo run test --filter=@my-resume/server --filter=@my-resume/web --filter=@my-resume/admin --filter=@my-resume/api-client",
+    "test:unit": "turbo run test --filter=@my-resume/server --filter=@my-resume/web --filter=@my-resume/admin --filter=@my-resume/api-client --filter=@my-resume/ui",
     "test:e2e": "pnpm --filter @my-resume/server test:e2e",
     "test:ci": "pnpm test:unit && pnpm test:e2e",
     "typecheck:all": "turbo run typecheck",

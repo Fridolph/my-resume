@@ -2,5 +2,24 @@
   "name": "@my-resume/ui",
   "private": true,
   "version": "0.0.1",
-  "type": "module"
+  "type": "module",
+  "exports": {
+    ".": "./src/theme.tsx",
+    "./theme": "./src/theme.tsx"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.1.7",
+    "jsdom": "^26.1.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
 }

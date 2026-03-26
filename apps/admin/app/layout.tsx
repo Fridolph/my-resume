@@ -1,5 +1,6 @@
 import './globals.css';
 
+import { ThemeModeProvider } from '@my-resume/ui/theme';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
@@ -14,8 +15,10 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="zh-CN">
-      <body>{children}</body>
+    <html data-theme="light" lang="zh-CN">
+      <body>
+        <ThemeModeProvider>{children}</ThemeModeProvider>
+      </body>
     </html>
   );
 }

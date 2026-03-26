@@ -6,8 +6,6 @@ import {
   ResumeProjectItem,
 } from '../../lib/published-resume-types';
 
-export type ThemeMode = 'light' | 'dark';
-
 export function readLocalizedText(
   value: LocalizedText,
   locale: ResumeLocale,
