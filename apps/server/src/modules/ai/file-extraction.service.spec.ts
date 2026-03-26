@@ -1,13 +1,13 @@
-import { describe, expect, it, jest } from '@jest/globals';
+import { describe, expect, it, vi } from 'vitest';
 import { Document, Packer, Paragraph } from 'docx';
 import PDFDocument from 'pdfkit';
 
-jest.mock('pdf-parse', () => ({
-  PDFParse: jest.fn().mockImplementation(() => ({
-    getText: jest.fn().mockResolvedValue({
+vi.mock('pdf-parse', () => ({
+  PDFParse: vi.fn().mockImplementation(() => ({
+    getText: vi.fn().mockResolvedValue({
       text: 'PDF resume content',
     }),
-    destroy: jest.fn().mockResolvedValue(undefined),
+    destroy: vi.fn().mockResolvedValue(undefined),
   })),
 }));
 

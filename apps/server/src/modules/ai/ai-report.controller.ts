@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 
 import { RequireCapability } from '../auth/decorators/require-capability.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -20,7 +28,9 @@ interface CacheReportBody {
 @UseGuards(JwtAuthGuard)
 export class AiReportController {
   constructor(
+    @Inject(AiService)
     private readonly aiService: AiService,
+    @Inject(AnalysisReportCacheService)
     private readonly analysisReportCacheService: AnalysisReportCacheService,
   ) {}
 
