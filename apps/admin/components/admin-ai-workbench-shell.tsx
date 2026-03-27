@@ -23,6 +23,7 @@ import {
 import { FileExtractionResult } from '../lib/ai-file-types';
 import { ThemeModeToggle } from './theme-mode-toggle';
 import { AiAnalysisPanel } from './ai-analysis-panel';
+import { AiCachedReportsPanel } from './ai-cached-reports-panel';
 import { AiFileExtractionPanel } from './ai-file-extraction-panel';
 
 const scenarioCards = {
@@ -128,6 +129,13 @@ export function AdminAiWorkbenchShell() {
   const roleMessage = isAdmin
     ? '当前账号可继续接入上传、真实分析和结果阅读。'
     : 'viewer 当前只允许查看缓存结果与预设体验，不能上传文件或触发真实分析。';
+  const cachedReportsPanel = (
+    <AiCachedReportsPanel
+      accessToken={readAccessToken() ?? ''}
+      apiBaseUrl={DEFAULT_API_BASE_URL}
+      isViewerExperience={!isAdmin}
+    />
+  );
 
   return (
     <main className="dashboard-shell ai-workbench-shell">
@@ -171,6 +179,8 @@ export function AdminAiWorkbenchShell() {
 
       <section className="dashboard-main-grid ai-workbench-grid">
         <div className="dashboard-column stack">
+          {!isAdmin ? cachedReportsPanel : null}
+
           <AiFileExtractionPanel
             accessToken={readAccessToken() ?? ''}
             apiBaseUrl={DEFAULT_API_BASE_URL}
@@ -187,6 +197,8 @@ export function AdminAiWorkbenchShell() {
             onContentChange={handleAnalysisContentChange}
             runtimeSummary={runtimeSummary}
           />
+
+          {isAdmin ? cachedReportsPanel : null}
 
           <DisplaySurfaceCard className="card stack">
             <DisplaySectionIntro
@@ -234,9 +246,9 @@ export function AdminAiWorkbenchShell() {
 
             <ul className="muted-list">
               <li>业务逻辑继续统一由 `apps/server` 承载，不写 Next Route Handlers 业务接口。</li>
-              <li>本轮先打通“上传 -&gt; 提取 -&gt; 真实分析 -&gt; 结果阅读”最小闭环。</li>
+              <li>本轮已同时收住“admin 真实分析”与“viewer 缓存体验”的页面边界。</li>
               <li>
-                后续 issue 会按“viewer 缓存体验 {'->'} 里程碑文档收束”继续推进。
+                后续 issue 会按“里程碑文档收束”继续推进。
               </li>
             </ul>
           </DisplaySurfaceCard>

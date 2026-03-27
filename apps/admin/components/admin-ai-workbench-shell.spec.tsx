@@ -85,6 +85,18 @@ vi.mock('./ai-analysis-panel', () => ({
   ),
 }));
 
+vi.mock('./ai-cached-reports-panel', () => ({
+  AiCachedReportsPanel: ({
+    isViewerExperience,
+  }: {
+    isViewerExperience: boolean;
+  }) => (
+    <div>
+      {isViewerExperience ? 'viewer 缓存结果面板占位' : 'admin 缓存结果面板占位'}
+    </div>
+  ),
+}));
+
 import { AdminAiWorkbenchShell } from './admin-ai-workbench-shell';
 
 const runtimeSummary = {
@@ -162,6 +174,7 @@ describe('AdminAiWorkbenchShell', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('文件提取面板占位')).toBeInTheDocument();
     expect(screen.getByText('真实分析面板占位')).toBeInTheDocument();
+    expect(screen.getByText('admin 缓存结果面板占位')).toBeInTheDocument();
     expect(screen.getByText('当前分析内容：空')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '模拟提取完成' }));
@@ -180,6 +193,7 @@ describe('AdminAiWorkbenchShell', () => {
     expect(
       screen.getByText('viewer 当前只允许查看缓存结果与预设体验，不能上传文件或触发真实分析。'),
     ).toBeInTheDocument();
+    expect(screen.getByText('viewer 缓存结果面板占位')).toBeInTheDocument();
     expect(screen.getByText('文件提取只读占位')).toBeInTheDocument();
     expect(screen.getByText('真实分析只读占位')).toBeInTheDocument();
   });
