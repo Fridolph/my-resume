@@ -237,6 +237,20 @@ export function AdminDashboardShell() {
             />
           ))}
         </div>
+
+        <DisplaySurfaceCard className="dashboard-entry-card">
+          <DisplaySectionIntro
+            compact
+            description="把 AI 场景、Provider 状态和角色边界集中收进独立工作台，后续上传和分析都从这里继续扩展。"
+            eyebrow="M10 入口"
+            title="AI 工作台"
+          />
+          <div className="dashboard-entry-actions">
+            <Link className="link-button" href="/dashboard/ai">
+              进入 AI 工作台
+            </Link>
+          </div>
+        </DisplaySurfaceCard>
       </DisplaySurfaceCard>
 
       <section className="dashboard-main-grid">

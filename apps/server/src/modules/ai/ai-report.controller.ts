@@ -24,6 +24,12 @@ interface CacheReportBody {
   locale?: AnalysisLocale;
 }
 
+const SUPPORTED_SCENARIOS: AnalysisScenario[] = [
+  'jd-match',
+  'resume-review',
+  'offer-compare',
+];
+
 @Controller('ai/reports')
 @UseGuards(JwtAuthGuard)
 export class AiReportController {
@@ -38,6 +44,14 @@ export class AiReportController {
   listCachedReports() {
     return {
       reports: this.analysisReportCacheService.listReports(),
+    };
+  }
+
+  @Get('runtime')
+  getRuntimeSummary() {
+    return {
+      ...this.aiService.getProviderSummary(),
+      supportedScenarios: SUPPORTED_SCENARIOS,
     };
   }
 

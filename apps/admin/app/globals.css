@@ -190,11 +190,45 @@ textarea {
   margin: 0;
 }
 
+.dashboard-entry-card {
+  display: grid;
+  gap: 1rem;
+  padding: 1.1rem 1.15rem;
+  border-radius: 22px;
+}
+
+.dashboard-entry-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
 .dashboard-main-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.95fr);
   gap: 1.25rem;
   align-items: start;
+}
+
+.ai-workbench-grid {
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+}
+
+.scenario-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.scenario-card {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 20px;
+  background: color-mix(
+    in srgb,
+    var(--display-color-surface) 84%,
+    var(--display-color-surface-muted)
+  );
 }
 
 .dashboard-column {
@@ -230,6 +264,20 @@ textarea {
   border: 1px solid var(--display-color-border);
 }
 
+.secondary-link-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 44px;
+  border-radius: var(--display-radius-control);
+  background: var(--display-color-surface-muted);
+  color: var(--display-color-text);
+  border: 1px solid var(--display-color-border);
+  padding: 0.85rem 1rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
 @media (max-width: 960px) {
   .page-shell {
     grid-template-columns: minmax(0, 1fr);
@@ -258,7 +306,8 @@ textarea {
   }
 
   .dashboard-main-grid,
-  .dashboard-overview-grid {
+  .dashboard-overview-grid,
+  .scenario-grid {
     grid-template-columns: 1fr;
   }
 
