@@ -32,6 +32,12 @@ vi.mock('./theme-mode-toggle', () => ({
   ThemeModeToggle: () => <div>主题切换占位</div>,
 }));
 
+vi.mock('./ai-file-extraction-panel', () => ({
+  AiFileExtractionPanel: ({ canUpload }: { canUpload: boolean }) => (
+    <div>{canUpload ? '文件提取面板占位' : '文件提取只读占位'}</div>
+  ),
+}));
+
 import { AdminAiWorkbenchShell } from './admin-ai-workbench-shell';
 
 const runtimeSummary = {
@@ -106,6 +112,7 @@ describe('AdminAiWorkbenchShell', () => {
     expect(
       screen.getByText('当前账号可继续接入上传、真实分析和结果阅读。'),
     ).toBeInTheDocument();
+    expect(screen.getByText('文件提取面板占位')).toBeInTheDocument();
   });
 
   it('should render viewer-specific guidance for read-only AI experience', async () => {
@@ -119,5 +126,6 @@ describe('AdminAiWorkbenchShell', () => {
     expect(
       screen.getByText('viewer 当前只允许查看缓存结果与预设体验，不能上传文件或触发真实分析。'),
     ).toBeInTheDocument();
+    expect(screen.getByText('文件提取只读占位')).toBeInTheDocument();
   });
 });

@@ -21,6 +21,7 @@ import {
   readAccessToken,
 } from '../lib/session-storage';
 import { ThemeModeToggle } from './theme-mode-toggle';
+import { AiFileExtractionPanel } from './ai-file-extraction-panel';
 
 const scenarioCards = {
   'jd-match': {
@@ -149,6 +150,12 @@ export function AdminAiWorkbenchShell() {
 
       <section className="dashboard-main-grid ai-workbench-grid">
         <div className="dashboard-column stack">
+          <AiFileExtractionPanel
+            accessToken={readAccessToken() ?? ''}
+            apiBaseUrl={DEFAULT_API_BASE_URL}
+            canUpload={isAdmin}
+          />
+
           <DisplaySurfaceCard className="card stack">
             <DisplaySectionIntro
               description="当前先把 AI 能力按场景讲清楚，不急着把上传、分析和结果阅读一次性全部做完。"
@@ -195,7 +202,7 @@ export function AdminAiWorkbenchShell() {
 
             <ul className="muted-list">
               <li>业务逻辑继续统一由 `apps/server` 承载，不写 Next Route Handlers 业务接口。</li>
-              <li>本轮只搭 AI 工作台入口，不在这里直接展开上传和真实分析实现。</li>
+              <li>本轮先打通“上传 -&gt; 提取 -&gt; 预览”闭环，真实分析与附件沉淀继续后置。</li>
               <li>
                 后续 issue 会按“上传提取 {'->'} 真实分析 {'->'} viewer 边界”继续推进。
               </li>

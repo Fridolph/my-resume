@@ -231,6 +231,19 @@ textarea {
   );
 }
 
+.preview-stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.preview-textarea {
+  min-height: 280px;
+  font-family:
+    'SFMono-Regular', ui-monospace, 'Cascadia Code', 'Source Code Pro',
+    Menlo, Consolas, monospace;
+  line-height: 1.6;
+}
+
 .dashboard-column {
   align-content: start;
 }
