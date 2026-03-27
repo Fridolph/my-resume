@@ -1,6 +1,7 @@
 'use client';
 
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const {
@@ -33,8 +34,54 @@ vi.mock('./theme-mode-toggle', () => ({
 }));
 
 vi.mock('./ai-file-extraction-panel', () => ({
-  AiFileExtractionPanel: ({ canUpload }: { canUpload: boolean }) => (
-    <div>{canUpload ? '文件提取面板占位' : '文件提取只读占位'}</div>
+  AiFileExtractionPanel: ({
+    canUpload,
+    onExtractedText,
+  }: {
+    canUpload: boolean;
+    onExtractedText?: (result: {
+      fileName: string;
+      fileType: 'txt';
+      mimeType: string;
+      text: string;
+      charCount: number;
+    }) => void;
+  }) =>
+    canUpload ? (
+      <div>
+        <span>文件提取面板占位</span>
+        <button
+          onClick={() =>
+            onExtractedText?.({
+              fileName: 'resume.txt',
+              fileType: 'txt',
+              mimeType: 'text/plain',
+              text: 'resume text content',
+              charCount: 19,
+            })
+          }
+          type="button"
+        >
+          模拟提取完成
+        </button>
+      </div>
+    ) : (
+      <div>文件提取只读占位</div>
+    ),
+}));
+
+vi.mock('./ai-analysis-panel', () => ({
+  AiAnalysisPanel: ({
+    canAnalyze,
+    content,
+  }: {
+    canAnalyze: boolean;
+    content: string;
+  }) => (
+    <div>
+      <span>{canAnalyze ? '真实分析面板占位' : '真实分析只读占位'}</span>
+      <span>{`当前分析内容：${content || '空'}`}</span>
+    </div>
   ),
 }));
 
@@ -95,6 +142,7 @@ describe('AdminAiWorkbenchShell', () => {
   });
 
   it('should render runtime summary and scenario cards for admin', async () => {
+    const user = userEvent.setup();
     readAccessTokenMock.mockReturnValue('admin-token');
     fetchCurrentUserMock.mockResolvedValue(adminUser);
     fetchAiWorkbenchRuntimeMock.mockResolvedValue(runtimeSummary);
@@ -113,6 +161,12 @@ describe('AdminAiWorkbenchShell', () => {
       screen.getByText('当前账号可继续接入上传、真实分析和结果阅读。'),
     ).toBeInTheDocument();
     expect(screen.getByText('文件提取面板占位')).toBeInTheDocument();
+    expect(screen.getByText('真实分析面板占位')).toBeInTheDocument();
+    expect(screen.getByText('当前分析内容：空')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '模拟提取完成' }));
+
+    expect(screen.getByText('当前分析内容：resume text content')).toBeInTheDocument();
   });
 
   it('should render viewer-specific guidance for read-only AI experience', async () => {
@@ -127,5 +181,6 @@ describe('AdminAiWorkbenchShell', () => {
       screen.getByText('viewer 当前只允许查看缓存结果与预设体验，不能上传文件或触发真实分析。'),
     ).toBeInTheDocument();
     expect(screen.getByText('文件提取只读占位')).toBeInTheDocument();
+    expect(screen.getByText('真实分析只读占位')).toBeInTheDocument();
   });
 });

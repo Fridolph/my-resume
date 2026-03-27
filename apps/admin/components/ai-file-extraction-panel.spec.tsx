@@ -30,6 +30,7 @@ describe('AiFileExtractionPanel', () => {
 
   it('should upload a file and render extracted preview for admin', async () => {
     const user = userEvent.setup();
+    const onExtractedText = vi.fn();
     const extractFileText = vi.fn().mockResolvedValue({
       fileName: 'resume.txt',
       fileType: 'txt',
@@ -44,6 +45,7 @@ describe('AiFileExtractionPanel', () => {
         apiBaseUrl="http://localhost:5577"
         canUpload
         extractFileText={extractFileText}
+        onExtractedText={onExtractedText}
       />,
     );
 
@@ -65,6 +67,13 @@ describe('AiFileExtractionPanel', () => {
     expect(await screen.findByDisplayValue('resume text content')).toBeInTheDocument();
     expect(screen.getByText('txt')).toBeInTheDocument();
     expect(screen.getByText('19')).toBeInTheDocument();
+    expect(onExtractedText).toHaveBeenCalledWith({
+      fileName: 'resume.txt',
+      fileType: 'txt',
+      mimeType: 'text/plain',
+      text: 'resume text content',
+      charCount: 19,
+    });
   });
 
   it('should show extraction error feedback when upload fails', async () => {

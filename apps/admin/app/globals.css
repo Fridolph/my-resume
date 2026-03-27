@@ -23,6 +23,14 @@ input {
   background: var(--display-color-control-bg);
 }
 
+select {
+  width: 100%;
+  border: 1px solid var(--display-color-border);
+  border-radius: var(--display-radius-control);
+  padding: 0.85rem 0.9rem;
+  background: var(--display-color-control-bg);
+}
+
 textarea {
   width: 100%;
   border: 1px solid var(--display-color-border);
@@ -236,6 +244,26 @@ textarea {
   gap: 1rem;
 }
 
+.analysis-summary-card,
+.analysis-section-card {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+  border-radius: 20px;
+}
+
+.analysis-text-block {
+  white-space: pre-wrap;
+  line-height: 1.7;
+  color: var(--display-color-text);
+}
+
+.analysis-section-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
 .preview-textarea {
   min-height: 280px;
   font-family:
@@ -258,6 +286,14 @@ textarea {
     var(--display-color-surface-muted) 84%,
     transparent
   );
+}
+
+@media (max-width: 960px) {
+  .analysis-section-grid,
+  .dashboard-main-grid,
+  .scenario-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .workflow-list {

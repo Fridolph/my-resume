@@ -20,7 +20,9 @@ import {
   clearAccessToken,
   readAccessToken,
 } from '../lib/session-storage';
+import { FileExtractionResult } from '../lib/ai-file-types';
 import { ThemeModeToggle } from './theme-mode-toggle';
+import { AiAnalysisPanel } from './ai-analysis-panel';
 import { AiFileExtractionPanel } from './ai-file-extraction-panel';
 
 const scenarioCards = {
@@ -45,6 +47,10 @@ export function AdminAiWorkbenchShell() {
   const [currentUser, setCurrentUser] = useState<AuthUserView | null>(null);
   const [runtimeSummary, setRuntimeSummary] =
     useState<AiWorkbenchRuntimeSummary | null>(null);
+  const [analysisContent, setAnalysisContent] = useState('');
+  const [analysisHelperMessage, setAnalysisHelperMessage] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     const accessToken = readAccessToken();
@@ -76,6 +82,21 @@ export function AdminAiWorkbenchShell() {
         setStatus('unauthorized');
       });
   }, []);
+
+  function handleExtractedText(result: FileExtractionResult) {
+    setAnalysisContent(result.text);
+    setAnalysisHelperMessage(
+      `已将 ${result.fileName} 的提取结果同步到分析输入区，可直接继续编辑或触发分析。`,
+    );
+  }
+
+  function handleAnalysisContentChange(nextContent: string) {
+    setAnalysisContent(nextContent);
+
+    if (analysisHelperMessage) {
+      setAnalysisHelperMessage(null);
+    }
+  }
 
   if (status === 'loading') {
     return (
@@ -154,6 +175,17 @@ export function AdminAiWorkbenchShell() {
             accessToken={readAccessToken() ?? ''}
             apiBaseUrl={DEFAULT_API_BASE_URL}
             canUpload={isAdmin}
+            onExtractedText={handleExtractedText}
+          />
+
+          <AiAnalysisPanel
+            accessToken={readAccessToken() ?? ''}
+            apiBaseUrl={DEFAULT_API_BASE_URL}
+            canAnalyze={isAdmin}
+            content={analysisContent}
+            helperMessage={analysisHelperMessage}
+            onContentChange={handleAnalysisContentChange}
+            runtimeSummary={runtimeSummary}
           />
 
           <DisplaySurfaceCard className="card stack">
@@ -202,9 +234,9 @@ export function AdminAiWorkbenchShell() {
 
             <ul className="muted-list">
               <li>业务逻辑继续统一由 `apps/server` 承载，不写 Next Route Handlers 业务接口。</li>
-              <li>本轮先打通“上传 -&gt; 提取 -&gt; 预览”闭环，真实分析与附件沉淀继续后置。</li>
+              <li>本轮先打通“上传 -&gt; 提取 -&gt; 真实分析 -&gt; 结果阅读”最小闭环。</li>
               <li>
-                后续 issue 会按“上传提取 {'->'} 真实分析 {'->'} viewer 边界”继续推进。
+                后续 issue 会按“viewer 缓存体验 {'->'} 里程碑文档收束”继续推进。
               </li>
             </ul>
           </DisplaySurfaceCard>

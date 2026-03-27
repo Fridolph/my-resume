@@ -10,6 +10,7 @@ interface AiFileExtractionPanelProps {
   accessToken: string;
   canUpload: boolean;
   extractFileText?: typeof extractTextFromFile;
+  onExtractedText?: (result: FileExtractionResult) => void;
 }
 
 function formatFileSize(size: number): string {
@@ -25,6 +26,7 @@ export function AiFileExtractionPanel({
   accessToken,
   canUpload,
   extractFileText = extractTextFromFile,
+  onExtractedText,
 }: AiFileExtractionPanelProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [result, setResult] = useState<FileExtractionResult | null>(null);
@@ -64,6 +66,7 @@ export function AiFileExtractionPanel({
       });
 
       setResult(nextResult);
+      onExtractedText?.(nextResult);
     } catch (error) {
       setResult(null);
       setErrorMessage(
