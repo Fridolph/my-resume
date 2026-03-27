@@ -1,5 +1,7 @@
 import {
+  AiWorkbenchCachedReportSummary,
   AiWorkbenchLocale,
+  AiWorkbenchReport,
   AiWorkbenchRuntimeSummary,
   AiWorkbenchScenario,
   TriggerAiWorkbenchAnalysisResult,
@@ -65,4 +67,45 @@ export async function triggerAiWorkbenchAnalysis(
   }
 
   return (await response.json()) as TriggerAiWorkbenchAnalysisResult;
+}
+
+export async function fetchCachedAiWorkbenchReports(
+  input: FetchAiWorkbenchRuntimeInput,
+): Promise<AiWorkbenchCachedReportSummary[]> {
+  const response = await fetch(joinApiUrl(input.apiBaseUrl, '/ai/reports/cache'), {
+    headers: {
+      Authorization: `Bearer ${input.accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('缓存报告列表加载失败');
+  }
+
+  const payload = (await response.json()) as {
+    reports: AiWorkbenchCachedReportSummary[];
+  };
+
+  return payload.reports;
+}
+
+export async function fetchCachedAiWorkbenchReport(
+  input: FetchAiWorkbenchRuntimeInput & {
+    reportId: string;
+  },
+): Promise<AiWorkbenchReport> {
+  const response = await fetch(
+    joinApiUrl(input.apiBaseUrl, `/ai/reports/cache/${input.reportId}`),
+    {
+      headers: {
+        Authorization: `Bearer ${input.accessToken}`,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error('缓存报告详情加载失败');
+  }
+
+  return (await response.json()) as AiWorkbenchReport;
 }

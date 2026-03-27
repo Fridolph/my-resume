@@ -32,6 +32,15 @@ export interface AiWorkbenchReport {
   createdAt: string;
 }
 
+export interface AiWorkbenchCachedReportSummary {
+  reportId: string;
+  scenario: AiWorkbenchScenario;
+  locale: AiWorkbenchLocale;
+  summary: string;
+  generator: AiWorkbenchReportGenerator;
+  createdAt: string;
+}
+
 export interface TriggerAiWorkbenchAnalysisResult {
   cached: boolean;
   report: AiWorkbenchReport;
