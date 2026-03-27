@@ -29,15 +29,6 @@
   opacity: 0.2;
 }
 
-.hero-card,
-.section-card,
-.empty-card {
-  background: var(--display-color-surface);
-  border: 1px solid var(--display-color-border);
-  border-radius: var(--display-radius-card);
-  box-shadow: var(--display-shadow-card);
-}
-
 .hero-card {
   position: relative;
   overflow: hidden;
@@ -83,14 +74,11 @@
 }
 
 .subtitle,
-.section-subtitle,
-.meta-text,
-.signal-description {
+.meta-text {
   color: var(--display-color-text-muted);
 }
 
-.subtitle,
-.section-subtitle {
+.subtitle {
   margin: 0;
   line-height: 1.7;
 }
@@ -108,38 +96,8 @@
   z-index: 1;
 }
 
-.meta-pill,
-.link-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  min-height: 42px;
-  padding: 0.68rem 0.95rem;
-  border-radius: var(--display-radius-pill);
-  background: var(--display-color-surface-muted);
-  border: 1px solid var(--display-color-border);
-}
-
-.meta-pill {
+.hero-meta .display-pill {
   font-size: 0.94rem;
-}
-
-.link-pill {
-  text-decoration: none;
-  transition:
-    transform 160ms ease,
-    border-color 160ms ease,
-    background 160ms ease;
-}
-
-.link-pill:hover {
-  transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--display-color-accent) 48%, var(--display-color-border));
-  background: color-mix(
-    in srgb,
-    var(--display-color-accent-soft) 48%,
-    var(--display-color-surface-muted)
-  );
 }
 
 .link-grid,
@@ -210,22 +168,6 @@
   );
 }
 
-.section-header {
-  display: grid;
-  gap: 0.42rem;
-  position: relative;
-  z-index: 1;
-}
-
-.section-header.compact {
-  gap: 0.2rem;
-}
-
-.section-title {
-  margin: 0;
-  font-size: 1.28rem;
-}
-
 .hero-block {
   display: grid;
   gap: 0.75rem;
@@ -253,11 +195,8 @@
 }
 
 .signal-card {
-  display: grid;
-  gap: 0.45rem;
   padding: 1.1rem 1.15rem;
   border-radius: 22px;
-  border: 1px solid var(--display-color-border);
   background: color-mix(
     in srgb,
     var(--display-color-surface) 80%,
@@ -266,20 +205,19 @@
   box-shadow: var(--display-shadow-card);
 }
 
-.signal-label {
+.signal-card .display-stat-label {
   color: var(--display-color-text-muted);
   font-size: 0.88rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
-.signal-value {
+.signal-card .display-stat-value {
   font-size: clamp(1.5rem, 2vw, 2rem);
   letter-spacing: -0.04em;
 }
 
-.signal-description {
-  margin: 0;
+.signal-card .display-stat-description {
   line-height: 1.6;
   font-size: 0.95rem;
 }

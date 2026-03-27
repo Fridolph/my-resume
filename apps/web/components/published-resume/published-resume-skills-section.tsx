@@ -1,3 +1,5 @@
+import { DisplayPill } from '@my-resume/ui/display';
+
 import {
   ResumeLocale,
   ResumeSkillGroup,
@@ -35,9 +37,9 @@ export function PublishedResumeSkillsSection({
             <h3 className="item-title">{readLocalizedText(group.name, locale)}</h3>
             <div className="tag-grid">
               {group.keywords.map((keyword) => (
-                <span className="meta-pill" key={`${group.name.en}-${keyword}`}>
+                <DisplayPill key={`${group.name.en}-${keyword}`}>
                   {keyword}
-                </span>
+                </DisplayPill>
               ))}
             </div>
           </article>
