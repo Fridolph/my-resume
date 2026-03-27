@@ -32,6 +32,14 @@ describe('AI report role access (e2e)', () => {
 
     const accessToken = loginResponse.body.accessToken as string;
 
+    const runtimeResponse = await request(app.getHttpServer())
+      .get('/ai/reports/runtime')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    expect(runtimeResponse.body.supportedScenarios).toContain('jd-match');
+    expect(runtimeResponse.body.provider).toBeDefined();
+
     const listResponse = await request(app.getHttpServer())
       .get('/ai/reports/cache')
       .set('Authorization', `Bearer ${accessToken}`)
@@ -77,6 +85,17 @@ describe('AI report role access (e2e)', () => {
       .expect(200);
 
     const accessToken = loginResponse.body.accessToken as string;
+
+    const runtimeResponse = await request(app.getHttpServer())
+      .get('/ai/reports/runtime')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    expect(runtimeResponse.body.supportedScenarios).toEqual([
+      'jd-match',
+      'resume-review',
+      'offer-compare',
+    ]);
 
     const response = await request(app.getHttpServer())
       .post('/ai/reports/analyze')

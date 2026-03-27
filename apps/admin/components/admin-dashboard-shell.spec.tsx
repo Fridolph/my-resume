@@ -15,6 +15,7 @@ const {
 
 vi.mock('../lib/auth-api', () => ({
   fetchCurrentUser: fetchCurrentUserMock,
+  fetchAiWorkbenchRuntime: vi.fn(),
   postProtectedAction: vi.fn(),
   publishResume: vi.fn(),
 }));
@@ -107,6 +108,9 @@ describe('AdminDashboardShell', () => {
     expect(screen.getByText('导出入口占位')).toBeInTheDocument();
     expect(screen.getByText('当前账号：admin')).toBeInTheDocument();
     expect(screen.getByText('当前角色：admin')).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: '进入 AI 工作台' }),
+    ).toHaveAttribute('href', '/dashboard/ai');
   });
 
   it('should render viewer-specific guidance in the overview section', async () => {
