@@ -8,14 +8,17 @@ import {
 import { useState } from 'react';
 
 import {
+  generateAiResumeOptimization,
   triggerAiWorkbenchAnalysis,
 } from '../lib/ai-workbench-api';
 import {
+  AiResumeOptimizationResult,
   AiWorkbenchLocale,
   AiWorkbenchReport,
   AiWorkbenchRuntimeSummary,
   AiWorkbenchScenario,
 } from '../lib/ai-workbench-types';
+import { updateDraftResume } from '../lib/resume-draft-api';
 
 interface AiAnalysisPanelProps {
   accessToken: string;
@@ -25,6 +28,8 @@ interface AiAnalysisPanelProps {
   helperMessage?: string | null;
   onContentChange: (value: string) => void;
   runtimeSummary: AiWorkbenchRuntimeSummary;
+  generateResumeOptimization?: typeof generateAiResumeOptimization;
+  saveDraft?: typeof updateDraftResume;
   triggerAnalysis?: typeof triggerAiWorkbenchAnalysis;
 }
 
@@ -82,6 +87,8 @@ export function AiAnalysisPanel({
   helperMessage,
   onContentChange,
   runtimeSummary,
+  generateResumeOptimization = generateAiResumeOptimization,
+  saveDraft = updateDraftResume,
   triggerAnalysis = triggerAiWorkbenchAnalysis,
 }: AiAnalysisPanelProps) {
   const [scenario, setScenario] = useState<AiWorkbenchScenario>('resume-review');
@@ -89,6 +96,16 @@ export function AiAnalysisPanel({
   const [pending, setPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [report, setReport] = useState<AiWorkbenchReport | null>(null);
+  const [suggestionPending, setSuggestionPending] = useState(false);
+  const [suggestionErrorMessage, setSuggestionErrorMessage] = useState<string | null>(
+    null,
+  );
+  const [suggestion, setSuggestion] =
+    useState<AiResumeOptimizationResult | null>(null);
+  const [applyPending, setApplyPending] = useState(false);
+  const [applyFeedbackMessage, setApplyFeedbackMessage] = useState<string | null>(
+    null,
+  );
 
   if (!canAnalyze) {
     return (
@@ -118,6 +135,7 @@ export function AiAnalysisPanel({
 
     setPending(true);
     setErrorMessage(null);
+    setApplyFeedbackMessage(null);
 
     try {
       const result = await triggerAnalysis({
@@ -136,6 +154,72 @@ export function AiAnalysisPanel({
       );
     } finally {
       setPending(false);
+    }
+  }
+
+  async function handleGenerateSuggestion() {
+    const normalizedContent = content.trim();
+
+    if (!normalizedContent) {
+      setSuggestionErrorMessage('请先输入 JD 或优化方向，再生成结构化建议。');
+      setSuggestion(null);
+      return;
+    }
+
+    if (scenario !== 'resume-review') {
+      setSuggestionErrorMessage('结构化简历建议当前只支持“简历优化建议”场景。');
+      setSuggestion(null);
+      return;
+    }
+
+    setSuggestionPending(true);
+    setSuggestionErrorMessage(null);
+    setApplyFeedbackMessage(null);
+
+    try {
+      const result = await generateResumeOptimization({
+        apiBaseUrl,
+        accessToken,
+        instruction: normalizedContent,
+        locale,
+      });
+
+      setSuggestion(result);
+    } catch (error) {
+      setSuggestion(null);
+      setSuggestionErrorMessage(
+        error instanceof Error ? error.message : '结构化简历建议生成失败，请稍后重试',
+      );
+    } finally {
+      setSuggestionPending(false);
+    }
+  }
+
+  async function handleApplySuggestion() {
+    if (!suggestion) {
+      return;
+    }
+
+    setApplyPending(true);
+    setSuggestionErrorMessage(null);
+    setApplyFeedbackMessage(null);
+
+    try {
+      await saveDraft({
+        apiBaseUrl,
+        accessToken,
+        resume: suggestion.suggestedResume,
+      });
+
+      setApplyFeedbackMessage(
+        'AI 建议稿已应用到当前草稿。公开站内容不会自动变化，仍需手动发布。',
+      );
+    } catch (error) {
+      setSuggestionErrorMessage(
+        error instanceof Error ? error.message : 'AI 建议稿应用失败，请稍后重试',
+      );
+    } finally {
+      setApplyPending(false);
     }
   }
 
@@ -199,10 +283,23 @@ export function AiAnalysisPanel({
         ) : null}
 
         {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
+        {suggestionErrorMessage ? (
+          <p className="error-text">{suggestionErrorMessage}</p>
+        ) : null}
+        {applyFeedbackMessage ? (
+          <p className="dashboard-inline-note">{applyFeedbackMessage}</p>
+        ) : null}
 
         <div className="dashboard-entry-actions">
           <button disabled={pending} type="submit">
             {pending ? '正在生成分析...' : '开始真实分析'}
+          </button>
+          <button
+            disabled={suggestionPending || applyPending}
+            onClick={() => void handleGenerateSuggestion()}
+            type="button"
+          >
+            {suggestionPending ? '正在生成建议稿...' : '生成结构化简历建议'}
           </button>
         </div>
       </form>
@@ -253,6 +350,65 @@ export function AiAnalysisPanel({
               </DisplaySurfaceCard>
             ))}
           </div>
+        </div>
+      ) : null}
+
+      {suggestion ? (
+        <div className="preview-stack">
+          <div className="stack">
+            <DisplaySectionIntro
+              compact
+              description="服务端已把 AI 返回的结构化 patch 合并回当前 StandardResume，并完成校验。"
+              eyebrow="结构化建议"
+              title="可一键应用的草稿建议"
+            />
+            <div className="dashboard-badge-row">
+              {suggestion.changedModules.map((module) => (
+                <DisplayPill key={module}>模块：{module}</DisplayPill>
+              ))}
+              <DisplayPill>
+                Provider：{suggestion.providerSummary.provider} /{' '}
+                {suggestion.providerSummary.model}
+              </DisplayPill>
+            </div>
+          </div>
+
+          <DisplaySurfaceCard className="analysis-summary-card">
+            <DisplaySectionIntro
+              compact
+              description="当前开源版先只做结构化改写建议和一键应用草稿，不继续扩张到历史与多版本管理。"
+              eyebrow="建议摘要"
+              title="AI 建议稿说明"
+              titleAs="h3"
+            />
+            <div className="analysis-text-block">{suggestion.summary}</div>
+            {suggestion.focusAreas.length > 0 ? (
+              <ul className="muted-list">
+                {suggestion.focusAreas.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            ) : null}
+          </DisplaySurfaceCard>
+
+          <DisplaySurfaceCard className="card stack">
+            <DisplaySectionIntro
+              compact
+              description="一键应用会覆盖当前草稿，但不会自动发布到公开站。"
+              eyebrow="草稿应用"
+              title="将建议稿写回当前草稿"
+              titleAs="h3"
+            />
+            <div className="dashboard-entry-actions">
+              <button
+                disabled={applyPending}
+                onClick={() => void handleApplySuggestion()}
+                type="button"
+              >
+                {applyPending ? '正在应用到草稿...' : '一键应用到当前草稿'}
+              </button>
+            </div>
+          </DisplaySurfaceCard>
         </div>
       ) : null}
     </section>

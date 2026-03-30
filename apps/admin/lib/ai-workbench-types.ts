@@ -1,3 +1,5 @@
+import type { StandardResume } from './resume-types';
+
 export type AiWorkbenchScenario =
   | 'jd-match'
   | 'resume-review'
@@ -44,4 +46,22 @@ export interface AiWorkbenchCachedReportSummary {
 export interface TriggerAiWorkbenchAnalysisResult {
   cached: boolean;
   report: AiWorkbenchReport;
+}
+
+export type AiResumeOptimizationChangedModule =
+  | 'profile'
+  | 'experiences'
+  | 'projects'
+  | 'highlights';
+
+export interface AiResumeOptimizationResult {
+  summary: string;
+  focusAreas: string[];
+  changedModules: AiResumeOptimizationChangedModule[];
+  suggestedResume: StandardResume;
+  providerSummary: {
+    provider: string;
+    model: string;
+    mode: string;
+  };
 }

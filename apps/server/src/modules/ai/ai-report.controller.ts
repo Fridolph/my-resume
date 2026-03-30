@@ -13,6 +13,10 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RoleCapabilitiesGuard } from '../auth/guards/role-capabilities.guard';
 import { AiService } from './ai.service';
 import {
+  AiResumeOptimizationService,
+  GenerateResumeOptimizationInput,
+} from './ai-resume-optimization.service';
+import {
   AnalysisLocale,
   AnalysisScenario,
   AnalysisReportCacheService,
@@ -23,6 +27,8 @@ interface CacheReportBody {
   content: string;
   locale?: AnalysisLocale;
 }
+
+interface ResumeOptimizationBody extends GenerateResumeOptimizationInput {}
 
 const SUPPORTED_SCENARIOS: AnalysisScenario[] = [
   'jd-match',
@@ -36,6 +42,8 @@ export class AiReportController {
   constructor(
     @Inject(AiService)
     private readonly aiService: AiService,
+    @Inject(AiResumeOptimizationService)
+    private readonly aiResumeOptimizationService: AiResumeOptimizationService,
     @Inject(AnalysisReportCacheService)
     private readonly analysisReportCacheService: AnalysisReportCacheService,
   ) {}
@@ -87,6 +95,13 @@ export class AiReportController {
         providerSummary: this.aiService.getProviderSummary(),
       }),
     };
+  }
+
+  @Post('resume-optimize')
+  @UseGuards(RoleCapabilitiesGuard)
+  @RequireCapability('canTriggerAiAnalysis')
+  async optimizeResume(@Body() body: ResumeOptimizationBody) {
+    return this.aiResumeOptimizationService.generateSuggestion(body);
   }
 
   private buildAnalysisPrompt(body: CacheReportBody): string {
