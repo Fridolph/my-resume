@@ -1,0 +1,14 @@
+node_modules
+.git
+.turbo
+.next
+dist
+dist-ssr
+.data
+coverage
+tmp
+*.log
+.env
+.env.*
+*.local
+docs

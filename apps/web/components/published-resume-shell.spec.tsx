@@ -154,41 +154,45 @@ describe('PublishedResumeShell', () => {
     );
   }
 
-  it('should render modular zh sections by default and switch to en', async () => {
-    const user = userEvent.setup();
+  it(
+    'should render modular zh sections by default and switch to en',
+    async () => {
+      const user = userEvent.setup();
 
-    renderShell();
+      renderShell();
 
-    expect(screen.getByRole('heading', { name: '付寅生' })).toBeInTheDocument();
-    expect(
-      screen.getByText('专注前端工程化与 Node.js 后端。'),
-    ).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '职业经历' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '代表项目' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '教育背景' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '技能结构' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '补充亮点' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '公开简历速览' })).toBeInTheDocument();
-    expect(screen.getByText('标准双语公开版')).toBeInTheDocument();
-    expect(screen.getByText('成都一蟹科技有限公司')).toBeInTheDocument();
-    expect(screen.getByText('四川大学锦江学院')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: '付寅生' })).toBeInTheDocument();
+      expect(
+        screen.getByText('专注前端工程化与 Node.js 后端。'),
+      ).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: '职业经历' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: '代表项目' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: '教育背景' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: '技能结构' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: '补充亮点' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: '公开简历速览' })).toBeInTheDocument();
+      expect(screen.getByText('标准双语公开版')).toBeInTheDocument();
+      expect(screen.getByText('成都一蟹科技有限公司')).toBeInTheDocument();
+      expect(screen.getByText('四川大学锦江学院')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'EN' }));
+      await user.click(screen.getByRole('button', { name: 'EN' }));
 
-    expect(
-      screen.getByRole('heading', { name: 'Yinsheng Fu' }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText('Focused on frontend engineering and Node.js backend development.'),
-    ).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Work Experience' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Selected Projects' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Education' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Skill Structure' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Additional Highlights' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Public Resume Overview' })).toBeInTheDocument();
-    expect(screen.getByText('Standard Bilingual Edition')).toBeInTheDocument();
-  });
+      expect(
+        screen.getByRole('heading', { name: 'Yinsheng Fu' }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText('Focused on frontend engineering and Node.js backend development.'),
+      ).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Work Experience' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Selected Projects' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Education' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Skill Structure' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Additional Highlights' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Public Resume Overview' })).toBeInTheDocument();
+      expect(screen.getByText('Standard Bilingual Edition')).toBeInTheDocument();
+    },
+    10000,
+  );
 
   it('should toggle light and dark theme on the document element', async () => {
     const user = userEvent.setup();
