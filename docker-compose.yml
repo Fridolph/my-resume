@@ -1,0 +1,49 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 5577
+      API_HOST: 0.0.0.0
+      DATABASE_URL: file:/app/.data/my-resume.db
+    ports:
+      - '5577:5577'
+    volumes:
+      - resume_sqlite_data:/app/.data
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:5577
+        RESUME_API_BASE_URL: http://server:5577
+    environment:
+      NODE_ENV: production
+      RESUME_API_BASE_URL: http://server:5577
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:5577
+    depends_on:
+      - server
+    ports:
+      - '5555:5555'
+
+  admin:
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:5577
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:5577
+    depends_on:
+      - server
+    ports:
+      - '5566:5566'
+
+volumes:
+  resume_sqlite_data:

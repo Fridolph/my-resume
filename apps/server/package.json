@@ -11,6 +11,7 @@
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push --force",
     "db:studio": "drizzle-kit studio",
+    "dev": "nest start --watch",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
