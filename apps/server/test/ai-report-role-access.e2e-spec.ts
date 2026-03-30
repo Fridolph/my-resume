@@ -1,17 +1,59 @@
+import { mkdtempSync, rmSync } from 'fs';
 import { INestApplication } from '@nestjs/common';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
 
+import type { DatabaseClient } from './../src/database/database.client';
+import { DATABASE_CLIENT } from './../src/database/database.tokens';
 import { AppModule } from './../src/app.module';
+
+async function prepareResumeTables(client: DatabaseClient) {
+  await client.execute(`
+    CREATE TABLE IF NOT EXISTS resume_drafts (
+      resume_key text PRIMARY KEY NOT NULL,
+      schema_version integer NOT NULL,
+      resume_json text NOT NULL,
+      updated_at integer NOT NULL
+    );
+  `);
+
+  await client.execute(`
+    CREATE TABLE IF NOT EXISTS resume_publication_snapshots (
+      id text PRIMARY KEY NOT NULL,
+      resume_key text NOT NULL,
+      schema_version integer NOT NULL,
+      resume_json text NOT NULL,
+      published_at integer NOT NULL
+    );
+  `);
+
+  await client.execute(`
+    CREATE INDEX IF NOT EXISTS resume_publication_snapshots_resume_key_published_at_idx
+    ON resume_publication_snapshots (resume_key, published_at);
+  `);
+
+  await client.execute('DELETE FROM resume_publication_snapshots;');
+  await client.execute('DELETE FROM resume_drafts;');
+}
 
 describe('AI report role access (e2e)', () => {
   let app: INestApplication<App>;
+  let previousDatabaseUrl: string | undefined;
+  let tempDirectory: string;
 
   beforeEach(async () => {
+    previousDatabaseUrl = process.env.DATABASE_URL;
+    tempDirectory = mkdtempSync(join(tmpdir(), 'my-resume-ai-role-e2e-'));
+    process.env.DATABASE_URL = `file:${join(tempDirectory, 'ai-report-role-access.db')}`;
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
+
+    await prepareResumeTables(moduleFixture.get<DatabaseClient>(DATABASE_CLIENT));
 
     app = moduleFixture.createNestApplication();
     await app.init();
@@ -19,6 +61,17 @@ describe('AI report role access (e2e)', () => {
 
   afterEach(async () => {
     await app.close();
+
+    if (previousDatabaseUrl) {
+      process.env.DATABASE_URL = previousDatabaseUrl;
+    } else {
+      delete process.env.DATABASE_URL;
+    }
+
+    rmSync(tempDirectory, {
+      force: true,
+      recursive: true,
+    });
   });
 
   it('should allow viewer to read cached reports but forbid new trigger actions', async () => {
