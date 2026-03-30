@@ -1,4 +1,5 @@
 import {
+  AiResumeOptimizationResult,
   AiWorkbenchCachedReportSummary,
   AiWorkbenchLocale,
   AiWorkbenchReport,
@@ -15,6 +16,11 @@ interface FetchAiWorkbenchRuntimeInput {
 interface TriggerAiWorkbenchAnalysisInput extends FetchAiWorkbenchRuntimeInput {
   scenario: AiWorkbenchScenario;
   content: string;
+  locale: AiWorkbenchLocale;
+}
+
+interface GenerateAiResumeOptimizationInput extends FetchAiWorkbenchRuntimeInput {
+  instruction: string;
   locale: AiWorkbenchLocale;
 }
 
@@ -67,6 +73,39 @@ export async function triggerAiWorkbenchAnalysis(
   }
 
   return (await response.json()) as TriggerAiWorkbenchAnalysisResult;
+}
+
+export async function generateAiResumeOptimization(
+  input: GenerateAiResumeOptimizationInput,
+): Promise<AiResumeOptimizationResult> {
+  const response = await fetch(
+    joinApiUrl(input.apiBaseUrl, '/ai/reports/resume-optimize'),
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${input.accessToken}`,
+      },
+      body: JSON.stringify({
+        instruction: input.instruction,
+        locale: input.locale,
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as
+      | { message?: string | string[] }
+      | null;
+
+    const message = Array.isArray(payload?.message)
+      ? payload.message[0]
+      : payload?.message;
+
+    throw new Error(message || '结构化简历建议生成失败，请稍后重试');
+  }
+
+  return (await response.json()) as AiResumeOptimizationResult;
 }
 
 export async function fetchCachedAiWorkbenchReports(

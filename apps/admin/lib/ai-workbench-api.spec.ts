@@ -4,6 +4,7 @@ import {
   fetchCachedAiWorkbenchReport,
   fetchCachedAiWorkbenchReports,
   fetchAiWorkbenchRuntime,
+  generateAiResumeOptimization,
   triggerAiWorkbenchAnalysis,
 } from './ai-workbench-api';
 
@@ -199,5 +200,84 @@ describe('ai workbench api client', () => {
       }),
     );
     expect(response.sections[0]?.title).toBe('匹配概览');
+  });
+
+  it('should request structured resume optimization with bearer token', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          summary: '已生成结构化建议',
+          focusAreas: ['强化摘要', '补强项目亮点'],
+          changedModules: ['profile', 'projects'],
+          suggestedResume: {
+            meta: {
+              slug: 'standard-resume',
+              version: 1,
+              defaultLocale: 'zh',
+              locales: ['zh', 'en'],
+            },
+            profile: {
+              fullName: {
+                zh: '付寅生',
+                en: 'Yinsheng Fu',
+              },
+              headline: {
+                zh: '前端工程师',
+                en: 'Frontend Engineer',
+              },
+              summary: {
+                zh: '新的中文摘要',
+                en: 'New English summary',
+              },
+              location: {
+                zh: '成都',
+                en: 'Chengdu',
+              },
+              email: 'demo@example.com',
+              phone: '123456789',
+              website: 'https://example.com',
+              links: [],
+              interests: [],
+            },
+            education: [],
+            experiences: [],
+            projects: [],
+            skills: [],
+            highlights: [],
+          },
+          providerSummary: {
+            provider: 'qiniu',
+            model: 'deepseek-v3',
+            mode: 'openai-compatible',
+          },
+        }),
+      }),
+    );
+
+    const response = await generateAiResumeOptimization({
+      apiBaseUrl: 'http://localhost:5577',
+      accessToken: 'demo-token',
+      instruction: '请根据 React 和 Next.js 岗位优化当前简历',
+      locale: 'zh',
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5577/ai/reports/resume-optimize',
+      expect.objectContaining({
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer demo-token',
+        },
+        body: JSON.stringify({
+          instruction: '请根据 React 和 Next.js 岗位优化当前简历',
+          locale: 'zh',
+        }),
+      }),
+    );
+    expect(response.changedModules).toEqual(['profile', 'projects']);
+    expect(response.suggestedResume.profile.summary.zh).toBe('新的中文摘要');
   });
 });

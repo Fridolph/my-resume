@@ -73,6 +73,15 @@ describe('AI report role access (e2e)', () => {
         locale: 'zh',
       })
       .expect(403);
+
+    await request(app.getHttpServer())
+      .post('/ai/reports/resume-optimize')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        instruction: '请帮我优化简历，重点突出 React 与 Next.js 能力',
+        locale: 'zh',
+      })
+      .expect(403);
   });
 
   it('should allow admin to trigger analysis and write cached ai results', async () => {
@@ -109,5 +118,18 @@ describe('AI report role access (e2e)', () => {
 
     expect(response.body.report.generator).toBe('ai-provider');
     expect(response.body.report.summary.length).toBeGreaterThan(0);
+
+    const optimizeResponse = await request(app.getHttpServer())
+      .post('/ai/reports/resume-optimize')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        instruction: '请根据 React 与 Next.js 相关岗位方向优化当前简历',
+        locale: 'zh',
+      })
+      .expect(201);
+
+    expect(optimizeResponse.body.summary.length).toBeGreaterThan(0);
+    expect(optimizeResponse.body.changedModules).toContain('profile');
+    expect(optimizeResponse.body.suggestedResume.meta.slug).toBe('standard-resume');
   });
 });
