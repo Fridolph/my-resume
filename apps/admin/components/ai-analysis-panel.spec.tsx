@@ -227,8 +227,102 @@ describe('AiAnalysisPanel', () => {
     expect(triggerAnalysis).not.toHaveBeenCalled();
   });
 
+  it('should remind the user to generate a suggestion before linking to a module rewrite', async () => {
+    const user = userEvent.setup();
+    const triggerAnalysis = vi.fn().mockResolvedValue({
+      cached: false,
+      report: {
+        reportId: 'resume-review-demo',
+        cacheKey: 'resume-review:zh:demo',
+        scenario: 'resume-review',
+        locale: 'zh',
+        sourceHash: 'demo',
+        inputPreview: 'NestJS React TypeScript',
+        summary: '建议继续补充量化结果与职责边界。',
+        score: {
+          value: 76,
+          label: '基础匹配良好',
+          reason: '已有核心技术关键词，但成果与职责边界仍需补强。',
+        },
+        strengths: ['已覆盖 NestJS、React、TypeScript 等岗位基础关键词。'],
+        gaps: ['缺少体现业务结果的量化成果。'],
+        risks: ['如果没有主导范围说明，容易被理解为参与而非负责。'],
+        suggestions: [
+          {
+            key: 'project-impact',
+            title: '补强项目成果描述',
+            module: 'projects',
+            reason: '项目模块最适合承接与 JD 对齐的成果表达。',
+            actions: ['补充目标岗位相关成果'],
+          },
+        ],
+        sections: [],
+        generator: 'ai-provider',
+        createdAt: '2026-03-27T00:00:00.000Z',
+      },
+    });
+
+    render(
+      <ControlledAnalysisPanel
+        canAnalyze
+        initialContent="NestJS React TypeScript"
+        triggerAnalysis={triggerAnalysis}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: '开始真实分析' }));
+    await screen.findByText('建议继续补充量化结果与职责边界。');
+
+    await user.click(
+      screen.getByRole('button', { name: '定位到 projects 改写模块' }),
+    );
+
+    expect(
+      await screen.findByText('请先生成结构化简历建议，再定位到具体改写模块。'),
+    ).toBeInTheDocument();
+  });
+
   it('should preview module diffs and apply only the selected modules', async () => {
     const user = userEvent.setup();
+    const triggerAnalysis = vi.fn().mockResolvedValue({
+      cached: false,
+      report: {
+        reportId: 'resume-review-demo',
+        cacheKey: 'resume-review:zh:demo',
+        scenario: 'resume-review',
+        locale: 'zh',
+        sourceHash: 'demo',
+        inputPreview: '请根据 React 和 Next.js 岗位优化当前简历',
+        summary: '建议先补强个人摘要，再把项目成果写得更贴近岗位。',
+        score: {
+          value: 81,
+          label: '岗位方向基本明确',
+          reason: '已经有目标岗位关键词，但项目成果表达还可以更聚焦。',
+        },
+        strengths: ['已具备 React、Next.js 相关关键词。'],
+        gaps: ['项目成果和岗位目标的对应关系还不够清楚。'],
+        risks: ['如果不补项目成果，面试官可能只看到技术名词而看不到产出。'],
+        suggestions: [
+          {
+            key: 'profile-focus',
+            title: '先收束个人定位',
+            module: 'profile',
+            reason: '摘要决定面试官第一眼怎么理解你。',
+            actions: ['强调目标岗位定位'],
+          },
+          {
+            key: 'project-focus',
+            title: '再强化项目成果',
+            module: 'projects',
+            reason: '项目是证明技术方案和业务结果的关键模块。',
+            actions: ['突出项目成果与个人贡献'],
+          },
+        ],
+        sections: [],
+        generator: 'ai-provider',
+        createdAt: '2026-03-27T00:00:00.000Z',
+      },
+    });
     const generateResumeOptimization = vi.fn().mockResolvedValue({
       summary: '已生成结构化建议稿',
       focusAreas: ['强化摘要', '补强项目亮点'],
@@ -309,10 +403,13 @@ describe('AiAnalysisPanel', () => {
         canAnalyze
         generateResumeOptimization={generateResumeOptimization}
         initialContent="请根据 React 和 Next.js 岗位优化当前简历"
+        triggerAnalysis={triggerAnalysis}
       />,
     );
 
     await user.selectOptions(screen.getByLabelText('分析场景'), 'resume-review');
+    await user.click(screen.getByRole('button', { name: '开始真实分析' }));
+    await screen.findByText('建议先补强个人摘要，再把项目成果写得更贴近岗位。');
     await user.click(screen.getByRole('button', { name: '生成结构化简历建议' }));
 
     await waitFor(() => {
@@ -334,6 +431,16 @@ describe('AiAnalysisPanel', () => {
     await user.click(
       screen.getByRole('checkbox', { name: '应用模块：projects' }),
     );
+    await user.click(
+      screen.getByRole('button', { name: '定位到 projects 改写模块' }),
+    );
+
+    expect(
+      await screen.findByText('已定位到 projects 改写模块，可继续确认并应用。'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('checkbox', { name: '应用模块：projects' }),
+    ).toBeChecked();
     await user.click(screen.getByRole('button', { name: '应用已选模块到当前草稿' }));
 
     await waitFor(() => {
@@ -341,7 +448,7 @@ describe('AiAnalysisPanel', () => {
         apiBaseUrl: 'http://localhost:5577',
         accessToken: 'demo-token',
         draftUpdatedAt: '2026-03-30T00:00:00.000Z',
-        modules: ['profile'],
+        modules: ['profile', 'projects'],
         patch: expect.objectContaining({
           profile: expect.objectContaining({
             summary: {
@@ -355,7 +462,7 @@ describe('AiAnalysisPanel', () => {
 
     expect(
       await screen.findByText(
-        '已将 1 个模块应用到当前草稿。公开站内容不会自动变化，仍需手动发布。',
+        '已将 2 个模块应用到当前草稿。公开站内容不会自动变化，仍需手动发布。',
       ),
     ).toBeInTheDocument();
   });
