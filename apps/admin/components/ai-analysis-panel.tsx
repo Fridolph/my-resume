@@ -79,6 +79,10 @@ function formatGenerator(generator: AiWorkbenchReport['generator']): string {
   return generator === 'ai-provider' ? '真实 Provider' : '缓存结果';
 }
 
+function formatScore(report: AiWorkbenchReport): string {
+  return `评分：${report.score.value} / 100`;
+}
+
 export function AiAnalysisPanel({
   accessToken,
   apiBaseUrl,
@@ -327,21 +331,111 @@ export function AiAnalysisPanel({
             <DisplaySectionIntro
               compact
               description={report.inputPreview}
-              eyebrow="摘要"
-              title="模型返回摘要"
+              eyebrow="结论层"
+              title="模型判断摘要"
               titleAs="h3"
             />
             <div className="analysis-text-block">{report.summary}</div>
+            <div className="info-grid">
+              <div className="status-box">
+                <strong>{formatScore(report)}</strong>
+                <span>{report.score.label}</span>
+              </div>
+              <div className="status-box">
+                <strong>判断理由</strong>
+                <span>{report.score.reason}</span>
+              </div>
+            </div>
           </DisplaySurfaceCard>
 
           <div className="analysis-section-grid">
+            <DisplaySurfaceCard as="article" className="analysis-section-card">
+              <DisplaySectionIntro
+                compact
+                description="这里展示当前输入已经具备的优势，帮助用户判断“哪些内容不该被误改”。"
+                title="已有优势"
+                titleAs="h3"
+              />
+              <ul className="muted-list">
+                {report.strengths.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </DisplaySurfaceCard>
+
+            <DisplaySurfaceCard as="article" className="analysis-section-card">
+              <DisplaySectionIntro
+                compact
+                description="这些缺口是 AI 判断当前输入还不够有说服力的地方。"
+                title="待补缺口"
+                titleAs="h3"
+              />
+              <ul className="muted-list">
+                {report.gaps.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </DisplaySurfaceCard>
+
+            <DisplaySurfaceCard as="article" className="analysis-section-card">
+              <DisplaySectionIntro
+                compact
+                description="风险提示不是为了制造焦虑，而是提前告诉用户“不改会发生什么”。"
+                title="风险提示"
+                titleAs="h3"
+              />
+              <ul className="muted-list">
+                {report.risks.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </DisplaySurfaceCard>
+
+            <DisplaySurfaceCard as="article" className="analysis-section-card">
+              <DisplaySectionIntro
+                compact
+                description="建议动作会尽量指向简历模块，为后续 diff / apply 做准备。"
+                title="建议动作"
+                titleAs="h3"
+              />
+              <div className="stack">
+                {report.suggestions.map((item) => (
+                  <DisplaySurfaceCard
+                    as="section"
+                    className="card stack"
+                    key={item.key}
+                  >
+                    <DisplaySectionIntro
+                      compact
+                      description={item.reason}
+                      eyebrow={
+                        item.module ? `建议模块：${item.module}` : '建议模块：通用判断'
+                      }
+                      title={item.title}
+                      titleAs="h4"
+                    />
+                    <ul className="muted-list">
+                      {item.actions.map((action) => (
+                        <li key={`${item.key}-${action}`}>{action}</li>
+                      ))}
+                    </ul>
+                  </DisplaySurfaceCard>
+                ))}
+              </div>
+            </DisplaySurfaceCard>
+
             {report.sections.map((section) => (
               <DisplaySurfaceCard
                 as="article"
                 className="analysis-section-card"
-                key={section.key}
+                key={`legacy-${section.key}`}
               >
-                <DisplaySectionIntro compact title={section.title} titleAs="h3" />
+                <DisplaySectionIntro
+                  compact
+                  description="兼容缓存阅读面板的过渡结构。"
+                  title={section.title}
+                  titleAs="h3"
+                />
                 <ul className="muted-list">
                   {section.bullets.map((bullet) => (
                     <li key={`${section.key}-${bullet}`}>{bullet}</li>

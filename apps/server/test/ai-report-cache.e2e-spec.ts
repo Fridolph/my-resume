@@ -59,7 +59,12 @@ describe('AI report cache (e2e)', () => {
       .expect(200);
 
     expect(detail.body.reportId).toBe(first.body.report.reportId);
-    expect(detail.body.sections).toHaveLength(3);
+    expect(detail.body.score.value).toBeGreaterThan(0);
+    expect(detail.body.strengths.length).toBeGreaterThan(0);
+    expect(detail.body.gaps.length).toBeGreaterThan(0);
+    expect(detail.body.risks.length).toBeGreaterThan(0);
+    expect(detail.body.suggestions.length).toBeGreaterThan(0);
+    expect(detail.body.sections).toHaveLength(4);
   });
 
   it('should reject unsupported analysis scenarios', async () => {
