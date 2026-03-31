@@ -108,6 +108,23 @@ describe('AiAnalysisPanel', () => {
         sourceHash: 'demo',
         inputPreview: 'NestJS React TypeScript',
         summary: '建议继续补充量化结果与职责边界。',
+        score: {
+          value: 76,
+          label: '基础匹配良好',
+          reason: '已有核心技术关键词，但成果与职责边界仍需补强。',
+        },
+        strengths: ['已覆盖 NestJS、React、TypeScript 等岗位基础关键词。'],
+        gaps: ['缺少体现业务结果的量化成果。'],
+        risks: ['如果没有主导范围说明，容易被理解为参与而非负责。'],
+        suggestions: [
+          {
+            key: 'experience-impact',
+            title: '补强经历成果描述',
+            module: 'experiences',
+            reason: '工作经历是最能证明能力与影响范围的模块。',
+            actions: ['补一条量化结果', '补一条主导职责描述'],
+          },
+        ],
         sections: [
           {
             key: 'analysis-result',
@@ -157,10 +174,22 @@ describe('AiAnalysisPanel', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('场景：简历优化建议')).toBeInTheDocument();
     expect(screen.getByText('Provider：qiniu / deepseek-v3')).toBeInTheDocument();
+    expect(screen.getByText('评分：76 / 100')).toBeInTheDocument();
+    expect(screen.getByText('基础匹配良好')).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { name: '分析结果', level: 3 }),
+      screen.getByText('已有核心技术关键词，但成果与职责边界仍需补强。'),
     ).toBeInTheDocument();
-    expect(screen.getByText('补充量化成果。')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: '已有优势', level: 3 }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('已覆盖 NestJS、React、TypeScript 等岗位基础关键词。'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: '建议动作', level: 3 }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('建议模块：experiences')).toBeInTheDocument();
+    expect(screen.getByText('补一条量化结果')).toBeInTheDocument();
   });
 
   it('should show error feedback when live analysis fails', async () => {

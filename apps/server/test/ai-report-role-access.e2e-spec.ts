@@ -171,6 +171,11 @@ describe('AI report role access (e2e)', () => {
 
     expect(response.body.report.generator).toBe('ai-provider');
     expect(response.body.report.summary.length).toBeGreaterThan(0);
+    expect(response.body.report.score.value).toBeGreaterThan(0);
+    expect(response.body.report.strengths.length).toBeGreaterThan(0);
+    expect(response.body.report.gaps.length).toBeGreaterThan(0);
+    expect(response.body.report.risks.length).toBeGreaterThan(0);
+    expect(response.body.report.suggestions.length).toBeGreaterThan(0);
 
     const optimizeResponse = await request(app.getHttpServer())
       .post('/ai/reports/resume-optimize')

@@ -80,10 +80,7 @@ export class AiReportController {
   @RequireCapability('canTriggerAiAnalysis')
   async analyzeReport(@Body() body: CacheReportBody) {
     const result = await this.aiService.generateText({
-      systemPrompt:
-        body.locale === 'en'
-          ? 'You are a concise resume analysis assistant.'
-          : '你是一个简洁的简历分析助手。',
+      systemPrompt: this.buildAnalysisSystemPrompt(body.locale ?? 'zh'),
       prompt: this.buildAnalysisPrompt(body),
     });
 
@@ -106,9 +103,81 @@ export class AiReportController {
 
   private buildAnalysisPrompt(body: CacheReportBody): string {
     if (body.locale === 'en') {
-      return `Scenario: ${body.scenario}\nPlease give a short analysis for the following content:\n${body.content}`;
+      return [
+        `Scenario: ${body.scenario}`,
+        'Task: analyze the current input for interview readiness and job-fit communication.',
+        'Return JSON only. Do not wrap it in markdown.',
+        'JSON shape:',
+        JSON.stringify(
+          {
+            summary: 'string',
+            score: {
+              value: 78,
+              label: 'string',
+              reason: 'string',
+            },
+            strengths: ['string'],
+            gaps: ['string'],
+            risks: ['string'],
+            suggestions: [
+              {
+                key: 'string',
+                title: 'string',
+                module: 'profile | experiences | projects | highlights | null',
+                reason: 'string',
+                actions: ['string'],
+              },
+            ],
+          },
+          null,
+          2,
+        ),
+        'Keep the output concise and product-friendly.',
+        `Input:\n${body.content}`,
+      ].join('\n');
     }
 
-    return `分析场景：${body.scenario}\n请基于以下内容给出简短分析：\n${body.content}`;
+    return [
+      `分析场景：${body.scenario}`,
+      '任务：从“更好投递、面试更有说服力、拿到 offer 更稳”这三个角度分析当前输入。',
+      '请只返回 JSON，不要输出 markdown，不要输出代码块。',
+      'JSON 结构：',
+      JSON.stringify(
+        {
+          summary: 'string',
+          score: {
+            value: 78,
+            label: 'string',
+            reason: 'string',
+          },
+          strengths: ['string'],
+          gaps: ['string'],
+          risks: ['string'],
+          suggestions: [
+            {
+              key: 'string',
+              title: 'string',
+              module: 'profile | experiences | projects | highlights | null',
+              reason: 'string',
+              actions: ['string'],
+            },
+          ],
+        },
+        null,
+        2,
+      ),
+      '要求：strengths 说明已有优势，gaps 说明当前缺口，risks 说明不修改会带来的投递或面试风险，suggestions 给出可执行动作。',
+      `输入内容：\n${body.content}`,
+    ].join('\n');
+  }
+
+  private buildAnalysisSystemPrompt(locale: AnalysisLocale): string {
+    /**
+     * analyze 接口后续会成为“分析 -> 建议稿 -> diff -> apply”的上游输入，
+     * 所以这里强制要求结构化 JSON，而不是让前端从自由文本里猜字段。
+     */
+    return locale === 'en'
+      ? 'You are a resume analysis assistant. Output valid JSON only.'
+      : '你是一个简历分析助手。只输出合法 JSON。';
   }
 }

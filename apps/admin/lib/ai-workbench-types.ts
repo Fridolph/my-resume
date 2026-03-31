@@ -14,6 +14,31 @@ export interface AiWorkbenchRuntimeSummary {
 
 export type AiWorkbenchLocale = 'zh' | 'en';
 export type AiWorkbenchReportGenerator = 'mock-cache' | 'ai-provider';
+export type AiAnalysisSuggestionModule =
+  | 'profile'
+  | 'experiences'
+  | 'projects'
+  | 'highlights';
+
+export interface AiWorkbenchScore {
+  /**
+   * 面向用户的快速分值信号，用于帮助判断“当前内容离目标还差多少”。
+   */
+  value: number;
+  label: string;
+  reason: string;
+}
+
+export interface AiWorkbenchSuggestion {
+  key: string;
+  title: string;
+  module?: AiAnalysisSuggestionModule;
+  /**
+   * reason 直接面向用户解释“为什么建议改这里”。
+   */
+  reason: string;
+  actions: string[];
+}
 
 export interface AiWorkbenchReportSection {
   key: string;
@@ -29,6 +54,11 @@ export interface AiWorkbenchReport {
   sourceHash: string;
   inputPreview: string;
   summary: string;
+  score: AiWorkbenchScore;
+  strengths: string[];
+  gaps: string[];
+  risks: string[];
+  suggestions: AiWorkbenchSuggestion[];
   sections: AiWorkbenchReportSection[];
   generator: AiWorkbenchReportGenerator;
   createdAt: string;
