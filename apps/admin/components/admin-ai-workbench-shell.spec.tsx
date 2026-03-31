@@ -7,11 +7,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const {
   fetchCurrentUserMock,
   fetchAiWorkbenchRuntimeMock,
+  fetchDraftResumeMock,
   readAccessTokenMock,
   clearAccessTokenMock,
 } = vi.hoisted(() => ({
   fetchCurrentUserMock: vi.fn(),
   fetchAiWorkbenchRuntimeMock: vi.fn(),
+  fetchDraftResumeMock: vi.fn(),
   readAccessTokenMock: vi.fn(),
   clearAccessTokenMock: vi.fn(),
 }));
@@ -22,6 +24,10 @@ vi.mock('../lib/auth-api', () => ({
 
 vi.mock('../lib/ai-workbench-api', () => ({
   fetchAiWorkbenchRuntime: fetchAiWorkbenchRuntimeMock,
+}));
+
+vi.mock('../lib/resume-draft-api', () => ({
+  fetchDraftResume: fetchDraftResumeMock,
 }));
 
 vi.mock('../lib/session-storage', () => ({
@@ -74,13 +80,55 @@ vi.mock('./ai-analysis-panel', () => ({
   AiAnalysisPanel: ({
     canAnalyze,
     content,
+    onDraftApplied,
   }: {
     canAnalyze: boolean;
     content: string;
+    onDraftApplied?: (snapshot: {
+      status: 'draft';
+      updatedAt: string;
+      resume: {
+        profile: {
+          headline: {
+            zh: string;
+            en: string;
+          };
+          summary: {
+            zh: string;
+            en: string;
+          };
+        };
+      };
+    }) => void;
   }) => (
     <div>
       <span>{canAnalyze ? '真实分析面板占位' : '真实分析只读占位'}</span>
       <span>{`当前分析内容：${content || '空'}`}</span>
+      {canAnalyze ? (
+        <button
+          onClick={() =>
+            onDraftApplied?.({
+              status: 'draft',
+              updatedAt: '2026-03-31T10:00:00.000Z',
+              resume: {
+                profile: {
+                  headline: {
+                    zh: 'AI 优化后标题',
+                    en: 'AI Optimized Headline',
+                  },
+                  summary: {
+                    zh: 'AI 优化后的中文摘要',
+                    en: 'AI optimized English summary',
+                  },
+                },
+              },
+            })
+          }
+          type="button"
+        >
+          模拟应用草稿
+        </button>
+      ) : null}
     </div>
   ),
 }));
@@ -104,6 +152,23 @@ const runtimeSummary = {
   model: 'deepseek-v3',
   mode: 'live',
   supportedScenarios: ['jd-match', 'resume-review', 'offer-compare'] as const,
+};
+
+const draftSnapshot = {
+  status: 'draft' as const,
+  updatedAt: '2026-03-31T09:00:00.000Z',
+  resume: {
+    profile: {
+      headline: {
+        zh: '当前草稿标题',
+        en: 'Current Draft Headline',
+      },
+      summary: {
+        zh: '当前草稿摘要',
+        en: 'Current draft summary',
+      },
+    },
+  },
 };
 
 const adminUser = {
@@ -134,6 +199,7 @@ describe('AdminAiWorkbenchShell', () => {
   beforeEach(() => {
     fetchCurrentUserMock.mockReset();
     fetchAiWorkbenchRuntimeMock.mockReset();
+    fetchDraftResumeMock.mockReset();
     readAccessTokenMock.mockReset();
     clearAccessTokenMock.mockReset();
   });
@@ -158,6 +224,7 @@ describe('AdminAiWorkbenchShell', () => {
     readAccessTokenMock.mockReturnValue('admin-token');
     fetchCurrentUserMock.mockResolvedValue(adminUser);
     fetchAiWorkbenchRuntimeMock.mockResolvedValue(runtimeSummary);
+    fetchDraftResumeMock.mockResolvedValue(draftSnapshot);
 
     render(<AdminAiWorkbenchShell />);
 
@@ -176,16 +243,25 @@ describe('AdminAiWorkbenchShell', () => {
     expect(screen.getByText('真实分析面板占位')).toBeInTheDocument();
     expect(screen.getByText('admin 缓存结果面板占位')).toBeInTheDocument();
     expect(screen.getByText('当前分析内容：空')).toBeInTheDocument();
+    expect(await screen.findByText('当前草稿快照')).toBeInTheDocument();
+    expect(screen.getByText('当前草稿标题')).toBeInTheDocument();
+    expect(screen.getByText('当前草稿摘要')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '模拟提取完成' }));
 
     expect(screen.getByText('当前分析内容：resume text content')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '模拟应用草稿' }));
+
+    expect(await screen.findByText('AI 优化后标题')).toBeInTheDocument();
+    expect(screen.getByText('AI 优化后的中文摘要')).toBeInTheDocument();
   });
 
   it('should render viewer-specific guidance for read-only AI experience', async () => {
     readAccessTokenMock.mockReturnValue('viewer-token');
     fetchCurrentUserMock.mockResolvedValue(viewerUser);
     fetchAiWorkbenchRuntimeMock.mockResolvedValue(runtimeSummary);
+    fetchDraftResumeMock.mockResolvedValue(draftSnapshot);
 
     render(<AdminAiWorkbenchShell />);
 
@@ -196,5 +272,6 @@ describe('AdminAiWorkbenchShell', () => {
     expect(screen.getByText('viewer 缓存结果面板占位')).toBeInTheDocument();
     expect(screen.getByText('文件提取只读占位')).toBeInTheDocument();
     expect(screen.getByText('真实分析只读占位')).toBeInTheDocument();
+    expect(fetchDraftResumeMock).not.toHaveBeenCalled();
   });
 });
