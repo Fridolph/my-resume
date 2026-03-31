@@ -1,4 +1,6 @@
 import {
+  ApplyAiResumeOptimizationInput,
+  ApplyAiResumeOptimizationResult,
   AiResumeOptimizationResult,
   AiWorkbenchCachedReportSummary,
   AiWorkbenchLocale,
@@ -106,6 +108,40 @@ export async function generateAiResumeOptimization(
   }
 
   return (await response.json()) as AiResumeOptimizationResult;
+}
+
+export async function applyAiResumeOptimization(
+  input: ApplyAiResumeOptimizationInput,
+): Promise<ApplyAiResumeOptimizationResult> {
+  const response = await fetch(
+    joinApiUrl(input.apiBaseUrl, '/ai/reports/resume-optimize/apply'),
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${input.accessToken}`,
+      },
+      body: JSON.stringify({
+        draftUpdatedAt: input.draftUpdatedAt,
+        modules: input.modules,
+        patch: input.patch,
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as
+      | { message?: string | string[] }
+      | null;
+
+    const message = Array.isArray(payload?.message)
+      ? payload.message[0]
+      : payload?.message;
+
+    throw new Error(message || 'AI 建议稿应用失败，请稍后重试');
+  }
+
+  return (await response.json()) as ApplyAiResumeOptimizationResult;
 }
 
 export async function fetchCachedAiWorkbenchReports(

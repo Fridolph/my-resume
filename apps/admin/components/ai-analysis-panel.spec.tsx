@@ -59,10 +59,10 @@ const runtimeSummary = {
 };
 
 function ControlledAnalysisPanel(props: {
+  applyResumeOptimization?: typeof import('../lib/ai-workbench-api').applyAiResumeOptimization;
   canAnalyze: boolean;
   generateResumeOptimization?: typeof import('../lib/ai-workbench-api').generateAiResumeOptimization;
   helperMessage?: string | null;
-  saveDraft?: typeof import('../lib/resume-draft-api').updateDraftResume;
   triggerAnalysis?: typeof import('../lib/ai-workbench-api').triggerAiWorkbenchAnalysis;
   initialContent?: string;
 }) {
@@ -77,8 +77,8 @@ function ControlledAnalysisPanel(props: {
       helperMessage={props.helperMessage}
       onContentChange={setContent}
       runtimeSummary={runtimeSummary}
+      applyResumeOptimization={props.applyResumeOptimization}
       generateResumeOptimization={props.generateResumeOptimization}
-      saveDraft={props.saveDraft}
       triggerAnalysis={props.triggerAnalysis}
     />
   );
@@ -227,12 +227,60 @@ describe('AiAnalysisPanel', () => {
     expect(triggerAnalysis).not.toHaveBeenCalled();
   });
 
-  it('should generate a structured suggestion and apply it to the draft', async () => {
+  it('should preview module diffs and apply only the selected modules', async () => {
     const user = userEvent.setup();
     const generateResumeOptimization = vi.fn().mockResolvedValue({
       summary: '已生成结构化建议稿',
       focusAreas: ['强化摘要', '补强项目亮点'],
       changedModules: ['profile', 'projects'],
+      moduleDiffs: [
+        {
+          module: 'profile',
+          title: '个人定位与摘要',
+          reason: '个人摘要决定面试官最先看到的岗位定位。',
+          entries: [
+            {
+              key: 'profile-summary',
+              label: '个人摘要',
+              before: '中文：原始中文摘要 | English: Original English summary',
+              after: '中文：新的中文摘要 | English: New English summary',
+            },
+          ],
+        },
+        {
+          module: 'projects',
+          title: '项目摘要与亮点',
+          reason: '项目经历能证明技术方案、业务场景和个人贡献。',
+          entries: [
+            {
+              key: 'project-0-summary',
+              label: '项目 1 摘要',
+              before: '中文：旧项目摘要 | English: Old project summary',
+              after: '中文：新项目摘要 | English: New project summary',
+            },
+          ],
+        },
+      ],
+      applyPayload: {
+        draftUpdatedAt: '2026-03-30T00:00:00.000Z',
+        patch: {
+          profile: {
+            summary: {
+              zh: '新的中文摘要',
+              en: 'New English summary',
+            },
+          },
+          projects: [
+            {
+              index: 0,
+              summary: {
+                zh: '新项目摘要',
+                en: 'New project summary',
+              },
+            },
+          ],
+        },
+      },
       suggestedResume: {
         ...createTestResume(),
         profile: {
@@ -249,7 +297,7 @@ describe('AiAnalysisPanel', () => {
         mode: 'openai-compatible',
       },
     });
-    const saveDraft = vi.fn().mockResolvedValue({
+    const applyResumeOptimization = vi.fn().mockResolvedValue({
       status: 'draft',
       resume: createTestResume(),
       updatedAt: '2026-03-30T00:00:00.000Z',
@@ -257,10 +305,10 @@ describe('AiAnalysisPanel', () => {
 
     render(
       <ControlledAnalysisPanel
+        applyResumeOptimization={applyResumeOptimization}
         canAnalyze
         generateResumeOptimization={generateResumeOptimization}
         initialContent="请根据 React 和 Next.js 岗位优化当前简历"
-        saveDraft={saveDraft}
       />,
     );
 
@@ -277,15 +325,24 @@ describe('AiAnalysisPanel', () => {
     });
 
     expect(await screen.findByText('已生成结构化建议稿')).toBeInTheDocument();
-    expect(screen.getByText('模块：profile')).toBeInTheDocument();
+    expect(screen.getAllByText('模块：profile').length).toBeGreaterThan(0);
+    expect(screen.getByText('个人定位与摘要')).toBeInTheDocument();
+    expect(screen.getByText('个人摘要')).toBeInTheDocument();
+    expect(screen.getAllByText('当前草稿').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('建议稿').length).toBeGreaterThan(0);
 
-    await user.click(screen.getByRole('button', { name: '一键应用到当前草稿' }));
+    await user.click(
+      screen.getByRole('checkbox', { name: '应用模块：projects' }),
+    );
+    await user.click(screen.getByRole('button', { name: '应用已选模块到当前草稿' }));
 
     await waitFor(() => {
-      expect(saveDraft).toHaveBeenCalledWith({
+      expect(applyResumeOptimization).toHaveBeenCalledWith({
         apiBaseUrl: 'http://localhost:5577',
         accessToken: 'demo-token',
-        resume: expect.objectContaining({
+        draftUpdatedAt: '2026-03-30T00:00:00.000Z',
+        modules: ['profile'],
+        patch: expect.objectContaining({
           profile: expect.objectContaining({
             summary: {
               zh: '新的中文摘要',
@@ -298,7 +355,7 @@ describe('AiAnalysisPanel', () => {
 
     expect(
       await screen.findByText(
-        'AI 建议稿已应用到当前草稿。公开站内容不会自动变化，仍需手动发布。',
+        '已将 1 个模块应用到当前草稿。公开站内容不会自动变化，仍需手动发布。',
       ),
     ).toBeInTheDocument();
   });

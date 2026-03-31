@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ResumePublicationService } from '../resume/resume-publication.service';
-import { createExampleStandardResume } from '../resume/domain/standard-resume';
+import {
+  createExampleStandardResume,
+  type StandardResume,
+} from '../resume/domain/standard-resume';
 import { AiService } from './ai.service';
 import { AiResumeOptimizationService } from './ai-resume-optimization.service';
 
@@ -39,6 +42,10 @@ describe('AiResumeOptimizationService', () => {
     expect(result.focusAreas.length).toBeGreaterThan(0);
     expect(result.changedModules).toContain('profile');
     expect(result.suggestedResume.profile.summary.zh).toContain('Next.js');
+    expect(result.moduleDiffs.length).toBeGreaterThan(0);
+    expect(result.moduleDiffs[0]?.entries.length).toBeGreaterThan(0);
+    expect(result.applyPayload.draftUpdatedAt).toBe('2026-03-30T00:00:00.000Z');
+    expect(result.applyPayload.patch.profile?.summary?.zh).toContain('Next.js');
   });
 
   it('should parse provider JSON and merge it into the current resume draft', async () => {
@@ -98,6 +105,20 @@ describe('AiResumeOptimizationService', () => {
     expect(result.suggestedResume.profile.summary.zh).toBe('新的中文摘要');
     expect(result.suggestedResume.projects[0]?.summary.zh).toBe('新的项目摘要');
     expect(result.suggestedResume.profile.email).toBe(resume.profile.email);
+    expect(result.moduleDiffs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          module: 'profile',
+          entries: expect.arrayContaining([
+            expect.objectContaining({
+              label: '个人摘要',
+              before: expect.any(String),
+              after: expect.any(String),
+            }),
+          ]),
+        }),
+      ]),
+    );
   });
 
   it('should reject invalid provider payloads', async () => {
@@ -133,5 +154,95 @@ describe('AiResumeOptimizationService', () => {
         locale: 'zh',
       }),
     ).rejects.toThrow('AI 返回的 summary 无效');
+  });
+
+  it('should apply only the selected modules back to the current draft', async () => {
+    const resume = createExampleStandardResume();
+    const updateDraft = vi.fn().mockImplementation(async (nextResume: StandardResume) => ({
+      status: 'draft',
+      resume: nextResume,
+      updatedAt: '2026-03-31T00:00:00.000Z',
+    }));
+    const aiService = {
+      getProviderSummary: () => ({
+        provider: 'mock',
+        model: 'mock-resume',
+        mode: 'mock',
+      }),
+      generateText: vi.fn(),
+    } as unknown as AiService;
+    const resumePublicationService = {
+      getDraft: vi.fn().mockResolvedValue({
+        status: 'draft',
+        resume,
+        updatedAt: '2026-03-30T00:00:00.000Z',
+      }),
+      updateDraft,
+    } as unknown as ResumePublicationService;
+
+    const service = new AiResumeOptimizationService(
+      aiService,
+      resumePublicationService,
+    );
+
+    const suggestion = await service.generateSuggestion({
+      instruction: '请针对 Next.js React TypeScript 岗位优化这份简历',
+      locale: 'zh',
+    });
+
+    await service.applySuggestion({
+      draftUpdatedAt: suggestion.applyPayload.draftUpdatedAt,
+      patch: suggestion.applyPayload.patch,
+      modules: ['profile'],
+    });
+
+    expect(updateDraft).toHaveBeenCalledTimes(1);
+    const nextResume = updateDraft.mock.calls[0]?.[0] as StandardResume;
+
+    expect(nextResume.profile.summary.zh).toContain('Next.js');
+    expect(nextResume.projects[0]?.summary.zh).toBe(resume.projects[0]?.summary.zh);
+    expect(nextResume.highlights[0]?.description.zh).toBe(
+      resume.highlights[0]?.description.zh,
+    );
+  });
+
+  it('should reject apply when the draft timestamp is stale', async () => {
+    const resume = createExampleStandardResume();
+    const aiService = {
+      getProviderSummary: () => ({
+        provider: 'mock',
+        model: 'mock-resume',
+        mode: 'mock',
+      }),
+      generateText: vi.fn(),
+    } as unknown as AiService;
+    const resumePublicationService = {
+      getDraft: vi.fn().mockResolvedValue({
+        status: 'draft',
+        resume,
+        updatedAt: '2026-03-31T00:00:00.000Z',
+      }),
+      updateDraft: vi.fn(),
+    } as unknown as ResumePublicationService;
+
+    const service = new AiResumeOptimizationService(
+      aiService,
+      resumePublicationService,
+    );
+
+    await expect(
+      service.applySuggestion({
+        draftUpdatedAt: '2026-03-30T00:00:00.000Z',
+        patch: {
+          profile: {
+            summary: {
+              zh: '新的中文摘要',
+              en: 'New English summary',
+            },
+          },
+        },
+        modules: ['profile'],
+      }),
+    ).rejects.toThrow('当前草稿已发生变化，请重新生成建议稿后再应用');
   });
 });

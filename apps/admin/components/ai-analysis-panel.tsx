@@ -8,28 +8,29 @@ import {
 import { useState } from 'react';
 
 import {
+  applyAiResumeOptimization,
   generateAiResumeOptimization,
   triggerAiWorkbenchAnalysis,
 } from '../lib/ai-workbench-api';
 import {
+  AiResumeOptimizationChangedModule,
   AiResumeOptimizationResult,
   AiWorkbenchLocale,
   AiWorkbenchReport,
   AiWorkbenchRuntimeSummary,
   AiWorkbenchScenario,
 } from '../lib/ai-workbench-types';
-import { updateDraftResume } from '../lib/resume-draft-api';
 
 interface AiAnalysisPanelProps {
   accessToken: string;
   apiBaseUrl: string;
+  applyResumeOptimization?: typeof applyAiResumeOptimization;
   canAnalyze: boolean;
   content: string;
   helperMessage?: string | null;
   onContentChange: (value: string) => void;
   runtimeSummary: AiWorkbenchRuntimeSummary;
   generateResumeOptimization?: typeof generateAiResumeOptimization;
-  saveDraft?: typeof updateDraftResume;
   triggerAnalysis?: typeof triggerAiWorkbenchAnalysis;
 }
 
@@ -86,13 +87,13 @@ function formatScore(report: AiWorkbenchReport): string {
 export function AiAnalysisPanel({
   accessToken,
   apiBaseUrl,
+  applyResumeOptimization = applyAiResumeOptimization,
   canAnalyze,
   content,
   helperMessage,
   onContentChange,
   runtimeSummary,
   generateResumeOptimization = generateAiResumeOptimization,
-  saveDraft = updateDraftResume,
   triggerAnalysis = triggerAiWorkbenchAnalysis,
 }: AiAnalysisPanelProps) {
   const [scenario, setScenario] = useState<AiWorkbenchScenario>('resume-review');
@@ -106,6 +107,9 @@ export function AiAnalysisPanel({
   );
   const [suggestion, setSuggestion] =
     useState<AiResumeOptimizationResult | null>(null);
+  const [selectedModules, setSelectedModules] = useState<
+    AiResumeOptimizationChangedModule[]
+  >([]);
   const [applyPending, setApplyPending] = useState(false);
   const [applyFeedbackMessage, setApplyFeedbackMessage] = useState<string | null>(
     null,
@@ -189,8 +193,10 @@ export function AiAnalysisPanel({
       });
 
       setSuggestion(result);
+      setSelectedModules(result.changedModules);
     } catch (error) {
       setSuggestion(null);
+      setSelectedModules([]);
       setSuggestionErrorMessage(
         error instanceof Error ? error.message : '结构化简历建议生成失败，请稍后重试',
       );
@@ -199,8 +205,21 @@ export function AiAnalysisPanel({
     }
   }
 
+  function toggleSelectedModule(module: AiResumeOptimizationChangedModule) {
+    setSelectedModules((currentModules) =>
+      currentModules.includes(module)
+        ? currentModules.filter((item) => item !== module)
+        : [...currentModules, module],
+    );
+  }
+
   async function handleApplySuggestion() {
     if (!suggestion) {
+      return;
+    }
+
+    if (selectedModules.length === 0) {
+      setSuggestionErrorMessage('请至少勾选一个要应用到草稿的模块。');
       return;
     }
 
@@ -209,14 +228,16 @@ export function AiAnalysisPanel({
     setApplyFeedbackMessage(null);
 
     try {
-      await saveDraft({
+      await applyResumeOptimization({
         apiBaseUrl,
         accessToken,
-        resume: suggestion.suggestedResume,
+        draftUpdatedAt: suggestion.applyPayload.draftUpdatedAt,
+        modules: selectedModules,
+        patch: suggestion.applyPayload.patch,
       });
 
       setApplyFeedbackMessage(
-        'AI 建议稿已应用到当前草稿。公开站内容不会自动变化，仍需手动发布。',
+        `已将 ${selectedModules.length} 个模块应用到当前草稿。公开站内容不会自动变化，仍需手动发布。`,
       );
     } catch (error) {
       setSuggestionErrorMessage(
@@ -470,7 +491,7 @@ export function AiAnalysisPanel({
           <DisplaySurfaceCard className="analysis-summary-card">
             <DisplaySectionIntro
               compact
-              description="当前开源版先只做结构化改写建议和一键应用草稿，不继续扩张到历史与多版本管理。"
+              description="当前开源版先只做结构化改写建议、模块级确认和服务端 apply，不继续扩张到历史与多版本管理。"
               eyebrow="建议摘要"
               title="AI 建议稿说明"
               titleAs="h3"
@@ -485,21 +506,75 @@ export function AiAnalysisPanel({
             ) : null}
           </DisplaySurfaceCard>
 
+          <div className="analysis-section-grid">
+            {suggestion.moduleDiffs.map((moduleDiff) => {
+              const checked = selectedModules.includes(moduleDiff.module);
+
+              return (
+                <DisplaySurfaceCard
+                  as="article"
+                  className="analysis-section-card"
+                  key={moduleDiff.module}
+                >
+                  <div className="module-diff-header">
+                    <DisplaySectionIntro
+                      compact
+                      description={moduleDiff.reason}
+                      eyebrow={`模块：${moduleDiff.module}`}
+                      title={moduleDiff.title}
+                      titleAs="h3"
+                    />
+                    <label className="module-check">
+                      <input
+                        checked={checked}
+                        onChange={() => toggleSelectedModule(moduleDiff.module)}
+                        type="checkbox"
+                      />
+                      <span>{`应用模块：${moduleDiff.module}`}</span>
+                    </label>
+                  </div>
+
+                  <div className="module-diff-stack">
+                    {moduleDiff.entries.map((entry) => (
+                      <div className="module-diff-entry" key={entry.key}>
+                        <strong>{entry.label}</strong>
+                        <div className="module-diff-grid">
+                          <div className="status-box">
+                            <strong>当前草稿</strong>
+                            <span>{entry.before}</span>
+                          </div>
+                          <div className="status-box">
+                            <strong>建议稿</strong>
+                            <span>{entry.after}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </DisplaySurfaceCard>
+              );
+            })}
+          </div>
+
           <DisplaySurfaceCard className="card stack">
             <DisplaySectionIntro
               compact
-              description="一键应用会覆盖当前草稿，但不会自动发布到公开站。"
+              description="只有勾选的模块会被服务端写回当前草稿，避免前端整份覆盖。"
               eyebrow="草稿应用"
-              title="将建议稿写回当前草稿"
+              title="将已选模块写回当前草稿"
               titleAs="h3"
             />
+            <div className="dashboard-inline-note">
+              当前已选择 {selectedModules.length} / {suggestion.changedModules.length}{' '}
+              个模块。
+            </div>
             <div className="dashboard-entry-actions">
               <button
-                disabled={applyPending}
+                disabled={applyPending || selectedModules.length === 0}
                 onClick={() => void handleApplySuggestion()}
                 type="button"
               >
-                {applyPending ? '正在应用到草稿...' : '一键应用到当前草稿'}
+                {applyPending ? '正在应用到草稿...' : '应用已选模块到当前草稿'}
               </button>
             </div>
           </DisplaySurfaceCard>

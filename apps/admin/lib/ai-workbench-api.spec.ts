@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  applyAiResumeOptimization,
   fetchCachedAiWorkbenchReport,
   fetchCachedAiWorkbenchReports,
   fetchAiWorkbenchRuntime,
@@ -211,6 +212,32 @@ describe('ai workbench api client', () => {
           summary: '已生成结构化建议',
           focusAreas: ['强化摘要', '补强项目亮点'],
           changedModules: ['profile', 'projects'],
+          moduleDiffs: [
+            {
+              module: 'profile',
+              title: '个人定位与摘要',
+              reason: '个人摘要决定面试官最先看到的岗位定位。',
+              entries: [
+                {
+                  key: 'profile-summary',
+                  label: '个人摘要',
+                  before: '中文：原摘要 | English: Original summary',
+                  after: '中文：新的中文摘要 | English: New English summary',
+                },
+              ],
+            },
+          ],
+          applyPayload: {
+            draftUpdatedAt: '2026-03-30T00:00:00.000Z',
+            patch: {
+              profile: {
+                summary: {
+                  zh: '新的中文摘要',
+                  en: 'New English summary',
+                },
+              },
+            },
+          },
           suggestedResume: {
             meta: {
               slug: 'standard-resume',
@@ -278,6 +305,96 @@ describe('ai workbench api client', () => {
       }),
     );
     expect(response.changedModules).toEqual(['profile', 'projects']);
+    expect(response.moduleDiffs[0]?.entries[0]?.label).toBe('个人摘要');
+    expect(response.applyPayload.patch.profile?.summary?.zh).toBe('新的中文摘要');
     expect(response.suggestedResume.profile.summary.zh).toBe('新的中文摘要');
+  });
+
+  it('should apply selected resume optimization modules with bearer token', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          status: 'draft',
+          updatedAt: '2026-03-31T00:00:00.000Z',
+          resume: {
+            meta: {
+              slug: 'standard-resume',
+              version: 1,
+              defaultLocale: 'zh',
+              locales: ['zh', 'en'],
+            },
+            profile: {
+              fullName: {
+                zh: '付寅生',
+                en: 'Yinsheng Fu',
+              },
+              headline: {
+                zh: '前端工程师',
+                en: 'Frontend Engineer',
+              },
+              summary: {
+                zh: '新的中文摘要',
+                en: 'New English summary',
+              },
+              location: {
+                zh: '成都',
+                en: 'Chengdu',
+              },
+              email: 'demo@example.com',
+              phone: '123456789',
+              website: 'https://example.com',
+              links: [],
+              interests: [],
+            },
+            education: [],
+            experiences: [],
+            projects: [],
+            skills: [],
+            highlights: [],
+          },
+        }),
+      }),
+    );
+
+    const response = await applyAiResumeOptimization({
+      apiBaseUrl: 'http://localhost:5577',
+      accessToken: 'demo-token',
+      draftUpdatedAt: '2026-03-30T00:00:00.000Z',
+      modules: ['profile'],
+      patch: {
+        profile: {
+          summary: {
+            zh: '新的中文摘要',
+            en: 'New English summary',
+          },
+        },
+      },
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5577/ai/reports/resume-optimize/apply',
+      expect.objectContaining({
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer demo-token',
+        },
+        body: JSON.stringify({
+          draftUpdatedAt: '2026-03-30T00:00:00.000Z',
+          modules: ['profile'],
+          patch: {
+            profile: {
+              summary: {
+                zh: '新的中文摘要',
+                en: 'New English summary',
+              },
+            },
+          },
+        }),
+      }),
+    );
+    expect(response.resume.profile.summary.zh).toBe('新的中文摘要');
   });
 });

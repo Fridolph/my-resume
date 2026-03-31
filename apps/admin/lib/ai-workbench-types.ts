@@ -1,4 +1,5 @@
 import type { StandardResume } from './resume-types';
+import type { LocalizedText, ResumeDraftSnapshot, ResumeHighlightItem } from './resume-types';
 
 export type AiWorkbenchScenario =
   | 'jd-match'
@@ -84,10 +85,61 @@ export type AiResumeOptimizationChangedModule =
   | 'projects'
   | 'highlights';
 
+export interface AiResumeOptimizationProfilePatch {
+  headline?: LocalizedText;
+  summary?: LocalizedText;
+}
+
+export interface AiResumeOptimizationExperiencePatch {
+  index: number;
+  summary?: LocalizedText;
+  highlights?: LocalizedText[];
+}
+
+export interface AiResumeOptimizationProjectPatch {
+  index: number;
+  summary?: LocalizedText;
+  highlights?: LocalizedText[];
+}
+
+export interface AiResumeOptimizationPatch {
+  profile?: AiResumeOptimizationProfilePatch;
+  experiences?: AiResumeOptimizationExperiencePatch[];
+  projects?: AiResumeOptimizationProjectPatch[];
+  highlights?: ResumeHighlightItem[];
+}
+
+export interface AiResumeOptimizationDiffEntry {
+  key: string;
+  label: string;
+  before: string;
+  after: string;
+}
+
+export interface AiResumeOptimizationModuleDiff {
+  module: AiResumeOptimizationChangedModule;
+  title: string;
+  reason: string;
+  entries: AiResumeOptimizationDiffEntry[];
+}
+
+export interface ApplyAiResumeOptimizationInput {
+  apiBaseUrl: string;
+  accessToken: string;
+  draftUpdatedAt: string;
+  modules: AiResumeOptimizationChangedModule[];
+  patch: AiResumeOptimizationPatch;
+}
+
 export interface AiResumeOptimizationResult {
   summary: string;
   focusAreas: string[];
   changedModules: AiResumeOptimizationChangedModule[];
+  moduleDiffs: AiResumeOptimizationModuleDiff[];
+  applyPayload: {
+    draftUpdatedAt: string;
+    patch: AiResumeOptimizationPatch;
+  };
   suggestedResume: StandardResume;
   providerSummary: {
     provider: string;
@@ -95,3 +147,5 @@ export interface AiResumeOptimizationResult {
     mode: string;
   };
 }
+
+export type ApplyAiResumeOptimizationResult = ResumeDraftSnapshot;

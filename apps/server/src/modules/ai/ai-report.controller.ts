@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Inject,
   Param,
   Post,
@@ -13,6 +15,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RoleCapabilitiesGuard } from '../auth/guards/role-capabilities.guard';
 import { AiService } from './ai.service';
 import {
+  ApplyResumeOptimizationInput,
   AiResumeOptimizationService,
   GenerateResumeOptimizationInput,
 } from './ai-resume-optimization.service';
@@ -29,6 +32,7 @@ interface CacheReportBody {
 }
 
 interface ResumeOptimizationBody extends GenerateResumeOptimizationInput {}
+interface ApplyResumeOptimizationBody extends ApplyResumeOptimizationInput {}
 
 const SUPPORTED_SCENARIOS: AnalysisScenario[] = [
   'jd-match',
@@ -99,6 +103,14 @@ export class AiReportController {
   @RequireCapability('canTriggerAiAnalysis')
   async optimizeResume(@Body() body: ResumeOptimizationBody) {
     return this.aiResumeOptimizationService.generateSuggestion(body);
+  }
+
+  @Post('resume-optimize/apply')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(RoleCapabilitiesGuard)
+  @RequireCapability('canEditResume')
+  async applyResumeOptimization(@Body() body: ApplyResumeOptimizationBody) {
+    return this.aiResumeOptimizationService.applySuggestion(body);
   }
 
   private buildAnalysisPrompt(body: CacheReportBody): string {

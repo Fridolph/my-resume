@@ -135,6 +135,23 @@ describe('AI report role access (e2e)', () => {
         locale: 'zh',
       })
       .expect(403);
+
+    await request(app.getHttpServer())
+      .post('/ai/reports/resume-optimize/apply')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        draftUpdatedAt: '2026-03-31T00:00:00.000Z',
+        modules: ['profile'],
+        patch: {
+          profile: {
+            summary: {
+              zh: '新的中文摘要',
+              en: 'New English summary',
+            },
+          },
+        },
+      })
+      .expect(403);
   });
 
   it('should allow admin to trigger analysis and write cached ai results', async () => {
@@ -188,6 +205,24 @@ describe('AI report role access (e2e)', () => {
 
     expect(optimizeResponse.body.summary.length).toBeGreaterThan(0);
     expect(optimizeResponse.body.changedModules).toContain('profile');
+    expect(optimizeResponse.body.moduleDiffs.length).toBeGreaterThan(0);
+    expect(optimizeResponse.body.applyPayload.draftUpdatedAt).toBeTruthy();
     expect(optimizeResponse.body.suggestedResume.meta.slug).toBe('standard-resume');
+
+    const applyResponse = await request(app.getHttpServer())
+      .post('/ai/reports/resume-optimize/apply')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        draftUpdatedAt: optimizeResponse.body.applyPayload.draftUpdatedAt,
+        modules: ['profile'],
+        patch: optimizeResponse.body.applyPayload.patch,
+      })
+      .expect(200);
+
+    expect(applyResponse.body.status).toBe('draft');
+    expect(applyResponse.body.resume.profile.summary.zh).not.toBe('');
+    expect(applyResponse.body.resume.projects[0].summary.zh).toBe(
+      '为药械企业提供推广与结算管理的 SaaS 方案，支持多组织、多任务与合规流程。',
+    );
   });
 });
