@@ -110,6 +110,9 @@ export function AiAnalysisPanel({
   const [selectedModules, setSelectedModules] = useState<
     AiResumeOptimizationChangedModule[]
   >([]);
+  const [linkedModule, setLinkedModule] =
+    useState<AiResumeOptimizationChangedModule | null>(null);
+  const [moduleLinkMessage, setModuleLinkMessage] = useState<string | null>(null);
   const [applyPending, setApplyPending] = useState(false);
   const [applyFeedbackMessage, setApplyFeedbackMessage] = useState<string | null>(
     null,
@@ -183,6 +186,7 @@ export function AiAnalysisPanel({
     setSuggestionPending(true);
     setSuggestionErrorMessage(null);
     setApplyFeedbackMessage(null);
+    setModuleLinkMessage(null);
 
     try {
       const result = await generateResumeOptimization({
@@ -194,9 +198,11 @@ export function AiAnalysisPanel({
 
       setSuggestion(result);
       setSelectedModules(result.changedModules);
+      setLinkedModule(null);
     } catch (error) {
       setSuggestion(null);
       setSelectedModules([]);
+      setLinkedModule(null);
       setSuggestionErrorMessage(
         error instanceof Error ? error.message : '结构化简历建议生成失败，请稍后重试',
       );
@@ -211,6 +217,36 @@ export function AiAnalysisPanel({
         ? currentModules.filter((item) => item !== module)
         : [...currentModules, module],
     );
+  }
+
+  function handleLinkSuggestionModule(module: AiResumeOptimizationChangedModule) {
+    if (!suggestion) {
+      setModuleLinkMessage('请先生成结构化简历建议，再定位到具体改写模块。');
+      return;
+    }
+
+    const hasModuleDiff = suggestion.moduleDiffs.some((item) => item.module === module);
+
+    if (!hasModuleDiff) {
+      setModuleLinkMessage(`当前建议稿中还没有 ${module} 模块的可应用改写。`);
+      return;
+    }
+
+    setSelectedModules((currentModules) =>
+      currentModules.includes(module) ? currentModules : [...currentModules, module],
+    );
+    setLinkedModule(module);
+    setModuleLinkMessage(`已定位到 ${module} 改写模块，可继续确认并应用。`);
+
+    if (typeof document !== 'undefined') {
+      const target = document.getElementById(`module-diff-${module}`);
+      if (typeof target?.scrollIntoView === 'function') {
+        target.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        });
+      }
+    }
   }
 
   async function handleApplySuggestion() {
@@ -310,6 +346,9 @@ export function AiAnalysisPanel({
         {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
         {suggestionErrorMessage ? (
           <p className="error-text">{suggestionErrorMessage}</p>
+        ) : null}
+        {moduleLinkMessage ? (
+          <p className="dashboard-inline-note">{moduleLinkMessage}</p>
         ) : null}
         {applyFeedbackMessage ? (
           <p className="dashboard-inline-note">{applyFeedbackMessage}</p>
@@ -421,26 +460,47 @@ export function AiAnalysisPanel({
               />
               <div className="stack">
                 {report.suggestions.map((item) => (
-                  <DisplaySurfaceCard
-                    as="section"
-                    className="card stack"
-                    key={item.key}
-                  >
-                    <DisplaySectionIntro
-                      compact
-                      description={item.reason}
-                      eyebrow={
-                        item.module ? `建议模块：${item.module}` : '建议模块：通用判断'
-                      }
-                      title={item.title}
-                      titleAs="h4"
-                    />
-                    <ul className="muted-list">
-                      {item.actions.map((action) => (
-                        <li key={`${item.key}-${action}`}>{action}</li>
-                      ))}
-                    </ul>
-                  </DisplaySurfaceCard>
+                  (() => {
+                    const suggestionModule = item.module;
+
+                    return (
+                      <DisplaySurfaceCard
+                        as="section"
+                        className="card stack"
+                        key={item.key}
+                      >
+                        <DisplaySectionIntro
+                          compact
+                          description={item.reason}
+                          eyebrow={
+                            suggestionModule
+                              ? `建议模块：${suggestionModule}`
+                              : '建议模块：通用判断'
+                          }
+                          title={item.title}
+                          titleAs="h4"
+                        />
+                        <ul className="muted-list">
+                          {item.actions.map((action) => (
+                            <li key={`${item.key}-${action}`}>{action}</li>
+                          ))}
+                        </ul>
+                        {suggestionModule ? (
+                          <div className="dashboard-entry-actions">
+                            <button
+                              className="secondary-button"
+                              onClick={() =>
+                                handleLinkSuggestionModule(suggestionModule)
+                              }
+                              type="button"
+                            >
+                              {`定位到 ${suggestionModule} 改写模块`}
+                            </button>
+                          </div>
+                        ) : null}
+                      </DisplaySurfaceCard>
+                    );
+                  })()
                 ))}
               </div>
             </DisplaySurfaceCard>
@@ -513,7 +573,8 @@ export function AiAnalysisPanel({
               return (
                 <DisplaySurfaceCard
                   as="article"
-                  className="analysis-section-card"
+                  className={`analysis-section-card${linkedModule === moduleDiff.module ? ' is-linked-module' : ''}`}
+                  id={`module-diff-${moduleDiff.module}`}
                   key={moduleDiff.module}
                 >
                   <div className="module-diff-header">

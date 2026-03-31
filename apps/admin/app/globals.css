@@ -252,6 +252,11 @@ textarea {
   border-radius: 20px;
 }
 
+.analysis-section-card.is-linked-module {
+  border: 1px solid var(--display-color-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--display-color-accent) 18%, transparent);
+}
+
 .analysis-text-block {
   white-space: pre-wrap;
   line-height: 1.7;
