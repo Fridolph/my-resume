@@ -63,6 +63,11 @@ function ControlledAnalysisPanel(props: {
   canAnalyze: boolean;
   generateResumeOptimization?: typeof import('../lib/ai-workbench-api').generateAiResumeOptimization;
   helperMessage?: string | null;
+  onDraftApplied?: (snapshot: {
+    status: 'draft';
+    updatedAt: string;
+    resume: StandardResume;
+  }) => void;
   triggerAnalysis?: typeof import('../lib/ai-workbench-api').triggerAiWorkbenchAnalysis;
   initialContent?: string;
 }) {
@@ -76,6 +81,7 @@ function ControlledAnalysisPanel(props: {
       content={content}
       helperMessage={props.helperMessage}
       onContentChange={setContent}
+      onDraftApplied={props.onDraftApplied}
       runtimeSummary={runtimeSummary}
       applyResumeOptimization={props.applyResumeOptimization}
       generateResumeOptimization={props.generateResumeOptimization}
@@ -396,6 +402,7 @@ describe('AiAnalysisPanel', () => {
       resume: createTestResume(),
       updatedAt: '2026-03-30T00:00:00.000Z',
     });
+    const onDraftApplied = vi.fn();
 
     render(
       <ControlledAnalysisPanel
@@ -403,6 +410,7 @@ describe('AiAnalysisPanel', () => {
         canAnalyze
         generateResumeOptimization={generateResumeOptimization}
         initialContent="请根据 React 和 Next.js 岗位优化当前简历"
+        onDraftApplied={onDraftApplied}
         triggerAnalysis={triggerAnalysis}
       />,
     );
@@ -458,6 +466,12 @@ describe('AiAnalysisPanel', () => {
           }),
         }),
       });
+    });
+
+    expect(onDraftApplied).toHaveBeenCalledWith({
+      status: 'draft',
+      resume: createTestResume(),
+      updatedAt: '2026-03-30T00:00:00.000Z',
     });
 
     expect(

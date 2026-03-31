@@ -16,6 +16,8 @@ import { fetchAiWorkbenchRuntime } from '../lib/ai-workbench-api';
 import { AiWorkbenchRuntimeSummary } from '../lib/ai-workbench-types';
 import { AuthUserView } from '../lib/auth-types';
 import { DEFAULT_API_BASE_URL } from '../lib/env';
+import { fetchDraftResume } from '../lib/resume-draft-api';
+import { ResumeDraftSnapshot } from '../lib/resume-types';
 import {
   clearAccessToken,
   readAccessToken,
@@ -52,6 +54,15 @@ export function AdminAiWorkbenchShell() {
   const [analysisHelperMessage, setAnalysisHelperMessage] = useState<
     string | null
   >(null);
+  const [draftSnapshot, setDraftSnapshot] = useState<ResumeDraftSnapshot | null>(
+    null,
+  );
+  const [draftSnapshotStatus, setDraftSnapshotStatus] = useState<
+    'idle' | 'loading' | 'ready' | 'error'
+  >('idle');
+  const [draftSnapshotMessage, setDraftSnapshotMessage] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     const accessToken = readAccessToken();
@@ -84,6 +95,36 @@ export function AdminAiWorkbenchShell() {
       });
   }, []);
 
+  useEffect(() => {
+    if (status !== 'ready' || !currentUser?.capabilities.canEditResume) {
+      return;
+    }
+
+    const accessToken = readAccessToken();
+
+    if (!accessToken) {
+      return;
+    }
+
+    setDraftSnapshotStatus('loading');
+    setDraftSnapshotMessage(null);
+
+    fetchDraftResume({
+      apiBaseUrl: DEFAULT_API_BASE_URL,
+      accessToken,
+    })
+      .then((snapshot) => {
+        setDraftSnapshot(snapshot);
+        setDraftSnapshotStatus('ready');
+      })
+      .catch((error) => {
+        setDraftSnapshotStatus('error');
+        setDraftSnapshotMessage(
+          error instanceof Error ? error.message : '草稿快照读取失败，请稍后重试',
+        );
+      });
+  }, [currentUser?.capabilities.canEditResume, status]);
+
   function handleExtractedText(result: FileExtractionResult) {
     setAnalysisContent(result.text);
     setAnalysisHelperMessage(
@@ -97,6 +138,12 @@ export function AdminAiWorkbenchShell() {
     if (analysisHelperMessage) {
       setAnalysisHelperMessage(null);
     }
+  }
+
+  function handleDraftApplied(snapshot: ResumeDraftSnapshot) {
+    setDraftSnapshot(snapshot);
+    setDraftSnapshotStatus('ready');
+    setDraftSnapshotMessage('当前草稿快照已刷新，可直接确认 AI 改写结果。');
   }
 
   if (status === 'loading') {
@@ -194,6 +241,7 @@ export function AdminAiWorkbenchShell() {
             canAnalyze={isAdmin}
             content={analysisContent}
             helperMessage={analysisHelperMessage}
+            onDraftApplied={handleDraftApplied}
             onContentChange={handleAnalysisContentChange}
             runtimeSummary={runtimeSummary}
           />
@@ -227,6 +275,42 @@ export function AdminAiWorkbenchShell() {
         </div>
 
         <aside className="dashboard-column stack">
+          {currentUser.capabilities.canEditResume ? (
+            <DisplaySurfaceCard className="card stack">
+              <DisplaySectionIntro
+                description="这里展示 AI 工作台当前看到的草稿快照，apply 成功后会即时刷新，避免必须切回后台首页再确认。"
+                eyebrow="草稿反馈"
+                title="当前草稿快照"
+              />
+
+              {draftSnapshotStatus === 'loading' ? (
+                <p className="muted">正在加载当前草稿快照...</p>
+              ) : null}
+
+              {draftSnapshotStatus === 'error' && draftSnapshotMessage ? (
+                <p className="error-text">{draftSnapshotMessage}</p>
+              ) : null}
+
+              {draftSnapshotMessage && draftSnapshotStatus === 'ready' ? (
+                <div className="dashboard-inline-note">{draftSnapshotMessage}</div>
+              ) : null}
+
+              {draftSnapshot ? (
+                <div className="stack">
+                  <div className="status-box">
+                    <strong>{draftSnapshot.resume.profile.headline.zh}</strong>
+                    <span>{draftSnapshot.resume.profile.summary.zh}</span>
+                    <span>{`最近更新时间：${new Date(draftSnapshot.updatedAt).toLocaleString('zh-CN', { hour12: false })}`}</span>
+                  </div>
+                  <div className="status-box">
+                    <strong>{draftSnapshot.resume.profile.headline.en}</strong>
+                    <span>{draftSnapshot.resume.profile.summary.en}</span>
+                  </div>
+                </div>
+              ) : null}
+            </DisplaySurfaceCard>
+          ) : null}
+
           <DisplaySurfaceCard className="card stack">
             <DisplaySectionIntro
               description="先把当前运行时状态和角色限制写清楚，避免 AI 工作台后续越做越散。"

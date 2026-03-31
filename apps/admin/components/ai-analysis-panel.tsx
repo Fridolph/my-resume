@@ -15,6 +15,7 @@ import {
 import {
   AiResumeOptimizationChangedModule,
   AiResumeOptimizationResult,
+  ApplyAiResumeOptimizationResult,
   AiWorkbenchLocale,
   AiWorkbenchReport,
   AiWorkbenchRuntimeSummary,
@@ -28,6 +29,7 @@ interface AiAnalysisPanelProps {
   canAnalyze: boolean;
   content: string;
   helperMessage?: string | null;
+  onDraftApplied?: (snapshot: ApplyAiResumeOptimizationResult) => void;
   onContentChange: (value: string) => void;
   runtimeSummary: AiWorkbenchRuntimeSummary;
   generateResumeOptimization?: typeof generateAiResumeOptimization;
@@ -91,6 +93,7 @@ export function AiAnalysisPanel({
   canAnalyze,
   content,
   helperMessage,
+  onDraftApplied,
   onContentChange,
   runtimeSummary,
   generateResumeOptimization = generateAiResumeOptimization,
@@ -262,15 +265,18 @@ export function AiAnalysisPanel({
     setApplyPending(true);
     setSuggestionErrorMessage(null);
     setApplyFeedbackMessage(null);
+    setModuleLinkMessage(null);
 
     try {
-      await applyResumeOptimization({
+      const nextSnapshot = await applyResumeOptimization({
         apiBaseUrl,
         accessToken,
         draftUpdatedAt: suggestion.applyPayload.draftUpdatedAt,
         modules: selectedModules,
         patch: suggestion.applyPayload.patch,
       });
+
+      onDraftApplied?.(nextSnapshot);
 
       setApplyFeedbackMessage(
         `已将 ${selectedModules.length} 个模块应用到当前草稿。公开站内容不会自动变化，仍需手动发布。`,
