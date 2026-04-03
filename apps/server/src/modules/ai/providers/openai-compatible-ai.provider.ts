@@ -1,6 +1,8 @@
 import { AiRuntimeConfig } from '../config/ai-config';
 import {
   AiProvider,
+  EmbedTextsInput,
+  EmbedTextsResult,
   GenerateTextInput,
   GenerateTextResult,
 } from '../interfaces/ai-provider.interface';
@@ -16,8 +18,19 @@ interface OpenAiCompatibleResponse {
   }>;
 }
 
+interface OpenAiCompatibleEmbeddingResponse {
+  data?: Array<{
+    embedding?: number[];
+    index?: number;
+  }>;
+}
+
 function joinChatCompletionsUrl(baseUrl: string): string {
   return `${baseUrl.replace(/\/$/, '')}/chat/completions`;
+}
+
+function joinEmbeddingsUrl(baseUrl: string): string {
+  return `${baseUrl.replace(/\/$/, '')}/embeddings`;
 }
 
 function extractMessageContent(response: OpenAiCompatibleResponse): string {
@@ -96,6 +109,36 @@ export class OpenAiCompatibleAiProvider implements AiProvider {
       provider: this.config.provider,
       model: this.config.model,
       text: extractMessageContent(payload),
+      raw: payload,
+    };
+  }
+
+  async embedTexts(input: EmbedTextsInput): Promise<EmbedTextsResult> {
+    const response = await this.fetchFn(joinEmbeddingsUrl(this.config.baseUrl), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.config.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: this.config.model,
+        input: input.texts,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `${this.config.providerLabel} embeddings request failed with status ${response.status}`,
+      );
+    }
+
+    const payload = (await response.json()) as OpenAiCompatibleEmbeddingResponse;
+    const embeddings = payload.data?.map((item) => item.embedding ?? []) ?? [];
+
+    return {
+      provider: this.config.provider,
+      model: this.config.model,
+      embeddings,
       raw: payload,
     };
   }

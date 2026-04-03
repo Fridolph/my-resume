@@ -222,7 +222,7 @@ describe('AI report role access (e2e)', () => {
     expect(applyResponse.body.status).toBe('draft');
     expect(applyResponse.body.resume.profile.summary.zh).not.toBe('');
     expect(applyResponse.body.resume.projects[0].summary.zh).toBe(
-      '为药械企业提供推广与结算管理的 SaaS 方案，支持多组织、多任务与合规流程。',
+      '为全球光伏安装商提供在线项目设计与报价服务，支持多国家、多税率、多币种的复杂业务场景。',
     );
   });
 });

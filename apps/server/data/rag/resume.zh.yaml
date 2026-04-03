@@ -1,0 +1,245 @@
+profile:
+  name: 付寅生
+  title: JS全栈 / AI Agent 开发工程师
+  location: 中国成都
+  experienceYears: 10年
+  targetRole: JS全栈 / AI Agent开发
+  status: 在职，可机会
+  summary: >
+    10年 JavaScript 全栈开发经验，覆盖安全平台、SaaS、能源与内容社区等业务场景，
+    擅长 Vue / React、Node.js、工程化和复杂业务建模，也在持续推进 AI Agent 工作流落地与知识沉淀。
+  links:
+    - label: 在线简历
+      url: https://resume.fridolph.top
+    - label: GitHub
+      url: https://github.com/Fridolph
+    - label: 技术博客
+      url: https://blog.fridolph.top
+    - label: 掘金专栏
+      url: https://juejin.cn/user/3984288320609918
+
+skills:
+  - 具备 10 年 JavaScript 全栈开发经验，经历安全、SaaS、能源和内容社区等多类 ToB / ToC 业务。
+  - 熟练掌握 Vue2/3、Nuxt、Composition API、Pinia，主导过多个项目 Vue2 -> Vue3 架构升级。
+  - 熟悉 React、Hooks、Next.js，能在学习型项目中完成 React 全栈重构和工程落地。
+  - 熟练使用 Node.js、NestJS，具备 RESTful API、JWT 认证、数据库设计与服务端工程化能力。
+  - 熟悉 pnpm workspace、Monorepo、CI/CD、测试策略、性能优化和前端规范建设。
+  - 持续进行 AI Agent 开发实践，熟悉 Claude Code、Cursor、Codex、Coze、Prompt Engineering 与 RAG 基础链路。
+  - 熟悉 TailwindCSS、Sass/Less、ECharts、D3.js、WebSocket、Web Worker 和多端响应式设计。
+  - 有团队管理、Code Review、知识库建设与技术分享经验，重视工程可解释性与可持续协作。
+
+education:
+  - id: scu-jj
+    school: 四川大学锦江学院
+    degree: 本科
+    major: 通信工程
+    period: 2012.09 - 2016.06
+    location: 四川眉山
+    details:
+      - 本科阶段完成通信工程专业学习，为后续前端与工程化实践打下基础。
+
+experiences:
+  - id: aosheng
+    company: 成都澳昇能源科技有限责任公司
+    role: 前端开发工程师
+    period: 2024.08 - 至今
+    summary: 负责 C 端核心业务开发，涵盖项目创建、设计、报价系统及展示链路，并参与技术方案、数据库设计和 AI 工具流程建设。
+    responsibilities:
+      - 负责项目创建、设计、报价与展示链路的前端交付。
+      - 参与需求评审、技术方案设计，并协助后端进行数据库设计。
+      - 引入 Coze 等 AI 工具，沉淀内部 Skill 库与复用流程。
+    achievements:
+      - 独立完成报价系统前端架构设计，支持复杂配置项动态计算与多方案对比。
+      - 优化项目创建 -> 报价 -> 展示主链路，减少无效操作并提升关键转化体验。
+      - 实践 AI 辅助开发，让流程更可回溯、可复用。
+    techStack:
+      - Nuxt 4
+      - Vue3
+      - TypeScript
+      - Nuxt UI
+      - Pinia
+      - i18n
+    projects:
+      - id: greensketch
+        name: GreenSketch
+        summary: 为全球光伏安装商提供在线项目设计与报价服务，支持多国家、多税率、多币种的复杂业务场景。
+        techStack:
+          - Nuxt 4
+          - Vue3
+          - TypeScript
+          - Nuxt UI
+          - Pinia
+          - ECharts
+          - Google Maps
+          - Web Worker
+        contributions:
+          - 设计可扩展的配置计算与收益预测链路，支撑 10+ 配置项联动。
+          - 使用 Web Worker 与复杂表单状态管理，保证报价生成的稳定性和性能。
+          - 抽象国家策略层，支持税率、币种和法规的动态适配。
+
+  - id: yixie
+    company: 成都一蟹科技有限公司
+    role: 前端主管
+    period: 2024.03 - 2024.08
+    summary: 负责团队管理、需求规划、技术升级与质量建设，推动 Monorepo 工程化改造与知识沉淀。
+    responsibilities:
+      - 管理 10 人前端团队，制定 TypeScript、ESLint 与提交流程规范。
+      - 主导部分项目 Vue2 -> Vue3 + TypeScript 升级与复用组件建设。
+      - 组织 Code Review 与技术分享，改善协作氛围和交付质量。
+    achievements:
+      - 建立企业内部知识库，沉淀 50+ 技术文档和最佳实践。
+      - 推动 Monorepo 与 pnpm 接入，统一管理多个项目的依赖和协作方式。
+      - 参与企业合规中心迭代，设计跨项目复用的业务组件。
+    techStack:
+      - Vue3
+      - TypeScript
+      - pnpm
+      - Monorepo
+      - Ant Design Vue
+      - uni-app
+    projects:
+      - id: yyk-saas
+        name: 云药客 SaaS 系统
+        summary: 为药械企业提供业务推广解决方案，支持多组织、多任务的结算管理并确保合规性。
+        techStack:
+          - Vue3
+          - Ant Design Vue
+          - Pinia
+          - TypeScript
+          - ECharts
+        contributions:
+          - 主导 Vue2 -> Vue3 + TS 重构，提升性能并降低维护成本。
+          - 引入 pnpm 与 Monorepo，统一依赖和项目协作方式。
+          - 设计并实现组合式卡片、模式入口、组合搜索等复用业务组件。
+      - id: xhyx
+        name: 悬壶医讯
+        summary: 面向医生的互动交流平台，负责真实世界 RWS、抽奖活动等模块迭代，并推进 uni-app 重构方案。
+        techStack:
+          - 微信小程序
+          - uni-app
+          - Vue3
+          - TypeScript
+          - TailwindCSS
+        contributions:
+          - 负责真实世界 RWS 与抽奖活动模块的开发与优化。
+          - 参与 Vue3 + TypeScript + Tailwind + uView UI 的 uni-app 重构方案调研与推进。
+
+  - id: wskp
+    company: 成都网思科平科技有限公司
+    role: 前端组长
+    period: 2017.07 - 2024.01
+    summary: 负责多个 ToB 安全与管理平台的前端架构、规范建设、跨端协作和重点模块交付，长期处理大数据量渲染、实时通信与复杂权限等问题。
+    responsibilities:
+      - 搭建项目前端架构，明确团队开发规范与协作方式。
+      - 与后端共同约定接口契约，处理复杂表格、搜索、筛选和导出场景。
+      - 推行单元测试、Code Review 与知识共享机制。
+    achievements:
+      - 沉淀详细文档、示例代码和团队规范，提升新人接入效率与协作稳定性。
+      - 在 EDR、Admin、大屏等项目中持续解决高复杂度交付问题。
+      - 参与政府项目，积累较完整的 Web 安全实践经验。
+    techStack:
+      - Vue2
+      - Vue3
+      - TypeScript
+      - ECharts
+      - WebSocket
+      - vxe-table
+      - D3.js
+    projects:
+      - id: edr
+        name: EDR - 终端威胁侦测与响应平台
+        summary: 面向政企安全场景的终端威胁侦测与响应平台，通过探针实时监控终端并在 Web 端统一展示。
+        techStack:
+          - Vue
+          - iView
+          - vxe-table
+          - vue-i18n
+          - ECharts
+          - D3.js
+          - WebSocket
+        contributions:
+          - 负责前端架构、基础模块、utils 和示例文档建设。
+          - 通过 WebSocket 与 Web Worker 优化终端详情、大数据渲染和实时交互体验。
+          - 封装高级搜索、过滤器、PowerShell 等业务组件，并支持导出与私有部署。
+      - id: admin
+        name: Admin - 综合管理后台
+        summary: 公司核心综合管理后台，用于统一管理用户权限、子系统入口和模块定制展示。
+        techStack:
+          - Vue3
+          - TypeScript
+          - Naive UI
+          - ECharts
+          - vue-i18n
+        contributions:
+          - 主导并完成项目架构升级到 Vue3，提高开发效率。
+          - 定义主题变量和组件规范，封装通用表单、上传、高级搜索等能力。
+          - 设计并开发路由权限、菜单权限和多角色能力边界。
+      - id: lc-dashboard
+        name: LC 安全分析大屏
+        summary: 结合 EDR 数据进行安全态势感知与可视化展示的大屏项目。
+        techStack:
+          - Vue3
+          - TypeScript
+          - ECharts
+          - D3.js
+        contributions:
+          - 使用 CSS 绘制、SVG 和响应式布局优化大屏体验与首屏性能。
+          - 实现 ATT&CK 热力图及不同尺寸设备下的适配展示。
+
+  - id: aili
+    company: 四川爱礼科技有限公司
+    role: Web 开发 / 移动端 WebView 开发
+    period: 2016.01 - 2017.07
+    summary: 参与官网与主项目页面开发，负责高精度还原、组件拆分、响应式适配与前后端联调，也经历了从 jQuery 到 React 工程化的早期转型。
+    responsibilities:
+      - 根据设计图进行高精度还原，拆分可复用组件。
+      - 适配主流移动端设备与浏览器，完成与后端接口联调。
+    achievements:
+      - 封装滚动、全屏特效、工具栏、动画与过渡工具模块。
+      - 通过响应式设计和兼容性处理，提升页面一致性与可维护性。
+    techStack:
+      - React
+      - Webpack
+      - Redux
+      - jQuery
+      - Bootstrap
+    projects:
+      - id: etiquette
+        name: 环球礼仪知识平台
+        summary: 传统内容社区综合网站，在平台升级阶段从多页面模式过渡到 Webpack + React + Redux 的工程化模式。
+        techStack:
+          - React
+          - Webpack
+          - Redux
+          - jQuery
+          - Bootstrap
+        contributions:
+          - 负责静态页面与样式编码，兼顾视觉还原和用户体验。
+          - 封装滚动、全屏特效、工具栏和动画模块，提升复用度。
+          - 处理多端适配与兼容性问题，支撑早期工程化转型。
+
+projects:
+  - id: my-resume
+    name: my-resume 在线简历
+    role: 作者 / 维护者
+    period: 2024.02 - 至今
+    summary: 围绕个人履历、全栈重构、AI 分析与教程写作持续迭代的在线简历项目，也是当前公开知识库与 RAG 实验的承载体。
+    techStack:
+      - Next.js
+      - NestJS
+      - TypeScript
+      - AI Provider Adapter
+      - RAG
+    contributions:
+      - 持续记录从开发到部署的全过程，并沉淀为教程、开发日志与可复用模板。
+      - 作为当前 monorepo 重构、简历智能分析和知识库实验的统一内容基线。
+
+extras:
+  openSource:
+    - my-resume：个人简历项目，围绕全栈重构、公开教程与 AI 分析能力持续迭代。
+    - fullstack-mianshiwang：Nuxt + NestJS 全栈项目，验证 DeepSeek SSE 和多轮对话能力。
+    - AI-Journey-Fighting：AI 学习知识库，记录 Agent 开发实践。
+  articles:
+    - 「JS全栈 AI Agent 学习」RAG篇①：先翻书，再答题——RAG 是什么？
+    - 「JS全栈 AI Agent 学习」RAG篇②：RAG 怎么做？从切片到向量检索
+    - 「JS全栈 AI Agent 学习」RAG篇③：RAG 怎么做好？意图提取、重排序与答案质量

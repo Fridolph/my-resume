@@ -13,10 +13,10 @@ describe('ResumeMarkdownExportService', () => {
 
     expect(markdown).toContain('# 付寅生');
     expect(markdown).toContain('## 个人简介');
-    expect(markdown).toContain('前端工程师 / 前端负责人');
-    expect(markdown).toContain('### 成都一蟹科技有限公司');
-    expect(markdown).toContain('### 云药客 SaaS 系统');
-    expect(markdown).toContain('Vite / Webpack / pnpm / Monorepo');
+    expect(markdown).toContain('JS 全栈 / AI Agent 开发工程师');
+    expect(markdown).toContain('### 成都澳昇能源科技有限责任公司');
+    expect(markdown).toContain('### GreenSketch');
+    expect(markdown).toContain('Nuxt 4 / Vue 3 / TypeScript / Pinia / Nuxt UI / i18n');
   });
 
   it('should render english markdown when locale is en', () => {
@@ -26,9 +26,9 @@ describe('ResumeMarkdownExportService', () => {
 
     expect(markdown).toContain('# Yinsheng Fu');
     expect(markdown).toContain('## Summary');
-    expect(markdown).toContain('Frontend Engineer / Frontend Lead');
-    expect(markdown).toContain('### Chengdu Yixie Technology Co., Ltd.');
-    expect(markdown).toContain('### YYK SaaS Platform');
-    expect(markdown).toContain('frontend engineering');
+    expect(markdown).toContain('JavaScript Full-Stack / AI Agent Engineer');
+    expect(markdown).toContain('### Chengdu Aosheng Energy Technology Co., Ltd.');
+    expect(markdown).toContain('### GreenSketch');
+    expect(markdown).toContain('AI Agent workflows');
   });
 });

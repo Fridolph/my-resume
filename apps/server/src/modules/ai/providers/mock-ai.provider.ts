@@ -1,9 +1,33 @@
 import { AiRuntimeConfig } from '../config/ai-config';
 import {
   AiProvider,
+  EmbedTextsInput,
+  EmbedTextsResult,
   GenerateTextInput,
   GenerateTextResult,
 } from '../interfaces/ai-provider.interface';
+
+function buildMockEmbedding(text: string, dimensions = 24): number[] {
+  const vector = Array.from({ length: dimensions }, () => 0);
+  const normalized = text.trim().toLowerCase();
+
+  for (let index = 0; index < normalized.length; index += 1) {
+    const codePoint = normalized.codePointAt(index) ?? 0;
+    const bucket = (codePoint + index) % dimensions;
+
+    vector[bucket] += 1 + (codePoint % 17) / 100;
+  }
+
+  const magnitude = Math.sqrt(
+    vector.reduce((sum, item) => sum + item * item, 0),
+  );
+
+  if (magnitude === 0) {
+    return vector;
+  }
+
+  return vector.map((item) => Number((item / magnitude).toFixed(6)));
+}
 
 export class MockAiProvider implements AiProvider {
   constructor(
@@ -29,6 +53,17 @@ export class MockAiProvider implements AiProvider {
       provider: this.config.provider,
       model: this.config.model,
       text: fragments.join(' | '),
+      raw: {
+        mocked: true,
+      },
+    };
+  }
+
+  async embedTexts(input: EmbedTextsInput): Promise<EmbedTextsResult> {
+    return {
+      provider: this.config.provider,
+      model: this.config.model,
+      embeddings: input.texts.map((item) => buildMockEmbedding(item)),
       raw: {
         mocked: true,
       },

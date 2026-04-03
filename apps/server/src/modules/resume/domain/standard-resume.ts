@@ -170,10 +170,13 @@ export function createExampleStandardResume(): StandardResume {
     },
     profile: {
       fullName: createLocalizedText('付寅生', 'Yinsheng Fu'),
-      headline: createLocalizedText('前端工程师 / 前端负责人', 'Frontend Engineer / Frontend Lead'),
+      headline: createLocalizedText(
+        'JS 全栈 / AI Agent 开发工程师',
+        'JavaScript Full-Stack / AI Agent Engineer',
+      ),
       summary: createLocalizedText(
-        '8 年前端开发经验，经历 ToB 安全平台、综合管理后台、SaaS 与小程序项目，擅长 Vue3、TypeScript、前端工程化与团队协作，也在持续补齐 React、Next.js、NestJS 与 AI 工具链能力。',
-        'Frontend engineer with 8 years of experience across ToB security platforms, integrated admin systems, SaaS products, and mini-program projects. Strong in Vue 3, TypeScript, frontend engineering, and team collaboration, while actively expanding into React, Next.js, NestJS, and AI workflows.',
+        '10 年 JavaScript 全栈开发经验，覆盖安全平台、SaaS、能源与内容社区等业务场景，擅长 Vue / React、Node.js、工程化和复杂业务建模，也在持续推进 AI Agent 工作流落地与知识沉淀。',
+        'JavaScript full-stack engineer with 10 years of experience across security platforms, SaaS systems, energy products, and content communities. Strong in Vue, React, Node.js, engineering workflows, and complex business modeling, while actively applying AI Agent workflows in real projects.',
       ),
       location: createLocalizedText('中国 成都', 'Chengdu, China'),
       email: '249121486@qq.com',
@@ -197,7 +200,7 @@ export function createExampleStandardResume(): StandardResume {
         createLocalizedText('羽毛球', 'Badminton'),
         createLocalizedText('动漫', 'Anime'),
         createLocalizedText('音乐', 'Music'),
-        createLocalizedText('开源', 'Open Source'),
+        createLocalizedText('AI Agent 实践', 'AI Agent Practice'),
       ],
     },
     education: [
@@ -222,6 +225,43 @@ export function createExampleStandardResume(): StandardResume {
     experiences: [
       {
         companyName: createLocalizedText(
+          '成都澳昇能源科技有限责任公司',
+          'Chengdu Aosheng Energy Technology Co., Ltd.',
+        ),
+        role: createLocalizedText('前端开发工程师', 'Frontend Engineer'),
+        employmentType: createLocalizedText('全职', 'Full-time'),
+        startDate: '2024-08',
+        endDate: '至今',
+        location: createLocalizedText('成都', 'Chengdu'),
+        summary: createLocalizedText(
+          '负责 C 端核心业务开发，覆盖项目创建、设计、报价与展示链路，同时参与产品评审、技术方案与数据库设计，并推动 AI 工具进入团队协作流程。',
+          'Owns core consumer-facing flows including project creation, design, quoting, and presentation, while contributing to product reviews, technical solution design, database modeling, and AI-assisted team workflows.',
+        ),
+        highlights: [
+          createLocalizedText(
+            '独立完成报价系统前端架构设计，支持复杂配置项的动态计算与多方案对比。',
+            'Designed the frontend architecture for the quotation system, supporting complex configuration calculations and multi-scheme comparison.',
+          ),
+          createLocalizedText(
+            '优化项目创建到报价展示的主链路，减少无效操作并提升关键转化体验。',
+            'Optimized the main flow from project setup to quotation presentation, reducing redundant steps and improving conversion experience.',
+          ),
+          createLocalizedText(
+            '引入 Coze 等 AI 工具与内部 Skill 库，帮助团队沉淀可复用开发流程。',
+            'Introduced AI tools such as Coze and internal skill libraries to help the team build reusable delivery workflows.',
+          ),
+        ],
+        technologies: [
+          'Nuxt 4',
+          'Vue 3',
+          'TypeScript',
+          'Pinia',
+          'Nuxt UI',
+          'i18n',
+        ],
+      },
+      {
+        companyName: createLocalizedText(
           '成都一蟹科技有限公司',
           'Chengdu Yixie Technology Co., Ltd.',
         ),
@@ -231,29 +271,36 @@ export function createExampleStandardResume(): StandardResume {
         endDate: '2024-08',
         location: createLocalizedText('成都', 'Chengdu'),
         summary: createLocalizedText(
-          '负责需求规划、团队协作、技术升级与质量建设，推动前端体系化建设和知识沉淀。',
-          'Led requirement planning, team collaboration, technical upgrades, and quality practices, while promoting a more systematic frontend engineering workflow and knowledge sharing.',
+          '负责需求规划、团队协作、技术升级与质量建设，推动前端体系化建设、Monorepo 工程化改造与知识沉淀。',
+          'Led requirement planning, team collaboration, technical upgrades, and quality practices, while driving monorepo adoption and a more systematic frontend engineering workflow.',
         ),
         highlights: [
           createLocalizedText(
-            '规划并实施 2024 年二、三季度计划，推动团队整体绩效提升。',
-            'Planned and executed Q2 and Q3 goals for 2024, improving overall team effectiveness.',
+            '管理 10 人前端团队，制定 TypeScript、ESLint 与提交规范，推动协作方式统一。',
+            'Managed a 10-person frontend team and introduced TypeScript, ESLint, and commit conventions to unify collaboration.',
           ),
           createLocalizedText(
-            '建立并丰富语雀知识库，沉淀团队协作、规范与复盘材料。',
-            'Built and enriched the internal knowledge base to capture collaboration rules, standards, and project learnings.',
+            '推动部分项目从 Vue2 升级到 Vue3 + TypeScript，并配合组件库沉淀复用能力。',
+            'Promoted Vue 2 to Vue 3 + TypeScript upgrades across projects while contributing reusable component patterns.',
           ),
           createLocalizedText(
-            '定期组织 Code Review 和技术分享，改善质量保障与团队交流氛围。',
-            'Organized regular code reviews and sharing sessions to improve code quality and team communication.',
+            '从 0 建立企业内部知识库并定期组织 Code Review 与技术分享，提升团队质量氛围。',
+            'Built the internal knowledge base from scratch and organized regular code reviews and sharing sessions to improve engineering quality.',
           ),
         ],
-        technologies: ['Vue 3', 'TypeScript', 'uni-app', 'pnpm', 'Monorepo'],
+        technologies: [
+          'Vue 3',
+          'TypeScript',
+          'pnpm',
+          'Monorepo',
+          'Ant Design Vue',
+          'uni-app',
+        ],
       },
       {
         companyName: createLocalizedText(
           '成都网思科平科技有限公司',
-          'OneScorpion Technology Co., Ltd.',
+          'Chengdu Wangsikeping Technology Co., Ltd.',
         ),
         role: createLocalizedText('前端组长', 'Frontend Team Lead'),
         employmentType: createLocalizedText('全职', 'Full-time'),
@@ -261,30 +308,31 @@ export function createExampleStandardResume(): StandardResume {
         endDate: '2024-01',
         location: createLocalizedText('成都', 'Chengdu'),
         summary: createLocalizedText(
-          '负责多个 ToB 安全与管理平台的前端架构、规范建设、跨端协作和重点模块交付。',
-          'Led frontend architecture, engineering standards, cross-team collaboration, and key feature delivery across multiple ToB security and management platforms.',
+          '负责多个 ToB 安全与管理平台的前端架构、规范建设、跨端协作和重点模块交付，长期处理大数据量渲染、实时通信与复杂权限等问题。',
+          'Led frontend architecture, engineering standards, cross-team collaboration, and key feature delivery across multiple ToB security and management platforms, with long-term ownership of heavy data rendering, real-time communication, and complex permissions.',
         ),
         highlights: [
           createLocalizedText(
-            '主导前端架构搭建、技术选型与开发规范落地，推动团队形成稳定协作方式。',
-            'Led frontend architecture, technical choices, and engineering conventions, helping the team build a stable collaboration model.',
+            '搭建项目基础架构并沉淀详细文档、示例代码与开发规范，帮助团队形成稳定协作方式。',
+            'Built project foundations with detailed documentation, sample code, and conventions to help the team form a stable collaboration model.',
           ),
           createLocalizedText(
-            '参与需求梳理、接口约定、单元测试与 Code Review，持续优化交付质量。',
-            'Participated in requirement refinement, API contracts, unit testing, and code review to continuously improve delivery quality.',
+            '处理实时通信、大表格、复杂筛选、导出与私有部署等高复杂度场景，持续优化交付质量。',
+            'Handled complex scenarios such as realtime communication, large tables, advanced filtering, exporting, and private deployment to improve delivery quality.',
           ),
           createLocalizedText(
-            '承担团队 Leader 角色，推动资源共享、知识沉淀和新人支持。',
-            'Acted as team lead to promote shared resources, knowledge accumulation, and onboarding support.',
+            '推行单元测试、Code Review 与资源共享，持续支持新人和团队规范化建设。',
+            'Promoted unit testing, code review, and shared resources while continuously supporting onboarding and team standardization.',
           ),
         ],
         technologies: [
-          'Vue',
+          'Vue 2',
           'Vue 3',
           'TypeScript',
           'ECharts',
           'WebSocket',
           'vxe-table',
+          'D3.js',
         ],
       },
       {
@@ -298,8 +346,8 @@ export function createExampleStandardResume(): StandardResume {
         endDate: '2017-07',
         location: createLocalizedText('成都', 'Chengdu'),
         summary: createLocalizedText(
-          '参与官网与主项目页面开发，负责高精度还原、组件拆分、响应式适配与前后端联调。',
-          'Worked on the company website and core product pages, focusing on precise implementation, componentization, responsive adaptation, and frontend-backend integration.',
+          '参与官网与主项目页面开发，负责高精度还原、组件拆分、响应式适配与前后端联调，也经历了从 jQuery 到 React 工程化的早期转型。',
+          'Worked on the company website and core product pages, focusing on precise implementation, componentization, responsive adaptation, and frontend-backend integration, while experiencing an early transition from jQuery to React engineering.',
         ),
         highlights: [
           createLocalizedText(
@@ -320,8 +368,48 @@ export function createExampleStandardResume(): StandardResume {
     ],
     projects: [
       {
-        name: createLocalizedText('云药客 SaaS 系统', 'YYK SaaS Platform'),
+        name: createLocalizedText('GreenSketch', 'GreenSketch'),
         role: createLocalizedText('核心前端开发', 'Core Frontend Engineer'),
+        startDate: '2024-09',
+        endDate: '至今',
+        summary: createLocalizedText(
+          '为全球光伏安装商提供在线项目设计与报价服务，支持多国家、多税率、多币种的复杂业务场景。',
+          'An online design and quotation platform for global solar installers, supporting multi-country, multi-tax, and multi-currency business scenarios.',
+        ),
+        highlights: [
+          createLocalizedText(
+            '设计可扩展的配置计算与收益预测链路，支撑 10+ 配置项联动。',
+            'Designed extensible configuration and revenue forecasting flows that support 10+ linked configuration inputs.',
+          ),
+          createLocalizedText(
+            '通过 Web Worker、复杂表单状态管理与多方案对比，保证报价生成的稳定性与体验。',
+            'Used Web Workers, complex form state management, and multi-scheme comparison to keep quotation generation stable and responsive.',
+          ),
+          createLocalizedText(
+            '抽象国家策略层，支持税率、币种和法规的动态适配，帮助业务快速扩展到多国市场。',
+            'Abstracted a country strategy layer for taxes, currency, and regulations to help the product expand quickly across markets.',
+          ),
+        ],
+        technologies: [
+          'Nuxt 4',
+          'Vue 3',
+          'TypeScript',
+          'Nuxt UI',
+          'Pinia',
+          'ECharts',
+          'Google Maps',
+          'Web Worker',
+        ],
+        links: [
+          {
+            label: createLocalizedText('项目地址', 'Project URL'),
+            url: 'https://c.greensketch.ai/au',
+          },
+        ],
+      },
+      {
+        name: createLocalizedText('云药客 SaaS 系统', 'YYK SaaS Platform'),
+        role: createLocalizedText('前端主管 / 核心前端开发', 'Frontend Lead / Core Frontend Engineer'),
         startDate: '2024-03',
         endDate: '2024-08',
         summary: createLocalizedText(
@@ -343,28 +431,6 @@ export function createExampleStandardResume(): StandardResume {
           ),
         ],
         technologies: ['Vue 3', 'TypeScript', 'Ant Design Vue', 'Pinia', 'pnpm'],
-        links: [],
-      },
-      {
-        name: createLocalizedText('悬壶医讯', 'XuanHu News'),
-        role: createLocalizedText('小程序前端开发', 'Mini Program Frontend Engineer'),
-        startDate: '2024-03',
-        endDate: '2024-08',
-        summary: createLocalizedText(
-          '面向医生的互动交流平台，负责真实世界 RWS、抽奖活动等模块迭代，并推进 uni-app 重构方案。',
-          'An interaction platform for doctors, where I worked on RWS, lottery modules, and the uni-app migration plan.',
-        ),
-        highlights: [
-          createLocalizedText(
-            '负责真实世界 RWS 和抽奖活动模块的开发与优化。',
-            'Developed and optimized the RWS and lottery modules in the mini program.',
-          ),
-          createLocalizedText(
-            '参与 Vue3 + TypeScript + Tailwind + uView UI 的 uni-app 重构调研与推进。',
-            'Participated in researching and promoting a uni-app refactor based on Vue 3, TypeScript, Tailwind, and uView UI.',
-          ),
-        ],
-        technologies: ['uni-app', 'Vue 3', 'TypeScript', 'Tailwind CSS', 'uView UI'],
         links: [],
       },
       {
@@ -441,33 +507,7 @@ export function createExampleStandardResume(): StandardResume {
             'Optimized first-screen loading, chart updates, and display across multiple screen sizes.',
           ),
         ],
-        technologies: ['Vue 3', 'TypeScript', 'ECharts', 'D3.js'],
-        links: [],
-      },
-      {
-        name: createLocalizedText('环球礼仪知识平台', 'Global Etiquette Knowledge Platform'),
-        role: createLocalizedText('Web 开发', 'Web Developer'),
-        startDate: '2016-01',
-        endDate: '2017-07',
-        summary: createLocalizedText(
-          '传统内容社区网站，在平台升级阶段从多页面模式过渡到 Webpack + React + Redux 的工程化模式。',
-          'A traditional content community website that evolved from a multi-page setup to a Webpack + React + Redux engineering workflow.',
-        ),
-        highlights: [
-          createLocalizedText(
-            '负责静态页面与样式编码，兼顾视觉还原和用户体验。',
-            'Implemented static pages and styles with a strong focus on design fidelity and user experience.',
-          ),
-          createLocalizedText(
-            '封装滚动、全屏特效、工具栏与动画等工具模块，提升页面复用度。',
-            'Encapsulated utility modules for scrolling, fullscreen effects, toolbars, and animations to improve reuse.',
-          ),
-          createLocalizedText(
-            '完成多端适配和兼容性处理，适应早期前端工程化转型。',
-            'Handled responsive adaptation and browser compatibility during the team’s transition to frontend engineering.',
-          ),
-        ],
-        technologies: ['React', 'Webpack', 'Redux', 'jQuery', 'Bootstrap'],
+        technologies: ['Vue 3', 'TypeScript', 'ECharts', 'D3.js', 'Responsive Design'],
         links: [],
       },
       {
@@ -476,20 +516,27 @@ export function createExampleStandardResume(): StandardResume {
         startDate: '2024-02',
         endDate: '至今',
         summary: createLocalizedText(
-          '使用 Vite、Vue3、TypeScript 与 TailwindCSS 搭建的在线简历项目，并持续以教程和开源形式迭代。',
-          'An online resume project built with Vite, Vue 3, TypeScript, and Tailwind CSS, iterated publicly through tutorials and open source.',
+          '围绕个人履历、全栈重构、AI 分析与教程写作持续迭代的在线简历项目，也是当前公开知识库与 RAG 实验的承载体。',
+          'An online resume project continuously iterated around personal resume content, full-stack refactoring, AI analysis, and tutorial writing. It also serves as the public knowledge base and RAG playground.',
         ),
         highlights: [
           createLocalizedText(
-            '完整记录从开发到上线的过程，并沉淀为文章与可复用模板。',
-            'Documented the full path from development to deployment and turned it into articles and reusable templates.',
+            '记录从开发到部署的全过程，并沉淀为教程、开发日志与可复用模板。',
+            'Documents the path from development to deployment and turns it into tutorials, devlogs, and reusable templates.',
           ),
           createLocalizedText(
-            '作为当前 monorepo 重构的内容来源与迁移基线。',
-            'Serves as the source content and migration baseline for the current monorepo refactor.',
+            '作为当前 monorepo 重构、简历智能分析和知识库实验的统一内容基线。',
+            'Acts as the single content baseline for the monorepo refactor, AI resume analysis, and knowledge-base experiments.',
           ),
         ],
-        technologies: ['Vite', 'Vue 3', 'TypeScript', 'Tailwind CSS'],
+        technologies: [
+          'Next.js',
+          'NestJS',
+          'TypeScript',
+          'VitePress',
+          'AI Provider Adapter',
+          'RAG',
+        ],
         links: [
           {
             label: createLocalizedText('GitHub 仓库', 'GitHub Repository'),
@@ -504,7 +551,7 @@ export function createExampleStandardResume(): StandardResume {
     ],
     skills: [
       {
-        name: createLocalizedText('前端基础与框架', 'Frontend Fundamentals & Frameworks'),
+        name: createLocalizedText('前端核心能力', 'Frontend Core'),
         keywords: [
           'HTML',
           'CSS',
@@ -513,67 +560,80 @@ export function createExampleStandardResume(): StandardResume {
           'Vue',
           'Vue 3',
           'React',
-          'uni-app',
+          'Next.js',
+          'Nuxt',
+          'Tailwind CSS',
         ],
       },
       {
-        name: createLocalizedText('工程化与质量', 'Engineering & Quality'),
+        name: createLocalizedText('全栈开发与工程化', 'Full-Stack & Engineering'),
         keywords: [
+          'Node.js',
+          'NestJS',
           'Vite',
           'Webpack',
           'pnpm',
           'Monorepo',
-          'JSDoc',
+          'CI/CD',
+          'Drizzle ORM',
+          'SQLite',
+          'MongoDB',
+        ],
+      },
+      {
+        name: createLocalizedText('AI Agent 开发', 'AI Agent Development'),
+        keywords: [
+          'AI Provider Adapter',
+          'Prompt Engineering',
+          'RAG',
+          'Claude Code',
+          'Cursor',
+          'Codex',
+          'Coze',
+          'OpenClaw',
+        ],
+      },
+      {
+        name: createLocalizedText('质量、性能与安全', 'Quality, Performance & Security'),
+        keywords: [
           'Unit Testing',
-          'GitLab CI',
-          'Jenkins',
-        ],
-      },
-      {
-        name: createLocalizedText('UI 与可视化', 'UI & Visualization'),
-        keywords: [
-          'Tailwind CSS',
-          'Naive UI',
-          'Ant Design Vue',
-          'Element UI',
-          'ECharts',
-          'D3.js',
-          'vxe-table',
-        ],
-      },
-      {
-        name: createLocalizedText('服务端与安全', 'Backend & Security'),
-        keywords: [
-          'Node.js',
-          'Koa',
-          'NestJS',
-          'Linux',
-          'Web Security',
+          'Vitest',
+          'Performance Optimization',
+          'Web Worker',
           'WebSocket',
           'Responsive Design',
+          'Web Security',
+          'Linux',
         ],
       },
     ],
     highlights: [
       {
-        title: createLocalizedText('个人项目与知识沉淀', 'Personal Projects & Knowledge Sharing'),
+        title: createLocalizedText('10 年全栈业务经验', '10 Years of Product Delivery'),
         description: createLocalizedText(
-          '长期维护 `my-element-plus`、`my-program`、`FE-prepare-interview`、`fridolph` 等仓库，持续整理前端学习资料、项目经验与教程输出。',
-          'Maintains repositories such as `my-element-plus`, `my-program`, `FE-prepare-interview`, and `fridolph`, continuously organizing frontend learning materials, project experience, and tutorial content.',
+          '主导和参与安全、SaaS、能源与内容社区等多个业务场景的架构设计与核心模块交付，能在复杂约束下稳定推进落地。',
+          'Led or contributed to architecture and core delivery across security, SaaS, energy, and content products, with stable execution under complex constraints.',
         ),
       },
       {
-        title: createLocalizedText('开源参与', 'Open Source Contributions'),
+        title: createLocalizedText('AI 工程化实践', 'Applied AI Engineering'),
         description: createLocalizedText(
-          '参与 MDN 感知性能文章翻译、`hexo-theme-butterfly` 优化以及简历项目开源分享，强调可复用与可传播。',
-          'Contributed to MDN perceived performance translation, improvements in `hexo-theme-butterfly`, and open-sourced the resume project with a focus on reusability and knowledge sharing.',
+          '持续把 AI Agent 工作流、Prompt 模板与知识库实验带入真实开发流程，关注“为什么这样设计”和结果可追溯。',
+          'Continuously brings AI Agent workflows, prompt templates, and knowledge-base experiments into real delivery flows, with strong attention to design rationale and traceability.',
         ),
       },
       {
-        title: createLocalizedText('团队建设与规范实践', 'Team Building & Engineering Standards'),
+        title: createLocalizedText('团队管理与规范建设', 'Team Leadership & Standards'),
         description: createLocalizedText(
-          '通过团队文档、UI 规范、代码规范、Code Review 与技术分享，持续提升协作效率与项目可维护性。',
-          'Improved collaboration efficiency and maintainability through team documentation, UI standards, coding conventions, code reviews, and technical sharing.',
+          '有团队管理和规范建设经验，持续通过文档、Code Review、测试与分享提升团队协作效率和工程质量。',
+          'Experienced in team leadership and engineering standards, continuously improving collaboration and quality through documentation, code review, testing, and sharing.',
+        ),
+      },
+      {
+        title: createLocalizedText('开源与技术输出', 'Open Source & Technical Writing'),
+        description: createLocalizedText(
+          '维护开源项目、技术博客与教程系列，把项目实践沉淀为知识资产，方便复盘、传播与后续产品化。',
+          'Maintains open-source projects, technical blogs, and tutorial series, turning delivery experience into reusable knowledge assets for review, sharing, and future productization.',
         ),
       },
     ],

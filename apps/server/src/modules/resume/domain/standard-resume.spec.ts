@@ -53,6 +53,11 @@ describe('standard resume domain', () => {
       valid: true,
       errors: [],
     });
+    expect(resume.profile.headline.zh).toContain('AI Agent');
+    expect(resume.experiences[0]?.companyName.zh).toBe('成都澳昇能源科技有限责任公司');
+    expect(
+      resume.projects.some((item) => item.name.zh === 'GreenSketch'),
+    ).toBe(true);
   });
 
   it('should reject invalid bilingual content shapes', () => {
