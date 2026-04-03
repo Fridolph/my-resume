@@ -1,26 +1,27 @@
 'use client';
 
-import { useThemeMode } from '@my-resume/ui/theme';
+import { Switch } from '@heroui/react';
+import { useTheme } from 'next-themes';
 
 export function ThemeModeToggle() {
-  const { theme, setTheme } = useThemeMode();
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
 
   return (
-    <div aria-label="主题切换" className="toolbar-group" role="group">
-      <button
-        className={`toggle-button ${theme === 'light' ? 'is-active' : ''}`}
-        onClick={() => setTheme('light')}
-        type="button"
+    <label
+      className="header-theme-switch"
+      htmlFor="theme-mode-switch"
+    >
+      <span className="header-theme-label">{isDark ? 'Dark' : 'Light'}</span>
+      <Switch
+        aria-label="切换明暗主题"
+        id="theme-mode-switch"
+        isSelected={isDark}
+        onChange={(nextSelected) => setTheme(nextSelected ? 'dark' : 'light')}
+        size="sm"
       >
-        Light
-      </button>
-      <button
-        className={`toggle-button ${theme === 'dark' ? 'is-active' : ''}`}
-        onClick={() => setTheme('dark')}
-        type="button"
-      >
-        Dark
-      </button>
-    </div>
+        <span className="sr-only">切换明暗主题</span>
+      </Switch>
+    </label>
   );
 }

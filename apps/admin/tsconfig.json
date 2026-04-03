@@ -9,7 +9,6 @@
     ],
     "allowJs": false,
     "noEmit": true,
-    "incremental": true,
     "jsx": "preserve",
     "plugins": [
       {
@@ -20,7 +19,8 @@
       "vitest/globals",
       "@testing-library/jest-dom"
     ],
-    "isolatedModules": true
+    "isolatedModules": true,
+    "incremental": true
   },
   "include": [
     "next-env.d.ts",

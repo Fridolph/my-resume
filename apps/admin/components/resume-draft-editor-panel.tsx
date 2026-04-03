@@ -1,5 +1,15 @@
 'use client';
 
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Input,
+  TextArea,
+} from '@heroui/react';
 import { useEffect, useMemo, useState } from 'react';
 
 import {
@@ -84,16 +94,18 @@ export function ResumeDraftEditorPanel({
 
   if (!canEdit) {
     return (
-      <section className="card stack">
-        <div>
+      <Card className="border border-zinc-200/70 dark:border-zinc-800">
+        <CardHeader className="flex flex-col items-start gap-2">
           <p className="eyebrow">草稿编辑</p>
-          <h2>当前角色只读</h2>
-          <p className="muted">只有管理员可读取并保存草稿。</p>
-        </div>
-        <div className="readonly-box">
-          当前账号没有草稿编辑权限，后台仅展示角色与导出入口。
-        </div>
-      </section>
+          <CardTitle>当前角色只读</CardTitle>
+          <CardDescription>只有管理员可读取并保存草稿。</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="readonly-box">
+            当前账号没有草稿编辑权限，后台仅展示角色与导出入口。
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -170,142 +182,175 @@ export function ResumeDraftEditorPanel({
   }
 
   return (
-    <section className="card stack">
-      <div>
+    <Card className="border border-zinc-200/70 dark:border-zinc-800">
+      <CardHeader className="flex flex-col items-start gap-2">
         <p className="eyebrow">草稿编辑</p>
-        <h2>最小 profile 编辑面板</h2>
-        <p className="muted">
+        <CardTitle>最小 profile 编辑面板</CardTitle>
+        <CardDescription>
           当前先接通个人信息模块的读取与保存，其余模块继续沿用草稿中的原始内容。
-        </p>
-      </div>
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="stack">
+        {status === 'loading' ? <p className="muted">正在加载草稿...</p> : null}
 
-      {status === 'loading' ? <p className="muted">正在加载草稿...</p> : null}
+        {status === 'error' && errorMessage ? (
+          <p className="error-text">{errorMessage}</p>
+        ) : null}
 
-      {status === 'error' ? <p className="error-text">{errorMessage}</p> : null}
+        {status === 'ready' && profileDraft && draftSnapshot ? (
+          <form className="stack" onSubmit={(event) => void handleSubmit(event)}>
+            <div className="status-box">
+              <strong>草稿态与发布态分离</strong>
+              <span>保存只会更新后台草稿，公开站仍读取最近一次手动发布的版本。</span>
+              {lastUpdatedLabel ? <span>最近保存：{lastUpdatedLabel}</span> : null}
+            </div>
 
-      {status === 'ready' && profileDraft && draftSnapshot ? (
-        <form className="stack" onSubmit={(event) => void handleSubmit(event)}>
-          <div className="status-box">
-            <strong>草稿态与发布态分离</strong>
-            <span>
-              保存只会更新后台草稿，公开站仍读取最近一次手动发布的版本。
-            </span>
-            {lastUpdatedLabel ? <span>最近保存：{lastUpdatedLabel}</span> : null}
-          </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="field">
+                <span>中文姓名</span>
+                <Input
+                  fullWidth
+                  onChange={(event) =>
+                    updateLocalizedField('fullName', 'zh', event.target.value)
+                  }
+                  value={profileDraft.fullName.zh}
+                  variant="secondary"
+                />
+              </label>
+              <label className="field">
+                <span>英文姓名</span>
+                <Input
+                  fullWidth
+                  onChange={(event) =>
+                    updateLocalizedField('fullName', 'en', event.target.value)
+                  }
+                  value={profileDraft.fullName.en}
+                  variant="secondary"
+                />
+              </label>
 
-          <div className="form-grid">
+              <label className="field">
+                <span>中文标题</span>
+                <Input
+                  fullWidth
+                  onChange={(event) =>
+                    updateLocalizedField('headline', 'zh', event.target.value)
+                  }
+                  value={profileDraft.headline.zh}
+                  variant="secondary"
+                />
+              </label>
+              <label className="field">
+                <span>英文标题</span>
+                <Input
+                  fullWidth
+                  onChange={(event) =>
+                    updateLocalizedField('headline', 'en', event.target.value)
+                  }
+                  value={profileDraft.headline.en}
+                  variant="secondary"
+                />
+              </label>
+
+              <label className="field">
+                <span>中文所在地</span>
+                <Input
+                  fullWidth
+                  onChange={(event) =>
+                    updateLocalizedField('location', 'zh', event.target.value)
+                  }
+                  value={profileDraft.location.zh}
+                  variant="secondary"
+                />
+              </label>
+              <label className="field">
+                <span>英文所在地</span>
+                <Input
+                  fullWidth
+                  onChange={(event) =>
+                    updateLocalizedField('location', 'en', event.target.value)
+                  }
+                  value={profileDraft.location.en}
+                  variant="secondary"
+                />
+              </label>
+
+              <label className="field">
+                <span>邮箱</span>
+                <Input
+                  fullWidth
+                  onChange={(event) => updatePlainField('email', event.target.value)}
+                  value={profileDraft.email}
+                  variant="secondary"
+                />
+              </label>
+              <label className="field">
+                <span>电话</span>
+                <Input
+                  fullWidth
+                  onChange={(event) => updatePlainField('phone', event.target.value)}
+                  value={profileDraft.phone}
+                  variant="secondary"
+                />
+              </label>
+            </div>
+
             <label className="field">
-              <span>中文姓名</span>
-              <input
-                onChange={(event) =>
-                  updateLocalizedField('fullName', 'zh', event.target.value)
-                }
-                value={profileDraft.fullName.zh}
+              <span>个人网站</span>
+              <Input
+                fullWidth
+                onChange={(event) => updatePlainField('website', event.target.value)}
+                value={profileDraft.website}
+                variant="secondary"
               />
             </label>
-            <label className="field">
-              <span>英文姓名</span>
-              <input
-                onChange={(event) =>
-                  updateLocalizedField('fullName', 'en', event.target.value)
-                }
-                value={profileDraft.fullName.en}
-              />
-            </label>
 
-            <label className="field">
-              <span>中文标题</span>
-              <input
-                onChange={(event) =>
-                  updateLocalizedField('headline', 'zh', event.target.value)
-                }
-                value={profileDraft.headline.zh}
-              />
-            </label>
-            <label className="field">
-              <span>英文标题</span>
-              <input
-                onChange={(event) =>
-                  updateLocalizedField('headline', 'en', event.target.value)
-                }
-                value={profileDraft.headline.en}
-              />
-            </label>
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="field">
+                <span>中文简介</span>
+                <TextArea
+                  fullWidth
+                  onChange={(event) =>
+                    updateLocalizedField('summary', 'zh', event.target.value)
+                  }
+                  rows={5}
+                  value={profileDraft.summary.zh}
+                  variant="secondary"
+                />
+              </label>
+              <label className="field">
+                <span>英文简介</span>
+                <TextArea
+                  fullWidth
+                  onChange={(event) =>
+                    updateLocalizedField('summary', 'en', event.target.value)
+                  }
+                  rows={5}
+                  value={profileDraft.summary.en}
+                  variant="secondary"
+                />
+              </label>
+            </div>
 
-            <label className="field">
-              <span>中文所在地</span>
-              <input
-                onChange={(event) =>
-                  updateLocalizedField('location', 'zh', event.target.value)
-                }
-                value={profileDraft.location.zh}
-              />
-            </label>
-            <label className="field">
-              <span>英文所在地</span>
-              <input
-                onChange={(event) =>
-                  updateLocalizedField('location', 'en', event.target.value)
-                }
-                value={profileDraft.location.en}
-              />
-            </label>
+            {errorMessage ? (
+              <p className="error-text">{errorMessage}</p>
+            ) : null}
+            {feedbackMessage ? (
+              <div className="dashboard-inline-note">{feedbackMessage}</div>
+            ) : null}
 
-            <label className="field">
-              <span>邮箱</span>
-              <input
-                onChange={(event) => updatePlainField('email', event.target.value)}
-                value={profileDraft.email}
-              />
-            </label>
-            <label className="field">
-              <span>电话</span>
-              <input
-                onChange={(event) => updatePlainField('phone', event.target.value)}
-                value={profileDraft.phone}
-              />
-            </label>
-          </div>
-
-          <label className="field">
-            <span>个人网站</span>
-            <input
-              onChange={(event) => updatePlainField('website', event.target.value)}
-              value={profileDraft.website}
-            />
-          </label>
-
-          <div className="form-grid">
-            <label className="field">
-              <span>中文简介</span>
-              <textarea
-                onChange={(event) =>
-                  updateLocalizedField('summary', 'zh', event.target.value)
-                }
-                rows={5}
-                value={profileDraft.summary.zh}
-              />
-            </label>
-            <label className="field">
-              <span>英文简介</span>
-              <textarea
-                onChange={(event) =>
-                  updateLocalizedField('summary', 'en', event.target.value)
-                }
-                rows={5}
-                value={profileDraft.summary.en}
-              />
-            </label>
-          </div>
-
-          {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
-          {feedbackMessage ? <p className="muted">{feedbackMessage}</p> : null}
-
-          <button disabled={pendingSave} type="submit">
-            {pendingSave ? '保存中...' : '保存当前草稿'}
-          </button>
-        </form>
-      ) : null}
-    </section>
+            <Button
+              fullWidth
+              isDisabled={pendingSave}
+              size="md"
+              type="submit"
+              variant="primary"
+            >
+              {pendingSave ? '保存中...' : '保存当前草稿'}
+            </Button>
+          </form>
+        ) : null}
+      </CardContent>
+    </Card>
   );
 }

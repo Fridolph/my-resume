@@ -1,5 +1,6 @@
 'use client';
 
+import { Button, Input, TextArea } from '@heroui/react';
 import { useState } from 'react';
 
 import { extractTextFromFile } from '../lib/ai-file-api';
@@ -90,8 +91,10 @@ export function AiFileExtractionPanel({
       <form className="stack" onSubmit={(event) => void handleSubmit(event)}>
         <label className="field">
           <span>选择文件</span>
-          <input
+          <Input
             accept=".txt,.md,.pdf,.docx"
+            aria-label="选择文件"
+            fullWidth
             onChange={(event) => {
               const file = event.target.files?.[0] ?? null;
 
@@ -100,6 +103,7 @@ export function AiFileExtractionPanel({
               setResult(null);
             }}
             type="file"
+            variant="secondary"
           />
         </label>
 
@@ -119,15 +123,20 @@ export function AiFileExtractionPanel({
         {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
 
         <div className="dashboard-entry-actions">
-          <button disabled={!selectedFile || pending} type="submit">
+          <Button
+            isDisabled={!selectedFile || pending}
+            size="md"
+            type="submit"
+            variant="primary"
+          >
             {pending ? '正在提取文本...' : '开始提取文本'}
-          </button>
+          </Button>
         </div>
       </form>
 
       {result ? (
         <div className="preview-stack">
-          <div className="info-grid">
+          <div className="grid gap-4 md:grid-cols-2">
             <div className="status-box">
               <strong>文件类型</strong>
               <span>{result.fileType}</span>
@@ -140,10 +149,12 @@ export function AiFileExtractionPanel({
 
           <label className="field">
             <span>提取结果预览</span>
-            <textarea
-              className="preview-textarea"
+            <TextArea
+              className="min-h-[17.5rem] font-mono leading-6"
+              fullWidth
               readOnly
               value={result.text}
+              variant="secondary"
             />
           </label>
         </div>

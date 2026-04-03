@@ -1,5 +1,6 @@
 'use client';
 
+import { Button } from '@heroui/react';
 import {
   DisplayPill,
   DisplaySectionIntro,
@@ -175,14 +176,14 @@ export function AiCachedReportsPanel({
       {reports.length > 0 ? (
         <div className="cached-report-list">
           {reports.map((report) => (
-            <button
+            <Button
               className={activeReportId === report.reportId ? 'secondary-button' : ''}
               key={report.reportId}
               onClick={() => void handleSelectReport(report.reportId)}
               type="button"
             >
               {scenarioLabels[report.scenario]}
-            </button>
+            </Button>
           ))}
         </div>
       ) : null}

@@ -1,5 +1,15 @@
 'use client';
 
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Chip,
+  Input,
+} from '@heroui/react';
 import { FormEvent, useState } from 'react';
 
 interface LoginFormProps {
@@ -25,49 +35,71 @@ export function LoginForm({
   }
 
   return (
-    <form className="card form" onSubmit={handleSubmit}>
-      <div className="stack">
-        <div>
-          <p className="eyebrow">my-resume admin</p>
-          <h1>后台最小登录壳</h1>
-          <p className="muted">
-            当前阶段只承接登录和登录态校验，后续再继续接内容管理。
-          </p>
+    <Card className="border border-zinc-200/70 bg-white/90 shadow-2xl dark:border-zinc-800 dark:bg-zinc-950/85">
+      <CardHeader className="flex flex-col items-start gap-4">
+        <div className="flex items-center gap-2">
+          <Chip size="sm">
+            my-resume admin
+          </Chip>
+          <Chip size="sm">
+            登录页
+          </Chip>
         </div>
+        <div className="space-y-2">
+          <CardTitle className="text-3xl font-semibold tracking-tight">
+            标准后台登录
+          </CardTitle>
+          <CardDescription className="max-w-md text-sm leading-6">
+            {'当前只保留用户名与密码登录，继续通过 localStorage token -> /auth/me 校验进入后台，不引入注册与多余入口。'}
+          </CardDescription>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <form className="stack" onSubmit={handleSubmit}>
+          <label className="field">
+            <span>用户名</span>
+            <Input
+              autoComplete="username"
+              fullWidth
+              name="username"
+              onChange={(event) => setUsername(event.target.value)}
+              placeholder="admin / viewer"
+              value={username}
+              variant="secondary"
+            />
+          </label>
 
-        <label className="field">
-          <span>用户名</span>
-          <input
-            autoComplete="username"
-            name="username"
-            onChange={(event) => setUsername(event.target.value)}
-            placeholder="admin / viewer"
-            value={username}
-          />
-        </label>
+          <label className="field">
+            <span>密码</span>
+            <Input
+              autoComplete="current-password"
+              fullWidth
+              name="password"
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="请输入密码"
+              type="password"
+              value={password}
+              variant="secondary"
+            />
+          </label>
 
-        <label className="field">
-          <span>密码</span>
-          <input
-            autoComplete="current-password"
-            name="password"
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="请输入密码"
-            type="password"
-            value={password}
-          />
-        </label>
+          {errorMessage ? (
+            <p aria-live="polite" className="error-text">
+              {errorMessage}
+            </p>
+          ) : null}
 
-        {errorMessage ? (
-          <p aria-live="polite" className="error-text">
-            {errorMessage}
-          </p>
-        ) : null}
-
-        <button disabled={pending} type="submit">
-          {pending ? '登录中...' : '登录后台'}
-        </button>
-      </div>
-    </form>
+          <Button
+            fullWidth
+            isDisabled={pending}
+            size="md"
+            type="submit"
+            variant="primary"
+          >
+            {pending ? '登录中...' : '登录后台'}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

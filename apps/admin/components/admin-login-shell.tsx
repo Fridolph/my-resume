@@ -1,7 +1,12 @@
 'use client';
 
-import { DisplaySectionIntro, DisplaySurfaceCard } from '@my-resume/ui/display';
-import Link from 'next/link';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Chip,
+} from '@heroui/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -33,6 +38,7 @@ export function AdminLoginShell() {
     })
       .then((user) => {
         setCurrentUser(user);
+        router.replace('/dashboard');
       })
       .catch(() => {
         setCurrentUser(null);
@@ -40,7 +46,7 @@ export function AdminLoginShell() {
       .finally(() => {
         setCheckingSession(false);
       });
-  }, []);
+  }, [router]);
 
   async function handleLogin(values: { username: string; password: string }) {
     setPending(true);
@@ -67,45 +73,79 @@ export function AdminLoginShell() {
 
   if (checkingSession) {
     return (
-      <DisplaySurfaceCard className="card">正在检查登录状态...</DisplaySurfaceCard>
+      <main className="mx-auto grid min-h-screen w-full max-w-3xl grid-cols-1 px-4 py-6 md:px-6">
+        <Card className="border border-zinc-200/70 bg-white/90 shadow-xl dark:border-zinc-800 dark:bg-zinc-950/85">
+          <CardContent className="py-12 text-center text-sm text-zinc-500 dark:text-zinc-400">
+            正在检查登录状态...
+          </CardContent>
+        </Card>
+      </main>
     );
   }
 
   return (
-    <main className="page-shell">
+    <main className="mx-auto grid min-h-screen w-full max-w-7xl grid-cols-1 gap-6 px-4 py-6 md:px-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(20rem,28rem)] lg:items-center xl:px-10">
+      <Card className="border border-zinc-200/70 bg-white/78 shadow-2xl backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/78">
+        <CardHeader className="flex flex-col items-start gap-5">
+          <div className="flex items-center gap-2">
+            <Chip size="sm">
+              管理后台
+            </Chip>
+            <Chip size="sm">
+              HeroUI Upgrade
+            </Chip>
+          </div>
+          <div className="space-y-3">
+            <p className="eyebrow">Admin Console</p>
+            <CardTitle className="text-4xl font-semibold tracking-tight text-zinc-950 dark:text-white">
+              面向内容维护与 AI 操作的标准后台壳
+            </CardTitle>
+            <p className="max-w-xl text-sm leading-7 text-zinc-500 dark:text-zinc-400">
+              这轮只升级后台信息架构与视觉壳层，不改后端 API，不把业务逻辑挪进
+              Next Route Handlers，也不扩到展示端样式体系。
+            </p>
+          </div>
+        </CardHeader>
+        <CardContent className="stack">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="status-box">
+              <strong>当前目标</strong>
+              <span>建立概览、简历编辑、AI 工作台、发布导出四个主工作区。</span>
+            </div>
+            <div className="status-box">
+              <strong>当前边界</strong>
+              <span>继续沿用前端 token 校验，不在这轮升级 cookie / middleware。</span>
+            </div>
+          </div>
+          <ul className="muted-list">
+            <li>业务逻辑继续只走 `apps/server`，admin 只做后台会话壳和操作入口。</li>
+            <li>当前 demo 账号：`admin / admin123456`、`viewer / viewer123456`。</li>
+            <li>登录成功后进入 `/dashboard`，viewer 保持只读体验，admin 可继续写与发布。</li>
+          </ul>
+          <div className="flex flex-wrap items-center gap-3">
+            <ThemeModeToggle />
+            <a
+              className="secondary-link-button"
+              href="https://github.com/heroui-inc/heroui"
+              target="_blank"
+            >
+              HeroUI 参考
+            </a>
+          </div>
+          {currentUser ? (
+            <div className="status-box">
+              已检测到登录状态：<strong>{currentUser.username}</strong>（
+              {currentUser.role}）
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
+
       <LoginForm
         errorMessage={errorMessage}
         onSubmit={handleLogin}
         pending={pending}
       />
-
-      <DisplaySurfaceCard className="card stack">
-        <div className="page-header">
-          <DisplaySectionIntro
-            className="page-header-copy"
-            eyebrow="当前说明"
-            title="最小后台登录说明"
-          />
-          <ThemeModeToggle />
-        </div>
-        <ul className="muted-list">
-          <li>业务逻辑继续只走 `apps/server`，不写 Next Route Handlers 业务接口。</li>
-          <li>本页只负责采集登录信息、发起请求、保存 token、跳转后台壳。</li>
-          <li>当前 demo 账号：`admin / admin123456`、`viewer / viewer123456`。</li>
-        </ul>
-
-        {currentUser ? (
-          <div className="status-box">
-            <p>
-              已检测到登录状态：<strong>{currentUser.username}</strong>（
-              {currentUser.role}）
-            </p>
-            <Link className="link-button" href="/dashboard">
-              前往受保护页面壳
-            </Link>
-          </div>
-        ) : null}
-      </DisplaySurfaceCard>
     </main>
   );
 }
