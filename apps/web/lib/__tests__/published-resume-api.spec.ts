@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { fetchPublishedResume } from './published-resume-api';
+import { fetchPublishedResume } from '../published-resume-api';
 
 describe('published resume api', () => {
   beforeEach(() => {

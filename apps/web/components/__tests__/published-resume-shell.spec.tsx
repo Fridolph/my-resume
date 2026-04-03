@@ -3,8 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { ThemeModeProvider } from '@my-resume/ui/theme';
 import { describe, expect, it } from 'vitest';
 
-import type { ResumePublishedSnapshot } from '../lib/published-resume-types';
-import { PublishedResumeShell } from './published-resume-shell';
+import type { ResumePublishedSnapshot } from '../../lib/published-resume-types';
+import { PublishedResumeShell } from '../published-resume-shell';
 
 const publishedResume: ResumePublishedSnapshot = {
   status: 'published' as const,

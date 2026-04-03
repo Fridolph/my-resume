@@ -1,12 +1,26 @@
 @import '../../../packages/ui/src/display.css';
 
 .page-shell {
-  width: min(1160px, 100%);
+  width: min(1320px, 100%);
   margin: 0 auto;
-  padding: 2.25rem 1.25rem 3.5rem;
+  padding: 1.25rem;
+  position: relative;
+}
+
+.resume-layout {
   display: grid;
   gap: 1.5rem;
-  position: relative;
+}
+
+.resume-sidebar,
+.resume-main {
+  min-width: 0;
+}
+
+.resume-sidebar-inner,
+.resume-main-stack {
+  display: grid;
+  gap: 1.5rem;
 }
 
 .page-shell::before {
@@ -291,6 +305,10 @@
 }
 
 @media (max-width: 900px) {
+  .page-shell {
+    padding: 0.75rem;
+  }
+
   .hero-header,
   .item-header {
     grid-template-columns: 1fr;
@@ -304,5 +322,49 @@
   .signal-grid,
   .content-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 960px) {
+  .page-shell {
+    padding: 1.5rem;
+  }
+
+  .resume-layout {
+    grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .resume-sidebar-inner {
+    position: sticky;
+    top: 1.5rem;
+  }
+
+  .resume-sidebar .hero-card {
+    padding: 1.35rem;
+  }
+
+  .resume-sidebar .hero-header {
+    grid-template-columns: 1fr;
+  }
+
+  .resume-sidebar .headline {
+    font-size: clamp(2rem, 3vw, 3.1rem);
+  }
+
+  .resume-sidebar .hero-aside {
+    gap: 0.85rem;
+  }
+
+  .resume-sidebar .toolbar {
+    justify-content: flex-start;
+  }
+
+  .resume-main {
+    padding-top: 0.1rem;
+  }
+
+  .signal-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

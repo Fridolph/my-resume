@@ -119,6 +119,143 @@ describe('ResumeDraftEditorPanel', () => {
     10000,
   );
 
+  it(
+    'should save experience and project core fields in the draft payload',
+    async () => {
+      cleanup();
+      const user = userEvent.setup();
+      const loadDraft = vi.fn().mockResolvedValue({
+        ...draftSnapshot,
+        resume: {
+          ...draftSnapshot.resume,
+          experiences: [
+            {
+              companyName: {
+                zh: '成都一蟹科技有限公司',
+                en: 'Chengdu Yixie Technology Co., Ltd.',
+              },
+              role: {
+                zh: '前端主管',
+                en: 'Frontend Lead',
+              },
+              employmentType: {
+                zh: '全职',
+                en: 'Full-time',
+              },
+              startDate: '2024-03',
+              endDate: '2024-08',
+              location: {
+                zh: '成都',
+                en: 'Chengdu',
+              },
+              summary: {
+                zh: '负责团队协作与前端建设。',
+                en: 'Led frontend collaboration and delivery.',
+              },
+              highlights: [
+                {
+                  zh: '推动 Code Review 机制落地',
+                  en: 'Established the code review workflow',
+                },
+              ],
+              technologies: ['Vue 3', 'TypeScript'],
+            },
+          ],
+          projects: [
+            {
+              name: {
+                zh: '云药客 SaaS 系统',
+                en: 'Cloud Pharma SaaS',
+              },
+              role: {
+                zh: '核心前端',
+                en: 'Core Frontend Engineer',
+              },
+              startDate: '2024-03',
+              endDate: '2024-08',
+              summary: {
+                zh: '推进 Vue3 + TS 重构。',
+                en: 'Migrated the project to Vue 3 and TypeScript.',
+              },
+              highlights: [
+                {
+                  zh: '落地 monorepo 结构',
+                  en: 'Introduced a monorepo structure',
+                },
+              ],
+              technologies: ['Vue 3', 'pnpm'],
+              links: [],
+            },
+          ],
+        },
+      });
+      const saveDraft = vi.fn().mockImplementation(async ({ resume }) => ({
+        ...draftSnapshot,
+        updatedAt: '2026-03-25T10:00:00.000Z',
+        resume,
+      }));
+
+      render(
+        <ResumeDraftEditorPanel
+          accessToken="demo-token"
+          apiBaseUrl="http://localhost:5577"
+          canEdit
+          loadDraft={loadDraft}
+          saveDraft={saveDraft}
+        />,
+      );
+
+      await screen.findByDisplayValue('成都一蟹科技有限公司');
+
+      await user.clear(screen.getByLabelText('工作经历 1 中文公司'));
+      await user.type(
+        screen.getByLabelText('工作经历 1 中文公司'),
+        '成都一蟹科技（升级版）',
+      );
+      await user.clear(screen.getByLabelText('工作经历 1 技术栈（逗号分隔）'));
+      await user.type(
+        screen.getByLabelText('工作经历 1 技术栈（逗号分隔）'),
+        'React, Next.js, NestJS',
+      );
+      await user.clear(screen.getByLabelText('项目经历 1 中文名称'));
+      await user.type(screen.getByLabelText('项目经历 1 中文名称'), '云药客 SaaS 平台');
+      await user.clear(screen.getByLabelText('项目经历 1 中文亮点（每行一条）'));
+      await user.type(
+        screen.getByLabelText('项目经历 1 中文亮点（每行一条）'),
+        `落地 monorepo 结构
+建立共享组件基线`,
+      );
+      await user.click(screen.getByRole('button', { name: '保存当前草稿' }));
+
+      await waitFor(() => {
+        expect(saveDraft).toHaveBeenCalledTimes(1);
+      });
+
+      const submittedResume = saveDraft.mock.calls[0]?.[0]?.resume;
+
+      expect(submittedResume.experiences[0]?.companyName.zh).toBe(
+        '成都一蟹科技（升级版）',
+      );
+      expect(submittedResume.experiences[0]?.technologies).toEqual([
+        'React',
+        'Next.js',
+        'NestJS',
+      ]);
+      expect(submittedResume.projects[0]?.name.zh).toBe('云药客 SaaS 平台');
+      expect(submittedResume.projects[0]?.highlights).toEqual([
+        {
+          zh: '落地 monorepo 结构',
+          en: '',
+        },
+        {
+          zh: '建立共享组件基线',
+          en: '',
+        },
+      ]);
+    },
+    10000,
+  );
+
   it('should show read-only message when current role cannot edit draft', () => {
     render(
       <ResumeDraftEditorPanel

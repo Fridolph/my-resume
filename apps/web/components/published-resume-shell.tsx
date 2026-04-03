@@ -63,54 +63,61 @@ export function PublishedResumeShell({
 
   return (
     <main className="page-shell" data-template="standard">
-      <PublishedResumeHero
-        apiBaseUrl={apiBaseUrl}
-        locale={locale}
-        onChangeLocale={setLocale}
-        onChangeTheme={setTheme}
-        publishedResume={publishedResume}
-        theme={theme}
-      />
-
-      <section className="signal-shell">
-        <div className="signal-header">
-          <p className="eyebrow">{labels.resumeSignalsEyebrow}</p>
-          <h2 className="signal-title">{labels.resumeSignalsTitle}</h2>
-        </div>
-        <div className="signal-grid">
-          {signalCards.map((card) => (
-            <DisplayStatCard
-              className="signal-card"
-              description={card.description}
-              key={card.label}
-              label={card.label}
-              value={card.value}
+      <div className="resume-layout">
+        <aside className="resume-sidebar">
+          <div className="resume-sidebar-inner">
+            <PublishedResumeHero
+              apiBaseUrl={apiBaseUrl}
+              locale={locale}
+              onChangeLocale={setLocale}
+              onChangeTheme={setTheme}
+              publishedResume={publishedResume}
+              theme={theme}
             />
-          ))}
-        </div>
-      </section>
+            <div className="section-stack">
+              <PublishedResumeEducationSection
+                education={education}
+                locale={locale}
+              />
+              <PublishedResumeSkillsSection locale={locale} skills={skills} />
+              <PublishedResumeHighlightsSection
+                highlights={highlights}
+                locale={locale}
+              />
+            </div>
+          </div>
+        </aside>
 
-      <section className="content-grid">
-        <div className="section-stack primary-stack">
-          <PublishedResumeExperienceSection
-            experiences={experiences}
-            locale={locale}
-          />
-          <PublishedResumeProjectsSection locale={locale} projects={projects} />
-        </div>
+        <section className="resume-main">
+          <div className="resume-main-stack">
+            <section className="signal-shell">
+              <div className="signal-header">
+                <p className="eyebrow">{labels.resumeSignalsEyebrow}</p>
+                <h2 className="signal-title">{labels.resumeSignalsTitle}</h2>
+              </div>
+              <div className="signal-grid">
+                {signalCards.map((card) => (
+                  <DisplayStatCard
+                    className="signal-card"
+                    description={card.description}
+                    key={card.label}
+                    label={card.label}
+                    value={card.value}
+                  />
+                ))}
+              </div>
+            </section>
 
-        <div className="section-stack secondary-stack">
-          <PublishedResumeEducationSection
-            education={education}
-            locale={locale}
-          />
-          <PublishedResumeSkillsSection locale={locale} skills={skills} />
-          <PublishedResumeHighlightsSection
-            highlights={highlights}
-            locale={locale}
-          />
-        </div>
-      </section>
+            <div className="section-stack primary-stack">
+              <PublishedResumeExperienceSection
+                experiences={experiences}
+                locale={locale}
+              />
+              <PublishedResumeProjectsSection locale={locale} projects={projects} />
+            </div>
+          </div>
+        </section>
+      </div>
     </main>
   );
 }
