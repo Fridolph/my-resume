@@ -1,7 +1,7 @@
 'use client';
 
 import { buildPublishedResumeExportUrl } from '@my-resume/api-client';
-import { Button, Switch } from '@heroui/react';
+import { Button, Dropdown, Switch } from '@heroui/react';
 import { useThemeMode } from '@my-resume/ui/theme';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -51,95 +51,87 @@ export function PublicSiteHeader({
     format: 'pdf',
     locale,
   });
-  const activeNavLabel =
-    navItems.find((item) =>
-      item.href === '/' ? pathname === item.href : pathname.startsWith(item.href),
-    )?.key ?? 'resume';
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/88 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/82">
-      <div className="mx-auto flex min-h-16 w-full max-w-7xl flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2 sm:px-6">
-        <div className="flex min-w-0 items-center gap-3">
+      <div className="mx-auto flex min-h-16 w-full max-w-7xl flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2 sm:px-6 md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-4">
+        <div className="flex min-w-0 items-center gap-3 md:justify-self-start">
           <Link className="inline-flex min-w-0 items-center gap-3" href="/">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-sm font-extrabold tracking-[-0.08em] text-white dark:bg-white dark:text-slate-950">
               FY
             </span>
             <span className="flex min-w-0 flex-col">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.28em] text-blue-600 dark:text-blue-300">
-                public site
-              </span>
               <span className="truncate text-lg font-semibold text-slate-950 dark:text-white">
-                fridolph resume
+                Fridolph Resume
               </span>
             </span>
           </Link>
         </div>
 
-        <nav
-          aria-label="Public site navigation"
-          className="order-3 flex w-full flex-wrap items-center gap-2 md:order-none md:w-auto md:flex-1"
-        >
-          {navItems.map((item) => {
-            const isActive =
-              item.href === '/'
-                ? pathname === item.href
-                : pathname.startsWith(item.href);
-            const label =
-              item.key === 'resume'
-                ? labels.resumeNav
-                : item.key === 'profile'
-                  ? labels.profileNav
-                  : labels.aiTalkNav;
+        <div className="order-3 flex w-full justify-center md:order-none md:w-auto md:justify-self-center">
+          <div
+            aria-label="Public site navigation"
+            className="flex flex-wrap items-center justify-center gap-2 rounded-full border border-slate-200/80 bg-white/82 p-1 shadow-[0_8px_30px_rgba(15,23,42,0.05)] dark:border-white/10 dark:bg-white/5"
+          >
+            {navItems.map((item) => {
+              const isActive =
+                item.href === '/'
+                  ? pathname === item.href
+                  : pathname.startsWith(item.href);
+              const label =
+                item.key === 'resume'
+                  ? labels.resumeNav
+                  : item.key === 'profile'
+                    ? labels.profileNav
+                    : labels.aiTalkNav;
 
-            return (
-              <Link href={item.href} key={item.href}>
-                <Button
-                  className="h-9 rounded-full px-3 text-sm"
-                  size="sm"
-                  variant={isActive ? 'primary' : 'ghost'}
-                >
-                  {label}
-                </Button>
-              </Link>
-            );
-          })}
-        </nav>
+              return (
+                <Link href={item.href} key={item.href}>
+                  <Button
+                    className="h-9 rounded-full px-4 text-sm"
+                    size="sm"
+                    variant={isActive ? 'primary' : 'ghost'}
+                  >
+                    {label}
+                  </Button>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
 
-        <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
-          <span className="inline-flex h-8 items-center rounded-full border border-blue-200 bg-blue-50 px-3 text-xs font-semibold text-blue-600 dark:border-blue-400/30 dark:bg-blue-500/10 dark:text-blue-200">
-            {labels.headerBadge}
-          </span>
-          <span className="inline-flex h-8 items-center rounded-full border border-slate-200 bg-white/80 px-3 text-xs font-medium text-slate-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
-            {activeNavLabel === 'resume'
-              ? labels.resumeNav
-              : activeNavLabel === 'profile'
-                ? labels.profileNav
-                : labels.aiTalkNav}
-          </span>
-
-          <a href={markdownExportUrl}>
-            <Button className="h-8 rounded-full px-3 text-xs" size="sm" variant="ghost">
-              {labels.exportMarkdown}
-            </Button>
-          </a>
-          <a href={pdfExportUrl}>
-            <Button className="h-8 rounded-full px-3 text-xs" size="sm" variant="ghost">
-              {labels.exportPdf}
-            </Button>
-          </a>
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-2 md:justify-self-end">
+          <Dropdown.Root>
+            <Dropdown.Trigger
+              aria-label={labels.downloadAriaLabel}
+              className="inline-flex h-8 min-w-8 items-center justify-center rounded-full border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-white/80 hover:text-slate-950 dark:text-slate-300 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-white"
+            >
+                <DownloadIcon className="h-4 w-4" />
+            </Dropdown.Trigger>
+            <Dropdown.Popover placement="bottom end">
+              <Dropdown.Menu aria-label={labels.downloadMenuLabel}>
+                <Dropdown.Item href={markdownExportUrl} id="download-markdown">
+                  {labels.exportMarkdownMenu}
+                </Dropdown.Item>
+                <Dropdown.Item href={pdfExportUrl} id="download-pdf">
+                  {labels.exportPdfMenu}
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown.Popover>
+          </Dropdown.Root>
 
           <div className="inline-flex items-center rounded-full border border-slate-200 bg-white/75 p-1 dark:border-white/10 dark:bg-white/5">
             <Button
-              className="h-8 min-w-[48px] rounded-full px-3 text-xs"
+              className="h-8 min-w-8 rounded-full px-3 text-xs"
               onClick={() => onChangeLocale('zh')}
               size="sm"
               type="button"
               variant={locale === 'zh' ? 'primary' : 'ghost'}
             >
-              中文
+              中
             </Button>
             <Button
-              className="h-8 min-w-[48px] rounded-full px-3 text-xs"
+              className="h-8 min-w-8 rounded-full px-3 text-xs"
               onClick={() => onChangeLocale('en')}
               size="sm"
               type="button"
@@ -160,7 +152,7 @@ export function PublicSiteHeader({
             <Switch
               aria-label="切换明暗主题"
               isSelected={theme === 'dark'}
-              onChange={(nextSelected) => setTheme(nextSelected ? 'dark' : 'light')}
+              onChange={(isSelected) => setTheme(isSelected ? 'dark' : 'light')}
               size="sm"
             />
             <ThemeMoonIcon
@@ -190,6 +182,27 @@ export function PublicSiteHeader({
         </div>
       </div>
     </header>
+  );
+}
+
+function DownloadIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      fill="none"
+      height="16"
+      viewBox="0 0 24 24"
+      width="16"
+    >
+      <path
+        d="M12 3V14M12 14L8 10M12 14L16 10M5 18H19"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+    </svg>
   );
 }
 

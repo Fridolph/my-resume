@@ -31,19 +31,14 @@ export function PublishedResumeHero({
   return (
     <Card className="web-section-card overflow-hidden">
       <CardHeader className="grid gap-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="grid gap-2">
-            <p className="web-eyebrow">{labels.profileCardLabel}</p>
-            <CardTitle className="text-[clamp(2.2rem,5vw,3.4rem)] leading-none tracking-[-0.08em] text-slate-950 dark:text-white">
-              {readLocalizedText(profile.fullName, locale)}
-            </CardTitle>
-            <CardDescription className="text-lg font-semibold tracking-[-0.04em] text-slate-500 dark:text-slate-300">
-              {readLocalizedText(profile.headline, locale)}
-            </CardDescription>
-          </div>
-          <Chip className="shrink-0" variant="soft">
-            {labels.headerBadge}
-          </Chip>
+        <div className="grid gap-2">
+          <p className="web-eyebrow">{labels.profileCardLabel}</p>
+          <CardTitle className="text-[clamp(2.2rem,5vw,3.4rem)] leading-none tracking-[-0.08em] text-slate-950 dark:text-white">
+            {readLocalizedText(profile.fullName, locale)}
+          </CardTitle>
+          <CardDescription className="text-lg font-semibold tracking-[-0.04em] text-slate-500 dark:text-slate-300">
+            {readLocalizedText(profile.headline, locale)}
+          </CardDescription>
         </div>
         <p className="text-base leading-7 text-slate-500 dark:text-slate-400">
           {readLocalizedText(profile.summary, locale)}

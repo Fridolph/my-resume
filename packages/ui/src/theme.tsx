@@ -44,6 +44,7 @@ export function applyThemeToDocument(
         documentElement: {
           dataset: DOMStringMap;
           style: Pick<CSSStyleDeclaration, 'colorScheme'>;
+          classList?: Pick<DOMTokenList, 'add' | 'remove'>;
         };
       }
     | null
@@ -56,6 +57,12 @@ export function applyThemeToDocument(
 
   documentNode.documentElement.dataset.theme = theme;
   documentNode.documentElement.style.colorScheme = theme;
+  if (theme === 'dark') {
+    documentNode.documentElement.classList?.add('dark');
+    return;
+  }
+
+  documentNode.documentElement.classList?.remove('dark');
 }
 
 interface ThemeModeContextValue {

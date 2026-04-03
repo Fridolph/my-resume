@@ -66,14 +66,16 @@ describe('PublishedResumeShell', () => {
 
     await user.click(screen.getByRole('switch', { name: '切换明暗主题' }));
     expect(document.documentElement.dataset.theme).toBe('dark');
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
     expect(window.localStorage.getItem('my-resume-theme-mode')).toBe('dark');
 
     await user.click(screen.getByRole('switch', { name: '切换明暗主题' }));
     expect(document.documentElement.dataset.theme).toBe('light');
+    expect(document.documentElement.classList.contains('dark')).toBe(false);
     expect(window.localStorage.getItem('my-resume-theme-mode')).toBe('light');
   });
 
-  it('should render export links and switch locale in download urls', async () => {
+  it('should render export entries in download menu and switch locale in urls', async () => {
     const user = userEvent.setup();
 
     render(
@@ -85,30 +87,26 @@ describe('PublishedResumeShell', () => {
       </ThemeModeProvider>,
     );
 
-    expect(
-      screen.getByRole('button', { name: '导出 Markdown' }).closest('a'),
-    ).toHaveAttribute(
+    await user.click(screen.getByRole('button', { name: '打开下载菜单' }));
+
+    expect(screen.getByRole('menuitem', { name: '导出 Markdown' })).toHaveAttribute(
       'href',
       'http://localhost:5577/resume/published/export/markdown?locale=zh',
     );
-    expect(
-      screen.getByRole('button', { name: '导出 PDF' }).closest('a'),
-    ).toHaveAttribute(
+    expect(screen.getByRole('menuitem', { name: '导出 PDF' })).toHaveAttribute(
       'href',
       'http://localhost:5577/resume/published/export/pdf?locale=zh',
     );
 
+    await user.keyboard('{Escape}');
     await user.click(screen.getByRole('button', { name: 'EN' }));
+    await user.click(screen.getByRole('button', { name: 'Open download menu' }));
 
-    expect(
-      screen.getByRole('button', { name: 'Export Markdown' }).closest('a'),
-    ).toHaveAttribute(
+    expect(screen.getByRole('menuitem', { name: 'Export Markdown' })).toHaveAttribute(
       'href',
       'http://localhost:5577/resume/published/export/markdown?locale=en',
     );
-    expect(
-      screen.getByRole('button', { name: 'Export PDF' }).closest('a'),
-    ).toHaveAttribute(
+    expect(screen.getByRole('menuitem', { name: 'Export PDF' })).toHaveAttribute(
       'href',
       'http://localhost:5577/resume/published/export/pdf?locale=en',
     );
