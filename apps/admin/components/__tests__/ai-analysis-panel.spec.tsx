@@ -5,8 +5,8 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { AiAnalysisPanel } from './ai-analysis-panel';
-import type { StandardResume } from '../lib/resume-types';
+import { AiAnalysisPanel } from '../ai-analysis-panel';
+import type { StandardResume } from '../../lib/resume-types';
 
 afterEach(() => {
   cleanup();
@@ -59,16 +59,16 @@ const runtimeSummary = {
 };
 
 function ControlledAnalysisPanel(props: {
-  applyResumeOptimization?: typeof import('../lib/ai-workbench-api').applyAiResumeOptimization;
+  applyResumeOptimization?: typeof import('../../lib/ai-workbench-api').applyAiResumeOptimization;
   canAnalyze: boolean;
-  generateResumeOptimization?: typeof import('../lib/ai-workbench-api').generateAiResumeOptimization;
+  generateResumeOptimization?: typeof import('../../lib/ai-workbench-api').generateAiResumeOptimization;
   helperMessage?: string | null;
   onDraftApplied?: (snapshot: {
     status: 'draft';
     updatedAt: string;
     resume: StandardResume;
   }) => void;
-  triggerAnalysis?: typeof import('../lib/ai-workbench-api').triggerAiWorkbenchAnalysis;
+  triggerAnalysis?: typeof import('../../lib/ai-workbench-api').triggerAiWorkbenchAnalysis;
   initialContent?: string;
 }) {
   const [content, setContent] = useState(props.initialContent ?? '');
@@ -161,8 +161,6 @@ describe('AiAnalysisPanel', () => {
       screen.getByText('已将 resume.pdf 的提取结果同步到分析输入区。'),
     ).toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText('分析场景'), 'resume-review');
-    await user.selectOptions(screen.getByLabelText('输出语言'), 'zh');
     await user.click(screen.getByRole('button', { name: '开始真实分析' }));
 
     await waitFor(() => {
@@ -185,9 +183,7 @@ describe('AiAnalysisPanel', () => {
     expect(
       screen.getByText('已有核心技术关键词，但成果与职责边界仍需补强。'),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole('heading', { name: '已有优势', level: 3 }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '已有优势' })).toBeInTheDocument();
     expect(
       screen.getByText('已覆盖 NestJS、React、TypeScript 等岗位基础关键词。'),
     ).toBeInTheDocument();
@@ -415,7 +411,6 @@ describe('AiAnalysisPanel', () => {
       />,
     );
 
-    await user.selectOptions(screen.getByLabelText('分析场景'), 'resume-review');
     await user.click(screen.getByRole('button', { name: '开始真实分析' }));
     await screen.findByText('建议先补强个人摘要，再把项目成果写得更贴近岗位。');
     await user.click(screen.getByRole('button', { name: '生成结构化简历建议' }));
@@ -493,7 +488,8 @@ describe('AiAnalysisPanel', () => {
       />,
     );
 
-    await user.selectOptions(screen.getByLabelText('分析场景'), 'offer-compare');
+    await user.click(screen.getByLabelText('分析场景'));
+    await user.click(await screen.findByRole('option', { name: 'Offer 对比建议' }));
     await user.click(screen.getByRole('button', { name: '生成结构化简历建议' }));
 
     expect(

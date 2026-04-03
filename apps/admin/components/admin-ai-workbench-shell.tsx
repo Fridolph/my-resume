@@ -1,59 +1,53 @@
 'use client';
 
 import {
-  DisplayPill,
-  DisplaySectionIntro,
-  DisplayStatCard,
-  DisplaySurfaceCard,
-} from '@my-resume/ui/display';
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Chip,
+} from '@heroui/react';
+import { useEffect, useMemo, useState } from 'react';
 
-import {
-  fetchCurrentUser,
-} from '../lib/auth-api';
-import { fetchAiWorkbenchRuntime } from '../lib/ai-workbench-api';
-import { AiWorkbenchRuntimeSummary } from '../lib/ai-workbench-types';
-import { AuthUserView } from '../lib/auth-types';
-import { DEFAULT_API_BASE_URL } from '../lib/env';
-import { fetchDraftResume } from '../lib/resume-draft-api';
-import { ResumeDraftSnapshot } from '../lib/resume-types';
-import {
-  clearAccessToken,
-  readAccessToken,
-} from '../lib/session-storage';
-import { FileExtractionResult } from '../lib/ai-file-types';
-import { ThemeModeToggle } from './theme-mode-toggle';
+import { AiFileExtractionPanel } from './ai-file-extraction-panel';
 import { AiAnalysisPanel } from './ai-analysis-panel';
 import { AiCachedReportsPanel } from './ai-cached-reports-panel';
-import { AiFileExtractionPanel } from './ai-file-extraction-panel';
+import { fetchAiWorkbenchRuntime } from '../lib/ai-workbench-api';
+import type { AiWorkbenchRuntimeSummary } from '../lib/ai-workbench-types';
+import { DEFAULT_API_BASE_URL } from '../lib/env';
+import { fetchDraftResume } from '../lib/resume-draft-api';
+import type { ResumeDraftSnapshot } from '../lib/resume-types';
+import { useAdminSession } from '../lib/admin-session';
+import type { FileExtractionResult } from '../lib/ai-file-types';
 
 const scenarioCards = {
   'jd-match': {
     title: 'JD 匹配分析',
-    description: '后续用于粘贴 JD 或解析后的文本，生成匹配度与补强建议。',
+    description: '根据岗位描述评估当前简历匹配度，帮助快速看出缺口与调整方向。',
   },
   'resume-review': {
     title: '简历优化建议',
-    description: '后续用于基于当前标准简历内容，输出更聚焦的优化方向。',
+    description: '围绕当前标准简历输出结构化建议，再由用户决定是否应用到草稿。',
   },
   'offer-compare': {
     title: 'Offer 对比建议',
-    description: '后续用于对比多个 offer 的岗位信息、成长空间与取舍理由。',
+    description: '对比多个机会的成长性、匹配度与风险，帮助做更稳妥的取舍。',
   },
 } as const;
 
 export function AdminAiWorkbenchShell() {
-  const [status, setStatus] = useState<'loading' | 'ready' | 'unauthorized'>(
-    'loading',
-  );
-  const [currentUser, setCurrentUser] = useState<AuthUserView | null>(null);
+  const { accessToken, currentUser, status } = useAdminSession();
   const [runtimeSummary, setRuntimeSummary] =
     useState<AiWorkbenchRuntimeSummary | null>(null);
+  const [runtimeState, setRuntimeState] = useState<'idle' | 'loading' | 'ready' | 'error'>(
+    'idle',
+  );
+  const [runtimeMessage, setRuntimeMessage] = useState<string | null>(null);
   const [analysisContent, setAnalysisContent] = useState('');
-  const [analysisHelperMessage, setAnalysisHelperMessage] = useState<
-    string | null
-  >(null);
+  const [analysisHelperMessage, setAnalysisHelperMessage] = useState<string | null>(
+    null,
+  );
   const [draftSnapshot, setDraftSnapshot] = useState<ResumeDraftSnapshot | null>(
     null,
   );
@@ -65,47 +59,53 @@ export function AdminAiWorkbenchShell() {
   );
 
   useEffect(() => {
-    const accessToken = readAccessToken();
-
-    if (!accessToken) {
-      setStatus('unauthorized');
+    if (status !== 'ready' || !accessToken) {
       return;
     }
 
-    Promise.all([
-      fetchCurrentUser({
-        apiBaseUrl: DEFAULT_API_BASE_URL,
-        accessToken,
-      }),
-      fetchAiWorkbenchRuntime({
-        apiBaseUrl: DEFAULT_API_BASE_URL,
-        accessToken,
-      }),
-    ])
-      .then(([user, runtime]) => {
-        setCurrentUser(user);
+    let cancelled = false;
+    setRuntimeState('loading');
+    setRuntimeMessage(null);
+
+    fetchAiWorkbenchRuntime({
+      apiBaseUrl: DEFAULT_API_BASE_URL,
+      accessToken,
+    })
+      .then((runtime) => {
+        if (cancelled) {
+          return;
+        }
+
         setRuntimeSummary(runtime);
-        setStatus('ready');
+        setRuntimeState('ready');
       })
-      .catch(() => {
-        clearAccessToken();
-        setCurrentUser(null);
+      .catch((error) => {
+        if (cancelled) {
+          return;
+        }
+
         setRuntimeSummary(null);
-        setStatus('unauthorized');
+        setRuntimeState('error');
+        setRuntimeMessage(
+          error instanceof Error ? error.message : 'AI 工作台运行时信息加载失败',
+        );
       });
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, status]);
 
   useEffect(() => {
-    if (status !== 'ready' || !currentUser?.capabilities.canEditResume) {
+    if (
+      status !== 'ready' ||
+      !accessToken ||
+      !currentUser?.capabilities.canEditResume
+    ) {
       return;
     }
 
-    const accessToken = readAccessToken();
-
-    if (!accessToken) {
-      return;
-    }
-
+    let cancelled = false;
     setDraftSnapshotStatus('loading');
     setDraftSnapshotMessage(null);
 
@@ -114,16 +114,42 @@ export function AdminAiWorkbenchShell() {
       accessToken,
     })
       .then((snapshot) => {
+        if (cancelled) {
+          return;
+        }
+
         setDraftSnapshot(snapshot);
         setDraftSnapshotStatus('ready');
       })
       .catch((error) => {
+        if (cancelled) {
+          return;
+        }
+
+        setDraftSnapshot(null);
         setDraftSnapshotStatus('error');
         setDraftSnapshotMessage(
           error instanceof Error ? error.message : '草稿快照读取失败，请稍后重试',
         );
       });
-  }, [currentUser?.capabilities.canEditResume, status]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, currentUser?.capabilities.canEditResume, status]);
+
+  const isAdmin = Boolean(currentUser?.capabilities.canTriggerAiAnalysis);
+  const roleMessage = isAdmin
+    ? '当前账号可继续接入上传、真实分析和结果阅读。'
+    : 'viewer 当前只允许查看缓存结果与预设体验，不能上传文件或触发真实分析。';
+
+  const cachedReportsPanel = accessToken ? (
+    <AiCachedReportsPanel
+      accessToken={accessToken}
+      apiBaseUrl={DEFAULT_API_BASE_URL}
+      isViewerExperience={!isAdmin}
+    />
+  ) : null;
 
   function handleExtractedText(result: FileExtractionResult) {
     setAnalysisContent(result.text);
@@ -146,198 +172,179 @@ export function AdminAiWorkbenchShell() {
     setDraftSnapshotMessage('当前草稿快照已刷新，可直接确认 AI 改写结果。');
   }
 
-  if (status === 'loading') {
-    return (
-      <main className="page-shell single-card">
-        <DisplaySurfaceCard className="card">正在加载 AI 工作台...</DisplaySurfaceCard>
-      </main>
-    );
-  }
-
-  if (status === 'unauthorized' || !currentUser || !runtimeSummary) {
-    return (
-      <main className="page-shell single-card">
-        <DisplaySurfaceCard className="card stack">
-          <DisplaySectionIntro
-            description="AI 工作台属于受保护页面，需要先获取 JWT。"
-            eyebrow="未登录"
-            title="请先登录后台"
-            titleAs="h1"
-          />
-          <Link className="link-button" href="/">
-            返回登录页
-          </Link>
-        </DisplaySurfaceCard>
-      </main>
-    );
-  }
-
-  const isAdmin = Boolean(currentUser.capabilities.canTriggerAiAnalysis);
-  const roleMessage = isAdmin
-    ? '当前账号可继续接入上传、真实分析和结果阅读。'
-    : 'viewer 当前只允许查看缓存结果与预设体验，不能上传文件或触发真实分析。';
-  const cachedReportsPanel = (
-    <AiCachedReportsPanel
-      accessToken={readAccessToken() ?? ''}
-      apiBaseUrl={DEFAULT_API_BASE_URL}
-      isViewerExperience={!isAdmin}
-    />
+  const scenarioEntries = useMemo(
+    () =>
+      runtimeSummary?.supportedScenarios.map((scenario) => ({
+        scenario,
+        ...scenarioCards[scenario],
+      })) ?? [],
+    [runtimeSummary],
   );
 
+  if (status !== 'ready' || !currentUser) {
+    return null;
+  }
+
   return (
-    <main className="dashboard-shell ai-workbench-shell">
-      <DisplaySurfaceCard className="card dashboard-hero">
-        <div className="page-header">
-          <DisplaySectionIntro
-            className="page-header-copy"
-            description="这一页先把 AI 能力入口、Provider 状态、分析场景和角色边界集中讲清楚，为后续上传、提取和真实分析闭环打底。"
-            eyebrow="受保护页面"
-            title="AI 工作台"
-            titleAs="h1"
-          />
-          <div className="dashboard-hero-actions">
-            <ThemeModeToggle />
-            <Link className="secondary-link-button" href="/dashboard">
-              返回控制台
-            </Link>
+    <div className="stack">
+      <Card className="border border-zinc-200/70 dark:border-zinc-800">
+        <CardHeader className="flex flex-col items-start gap-3">
+          <div className="flex flex-wrap gap-2">
+            <Chip size="sm">
+              当前账号：{currentUser.username}
+            </Chip>
+            <Chip size="sm">
+              当前角色：{currentUser.role}
+            </Chip>
           </div>
-        </div>
+          <div className="space-y-2">
+            <CardTitle className="text-3xl font-semibold tracking-tight">
+              AI 工作台
+            </CardTitle>
+            <CardDescription className="max-w-3xl leading-7">
+              这一页先把上传、分析、缓存报告、草稿回写与运行时状态整理为稳定工作台。现在布局按“整页分行 + 中间双栏工作区”收拢，后续再加 RAG、检索链路或更复杂的 prompt 策略时，也不会破坏后台主线。
+            </CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent className="stack">
+          <div className="dashboard-badge-row">
+            <Chip>
+              当前 Provider：{runtimeSummary?.provider ?? '加载中'}
+            </Chip>
+            <Chip>
+              当前模型：{runtimeSummary?.model ?? '加载中'}
+            </Chip>
+            <Chip>
+              运行模式：{runtimeSummary?.mode ?? '加载中'}
+            </Chip>
+          </div>
 
-        <div className="dashboard-badge-row">
-          <DisplayPill className="dashboard-badge">
-            当前账号：{currentUser.username}
-          </DisplayPill>
-          <DisplayPill className="dashboard-badge">
-            当前角色：{currentUser.role}
-          </DisplayPill>
-          <DisplayPill className="dashboard-badge">
-            当前 Provider：{runtimeSummary.provider}
-          </DisplayPill>
-          <DisplayPill className="dashboard-badge">
-            当前模型：{runtimeSummary.model}
-          </DisplayPill>
-          <DisplayPill className="dashboard-badge">
-            运行模式：{runtimeSummary.mode}
-          </DisplayPill>
-        </div>
+          {isAdmin ? (
+            <div className="status-box">{roleMessage}</div>
+          ) : (
+            <div className="readonly-box">{roleMessage}</div>
+          )}
 
-        <div className="dashboard-inline-note">{roleMessage}</div>
-      </DisplaySurfaceCard>
+          {runtimeState === 'loading' ? (
+            <p className="muted">正在加载 AI 工作台运行时信息...</p>
+          ) : null}
+          {runtimeState === 'error' && runtimeMessage ? (
+            <p className="error-text">{runtimeMessage}</p>
+          ) : null}
+        </CardContent>
+      </Card>
 
-      <section className="dashboard-main-grid ai-workbench-grid">
-        <div className="dashboard-column stack">
-          {!isAdmin ? cachedReportsPanel : null}
-
-          <AiFileExtractionPanel
-            accessToken={readAccessToken() ?? ''}
-            apiBaseUrl={DEFAULT_API_BASE_URL}
-            canUpload={isAdmin}
-            onExtractedText={handleExtractedText}
-          />
-
-          <AiAnalysisPanel
-            accessToken={readAccessToken() ?? ''}
-            apiBaseUrl={DEFAULT_API_BASE_URL}
-            canAnalyze={isAdmin}
-            content={analysisContent}
-            helperMessage={analysisHelperMessage}
-            onDraftApplied={handleDraftApplied}
-            onContentChange={handleAnalysisContentChange}
-            runtimeSummary={runtimeSummary}
-          />
-
-          {isAdmin ? cachedReportsPanel : null}
-
-          <DisplaySurfaceCard className="card stack">
-            <DisplaySectionIntro
-              description="当前先把 AI 能力按场景讲清楚，不急着把上传、分析和结果阅读一次性全部做完。"
-              eyebrow="场景规划"
-              title="支持的分析场景"
-            />
-            <div className="scenario-grid">
-              {runtimeSummary.supportedScenarios.map((scenario) => (
-                <DisplaySurfaceCard
-                  as="article"
-                  className="scenario-card"
-                  key={scenario}
-                >
-                  <DisplaySectionIntro
-                    compact
-                    description={scenarioCards[scenario].description}
-                    eyebrow="M10 入口"
-                    title={scenarioCards[scenario].title}
-                    titleAs="h2"
-                  />
-                </DisplaySurfaceCard>
+      <Card className="border border-zinc-200/70 dark:border-zinc-800">
+        <CardHeader className="flex flex-col items-start gap-2">
+          <p className="eyebrow">场景规划</p>
+          <CardTitle>支持的分析场景</CardTitle>
+          <CardDescription>
+            当前先把分析场景收束成固定三类，既方便教学，也方便保证输出结构稳定。
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="stack">
+          {scenarioEntries.length === 0 ? (
+            <p className="muted">场景信息将在运行时摘要加载后显示。</p>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {scenarioEntries.map((entry) => (
+                <div className="status-box" key={entry.scenario}>
+                  <strong>{entry.title}</strong>
+                  <span>{entry.description}</span>
+                </div>
               ))}
             </div>
-          </DisplaySurfaceCard>
-        </div>
+          )}
+        </CardContent>
+      </Card>
 
-        <aside className="dashboard-column stack">
-          {currentUser.capabilities.canEditResume ? (
-            <DisplaySurfaceCard className="card stack">
-              <DisplaySectionIntro
-                description="这里展示 AI 工作台当前看到的草稿快照，apply 成功后会即时刷新，避免必须切回后台首页再确认。"
-                eyebrow="草稿反馈"
-                title="当前草稿快照"
-              />
-
-              {draftSnapshotStatus === 'loading' ? (
-                <p className="muted">正在加载当前草稿快照...</p>
-              ) : null}
-
-              {draftSnapshotStatus === 'error' && draftSnapshotMessage ? (
-                <p className="error-text">{draftSnapshotMessage}</p>
-              ) : null}
-
-              {draftSnapshotMessage && draftSnapshotStatus === 'ready' ? (
-                <div className="dashboard-inline-note">{draftSnapshotMessage}</div>
-              ) : null}
-
-              {draftSnapshot ? (
-                <div className="stack">
-                  <div className="status-box">
-                    <strong>{draftSnapshot.resume.profile.headline.zh}</strong>
-                    <span>{draftSnapshot.resume.profile.summary.zh}</span>
-                    <span>{`最近更新时间：${new Date(draftSnapshot.updatedAt).toLocaleString('zh-CN', { hour12: false })}`}</span>
-                  </div>
-                  <div className="status-box">
-                    <strong>{draftSnapshot.resume.profile.headline.en}</strong>
-                    <span>{draftSnapshot.resume.profile.summary.en}</span>
-                  </div>
-                </div>
-              ) : null}
-            </DisplaySurfaceCard>
-          ) : null}
-
-          <DisplaySurfaceCard className="card stack">
-            <DisplaySectionIntro
-              description="先把当前运行时状态和角色限制写清楚，避免 AI 工作台后续越做越散。"
-              eyebrow="运行时摘要"
-              title="Provider 与边界"
+      {accessToken && runtimeSummary ? (
+        <AiAnalysisPanel
+          accessToken={accessToken}
+          apiBaseUrl={DEFAULT_API_BASE_URL}
+          canAnalyze={isAdmin}
+          content={analysisContent}
+          helperMessage={analysisHelperMessage}
+          inputAccessory={
+            <AiFileExtractionPanel
+              accessToken={accessToken}
+              apiBaseUrl={DEFAULT_API_BASE_URL}
+              canUpload={isAdmin}
+              onExtractedText={handleExtractedText}
             />
+          }
+          onContentChange={handleAnalysisContentChange}
+          onDraftApplied={handleDraftApplied}
+          runtimeSummary={runtimeSummary}
+        />
+      ) : null}
 
-            <div className="info-grid">
-              <DisplayStatCard label="Provider" value={runtimeSummary.provider} />
-              <DisplayStatCard label="Model" value={runtimeSummary.model} />
-              <DisplayStatCard label="Mode" value={runtimeSummary.mode} />
-              <DisplayStatCard
-                label="分析场景"
-                value={String(runtimeSummary.supportedScenarios.length)}
-              />
-            </div>
+      {cachedReportsPanel}
 
-            <ul className="muted-list">
-              <li>业务逻辑继续统一由 `apps/server` 承载，不写 Next Route Handlers 业务接口。</li>
-              <li>本轮已同时收住“admin 真实分析”与“viewer 缓存体验”的页面边界。</li>
-              <li>
-                后续 issue 会按“里程碑文档收束”继续推进。
-              </li>
-            </ul>
-          </DisplaySurfaceCard>
-        </aside>
-      </section>
-    </main>
+      {currentUser.capabilities.canEditResume ? (
+        <Card className="border border-zinc-200/70 dark:border-zinc-800">
+          <CardHeader className="flex flex-col items-start gap-2">
+            <p className="eyebrow">草稿反馈</p>
+            <CardTitle>当前草稿快照</CardTitle>
+            <CardDescription>
+              apply 成功后这里会立即刷新，减少在多个后台页面之间来回切换确认的成本。
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="stack">
+            {draftSnapshotStatus === 'loading' ? (
+              <p className="muted">正在加载当前草稿快照...</p>
+            ) : null}
+            {draftSnapshotStatus === 'error' && draftSnapshotMessage ? (
+              <p className="error-text">{draftSnapshotMessage}</p>
+            ) : null}
+            {draftSnapshotMessage && draftSnapshotStatus === 'ready' ? (
+              <div className="dashboard-inline-note">{draftSnapshotMessage}</div>
+            ) : null}
+            {draftSnapshot ? (
+              <div className="grid gap-4 xl:grid-cols-2">
+                <div className="status-box">
+                  <strong>{draftSnapshot.resume.profile.headline.zh}</strong>
+                  <span>{draftSnapshot.resume.profile.summary.zh}</span>
+                  <span>
+                    最近更新时间：
+                    {new Date(draftSnapshot.updatedAt).toLocaleString('zh-CN', {
+                      hour12: false,
+                    })}
+                  </span>
+                </div>
+                <div className="status-box">
+                  <strong>{draftSnapshot.resume.profile.headline.en}</strong>
+                  <span>{draftSnapshot.resume.profile.summary.en}</span>
+                </div>
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
+
+      <Card className="border border-zinc-200/70 dark:border-zinc-800">
+        <CardHeader className="flex flex-col items-start gap-2">
+          <p className="eyebrow">运行时摘要</p>
+          <CardTitle>Provider 与边界</CardTitle>
+          <CardDescription>
+            在这轮 UI 升级里，AI 页面仍然保持“输入、结论、应用”三层节奏，不去扩成复杂多步流程。
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4 xl:grid-cols-3">
+          <div className="status-box">
+            <strong>输入层</strong>
+            <span>文件提取和手工输入都统一沉淀为分析内容，便于继续做缓存和重试。</span>
+          </div>
+          <div className="status-box">
+            <strong>结论层</strong>
+            <span>报告需要既有可读结论，也有结构化理由和建议，避免只给模糊答案。</span>
+          </div>
+          <div className="status-box">
+            <strong>应用层</strong>
+            <span>最终是否写回草稿由用户确认，后台不做无脑自动覆盖。</span>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

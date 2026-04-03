@@ -4,7 +4,7 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { AiFileExtractionPanel } from './ai-file-extraction-panel';
+import { AiFileExtractionPanel } from '../ai-file-extraction-panel';
 
 afterEach(() => {
   cleanup();

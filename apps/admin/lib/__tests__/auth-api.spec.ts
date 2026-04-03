@@ -5,7 +5,7 @@ import {
   loginWithPassword,
   postProtectedAction,
   publishResume,
-} from './auth-api';
+} from '../auth-api';
 
 describe('auth api client', () => {
   beforeEach(() => {

@@ -2,44 +2,29 @@
 
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const {
-  fetchCurrentUserMock,
-  fetchAiWorkbenchRuntimeMock,
-  fetchDraftResumeMock,
-  readAccessTokenMock,
-  clearAccessTokenMock,
-} = vi.hoisted(() => ({
-  fetchCurrentUserMock: vi.fn(),
-  fetchAiWorkbenchRuntimeMock: vi.fn(),
-  fetchDraftResumeMock: vi.fn(),
-  readAccessTokenMock: vi.fn(),
-  clearAccessTokenMock: vi.fn(),
+const { useAdminSessionMock, fetchAiWorkbenchRuntimeMock, fetchDraftResumeMock } =
+  vi.hoisted(() => ({
+    useAdminSessionMock: vi.fn(),
+    fetchAiWorkbenchRuntimeMock: vi.fn(),
+    fetchDraftResumeMock: vi.fn(),
+  }));
+
+vi.mock('../../lib/admin-session', () => ({
+  useAdminSession: useAdminSessionMock,
 }));
 
-vi.mock('../lib/auth-api', () => ({
-  fetchCurrentUser: fetchCurrentUserMock,
-}));
-
-vi.mock('../lib/ai-workbench-api', () => ({
+vi.mock('../../lib/ai-workbench-api', () => ({
   fetchAiWorkbenchRuntime: fetchAiWorkbenchRuntimeMock,
 }));
 
-vi.mock('../lib/resume-draft-api', () => ({
+vi.mock('../../lib/resume-draft-api', () => ({
   fetchDraftResume: fetchDraftResumeMock,
 }));
 
-vi.mock('../lib/session-storage', () => ({
-  clearAccessToken: clearAccessTokenMock,
-  readAccessToken: readAccessTokenMock,
-}));
-
-vi.mock('./theme-mode-toggle', () => ({
-  ThemeModeToggle: () => <div>主题切换占位</div>,
-}));
-
-vi.mock('./ai-file-extraction-panel', () => ({
+vi.mock('../ai-file-extraction-panel', () => ({
   AiFileExtractionPanel: ({
     canUpload,
     onExtractedText,
@@ -76,14 +61,16 @@ vi.mock('./ai-file-extraction-panel', () => ({
     ),
 }));
 
-vi.mock('./ai-analysis-panel', () => ({
+vi.mock('../ai-analysis-panel', () => ({
   AiAnalysisPanel: ({
     canAnalyze,
     content,
+    inputAccessory,
     onDraftApplied,
   }: {
     canAnalyze: boolean;
     content: string;
+    inputAccessory?: ReactNode;
     onDraftApplied?: (snapshot: {
       status: 'draft';
       updatedAt: string;
@@ -102,6 +89,7 @@ vi.mock('./ai-analysis-panel', () => ({
     }) => void;
   }) => (
     <div>
+      {inputAccessory}
       <span>{canAnalyze ? '真实分析面板占位' : '真实分析只读占位'}</span>
       <span>{`当前分析内容：${content || '空'}`}</span>
       {canAnalyze ? (
@@ -133,7 +121,7 @@ vi.mock('./ai-analysis-panel', () => ({
   ),
 }));
 
-vi.mock('./ai-cached-reports-panel', () => ({
+vi.mock('../ai-cached-reports-panel', () => ({
   AiCachedReportsPanel: ({
     isViewerExperience,
   }: {
@@ -145,7 +133,7 @@ vi.mock('./ai-cached-reports-panel', () => ({
   ),
 }));
 
-import { AdminAiWorkbenchShell } from './admin-ai-workbench-shell';
+import { AdminAiWorkbenchShell } from '../admin-ai-workbench-shell';
 
 const runtimeSummary = {
   provider: 'qiniu',
@@ -197,32 +185,24 @@ const viewerUser = {
 
 describe('AdminAiWorkbenchShell', () => {
   beforeEach(() => {
-    fetchCurrentUserMock.mockReset();
+    useAdminSessionMock.mockReset();
     fetchAiWorkbenchRuntimeMock.mockReset();
     fetchDraftResumeMock.mockReset();
-    readAccessTokenMock.mockReset();
-    clearAccessTokenMock.mockReset();
   });
 
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  it('should show unauthorized state when access token is missing', () => {
-    readAccessTokenMock.mockReturnValue(null);
-
-    render(<AdminAiWorkbenchShell />);
-
-    expect(screen.getByRole('heading', { name: '请先登录后台' })).toBeInTheDocument();
-    expect(
-      screen.getByText('AI 工作台属于受保护页面，需要先获取 JWT。'),
-    ).toBeInTheDocument();
-  });
-
   it('should render runtime summary and scenario cards for admin', async () => {
     const user = userEvent.setup();
-    readAccessTokenMock.mockReturnValue('admin-token');
-    fetchCurrentUserMock.mockResolvedValue(adminUser);
+    useAdminSessionMock.mockReturnValue({
+      accessToken: 'admin-token',
+      currentUser: adminUser,
+      logout: vi.fn(),
+      refreshSession: vi.fn(),
+      status: 'ready',
+    });
     fetchAiWorkbenchRuntimeMock.mockResolvedValue(runtimeSummary);
     fetchDraftResumeMock.mockResolvedValue(draftSnapshot);
 
@@ -232,10 +212,9 @@ describe('AdminAiWorkbenchShell', () => {
     expect(screen.getByText('当前 Provider：qiniu')).toBeInTheDocument();
     expect(screen.getByText('当前模型：deepseek-v3')).toBeInTheDocument();
     expect(screen.getByText('运行模式：live')).toBeInTheDocument();
-    expect(screen.getByText('主题切换占位')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'JD 匹配分析' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '简历优化建议' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Offer 对比建议' })).toBeInTheDocument();
+    expect(screen.getByText('JD 匹配分析')).toBeInTheDocument();
+    expect(screen.getByText('简历优化建议')).toBeInTheDocument();
+    expect(screen.getByText('Offer 对比建议')).toBeInTheDocument();
     expect(
       screen.getByText('当前账号可继续接入上传、真实分析和结果阅读。'),
     ).toBeInTheDocument();
@@ -257,11 +236,15 @@ describe('AdminAiWorkbenchShell', () => {
     expect(screen.getByText('AI 优化后的中文摘要')).toBeInTheDocument();
   });
 
-  it('should render viewer-specific guidance for read-only AI experience', async () => {
-    readAccessTokenMock.mockReturnValue('viewer-token');
-    fetchCurrentUserMock.mockResolvedValue(viewerUser);
+  it('should render viewer-specific read-only guidance', async () => {
+    useAdminSessionMock.mockReturnValue({
+      accessToken: 'viewer-token',
+      currentUser: viewerUser,
+      logout: vi.fn(),
+      refreshSession: vi.fn(),
+      status: 'ready',
+    });
     fetchAiWorkbenchRuntimeMock.mockResolvedValue(runtimeSummary);
-    fetchDraftResumeMock.mockResolvedValue(draftSnapshot);
 
     render(<AdminAiWorkbenchShell />);
 

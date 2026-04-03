@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { extractTextFromFile } from './ai-file-api';
+import { extractTextFromFile } from '../ai-file-api';
 
 describe('ai file api client', () => {
   beforeEach(() => {

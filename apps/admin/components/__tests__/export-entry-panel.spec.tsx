@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { ExportEntryPanel } from './export-entry-panel';
+import { ExportEntryPanel } from '../export-entry-panel';
 
 describe('ExportEntryPanel', () => {
   it('should render markdown and pdf download links for admin surface', () => {

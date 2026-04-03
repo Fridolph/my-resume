@@ -1,11 +1,12 @@
 'use client';
 
+import { Button, Checkbox, ListBox, Select, TextArea } from '@heroui/react';
 import {
   DisplayPill,
   DisplaySectionIntro,
   DisplaySurfaceCard,
 } from '@my-resume/ui/display';
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
 
 import {
   applyAiResumeOptimization,
@@ -28,11 +29,12 @@ interface AiAnalysisPanelProps {
   applyResumeOptimization?: typeof applyAiResumeOptimization;
   canAnalyze: boolean;
   content: string;
+  generateResumeOptimization?: typeof generateAiResumeOptimization;
   helperMessage?: string | null;
+  inputAccessory?: ReactNode;
   onDraftApplied?: (snapshot: ApplyAiResumeOptimizationResult) => void;
   onContentChange: (value: string) => void;
   runtimeSummary: AiWorkbenchRuntimeSummary;
-  generateResumeOptimization?: typeof generateAiResumeOptimization;
   triggerAnalysis?: typeof triggerAiWorkbenchAnalysis;
 }
 
@@ -69,9 +71,7 @@ const localeOptions: Array<{
 ];
 
 function formatScenario(scenario: AiWorkbenchScenario): string {
-  return (
-    scenarioOptions.find((item) => item.value === scenario)?.label ?? scenario
-  );
+  return scenarioOptions.find((item) => item.value === scenario)?.label ?? scenario;
 }
 
 function formatLocale(locale: AiWorkbenchLocale): string {
@@ -92,11 +92,12 @@ export function AiAnalysisPanel({
   applyResumeOptimization = applyAiResumeOptimization,
   canAnalyze,
   content,
+  generateResumeOptimization = generateAiResumeOptimization,
   helperMessage,
+  inputAccessory,
   onDraftApplied,
   onContentChange,
   runtimeSummary,
-  generateResumeOptimization = generateAiResumeOptimization,
   triggerAnalysis = triggerAiWorkbenchAnalysis,
 }: AiAnalysisPanelProps) {
   const [scenario, setScenario] = useState<AiWorkbenchScenario>('resume-review');
@@ -108,8 +109,9 @@ export function AiAnalysisPanel({
   const [suggestionErrorMessage, setSuggestionErrorMessage] = useState<string | null>(
     null,
   );
-  const [suggestion, setSuggestion] =
-    useState<AiResumeOptimizationResult | null>(null);
+  const [suggestion, setSuggestion] = useState<AiResumeOptimizationResult | null>(
+    null,
+  );
   const [selectedModules, setSelectedModules] = useState<
     AiResumeOptimizationChangedModule[]
   >([]);
@@ -124,6 +126,7 @@ export function AiAnalysisPanel({
   if (!canAnalyze) {
     return (
       <section className="card stack">
+        {inputAccessory ? <div className="stack">{inputAccessory}</div> : null}
         <div>
           <p className="eyebrow">真实分析</p>
           <h2>当前角色只读</h2>
@@ -300,173 +303,244 @@ export function AiAnalysisPanel({
         </p>
       </div>
 
-      <form className="stack" onSubmit={(event) => void handleSubmit(event)}>
-        <div className="form-grid">
-          <label className="field">
-            <span>分析场景</span>
-            <select
-              onChange={(event) =>
-                setScenario(event.target.value as AiWorkbenchScenario)
-              }
-              value={scenario}
-            >
-              {scenarioOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+        <div className="stack self-start">
+          {inputAccessory ? <div className="stack">{inputAccessory}</div> : null}
 
-          <label className="field">
-            <span>输出语言</span>
-            <select
-              onChange={(event) =>
-                setLocale(event.target.value as AiWorkbenchLocale)
-              }
-              value={locale}
-            >
-              {localeOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        <label className="field">
-          <span>分析输入</span>
-          <textarea
-            className="preview-textarea"
-            onChange={(event) => onContentChange(event.target.value)}
-            placeholder="可直接粘贴 JD、简历段落或 offer 信息；也可以先从上方文件提取区同步文本。"
-            value={content}
-          />
-        </label>
-
-        {helperMessage ? (
-          <div className="dashboard-inline-note">{helperMessage}</div>
-        ) : null}
-
-        {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
-        {suggestionErrorMessage ? (
-          <p className="error-text">{suggestionErrorMessage}</p>
-        ) : null}
-        {moduleLinkMessage ? (
-          <p className="dashboard-inline-note">{moduleLinkMessage}</p>
-        ) : null}
-        {applyFeedbackMessage ? (
-          <p className="dashboard-inline-note">{applyFeedbackMessage}</p>
-        ) : null}
-
-        <div className="dashboard-entry-actions">
-          <button disabled={pending} type="submit">
-            {pending ? '正在生成分析...' : '开始真实分析'}
-          </button>
-          <button
-            disabled={suggestionPending || applyPending}
-            onClick={() => void handleGenerateSuggestion()}
-            type="button"
+          <form
+            className="stack rounded-[1.75rem] border border-zinc-200/80 bg-white/80 p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/80"
+            onSubmit={(event) => void handleSubmit(event)}
           >
-            {suggestionPending ? '正在生成建议稿...' : '生成结构化简历建议'}
-          </button>
-        </div>
-      </form>
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="field">
+                <span>分析场景</span>
+                <Select
+                  aria-label="分析场景"
+                  fullWidth
+                  onSelectionChange={(key) =>
+                    setScenario(String(key) as AiWorkbenchScenario)
+                  }
+                  selectedKey={scenario}
+                  variant="secondary"
+                >
+                  <Select.Trigger aria-label="分析场景">
+                    <Select.Value />
+                    <Select.Indicator />
+                  </Select.Trigger>
+                  <Select.Popover>
+                    <ListBox>
+                      {scenarioOptions.map((option) => (
+                        <ListBox.Item
+                          id={option.value}
+                          key={option.value}
+                          textValue={option.label}
+                        >
+                          {option.label}
+                        </ListBox.Item>
+                      ))}
+                    </ListBox>
+                  </Select.Popover>
+                </Select>
+              </label>
 
-      {report ? (
-        <div className="preview-stack">
-          <div className="stack">
-            <DisplaySectionIntro
-              compact
-              description="当前展示的是管理员刚触发的同步分析结果，后续再继续扩展历史记录与更完整的结果阅读。"
-              eyebrow="分析结果"
-              title="最近一次结果"
-            />
-            <div className="dashboard-badge-row">
-              <DisplayPill>场景：{formatScenario(report.scenario)}</DisplayPill>
-              <DisplayPill>语言：{formatLocale(report.locale)}</DisplayPill>
-              <DisplayPill>来源：{formatGenerator(report.generator)}</DisplayPill>
-              <DisplayPill>
-                Provider：{runtimeSummary.provider} / {runtimeSummary.model}
-              </DisplayPill>
+              <label className="field">
+                <span>输出语言</span>
+                <Select
+                  aria-label="输出语言"
+                  fullWidth
+                  onSelectionChange={(key) =>
+                    setLocale(String(key) as AiWorkbenchLocale)
+                  }
+                  selectedKey={locale}
+                  variant="secondary"
+                >
+                  <Select.Trigger aria-label="输出语言">
+                    <Select.Value />
+                    <Select.Indicator />
+                  </Select.Trigger>
+                  <Select.Popover>
+                    <ListBox>
+                      {localeOptions.map((option) => (
+                        <ListBox.Item
+                          id={option.value}
+                          key={option.value}
+                          textValue={option.label}
+                        >
+                          {option.label}
+                        </ListBox.Item>
+                      ))}
+                    </ListBox>
+                  </Select.Popover>
+                </Select>
+              </label>
             </div>
-          </div>
 
-          <DisplaySurfaceCard className="analysis-summary-card">
+            <label className="field">
+              <span>分析输入</span>
+              <TextArea
+                className="min-h-[20rem] font-mono leading-6"
+                fullWidth
+                onChange={(event) => onContentChange(event.target.value)}
+                placeholder="可直接粘贴 JD、简历段落或 offer 信息；也可以先从上方文件提取区同步文本。"
+                value={content}
+                variant="secondary"
+              />
+            </label>
+
+            {helperMessage ? (
+              <div className="dashboard-inline-note">{helperMessage}</div>
+            ) : null}
+
+            {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
+            {suggestionErrorMessage ? (
+              <p className="error-text">{suggestionErrorMessage}</p>
+            ) : null}
+            {moduleLinkMessage ? (
+              <p className="dashboard-inline-note">{moduleLinkMessage}</p>
+            ) : null}
+            {applyFeedbackMessage ? (
+              <p className="dashboard-inline-note">{applyFeedbackMessage}</p>
+            ) : null}
+
+            <div className="dashboard-entry-actions">
+              <Button
+                isDisabled={pending}
+                size="md"
+                type="submit"
+                variant="primary"
+              >
+                {pending ? '正在生成分析...' : '开始真实分析'}
+              </Button>
+              <Button
+                isDisabled={suggestionPending || applyPending}
+                onClick={() => void handleGenerateSuggestion()}
+                size="md"
+                type="button"
+                variant="outline"
+              >
+                {suggestionPending ? '正在生成建议稿...' : '生成结构化简历建议'}
+              </Button>
+            </div>
+          </form>
+        </div>
+
+        <div className="stack self-start">
+          <DisplaySurfaceCard className="grid gap-4">
             <DisplaySectionIntro
               compact
-              description={report.inputPreview}
-              eyebrow="结论层"
-              title="模型判断摘要"
+              description={
+                report
+                  ? '当前结果会把评分、来源、语言和模型上下文收在同一个概览里，方便边看输入边判断结果是否可信。'
+                  : '触发一次真实分析后，这里会集中展示当前报告概览、结论摘要、判断依据、风险提示和建议动作。'
+              }
+              eyebrow="分析结果"
+              title="当前报告概览"
               titleAs="h3"
             />
-            <div className="analysis-text-block">{report.summary}</div>
-            <div className="info-grid">
+
+            {report ? (
+              <>
+                <div className="dashboard-badge-row">
+                  <DisplayPill>场景：{formatScenario(report.scenario)}</DisplayPill>
+                  <DisplayPill>语言：{formatLocale(report.locale)}</DisplayPill>
+                  <DisplayPill>来源：{formatGenerator(report.generator)}</DisplayPill>
+                  <DisplayPill>
+                    Provider：{runtimeSummary.provider} / {runtimeSummary.model}
+                  </DisplayPill>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="status-box">
+                    <strong>{formatScore(report)}</strong>
+                    <span>{report.score.label}</span>
+                  </div>
+                  <div className="status-box">
+                    <strong>输入预览</strong>
+                    <span>{report.inputPreview}</span>
+                  </div>
+                </div>
+              </>
+            ) : (
               <div className="status-box">
-                <strong>{formatScore(report)}</strong>
-                <span>{report.score.label}</span>
+                <strong>等待分析结果</strong>
+                <span>先在左侧输入完整文本，或通过文件提取同步内容，再触发一次真实分析。</span>
               </div>
-              <div className="status-box">
-                <strong>判断理由</strong>
-                <span>{report.score.reason}</span>
-              </div>
-            </div>
+            )}
           </DisplaySurfaceCard>
 
-          <div className="analysis-section-grid">
-            <DisplaySurfaceCard as="article" className="analysis-section-card">
-              <DisplaySectionIntro
-                compact
-                description="这里展示当前输入已经具备的优势，帮助用户判断“哪些内容不该被误改”。"
-                title="已有优势"
-                titleAs="h3"
-              />
-              <ul className="muted-list">
-                {report.strengths.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </DisplaySurfaceCard>
+          {report ? (
+            <>
+              <DisplaySurfaceCard className="grid gap-4">
+                <DisplaySectionIntro
+                  compact
+                  description="先给出面向用户的整体判断，再展开为什么这样判断。这样更适合简历修改和面试准备。"
+                  eyebrow="结论层"
+                  title="结论摘要"
+                  titleAs="h3"
+                />
+                <div className="analysis-text-block">{report.summary}</div>
+                <div className="status-box">
+                  <strong>判断理由</strong>
+                  <span>{report.score.reason}</span>
+                </div>
+              </DisplaySurfaceCard>
 
-            <DisplaySurfaceCard as="article" className="analysis-section-card">
-              <DisplaySectionIntro
-                compact
-                description="这些缺口是 AI 判断当前输入还不够有说服力的地方。"
-                title="待补缺口"
-                titleAs="h3"
-              />
-              <ul className="muted-list">
-                {report.gaps.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </DisplaySurfaceCard>
+              <DisplaySurfaceCard className="grid gap-4">
+                <DisplaySectionIntro
+                  compact
+                  description="这里把已有优势和待补缺口放在同一层，帮助用户理解为什么当前简历会得到这个结论。"
+                  eyebrow="依据层"
+                  title="判断依据"
+                  titleAs="h3"
+                />
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="grid gap-3">
+                    <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                      已有优势
+                    </h4>
+                    <ul className="muted-list">
+                      {report.strengths.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="grid gap-3">
+                    <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                      待补缺口
+                    </h4>
+                    <ul className="muted-list">
+                      {report.gaps.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </DisplaySurfaceCard>
 
-            <DisplaySurfaceCard as="article" className="analysis-section-card">
-              <DisplaySectionIntro
-                compact
-                description="风险提示不是为了制造焦虑，而是提前告诉用户“不改会发生什么”。"
-                title="风险提示"
-                titleAs="h3"
-              />
-              <ul className="muted-list">
-                {report.risks.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </DisplaySurfaceCard>
+              <DisplaySurfaceCard className="grid gap-4">
+                <DisplaySectionIntro
+                  compact
+                  description="风险提示不是为了制造焦虑，而是提前告诉用户“不改会发生什么”。"
+                  eyebrow="风险层"
+                  title="风险提示"
+                  titleAs="h3"
+                />
+                <ul className="muted-list">
+                  {report.risks.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </DisplaySurfaceCard>
 
-            <DisplaySurfaceCard as="article" className="analysis-section-card">
-              <DisplaySectionIntro
-                compact
-                description="建议动作会尽量指向简历模块，为后续 diff / apply 做准备。"
-                title="建议动作"
-                titleAs="h3"
-              />
-              <div className="stack">
-                {report.suggestions.map((item) => (
-                  (() => {
+              <DisplaySurfaceCard className="grid gap-4">
+                <DisplaySectionIntro
+                  compact
+                  description="建议动作会尽量指向简历模块，为后续 diff / apply 做准备，也方便用户在确认原因后再执行。"
+                  eyebrow="行动层"
+                  title="建议动作"
+                  titleAs="h3"
+                />
+                <div className="stack">
+                  {report.suggestions.map((item) => {
                     const suggestionModule = item.module;
 
                     return (
@@ -493,160 +567,165 @@ export function AiAnalysisPanel({
                         </ul>
                         {suggestionModule ? (
                           <div className="dashboard-entry-actions">
-                            <button
-                              className="secondary-button"
+                            <Button
                               onClick={() =>
                                 handleLinkSuggestionModule(suggestionModule)
                               }
+                              size="sm"
                               type="button"
+                              variant="outline"
                             >
                               {`定位到 ${suggestionModule} 改写模块`}
-                            </button>
+                            </Button>
                           </div>
                         ) : null}
                       </DisplaySurfaceCard>
                     );
-                  })()
-                ))}
-              </div>
-            </DisplaySurfaceCard>
-
-            {report.sections.map((section) => (
-              <DisplaySurfaceCard
-                as="article"
-                className="analysis-section-card"
-                key={`legacy-${section.key}`}
-              >
-                <DisplaySectionIntro
-                  compact
-                  description="兼容缓存阅读面板的过渡结构。"
-                  title={section.title}
-                  titleAs="h3"
-                />
-                <ul className="muted-list">
-                  {section.bullets.map((bullet) => (
-                    <li key={`${section.key}-${bullet}`}>{bullet}</li>
-                  ))}
-                </ul>
+                  })}
+                </div>
               </DisplaySurfaceCard>
-            ))}
-          </div>
-        </div>
-      ) : null}
 
-      {suggestion ? (
-        <div className="preview-stack">
-          <div className="stack">
-            <DisplaySectionIntro
-              compact
-              description="服务端已把 AI 返回的结构化 patch 合并回当前 StandardResume，并完成校验。"
-              eyebrow="结构化建议"
-              title="可一键应用的草稿建议"
-            />
-            <div className="dashboard-badge-row">
-              {suggestion.changedModules.map((module) => (
-                <DisplayPill key={module}>模块：{module}</DisplayPill>
-              ))}
-              <DisplayPill>
-                Provider：{suggestion.providerSummary.provider} /{' '}
-                {suggestion.providerSummary.model}
-              </DisplayPill>
-            </div>
-          </div>
-
-          <DisplaySurfaceCard className="analysis-summary-card">
-            <DisplaySectionIntro
-              compact
-              description="当前开源版先只做结构化改写建议、模块级确认和服务端 apply，不继续扩张到历史与多版本管理。"
-              eyebrow="建议摘要"
-              title="AI 建议稿说明"
-              titleAs="h3"
-            />
-            <div className="analysis-text-block">{suggestion.summary}</div>
-            {suggestion.focusAreas.length > 0 ? (
-              <ul className="muted-list">
-                {suggestion.focusAreas.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            ) : null}
-          </DisplaySurfaceCard>
-
-          <div className="analysis-section-grid">
-            {suggestion.moduleDiffs.map((moduleDiff) => {
-              const checked = selectedModules.includes(moduleDiff.module);
-
-              return (
-                <DisplaySurfaceCard
-                  as="article"
-                  className={`analysis-section-card${linkedModule === moduleDiff.module ? ' is-linked-module' : ''}`}
-                  id={`module-diff-${moduleDiff.module}`}
-                  key={moduleDiff.module}
-                >
-                  <div className="module-diff-header">
-                    <DisplaySectionIntro
-                      compact
-                      description={moduleDiff.reason}
-                      eyebrow={`模块：${moduleDiff.module}`}
-                      title={moduleDiff.title}
-                      titleAs="h3"
-                    />
-                    <label className="module-check">
-                      <input
-                        checked={checked}
-                        onChange={() => toggleSelectedModule(moduleDiff.module)}
-                        type="checkbox"
-                      />
-                      <span>{`应用模块：${moduleDiff.module}`}</span>
-                    </label>
-                  </div>
-
-                  <div className="module-diff-stack">
-                    {moduleDiff.entries.map((entry) => (
-                      <div className="module-diff-entry" key={entry.key}>
-                        <strong>{entry.label}</strong>
-                        <div className="module-diff-grid">
-                          <div className="status-box">
-                            <strong>当前草稿</strong>
-                            <span>{entry.before}</span>
-                          </div>
-                          <div className="status-box">
-                            <strong>建议稿</strong>
-                            <span>{entry.after}</span>
-                          </div>
-                        </div>
-                      </div>
+              {report.sections.length > 0 ? (
+                <DisplaySurfaceCard className="grid gap-4">
+                  <DisplaySectionIntro
+                    compact
+                    description="兼容缓存阅读面板的过渡结构，便于后续继续统一报告阅读体验。"
+                    eyebrow="兼容层"
+                    title="附加阅读段落"
+                    titleAs="h3"
+                  />
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    {report.sections.map((section) => (
+                      <DisplaySurfaceCard
+                        as="article"
+                        className="analysis-section-card"
+                        key={`legacy-${section.key}`}
+                      >
+                        <DisplaySectionIntro
+                          compact
+                          description="兼容缓存阅读面板的过渡结构。"
+                          title={section.title}
+                          titleAs="h4"
+                        />
+                        <ul className="muted-list">
+                          {section.bullets.map((bullet) => (
+                            <li key={`${section.key}-${bullet}`}>{bullet}</li>
+                          ))}
+                        </ul>
+                      </DisplaySurfaceCard>
                     ))}
                   </div>
                 </DisplaySurfaceCard>
-              );
-            })}
-          </div>
+              ) : null}
+            </>
+          ) : null}
 
-          <DisplaySurfaceCard className="card stack">
-            <DisplaySectionIntro
-              compact
-              description="只有勾选的模块会被服务端写回当前草稿，避免前端整份覆盖。"
-              eyebrow="草稿应用"
-              title="将已选模块写回当前草稿"
-              titleAs="h3"
-            />
-            <div className="dashboard-inline-note">
-              当前已选择 {selectedModules.length} / {suggestion.changedModules.length}{' '}
-              个模块。
-            </div>
-            <div className="dashboard-entry-actions">
-              <button
-                disabled={applyPending || selectedModules.length === 0}
-                onClick={() => void handleApplySuggestion()}
-                type="button"
-              >
-                {applyPending ? '正在应用到草稿...' : '应用已选模块到当前草稿'}
-              </button>
-            </div>
-          </DisplaySurfaceCard>
+          {suggestion ? (
+            <>
+              <DisplaySurfaceCard className="grid gap-4">
+                <DisplaySectionIntro
+                  compact
+                  description="服务端已把 AI 返回的结构化 patch 合并回当前 StandardResume，并完成校验。"
+                  eyebrow="结构化建议"
+                  title="可一键应用的草稿建议"
+                />
+                <div className="dashboard-badge-row">
+                  {suggestion.changedModules.map((module) => (
+                    <DisplayPill key={module}>模块：{module}</DisplayPill>
+                  ))}
+                  <DisplayPill>
+                    Provider：{suggestion.providerSummary.provider} /{' '}
+                    {suggestion.providerSummary.model}
+                  </DisplayPill>
+                </div>
+                <div className="analysis-text-block">{suggestion.summary}</div>
+                {suggestion.focusAreas.length > 0 ? (
+                  <ul className="muted-list">
+                    {suggestion.focusAreas.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </DisplaySurfaceCard>
+
+              <div className="grid gap-4">
+                {suggestion.moduleDiffs.map((moduleDiff) => {
+                  const checked = selectedModules.includes(moduleDiff.module);
+
+                  return (
+                    <DisplaySurfaceCard
+                      as="article"
+                      className={`analysis-section-card${linkedModule === moduleDiff.module ? ' is-linked-module' : ''}`}
+                      id={`module-diff-${moduleDiff.module}`}
+                      key={moduleDiff.module}
+                    >
+                      <div className="module-diff-header">
+                        <DisplaySectionIntro
+                          compact
+                          description={moduleDiff.reason}
+                          eyebrow={`模块：${moduleDiff.module}`}
+                          title={moduleDiff.title}
+                          titleAs="h3"
+                        />
+                        <Checkbox
+                          className="module-check"
+                          isSelected={checked}
+                          onChange={() => toggleSelectedModule(moduleDiff.module)}
+                        >
+                          {`应用模块：${moduleDiff.module}`}
+                        </Checkbox>
+                      </div>
+
+                      <div className="module-diff-stack">
+                        {moduleDiff.entries.map((entry) => (
+                          <div className="module-diff-entry" key={entry.key}>
+                            <strong>{entry.label}</strong>
+                            <div className="grid gap-3 md:grid-cols-2">
+                              <div className="status-box">
+                                <strong>当前草稿</strong>
+                                <span>{entry.before}</span>
+                              </div>
+                              <div className="status-box">
+                                <strong>建议稿</strong>
+                                <span>{entry.after}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </DisplaySurfaceCard>
+                  );
+                })}
+              </div>
+
+              <DisplaySurfaceCard className="card stack">
+                <DisplaySectionIntro
+                  compact
+                  description="只有勾选的模块会被服务端写回当前草稿，避免前端整份覆盖。"
+                  eyebrow="草稿应用"
+                  title="将已选模块写回当前草稿"
+                  titleAs="h3"
+                />
+                <div className="dashboard-inline-note">
+                  当前已选择 {selectedModules.length} / {suggestion.changedModules.length}{' '}
+                  个模块。
+                </div>
+                <div className="dashboard-entry-actions">
+                  <Button
+                    isDisabled={applyPending || selectedModules.length === 0}
+                    onClick={() => void handleApplySuggestion()}
+                    size="md"
+                    type="button"
+                    variant="primary"
+                  >
+                    {applyPending ? '正在应用到草稿...' : '应用已选模块到当前草稿'}
+                  </Button>
+                </div>
+              </DisplaySurfaceCard>
+            </>
+          ) : null}
         </div>
-      ) : null}
+      </div>
     </section>
   );
 }

@@ -7,7 +7,7 @@ import {
   fetchAiWorkbenchRuntime,
   generateAiResumeOptimization,
   triggerAiWorkbenchAnalysis,
-} from './ai-workbench-api';
+} from '../ai-workbench-api';
 
 describe('ai workbench api client', () => {
   beforeEach(() => {

@@ -127,6 +127,17 @@
 - 每个任务的开发日志放在 `docs/30-开发日志/`
 - 里程碑级教程 / 博客正文或大纲放在 `docs/40-教程与博客/`
 
+## 测试文件约定
+
+- 新增测试文件时，优先放在对应目录下的 `__tests__/` 子目录中。
+- 页面 / 组件测试示例：
+  - `apps/admin/components/__tests__/xxx.spec.tsx`
+  - `apps/web/components/__tests__/xxx.spec.tsx`
+- 公共模块、客户端请求层、领域函数等测试示例：
+  - `apps/admin/lib/__tests__/xxx.spec.ts`
+  - `apps/server/src/**/__tests__/xxx.spec.ts`
+- 避免再把 `.spec.ts` / `.spec.tsx` 直接散落在实现文件同级目录，除非当前目录结构确实无法自然承载 `__tests__/`。
+
 ## 后续实现方向约束
 
 - 目标架构是：

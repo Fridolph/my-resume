@@ -4,8 +4,8 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ResumeDraftSnapshot } from '../lib/resume-types';
-import { ResumeDraftEditorPanel } from './resume-draft-editor-panel';
+import type { ResumeDraftSnapshot } from '../../lib/resume-types';
+import { ResumeDraftEditorPanel } from '../resume-draft-editor-panel';
 
 const draftSnapshot: ResumeDraftSnapshot = {
   status: 'draft' as const,

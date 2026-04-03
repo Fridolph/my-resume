@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { fetchDraftResume, updateDraftResume } from './resume-draft-api';
-import { ResumeDraftSnapshot } from './resume-types';
+import { fetchDraftResume, updateDraftResume } from '../resume-draft-api';
+import type { ResumeDraftSnapshot } from '../resume-types';
 
 const draftSnapshot: ResumeDraftSnapshot = {
   status: 'draft' as const,

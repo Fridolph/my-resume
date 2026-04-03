@@ -4,7 +4,7 @@ import {
   clearAccessToken,
   readAccessToken,
   writeAccessToken,
-} from './session-storage';
+} from '../session-storage';
 
 describe('session storage', () => {
   afterEach(() => {
