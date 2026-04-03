@@ -39,6 +39,9 @@ describe('PublishedResumeShell', () => {
     expect(
       screen.queryByRole('heading', { name: '公开简历速览' }),
     ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '打开项目 GitHub 仓库' }).closest('a'),
+    ).toHaveAttribute('href', 'https://github.com/Fridolph/my-resume');
 
     await user.click(screen.getByRole('button', { name: 'EN' }));
 
@@ -46,6 +49,9 @@ describe('PublishedResumeShell', () => {
       screen.getByRole('heading', { name: 'Yinsheng Fu' }),
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Profile' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Open project GitHub repository' }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole('heading', { name: 'Work Experience' }),
     ).toBeInTheDocument();

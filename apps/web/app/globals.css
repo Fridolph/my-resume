@@ -47,7 +47,6 @@ a {
 
 .web-page-shell {
   min-height: 100vh;
-  padding: 1rem;
 }
 
 .web-eyebrow {
@@ -150,11 +149,14 @@ a {
   color: #cbd5e1;
 }
 
-@media (max-width: 767px) {
-  .web-page-shell {
-    padding: 0.85rem;
-  }
+.tag-grid,
+.link-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
 
+@media (max-width: 767px) {
   .item-header {
     flex-direction: column;
     align-items: flex-start;
