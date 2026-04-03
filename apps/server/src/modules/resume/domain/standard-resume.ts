@@ -213,7 +213,7 @@ export function createExampleStandardResume(): StandardResume {
         fieldOfStudy: createLocalizedText('通信工程', 'Communication Engineering'),
         startDate: '2012-09',
         endDate: '2016-06',
-        location: createLocalizedText('四川 眉山', 'Meishan, Sichuan'),
+        location: createLocalizedText('四川 成都', 'Meishan, Sichuan'),
         highlights: [
           createLocalizedText(
             '完成通信工程本科学习，系统接触通信原理、计算机基础与工程实践。',

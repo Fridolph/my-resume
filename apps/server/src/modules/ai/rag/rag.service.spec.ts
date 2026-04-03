@@ -27,7 +27,7 @@ education:
     degree: 本科
     major: 通信工程
     period: 2012 - 2016
-    location: 四川眉山
+    location: 四川成都
 experiences:
   - id: wskp
     company: 成都网思科平科技有限公司
