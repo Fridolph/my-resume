@@ -16,6 +16,7 @@ import {
   DrawerHeader,
   DrawerHeading,
   Separator,
+  Tooltip,
   useOverlayState,
 } from '@heroui/react';
 import Link from 'next/link';
@@ -86,13 +87,20 @@ function AdminNavItems({
             ? currentPathname === item.href
             : currentPathname.startsWith(item.href);
 
-        return (
+        const navButton = (
           <Button
             aria-current={isActive ? 'page' : undefined}
-            aria-label={collapsed ? item.title : undefined}
-            className={isActive ? 'admin-nav-item is-active' : 'admin-nav-item'}
+            aria-label={item.title}
+            className={
+              collapsed
+                ? isActive
+                  ? 'admin-nav-item is-active is-collapsed'
+                  : 'admin-nav-item is-collapsed'
+                : isActive
+                  ? 'admin-nav-item is-active'
+                  : 'admin-nav-item'
+            }
             fullWidth
-            key={item.href}
             onClick={() => {
               onNavigate?.();
               router.push(item.href);
@@ -108,6 +116,23 @@ function AdminNavItems({
               <span className="admin-nav-item-label">{item.title}</span>
             ) : null}
           </Button>
+        );
+
+        if (!collapsed) {
+          return (
+            <div key={item.href}>
+              {navButton}
+            </div>
+          );
+        }
+
+        return (
+          <Tooltip key={item.href}>
+            <Tooltip.Trigger>{navButton}</Tooltip.Trigger>
+            <Tooltip.Content offset={12} placement="right">
+              {item.title}
+            </Tooltip.Content>
+          </Tooltip>
         );
       })}
     </div>
@@ -199,15 +224,24 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
       <div className="min-h-screen bg-zinc-100 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
         <div
           className="grid min-h-screen w-full grid-cols-1 md:[grid-template-columns:var(--admin-sidebar-width)_minmax(0,1fr)]"
-          style={{ '--admin-sidebar-width': sidebarCollapsed ? '80px' : '160px' } as CSSProperties}
+          style={{ '--admin-sidebar-width': sidebarCollapsed ? '88px' : '176px' } as CSSProperties}
         >
-          <aside className="admin-sidebar-shell hidden md:block">
+          <aside className="admin-sidebar-shell hidden border-none bg-transparent md:block">
             <Card className="admin-sidebar-card p-1! rounded-none border-none bg-transparent shadow-none">
-              <CardHeader className="flex-col items-start gap-4 px-2 pt-4 pb-3">
-                <div className="flex w-full items-center justify-between gap-2">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-zinc-950 text-sm font-semibold text-white dark:bg-white dark:text-zinc-950">
-                    MR
-                  </div>
+              <CardHeader
+                className={
+                  sidebarCollapsed
+                    ? 'admin-sidebar-header is-collapsed'
+                    : 'admin-sidebar-header'
+                }
+              >
+                <div
+                  className={
+                    sidebarCollapsed
+                      ? 'admin-sidebar-brand is-collapsed'
+                      : 'admin-sidebar-brand'
+                  }
+                >
                   <Button
                     aria-label={sidebarCollapsed ? '展开侧边栏' : '折叠侧边栏'}
                     className="sidebar-toggle-button"
@@ -219,17 +253,26 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
                   >
                     {sidebarCollapsed ? '>' : '<'}
                   </Button>
+                  <div className="admin-sidebar-logo">
+                    MR
+                  </div>
                 </div>
                 {!sidebarCollapsed ? (
                   <div className="space-y-1">
-                    <CardTitle className="text-lg">my-resume admin</CardTitle>
+                    <CardTitle className="text-lg">resume admin</CardTitle>
                     <CardDescription>
                       标准后台壳，继续只消费 NestJS 提供的业务能力。
                     </CardDescription>
                   </div>
                 ) : null}
               </CardHeader>
-              <CardContent className="flex min-h-0 flex-1 flex-col gap-4 px-2 pb-4">
+              <CardContent
+                className={
+                  sidebarCollapsed
+                    ? 'admin-sidebar-content is-collapsed'
+                    : 'admin-sidebar-content'
+                }
+              >
                 <AdminNavItems
                   collapsed={sidebarCollapsed}
                   currentPathname={pathname}

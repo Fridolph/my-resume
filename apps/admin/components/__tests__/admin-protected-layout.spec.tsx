@@ -100,7 +100,7 @@ describe('AdminProtectedLayout', () => {
       </AdminProtectedLayout>,
     );
 
-    expect(screen.getByText('my-resume admin')).toBeInTheDocument();
+    expect(screen.getByText('resume admin')).toBeInTheDocument();
     expect(screen.getByText('受保护内容')).toBeInTheDocument();
     expect(screen.getByText('账号：admin')).toBeInTheDocument();
     expect(screen.getAllByText('概览').length).toBeGreaterThan(0);
