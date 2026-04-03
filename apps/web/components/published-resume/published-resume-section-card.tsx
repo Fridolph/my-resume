@@ -1,4 +1,4 @@
-import { DisplaySectionIntro, DisplaySurfaceCard } from '@my-resume/ui/display';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@heroui/react';
 import { ReactNode } from 'react';
 
 interface PublishedResumeSectionCardProps {
@@ -15,13 +15,19 @@ export function PublishedResumeSectionCard({
   children,
 }: PublishedResumeSectionCardProps) {
   return (
-    <DisplaySurfaceCard className="section-card">
-      <DisplaySectionIntro
-        description={description}
-        eyebrow={eyebrow}
-        title={title}
-      />
-      {children}
-    </DisplaySurfaceCard>
+    <Card className="web-section-card">
+      <CardHeader className="gap-3">
+        <p className="web-eyebrow">{eyebrow}</p>
+        <CardTitle className="text-2xl text-slate-950 dark:text-white">
+          {title}
+        </CardTitle>
+        {description ? (
+          <CardDescription className="text-base leading-7 text-slate-500 dark:text-slate-400">
+            {description}
+          </CardDescription>
+        ) : null}
+      </CardHeader>
+      <CardContent className="grid gap-4">{children}</CardContent>
+    </Card>
   );
 }

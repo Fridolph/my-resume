@@ -12,11 +12,16 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@heroui/react": "^3.0.1",
+    "@heroui/styles": "^3.0.1",
     "@my-resume/api-client": "workspace:*",
     "@my-resume/ui": "workspace:*",
+    "@tailwindcss/postcss": "^4.2.2",
+    "framer-motion": "^12.38.0",
     "next": "^15.5.2",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.8.0",

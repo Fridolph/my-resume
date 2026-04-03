@@ -1,7 +1,5 @@
 'use client';
 
-import { DisplayStatCard } from '@my-resume/ui/display';
-import { useThemeMode } from '@my-resume/ui/theme';
 import { useState } from 'react';
 
 import { DEFAULT_API_BASE_URL } from '../lib/env';
@@ -13,10 +11,8 @@ import { PublishedResumeHero } from './published-resume/published-resume-hero';
 import { PublishedResumeHighlightsSection } from './published-resume/published-resume-highlights-section';
 import { PublishedResumeProjectsSection } from './published-resume/published-resume-projects-section';
 import { PublishedResumeSkillsSection } from './published-resume/published-resume-skills-section';
-import {
-  formatPublishedAt,
-  resumeLabels,
-} from './published-resume/published-resume-utils';
+import { resumeLabels } from './published-resume/published-resume-utils';
+import { PublicSiteHeader } from './public-site-header';
 
 export function PublishedResumeShell({
   apiBaseUrl = DEFAULT_API_BASE_URL,
@@ -26,55 +22,29 @@ export function PublishedResumeShell({
   publishedResume: ResumePublishedSnapshot | null;
 }) {
   const [locale, setLocale] = useState<ResumeLocale>('zh');
-  const { theme, setTheme } = useThemeMode();
 
   if (!publishedResume) {
     return <PublishedResumeEmptyState />;
   }
 
-  const labels = resumeLabels[locale];
   const { education, experiences, highlights, projects, skills } =
     publishedResume.resume;
-  const signalCards = [
-    {
-      label: labels.experienceCountLabel,
-      value: String(experiences.length).padStart(2, '0'),
-      description: labels.experienceCountDescription,
-    },
-    {
-      label: labels.projectsCountLabel,
-      value: String(projects.length).padStart(2, '0'),
-      description: labels.projectsCountDescription,
-    },
-    {
-      label: labels.skillsCountLabel,
-      value: String(skills.length).padStart(2, '0'),
-      description: labels.skillsCountDescription,
-    },
-    {
-      label: labels.publicationStateLabel,
-      value: labels.publicationStateValue,
-      description: `${labels.publicationStateDescription} ${formatPublishedAt(
-        publishedResume.publishedAt,
-        locale,
-      )}`,
-    },
-  ];
+  const labels = resumeLabels[locale];
 
   return (
-    <main className="page-shell" data-template="standard">
-      <div className="resume-layout">
-        <aside className="resume-sidebar">
-          <div className="resume-sidebar-inner">
+    <main className="web-page-shell" data-template="standard">
+      <PublicSiteHeader locale={locale} onChangeLocale={setLocale} />
+
+      <section className="mx-auto grid w-full max-w-7xl gap-6">
+        <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
+          <div className="grid gap-6">
             <PublishedResumeHero
               apiBaseUrl={apiBaseUrl}
               locale={locale}
               onChangeLocale={setLocale}
-              onChangeTheme={setTheme}
               publishedResume={publishedResume}
-              theme={theme}
             />
-            <div className="section-stack">
+            <div className="grid gap-6">
               <PublishedResumeEducationSection
                 education={education}
                 locale={locale}
@@ -86,29 +56,19 @@ export function PublishedResumeShell({
               />
             </div>
           </div>
-        </aside>
 
-        <section className="resume-main">
-          <div className="resume-main-stack">
-            <section className="signal-shell">
-              <div className="signal-header">
-                <p className="eyebrow">{labels.resumeSignalsEyebrow}</p>
-                <h2 className="signal-title">{labels.resumeSignalsTitle}</h2>
-              </div>
-              <div className="signal-grid">
-                {signalCards.map((card) => (
-                  <DisplayStatCard
-                    className="signal-card"
-                    description={card.description}
-                    key={card.label}
-                    label={card.label}
-                    value={card.value}
-                  />
-                ))}
-              </div>
-            </section>
+          <div className="grid gap-6">
+            <div className="grid gap-2 rounded-[1.75rem] border border-dashed border-slate-300 bg-white/60 px-5 py-5 dark:border-white/10 dark:bg-white/5">
+              <p className="web-eyebrow">{labels.pageEyebrow}</p>
+              <h2 className="text-2xl font-semibold tracking-[-0.05em] text-slate-950 dark:text-white">
+                {labels.pageTitle}
+              </h2>
+              <p className="text-base leading-7 text-slate-500 dark:text-slate-400">
+                {labels.pageDescription}
+              </p>
+            </div>
 
-            <div className="section-stack primary-stack">
+            <div className="grid gap-6">
               <PublishedResumeExperienceSection
                 experiences={experiences}
                 locale={locale}
@@ -116,8 +76,8 @@ export function PublishedResumeShell({
               <PublishedResumeProjectsSection locale={locale} projects={projects} />
             </div>
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
     </main>
   );
 }
