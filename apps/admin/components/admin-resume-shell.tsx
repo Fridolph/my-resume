@@ -17,32 +17,32 @@ const moduleRoadmap = [
   {
     key: 'profile',
     title: '基础信息',
-    description: '已接通双语 profile 编辑、保存与草稿刷新，是当前唯一可直接操作的模块。',
+    description: '双语 profile 与个人扩展字段已接通，可维护摘要、链接与兴趣方向。',
     status: '已实现',
   },
   {
     key: 'education',
     title: '教育经历',
-    description: '后续会补进独立列表编辑与排序，目前先只在数据模型中保留结构。',
-    status: '规划中',
+    description: '已接通双语教育经历编辑，可维护学校、学位、专业、时间、地点与亮点。',
+    status: '已实现',
   },
   {
     key: 'experiences',
     title: '工作经历',
-    description: '会与项目经历共用部分列表编辑模式，本轮先不扩到复杂表单。',
-    status: '规划中',
+    description: '已支持公司、岗位、时间、地点、摘要、亮点与技术栈的草稿维护。',
+    status: '已实现',
   },
   {
     key: 'projects',
     title: '项目经历',
-    description: '后续会结合 AI 建议回写能力一起扩展，当前先作为结构保留。',
-    status: '规划中',
+    description: '已支持项目名称、角色、时间、摘要、亮点与技术栈，继续为扩展字段收口做准备。',
+    status: '已实现',
   },
   {
     key: 'skills',
     title: '技能与亮点',
-    description: '会继续拆成技能组与亮点条目，保持和导出模型一致。',
-    status: '规划中',
+    description: '技能组与亮点条目已接通，保持与公开展示和导出模型一致。',
+    status: '已实现',
   },
 ] as const;
 
@@ -78,7 +78,7 @@ export function AdminResumeShell() {
           <CardContent className="stack">
             {currentUser.capabilities.canEditResume ? (
               <div className="status-box">
-                当前阶段只开放 profile 模块真实编辑，其他模块先保留入口与结构说明。
+                当前已接通标准简历主模块编辑，后台可维护草稿后再手动发布到公开站。
               </div>
             ) : (
               <div className="readonly-box">

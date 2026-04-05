@@ -16,9 +16,13 @@ import { fetchDraftResume, updateDraftResume } from '../lib/resume-draft-api';
 import type {
   LocalizedText,
   ResumeDraftSnapshot,
+  ResumeEducationItem,
   ResumeExperienceItem,
+  ResumeHighlightItem,
   ResumeProfile,
+  ResumeProfileLink,
   ResumeProjectItem,
+  ResumeSkillGroup,
   StandardResume,
 } from '../lib/resume-types';
 
@@ -64,6 +68,25 @@ function createEmptyExperience(): ResumeExperienceItem {
   };
 }
 
+function createEmptyProfileLink(): ResumeProfileLink {
+  return {
+    label: createEmptyLocalizedText(),
+    url: '',
+  };
+}
+
+function createEmptyEducation(): ResumeEducationItem {
+  return {
+    schoolName: createEmptyLocalizedText(),
+    degree: createEmptyLocalizedText(),
+    fieldOfStudy: createEmptyLocalizedText(),
+    startDate: '',
+    endDate: '',
+    location: createEmptyLocalizedText(),
+    highlights: [],
+  };
+}
+
 function createEmptyProject(): ResumeProjectItem {
   return {
     name: createEmptyLocalizedText(),
@@ -74,6 +97,20 @@ function createEmptyProject(): ResumeProjectItem {
     highlights: [],
     technologies: [],
     links: [],
+  };
+}
+
+function createEmptySkillGroup(): ResumeSkillGroup {
+  return {
+    name: createEmptyLocalizedText(),
+    keywords: [],
+  };
+}
+
+function createEmptyHighlight(): ResumeHighlightItem {
+  return {
+    title: createEmptyLocalizedText(),
+    description: createEmptyLocalizedText(),
   };
 }
 
@@ -113,9 +150,9 @@ function mergeLocalizedLines(
 }
 
 function buildDraftFieldKey(
-  scope: 'experience' | 'project',
-  index: number,
-  field: 'highlights' | 'technologies',
+  scope: 'experience' | 'project' | 'education' | 'skill' | 'profile',
+  index: number | 'interests',
+  field: 'highlights' | 'technologies' | 'keywords' | 'interests',
   locale?: 'zh' | 'en',
 ): string {
   return [scope, index, field, locale ?? 'plain'].join(':');
@@ -141,6 +178,23 @@ function buildDraftFieldValues(resume: StandardResume): DraftFieldValues {
     nextValues[buildDraftFieldKey('project', index, 'technologies')] =
       formatCommaSeparatedValues(project.technologies);
   });
+
+  resume.education.forEach((education, index) => {
+    nextValues[buildDraftFieldKey('education', index, 'highlights', 'zh')] =
+      formatLocalizedLines(education.highlights, 'zh');
+    nextValues[buildDraftFieldKey('education', index, 'highlights', 'en')] =
+      formatLocalizedLines(education.highlights, 'en');
+  });
+
+  resume.skills.forEach((skill, index) => {
+    nextValues[buildDraftFieldKey('skill', index, 'keywords')] =
+      formatCommaSeparatedValues(skill.keywords);
+  });
+
+  nextValues[buildDraftFieldKey('profile', 'interests', 'interests', 'zh')] =
+    formatLocalizedLines(resume.profile.interests, 'zh');
+  nextValues[buildDraftFieldKey('profile', 'interests', 'interests', 'en')] =
+    formatLocalizedLines(resume.profile.interests, 'en');
 
   return nextValues;
 }
@@ -236,6 +290,110 @@ export function ResumeDraftEditorPanel({
     updateResumeDraft((draft) => {
       draft.profile[field] = value;
     });
+  }
+
+  function updateProfileLinkField(
+    index: number,
+    field: 'label' | 'url',
+    value: string,
+    locale?: 'zh' | 'en',
+  ) {
+    updateResumeDraft((draft) => {
+      if (field === 'url') {
+        draft.profile.links[index].url = value;
+        return;
+      }
+
+      draft.profile.links[index].label[locale ?? 'zh'] = value;
+    });
+  }
+
+  function updateProfileInterests(locale: 'zh' | 'en', value: string) {
+    setDraftFieldValues((current) => ({
+      ...current,
+      [buildDraftFieldKey('profile', 'interests', 'interests', locale)]: value,
+    }));
+
+    updateResumeDraft((draft) => {
+      draft.profile.interests = mergeLocalizedLines(
+        draft.profile.interests,
+        locale,
+        value,
+      );
+    });
+  }
+
+  function addProfileLink() {
+    updateResumeDraft((draft) => {
+      draft.profile.links.push(createEmptyProfileLink());
+    });
+  }
+
+  function removeProfileLink(index: number) {
+    updateResumeDraft((draft) => {
+      draft.profile.links.splice(index, 1);
+    });
+  }
+
+  function updateEducationLocalizedField(
+    index: number,
+    field: keyof Pick<
+      ResumeEducationItem,
+      'schoolName' | 'degree' | 'fieldOfStudy' | 'location'
+    >,
+    locale: 'zh' | 'en',
+    value: string,
+  ) {
+    updateResumeDraft((draft) => {
+      draft.education[index][field][locale] = value;
+    });
+  }
+
+  function updateEducationPlainField(
+    index: number,
+    field: keyof Pick<ResumeEducationItem, 'startDate' | 'endDate'>,
+    value: string,
+  ) {
+    updateResumeDraft((draft) => {
+      draft.education[index][field] = value;
+    });
+  }
+
+  function updateEducationHighlights(
+    index: number,
+    locale: 'zh' | 'en',
+    value: string,
+  ) {
+    setDraftFieldValues((current) => ({
+      ...current,
+      [buildDraftFieldKey('education', index, 'highlights', locale)]: value,
+    }));
+
+    updateResumeDraft((draft) => {
+      draft.education[index].highlights = mergeLocalizedLines(
+        draft.education[index].highlights,
+        locale,
+        value,
+      );
+    });
+  }
+
+  function addEducation() {
+    updateResumeDraft(
+      (draft) => {
+        draft.education.push(createEmptyEducation());
+      },
+      { syncDraftFields: true },
+    );
+  }
+
+  function removeEducation(index: number) {
+    updateResumeDraft(
+      (draft) => {
+        draft.education.splice(index, 1);
+      },
+      { syncDraftFields: true },
+    );
   }
 
   function updateExperienceLocalizedField(
@@ -363,6 +521,68 @@ export function ResumeDraftEditorPanel({
     }, { syncDraftFields: true });
   }
 
+  function updateSkillLocalizedField(
+    index: number,
+    locale: 'zh' | 'en',
+    value: string,
+  ) {
+    updateResumeDraft((draft) => {
+      draft.skills[index].name[locale] = value;
+    });
+  }
+
+  function updateSkillKeywords(index: number, value: string) {
+    setDraftFieldValues((current) => ({
+      ...current,
+      [buildDraftFieldKey('skill', index, 'keywords')]: value,
+    }));
+
+    updateResumeDraft((draft) => {
+      draft.skills[index].keywords = parseCommaSeparatedValues(value);
+    });
+  }
+
+  function addSkillGroup() {
+    updateResumeDraft(
+      (draft) => {
+        draft.skills.push(createEmptySkillGroup());
+      },
+      { syncDraftFields: true },
+    );
+  }
+
+  function removeSkillGroup(index: number) {
+    updateResumeDraft(
+      (draft) => {
+        draft.skills.splice(index, 1);
+      },
+      { syncDraftFields: true },
+    );
+  }
+
+  function updateHighlightLocalizedField(
+    index: number,
+    field: keyof Pick<ResumeHighlightItem, 'title' | 'description'>,
+    locale: 'zh' | 'en',
+    value: string,
+  ) {
+    updateResumeDraft((draft) => {
+      draft.highlights[index][field][locale] = value;
+    });
+  }
+
+  function addHighlight() {
+    updateResumeDraft((draft) => {
+      draft.highlights.push(createEmptyHighlight());
+    });
+  }
+
+  function removeHighlight(index: number) {
+    updateResumeDraft((draft) => {
+      draft.highlights.splice(index, 1);
+    });
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -417,7 +637,7 @@ export function ResumeDraftEditorPanel({
         <p className="eyebrow">草稿编辑</p>
         <CardTitle>简历草稿关键模块编辑</CardTitle>
         <CardDescription>
-          当前先开放 profile、工作经历和项目经历的最小编辑入口，优先覆盖公开简历最常调整的模块。
+          当前继续扩展为标准简历模型编辑，按教育、经历、项目、技能与亮点分组维护，保存后仍需手动发布。
         </CardDescription>
       </CardHeader>
       <CardContent className="stack">
@@ -543,6 +763,85 @@ export function ResumeDraftEditorPanel({
                 />
               </label>
 
+              <div className="stack">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-semibold text-zinc-950 dark:text-white">
+                      个人链接
+                    </h4>
+                    <p className="muted">用于公开侧栏展示 GitHub、博客等对外入口。</p>
+                  </div>
+                  <Button onClick={addProfileLink} size="sm" type="button" variant="outline">
+                    新增个人链接
+                  </Button>
+                </div>
+
+                {resumeDraft.profile.links.length === 0 ? (
+                  <div className="status-box">
+                    <strong>当前还没有个人链接</strong>
+                    <span>可继续补 GitHub、博客或其他公开主页入口。</span>
+                  </div>
+                ) : null}
+
+                {resumeDraft.profile.links.map((link, index) => (
+                  <div className="card stack" key={`profile-link-${index}`}>
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                      <div className="space-y-1">
+                        <h5 className="text-sm font-semibold text-zinc-950 dark:text-white">
+                          个人链接 {index + 1}
+                        </h5>
+                        <p className="muted">{link.url || link.label.zh || '未命名链接'}</p>
+                      </div>
+                      <Button
+                        onClick={() => removeProfileLink(index)}
+                        size="sm"
+                        type="button"
+                        variant="ghost"
+                      >
+                        删除本条
+                      </Button>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <label className="field">
+                        <span>{`个人链接 ${index + 1} 中文标签`}</span>
+                        <Input
+                          fullWidth
+                          onChange={(event) =>
+                            updateProfileLinkField(index, 'label', event.target.value, 'zh')
+                          }
+                          value={link.label.zh}
+                          variant="secondary"
+                        />
+                      </label>
+                      <label className="field">
+                        <span>{`个人链接 ${index + 1} 英文标签`}</span>
+                        <Input
+                          fullWidth
+                          onChange={(event) =>
+                            updateProfileLinkField(index, 'label', event.target.value, 'en')
+                          }
+                          value={link.label.en}
+                          variant="secondary"
+                        />
+                      </label>
+                    </div>
+
+                    <label className="field">
+                      <span>{`个人链接 ${index + 1} 链接地址`}</span>
+                      <Input
+                        fullWidth
+                        onChange={(event) =>
+                          updateProfileLinkField(index, 'url', event.target.value)
+                        }
+                        value={link.url}
+                        variant="secondary"
+                      />
+                    </label>
+                  </div>
+                ))}
+              </div>
+
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="field">
                   <span>中文简介</span>
@@ -569,6 +868,273 @@ export function ResumeDraftEditorPanel({
                   />
                 </label>
               </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="field">
+                  <span>中文兴趣方向（每行一条）</span>
+                  <TextArea
+                    fullWidth
+                    onChange={(event) => updateProfileInterests('zh', event.target.value)}
+                    rows={4}
+                    value={
+                      draftFieldValues[
+                        buildDraftFieldKey('profile', 'interests', 'interests', 'zh')
+                      ] ?? formatLocalizedLines(resumeDraft.profile.interests, 'zh')
+                    }
+                    variant="secondary"
+                  />
+                </label>
+                <label className="field">
+                  <span>英文兴趣方向（每行一条）</span>
+                  <TextArea
+                    fullWidth
+                    onChange={(event) => updateProfileInterests('en', event.target.value)}
+                    rows={4}
+                    value={
+                      draftFieldValues[
+                        buildDraftFieldKey('profile', 'interests', 'interests', 'en')
+                      ] ?? formatLocalizedLines(resumeDraft.profile.interests, 'en')
+                    }
+                    variant="secondary"
+                  />
+                </label>
+              </div>
+            </section>
+
+            <section className="stack">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div className="space-y-1">
+                  <h3 className="text-base font-semibold text-zinc-950 dark:text-white">
+                    教育经历
+                  </h3>
+                  <p className="muted">补齐学校、学历、专业、时间、地点与教育亮点的双语维护。</p>
+                </div>
+                <Button onClick={addEducation} size="sm" type="button" variant="outline">
+                  新增教育经历
+                </Button>
+              </div>
+
+              {resumeDraft.education.length === 0 ? (
+                <div className="status-box">
+                  <strong>当前还没有教育经历</strong>
+                  <span>可先新增一段教育经历，再继续补学校、学历和亮点。</span>
+                </div>
+              ) : null}
+
+              {resumeDraft.education.map((education, index) => (
+                <div className="card stack" key={`education-${index}`}>
+                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-semibold text-zinc-950 dark:text-white">
+                        教育经历 {index + 1}
+                      </h4>
+                      <p className="muted">
+                        {education.schoolName.zh || education.schoolName.en || '未命名教育经历'}
+                      </p>
+                    </div>
+                    <Button
+                      onClick={() => removeEducation(index)}
+                      size="sm"
+                      type="button"
+                      variant="ghost"
+                    >
+                      删除本段
+                    </Button>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <label className="field">
+                      <span>{`教育经历 ${index + 1} 中文学校`}</span>
+                      <Input
+                        fullWidth
+                        onChange={(event) =>
+                          updateEducationLocalizedField(
+                            index,
+                            'schoolName',
+                            'zh',
+                            event.target.value,
+                          )
+                        }
+                        value={education.schoolName.zh}
+                        variant="secondary"
+                      />
+                    </label>
+                    <label className="field">
+                      <span>{`教育经历 ${index + 1} 英文学校`}</span>
+                      <Input
+                        fullWidth
+                        onChange={(event) =>
+                          updateEducationLocalizedField(
+                            index,
+                            'schoolName',
+                            'en',
+                            event.target.value,
+                          )
+                        }
+                        value={education.schoolName.en}
+                        variant="secondary"
+                      />
+                    </label>
+
+                    <label className="field">
+                      <span>{`教育经历 ${index + 1} 中文学位`}</span>
+                      <Input
+                        fullWidth
+                        onChange={(event) =>
+                          updateEducationLocalizedField(
+                            index,
+                            'degree',
+                            'zh',
+                            event.target.value,
+                          )
+                        }
+                        value={education.degree.zh}
+                        variant="secondary"
+                      />
+                    </label>
+                    <label className="field">
+                      <span>{`教育经历 ${index + 1} 英文学位`}</span>
+                      <Input
+                        fullWidth
+                        onChange={(event) =>
+                          updateEducationLocalizedField(
+                            index,
+                            'degree',
+                            'en',
+                            event.target.value,
+                          )
+                        }
+                        value={education.degree.en}
+                        variant="secondary"
+                      />
+                    </label>
+
+                    <label className="field">
+                      <span>{`教育经历 ${index + 1} 中文专业`}</span>
+                      <Input
+                        fullWidth
+                        onChange={(event) =>
+                          updateEducationLocalizedField(
+                            index,
+                            'fieldOfStudy',
+                            'zh',
+                            event.target.value,
+                          )
+                        }
+                        value={education.fieldOfStudy.zh}
+                        variant="secondary"
+                      />
+                    </label>
+                    <label className="field">
+                      <span>{`教育经历 ${index + 1} 英文专业`}</span>
+                      <Input
+                        fullWidth
+                        onChange={(event) =>
+                          updateEducationLocalizedField(
+                            index,
+                            'fieldOfStudy',
+                            'en',
+                            event.target.value,
+                          )
+                        }
+                        value={education.fieldOfStudy.en}
+                        variant="secondary"
+                      />
+                    </label>
+
+                    <label className="field">
+                      <span>{`教育经历 ${index + 1} 开始时间`}</span>
+                      <Input
+                        fullWidth
+                        onChange={(event) =>
+                          updateEducationPlainField(index, 'startDate', event.target.value)
+                        }
+                        value={education.startDate}
+                        variant="secondary"
+                      />
+                    </label>
+                    <label className="field">
+                      <span>{`教育经历 ${index + 1} 结束时间`}</span>
+                      <Input
+                        fullWidth
+                        onChange={(event) =>
+                          updateEducationPlainField(index, 'endDate', event.target.value)
+                        }
+                        value={education.endDate}
+                        variant="secondary"
+                      />
+                    </label>
+
+                    <label className="field">
+                      <span>{`教育经历 ${index + 1} 中文地点`}</span>
+                      <Input
+                        fullWidth
+                        onChange={(event) =>
+                          updateEducationLocalizedField(
+                            index,
+                            'location',
+                            'zh',
+                            event.target.value,
+                          )
+                        }
+                        value={education.location.zh}
+                        variant="secondary"
+                      />
+                    </label>
+                    <label className="field">
+                      <span>{`教育经历 ${index + 1} 英文地点`}</span>
+                      <Input
+                        fullWidth
+                        onChange={(event) =>
+                          updateEducationLocalizedField(
+                            index,
+                            'location',
+                            'en',
+                            event.target.value,
+                          )
+                        }
+                        value={education.location.en}
+                        variant="secondary"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <label className="field">
+                      <span>{`教育经历 ${index + 1} 中文亮点（每行一条）`}</span>
+                      <TextArea
+                        fullWidth
+                        onChange={(event) =>
+                          updateEducationHighlights(index, 'zh', event.target.value)
+                        }
+                        rows={4}
+                        value={
+                          draftFieldValues[
+                            buildDraftFieldKey('education', index, 'highlights', 'zh')
+                          ] ?? formatLocalizedLines(education.highlights, 'zh')
+                        }
+                        variant="secondary"
+                      />
+                    </label>
+                    <label className="field">
+                      <span>{`教育经历 ${index + 1} 英文亮点（每行一条）`}</span>
+                      <TextArea
+                        fullWidth
+                        onChange={(event) =>
+                          updateEducationHighlights(index, 'en', event.target.value)
+                        }
+                        rows={4}
+                        value={
+                          draftFieldValues[
+                            buildDraftFieldKey('education', index, 'highlights', 'en')
+                          ] ?? formatLocalizedLines(education.highlights, 'en')
+                        }
+                        variant="secondary"
+                      />
+                    </label>
+                  </div>
+                </div>
+              ))}
             </section>
 
             <section className="stack">
@@ -1041,6 +1607,202 @@ export function ResumeDraftEditorPanel({
                       variant="secondary"
                     />
                   </label>
+                </div>
+              ))}
+            </section>
+
+            <section className="stack">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div className="space-y-1">
+                  <h3 className="text-base font-semibold text-zinc-950 dark:text-white">
+                    技能组
+                  </h3>
+                  <p className="muted">按技能组维护关键词，公开页会按组展示能力结构。</p>
+                </div>
+                <Button onClick={addSkillGroup} size="sm" type="button" variant="outline">
+                  新增技能组
+                </Button>
+              </div>
+
+              {resumeDraft.skills.length === 0 ? (
+                <div className="status-box">
+                  <strong>当前还没有技能组</strong>
+                  <span>可按技术方向逐组补充关键词，保持结构清晰。</span>
+                </div>
+              ) : null}
+
+              {resumeDraft.skills.map((skill, index) => (
+                <div className="card stack" key={`skill-${index}`}>
+                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-semibold text-zinc-950 dark:text-white">
+                        技能组 {index + 1}
+                      </h4>
+                      <p className="muted">{skill.name.zh || skill.name.en || '未命名技能组'}</p>
+                    </div>
+                    <Button
+                      onClick={() => removeSkillGroup(index)}
+                      size="sm"
+                      type="button"
+                      variant="ghost"
+                    >
+                      删除本组
+                    </Button>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <label className="field">
+                      <span>{`技能组 ${index + 1} 中文名称`}</span>
+                      <Input
+                        fullWidth
+                        onChange={(event) =>
+                          updateSkillLocalizedField(index, 'zh', event.target.value)
+                        }
+                        value={skill.name.zh}
+                        variant="secondary"
+                      />
+                    </label>
+                    <label className="field">
+                      <span>{`技能组 ${index + 1} 英文名称`}</span>
+                      <Input
+                        fullWidth
+                        onChange={(event) =>
+                          updateSkillLocalizedField(index, 'en', event.target.value)
+                        }
+                        value={skill.name.en}
+                        variant="secondary"
+                      />
+                    </label>
+                  </div>
+
+                  <label className="field">
+                    <span>{`技能组 ${index + 1} 关键词（逗号分隔）`}</span>
+                    <Input
+                      fullWidth
+                      onChange={(event) => updateSkillKeywords(index, event.target.value)}
+                      value={
+                        draftFieldValues[buildDraftFieldKey('skill', index, 'keywords')] ??
+                        formatCommaSeparatedValues(skill.keywords)
+                      }
+                      variant="secondary"
+                    />
+                  </label>
+                </div>
+              ))}
+            </section>
+
+            <section className="stack">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div className="space-y-1">
+                  <h3 className="text-base font-semibold text-zinc-950 dark:text-white">
+                    亮点
+                  </h3>
+                  <p className="muted">维护个人优势、开源、团队协作等补充亮点，丰富公开页结尾信息。</p>
+                </div>
+                <Button onClick={addHighlight} size="sm" type="button" variant="outline">
+                  新增亮点
+                </Button>
+              </div>
+
+              {resumeDraft.highlights.length === 0 ? (
+                <div className="status-box">
+                  <strong>当前还没有亮点</strong>
+                  <span>可补充开源、技术写作、团队建设等补充优势。</span>
+                </div>
+              ) : null}
+
+              {resumeDraft.highlights.map((highlight, index) => (
+                <div className="card stack" key={`highlight-${index}`}>
+                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-semibold text-zinc-950 dark:text-white">
+                        亮点 {index + 1}
+                      </h4>
+                      <p className="muted">
+                        {highlight.title.zh || highlight.title.en || '未命名亮点'}
+                      </p>
+                    </div>
+                    <Button
+                      onClick={() => removeHighlight(index)}
+                      size="sm"
+                      type="button"
+                      variant="ghost"
+                    >
+                      删除本条
+                    </Button>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <label className="field">
+                      <span>{`亮点 ${index + 1} 中文标题`}</span>
+                      <Input
+                        fullWidth
+                        onChange={(event) =>
+                          updateHighlightLocalizedField(
+                            index,
+                            'title',
+                            'zh',
+                            event.target.value,
+                          )
+                        }
+                        value={highlight.title.zh}
+                        variant="secondary"
+                      />
+                    </label>
+                    <label className="field">
+                      <span>{`亮点 ${index + 1} 英文标题`}</span>
+                      <Input
+                        fullWidth
+                        onChange={(event) =>
+                          updateHighlightLocalizedField(
+                            index,
+                            'title',
+                            'en',
+                            event.target.value,
+                          )
+                        }
+                        value={highlight.title.en}
+                        variant="secondary"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <label className="field">
+                      <span>{`亮点 ${index + 1} 中文描述`}</span>
+                      <TextArea
+                        fullWidth
+                        onChange={(event) =>
+                          updateHighlightLocalizedField(
+                            index,
+                            'description',
+                            'zh',
+                            event.target.value,
+                          )
+                        }
+                        rows={4}
+                        value={highlight.description.zh}
+                        variant="secondary"
+                      />
+                    </label>
+                    <label className="field">
+                      <span>{`亮点 ${index + 1} 英文描述`}</span>
+                      <TextArea
+                        fullWidth
+                        onChange={(event) =>
+                          updateHighlightLocalizedField(
+                            index,
+                            'description',
+                            'en',
+                            event.target.value,
+                          )
+                        }
+                        rows={4}
+                        value={highlight.description.en}
+                        variant="secondary"
+                      />
+                    </label>
+                  </div>
                 </div>
               ))}
             </section>

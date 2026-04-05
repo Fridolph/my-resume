@@ -256,6 +256,97 @@ describe('ResumeDraftEditorPanel', () => {
     10000,
   );
 
+  it(
+    'should add and save education skills highlights profile links and interests',
+    async () => {
+      cleanup();
+      const user = userEvent.setup();
+      const loadDraft = vi.fn().mockResolvedValue(draftSnapshot);
+      const saveDraft = vi.fn().mockImplementation(async ({ resume }) => ({
+        ...draftSnapshot,
+        updatedAt: '2026-03-25T10:30:00.000Z',
+        resume,
+      }));
+
+      render(
+        <ResumeDraftEditorPanel
+          accessToken="demo-token"
+          apiBaseUrl="http://localhost:5577"
+          canEdit
+          loadDraft={loadDraft}
+          saveDraft={saveDraft}
+        />,
+      );
+
+      await screen.findByDisplayValue('付寅生');
+
+      await user.click(screen.getByRole('button', { name: '新增教育经历' }));
+      await user.type(screen.getByLabelText('教育经历 1 中文学校'), '四川大学锦江学院');
+      await user.type(
+        screen.getByLabelText('教育经历 1 中文亮点（每行一条）'),
+        '通信工程本科',
+      );
+
+      await user.click(screen.getByRole('button', { name: '新增技能组' }));
+      await user.type(screen.getByLabelText('技能组 1 中文名称'), '前端工程化');
+      await user.type(
+        screen.getByLabelText('技能组 1 关键词（逗号分隔）'),
+        'TypeScript, React, Next.js',
+      );
+
+      await user.click(screen.getByRole('button', { name: '新增亮点' }));
+      await user.type(screen.getByLabelText('亮点 1 中文标题'), '技术写作');
+      await user.type(screen.getByLabelText('亮点 1 中文描述'), '持续输出教程与博客');
+
+      await user.click(screen.getByRole('button', { name: '新增个人链接' }));
+      await user.type(screen.getByLabelText('个人链接 1 中文标签'), 'GitHub');
+      await user.type(
+        screen.getByLabelText('个人链接 1 链接地址'),
+        'https://github.com/Fridolph',
+      );
+
+      await user.type(screen.getByLabelText('中文兴趣方向（每行一条）'), '羽毛球');
+      await user.type(screen.getByLabelText('英文兴趣方向（每行一条）'), 'Badminton');
+
+      await user.click(screen.getByRole('button', { name: '保存当前草稿' }));
+
+      await waitFor(() => {
+        expect(saveDraft).toHaveBeenCalledTimes(1);
+      });
+
+      const submittedResume = saveDraft.mock.calls[0]?.[0]?.resume;
+
+      expect(submittedResume.education[0]?.schoolName.zh).toBe('四川大学锦江学院');
+      expect(submittedResume.education[0]?.highlights).toEqual([
+        {
+          zh: '通信工程本科',
+          en: '',
+        },
+      ]);
+      expect(submittedResume.skills[0]?.name.zh).toBe('前端工程化');
+      expect(submittedResume.skills[0]?.keywords).toEqual([
+        'TypeScript',
+        'React',
+        'Next.js',
+      ]);
+      expect(submittedResume.highlights[0]?.title.zh).toBe('技术写作');
+      expect(submittedResume.highlights[0]?.description.zh).toBe(
+        '持续输出教程与博客',
+      );
+      expect(submittedResume.profile.links[0]?.label.zh).toBe('GitHub');
+      expect(submittedResume.profile.links[0]?.url).toBe(
+        'https://github.com/Fridolph',
+      );
+      expect(submittedResume.profile.interests).toEqual([
+        {
+          zh: '羽毛球',
+          en: 'Badminton',
+        },
+      ]);
+    },
+    10000,
+  );
+
   it('should show read-only message when current role cannot edit draft', () => {
     render(
       <ResumeDraftEditorPanel
