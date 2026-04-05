@@ -640,25 +640,174 @@ export function createExampleStandardResume(): StandardResume {
   };
 }
 
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === 'string');
+}
+
+function validateLocalizedTextField(
+  value: unknown,
+  path: string,
+  errors: string[],
+) {
+  if (!isLocalizedText(value)) {
+    errors.push(`${path} must be a localized text object`);
+  }
+}
+
+function validateLocalizedTextArray(
+  value: unknown,
+  path: string,
+  errors: string[],
+) {
+  if (!Array.isArray(value)) {
+    errors.push(`${path} must be an array`);
+    return;
+  }
+
+  value.forEach((item, index) => {
+    if (!isLocalizedText(item)) {
+      errors.push(`${path}[${index}] must be a localized text object`);
+    }
+  });
+}
+
+function validateResumeLinks(
+  value: unknown,
+  path: string,
+  errors: string[],
+) {
+  if (!Array.isArray(value)) {
+    errors.push(`${path} must be an array`);
+    return;
+  }
+
+  value.forEach((item, index) => {
+    if (!item || typeof item !== 'object') {
+      errors.push(`${path}[${index}] must be an object`);
+      return;
+    }
+
+    const candidate = item as Record<string, unknown>;
+
+    if (!isLocalizedText(candidate.label)) {
+      errors.push(`${path}[${index}].label must be a localized text object`);
+    }
+
+    if (typeof candidate.url !== 'string') {
+      errors.push(`${path}[${index}].url must be a string`);
+    }
+  });
+}
+
 export function validateStandardResume(
   resume: StandardResume,
 ): ResumeValidationResult {
   const errors: string[] = [];
 
-  if (!isLocalizedText(resume.profile.fullName)) {
-    errors.push('profile.fullName must be a localized text object');
+  validateLocalizedTextField(resume.profile.fullName, 'profile.fullName', errors);
+  validateLocalizedTextField(resume.profile.headline, 'profile.headline', errors);
+  validateLocalizedTextField(resume.profile.summary, 'profile.summary', errors);
+  validateLocalizedTextField(resume.profile.location, 'profile.location', errors);
+  validateResumeLinks(resume.profile.links, 'profile.links', errors);
+  validateLocalizedTextArray(resume.profile.interests, 'profile.interests', errors);
+
+  if (!Array.isArray(resume.education)) {
+    errors.push('education must be an array');
+  } else {
+    resume.education.forEach((item, index) => {
+      validateLocalizedTextField(
+        item.schoolName,
+        `education[${index}].schoolName`,
+        errors,
+      );
+      validateLocalizedTextField(item.degree, `education[${index}].degree`, errors);
+      validateLocalizedTextField(
+        item.fieldOfStudy,
+        `education[${index}].fieldOfStudy`,
+        errors,
+      );
+      validateLocalizedTextField(item.location, `education[${index}].location`, errors);
+      validateLocalizedTextArray(
+        item.highlights,
+        `education[${index}].highlights`,
+        errors,
+      );
+    });
   }
 
-  if (!isLocalizedText(resume.profile.headline)) {
-    errors.push('profile.headline must be a localized text object');
+  if (!Array.isArray(resume.experiences)) {
+    errors.push('experiences must be an array');
+  } else {
+    resume.experiences.forEach((item, index) => {
+      validateLocalizedTextField(
+        item.companyName,
+        `experiences[${index}].companyName`,
+        errors,
+      );
+      validateLocalizedTextField(item.role, `experiences[${index}].role`, errors);
+      validateLocalizedTextField(
+        item.employmentType,
+        `experiences[${index}].employmentType`,
+        errors,
+      );
+      validateLocalizedTextField(item.location, `experiences[${index}].location`, errors);
+      validateLocalizedTextField(item.summary, `experiences[${index}].summary`, errors);
+      validateLocalizedTextArray(
+        item.highlights,
+        `experiences[${index}].highlights`,
+        errors,
+      );
+
+      if (!isStringArray(item.technologies)) {
+        errors.push(`experiences[${index}].technologies must be a string array`);
+      }
+    });
   }
 
-  if (!isLocalizedText(resume.profile.summary)) {
-    errors.push('profile.summary must be a localized text object');
+  if (!Array.isArray(resume.projects)) {
+    errors.push('projects must be an array');
+  } else {
+    resume.projects.forEach((item, index) => {
+      validateLocalizedTextField(item.name, `projects[${index}].name`, errors);
+      validateLocalizedTextField(item.role, `projects[${index}].role`, errors);
+      validateLocalizedTextField(item.summary, `projects[${index}].summary`, errors);
+      validateLocalizedTextArray(
+        item.highlights,
+        `projects[${index}].highlights`,
+        errors,
+      );
+
+      if (!isStringArray(item.technologies)) {
+        errors.push(`projects[${index}].technologies must be a string array`);
+      }
+
+      validateResumeLinks(item.links, `projects[${index}].links`, errors);
+    });
   }
 
-  if (!isLocalizedText(resume.profile.location)) {
-    errors.push('profile.location must be a localized text object');
+  if (!Array.isArray(resume.skills)) {
+    errors.push('skills must be an array');
+  } else {
+    resume.skills.forEach((item, index) => {
+      validateLocalizedTextField(item.name, `skills[${index}].name`, errors);
+
+      if (!isStringArray(item.keywords)) {
+        errors.push(`skills[${index}].keywords must be a string array`);
+      }
+    });
+  }
+
+  if (!Array.isArray(resume.highlights)) {
+    errors.push('highlights must be an array');
+  } else {
+    resume.highlights.forEach((item, index) => {
+      validateLocalizedTextField(item.title, `highlights[${index}].title`, errors);
+      validateLocalizedTextField(
+        item.description,
+        `highlights[${index}].description`,
+        errors,
+      );
+    });
   }
 
   return {

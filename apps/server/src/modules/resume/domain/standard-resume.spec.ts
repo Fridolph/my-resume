@@ -78,4 +78,103 @@ describe('standard resume domain', () => {
       errors: ['profile.fullName must be a localized text object'],
     });
   });
+
+  it('should validate all standard resume module structures', () => {
+    const resume = createExampleStandardResume();
+
+    resume.profile.links.push({
+      label: {
+        zh: '项目仓库',
+        en: 'Repository',
+      },
+      url: 'https://github.com/Fridolph/my-resume',
+    });
+
+    expect(validateStandardResume(resume)).toEqual({
+      valid: true,
+      errors: [],
+    });
+  });
+
+  it('should reject invalid module arrays and nested field shapes', () => {
+    const resume = createExampleStandardResume() as ReturnType<
+      typeof createExampleStandardResume
+    > & {
+      profile: {
+        links: Array<{ label: { zh: string }; url: number }>;
+        interests: string;
+      };
+      education: string;
+      experiences: Array<{ technologies: string }>;
+      projects: Array<{ links: string; technologies: string[] }>;
+      skills: Array<{ keywords: string; name: { zh: string } }>;
+      highlights: Array<{ title: { zh: string }; description: { zh: string } }>;
+    };
+
+    resume.profile.links = [
+      {
+        label: {
+          zh: '只写中文',
+        },
+        url: 123,
+      },
+    ];
+    resume.profile.interests = 'badminton';
+    resume.education = 'education' as unknown as string;
+    resume.experiences = [
+      {
+        technologies: 'Vue 3',
+      },
+    ];
+    resume.projects = [
+      {
+        links: 'https://example.com',
+        technologies: ['Vue 3'],
+      },
+    ];
+    resume.skills = [
+      {
+        keywords: 'TypeScript',
+        name: {
+          zh: '前端工程化',
+        },
+      },
+    ];
+    resume.highlights = [
+      {
+        title: {
+          zh: '技术写作',
+        },
+        description: {
+          zh: '持续输出',
+        },
+      },
+    ];
+
+    expect(validateStandardResume(resume)).toEqual({
+      valid: false,
+      errors: [
+        'profile.links[0].label must be a localized text object',
+        'profile.links[0].url must be a string',
+        'profile.interests must be an array',
+        'education must be an array',
+        'experiences[0].companyName must be a localized text object',
+        'experiences[0].role must be a localized text object',
+        'experiences[0].employmentType must be a localized text object',
+        'experiences[0].location must be a localized text object',
+        'experiences[0].summary must be a localized text object',
+        'experiences[0].highlights must be an array',
+        'experiences[0].technologies must be a string array',
+        'projects[0].name must be a localized text object',
+        'projects[0].role must be a localized text object',
+        'projects[0].summary must be a localized text object',
+        'projects[0].highlights must be an array',
+        'projects[0].links must be an array',
+        'skills[0].name must be a localized text object',
+        'skills[0].keywords must be a string array',
+        'highlights[0].title must be a localized text object',
+        'highlights[0].description must be a localized text object',
+      ],
+    });
+  });
 });

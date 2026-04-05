@@ -509,6 +509,35 @@ export function ResumeDraftEditorPanel({
     });
   }
 
+  function updateProjectLinkField(
+    projectIndex: number,
+    linkIndex: number,
+    field: 'label' | 'url',
+    value: string,
+    locale?: 'zh' | 'en',
+  ) {
+    updateResumeDraft((draft) => {
+      if (field === 'url') {
+        draft.projects[projectIndex].links[linkIndex].url = value;
+        return;
+      }
+
+      draft.projects[projectIndex].links[linkIndex].label[locale ?? 'zh'] = value;
+    });
+  }
+
+  function addProjectLink(projectIndex: number) {
+    updateResumeDraft((draft) => {
+      draft.projects[projectIndex].links.push(createEmptyProfileLink());
+    });
+  }
+
+  function removeProjectLink(projectIndex: number, linkIndex: number) {
+    updateResumeDraft((draft) => {
+      draft.projects[projectIndex].links.splice(linkIndex, 1);
+    });
+  }
+
   function addProject() {
     updateResumeDraft((draft) => {
       draft.projects.push(createEmptyProject());
@@ -635,9 +664,9 @@ export function ResumeDraftEditorPanel({
     <Card className="border border-zinc-200/70 dark:border-zinc-800">
       <CardHeader className="flex flex-col items-start gap-2">
         <p className="eyebrow">草稿编辑</p>
-        <CardTitle>简历草稿关键模块编辑</CardTitle>
+        <CardTitle>完整标准简历模块编辑</CardTitle>
         <CardDescription>
-          当前继续扩展为标准简历模型编辑，按教育、经历、项目、技能与亮点分组维护，保存后仍需手动发布。
+          当前后台已按标准简历模型接通基础信息、教育、工作、项目、技能与亮点编辑，保存后仍需手动发布。
         </CardDescription>
       </CardHeader>
       <CardContent className="stack">
@@ -1425,7 +1454,7 @@ export function ResumeDraftEditorPanel({
                     项目经历
                   </h3>
                   <p className="muted">
-                    先开放项目名称、角色、时间、摘要、亮点和技术栈，满足公开版最核心的信息组织。
+                    当前已接通项目名称、角色、时间、摘要、亮点、技术栈与项目链接，保持与公开展示结构一致。
                   </p>
                 </div>
                 <Button onClick={addProject} size="sm" type="button" variant="outline">
@@ -1607,6 +1636,104 @@ export function ResumeDraftEditorPanel({
                       variant="secondary"
                     />
                   </label>
+
+                  <div className="stack">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                      <div className="space-y-1">
+                        <h5 className="text-sm font-semibold text-zinc-950 dark:text-white">
+                          项目链接
+                        </h5>
+                        <p className="muted">
+                          可补充项目地址、演示入口或仓库链接，公开页和导出内容会复用这些字段。
+                        </p>
+                      </div>
+                      <Button
+                        onClick={() => addProjectLink(index)}
+                        size="sm"
+                        type="button"
+                        variant="outline"
+                      >
+                        新增项目链接
+                      </Button>
+                    </div>
+
+                    {project.links.length === 0 ? (
+                      <div className="status-box">
+                        <strong>当前还没有项目链接</strong>
+                        <span>可按项目补充 demo、仓库或案例文章入口。</span>
+                      </div>
+                    ) : null}
+
+                    {project.links.map((link, linkIndex) => (
+                      <div className="card stack" key={`project-${index}-link-${linkIndex}`}>
+                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                          <div className="space-y-1">
+                            <h6 className="text-sm font-semibold text-zinc-950 dark:text-white">
+                              {`项目链接 ${linkIndex + 1}`}
+                            </h6>
+                            <p className="muted">{link.url || link.label.zh || '未命名链接'}</p>
+                          </div>
+                          <Button
+                            onClick={() => removeProjectLink(index, linkIndex)}
+                            size="sm"
+                            type="button"
+                            variant="ghost"
+                          >
+                            删除本条
+                          </Button>
+                        </div>
+
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <label className="field">
+                            <span>{`项目经历 ${index + 1} 链接 ${linkIndex + 1} 中文标签`}</span>
+                            <Input
+                              fullWidth
+                              onChange={(event) =>
+                                updateProjectLinkField(
+                                  index,
+                                  linkIndex,
+                                  'label',
+                                  event.target.value,
+                                  'zh',
+                                )
+                              }
+                              value={link.label.zh}
+                              variant="secondary"
+                            />
+                          </label>
+                          <label className="field">
+                            <span>{`项目经历 ${index + 1} 链接 ${linkIndex + 1} 英文标签`}</span>
+                            <Input
+                              fullWidth
+                              onChange={(event) =>
+                                updateProjectLinkField(
+                                  index,
+                                  linkIndex,
+                                  'label',
+                                  event.target.value,
+                                  'en',
+                                )
+                              }
+                              value={link.label.en}
+                              variant="secondary"
+                            />
+                          </label>
+                        </div>
+
+                        <label className="field">
+                          <span>{`项目经历 ${index + 1} 链接 ${linkIndex + 1} 地址`}</span>
+                          <Input
+                            fullWidth
+                            onChange={(event) =>
+                              updateProjectLinkField(index, linkIndex, 'url', event.target.value)
+                            }
+                            value={link.url}
+                            variant="secondary"
+                          />
+                        </label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </section>

@@ -166,6 +166,122 @@ describe('ResumePublicationService', () => {
     client.close();
   });
 
+  it('should publish edited module content only after manual publish', async () => {
+    const { client, service } = await createServiceHarness();
+    const initialDraft = createExampleStandardResume();
+
+    await service.updateDraft(initialDraft);
+    await service.publish();
+
+    const nextDraft = createExampleStandardResume();
+
+    nextDraft.education[0]!.schoolName = {
+      zh: '升级后的学校信息',
+      en: 'Updated Education Entry',
+    };
+    nextDraft.experiences[0]!.companyName = {
+      zh: '新的工作经历公司',
+      en: 'Updated Experience Company',
+    };
+    nextDraft.projects[0]!.name = {
+      zh: '新的项目名称',
+      en: 'Updated Project Name',
+    };
+    nextDraft.projects[0]!.links = [
+      {
+        label: {
+          zh: '在线演示',
+          en: 'Live Demo',
+        },
+        url: 'https://demo.example.com/resume-project',
+      },
+    ];
+    nextDraft.skills[0]!.keywords = ['TypeScript', 'Next.js', 'NestJS'];
+    nextDraft.highlights[0]!.title = {
+      zh: '新的优势总结',
+      en: 'Updated Highlight',
+    };
+    nextDraft.profile.links = [
+      {
+        label: {
+          zh: '作品集',
+          en: 'Portfolio',
+        },
+        url: 'https://portfolio.example.com',
+      },
+    ];
+    nextDraft.profile.interests = [
+      {
+        zh: '知识库构建',
+        en: 'Knowledge Base Design',
+      },
+    ];
+
+    await service.updateDraft(nextDraft);
+
+    const publishedBeforeRepublish = await service.getPublished();
+
+    expect(publishedBeforeRepublish?.resume.education[0]?.schoolName.zh).not.toBe(
+      '升级后的学校信息',
+    );
+    expect(publishedBeforeRepublish?.resume.projects[0]?.links).not.toEqual([
+      {
+        label: {
+          zh: '在线演示',
+          en: 'Live Demo',
+        },
+        url: 'https://demo.example.com/resume-project',
+      },
+    ]);
+    expect(publishedBeforeRepublish?.resume.profile.links).not.toEqual([
+      {
+        label: {
+          zh: '作品集',
+          en: 'Portfolio',
+        },
+        url: 'https://portfolio.example.com',
+      },
+    ]);
+
+    const republished = await service.publish();
+
+    expect(republished.resume.education[0]?.schoolName.zh).toBe('升级后的学校信息');
+    expect(republished.resume.experiences[0]?.companyName.zh).toBe('新的工作经历公司');
+    expect(republished.resume.projects[0]?.name.zh).toBe('新的项目名称');
+    expect(republished.resume.projects[0]?.links).toEqual([
+      {
+        label: {
+          zh: '在线演示',
+          en: 'Live Demo',
+        },
+        url: 'https://demo.example.com/resume-project',
+      },
+    ]);
+    expect(republished.resume.skills[0]?.keywords).toEqual([
+      'TypeScript',
+      'Next.js',
+      'NestJS',
+    ]);
+    expect(republished.resume.highlights[0]?.title.zh).toBe('新的优势总结');
+    expect(republished.resume.profile.links).toEqual([
+      {
+        label: {
+          zh: '作品集',
+          en: 'Portfolio',
+        },
+        url: 'https://portfolio.example.com',
+      },
+    ]);
+    expect(republished.resume.profile.interests).toEqual([
+      {
+        zh: '知识库构建',
+        en: 'Knowledge Base Design',
+      },
+    ]);
+
+    client.close();
+  });
+
   it('should keep draft and published data after recreating the service on the same database', async () => {
     const firstHarness = await createServiceHarness();
     const draft = createExampleStandardResume();

@@ -184,7 +184,15 @@ describe('ResumeDraftEditorPanel', () => {
                 },
               ],
               technologies: ['Vue 3', 'pnpm'],
-              links: [],
+              links: [
+                {
+                  label: {
+                    zh: '项目仓库',
+                    en: 'Repository',
+                  },
+                  url: 'https://github.com/Fridolph/cloud-pharma',
+                },
+              ],
             },
           ],
         },
@@ -225,6 +233,19 @@ describe('ResumeDraftEditorPanel', () => {
         `落地 monorepo 结构
 建立共享组件基线`,
       );
+      await user.clear(screen.getByLabelText('项目经历 1 链接 1 中文标签'));
+      await user.type(screen.getByLabelText('项目经历 1 链接 1 中文标签'), '在线演示');
+      await user.clear(screen.getByLabelText('项目经历 1 链接 1 地址'));
+      await user.type(
+        screen.getByLabelText('项目经历 1 链接 1 地址'),
+        'https://demo.example.com/cloud-pharma',
+      );
+      await user.click(screen.getByRole('button', { name: '新增项目链接' }));
+      await user.type(screen.getByLabelText('项目经历 1 链接 2 中文标签'), '案例文章');
+      await user.type(
+        screen.getByLabelText('项目经历 1 链接 2 地址'),
+        'https://blog.example.com/cloud-pharma',
+      );
       await user.click(screen.getByRole('button', { name: '保存当前草稿' }));
 
       await waitFor(() => {
@@ -250,6 +271,22 @@ describe('ResumeDraftEditorPanel', () => {
         {
           zh: '建立共享组件基线',
           en: '',
+        },
+      ]);
+      expect(submittedResume.projects[0]?.links).toEqual([
+        {
+          label: {
+            zh: '在线演示',
+            en: 'Repository',
+          },
+          url: 'https://demo.example.com/cloud-pharma',
+        },
+        {
+          label: {
+            zh: '案例文章',
+            en: '',
+          },
+          url: 'https://blog.example.com/cloud-pharma',
         },
       ]);
     },

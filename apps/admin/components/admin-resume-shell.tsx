@@ -35,7 +35,7 @@ const moduleRoadmap = [
   {
     key: 'projects',
     title: '项目经历',
-    description: '已支持项目名称、角色、时间、摘要、亮点与技术栈，继续为扩展字段收口做准备。',
+    description: '已支持项目名称、角色、时间、摘要、亮点、技术栈与项目链接的草稿维护。',
     status: '已实现',
   },
   {
