@@ -37,6 +37,10 @@ describe('PublishedResumeShell', () => {
     expect(screen.getByRole('heading', { name: '职业经历' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '代表项目' })).toBeInTheDocument();
     expect(
+      screen.getByRole('heading', { name: '前端架构落地' }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText('AI 工程化').length).toBeGreaterThan(0);
+    expect(
       screen.queryByRole('heading', { name: '公开简历速览' }),
     ).not.toBeInTheDocument();
     expect(
@@ -55,6 +59,10 @@ describe('PublishedResumeShell', () => {
     expect(
       screen.getByRole('heading', { name: 'Work Experience' }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'AI Engineering Practice' }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText('Frontend').length).toBeGreaterThan(0);
   });
 
   it('should toggle light and dark theme on the document element', async () => {

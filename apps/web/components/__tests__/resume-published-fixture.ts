@@ -140,12 +140,32 @@ export const publishedResumeFixture: ResumePublishedSnapshot = {
     highlights: [
       {
         title: {
-          zh: '开源参与',
-          en: 'Open Source Contributions',
+          zh: '前端架构落地',
+          en: 'Frontend Architecture Delivery',
         },
         description: {
-          zh: '持续沉淀文章、开源和知识文档。',
-          en: 'Continuously shares articles, open-source work, and knowledge docs.',
+          zh: '持续把展示组件、主题和信息结构整理成可复用的前端表达。',
+          en: 'Continuously turns visual systems, themes, and information architecture into reusable frontend patterns.',
+        },
+      },
+      {
+        title: {
+          zh: 'AI 工程化实践',
+          en: 'AI Engineering Practice',
+        },
+        description: {
+          zh: '把简历分析、结构化草稿和知识库问答逐步收成可解释、可验证的工程链路。',
+          en: 'Shapes resume analysis, structured drafts, and knowledge-base Q&A into explainable engineering workflows.',
+        },
+      },
+      {
+        title: {
+          zh: '技术写作与开源',
+          en: 'Technical Writing and Open Source',
+        },
+        description: {
+          zh: '持续沉淀教程、文章和开源项目，把经验公开成可复用的知识资产。',
+          en: 'Continuously packages tutorials, articles, and open-source work into reusable public knowledge assets.',
         },
       },
     ],
