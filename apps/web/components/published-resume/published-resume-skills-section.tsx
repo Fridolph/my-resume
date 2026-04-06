@@ -56,8 +56,7 @@ const skillViewLabels = {
     chart: '图表',
     rawTooltip: '查看完整原始内容',
     itemCount: '条',
-    coverage: '占比',
-    items: '条目数',
+    points: '个能力点',
   },
   en: {
     structure: 'Structure',
@@ -65,8 +64,7 @@ const skillViewLabels = {
     chart: 'Chart',
     rawTooltip: 'View original line',
     itemCount: 'items',
-    coverage: 'Coverage',
-    items: 'Items',
+    points: 'capability points',
   },
 } as const;
 
@@ -91,8 +89,18 @@ export function PublishedResumeSkillsSection({
     return null;
   }
 
-  const totalItemCount =
-    normalizedGroups.reduce((sum, group) => sum + group.parsedKeywords.length, 0) || 1;
+  const chartGroups = [...normalizedGroups]
+    .map((group, index) => ({
+      ...group,
+      originalIndex: index,
+    }))
+    .sort((left, right) => {
+      if (right.parsedKeywords.length !== left.parsedKeywords.length) {
+        return right.parsedKeywords.length - left.parsedKeywords.length;
+      }
+
+      return left.originalIndex - right.originalIndex;
+    });
 
   return (
     <PublishedResumeSectionCard
@@ -144,17 +152,16 @@ export function PublishedResumeSkillsSection({
                     key={`${group.name.en}-${item.raw}`}
                   >
                     {item.label ? (
-                      <div className="flex flex-col gap-1 sm:flex-row sm:items-start">
-                        <strong className="min-w-0 font-semibold text-slate-900 dark:text-white">
+                      <div className="grid gap-1.5">
+                        <strong className="text-sm font-semibold leading-6 text-slate-900 dark:text-white">
                           {item.label}
                         </strong>
-                        <span className="hidden text-slate-300 dark:text-slate-600 sm:inline">
-                          :
+                        <span className="text-[0.95rem] leading-7 text-slate-600 dark:text-slate-200">
+                          {item.content}
                         </span>
-                        <span className="min-w-0">{item.content}</span>
                       </div>
                     ) : (
-                      <span>{item.content}</span>
+                      <span className="block text-[0.95rem] leading-7">{item.content}</span>
                     )}
                   </li>
                 ))}
@@ -206,9 +213,11 @@ export function PublishedResumeSkillsSection({
 
       {viewMode === 'chart' ? (
         <div className="grid gap-4">
-          {normalizedGroups.map((group) => {
+          {chartGroups.map((group) => {
             const count = group.parsedKeywords.length;
-            const percent = Math.round((count / totalItemCount) * 100);
+            const featuredLabels = group.parsedKeywords
+              .map((item) => item.label ?? item.content)
+              .slice(0, 4);
 
             return (
               <article
@@ -221,7 +230,7 @@ export function PublishedResumeSkillsSection({
                       {readLocalizedText(group.name, locale)}
                     </h3>
                     <p className="text-sm leading-6 text-slate-500 dark:text-slate-400">
-                      {localLabels.items} {count} · {localLabels.coverage} {percent}%
+                      {count} {localLabels.points}
                     </p>
                   </div>
                   <span className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">
@@ -229,21 +238,24 @@ export function PublishedResumeSkillsSection({
                   </span>
                 </div>
 
-                <div className="mt-4 h-3 overflow-hidden rounded-full bg-slate-200/80 dark:bg-white/10">
-                  <div
-                    aria-hidden="true"
-                    className="h-full rounded-full bg-[linear-gradient(90deg,rgba(37,99,235,0.92),rgba(14,165,233,0.85),rgba(56,189,248,0.75))]"
-                    style={{ width: `${Math.max(percent, 8)}%` }}
-                  />
+                <div className="mt-4 flex flex-wrap gap-2.5" role="list" aria-label={`${readLocalizedText(group.name, locale)} skill dots`}>
+                  {group.parsedKeywords.map((item) => (
+                    <span
+                      aria-label={item.label ?? item.content}
+                      className="h-3 w-3 rounded-full bg-[linear-gradient(135deg,rgba(37,99,235,0.96),rgba(56,189,248,0.82))] shadow-[0_0_0_1px_rgba(255,255,255,0.2)]"
+                      key={`${group.name.en}-${item.raw}-dot`}
+                      role="listitem"
+                    />
+                  ))}
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {group.parsedKeywords.map((item) => (
+                  {featuredLabels.map((label) => (
                     <span
                       className="rounded-full border border-slate-200/70 bg-white/80 px-3 py-1.5 text-xs font-medium text-slate-500 dark:border-white/10 dark:bg-white/[0.05] dark:text-slate-300"
-                      key={`${group.name.en}-${item.raw}-legend`}
+                      key={`${group.name.en}-${label}-legend`}
                     >
-                      {item.label ?? item.content}
+                      {label}
                     </span>
                   ))}
                 </div>

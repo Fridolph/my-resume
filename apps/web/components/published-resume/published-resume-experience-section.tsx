@@ -39,14 +39,17 @@ export function PublishedResumeExperienceSection({
             key={`${experience.companyName.en}-${experience.startDate}`}
           >
             <div className="item-header">
-              <div>
-                <h3 className="item-title">
-                  {readLocalizedText(experience.companyName, locale)}
-                </h3>
-                <p className="item-subtitle">
-                  {readLocalizedText(experience.role, locale)} ·{' '}
-                  {readLocalizedText(experience.employmentType, locale)}
-                </p>
+              <div className="item-header-main">
+                <span aria-hidden="true" className="timeline-accent" />
+                <div className="item-heading-stack">
+                  <h3 className="item-title">
+                    {readLocalizedText(experience.companyName, locale)}
+                  </h3>
+                  <p className="item-subtitle">
+                    {readLocalizedText(experience.role, locale)} ·{' '}
+                    {readLocalizedText(experience.employmentType, locale)}
+                  </p>
+                </div>
               </div>
               <span className="meta-text">{formatPeriod(experience)}</span>
             </div>

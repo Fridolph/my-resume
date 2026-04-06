@@ -159,13 +159,12 @@ a {
 }
 
 .timeline-item {
-  position: relative;
   display: grid;
   gap: 0.75rem;
   border-radius: 1.5rem;
   border: 1px solid rgba(148, 163, 184, 0.24);
   background: rgba(248, 250, 252, 0.88);
-  padding: 1.25rem 1.25rem 1.25rem 1.35rem;
+  padding: 1.25rem;
 }
 
 [data-theme='dark'] .timeline-item {
@@ -173,20 +172,29 @@ a {
   background: rgba(255, 255, 255, 0.04);
 }
 
-.timeline-item::before {
-  content: '';
-  position: absolute;
-  inset: 1rem auto 1rem 0.75rem;
-  width: 2px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, rgba(37, 99, 235, 0.82), transparent);
-}
-
 .item-header {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: flex-start;
   gap: 1rem;
+}
+
+.item-header-main {
+  display: flex;
+  align-items: stretch;
+  gap: 0.85rem;
+}
+
+.item-heading-stack {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.timeline-accent {
+  width: 3px;
+  min-width: 3px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.9), rgba(96, 165, 250, 0.56));
 }
 
 .item-title,
@@ -244,5 +252,9 @@ a {
   .item-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .item-header-main {
+    width: 100%;
   }
 }

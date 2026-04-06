@@ -36,9 +36,12 @@ export function PublishedResumeProjectsSection({
         {projects.map((project) => (
           <article className="timeline-item" key={`${project.name.en}-${project.startDate}`}>
             <div className="item-header">
-              <div>
-                <h3 className="item-title">{readLocalizedText(project.name, locale)}</h3>
-                <p className="item-subtitle">{readLocalizedText(project.role, locale)}</p>
+              <div className="item-header-main">
+                <span aria-hidden="true" className="timeline-accent" />
+                <div className="item-heading-stack">
+                  <h3 className="item-title">{readLocalizedText(project.name, locale)}</h3>
+                  <p className="item-subtitle">{readLocalizedText(project.role, locale)}</p>
+                </div>
               </div>
               <span className="meta-text">{formatPeriod(project)}</span>
             </div>

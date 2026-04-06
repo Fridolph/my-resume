@@ -140,14 +140,19 @@ describe('PublishedResumeShell', () => {
     renderShell();
 
     expect(screen.getByText('Vue 生态')).toBeInTheDocument();
+    expect(
+      screen.getByText(/熟练掌握 Vue2\/3、Nuxt、Composition API、Pinia/)
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '词云' }));
     expect(screen.getByText('Node.js')).toBeInTheDocument();
     expect(screen.getByText('工程化')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '图表' }));
-    expect(screen.getByText(/条目数 4 · 占比 57%/)).toBeInTheDocument();
-    expect(screen.getByText(/条目数 3 · 占比 43%/)).toBeInTheDocument();
+    expect(screen.getByText('4 个能力点')).toBeInTheDocument();
+    expect(screen.getByText('3 个能力点')).toBeInTheDocument();
+    expect(screen.queryByText(/占比/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/%/)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '结构' }));
     expect(screen.getAllByText('TypeScript').length).toBeGreaterThan(0);
