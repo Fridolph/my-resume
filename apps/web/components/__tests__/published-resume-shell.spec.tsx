@@ -36,10 +36,23 @@ describe('PublishedResumeShell', () => {
     expect(screen.getByRole('heading', { name: '付寅生' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '职业经历' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '代表项目' })).toBeInTheDocument();
+    expect(screen.getByAltText('付寅生头像正面')).toBeInTheDocument();
+    expect(screen.getByAltText('付寅生头像背面')).toBeInTheDocument();
+    expect(screen.getByText('热爱Coding，生命不息，折腾不止')).toBeInTheDocument();
+    expect(screen.getByText('羽毛球爱好者，快乐挥拍，球场飞翔')).toBeInTheDocument();
+    expect(screen.getByText('上海')).toBeInTheDocument();
+    expect(screen.getByText('demo@example.com')).toBeInTheDocument();
+    expect(screen.getByText('+86 13800000000')).toBeInTheDocument();
+    expect(screen.queryByText('https://example.com')).not.toBeInTheDocument();
     expect(
       screen.getByRole('heading', { name: '前端架构落地' }),
     ).toBeInTheDocument();
-    expect(screen.getAllByText('AI 工程化').length).toBeGreaterThan(0);
+    expect(
+      screen.getByRole('heading', { name: 'AI 工程化实践' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('技能结构')).toBeInTheDocument();
+    expect(screen.getByText('Vue 生态')).toBeInTheDocument();
+    expect(screen.getByText(/熟练掌握 Vue2\/3、Nuxt/)).toBeInTheDocument();
     expect(
       screen.queryByRole('heading', { name: '公开简历速览' }),
     ).not.toBeInTheDocument();
@@ -62,7 +75,8 @@ describe('PublishedResumeShell', () => {
     expect(
       screen.getByRole('heading', { name: 'AI Engineering Practice' }),
     ).toBeInTheDocument();
-    expect(screen.getAllByText('Frontend').length).toBeGreaterThan(0);
+    expect(screen.getByRole('heading', { name: 'Skill Structure' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Frontend Engineering' })).toBeInTheDocument();
   });
 
   it('should toggle light and dark theme on the document element', async () => {
@@ -118,6 +132,25 @@ describe('PublishedResumeShell', () => {
       'href',
       'http://localhost:5577/resume/published/export/pdf?locale=en',
     );
+  });
+
+  it('should switch skill views between structure, tag cloud, and chart', async () => {
+    const user = userEvent.setup();
+
+    renderShell();
+
+    expect(screen.getByText('Vue 生态')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '词云' }));
+    expect(screen.getByText('Node.js')).toBeInTheDocument();
+    expect(screen.getByText('工程化')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '图表' }));
+    expect(screen.getByText(/条目数 4 · 占比 57%/)).toBeInTheDocument();
+    expect(screen.getByText(/条目数 3 · 占比 43%/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '结构' }));
+    expect(screen.getAllByText('TypeScript').length).toBeGreaterThan(0);
   });
 
   it('should render empty state when no published content is available', () => {

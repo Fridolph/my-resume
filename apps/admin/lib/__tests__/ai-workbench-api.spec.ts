@@ -265,6 +265,21 @@ describe('ai workbench api client', () => {
               email: 'demo@example.com',
               phone: '123456789',
               website: 'https://example.com',
+              hero: {
+                frontImageUrl: '/img/avatar.jpg',
+                backImageUrl: '/img/avatar2.jpg',
+                linkUrl: 'https://github.com/Fridolph/my-resume',
+                slogans: [
+                  {
+                    zh: '热爱Coding，生命不息，折腾不止',
+                    en: 'Driven by coding, always building, always iterating',
+                  },
+                  {
+                    zh: '羽毛球爱好者，快乐挥拍，球场飞翔',
+                    en: 'Badminton lover, happy swings, full-court energy',
+                  },
+                ],
+              },
               links: [],
               interests: [],
             },
@@ -345,6 +360,21 @@ describe('ai workbench api client', () => {
               email: 'demo@example.com',
               phone: '123456789',
               website: 'https://example.com',
+              hero: {
+                frontImageUrl: '/img/avatar.jpg',
+                backImageUrl: '/img/avatar2.jpg',
+                linkUrl: 'https://github.com/Fridolph/my-resume',
+                slogans: [
+                  {
+                    zh: '热爱Coding，生命不息，折腾不止',
+                    en: 'Driven by coding, always building, always iterating',
+                  },
+                  {
+                    zh: '羽毛球爱好者，快乐挥拍，球场飞翔',
+                    en: 'Badminton lover, happy swings, full-court energy',
+                  },
+                ],
+              },
               links: [],
               interests: [],
             },

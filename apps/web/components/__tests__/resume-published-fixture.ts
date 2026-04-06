@@ -30,6 +30,21 @@ export const publishedResumeFixture: ResumePublishedSnapshot = {
       email: 'demo@example.com',
       phone: '+86 13800000000',
       website: 'https://example.com',
+      hero: {
+        frontImageUrl: '/img/avatar.jpg',
+        backImageUrl: '/img/avatar2.jpg',
+        linkUrl: 'https://github.com/Fridolph/my-resume',
+        slogans: [
+          {
+            zh: '热爱Coding，生命不息，折腾不止',
+            en: 'Driven by coding, always building, always iterating',
+          },
+          {
+            zh: '羽毛球爱好者，快乐挥拍，球场飞翔',
+            en: 'Badminton lover, happy swings, full-court energy',
+          },
+        ],
+      },
       links: [
         {
           label: {
@@ -134,7 +149,23 @@ export const publishedResumeFixture: ResumePublishedSnapshot = {
           zh: '前端工程化',
           en: 'Frontend Engineering',
         },
-        keywords: ['TypeScript', 'React'],
+        keywords: [
+          '**Vue 生态**: 熟练掌握 Vue2/3、Nuxt、Composition API、Pinia，主导 3+ 项目 Vue2→Vue3 架构升级',
+          '**React 生态**: 熟悉 Hooks、Redux、Next.js，有中小型项目实践经验',
+          '**现代 CSS**: 精通 TailwindCSS、Sass/Less，擅长响应式设计',
+          '**TypeScript**: 制定团队 TS 规范，提升代码可维护性',
+        ],
+      },
+      {
+        name: {
+          zh: '全栈开发能力',
+          en: 'Full-Stack Delivery',
+        },
+        keywords: [
+          '**Node.js**: 熟练使用 Express、NestJS，能独立完成 RESTful API 与认证设计',
+          '**工程化**：Monorepo 实践（pnpm workspace）、微服务架构设计、CI/CD 流程搭建',
+          '**数据库**: MySQL、MongoDB、SQLite、Drizzle ORM，了解事务处理与索引优化',
+        ],
       },
     ],
     highlights: [

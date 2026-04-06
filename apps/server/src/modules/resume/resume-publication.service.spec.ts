@@ -311,6 +311,64 @@ describe('ResumePublicationService', () => {
     secondHarness.client.close();
   });
 
+  it('should normalize legacy draft and published snapshots when hero config is missing', async () => {
+    const service = new ResumePublicationService({
+      findDraft: async () => {
+        const legacyDraft = createExampleStandardResume() as ReturnType<
+          typeof createExampleStandardResume
+        > & {
+          profile: Omit<
+            ReturnType<typeof createExampleStandardResume>['profile'],
+            'hero'
+          > & { hero?: undefined };
+        };
+
+        delete legacyDraft.profile.hero;
+
+        return {
+          resumeJson: legacyDraft,
+          updatedAt: new Date('2026-04-06T00:00:00.000Z'),
+        };
+      },
+      saveDraft: async () => {
+        throw new Error('not used');
+      },
+      createPublishedSnapshot: async () => {
+        throw new Error('not used');
+      },
+      findLatestPublishedSnapshot: async () => {
+        const legacyPublished = createExampleStandardResume() as ReturnType<
+          typeof createExampleStandardResume
+        > & {
+          profile: Omit<
+            ReturnType<typeof createExampleStandardResume>['profile'],
+            'hero'
+          > & { hero?: undefined };
+        };
+
+        delete legacyPublished.profile.hero;
+
+        return {
+          id: 'published-legacy',
+          resumeKey: 'standard-resume',
+          schemaVersion: 1,
+          resumeJson: legacyPublished,
+          publishedAt: new Date('2026-04-06T00:00:00.000Z'),
+        };
+      },
+    } as unknown as ResumePublicationRepository);
+
+    const draft = await service.getDraft();
+    const published = await service.getPublished();
+
+    expect(draft.resume.profile.hero.frontImageUrl).toBe('/img/avatar.jpg');
+    expect(draft.resume.profile.hero.slogans).toHaveLength(2);
+    expect(published?.resume.profile.hero.backImageUrl).toBe('/img/avatar2.jpg');
+    expect(published?.resume.profile.hero.linkUrl).toBe(
+      'https://github.com/Fridolph/my-resume',
+    );
+  });
+
   it('should surface a friendly message when draft save hits a SQLite file lock', async () => {
     const service = new ResumePublicationService({
       findDraft: async () => ({

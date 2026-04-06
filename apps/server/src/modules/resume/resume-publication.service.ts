@@ -11,6 +11,7 @@ import {
 
 import {
   createExampleStandardResume,
+  normalizeStandardResume,
   StandardResume,
 } from './domain/standard-resume';
 import { ResumePublicationRepository } from './resume-publication.repository';
@@ -49,14 +50,14 @@ export class ResumePublicationService {
 
         return {
           status: 'draft',
-          resume: cloneStandardResume(seededDraft.resumeJson),
+          resume: normalizeStandardResume(cloneStandardResume(seededDraft.resumeJson)),
           updatedAt: seededDraft.updatedAt.toISOString(),
         };
       }
 
       return {
         status: 'draft',
-        resume: cloneStandardResume(existingDraft.resumeJson),
+        resume: normalizeStandardResume(cloneStandardResume(existingDraft.resumeJson)),
         updatedAt: existingDraft.updatedAt.toISOString(),
       };
     });
@@ -72,7 +73,7 @@ export class ResumePublicationService {
 
     return {
       status: 'published',
-      resume: cloneStandardResume(publishedSnapshot.resumeJson),
+      resume: normalizeStandardResume(cloneStandardResume(publishedSnapshot.resumeJson)),
       publishedAt: publishedSnapshot.publishedAt.toISOString(),
     };
   }
@@ -80,12 +81,12 @@ export class ResumePublicationService {
   async updateDraft(resume: StandardResume): Promise<ResumeDraftSnapshot> {
     return this.runWithDatabaseLockHint(async () => {
       const savedDraft = await this.resumePublicationRepository.saveDraft(
-        cloneStandardResume(resume),
+        normalizeStandardResume(cloneStandardResume(resume)),
       );
 
       return {
         status: 'draft',
-        resume: cloneStandardResume(savedDraft.resumeJson),
+        resume: normalizeStandardResume(cloneStandardResume(savedDraft.resumeJson)),
         updatedAt: savedDraft.updatedAt.toISOString(),
       };
     });

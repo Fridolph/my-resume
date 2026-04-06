@@ -6,6 +6,7 @@ import {
   createExampleStandardResume,
   getStandardResumeModuleKeys,
   isLocalizedText,
+  normalizeStandardResume,
   validateStandardResume,
 } from './standard-resume';
 
@@ -30,6 +31,8 @@ describe('standard resume domain', () => {
       zh: '',
       en: '',
     });
+    expect(resume.profile.hero.frontImageUrl).toBe('/img/avatar.jpg');
+    expect(resume.profile.hero.slogans).toHaveLength(2);
     expect(resume.education).toEqual([]);
     expect(resume.experiences).toEqual([]);
     expect(resume.projects).toEqual([]);
@@ -54,6 +57,7 @@ describe('standard resume domain', () => {
       errors: [],
     });
     expect(resume.profile.headline.zh).toContain('AI Agent');
+    expect(resume.profile.hero.linkUrl).toBe('https://github.com/Fridolph/my-resume');
     expect(resume.experiences[0]?.companyName.zh).toBe('成都澳昇能源科技有限责任公司');
     expect(
       resume.projects.some((item) => item.name.zh === 'GreenSketch'),
@@ -94,6 +98,24 @@ describe('standard resume domain', () => {
       valid: true,
       errors: [],
     });
+  });
+
+  it('should normalize legacy resumes when hero config is missing', () => {
+    const resume = createExampleStandardResume() as ReturnType<
+      typeof createExampleStandardResume
+    > & {
+      profile: Omit<ReturnType<typeof createExampleStandardResume>['profile'], 'hero'> & {
+        hero?: undefined;
+      };
+    };
+
+    delete resume.profile.hero;
+
+    const normalized = normalizeStandardResume(resume);
+
+    expect(normalized.profile.hero.frontImageUrl).toBe('/img/avatar.jpg');
+    expect(normalized.profile.hero.backImageUrl).toBe('/img/avatar2.jpg');
+    expect(normalized.profile.hero.slogans).toHaveLength(2);
   });
 
   it('should reject invalid module arrays and nested field shapes', () => {

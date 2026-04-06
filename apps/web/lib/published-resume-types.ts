@@ -5,6 +5,7 @@ export type {
   ResumeHighlightItem,
   ResumeLocale,
   ResumeProfile,
+  ResumeProfileHero,
   ResumeProfileLink,
   ResumeProjectItem,
   ResumePublishedSnapshot,

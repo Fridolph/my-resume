@@ -17,6 +17,13 @@ export interface ResumeProfileLink {
   url: string;
 }
 
+export interface ResumeProfileHero {
+  frontImageUrl: string;
+  backImageUrl: string;
+  linkUrl: string;
+  slogans: LocalizedText[];
+}
+
 export interface ResumeProfile {
   fullName: LocalizedText;
   headline: LocalizedText;
@@ -25,6 +32,7 @@ export interface ResumeProfile {
   email: string;
   phone: string;
   website: string;
+  hero: ResumeProfileHero;
   links: ResumeProfileLink[];
   interests: LocalizedText[];
 }
@@ -116,6 +124,24 @@ export function createLocalizedText(zh: string, en: string): LocalizedText {
   };
 }
 
+export function createDefaultResumeProfileHero(): ResumeProfileHero {
+  return {
+    frontImageUrl: '/img/avatar.jpg',
+    backImageUrl: '/img/avatar2.jpg',
+    linkUrl: 'https://github.com/Fridolph/my-resume',
+    slogans: [
+      createLocalizedText(
+        '热爱Coding，生命不息，折腾不止',
+        'Driven by coding, always building, always iterating',
+      ),
+      createLocalizedText(
+        '羽毛球爱好者，快乐挥拍，球场飞翔',
+        'Badminton lover, happy swings, full-court energy',
+      ),
+    ],
+  };
+}
+
 export function isLocalizedText(value: unknown): value is LocalizedText {
   if (!value || typeof value !== 'object') {
     return false;
@@ -149,6 +175,7 @@ export function createEmptyStandardResume(): StandardResume {
       email: '',
       phone: '',
       website: '',
+      hero: createDefaultResumeProfileHero(),
       links: [],
       interests: [],
     },
@@ -182,6 +209,7 @@ export function createExampleStandardResume(): StandardResume {
       email: '249121486@qq.com',
       phone: '16602835945',
       website: 'https://resume.fridolph.top',
+      hero: createDefaultResumeProfileHero(),
       links: [
         {
           label: createLocalizedText('GitHub', 'GitHub'),
@@ -644,6 +672,56 @@ function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === 'string');
 }
 
+function normalizeResumeProfileHero(value: unknown): ResumeProfileHero {
+  const defaults = createDefaultResumeProfileHero();
+
+  if (!value || typeof value !== 'object') {
+    return defaults;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const slogans = Array.isArray(candidate.slogans)
+    ? candidate.slogans.filter(isLocalizedText)
+    : defaults.slogans;
+
+  return {
+    frontImageUrl:
+      typeof candidate.frontImageUrl === 'string' && candidate.frontImageUrl.trim()
+        ? candidate.frontImageUrl
+        : defaults.frontImageUrl,
+    backImageUrl:
+      typeof candidate.backImageUrl === 'string' && candidate.backImageUrl.trim()
+        ? candidate.backImageUrl
+        : defaults.backImageUrl,
+    linkUrl:
+      typeof candidate.linkUrl === 'string' && candidate.linkUrl.trim()
+        ? candidate.linkUrl
+        : defaults.linkUrl,
+    slogans: slogans.length > 0 ? slogans : defaults.slogans,
+  };
+}
+
+export function normalizeStandardResume(resume: StandardResume): StandardResume {
+  return {
+    ...resume,
+    profile: {
+      ...resume.profile,
+      hero: normalizeResumeProfileHero(
+        (resume.profile as ResumeProfile & { hero?: ResumeProfileHero }).hero,
+      ),
+      links: Array.isArray(resume.profile.links) ? resume.profile.links : [],
+      interests: Array.isArray(resume.profile.interests)
+        ? resume.profile.interests
+        : [],
+    },
+    education: Array.isArray(resume.education) ? resume.education : [],
+    experiences: Array.isArray(resume.experiences) ? resume.experiences : [],
+    projects: Array.isArray(resume.projects) ? resume.projects : [],
+    skills: Array.isArray(resume.skills) ? resume.skills : [],
+    highlights: Array.isArray(resume.highlights) ? resume.highlights : [],
+  };
+}
+
 function validateLocalizedTextField(
   value: unknown,
   path: string,
@@ -708,6 +786,24 @@ export function validateStandardResume(
   validateLocalizedTextField(resume.profile.headline, 'profile.headline', errors);
   validateLocalizedTextField(resume.profile.summary, 'profile.summary', errors);
   validateLocalizedTextField(resume.profile.location, 'profile.location', errors);
+  if (!resume.profile.hero || typeof resume.profile.hero !== 'object') {
+    errors.push('profile.hero must be an object');
+  } else {
+    if (typeof resume.profile.hero.frontImageUrl !== 'string') {
+      errors.push('profile.hero.frontImageUrl must be a string');
+    }
+    if (typeof resume.profile.hero.backImageUrl !== 'string') {
+      errors.push('profile.hero.backImageUrl must be a string');
+    }
+    if (typeof resume.profile.hero.linkUrl !== 'string') {
+      errors.push('profile.hero.linkUrl must be a string');
+    }
+    validateLocalizedTextArray(
+      resume.profile.hero.slogans,
+      'profile.hero.slogans',
+      errors,
+    );
+  }
   validateResumeLinks(resume.profile.links, 'profile.links', errors);
   validateLocalizedTextArray(resume.profile.interests, 'profile.interests', errors);
 

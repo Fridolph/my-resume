@@ -18,6 +18,13 @@ export interface ResumeProfileLink {
   url: string;
 }
 
+export interface ResumeProfileHero {
+  frontImageUrl: string;
+  backImageUrl: string;
+  linkUrl: string;
+  slogans: LocalizedText[];
+}
+
 export interface ResumeProfile {
   fullName: LocalizedText;
   headline: LocalizedText;
@@ -26,6 +33,7 @@ export interface ResumeProfile {
   email: string;
   phone: string;
   website: string;
+  hero: ResumeProfileHero;
   links: ResumeProfileLink[];
   interests: LocalizedText[];
 }

@@ -7,6 +7,7 @@ export type {
   ResumeLocale,
   ResumeMeta,
   ResumeProfile,
+  ResumeProfileHero,
   ResumeProfileLink,
   ResumeProjectItem,
   ResumeSkillGroup,

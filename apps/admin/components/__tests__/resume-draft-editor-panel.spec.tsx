@@ -37,6 +37,21 @@ const draftSnapshot: ResumeDraftSnapshot = {
       email: 'demo@example.com',
       phone: '+86 13800000000',
       website: 'https://example.com',
+      hero: {
+        frontImageUrl: '/img/avatar.jpg',
+        backImageUrl: '/img/avatar2.jpg',
+        linkUrl: 'https://github.com/Fridolph/my-resume',
+        slogans: [
+          {
+            zh: '热爱Coding，生命不息，折腾不止',
+            en: 'Driven by coding, always building, always iterating',
+          },
+          {
+            zh: '羽毛球爱好者，快乐挥拍，球场飞翔',
+            en: 'Badminton lover, happy swings, full-court energy',
+          },
+        ],
+      },
       links: [],
       interests: [],
     },
@@ -104,7 +119,7 @@ describe('ResumeDraftEditorPanel', () => {
       expect(profileSectionTrigger).toHaveAttribute('aria-expanded', 'true');
     });
 
-    expect(screen.getByLabelText('中文姓名')).toBeInTheDocument();
+    expect(screen.getByLabelText('姓名')).toBeInTheDocument();
   });
 
   it('should switch between chinese main editing and english translation workspace', async () => {
@@ -122,19 +137,18 @@ describe('ResumeDraftEditorPanel', () => {
       />,
     );
 
-    expect(await screen.findByLabelText('中文姓名')).toBeInTheDocument();
-    expect(screen.queryByLabelText('英文姓名')).not.toBeInTheDocument();
+    expect(await screen.findByLabelText('姓名')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '英文翻译工作区' }));
 
-    expect(await screen.findByLabelText(/英文姓名/)).toBeInTheDocument();
-    expect(screen.queryByLabelText('中文姓名')).not.toBeInTheDocument();
-    expect(screen.getByText('中文参考：付寅生')).toBeInTheDocument();
+    expect(
+      await screen.findByLabelText(/姓名/, { selector: 'input' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('主文案参考：付寅生')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '中文主编辑' }));
 
-    expect(await screen.findByLabelText('中文姓名')).toBeInTheDocument();
-    expect(screen.queryByLabelText('英文姓名')).not.toBeInTheDocument();
+    expect(await screen.findByLabelText('姓名')).toBeInTheDocument();
   });
 
   it(
@@ -161,8 +175,8 @@ describe('ResumeDraftEditorPanel', () => {
 
       await screen.findByDisplayValue('付寅生');
 
-      await user.clear(screen.getByLabelText('中文标题'));
-      await user.type(screen.getByLabelText('中文标题'), '资深全栈工程师');
+      await user.clear(screen.getByLabelText('标题'));
+      await user.type(screen.getByLabelText('标题'), '资深全栈工程师');
       await user.click(screen.getByRole('button', { name: '保存当前草稿' }));
 
       await waitFor(() => {
@@ -209,22 +223,30 @@ describe('ResumeDraftEditorPanel', () => {
         />,
       );
 
-      await screen.findByLabelText('中文姓名');
+      await screen.findByLabelText('姓名');
 
       await user.click(screen.getByRole('button', { name: '英文翻译工作区' }));
       await user.click(
         screen.getByRole('button', { name: '基础信息 复制中文到英文' }),
       );
 
-      expect(await screen.findByLabelText(/英文姓名/)).toHaveValue('付寅生');
+      expect(
+        await screen.findByLabelText(/姓名/, { selector: 'input' }),
+      ).toHaveValue('付寅生');
 
       await user.click(
         screen.getByRole('button', { name: '基础信息 清空英文' }),
       );
-      expect(screen.getByLabelText(/英文姓名/)).toHaveValue('');
+      expect(screen.getByLabelText(/姓名/, { selector: 'input' })).toHaveValue('');
 
-      await user.type(screen.getByLabelText(/英文标题/), 'Senior Full-Stack Engineer');
-      await user.type(screen.getByLabelText(/英文姓名/), 'Yinsheng Fu');
+      await user.type(
+        screen.getByLabelText(/标题/, { selector: 'input' }),
+        'Senior Full-Stack Engineer',
+      );
+      await user.type(
+        screen.getByLabelText(/姓名/, { selector: 'input' }),
+        'Yinsheng Fu',
+      );
       await user.click(screen.getByRole('button', { name: '保存当前草稿' }));
 
       await waitFor(() => {
@@ -244,6 +266,88 @@ describe('ResumeDraftEditorPanel', () => {
     },
     10000,
   );
+
+  it('should save hero image urls, link url, and bilingual slogans in profile payload', async () => {
+    cleanup();
+    const user = userEvent.setup();
+    const loadDraft = vi.fn().mockResolvedValue(draftSnapshot);
+    const saveDraft = vi.fn().mockImplementation(async ({ resume }) => ({
+      ...draftSnapshot,
+      updatedAt: '2026-03-25T10:15:00.000Z',
+      resume,
+    }));
+
+    render(
+      <ResumeDraftEditorPanel
+        accessToken="demo-token"
+        apiBaseUrl="http://localhost:5577"
+        canEdit
+        loadDraft={loadDraft}
+        saveDraft={saveDraft}
+      />,
+    );
+
+    await screen.findByLabelText('姓名');
+
+    await user.clear(screen.getByLabelText('头像正面图片地址'));
+    await user.type(
+      screen.getByLabelText('头像正面图片地址'),
+      'https://cdn.example.com/avatar-front.png',
+    );
+    await user.clear(screen.getByLabelText('头像背面图片地址'));
+    await user.type(
+      screen.getByLabelText('头像背面图片地址'),
+      'https://cdn.example.com/avatar-back.png',
+    );
+    await user.clear(screen.getByLabelText('头像点击跳转地址'));
+    await user.type(
+      screen.getByLabelText('头像点击跳转地址'),
+      'https://github.com/Fridolph',
+    );
+    await user.clear(screen.getByLabelText('主视觉 slogan（每行一条，最多两行）'));
+    await user.type(
+      screen.getByLabelText('主视觉 slogan（每行一条，最多两行）'),
+      `保持输出，持续进化
+写代码，也写体系`,
+    );
+
+    await user.click(screen.getByRole('button', { name: '英文翻译工作区' }));
+    await user.clear(
+      screen.getByLabelText(/主视觉 slogan/, {
+        selector: 'textarea',
+      }),
+    );
+    await user.type(
+      screen.getByLabelText(/主视觉 slogan/, {
+        selector: 'textarea',
+      }),
+      `Keep shipping and evolving
+Build systems, not just pages`,
+    );
+    await user.click(screen.getByRole('button', { name: '保存当前草稿' }));
+
+    await waitFor(() => {
+      expect(saveDraft).toHaveBeenCalledTimes(1);
+    });
+
+    const submittedResume = saveDraft.mock.calls[0]?.[0]?.resume;
+
+    expect(submittedResume.profile.hero).toEqual({
+      frontImageUrl: 'https://cdn.example.com/avatar-front.png',
+      backImageUrl: 'https://cdn.example.com/avatar-back.png',
+      linkUrl: 'https://github.com/Fridolph',
+      slogans: [
+        {
+          zh: '保持输出，持续进化',
+          en: 'Keep shipping and evolving',
+        },
+        {
+          zh: '写代码，也写体系',
+          en: 'Build systems, not just pages',
+        },
+      ],
+    });
+  });
 
   it(
     'should save experience and project core fields in the draft payload',
@@ -341,9 +445,9 @@ describe('ResumeDraftEditorPanel', () => {
 
       await screen.findByDisplayValue('成都一蟹科技有限公司');
 
-      await user.clear(screen.getByLabelText('工作经历 1 中文公司'));
+      await user.clear(screen.getByLabelText('工作经历 1 公司'));
       await user.type(
-        screen.getByLabelText('工作经历 1 中文公司'),
+        screen.getByLabelText('工作经历 1 公司'),
         '成都一蟹科技（升级版）',
       );
       await user.clear(screen.getByLabelText('工作经历 1 技术栈（逗号分隔）'));
@@ -351,23 +455,25 @@ describe('ResumeDraftEditorPanel', () => {
         screen.getByLabelText('工作经历 1 技术栈（逗号分隔）'),
         'React, Next.js, NestJS',
       );
-      await user.clear(screen.getByLabelText('项目经历 1 中文名称'));
-      await user.type(screen.getByLabelText('项目经历 1 中文名称'), '云药客 SaaS 平台');
-      await user.clear(screen.getByLabelText('项目经历 1 中文亮点（每行一条）'));
+      await user.clear(screen.getByLabelText('项目经历 1 名称'));
+      await user.type(screen.getByLabelText('项目经历 1 名称'), '云药客 SaaS 平台');
+      await user.clear(screen.getByLabelText('项目经历 1 亮点（每行一条）'));
       await user.type(
-        screen.getByLabelText('项目经历 1 中文亮点（每行一条）'),
+        screen.getByLabelText('项目经历 1 亮点（每行一条）'),
         `落地 monorepo 结构
 建立共享组件基线`,
       );
-      await user.clear(screen.getByLabelText('项目经历 1 链接 1 中文标签'));
-      await user.type(screen.getByLabelText('项目经历 1 链接 1 中文标签'), '在线演示');
+      await user.clear(screen.getByLabelText('项目经历 1 链接 1 标签'));
+      await user.type(screen.getByLabelText('项目经历 1 链接 1 标签'), '在线演示');
       await user.clear(screen.getByLabelText('项目经历 1 链接 1 地址'));
       await user.type(
         screen.getByLabelText('项目经历 1 链接 1 地址'),
         'https://demo.example.com/cloud-pharma',
       );
-      await user.click(screen.getByRole('button', { name: '新增项目链接' }));
-      await user.type(screen.getByLabelText('项目经历 1 链接 2 中文标签'), '案例文章');
+      await user.click(
+        screen.getByRole('button', { name: '为项目经历 1 添加项目链接' }),
+      );
+      await user.type(screen.getByLabelText('项目经历 1 链接 2 标签'), '案例文章');
       await user.type(
         screen.getByLabelText('项目经历 1 链接 2 地址'),
         'https://blog.example.com/cloud-pharma',
@@ -443,34 +549,39 @@ describe('ResumeDraftEditorPanel', () => {
 
       await screen.findByDisplayValue('付寅生');
 
-      await user.click(screen.getByRole('button', { name: '新增教育经历' }));
-      await user.type(screen.getByLabelText('教育经历 1 中文学校'), '四川大学锦江学院');
+      await user.click(screen.getByRole('button', { name: '添加教育经历' }));
+      await user.type(screen.getByLabelText('教育经历 1 学校'), '四川大学锦江学院');
       await user.type(
-        screen.getByLabelText('教育经历 1 中文亮点（每行一条）'),
+        screen.getByLabelText('教育经历 1 亮点（每行一条）'),
         '通信工程本科',
       );
 
-      await user.click(screen.getByRole('button', { name: '新增技能组' }));
-      await user.type(screen.getByLabelText('技能组 1 中文名称'), '前端工程化');
+      await user.click(screen.getByRole('button', { name: '添加技能组' }));
+      await user.type(screen.getByLabelText('技能组 1 名称'), '前端工程化');
       await user.type(
-        screen.getByLabelText('技能组 1 关键词（逗号分隔）'),
-        'TypeScript, React, Next.js',
+        screen.getByLabelText('技能组 1 关键词（每行一条）'),
+        `TypeScript
+React
+Next.js`,
       );
 
-      await user.click(screen.getByRole('button', { name: '新增亮点' }));
-      await user.type(screen.getByLabelText('亮点 1 中文标题'), '技术写作');
-      await user.type(screen.getByLabelText('亮点 1 中文描述'), '持续输出教程与博客');
+      await user.click(screen.getByRole('button', { name: '添加亮点' }));
+      await user.type(screen.getByLabelText('亮点 1 标题'), '技术写作');
+      await user.type(screen.getByLabelText('亮点 1 描述'), '持续输出教程与博客');
 
-      await user.click(screen.getByRole('button', { name: '新增个人链接' }));
-      await user.type(screen.getByLabelText('个人链接 1 中文标签'), 'GitHub');
+      await user.click(screen.getByRole('button', { name: '添加个人链接' }));
+      await user.type(screen.getByLabelText('个人链接 1 标签'), 'GitHub');
       await user.type(
-        screen.getByLabelText('个人链接 1 链接地址'),
+        screen.getByLabelText('个人链接 1 地址'),
         'https://github.com/Fridolph',
       );
 
-      await user.type(screen.getByLabelText('中文兴趣方向（每行一条）'), '羽毛球');
+      await user.type(screen.getByLabelText('兴趣方向（每行一条）'), '羽毛球');
       await user.click(screen.getByRole('button', { name: '英文翻译工作区' }));
-      await user.type(screen.getByLabelText(/英文兴趣方向（每行一条）/), 'Badminton');
+      const translationPanel = screen.getByLabelText(/兴趣方向（每行一条）/, {
+        selector: 'textarea',
+      });
+      await user.type(translationPanel, 'Badminton');
 
       await user.click(screen.getByRole('button', { name: '保存当前草稿' }));
 

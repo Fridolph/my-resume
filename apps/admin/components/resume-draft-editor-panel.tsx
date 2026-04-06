@@ -11,6 +11,7 @@ import {
   Disclosure,
   Input,
   TextArea,
+  Tooltip,
 } from '@heroui/react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 
@@ -22,6 +23,7 @@ import type {
   ResumeExperienceItem,
   ResumeHighlightItem,
   ResumeProfile,
+  ResumeProfileHero,
   ResumeProfileLink,
   ResumeProjectItem,
   ResumeSkillGroup,
@@ -78,6 +80,15 @@ function createEmptyProfileLink(): ResumeProfileLink {
   };
 }
 
+function createEmptyProfileHero(): ResumeProfileHero {
+  return {
+    frontImageUrl: '/img/avatar.jpg',
+    backImageUrl: '/img/avatar2.jpg',
+    linkUrl: 'https://github.com/Fridolph/my-resume',
+    slogans: [createEmptyLocalizedText(), createEmptyLocalizedText()],
+  };
+}
+
 function createEmptyEducation(): ResumeEducationItem {
   return {
     schoolName: createEmptyLocalizedText(),
@@ -128,6 +139,10 @@ function formatCommaSeparatedValues(values: string[]): string {
   return values.join(', ');
 }
 
+function formatLineSeparatedValues(values: string[]): string {
+  return values.join('\n');
+}
+
 function parseLineSeparatedValues(value: string): string[] {
   return value
     .split('\n')
@@ -145,17 +160,21 @@ function mergeLocalizedLines(
   rawValue: string,
 ): LocalizedText[] {
   const nextValues = parseLineSeparatedValues(rawValue);
+  const targetLength =
+    locale === 'en'
+      ? Math.max(currentValues.length, nextValues.length)
+      : nextValues.length;
 
-  return nextValues.map((value, index) => ({
-    zh: locale === 'zh' ? value : currentValues[index]?.zh ?? '',
-    en: locale === 'en' ? value : currentValues[index]?.en ?? '',
-  }));
+  return Array.from({ length: targetLength }, (_, index) => ({
+    zh: locale === 'zh' ? nextValues[index] ?? '' : currentValues[index]?.zh ?? '',
+    en: locale === 'en' ? nextValues[index] ?? '' : currentValues[index]?.en ?? '',
+  })).filter((item) => item.zh || item.en);
 }
 
 function buildDraftFieldKey(
   scope: 'experience' | 'project' | 'education' | 'skill' | 'profile',
-  index: number | 'interests',
-  field: 'highlights' | 'technologies' | 'keywords' | 'interests',
+  index: number | 'interests' | 'hero',
+  field: 'highlights' | 'technologies' | 'keywords' | 'interests' | 'slogans',
   locale?: 'zh' | 'en',
 ): string {
   return [scope, index, field, locale ?? 'plain'].join(':');
@@ -191,13 +210,17 @@ function buildDraftFieldValues(resume: StandardResume): DraftFieldValues {
 
   resume.skills.forEach((skill, index) => {
     nextValues[buildDraftFieldKey('skill', index, 'keywords')] =
-      formatCommaSeparatedValues(skill.keywords);
+      formatLineSeparatedValues(skill.keywords);
   });
 
   nextValues[buildDraftFieldKey('profile', 'interests', 'interests', 'zh')] =
     formatLocalizedLines(resume.profile.interests, 'zh');
   nextValues[buildDraftFieldKey('profile', 'interests', 'interests', 'en')] =
     formatLocalizedLines(resume.profile.interests, 'en');
+  nextValues[buildDraftFieldKey('profile', 'hero', 'slogans', 'zh')] =
+    formatLocalizedLines(resume.profile.hero.slogans, 'zh');
+  nextValues[buildDraftFieldKey('profile', 'hero', 'slogans', 'en')] =
+    formatLocalizedLines(resume.profile.hero.slogans, 'en');
 
   return nextValues;
 }
@@ -224,6 +247,17 @@ function clearLocalizedLineValues(values: LocalizedText[]): LocalizedText[] {
   }));
 }
 
+function ensureHeroSlogans(hero: ResumeProfileHero): ResumeProfileHero {
+  if (hero.slogans.length >= 2) {
+    return hero;
+  }
+
+  return {
+    ...hero,
+    slogans: [...hero.slogans, ...Array.from({ length: 2 - hero.slogans.length }, () => createEmptyLocalizedText())],
+  };
+}
+
 function DisclosureChevron() {
   return (
     <svg aria-hidden="true" fill="none" height="16" viewBox="0 0 20 20" width="16">
@@ -235,6 +269,76 @@ function DisclosureChevron() {
         strokeWidth="1.8"
       />
     </svg>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg aria-hidden="true" fill="none" height="18" viewBox="0 0 20 20" width="18">
+      <path
+        d="M10 4.5v11m5.5-5.5h-11"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg aria-hidden="true" fill="none" height="18" viewBox="0 0 20 20" width="18">
+      <path
+        d="M7.5 4.75h5m-7 2h9m-7.5 2.5v4.75m3-4.75v4.75m2.75-7.5-.4 5.34a1.5 1.5 0 0 1-1.5 1.39H8.65a1.5 1.5 0 0 1-1.5-1.39l-.4-5.34m1.5-2.25.27-.79a1 1 0 0 1 .95-.67h1.06a1 1 0 0 1 .95.67l.27.79"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.7"
+      />
+    </svg>
+  );
+}
+
+interface IconActionButtonProps {
+  icon: ReactNode;
+  label: string;
+  onClick: () => void;
+  variant?: 'ghost' | 'outline';
+  className?: string;
+}
+
+function IconActionButton({
+  icon,
+  label,
+  onClick,
+  variant = 'outline',
+  className,
+}: IconActionButtonProps) {
+  return (
+    <Tooltip delay={300}>
+      <Tooltip.Trigger>
+        <Button
+          aria-label={label}
+          className={[
+            'h-10 w-10 min-w-10 rounded-full border-zinc-200/80 text-zinc-600 transition-colors hover:border-zinc-300 hover:bg-zinc-100 hover:text-zinc-950 focus-visible:ring-2 focus-visible:ring-blue-500/30 dark:border-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-700 dark:hover:bg-zinc-900 dark:hover:text-white',
+            className,
+          ]
+            .filter(Boolean)
+            .join(' ')}
+          isIconOnly
+          onClick={onClick}
+          size="sm"
+          type="button"
+          variant={variant}
+        >
+          {icon}
+        </Button>
+      </Tooltip.Trigger>
+      <Tooltip.Content offset={10} placement="bottom">
+        {label}
+      </Tooltip.Content>
+    </Tooltip>
   );
 }
 
@@ -265,8 +369,8 @@ function LocalizedEditorField({
           aria-hidden="true"
           className="rounded-2xl border border-dashed border-zinc-200/80 bg-zinc-50 px-3 py-2 text-sm leading-6 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-400"
         >
-          中文参考：
-          {sourceValue || '当前中文主编辑还没有内容，可先回中文主编辑补充主文案。'}
+          主文案参考：
+          {sourceValue || '当前主编辑还没有内容，可先回主编辑工作区补充文案。'}
         </span>
       ) : null}
       {variant === 'textarea' ? (
@@ -491,10 +595,12 @@ export function ResumeDraftEditorPanel({
         copyLocalizedTextValue(draft.profile.headline);
         copyLocalizedTextValue(draft.profile.summary);
         copyLocalizedTextValue(draft.profile.location);
+        draft.profile.hero = ensureHeroSlogans(draft.profile.hero);
         draft.profile.links.forEach((link) => {
           copyLocalizedTextValue(link.label);
         });
         draft.profile.interests = copyLocalizedLineValues(draft.profile.interests);
+        draft.profile.hero.slogans = copyLocalizedLineValues(draft.profile.hero.slogans);
       },
       { syncDraftFields: true },
     );
@@ -509,10 +615,12 @@ export function ResumeDraftEditorPanel({
         clearLocalizedTextValue(draft.profile.headline);
         clearLocalizedTextValue(draft.profile.summary);
         clearLocalizedTextValue(draft.profile.location);
+        draft.profile.hero = ensureHeroSlogans(draft.profile.hero);
         draft.profile.links.forEach((link) => {
           clearLocalizedTextValue(link.label);
         });
         draft.profile.interests = clearLocalizedLineValues(draft.profile.interests);
+        draft.profile.hero.slogans = clearLocalizedLineValues(draft.profile.hero.slogans);
       },
       { syncDraftFields: true },
     );
@@ -730,6 +838,36 @@ export function ResumeDraftEditorPanel({
   ) {
     updateResumeDraft((draft) => {
       draft.profile[field] = value;
+    });
+  }
+
+  function updateProfileHeroField(
+    field: keyof Pick<ResumeProfileHero, 'frontImageUrl' | 'backImageUrl' | 'linkUrl'>,
+    value: string,
+  ) {
+    updateResumeDraft((draft) => {
+      draft.profile.hero = ensureHeroSlogans(draft.profile.hero ?? createEmptyProfileHero());
+      draft.profile.hero[field] = value;
+    });
+  }
+
+  function updateProfileHeroSlogans(locale: 'zh' | 'en', value: string) {
+    setDraftFieldValues((current) => ({
+      ...current,
+      [buildDraftFieldKey('profile', 'hero', 'slogans', locale)]: value,
+    }));
+
+    updateResumeDraft((draft) => {
+      draft.profile.hero = ensureHeroSlogans(draft.profile.hero ?? createEmptyProfileHero());
+      draft.profile.hero.slogans = mergeLocalizedLines(
+        draft.profile.hero.slogans,
+        locale,
+        value,
+      ).slice(0, 2);
+
+      if (draft.profile.hero.slogans.length < 2) {
+        draft.profile.hero = ensureHeroSlogans(draft.profile.hero);
+      }
     });
   }
 
@@ -1008,7 +1146,7 @@ export function ResumeDraftEditorPanel({
     }));
 
     updateResumeDraft((draft) => {
-      draft.skills[index].keywords = parseCommaSeparatedValues(value);
+      draft.skills[index].keywords = parseLineSeparatedValues(value);
     });
   }
 
@@ -1180,17 +1318,22 @@ export function ResumeDraftEditorPanel({
                 onCopy: copyProfileTranslations,
                 onClear: clearProfileTranslations,
               })}
-              count={4 + resumeDraft.profile.links.length + resumeDraft.profile.interests.length}
+              count={
+                7 +
+                resumeDraft.profile.links.length +
+                resumeDraft.profile.interests.length +
+                Math.min(resumeDraft.profile.hero.slogans.length, 2)
+              }
               description={
                 isTranslationMode
-                  ? '英文翻译工作区只维护姓名、标题、简介、地点、链接标签和兴趣方向的英文内容。'
+                  ? '英文翻译工作区只维护姓名、标题、简介、地点、主视觉 slogan、链接标签和兴趣方向的英文内容。'
                   : '先保留原有 profile 编辑，继续作为标准简历的稳定基础层。'
               }
               title="基础信息"
             >
               <div className="grid gap-4 md:grid-cols-2">
                 <LocalizedEditorField
-                  label={isTranslationMode ? '英文姓名' : '中文姓名'}
+                  label="姓名"
                   localeMode={editorLocaleMode}
                   onChange={(value) =>
                     updateProfileLocalizedField('fullName', editorLocaleMode, value)
@@ -1199,7 +1342,7 @@ export function ResumeDraftEditorPanel({
                   value={resumeDraft.profile.fullName[editorLocaleMode]}
                 />
                 <LocalizedEditorField
-                  label={isTranslationMode ? '英文标题' : '中文标题'}
+                  label="标题"
                   localeMode={editorLocaleMode}
                   onChange={(value) =>
                     updateProfileLocalizedField('headline', editorLocaleMode, value)
@@ -1208,7 +1351,7 @@ export function ResumeDraftEditorPanel({
                   value={resumeDraft.profile.headline[editorLocaleMode]}
                 />
                 <LocalizedEditorField
-                  label={isTranslationMode ? '英文所在地' : '中文所在地'}
+                  label="所在地"
                   localeMode={editorLocaleMode}
                   onChange={(value) =>
                     updateProfileLocalizedField('location', editorLocaleMode, value)
@@ -1252,6 +1395,71 @@ export function ResumeDraftEditorPanel({
                 </label>
               ) : null}
 
+              <div className="stack rounded-[24px] border border-zinc-200/70 bg-zinc-50/70 px-4 py-4 dark:border-zinc-800 dark:bg-zinc-900/40">
+                <div className="space-y-1">
+                  <h4 className="text-sm font-semibold text-zinc-950 dark:text-white">
+                    侧栏主视觉
+                  </h4>
+                  <p className="muted">
+                    {isTranslationMode
+                      ? '这里集中维护头像区两句 slogan 的英文文案。图片地址和点击跳转链接仍在中文主编辑中维护。'
+                      : '维护头像正反图片地址、头像点击跳转链接，以及公开侧栏头像区的两句 slogan。'}
+                  </p>
+                </div>
+
+                {!isTranslationMode ? (
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <label className="field">
+                      <span>头像正面图片地址</span>
+                      <Input
+                        fullWidth
+                        onChange={(event) =>
+                          updateProfileHeroField('frontImageUrl', event.target.value)
+                        }
+                        value={resumeDraft.profile.hero.frontImageUrl}
+                        variant="secondary"
+                      />
+                    </label>
+                    <label className="field">
+                      <span>头像背面图片地址</span>
+                      <Input
+                        fullWidth
+                        onChange={(event) =>
+                          updateProfileHeroField('backImageUrl', event.target.value)
+                        }
+                        value={resumeDraft.profile.hero.backImageUrl}
+                        variant="secondary"
+                      />
+                    </label>
+                    <label className="field">
+                      <span>头像点击跳转地址</span>
+                      <Input
+                        fullWidth
+                        onChange={(event) =>
+                          updateProfileHeroField('linkUrl', event.target.value)
+                        }
+                        value={resumeDraft.profile.hero.linkUrl}
+                        variant="secondary"
+                      />
+                    </label>
+                  </div>
+                ) : null}
+
+                <LocalizedEditorField
+                  label="主视觉 slogan（每行一条，最多两行）"
+                  localeMode={editorLocaleMode}
+                  onChange={(value) => updateProfileHeroSlogans(editorLocaleMode, value)}
+                  rows={3}
+                  sourceValue={formatLocalizedLines(resumeDraft.profile.hero.slogans, 'zh')}
+                  value={
+                    draftFieldValues[
+                      buildDraftFieldKey('profile', 'hero', 'slogans', editorLocaleMode)
+                    ] ?? formatLocalizedLines(resumeDraft.profile.hero.slogans, editorLocaleMode)
+                  }
+                  variant="textarea"
+                />
+              </div>
+
               <div className="stack">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div className="space-y-1">
@@ -1265,73 +1473,76 @@ export function ResumeDraftEditorPanel({
                     </p>
                   </div>
                   {!isTranslationMode ? (
-                    <Button onClick={addProfileLink} size="sm" type="button" variant="outline">
-                      新增个人链接
-                    </Button>
+                    <IconActionButton
+                      icon={<PlusIcon />}
+                      label="添加个人链接"
+                      onClick={addProfileLink}
+                    />
                   ) : null}
                 </div>
 
                 {resumeDraft.profile.links.length === 0 ? (
-                  <div className="status-box">
+                  <div className="status-box min-h-0 px-4 py-3">
                     <strong>当前还没有个人链接</strong>
                     <span>可继续补 GitHub、博客或其他公开主页入口。</span>
                   </div>
                 ) : null}
 
-                {resumeDraft.profile.links.map((link, index) => (
-                  <div className="card stack" key={`profile-link-${index}`}>
-                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                      <div className="space-y-1">
-                        <h5 className="text-sm font-semibold text-zinc-950 dark:text-white">
-                          个人链接 {index + 1}
-                        </h5>
-                        <p className="muted">{link.url || link.label.zh || '未命名链接'}</p>
+                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                  {resumeDraft.profile.links.map((link, index) => (
+                    <div
+                      className="card stack min-h-full min-w-0 gap-3 rounded-[22px] p-4"
+                      key={`profile-link-${index}`}
+                    >
+                      <div className="flex min-w-0 items-start justify-between gap-3">
+                        <div className="min-w-0 space-y-1">
+                          <h5 className="text-sm font-semibold text-zinc-950 dark:text-white">
+                            个人链接 {index + 1}
+                          </h5>
+                          <p className="muted truncate">{link.url || link.label.zh || '未命名链接'}</p>
+                        </div>
+                        {!isTranslationMode ? (
+                          <IconActionButton
+                            className="mt-0.5"
+                            icon={<TrashIcon />}
+                            label={`删除个人链接 ${index + 1}`}
+                            onClick={() => removeProfileLink(index)}
+                            variant="ghost"
+                          />
+                        ) : null}
                       </div>
+
+                      <LocalizedEditorField
+                        label={`个人链接 ${index + 1} 标签`}
+                        localeMode={editorLocaleMode}
+                        onChange={(value) =>
+                          updateProfileLinkField(index, 'label', value, editorLocaleMode)
+                        }
+                        sourceValue={link.label.zh}
+                        value={link.label[editorLocaleMode]}
+                      />
+
                       {!isTranslationMode ? (
-                        <Button
-                          onClick={() => removeProfileLink(index)}
-                          size="sm"
-                          type="button"
-                          variant="ghost"
-                        >
-                          删除本条
-                        </Button>
+                        <label className="field min-w-0">
+                          <span>{`个人链接 ${index + 1} 地址`}</span>
+                          <Input
+                            className="min-w-0"
+                            fullWidth
+                            onChange={(event) =>
+                              updateProfileLinkField(index, 'url', event.target.value)
+                            }
+                            value={link.url}
+                            variant="secondary"
+                          />
+                        </label>
                       ) : null}
                     </div>
-
-                    <LocalizedEditorField
-                      label={
-                        isTranslationMode
-                          ? `个人链接 ${index + 1} 英文标签`
-                          : `个人链接 ${index + 1} 中文标签`
-                      }
-                      localeMode={editorLocaleMode}
-                      onChange={(value) =>
-                        updateProfileLinkField(index, 'label', value, editorLocaleMode)
-                      }
-                      sourceValue={link.label.zh}
-                      value={link.label[editorLocaleMode]}
-                    />
-
-                    {!isTranslationMode ? (
-                      <label className="field">
-                        <span>{`个人链接 ${index + 1} 链接地址`}</span>
-                        <Input
-                          fullWidth
-                          onChange={(event) =>
-                            updateProfileLinkField(index, 'url', event.target.value)
-                          }
-                          value={link.url}
-                          variant="secondary"
-                        />
-                      </label>
-                    ) : null}
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
 
               <LocalizedEditorField
-                label={isTranslationMode ? '英文简介' : '中文简介'}
+                label="简介"
                 localeMode={editorLocaleMode}
                 onChange={(value) =>
                   updateProfileLocalizedField('summary', editorLocaleMode, value)
@@ -1343,7 +1554,7 @@ export function ResumeDraftEditorPanel({
               />
 
               <LocalizedEditorField
-                label={isTranslationMode ? '英文兴趣方向（每行一条）' : '中文兴趣方向（每行一条）'}
+                label="兴趣方向（每行一条）"
                 localeMode={editorLocaleMode}
                 onChange={(value) => updateProfileInterests(editorLocaleMode, value)}
                 rows={4}
@@ -1370,9 +1581,11 @@ export function ResumeDraftEditorPanel({
                       onClear: clearEducationTranslations,
                     })
                   : (
-                <Button onClick={addEducation} size="sm" type="button" variant="outline">
-                  新增教育经历
-                </Button>
+                    <IconActionButton
+                      icon={<PlusIcon />}
+                      label="添加教育经历"
+                      onClick={addEducation}
+                    />
                     )
               }
               count={resumeDraft.education.length}
@@ -1394,14 +1607,12 @@ export function ResumeDraftEditorPanel({
                 <EditorEntry
                   action={
                     !isTranslationMode ? (
-                      <Button
+                      <IconActionButton
+                        icon={<TrashIcon />}
+                        label={`删除教育经历 ${index + 1}`}
                         onClick={() => removeEducation(index)}
-                        size="sm"
-                        type="button"
                         variant="ghost"
-                      >
-                        删除本段
-                      </Button>
+                      />
                     ) : null
                   }
                   defaultExpanded={resumeDraft.education.length === 1 || index === resumeDraft.education.length - 1}
@@ -1412,11 +1623,7 @@ export function ResumeDraftEditorPanel({
                 >
                   <div className="grid gap-4 md:grid-cols-2">
                     <LocalizedEditorField
-                      label={
-                        isTranslationMode
-                          ? `教育经历 ${index + 1} 英文学校`
-                          : `教育经历 ${index + 1} 中文学校`
-                      }
+                      label={`教育经历 ${index + 1} 学校`}
                       localeMode={editorLocaleMode}
                       onChange={(value) =>
                         updateEducationLocalizedField(
@@ -1430,11 +1637,7 @@ export function ResumeDraftEditorPanel({
                       value={education.schoolName[editorLocaleMode]}
                     />
                     <LocalizedEditorField
-                      label={
-                        isTranslationMode
-                          ? `教育经历 ${index + 1} 英文学位`
-                          : `教育经历 ${index + 1} 中文学位`
-                      }
+                      label={`教育经历 ${index + 1} 学位`}
                       localeMode={editorLocaleMode}
                       onChange={(value) =>
                         updateEducationLocalizedField(
@@ -1448,11 +1651,7 @@ export function ResumeDraftEditorPanel({
                       value={education.degree[editorLocaleMode]}
                     />
                     <LocalizedEditorField
-                      label={
-                        isTranslationMode
-                          ? `教育经历 ${index + 1} 英文专业`
-                          : `教育经历 ${index + 1} 中文专业`
-                      }
+                      label={`教育经历 ${index + 1} 专业`}
                       localeMode={editorLocaleMode}
                       onChange={(value) =>
                         updateEducationLocalizedField(
@@ -1492,11 +1691,7 @@ export function ResumeDraftEditorPanel({
                       </>
                     ) : null}
                     <LocalizedEditorField
-                      label={
-                        isTranslationMode
-                          ? `教育经历 ${index + 1} 英文地点`
-                          : `教育经历 ${index + 1} 中文地点`
-                      }
+                      label={`教育经历 ${index + 1} 地点`}
                       localeMode={editorLocaleMode}
                       onChange={(value) =>
                         updateEducationLocalizedField(
@@ -1512,11 +1707,7 @@ export function ResumeDraftEditorPanel({
                   </div>
 
                   <LocalizedEditorField
-                    label={
-                      isTranslationMode
-                        ? `教育经历 ${index + 1} 英文亮点（每行一条）`
-                        : `教育经历 ${index + 1} 中文亮点（每行一条）`
-                    }
+                    label={`教育经历 ${index + 1} 亮点（每行一条）`}
                     localeMode={editorLocaleMode}
                     onChange={(value) =>
                       updateEducationHighlights(index, editorLocaleMode, value)
@@ -1547,9 +1738,11 @@ export function ResumeDraftEditorPanel({
                       onClear: clearExperienceTranslations,
                     })
                   : (
-                <Button onClick={addExperience} size="sm" type="button" variant="outline">
-                  新增工作经历
-                </Button>
+                    <IconActionButton
+                      icon={<PlusIcon />}
+                      label="添加工作经历"
+                      onClick={addExperience}
+                    />
                     )
               }
               count={resumeDraft.experiences.length}
@@ -1571,14 +1764,12 @@ export function ResumeDraftEditorPanel({
                 <EditorEntry
                   action={
                     !isTranslationMode ? (
-                      <Button
+                      <IconActionButton
+                        icon={<TrashIcon />}
+                        label={`删除工作经历 ${index + 1}`}
                         onClick={() => removeExperience(index)}
-                        size="sm"
-                        type="button"
                         variant="ghost"
-                      >
-                        删除本段
-                      </Button>
+                      />
                     ) : null
                   }
                   defaultExpanded={
@@ -1594,7 +1785,7 @@ export function ResumeDraftEditorPanel({
                 >
                   <div className="grid gap-4 md:grid-cols-2">
                     <LocalizedEditorField
-                      label={isTranslationMode ? `工作经历 ${index + 1} 英文公司` : `工作经历 ${index + 1} 中文公司`}
+                      label={`工作经历 ${index + 1} 公司`}
                       localeMode={editorLocaleMode}
                       onChange={(value) =>
                         updateExperienceLocalizedField(
@@ -1608,7 +1799,7 @@ export function ResumeDraftEditorPanel({
                       value={experience.companyName[editorLocaleMode]}
                     />
                     <LocalizedEditorField
-                      label={isTranslationMode ? `工作经历 ${index + 1} 英文岗位` : `工作经历 ${index + 1} 中文岗位`}
+                      label={`工作经历 ${index + 1} 岗位`}
                       localeMode={editorLocaleMode}
                       onChange={(value) =>
                         updateExperienceLocalizedField(
@@ -1622,7 +1813,7 @@ export function ResumeDraftEditorPanel({
                       value={experience.role[editorLocaleMode]}
                     />
                     <LocalizedEditorField
-                      label={isTranslationMode ? `工作经历 ${index + 1} 英文类型` : `工作经历 ${index + 1} 中文类型`}
+                      label={`工作经历 ${index + 1} 类型`}
                       localeMode={editorLocaleMode}
                       onChange={(value) =>
                         updateExperienceLocalizedField(
@@ -1662,7 +1853,7 @@ export function ResumeDraftEditorPanel({
                       </>
                     ) : null}
                     <LocalizedEditorField
-                      label={isTranslationMode ? `工作经历 ${index + 1} 英文地点` : `工作经历 ${index + 1} 中文地点`}
+                      label={`工作经历 ${index + 1} 地点`}
                       localeMode={editorLocaleMode}
                       onChange={(value) =>
                         updateExperienceLocalizedField(
@@ -1678,7 +1869,7 @@ export function ResumeDraftEditorPanel({
                   </div>
 
                   <LocalizedEditorField
-                    label={isTranslationMode ? `工作经历 ${index + 1} 英文摘要` : `工作经历 ${index + 1} 中文摘要`}
+                    label={`工作经历 ${index + 1} 摘要`}
                     localeMode={editorLocaleMode}
                     onChange={(value) =>
                       updateExperienceLocalizedField(
@@ -1695,11 +1886,7 @@ export function ResumeDraftEditorPanel({
                   />
 
                   <LocalizedEditorField
-                    label={
-                      isTranslationMode
-                        ? `工作经历 ${index + 1} 英文亮点（每行一条）`
-                        : `工作经历 ${index + 1} 中文亮点（每行一条）`
-                    }
+                    label={`工作经历 ${index + 1} 亮点（每行一条）`}
                     localeMode={editorLocaleMode}
                     onChange={(value) =>
                       updateExperienceHighlights(index, editorLocaleMode, value)
@@ -1748,9 +1935,11 @@ export function ResumeDraftEditorPanel({
                       onClear: clearProjectTranslations,
                     })
                   : (
-                <Button onClick={addProject} size="sm" type="button" variant="outline">
-                  新增项目经历
-                </Button>
+                    <IconActionButton
+                      icon={<PlusIcon />}
+                      label="添加项目经历"
+                      onClick={addProject}
+                    />
                     )
               }
               count={resumeDraft.projects.length}
@@ -1772,14 +1961,12 @@ export function ResumeDraftEditorPanel({
                 <EditorEntry
                   action={
                     !isTranslationMode ? (
-                      <Button
+                      <IconActionButton
+                        icon={<TrashIcon />}
+                        label={`删除项目经历 ${index + 1}`}
                         onClick={() => removeProject(index)}
-                        size="sm"
-                        type="button"
                         variant="ghost"
-                      >
-                        删除本段
-                      </Button>
+                      />
                     ) : null
                   }
                   defaultExpanded={
@@ -1793,7 +1980,7 @@ export function ResumeDraftEditorPanel({
                 >
                   <div className="grid gap-4 md:grid-cols-2">
                     <LocalizedEditorField
-                      label={isTranslationMode ? `项目经历 ${index + 1} 英文名称` : `项目经历 ${index + 1} 中文名称`}
+                      label={`项目经历 ${index + 1} 名称`}
                       localeMode={editorLocaleMode}
                       onChange={(value) =>
                         updateProjectLocalizedField(index, 'name', editorLocaleMode, value)
@@ -1802,7 +1989,7 @@ export function ResumeDraftEditorPanel({
                       value={project.name[editorLocaleMode]}
                     />
                     <LocalizedEditorField
-                      label={isTranslationMode ? `项目经历 ${index + 1} 英文角色` : `项目经历 ${index + 1} 中文角色`}
+                      label={`项目经历 ${index + 1} 角色`}
                       localeMode={editorLocaleMode}
                       onChange={(value) =>
                         updateProjectLocalizedField(index, 'role', editorLocaleMode, value)
@@ -1839,7 +2026,7 @@ export function ResumeDraftEditorPanel({
                   </div>
 
                   <LocalizedEditorField
-                    label={isTranslationMode ? `项目经历 ${index + 1} 英文摘要` : `项目经历 ${index + 1} 中文摘要`}
+                    label={`项目经历 ${index + 1} 摘要`}
                     localeMode={editorLocaleMode}
                     onChange={(value) =>
                       updateProjectLocalizedField(index, 'summary', editorLocaleMode, value)
@@ -1851,11 +2038,7 @@ export function ResumeDraftEditorPanel({
                   />
 
                   <LocalizedEditorField
-                    label={
-                      isTranslationMode
-                        ? `项目经历 ${index + 1} 英文亮点（每行一条）`
-                        : `项目经历 ${index + 1} 中文亮点（每行一条）`
-                    }
+                    label={`项目经历 ${index + 1} 亮点（每行一条）`}
                     localeMode={editorLocaleMode}
                     onChange={(value) =>
                       updateProjectHighlights(index, editorLocaleMode, value)
@@ -1899,14 +2082,11 @@ export function ResumeDraftEditorPanel({
                         </p>
                       </div>
                       {!isTranslationMode ? (
-                        <Button
+                        <IconActionButton
+                          icon={<PlusIcon />}
+                          label={`为项目经历 ${index + 1} 添加项目链接`}
                           onClick={() => addProjectLink(index)}
-                          size="sm"
-                          type="button"
-                          variant="outline"
-                        >
-                          新增项目链接
-                        </Button>
+                        />
                       ) : null}
                     </div>
 
@@ -1918,32 +2098,27 @@ export function ResumeDraftEditorPanel({
                     ) : null}
 
                     {project.links.map((link, linkIndex) => (
-                      <div className="card stack" key={`project-${index}-link-${linkIndex}`}>
-                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                          <div className="space-y-1">
+                      <div className="card stack min-w-0" key={`project-${index}-link-${linkIndex}`}>
+                        <div className="flex min-w-0 items-start justify-between gap-3">
+                          <div className="min-w-0 space-y-1">
                             <h6 className="text-sm font-semibold text-zinc-950 dark:text-white">
                               {`项目链接 ${linkIndex + 1}`}
                             </h6>
-                            <p className="muted">{link.url || link.label.zh || '未命名链接'}</p>
+                            <p className="muted truncate">{link.url || link.label.zh || '未命名链接'}</p>
                           </div>
                           {!isTranslationMode ? (
-                            <Button
+                            <IconActionButton
+                              className="mt-0.5"
+                              icon={<TrashIcon />}
+                              label={`删除项目经历 ${index + 1} 的链接 ${linkIndex + 1}`}
                               onClick={() => removeProjectLink(index, linkIndex)}
-                              size="sm"
-                              type="button"
                               variant="ghost"
-                            >
-                              删除本条
-                            </Button>
+                            />
                           ) : null}
                         </div>
 
                         <LocalizedEditorField
-                          label={
-                            isTranslationMode
-                              ? `项目经历 ${index + 1} 链接 ${linkIndex + 1} 英文标签`
-                              : `项目经历 ${index + 1} 链接 ${linkIndex + 1} 中文标签`
-                          }
+                          label={`项目经历 ${index + 1} 链接 ${linkIndex + 1} 标签`}
                           localeMode={editorLocaleMode}
                           onChange={(value) =>
                             updateProjectLinkField(
@@ -1959,9 +2134,10 @@ export function ResumeDraftEditorPanel({
                         />
 
                         {!isTranslationMode ? (
-                          <label className="field">
+                          <label className="field min-w-0">
                             <span>{`项目经历 ${index + 1} 链接 ${linkIndex + 1} 地址`}</span>
                             <Input
+                              className="min-w-0"
                               fullWidth
                               onChange={(event) =>
                                 updateProjectLinkField(index, linkIndex, 'url', event.target.value)
@@ -1986,9 +2162,11 @@ export function ResumeDraftEditorPanel({
                       onClear: clearSkillTranslations,
                     })
                   : (
-                <Button onClick={addSkillGroup} size="sm" type="button" variant="outline">
-                  新增技能组
-                </Button>
+                    <IconActionButton
+                      icon={<PlusIcon />}
+                      label="添加技能组"
+                      onClick={addSkillGroup}
+                    />
                     )
               }
               count={resumeDraft.skills.length}
@@ -2010,14 +2188,12 @@ export function ResumeDraftEditorPanel({
                 <EditorEntry
                   action={
                     !isTranslationMode ? (
-                      <Button
+                      <IconActionButton
+                        icon={<TrashIcon />}
+                        label={`删除技能组 ${index + 1}`}
                         onClick={() => removeSkillGroup(index)}
-                        size="sm"
-                        type="button"
                         variant="ghost"
-                      >
-                        删除本组
-                      </Button>
+                      />
                     ) : null
                   }
                   defaultExpanded={
@@ -2030,7 +2206,7 @@ export function ResumeDraftEditorPanel({
                   toggleLabel={`技能组 ${index + 1} 条目开关`}
                 >
                   <LocalizedEditorField
-                    label={isTranslationMode ? `技能组 ${index + 1} 英文名称` : `技能组 ${index + 1} 中文名称`}
+                    label={`技能组 ${index + 1} 名称`}
                     localeMode={editorLocaleMode}
                     onChange={(value) =>
                       updateSkillLocalizedField(index, editorLocaleMode, value)
@@ -2041,13 +2217,14 @@ export function ResumeDraftEditorPanel({
 
                   {!isTranslationMode ? (
                     <label className="field">
-                      <span>{`技能组 ${index + 1} 关键词（逗号分隔）`}</span>
-                      <Input
+                      <span>{`技能组 ${index + 1} 关键词（每行一条）`}</span>
+                      <TextArea
                         fullWidth
                         onChange={(event) => updateSkillKeywords(index, event.target.value)}
+                        rows={5}
                         value={
                           draftFieldValues[buildDraftFieldKey('skill', index, 'keywords')] ??
-                          formatCommaSeparatedValues(skill.keywords)
+                          formatLineSeparatedValues(skill.keywords)
                         }
                         variant="secondary"
                       />
@@ -2065,9 +2242,11 @@ export function ResumeDraftEditorPanel({
                       onClear: clearHighlightTranslations,
                     })
                   : (
-                <Button onClick={addHighlight} size="sm" type="button" variant="outline">
-                  新增亮点
-                </Button>
+                    <IconActionButton
+                      icon={<PlusIcon />}
+                      label="添加亮点"
+                      onClick={addHighlight}
+                    />
                     )
               }
               count={resumeDraft.highlights.length}
@@ -2089,14 +2268,12 @@ export function ResumeDraftEditorPanel({
                 <EditorEntry
                   action={
                     !isTranslationMode ? (
-                      <Button
+                      <IconActionButton
+                        icon={<TrashIcon />}
+                        label={`删除亮点 ${index + 1}`}
                         onClick={() => removeHighlight(index)}
-                        size="sm"
-                        type="button"
                         variant="ghost"
-                      >
-                        删除本条
-                      </Button>
+                      />
                     ) : null
                   }
                   defaultExpanded={
@@ -2109,7 +2286,7 @@ export function ResumeDraftEditorPanel({
                   toggleLabel={`亮点 ${index + 1} 条目开关`}
                 >
                   <LocalizedEditorField
-                    label={isTranslationMode ? `亮点 ${index + 1} 英文标题` : `亮点 ${index + 1} 中文标题`}
+                    label={`亮点 ${index + 1} 标题`}
                     localeMode={editorLocaleMode}
                     onChange={(value) =>
                       updateHighlightLocalizedField(index, 'title', editorLocaleMode, value)
@@ -2119,7 +2296,7 @@ export function ResumeDraftEditorPanel({
                   />
 
                   <LocalizedEditorField
-                    label={isTranslationMode ? `亮点 ${index + 1} 英文描述` : `亮点 ${index + 1} 中文描述`}
+                    label={`亮点 ${index + 1} 描述`}
                     localeMode={editorLocaleMode}
                     onChange={(value) =>
                       updateHighlightLocalizedField(
