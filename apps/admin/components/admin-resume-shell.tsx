@@ -17,7 +17,7 @@ const moduleRoadmap = [
   {
     key: 'profile',
     title: '基础信息',
-    description: '双语 profile 与个人扩展字段已接通，可维护摘要、链接与兴趣方向。',
+    description: '已切到中文主编辑 + 英文翻译工作区，可维护摘要、链接与兴趣方向。',
     status: '已实现',
   },
   {
@@ -77,7 +77,7 @@ export function AdminResumeShell() {
         <CardContent className="stack">
           {currentUser.capabilities.canEditResume ? (
             <div className="dashboard-inline-note">
-              当前已接通标准简历主模块编辑。模块已按基础信息、教育、工作、项目、技能与亮点分组，便于逐段维护与后续继续重构。
+              当前已接通标准简历主模块编辑，并切到“中文主编辑 + 英文翻译工作区”的维护方式。模块继续按基础信息、教育、工作、项目、技能与亮点分组，便于逐段维护与后续继续扩展翻译能力。
             </div>
           ) : (
             <div className="readonly-box">

@@ -38,6 +38,7 @@ interface ResumeDraftEditorPanelProps {
 
 type DraftEditorStatus = 'idle' | 'loading' | 'ready' | 'error';
 type DraftFieldValues = Record<string, string>;
+type EditorLocaleMode = 'zh' | 'en';
 
 function cloneResume(resume: StandardResume): StandardResume {
   return JSON.parse(JSON.stringify(resume)) as StandardResume;
@@ -201,6 +202,28 @@ function buildDraftFieldValues(resume: StandardResume): DraftFieldValues {
   return nextValues;
 }
 
+function copyLocalizedTextValue(value: LocalizedText) {
+  value.en = value.zh;
+}
+
+function clearLocalizedTextValue(value: LocalizedText) {
+  value.en = '';
+}
+
+function copyLocalizedLineValues(values: LocalizedText[]): LocalizedText[] {
+  return values.map((item) => ({
+    zh: item.zh,
+    en: item.zh,
+  }));
+}
+
+function clearLocalizedLineValues(values: LocalizedText[]): LocalizedText[] {
+  return values.map((item) => ({
+    zh: item.zh,
+    en: '',
+  }));
+}
+
 function DisclosureChevron() {
   return (
     <svg aria-hidden="true" fill="none" height="16" viewBox="0 0 20 20" width="16">
@@ -212,6 +235,57 @@ function DisclosureChevron() {
         strokeWidth="1.8"
       />
     </svg>
+  );
+}
+
+interface LocalizedEditorFieldProps {
+  label: string;
+  localeMode: EditorLocaleMode;
+  onChange: (value: string) => void;
+  rows?: number;
+  sourceValue?: string;
+  value: string;
+  variant?: 'input' | 'textarea';
+}
+
+function LocalizedEditorField({
+  label,
+  localeMode,
+  onChange,
+  rows = 4,
+  sourceValue,
+  value,
+  variant = 'input',
+}: LocalizedEditorFieldProps) {
+  return (
+    <label className="field">
+      <span>{label}</span>
+      {localeMode === 'en' ? (
+        <span
+          aria-hidden="true"
+          className="rounded-2xl border border-dashed border-zinc-200/80 bg-zinc-50 px-3 py-2 text-sm leading-6 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-400"
+        >
+          中文参考：
+          {sourceValue || '当前中文主编辑还没有内容，可先回中文主编辑补充主文案。'}
+        </span>
+      ) : null}
+      {variant === 'textarea' ? (
+        <TextArea
+          fullWidth
+          onChange={(event) => onChange(event.target.value)}
+          rows={rows}
+          value={value}
+          variant="secondary"
+        />
+      ) : (
+        <Input
+          fullWidth
+          onChange={(event) => onChange(event.target.value)}
+          value={value}
+          variant="secondary"
+        />
+      )}
+    </label>
   );
 }
 
@@ -341,6 +415,7 @@ export function ResumeDraftEditorPanel({
   );
   const [resumeDraft, setResumeDraft] = useState<StandardResume | null>(null);
   const [draftFieldValues, setDraftFieldValues] = useState<DraftFieldValues>({});
+  const [editorLocaleMode, setEditorLocaleMode] = useState<EditorLocaleMode>('zh');
   const [pendingSave, setPendingSave] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -380,6 +455,8 @@ export function ResumeDraftEditorPanel({
     return formatIsoDateTime(draftSnapshot.updatedAt);
   }, [draftSnapshot]);
 
+  const isTranslationMode = editorLocaleMode === 'en';
+
   function updateResumeDraft(
     mutator: (draft: StandardResume) => void,
     options?: { syncDraftFields?: boolean },
@@ -400,6 +477,241 @@ export function ResumeDraftEditorPanel({
     if (options?.syncDraftFields && nextDraftForDraftFields) {
       setDraftFieldValues(buildDraftFieldValues(nextDraftForDraftFields));
     }
+  }
+
+  function showTranslationPlaceholder(scopeTitle: string) {
+    setErrorMessage(null);
+    setFeedbackMessage(`${scopeTitle} 的 AI 翻译入口将在后续 issue 接入，这里先把工作区和人工校对路径立住。`);
+  }
+
+  function copyProfileTranslations() {
+    updateResumeDraft(
+      (draft) => {
+        copyLocalizedTextValue(draft.profile.fullName);
+        copyLocalizedTextValue(draft.profile.headline);
+        copyLocalizedTextValue(draft.profile.summary);
+        copyLocalizedTextValue(draft.profile.location);
+        draft.profile.links.forEach((link) => {
+          copyLocalizedTextValue(link.label);
+        });
+        draft.profile.interests = copyLocalizedLineValues(draft.profile.interests);
+      },
+      { syncDraftFields: true },
+    );
+    setErrorMessage(null);
+    setFeedbackMessage('已将基础信息中的中文内容复制到英文翻译工作区。');
+  }
+
+  function clearProfileTranslations() {
+    updateResumeDraft(
+      (draft) => {
+        clearLocalizedTextValue(draft.profile.fullName);
+        clearLocalizedTextValue(draft.profile.headline);
+        clearLocalizedTextValue(draft.profile.summary);
+        clearLocalizedTextValue(draft.profile.location);
+        draft.profile.links.forEach((link) => {
+          clearLocalizedTextValue(link.label);
+        });
+        draft.profile.interests = clearLocalizedLineValues(draft.profile.interests);
+      },
+      { syncDraftFields: true },
+    );
+    setErrorMessage(null);
+    setFeedbackMessage('已清空基础信息中的英文翻译字段。');
+  }
+
+  function copyEducationTranslations() {
+    updateResumeDraft(
+      (draft) => {
+        draft.education.forEach((education) => {
+          copyLocalizedTextValue(education.schoolName);
+          copyLocalizedTextValue(education.degree);
+          copyLocalizedTextValue(education.fieldOfStudy);
+          copyLocalizedTextValue(education.location);
+          education.highlights = copyLocalizedLineValues(education.highlights);
+        });
+      },
+      { syncDraftFields: true },
+    );
+    setErrorMessage(null);
+    setFeedbackMessage('已将教育经历中的中文内容复制到英文翻译工作区。');
+  }
+
+  function clearEducationTranslations() {
+    updateResumeDraft(
+      (draft) => {
+        draft.education.forEach((education) => {
+          clearLocalizedTextValue(education.schoolName);
+          clearLocalizedTextValue(education.degree);
+          clearLocalizedTextValue(education.fieldOfStudy);
+          clearLocalizedTextValue(education.location);
+          education.highlights = clearLocalizedLineValues(education.highlights);
+        });
+      },
+      { syncDraftFields: true },
+    );
+    setErrorMessage(null);
+    setFeedbackMessage('已清空教育经历中的英文翻译字段。');
+  }
+
+  function copyExperienceTranslations() {
+    updateResumeDraft(
+      (draft) => {
+        draft.experiences.forEach((experience) => {
+          copyLocalizedTextValue(experience.companyName);
+          copyLocalizedTextValue(experience.role);
+          copyLocalizedTextValue(experience.employmentType);
+          copyLocalizedTextValue(experience.location);
+          copyLocalizedTextValue(experience.summary);
+          experience.highlights = copyLocalizedLineValues(experience.highlights);
+        });
+      },
+      { syncDraftFields: true },
+    );
+    setErrorMessage(null);
+    setFeedbackMessage('已将工作经历中的中文内容复制到英文翻译工作区。');
+  }
+
+  function clearExperienceTranslations() {
+    updateResumeDraft(
+      (draft) => {
+        draft.experiences.forEach((experience) => {
+          clearLocalizedTextValue(experience.companyName);
+          clearLocalizedTextValue(experience.role);
+          clearLocalizedTextValue(experience.employmentType);
+          clearLocalizedTextValue(experience.location);
+          clearLocalizedTextValue(experience.summary);
+          experience.highlights = clearLocalizedLineValues(experience.highlights);
+        });
+      },
+      { syncDraftFields: true },
+    );
+    setErrorMessage(null);
+    setFeedbackMessage('已清空工作经历中的英文翻译字段。');
+  }
+
+  function copyProjectTranslations() {
+    updateResumeDraft(
+      (draft) => {
+        draft.projects.forEach((project) => {
+          copyLocalizedTextValue(project.name);
+          copyLocalizedTextValue(project.role);
+          copyLocalizedTextValue(project.summary);
+          project.highlights = copyLocalizedLineValues(project.highlights);
+          project.links.forEach((link) => {
+            copyLocalizedTextValue(link.label);
+          });
+        });
+      },
+      { syncDraftFields: true },
+    );
+    setErrorMessage(null);
+    setFeedbackMessage('已将项目经历中的中文内容复制到英文翻译工作区。');
+  }
+
+  function clearProjectTranslations() {
+    updateResumeDraft(
+      (draft) => {
+        draft.projects.forEach((project) => {
+          clearLocalizedTextValue(project.name);
+          clearLocalizedTextValue(project.role);
+          clearLocalizedTextValue(project.summary);
+          project.highlights = clearLocalizedLineValues(project.highlights);
+          project.links.forEach((link) => {
+            clearLocalizedTextValue(link.label);
+          });
+        });
+      },
+      { syncDraftFields: true },
+    );
+    setErrorMessage(null);
+    setFeedbackMessage('已清空项目经历中的英文翻译字段。');
+  }
+
+  function copySkillTranslations() {
+    updateResumeDraft((draft) => {
+      draft.skills.forEach((skill) => {
+        copyLocalizedTextValue(skill.name);
+      });
+    });
+    setErrorMessage(null);
+    setFeedbackMessage('已将技能组名称复制到英文翻译工作区。');
+  }
+
+  function clearSkillTranslations() {
+    updateResumeDraft((draft) => {
+      draft.skills.forEach((skill) => {
+        clearLocalizedTextValue(skill.name);
+      });
+    });
+    setErrorMessage(null);
+    setFeedbackMessage('已清空技能组中的英文翻译字段。');
+  }
+
+  function copyHighlightTranslations() {
+    updateResumeDraft((draft) => {
+      draft.highlights.forEach((highlight) => {
+        copyLocalizedTextValue(highlight.title);
+        copyLocalizedTextValue(highlight.description);
+      });
+    });
+    setErrorMessage(null);
+    setFeedbackMessage('已将亮点中的中文内容复制到英文翻译工作区。');
+  }
+
+  function clearHighlightTranslations() {
+    updateResumeDraft((draft) => {
+      draft.highlights.forEach((highlight) => {
+        clearLocalizedTextValue(highlight.title);
+        clearLocalizedTextValue(highlight.description);
+      });
+    });
+    setErrorMessage(null);
+    setFeedbackMessage('已清空亮点中的英文翻译字段。');
+  }
+
+  function renderTranslationActions(
+    scopeTitle: string,
+    handlers: {
+      onCopy: () => void;
+      onClear: () => void;
+    },
+  ) {
+    if (!isTranslationMode) {
+      return null;
+    }
+
+    return (
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button
+          aria-label={`${scopeTitle} 复制中文到英文`}
+          onClick={handlers.onCopy}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          复制中文到英文
+        </Button>
+        <Button
+          aria-label={`${scopeTitle} 清空英文`}
+          onClick={handlers.onClear}
+          size="sm"
+          type="button"
+          variant="ghost"
+        >
+          清空英文
+        </Button>
+        <Button
+          aria-label={`${scopeTitle} AI 翻译入口预留`}
+          onClick={() => showTranslationPlaceholder(scopeTitle)}
+          size="sm"
+          type="button"
+          variant="ghost"
+        >
+          AI 翻译入口预留
+        </Button>
+      </div>
+    );
   }
 
   function updateProfileLocalizedField(
@@ -795,7 +1107,7 @@ export function ResumeDraftEditorPanel({
         <p className="eyebrow">草稿编辑</p>
         <CardTitle>完整标准简历模块编辑</CardTitle>
         <CardDescription>
-          当前后台已按标准简历模型接通基础信息、教育、工作、项目、技能与亮点编辑，保存后仍需手动发布。
+          当前后台已按标准简历模型接通基础信息、教育、工作、项目、技能与亮点编辑，并改成“中文主编辑 + 英文翻译工作区”的维护方式，保存后仍需手动发布。
         </CardDescription>
       </CardHeader>
       <CardContent className="stack">
@@ -824,110 +1136,121 @@ export function ResumeDraftEditorPanel({
               ) : null}
             </div>
 
+            <div className="flex flex-col gap-4 rounded-[24px] border border-zinc-200/70 bg-white/90 px-5 py-4 dark:border-zinc-800 dark:bg-zinc-950/70 md:flex-row md:items-center md:justify-between">
+              <div className="space-y-1">
+                <strong className="block text-sm text-zinc-950 dark:text-white">
+                  {isTranslationMode ? '英文翻译工作区' : '中文主编辑'}
+                </strong>
+                <p className="text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+                  {isTranslationMode
+                    ? '这里集中维护所有英文字段。条目增删、时间、技术栈、链接地址等结构性信息仍回到中文主编辑处理。'
+                    : '中文主编辑负责维护主文案与结构字段。英文字段改到独立翻译工作区，避免继续双列直填。'}
+                </p>
+              </div>
+              <div
+                aria-label="编辑模式切换"
+                className="inline-flex w-full rounded-full border border-zinc-200/80 bg-zinc-50 p-1 dark:border-zinc-800 dark:bg-zinc-900/70 md:w-auto"
+                role="tablist"
+              >
+                <Button
+                  aria-selected={editorLocaleMode === 'zh'}
+                  className="flex-1 md:flex-none"
+                  onClick={() => setEditorLocaleMode('zh')}
+                  size="sm"
+                  type="button"
+                  variant={editorLocaleMode === 'zh' ? 'primary' : 'ghost'}
+                >
+                  中文主编辑
+                </Button>
+                <Button
+                  aria-selected={editorLocaleMode === 'en'}
+                  className="flex-1 md:flex-none"
+                  onClick={() => setEditorLocaleMode('en')}
+                  size="sm"
+                  type="button"
+                  variant={editorLocaleMode === 'en' ? 'primary' : 'ghost'}
+                >
+                  英文翻译工作区
+                </Button>
+              </div>
+            </div>
+
             <EditorSection
+              action={renderTranslationActions('基础信息', {
+                onCopy: copyProfileTranslations,
+                onClear: clearProfileTranslations,
+              })}
               count={4 + resumeDraft.profile.links.length + resumeDraft.profile.interests.length}
-              description="先保留原有 profile 编辑，继续作为标准简历的稳定基础层。"
+              description={
+                isTranslationMode
+                  ? '英文翻译工作区只维护姓名、标题、简介、地点、链接标签和兴趣方向的英文内容。'
+                  : '先保留原有 profile 编辑，继续作为标准简历的稳定基础层。'
+              }
               title="基础信息"
             >
               <div className="grid gap-4 md:grid-cols-2">
-                <label className="field">
-                  <span>中文姓名</span>
-                  <Input
-                    fullWidth
-                    onChange={(event) =>
-                      updateProfileLocalizedField('fullName', 'zh', event.target.value)
-                    }
-                    value={resumeDraft.profile.fullName.zh}
-                    variant="secondary"
-                  />
-                </label>
-                <label className="field">
-                  <span>英文姓名</span>
-                  <Input
-                    fullWidth
-                    onChange={(event) =>
-                      updateProfileLocalizedField('fullName', 'en', event.target.value)
-                    }
-                    value={resumeDraft.profile.fullName.en}
-                    variant="secondary"
-                  />
-                </label>
-
-                <label className="field">
-                  <span>中文标题</span>
-                  <Input
-                    fullWidth
-                    onChange={(event) =>
-                      updateProfileLocalizedField('headline', 'zh', event.target.value)
-                    }
-                    value={resumeDraft.profile.headline.zh}
-                    variant="secondary"
-                  />
-                </label>
-                <label className="field">
-                  <span>英文标题</span>
-                  <Input
-                    fullWidth
-                    onChange={(event) =>
-                      updateProfileLocalizedField('headline', 'en', event.target.value)
-                    }
-                    value={resumeDraft.profile.headline.en}
-                    variant="secondary"
-                  />
-                </label>
-
-                <label className="field">
-                  <span>中文所在地</span>
-                  <Input
-                    fullWidth
-                    onChange={(event) =>
-                      updateProfileLocalizedField('location', 'zh', event.target.value)
-                    }
-                    value={resumeDraft.profile.location.zh}
-                    variant="secondary"
-                  />
-                </label>
-                <label className="field">
-                  <span>英文所在地</span>
-                  <Input
-                    fullWidth
-                    onChange={(event) =>
-                      updateProfileLocalizedField('location', 'en', event.target.value)
-                    }
-                    value={resumeDraft.profile.location.en}
-                    variant="secondary"
-                  />
-                </label>
-
-                <label className="field">
-                  <span>邮箱</span>
-                  <Input
-                    fullWidth
-                    onChange={(event) => updateProfilePlainField('email', event.target.value)}
-                    value={resumeDraft.profile.email}
-                    variant="secondary"
-                  />
-                </label>
-                <label className="field">
-                  <span>电话</span>
-                  <Input
-                    fullWidth
-                    onChange={(event) => updateProfilePlainField('phone', event.target.value)}
-                    value={resumeDraft.profile.phone}
-                    variant="secondary"
-                  />
-                </label>
+                <LocalizedEditorField
+                  label={isTranslationMode ? '英文姓名' : '中文姓名'}
+                  localeMode={editorLocaleMode}
+                  onChange={(value) =>
+                    updateProfileLocalizedField('fullName', editorLocaleMode, value)
+                  }
+                  sourceValue={resumeDraft.profile.fullName.zh}
+                  value={resumeDraft.profile.fullName[editorLocaleMode]}
+                />
+                <LocalizedEditorField
+                  label={isTranslationMode ? '英文标题' : '中文标题'}
+                  localeMode={editorLocaleMode}
+                  onChange={(value) =>
+                    updateProfileLocalizedField('headline', editorLocaleMode, value)
+                  }
+                  sourceValue={resumeDraft.profile.headline.zh}
+                  value={resumeDraft.profile.headline[editorLocaleMode]}
+                />
+                <LocalizedEditorField
+                  label={isTranslationMode ? '英文所在地' : '中文所在地'}
+                  localeMode={editorLocaleMode}
+                  onChange={(value) =>
+                    updateProfileLocalizedField('location', editorLocaleMode, value)
+                  }
+                  sourceValue={resumeDraft.profile.location.zh}
+                  value={resumeDraft.profile.location[editorLocaleMode]}
+                />
+                {!isTranslationMode ? (
+                  <>
+                    <label className="field">
+                      <span>邮箱</span>
+                      <Input
+                        fullWidth
+                        onChange={(event) => updateProfilePlainField('email', event.target.value)}
+                        value={resumeDraft.profile.email}
+                        variant="secondary"
+                      />
+                    </label>
+                    <label className="field">
+                      <span>电话</span>
+                      <Input
+                        fullWidth
+                        onChange={(event) => updateProfilePlainField('phone', event.target.value)}
+                        value={resumeDraft.profile.phone}
+                        variant="secondary"
+                      />
+                    </label>
+                  </>
+                ) : null}
               </div>
 
-              <label className="field">
-                <span>个人网站</span>
-                <Input
-                  fullWidth
-                  onChange={(event) => updateProfilePlainField('website', event.target.value)}
-                  value={resumeDraft.profile.website}
-                  variant="secondary"
-                />
-              </label>
+              {!isTranslationMode ? (
+                <label className="field">
+                  <span>个人网站</span>
+                  <Input
+                    fullWidth
+                    onChange={(event) => updateProfilePlainField('website', event.target.value)}
+                    value={resumeDraft.profile.website}
+                    variant="secondary"
+                  />
+                </label>
+              ) : null}
 
               <div className="stack">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -935,11 +1258,17 @@ export function ResumeDraftEditorPanel({
                     <h4 className="text-sm font-semibold text-zinc-950 dark:text-white">
                       个人链接
                     </h4>
-                    <p className="muted">用于公开侧栏展示 GitHub、博客等对外入口。</p>
+                    <p className="muted">
+                      {isTranslationMode
+                        ? '这里只维护链接标签的英文版本。链接地址与新增删除动作留在中文主编辑里处理。'
+                        : '用于公开侧栏展示 GitHub、博客等对外入口。'}
+                    </p>
                   </div>
-                  <Button onClick={addProfileLink} size="sm" type="button" variant="outline">
-                    新增个人链接
-                  </Button>
+                  {!isTranslationMode ? (
+                    <Button onClick={addProfileLink} size="sm" type="button" variant="outline">
+                      新增个人链接
+                    </Button>
+                  ) : null}
                 </div>
 
                 {resumeDraft.profile.links.length === 0 ? (
@@ -958,123 +1287,100 @@ export function ResumeDraftEditorPanel({
                         </h5>
                         <p className="muted">{link.url || link.label.zh || '未命名链接'}</p>
                       </div>
-                      <Button
-                        onClick={() => removeProfileLink(index)}
-                        size="sm"
-                        type="button"
-                        variant="ghost"
-                      >
-                        删除本条
-                      </Button>
+                      {!isTranslationMode ? (
+                        <Button
+                          onClick={() => removeProfileLink(index)}
+                          size="sm"
+                          type="button"
+                          variant="ghost"
+                        >
+                          删除本条
+                        </Button>
+                      ) : null}
                     </div>
 
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <LocalizedEditorField
+                      label={
+                        isTranslationMode
+                          ? `个人链接 ${index + 1} 英文标签`
+                          : `个人链接 ${index + 1} 中文标签`
+                      }
+                      localeMode={editorLocaleMode}
+                      onChange={(value) =>
+                        updateProfileLinkField(index, 'label', value, editorLocaleMode)
+                      }
+                      sourceValue={link.label.zh}
+                      value={link.label[editorLocaleMode]}
+                    />
+
+                    {!isTranslationMode ? (
                       <label className="field">
-                        <span>{`个人链接 ${index + 1} 中文标签`}</span>
+                        <span>{`个人链接 ${index + 1} 链接地址`}</span>
                         <Input
                           fullWidth
                           onChange={(event) =>
-                            updateProfileLinkField(index, 'label', event.target.value, 'zh')
+                            updateProfileLinkField(index, 'url', event.target.value)
                           }
-                          value={link.label.zh}
+                          value={link.url}
                           variant="secondary"
                         />
                       </label>
-                      <label className="field">
-                        <span>{`个人链接 ${index + 1} 英文标签`}</span>
-                        <Input
-                          fullWidth
-                          onChange={(event) =>
-                            updateProfileLinkField(index, 'label', event.target.value, 'en')
-                          }
-                          value={link.label.en}
-                          variant="secondary"
-                        />
-                      </label>
-                    </div>
-
-                    <label className="field">
-                      <span>{`个人链接 ${index + 1} 链接地址`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateProfileLinkField(index, 'url', event.target.value)
-                        }
-                        value={link.url}
-                        variant="secondary"
-                      />
-                    </label>
+                    ) : null}
                   </div>
                 ))}
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <label className="field">
-                  <span>中文简介</span>
-                  <TextArea
-                    fullWidth
-                    onChange={(event) =>
-                      updateProfileLocalizedField('summary', 'zh', event.target.value)
-                    }
-                    rows={5}
-                    value={resumeDraft.profile.summary.zh}
-                    variant="secondary"
-                  />
-                </label>
-                <label className="field">
-                  <span>英文简介</span>
-                  <TextArea
-                    fullWidth
-                    onChange={(event) =>
-                      updateProfileLocalizedField('summary', 'en', event.target.value)
-                    }
-                    rows={5}
-                    value={resumeDraft.profile.summary.en}
-                    variant="secondary"
-                  />
-                </label>
-              </div>
+              <LocalizedEditorField
+                label={isTranslationMode ? '英文简介' : '中文简介'}
+                localeMode={editorLocaleMode}
+                onChange={(value) =>
+                  updateProfileLocalizedField('summary', editorLocaleMode, value)
+                }
+                rows={5}
+                sourceValue={resumeDraft.profile.summary.zh}
+                value={resumeDraft.profile.summary[editorLocaleMode]}
+                variant="textarea"
+              />
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <label className="field">
-                  <span>中文兴趣方向（每行一条）</span>
-                  <TextArea
-                    fullWidth
-                    onChange={(event) => updateProfileInterests('zh', event.target.value)}
-                    rows={4}
-                    value={
-                      draftFieldValues[
-                        buildDraftFieldKey('profile', 'interests', 'interests', 'zh')
-                      ] ?? formatLocalizedLines(resumeDraft.profile.interests, 'zh')
-                    }
-                    variant="secondary"
-                  />
-                </label>
-                <label className="field">
-                  <span>英文兴趣方向（每行一条）</span>
-                  <TextArea
-                    fullWidth
-                    onChange={(event) => updateProfileInterests('en', event.target.value)}
-                    rows={4}
-                    value={
-                      draftFieldValues[
-                        buildDraftFieldKey('profile', 'interests', 'interests', 'en')
-                      ] ?? formatLocalizedLines(resumeDraft.profile.interests, 'en')
-                    }
-                    variant="secondary"
-                  />
-                </label>
-              </div>
+              <LocalizedEditorField
+                label={isTranslationMode ? '英文兴趣方向（每行一条）' : '中文兴趣方向（每行一条）'}
+                localeMode={editorLocaleMode}
+                onChange={(value) => updateProfileInterests(editorLocaleMode, value)}
+                rows={4}
+                sourceValue={formatLocalizedLines(resumeDraft.profile.interests, 'zh')}
+                value={
+                  draftFieldValues[
+                    buildDraftFieldKey(
+                      'profile',
+                      'interests',
+                      'interests',
+                      editorLocaleMode,
+                    )
+                  ] ?? formatLocalizedLines(resumeDraft.profile.interests, editorLocaleMode)
+                }
+                variant="textarea"
+              />
             </EditorSection>
 
             <EditorSection
               action={
+                isTranslationMode
+                  ? renderTranslationActions('教育经历', {
+                      onCopy: copyEducationTranslations,
+                      onClear: clearEducationTranslations,
+                    })
+                  : (
                 <Button onClick={addEducation} size="sm" type="button" variant="outline">
                   新增教育经历
                 </Button>
+                    )
               }
               count={resumeDraft.education.length}
-              description="补齐学校、学历、专业、时间、地点与教育亮点的双语维护。"
+              description={
+                isTranslationMode
+                  ? '英文翻译工作区集中维护学校、学位、专业、地点和教育亮点的英文内容。'
+                  : '补齐学校、学历、专业、时间、地点与教育亮点的双语维护。'
+              }
               title="教育经历"
             >
               {resumeDraft.education.length === 0 ? (
@@ -1087,14 +1393,16 @@ export function ResumeDraftEditorPanel({
               {resumeDraft.education.map((education, index) => (
                 <EditorEntry
                   action={
-                    <Button
-                      onClick={() => removeEducation(index)}
-                      size="sm"
-                      type="button"
-                      variant="ghost"
-                    >
-                      删除本段
-                    </Button>
+                    !isTranslationMode ? (
+                      <Button
+                        onClick={() => removeEducation(index)}
+                        size="sm"
+                        type="button"
+                        variant="ghost"
+                      >
+                        删除本段
+                      </Button>
+                    ) : null
                   }
                   defaultExpanded={resumeDraft.education.length === 1 || index === resumeDraft.education.length - 1}
                   key={`education-${index}`}
@@ -1103,208 +1411,153 @@ export function ResumeDraftEditorPanel({
                   toggleLabel={`教育经历 ${index + 1} 条目开关`}
                 >
                   <div className="grid gap-4 md:grid-cols-2">
-                    <label className="field">
-                      <span>{`教育经历 ${index + 1} 中文学校`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateEducationLocalizedField(
-                            index,
-                            'schoolName',
-                            'zh',
-                            event.target.value,
-                          )
-                        }
-                        value={education.schoolName.zh}
-                        variant="secondary"
-                      />
-                    </label>
-                    <label className="field">
-                      <span>{`教育经历 ${index + 1} 英文学校`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateEducationLocalizedField(
-                            index,
-                            'schoolName',
-                            'en',
-                            event.target.value,
-                          )
-                        }
-                        value={education.schoolName.en}
-                        variant="secondary"
-                      />
-                    </label>
-
-                    <label className="field">
-                      <span>{`教育经历 ${index + 1} 中文学位`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateEducationLocalizedField(
-                            index,
-                            'degree',
-                            'zh',
-                            event.target.value,
-                          )
-                        }
-                        value={education.degree.zh}
-                        variant="secondary"
-                      />
-                    </label>
-                    <label className="field">
-                      <span>{`教育经历 ${index + 1} 英文学位`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateEducationLocalizedField(
-                            index,
-                            'degree',
-                            'en',
-                            event.target.value,
-                          )
-                        }
-                        value={education.degree.en}
-                        variant="secondary"
-                      />
-                    </label>
-
-                    <label className="field">
-                      <span>{`教育经历 ${index + 1} 中文专业`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateEducationLocalizedField(
-                            index,
-                            'fieldOfStudy',
-                            'zh',
-                            event.target.value,
-                          )
-                        }
-                        value={education.fieldOfStudy.zh}
-                        variant="secondary"
-                      />
-                    </label>
-                    <label className="field">
-                      <span>{`教育经历 ${index + 1} 英文专业`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateEducationLocalizedField(
-                            index,
-                            'fieldOfStudy',
-                            'en',
-                            event.target.value,
-                          )
-                        }
-                        value={education.fieldOfStudy.en}
-                        variant="secondary"
-                      />
-                    </label>
-
-                    <label className="field">
-                      <span>{`教育经历 ${index + 1} 开始时间`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateEducationPlainField(index, 'startDate', event.target.value)
-                        }
-                        value={education.startDate}
-                        variant="secondary"
-                      />
-                    </label>
-                    <label className="field">
-                      <span>{`教育经历 ${index + 1} 结束时间`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateEducationPlainField(index, 'endDate', event.target.value)
-                        }
-                        value={education.endDate}
-                        variant="secondary"
-                      />
-                    </label>
-
-                    <label className="field">
-                      <span>{`教育经历 ${index + 1} 中文地点`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateEducationLocalizedField(
-                            index,
-                            'location',
-                            'zh',
-                            event.target.value,
-                          )
-                        }
-                        value={education.location.zh}
-                        variant="secondary"
-                      />
-                    </label>
-                    <label className="field">
-                      <span>{`教育经历 ${index + 1} 英文地点`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateEducationLocalizedField(
-                            index,
-                            'location',
-                            'en',
-                            event.target.value,
-                          )
-                        }
-                        value={education.location.en}
-                        variant="secondary"
-                      />
-                    </label>
+                    <LocalizedEditorField
+                      label={
+                        isTranslationMode
+                          ? `教育经历 ${index + 1} 英文学校`
+                          : `教育经历 ${index + 1} 中文学校`
+                      }
+                      localeMode={editorLocaleMode}
+                      onChange={(value) =>
+                        updateEducationLocalizedField(
+                          index,
+                          'schoolName',
+                          editorLocaleMode,
+                          value,
+                        )
+                      }
+                      sourceValue={education.schoolName.zh}
+                      value={education.schoolName[editorLocaleMode]}
+                    />
+                    <LocalizedEditorField
+                      label={
+                        isTranslationMode
+                          ? `教育经历 ${index + 1} 英文学位`
+                          : `教育经历 ${index + 1} 中文学位`
+                      }
+                      localeMode={editorLocaleMode}
+                      onChange={(value) =>
+                        updateEducationLocalizedField(
+                          index,
+                          'degree',
+                          editorLocaleMode,
+                          value,
+                        )
+                      }
+                      sourceValue={education.degree.zh}
+                      value={education.degree[editorLocaleMode]}
+                    />
+                    <LocalizedEditorField
+                      label={
+                        isTranslationMode
+                          ? `教育经历 ${index + 1} 英文专业`
+                          : `教育经历 ${index + 1} 中文专业`
+                      }
+                      localeMode={editorLocaleMode}
+                      onChange={(value) =>
+                        updateEducationLocalizedField(
+                          index,
+                          'fieldOfStudy',
+                          editorLocaleMode,
+                          value,
+                        )
+                      }
+                      sourceValue={education.fieldOfStudy.zh}
+                      value={education.fieldOfStudy[editorLocaleMode]}
+                    />
+                    {!isTranslationMode ? (
+                      <>
+                        <label className="field">
+                          <span>{`教育经历 ${index + 1} 开始时间`}</span>
+                          <Input
+                            fullWidth
+                            onChange={(event) =>
+                              updateEducationPlainField(index, 'startDate', event.target.value)
+                            }
+                            value={education.startDate}
+                            variant="secondary"
+                          />
+                        </label>
+                        <label className="field">
+                          <span>{`教育经历 ${index + 1} 结束时间`}</span>
+                          <Input
+                            fullWidth
+                            onChange={(event) =>
+                              updateEducationPlainField(index, 'endDate', event.target.value)
+                            }
+                            value={education.endDate}
+                            variant="secondary"
+                          />
+                        </label>
+                      </>
+                    ) : null}
+                    <LocalizedEditorField
+                      label={
+                        isTranslationMode
+                          ? `教育经历 ${index + 1} 英文地点`
+                          : `教育经历 ${index + 1} 中文地点`
+                      }
+                      localeMode={editorLocaleMode}
+                      onChange={(value) =>
+                        updateEducationLocalizedField(
+                          index,
+                          'location',
+                          editorLocaleMode,
+                          value,
+                        )
+                      }
+                      sourceValue={education.location.zh}
+                      value={education.location[editorLocaleMode]}
+                    />
                   </div>
 
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <label className="field">
-                      <span>{`教育经历 ${index + 1} 中文亮点（每行一条）`}</span>
-                      <TextArea
-                        fullWidth
-                        onChange={(event) =>
-                          updateEducationHighlights(index, 'zh', event.target.value)
-                        }
-                        rows={4}
-                        value={
-                          draftFieldValues[
-                            buildDraftFieldKey('education', index, 'highlights', 'zh')
-                          ] ?? formatLocalizedLines(education.highlights, 'zh')
-                        }
-                        variant="secondary"
-                      />
-                    </label>
-                    <label className="field">
-                      <span>{`教育经历 ${index + 1} 英文亮点（每行一条）`}</span>
-                      <TextArea
-                        fullWidth
-                        onChange={(event) =>
-                          updateEducationHighlights(index, 'en', event.target.value)
-                        }
-                        rows={4}
-                        value={
-                          draftFieldValues[
-                            buildDraftFieldKey('education', index, 'highlights', 'en')
-                          ] ?? formatLocalizedLines(education.highlights, 'en')
-                        }
-                        variant="secondary"
-                      />
-                    </label>
-                  </div>
+                  <LocalizedEditorField
+                    label={
+                      isTranslationMode
+                        ? `教育经历 ${index + 1} 英文亮点（每行一条）`
+                        : `教育经历 ${index + 1} 中文亮点（每行一条）`
+                    }
+                    localeMode={editorLocaleMode}
+                    onChange={(value) =>
+                      updateEducationHighlights(index, editorLocaleMode, value)
+                    }
+                    rows={4}
+                    sourceValue={formatLocalizedLines(education.highlights, 'zh')}
+                    value={
+                      draftFieldValues[
+                        buildDraftFieldKey(
+                          'education',
+                          index,
+                          'highlights',
+                          editorLocaleMode,
+                        )
+                      ] ?? formatLocalizedLines(education.highlights, editorLocaleMode)
+                    }
+                    variant="textarea"
+                  />
                 </EditorEntry>
               ))}
             </EditorSection>
 
             <EditorSection
               action={
+                isTranslationMode
+                  ? renderTranslationActions('工作经历', {
+                      onCopy: copyExperienceTranslations,
+                      onClear: clearExperienceTranslations,
+                    })
+                  : (
                 <Button onClick={addExperience} size="sm" type="button" variant="outline">
                   新增工作经历
                 </Button>
+                    )
               }
               count={resumeDraft.experiences.length}
-              description="优先开放公司、岗位、时间、摘要、亮点和技术栈，满足岗位定向调整的主需求。"
+              description={
+                isTranslationMode
+                  ? '英文翻译工作区只维护公司、岗位、类型、地点、摘要和亮点的英文内容。'
+                  : '优先开放公司、岗位、时间、摘要、亮点和技术栈，满足岗位定向调整的主需求。'
+              }
               title="工作经历"
             >
               {resumeDraft.experiences.length === 0 ? (
@@ -1317,14 +1570,16 @@ export function ResumeDraftEditorPanel({
               {resumeDraft.experiences.map((experience, index) => (
                 <EditorEntry
                   action={
-                    <Button
-                      onClick={() => removeExperience(index)}
-                      size="sm"
-                      type="button"
-                      variant="ghost"
-                    >
-                      删除本段
-                    </Button>
+                    !isTranslationMode ? (
+                      <Button
+                        onClick={() => removeExperience(index)}
+                        size="sm"
+                        type="button"
+                        variant="ghost"
+                      >
+                        删除本段
+                      </Button>
+                    ) : null
                   }
                   defaultExpanded={
                     resumeDraft.experiences.length === 1 ||
@@ -1338,251 +1593,172 @@ export function ResumeDraftEditorPanel({
                   toggleLabel={`工作经历 ${index + 1} 条目开关`}
                 >
                   <div className="grid gap-4 md:grid-cols-2">
-                    <label className="field">
-                      <span>{`工作经历 ${index + 1} 中文公司`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateExperienceLocalizedField(
-                            index,
-                            'companyName',
-                            'zh',
-                            event.target.value,
-                          )
-                        }
-                        value={experience.companyName.zh}
-                        variant="secondary"
-                      />
-                    </label>
-                    <label className="field">
-                      <span>{`工作经历 ${index + 1} 英文公司`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateExperienceLocalizedField(
-                            index,
-                            'companyName',
-                            'en',
-                            event.target.value,
-                          )
-                        }
-                        value={experience.companyName.en}
-                        variant="secondary"
-                      />
-                    </label>
-
-                    <label className="field">
-                      <span>{`工作经历 ${index + 1} 中文岗位`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateExperienceLocalizedField(index, 'role', 'zh', event.target.value)
-                        }
-                        value={experience.role.zh}
-                        variant="secondary"
-                      />
-                    </label>
-                    <label className="field">
-                      <span>{`工作经历 ${index + 1} 英文岗位`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateExperienceLocalizedField(index, 'role', 'en', event.target.value)
-                        }
-                        value={experience.role.en}
-                        variant="secondary"
-                      />
-                    </label>
-
-                    <label className="field">
-                      <span>{`工作经历 ${index + 1} 中文类型`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateExperienceLocalizedField(
-                            index,
-                            'employmentType',
-                            'zh',
-                            event.target.value,
-                          )
-                        }
-                        value={experience.employmentType.zh}
-                        variant="secondary"
-                      />
-                    </label>
-                    <label className="field">
-                      <span>{`工作经历 ${index + 1} 英文类型`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateExperienceLocalizedField(
-                            index,
-                            'employmentType',
-                            'en',
-                            event.target.value,
-                          )
-                        }
-                        value={experience.employmentType.en}
-                        variant="secondary"
-                      />
-                    </label>
-
-                    <label className="field">
-                      <span>{`工作经历 ${index + 1} 开始时间`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateExperiencePlainField(index, 'startDate', event.target.value)
-                        }
-                        value={experience.startDate}
-                        variant="secondary"
-                      />
-                    </label>
-                    <label className="field">
-                      <span>{`工作经历 ${index + 1} 结束时间`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateExperiencePlainField(index, 'endDate', event.target.value)
-                        }
-                        value={experience.endDate}
-                        variant="secondary"
-                      />
-                    </label>
-
-                    <label className="field">
-                      <span>{`工作经历 ${index + 1} 中文地点`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateExperienceLocalizedField(
-                            index,
-                            'location',
-                            'zh',
-                            event.target.value,
-                          )
-                        }
-                        value={experience.location.zh}
-                        variant="secondary"
-                      />
-                    </label>
-                    <label className="field">
-                      <span>{`工作经历 ${index + 1} 英文地点`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateExperienceLocalizedField(
-                            index,
-                            'location',
-                            'en',
-                            event.target.value,
-                          )
-                        }
-                        value={experience.location.en}
-                        variant="secondary"
-                      />
-                    </label>
-                  </div>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <label className="field">
-                      <span>{`工作经历 ${index + 1} 中文摘要`}</span>
-                      <TextArea
-                        fullWidth
-                        onChange={(event) =>
-                          updateExperienceLocalizedField(
-                            index,
-                            'summary',
-                            'zh',
-                            event.target.value,
-                          )
-                        }
-                        rows={4}
-                        value={experience.summary.zh}
-                        variant="secondary"
-                      />
-                    </label>
-                    <label className="field">
-                      <span>{`工作经历 ${index + 1} 英文摘要`}</span>
-                      <TextArea
-                        fullWidth
-                        onChange={(event) =>
-                          updateExperienceLocalizedField(
-                            index,
-                            'summary',
-                            'en',
-                            event.target.value,
-                          )
-                        }
-                        rows={4}
-                        value={experience.summary.en}
-                        variant="secondary"
-                      />
-                    </label>
-                  </div>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <label className="field">
-                      <span>{`工作经历 ${index + 1} 中文亮点（每行一条）`}</span>
-                      <TextArea
-                        fullWidth
-                        onChange={(event) =>
-                          updateExperienceHighlights(index, 'zh', event.target.value)
-                        }
-                        rows={5}
-                        value={
-                          draftFieldValues[
-                            buildDraftFieldKey('experience', index, 'highlights', 'zh')
-                          ] ?? formatLocalizedLines(experience.highlights, 'zh')
-                        }
-                        variant="secondary"
-                      />
-                    </label>
-                    <label className="field">
-                      <span>{`工作经历 ${index + 1} 英文亮点（每行一条）`}</span>
-                      <TextArea
-                        fullWidth
-                        onChange={(event) =>
-                          updateExperienceHighlights(index, 'en', event.target.value)
-                        }
-                        rows={5}
-                        value={
-                          draftFieldValues[
-                            buildDraftFieldKey('experience', index, 'highlights', 'en')
-                          ] ?? formatLocalizedLines(experience.highlights, 'en')
-                        }
-                        variant="secondary"
-                      />
-                    </label>
-                  </div>
-
-                  <label className="field">
-                    <span>{`工作经历 ${index + 1} 技术栈（逗号分隔）`}</span>
-                    <Input
-                      fullWidth
-                      onChange={(event) =>
-                        updateExperienceTechnologies(index, event.target.value)
+                    <LocalizedEditorField
+                      label={isTranslationMode ? `工作经历 ${index + 1} 英文公司` : `工作经历 ${index + 1} 中文公司`}
+                      localeMode={editorLocaleMode}
+                      onChange={(value) =>
+                        updateExperienceLocalizedField(
+                          index,
+                          'companyName',
+                          editorLocaleMode,
+                          value,
+                        )
                       }
-                      value={
-                        draftFieldValues[
-                          buildDraftFieldKey('experience', index, 'technologies')
-                        ] ?? formatCommaSeparatedValues(experience.technologies)
-                      }
-                      variant="secondary"
+                      sourceValue={experience.companyName.zh}
+                      value={experience.companyName[editorLocaleMode]}
                     />
-                  </label>
+                    <LocalizedEditorField
+                      label={isTranslationMode ? `工作经历 ${index + 1} 英文岗位` : `工作经历 ${index + 1} 中文岗位`}
+                      localeMode={editorLocaleMode}
+                      onChange={(value) =>
+                        updateExperienceLocalizedField(
+                          index,
+                          'role',
+                          editorLocaleMode,
+                          value,
+                        )
+                      }
+                      sourceValue={experience.role.zh}
+                      value={experience.role[editorLocaleMode]}
+                    />
+                    <LocalizedEditorField
+                      label={isTranslationMode ? `工作经历 ${index + 1} 英文类型` : `工作经历 ${index + 1} 中文类型`}
+                      localeMode={editorLocaleMode}
+                      onChange={(value) =>
+                        updateExperienceLocalizedField(
+                          index,
+                          'employmentType',
+                          editorLocaleMode,
+                          value,
+                        )
+                      }
+                      sourceValue={experience.employmentType.zh}
+                      value={experience.employmentType[editorLocaleMode]}
+                    />
+                    {!isTranslationMode ? (
+                      <>
+                        <label className="field">
+                          <span>{`工作经历 ${index + 1} 开始时间`}</span>
+                          <Input
+                            fullWidth
+                            onChange={(event) =>
+                              updateExperiencePlainField(index, 'startDate', event.target.value)
+                            }
+                            value={experience.startDate}
+                            variant="secondary"
+                          />
+                        </label>
+                        <label className="field">
+                          <span>{`工作经历 ${index + 1} 结束时间`}</span>
+                          <Input
+                            fullWidth
+                            onChange={(event) =>
+                              updateExperiencePlainField(index, 'endDate', event.target.value)
+                            }
+                            value={experience.endDate}
+                            variant="secondary"
+                          />
+                        </label>
+                      </>
+                    ) : null}
+                    <LocalizedEditorField
+                      label={isTranslationMode ? `工作经历 ${index + 1} 英文地点` : `工作经历 ${index + 1} 中文地点`}
+                      localeMode={editorLocaleMode}
+                      onChange={(value) =>
+                        updateExperienceLocalizedField(
+                          index,
+                          'location',
+                          editorLocaleMode,
+                          value,
+                        )
+                      }
+                      sourceValue={experience.location.zh}
+                      value={experience.location[editorLocaleMode]}
+                    />
+                  </div>
+
+                  <LocalizedEditorField
+                    label={isTranslationMode ? `工作经历 ${index + 1} 英文摘要` : `工作经历 ${index + 1} 中文摘要`}
+                    localeMode={editorLocaleMode}
+                    onChange={(value) =>
+                      updateExperienceLocalizedField(
+                        index,
+                        'summary',
+                        editorLocaleMode,
+                        value,
+                      )
+                    }
+                    rows={4}
+                    sourceValue={experience.summary.zh}
+                    value={experience.summary[editorLocaleMode]}
+                    variant="textarea"
+                  />
+
+                  <LocalizedEditorField
+                    label={
+                      isTranslationMode
+                        ? `工作经历 ${index + 1} 英文亮点（每行一条）`
+                        : `工作经历 ${index + 1} 中文亮点（每行一条）`
+                    }
+                    localeMode={editorLocaleMode}
+                    onChange={(value) =>
+                      updateExperienceHighlights(index, editorLocaleMode, value)
+                    }
+                    rows={5}
+                    sourceValue={formatLocalizedLines(experience.highlights, 'zh')}
+                    value={
+                      draftFieldValues[
+                        buildDraftFieldKey(
+                          'experience',
+                          index,
+                          'highlights',
+                          editorLocaleMode,
+                        )
+                      ] ?? formatLocalizedLines(experience.highlights, editorLocaleMode)
+                    }
+                    variant="textarea"
+                  />
+
+                  {!isTranslationMode ? (
+                    <label className="field">
+                      <span>{`工作经历 ${index + 1} 技术栈（逗号分隔）`}</span>
+                      <Input
+                        fullWidth
+                        onChange={(event) =>
+                          updateExperienceTechnologies(index, event.target.value)
+                        }
+                        value={
+                          draftFieldValues[
+                            buildDraftFieldKey('experience', index, 'technologies')
+                          ] ?? formatCommaSeparatedValues(experience.technologies)
+                        }
+                        variant="secondary"
+                      />
+                    </label>
+                  ) : null}
                 </EditorEntry>
               ))}
             </EditorSection>
 
             <EditorSection
               action={
+                isTranslationMode
+                  ? renderTranslationActions('项目经历', {
+                      onCopy: copyProjectTranslations,
+                      onClear: clearProjectTranslations,
+                    })
+                  : (
                 <Button onClick={addProject} size="sm" type="button" variant="outline">
                   新增项目经历
                 </Button>
+                    )
               }
               count={resumeDraft.projects.length}
-              description="当前已接通项目名称、角色、时间、摘要、亮点、技术栈与项目链接，保持与公开展示结构一致。"
+              description={
+                isTranslationMode
+                  ? '英文翻译工作区只维护项目名称、角色、摘要、亮点与链接标签的英文内容。'
+                  : '当前已接通项目名称、角色、时间、摘要、亮点、技术栈与项目链接，保持与公开展示结构一致。'
+              }
               title="项目经历"
             >
               {resumeDraft.projects.length === 0 ? (
@@ -1595,14 +1771,16 @@ export function ResumeDraftEditorPanel({
               {resumeDraft.projects.map((project, index) => (
                 <EditorEntry
                   action={
-                    <Button
-                      onClick={() => removeProject(index)}
-                      size="sm"
-                      type="button"
-                      variant="ghost"
-                    >
-                      删除本段
-                    </Button>
+                    !isTranslationMode ? (
+                      <Button
+                        onClick={() => removeProject(index)}
+                        size="sm"
+                        type="button"
+                        variant="ghost"
+                      >
+                        删除本段
+                      </Button>
+                    ) : null
                   }
                   defaultExpanded={
                     resumeDraft.projects.length === 1 ||
@@ -1614,151 +1792,99 @@ export function ResumeDraftEditorPanel({
                   toggleLabel={`项目经历 ${index + 1} 条目开关`}
                 >
                   <div className="grid gap-4 md:grid-cols-2">
-                    <label className="field">
-                      <span>{`项目经历 ${index + 1} 中文名称`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateProjectLocalizedField(index, 'name', 'zh', event.target.value)
-                        }
-                        value={project.name.zh}
-                        variant="secondary"
-                      />
-                    </label>
-                    <label className="field">
-                      <span>{`项目经历 ${index + 1} 英文名称`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateProjectLocalizedField(index, 'name', 'en', event.target.value)
-                        }
-                        value={project.name.en}
-                        variant="secondary"
-                      />
-                    </label>
-
-                    <label className="field">
-                      <span>{`项目经历 ${index + 1} 中文角色`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateProjectLocalizedField(index, 'role', 'zh', event.target.value)
-                        }
-                        value={project.role.zh}
-                        variant="secondary"
-                      />
-                    </label>
-                    <label className="field">
-                      <span>{`项目经历 ${index + 1} 英文角色`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateProjectLocalizedField(index, 'role', 'en', event.target.value)
-                        }
-                        value={project.role.en}
-                        variant="secondary"
-                      />
-                    </label>
-
-                    <label className="field">
-                      <span>{`项目经历 ${index + 1} 开始时间`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateProjectPlainField(index, 'startDate', event.target.value)
-                        }
-                        value={project.startDate}
-                        variant="secondary"
-                      />
-                    </label>
-                    <label className="field">
-                      <span>{`项目经历 ${index + 1} 结束时间`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateProjectPlainField(index, 'endDate', event.target.value)
-                        }
-                        value={project.endDate}
-                        variant="secondary"
-                      />
-                    </label>
-                  </div>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <label className="field">
-                      <span>{`项目经历 ${index + 1} 中文摘要`}</span>
-                      <TextArea
-                        fullWidth
-                        onChange={(event) =>
-                          updateProjectLocalizedField(index, 'summary', 'zh', event.target.value)
-                        }
-                        rows={4}
-                        value={project.summary.zh}
-                        variant="secondary"
-                      />
-                    </label>
-                    <label className="field">
-                      <span>{`项目经历 ${index + 1} 英文摘要`}</span>
-                      <TextArea
-                        fullWidth
-                        onChange={(event) =>
-                          updateProjectLocalizedField(index, 'summary', 'en', event.target.value)
-                        }
-                        rows={4}
-                        value={project.summary.en}
-                        variant="secondary"
-                      />
-                    </label>
-                  </div>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <label className="field">
-                      <span>{`项目经历 ${index + 1} 中文亮点（每行一条）`}</span>
-                      <TextArea
-                        fullWidth
-                        onChange={(event) =>
-                          updateProjectHighlights(index, 'zh', event.target.value)
-                        }
-                        rows={5}
-                        value={
-                          draftFieldValues[
-                            buildDraftFieldKey('project', index, 'highlights', 'zh')
-                          ] ?? formatLocalizedLines(project.highlights, 'zh')
-                        }
-                        variant="secondary"
-                      />
-                    </label>
-                    <label className="field">
-                      <span>{`项目经历 ${index + 1} 英文亮点（每行一条）`}</span>
-                      <TextArea
-                        fullWidth
-                        onChange={(event) =>
-                          updateProjectHighlights(index, 'en', event.target.value)
-                        }
-                        rows={5}
-                        value={
-                          draftFieldValues[
-                            buildDraftFieldKey('project', index, 'highlights', 'en')
-                          ] ?? formatLocalizedLines(project.highlights, 'en')
-                        }
-                        variant="secondary"
-                      />
-                    </label>
-                  </div>
-
-                  <label className="field">
-                    <span>{`项目经历 ${index + 1} 技术栈（逗号分隔）`}</span>
-                    <Input
-                      fullWidth
-                      onChange={(event) => updateProjectTechnologies(index, event.target.value)}
-                      value={
-                        draftFieldValues[
-                          buildDraftFieldKey('project', index, 'technologies')
-                        ] ?? formatCommaSeparatedValues(project.technologies)
+                    <LocalizedEditorField
+                      label={isTranslationMode ? `项目经历 ${index + 1} 英文名称` : `项目经历 ${index + 1} 中文名称`}
+                      localeMode={editorLocaleMode}
+                      onChange={(value) =>
+                        updateProjectLocalizedField(index, 'name', editorLocaleMode, value)
                       }
-                      variant="secondary"
+                      sourceValue={project.name.zh}
+                      value={project.name[editorLocaleMode]}
                     />
-                  </label>
+                    <LocalizedEditorField
+                      label={isTranslationMode ? `项目经历 ${index + 1} 英文角色` : `项目经历 ${index + 1} 中文角色`}
+                      localeMode={editorLocaleMode}
+                      onChange={(value) =>
+                        updateProjectLocalizedField(index, 'role', editorLocaleMode, value)
+                      }
+                      sourceValue={project.role.zh}
+                      value={project.role[editorLocaleMode]}
+                    />
+                    {!isTranslationMode ? (
+                      <>
+                        <label className="field">
+                          <span>{`项目经历 ${index + 1} 开始时间`}</span>
+                          <Input
+                            fullWidth
+                            onChange={(event) =>
+                              updateProjectPlainField(index, 'startDate', event.target.value)
+                            }
+                            value={project.startDate}
+                            variant="secondary"
+                          />
+                        </label>
+                        <label className="field">
+                          <span>{`项目经历 ${index + 1} 结束时间`}</span>
+                          <Input
+                            fullWidth
+                            onChange={(event) =>
+                              updateProjectPlainField(index, 'endDate', event.target.value)
+                            }
+                            value={project.endDate}
+                            variant="secondary"
+                          />
+                        </label>
+                      </>
+                    ) : null}
+                  </div>
+
+                  <LocalizedEditorField
+                    label={isTranslationMode ? `项目经历 ${index + 1} 英文摘要` : `项目经历 ${index + 1} 中文摘要`}
+                    localeMode={editorLocaleMode}
+                    onChange={(value) =>
+                      updateProjectLocalizedField(index, 'summary', editorLocaleMode, value)
+                    }
+                    rows={4}
+                    sourceValue={project.summary.zh}
+                    value={project.summary[editorLocaleMode]}
+                    variant="textarea"
+                  />
+
+                  <LocalizedEditorField
+                    label={
+                      isTranslationMode
+                        ? `项目经历 ${index + 1} 英文亮点（每行一条）`
+                        : `项目经历 ${index + 1} 中文亮点（每行一条）`
+                    }
+                    localeMode={editorLocaleMode}
+                    onChange={(value) =>
+                      updateProjectHighlights(index, editorLocaleMode, value)
+                    }
+                    rows={5}
+                    sourceValue={formatLocalizedLines(project.highlights, 'zh')}
+                    value={
+                      draftFieldValues[
+                        buildDraftFieldKey('project', index, 'highlights', editorLocaleMode)
+                      ] ?? formatLocalizedLines(project.highlights, editorLocaleMode)
+                    }
+                    variant="textarea"
+                  />
+
+                  {!isTranslationMode ? (
+                    <label className="field">
+                      <span>{`项目经历 ${index + 1} 技术栈（逗号分隔）`}</span>
+                      <Input
+                        fullWidth
+                        onChange={(event) => updateProjectTechnologies(index, event.target.value)}
+                        value={
+                          draftFieldValues[
+                            buildDraftFieldKey('project', index, 'technologies')
+                          ] ?? formatCommaSeparatedValues(project.technologies)
+                        }
+                        variant="secondary"
+                      />
+                    </label>
+                  ) : null}
 
                   <div className="stack">
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -1767,17 +1893,21 @@ export function ResumeDraftEditorPanel({
                           项目链接
                         </h5>
                         <p className="muted">
-                          可补充项目地址、演示入口或仓库链接，公开页和导出内容会复用这些字段。
+                          {isTranslationMode
+                            ? '这里集中维护项目链接标签的英文版本。链接地址与新增删除动作仍在中文主编辑处理。'
+                            : '可补充项目地址、演示入口或仓库链接，公开页和导出内容会复用这些字段。'}
                         </p>
                       </div>
-                      <Button
-                        onClick={() => addProjectLink(index)}
-                        size="sm"
-                        type="button"
-                        variant="outline"
-                      >
-                        新增项目链接
-                      </Button>
+                      {!isTranslationMode ? (
+                        <Button
+                          onClick={() => addProjectLink(index)}
+                          size="sm"
+                          type="button"
+                          variant="outline"
+                        >
+                          新增项目链接
+                        </Button>
+                      ) : null}
                     </div>
 
                     {project.links.length === 0 ? (
@@ -1796,64 +1926,51 @@ export function ResumeDraftEditorPanel({
                             </h6>
                             <p className="muted">{link.url || link.label.zh || '未命名链接'}</p>
                           </div>
-                          <Button
-                            onClick={() => removeProjectLink(index, linkIndex)}
-                            size="sm"
-                            type="button"
-                            variant="ghost"
-                          >
-                            删除本条
-                          </Button>
+                          {!isTranslationMode ? (
+                            <Button
+                              onClick={() => removeProjectLink(index, linkIndex)}
+                              size="sm"
+                              type="button"
+                              variant="ghost"
+                            >
+                              删除本条
+                            </Button>
+                          ) : null}
                         </div>
 
-                        <div className="grid gap-4 md:grid-cols-2">
+                        <LocalizedEditorField
+                          label={
+                            isTranslationMode
+                              ? `项目经历 ${index + 1} 链接 ${linkIndex + 1} 英文标签`
+                              : `项目经历 ${index + 1} 链接 ${linkIndex + 1} 中文标签`
+                          }
+                          localeMode={editorLocaleMode}
+                          onChange={(value) =>
+                            updateProjectLinkField(
+                              index,
+                              linkIndex,
+                              'label',
+                              value,
+                              editorLocaleMode,
+                            )
+                          }
+                          sourceValue={link.label.zh}
+                          value={link.label[editorLocaleMode]}
+                        />
+
+                        {!isTranslationMode ? (
                           <label className="field">
-                            <span>{`项目经历 ${index + 1} 链接 ${linkIndex + 1} 中文标签`}</span>
+                            <span>{`项目经历 ${index + 1} 链接 ${linkIndex + 1} 地址`}</span>
                             <Input
                               fullWidth
                               onChange={(event) =>
-                                updateProjectLinkField(
-                                  index,
-                                  linkIndex,
-                                  'label',
-                                  event.target.value,
-                                  'zh',
-                                )
+                                updateProjectLinkField(index, linkIndex, 'url', event.target.value)
                               }
-                              value={link.label.zh}
+                              value={link.url}
                               variant="secondary"
                             />
                           </label>
-                          <label className="field">
-                            <span>{`项目经历 ${index + 1} 链接 ${linkIndex + 1} 英文标签`}</span>
-                            <Input
-                              fullWidth
-                              onChange={(event) =>
-                                updateProjectLinkField(
-                                  index,
-                                  linkIndex,
-                                  'label',
-                                  event.target.value,
-                                  'en',
-                                )
-                              }
-                              value={link.label.en}
-                              variant="secondary"
-                            />
-                          </label>
-                        </div>
-
-                        <label className="field">
-                          <span>{`项目经历 ${index + 1} 链接 ${linkIndex + 1} 地址`}</span>
-                          <Input
-                            fullWidth
-                            onChange={(event) =>
-                              updateProjectLinkField(index, linkIndex, 'url', event.target.value)
-                            }
-                            value={link.url}
-                            variant="secondary"
-                          />
-                        </label>
+                        ) : null}
                       </div>
                     ))}
                   </div>
@@ -1863,12 +1980,23 @@ export function ResumeDraftEditorPanel({
 
             <EditorSection
               action={
+                isTranslationMode
+                  ? renderTranslationActions('技能组', {
+                      onCopy: copySkillTranslations,
+                      onClear: clearSkillTranslations,
+                    })
+                  : (
                 <Button onClick={addSkillGroup} size="sm" type="button" variant="outline">
                   新增技能组
                 </Button>
+                    )
               }
               count={resumeDraft.skills.length}
-              description="按技能组维护关键词，公开页会按组展示能力结构。"
+              description={
+                isTranslationMode
+                  ? '英文翻译工作区只维护技能组名称。关键词仍按当前原始技术名在中文主编辑中维护。'
+                  : '按技能组维护关键词，公开页会按组展示能力结构。'
+              }
               title="技能组"
             >
               {resumeDraft.skills.length === 0 ? (
@@ -1881,14 +2009,16 @@ export function ResumeDraftEditorPanel({
               {resumeDraft.skills.map((skill, index) => (
                 <EditorEntry
                   action={
-                    <Button
-                      onClick={() => removeSkillGroup(index)}
-                      size="sm"
-                      type="button"
-                      variant="ghost"
-                    >
-                      删除本组
-                    </Button>
+                    !isTranslationMode ? (
+                      <Button
+                        onClick={() => removeSkillGroup(index)}
+                        size="sm"
+                        type="button"
+                        variant="ghost"
+                      >
+                        删除本组
+                      </Button>
+                    ) : null
                   }
                   defaultExpanded={
                     resumeDraft.skills.length === 1 ||
@@ -1899,55 +2029,53 @@ export function ResumeDraftEditorPanel({
                   title={`技能组 ${index + 1}`}
                   toggleLabel={`技能组 ${index + 1} 条目开关`}
                 >
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <label className="field">
-                      <span>{`技能组 ${index + 1} 中文名称`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateSkillLocalizedField(index, 'zh', event.target.value)
-                        }
-                        value={skill.name.zh}
-                        variant="secondary"
-                      />
-                    </label>
-                    <label className="field">
-                      <span>{`技能组 ${index + 1} 英文名称`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateSkillLocalizedField(index, 'en', event.target.value)
-                        }
-                        value={skill.name.en}
-                        variant="secondary"
-                      />
-                    </label>
-                  </div>
+                  <LocalizedEditorField
+                    label={isTranslationMode ? `技能组 ${index + 1} 英文名称` : `技能组 ${index + 1} 中文名称`}
+                    localeMode={editorLocaleMode}
+                    onChange={(value) =>
+                      updateSkillLocalizedField(index, editorLocaleMode, value)
+                    }
+                    sourceValue={skill.name.zh}
+                    value={skill.name[editorLocaleMode]}
+                  />
 
-                  <label className="field">
-                    <span>{`技能组 ${index + 1} 关键词（逗号分隔）`}</span>
-                    <Input
-                      fullWidth
-                      onChange={(event) => updateSkillKeywords(index, event.target.value)}
-                      value={
-                        draftFieldValues[buildDraftFieldKey('skill', index, 'keywords')] ??
-                        formatCommaSeparatedValues(skill.keywords)
-                      }
-                      variant="secondary"
-                    />
-                  </label>
+                  {!isTranslationMode ? (
+                    <label className="field">
+                      <span>{`技能组 ${index + 1} 关键词（逗号分隔）`}</span>
+                      <Input
+                        fullWidth
+                        onChange={(event) => updateSkillKeywords(index, event.target.value)}
+                        value={
+                          draftFieldValues[buildDraftFieldKey('skill', index, 'keywords')] ??
+                          formatCommaSeparatedValues(skill.keywords)
+                        }
+                        variant="secondary"
+                      />
+                    </label>
+                  ) : null}
                 </EditorEntry>
               ))}
             </EditorSection>
 
             <EditorSection
               action={
+                isTranslationMode
+                  ? renderTranslationActions('亮点', {
+                      onCopy: copyHighlightTranslations,
+                      onClear: clearHighlightTranslations,
+                    })
+                  : (
                 <Button onClick={addHighlight} size="sm" type="button" variant="outline">
                   新增亮点
                 </Button>
+                    )
               }
               count={resumeDraft.highlights.length}
-              description="维护个人优势、开源、团队协作等补充亮点，丰富公开页结尾信息。"
+              description={
+                isTranslationMode
+                  ? '英文翻译工作区集中维护亮点标题和描述，方便后续对接 AI / 工具翻译。'
+                  : '维护个人优势、开源、团队协作等补充亮点，丰富公开页结尾信息。'
+              }
               title="亮点"
             >
               {resumeDraft.highlights.length === 0 ? (
@@ -1960,14 +2088,16 @@ export function ResumeDraftEditorPanel({
               {resumeDraft.highlights.map((highlight, index) => (
                 <EditorEntry
                   action={
-                    <Button
-                      onClick={() => removeHighlight(index)}
-                      size="sm"
-                      type="button"
-                      variant="ghost"
-                    >
-                      删除本条
-                    </Button>
+                    !isTranslationMode ? (
+                      <Button
+                        onClick={() => removeHighlight(index)}
+                        size="sm"
+                        type="button"
+                        variant="ghost"
+                      >
+                        删除本条
+                      </Button>
+                    ) : null
                   }
                   defaultExpanded={
                     resumeDraft.highlights.length === 1 ||
@@ -1978,77 +2108,32 @@ export function ResumeDraftEditorPanel({
                   title={`亮点 ${index + 1}`}
                   toggleLabel={`亮点 ${index + 1} 条目开关`}
                 >
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <label className="field">
-                      <span>{`亮点 ${index + 1} 中文标题`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateHighlightLocalizedField(
-                            index,
-                            'title',
-                            'zh',
-                            event.target.value,
-                          )
-                        }
-                        value={highlight.title.zh}
-                        variant="secondary"
-                      />
-                    </label>
-                    <label className="field">
-                      <span>{`亮点 ${index + 1} 英文标题`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateHighlightLocalizedField(
-                            index,
-                            'title',
-                            'en',
-                            event.target.value,
-                          )
-                        }
-                        value={highlight.title.en}
-                        variant="secondary"
-                      />
-                    </label>
-                  </div>
+                  <LocalizedEditorField
+                    label={isTranslationMode ? `亮点 ${index + 1} 英文标题` : `亮点 ${index + 1} 中文标题`}
+                    localeMode={editorLocaleMode}
+                    onChange={(value) =>
+                      updateHighlightLocalizedField(index, 'title', editorLocaleMode, value)
+                    }
+                    sourceValue={highlight.title.zh}
+                    value={highlight.title[editorLocaleMode]}
+                  />
 
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <label className="field">
-                      <span>{`亮点 ${index + 1} 中文描述`}</span>
-                      <TextArea
-                        fullWidth
-                        onChange={(event) =>
-                          updateHighlightLocalizedField(
-                            index,
-                            'description',
-                            'zh',
-                            event.target.value,
-                          )
-                        }
-                        rows={4}
-                        value={highlight.description.zh}
-                        variant="secondary"
-                      />
-                    </label>
-                    <label className="field">
-                      <span>{`亮点 ${index + 1} 英文描述`}</span>
-                      <TextArea
-                        fullWidth
-                        onChange={(event) =>
-                          updateHighlightLocalizedField(
-                            index,
-                            'description',
-                            'en',
-                            event.target.value,
-                          )
-                        }
-                        rows={4}
-                        value={highlight.description.en}
-                        variant="secondary"
-                      />
-                    </label>
-                  </div>
+                  <LocalizedEditorField
+                    label={isTranslationMode ? `亮点 ${index + 1} 英文描述` : `亮点 ${index + 1} 中文描述`}
+                    localeMode={editorLocaleMode}
+                    onChange={(value) =>
+                      updateHighlightLocalizedField(
+                        index,
+                        'description',
+                        editorLocaleMode,
+                        value,
+                      )
+                    }
+                    rows={4}
+                    sourceValue={highlight.description.zh}
+                    value={highlight.description[editorLocaleMode]}
+                    variant="textarea"
+                  />
                 </EditorEntry>
               ))}
             </EditorSection>

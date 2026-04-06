@@ -65,7 +65,7 @@ describe('ResumeDraftEditorPanel', () => {
     expect(screen.getByText('正在加载草稿...')).toBeInTheDocument();
 
     expect(await screen.findByDisplayValue('付寅生')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Full-Stack Engineer')).toBeInTheDocument();
+    expect(screen.queryByDisplayValue('Full-Stack Engineer')).not.toBeInTheDocument();
     expect(loadDraft).toHaveBeenCalled();
   });
 
@@ -105,6 +105,36 @@ describe('ResumeDraftEditorPanel', () => {
     });
 
     expect(screen.getByLabelText('中文姓名')).toBeInTheDocument();
+  });
+
+  it('should switch between chinese main editing and english translation workspace', async () => {
+    cleanup();
+    const user = userEvent.setup();
+    const loadDraft = vi.fn().mockResolvedValue(draftSnapshot);
+
+    render(
+      <ResumeDraftEditorPanel
+        accessToken="demo-token"
+        apiBaseUrl="http://localhost:5577"
+        canEdit
+        loadDraft={loadDraft}
+        saveDraft={vi.fn()}
+      />,
+    );
+
+    expect(await screen.findByLabelText('中文姓名')).toBeInTheDocument();
+    expect(screen.queryByLabelText('英文姓名')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '英文翻译工作区' }));
+
+    expect(await screen.findByLabelText(/英文姓名/)).toBeInTheDocument();
+    expect(screen.queryByLabelText('中文姓名')).not.toBeInTheDocument();
+    expect(screen.getByText('中文参考：付寅生')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '中文主编辑' }));
+
+    expect(await screen.findByLabelText('中文姓名')).toBeInTheDocument();
+    expect(screen.queryByLabelText('英文姓名')).not.toBeInTheDocument();
   });
 
   it(
@@ -153,6 +183,64 @@ describe('ResumeDraftEditorPanel', () => {
       expect(
         await screen.findByText('草稿已保存。公开站内容不会自动变化，仍需手动发布。'),
       ).toBeInTheDocument();
+    },
+    10000,
+  );
+
+  it(
+    'should support english translation actions and save english payload from translation workspace',
+    async () => {
+      cleanup();
+      const user = userEvent.setup();
+      const loadDraft = vi.fn().mockResolvedValue(draftSnapshot);
+      const saveDraft = vi.fn().mockImplementation(async ({ resume }) => ({
+        ...draftSnapshot,
+        updatedAt: '2026-03-25T10:10:00.000Z',
+        resume,
+      }));
+
+      render(
+        <ResumeDraftEditorPanel
+          accessToken="demo-token"
+          apiBaseUrl="http://localhost:5577"
+          canEdit
+          loadDraft={loadDraft}
+          saveDraft={saveDraft}
+        />,
+      );
+
+      await screen.findByLabelText('中文姓名');
+
+      await user.click(screen.getByRole('button', { name: '英文翻译工作区' }));
+      await user.click(
+        screen.getByRole('button', { name: '基础信息 复制中文到英文' }),
+      );
+
+      expect(await screen.findByLabelText(/英文姓名/)).toHaveValue('付寅生');
+
+      await user.click(
+        screen.getByRole('button', { name: '基础信息 清空英文' }),
+      );
+      expect(screen.getByLabelText(/英文姓名/)).toHaveValue('');
+
+      await user.type(screen.getByLabelText(/英文标题/), 'Senior Full-Stack Engineer');
+      await user.type(screen.getByLabelText(/英文姓名/), 'Yinsheng Fu');
+      await user.click(screen.getByRole('button', { name: '保存当前草稿' }));
+
+      await waitFor(() => {
+        expect(saveDraft).toHaveBeenCalledTimes(1);
+      });
+
+      const submittedResume = saveDraft.mock.calls[0]?.[0]?.resume;
+
+      expect(submittedResume.profile.fullName).toEqual({
+        zh: '付寅生',
+        en: 'Yinsheng Fu',
+      });
+      expect(submittedResume.profile.headline).toEqual({
+        zh: '全栈开发工程师',
+        en: 'Senior Full-Stack Engineer',
+      });
     },
     10000,
   );
@@ -381,7 +469,8 @@ describe('ResumeDraftEditorPanel', () => {
       );
 
       await user.type(screen.getByLabelText('中文兴趣方向（每行一条）'), '羽毛球');
-      await user.type(screen.getByLabelText('英文兴趣方向（每行一条）'), 'Badminton');
+      await user.click(screen.getByRole('button', { name: '英文翻译工作区' }));
+      await user.type(screen.getByLabelText(/英文兴趣方向（每行一条）/), 'Badminton');
 
       await user.click(screen.getByRole('button', { name: '保存当前草稿' }));
 
