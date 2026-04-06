@@ -69,6 +69,44 @@ describe('ResumeDraftEditorPanel', () => {
     expect(loadDraft).toHaveBeenCalled();
   });
 
+  it('should support collapsing and expanding editor modules', async () => {
+    cleanup();
+    const user = userEvent.setup();
+    const loadDraft = vi.fn().mockResolvedValue(draftSnapshot);
+
+    render(
+      <ResumeDraftEditorPanel
+        accessToken="demo-token"
+        apiBaseUrl="http://localhost:5577"
+        canEdit
+        loadDraft={loadDraft}
+        saveDraft={vi.fn()}
+      />,
+    );
+
+    expect(await screen.findByDisplayValue('付寅生')).toBeInTheDocument();
+
+    const profileSectionTrigger = screen.getByRole('button', {
+      name: '基础信息 模块开关',
+    });
+
+    expect(profileSectionTrigger).toHaveAttribute('aria-expanded', 'true');
+
+    await user.click(profileSectionTrigger);
+
+    await waitFor(() => {
+      expect(profileSectionTrigger).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    await user.click(profileSectionTrigger);
+
+    await waitFor(() => {
+      expect(profileSectionTrigger).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    expect(screen.getByLabelText('中文姓名')).toBeInTheDocument();
+  });
+
   it(
     'should save edited draft profile without auto publishing',
     async () => {

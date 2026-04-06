@@ -55,62 +55,48 @@ export function AdminResumeShell() {
 
   return (
     <div className="stack">
-      <section className="grid gap-4 xl:grid-cols-2">
-        <Card className="border border-zinc-200/70 dark:border-zinc-800">
-          <CardHeader className="flex flex-col items-start gap-3">
-            <div className="flex flex-wrap gap-2">
-              <Chip size="sm">
-                当前账号：{currentUser.username}
-              </Chip>
-              <Chip size="sm">
-                编辑模式：{currentUser.capabilities.canEditResume ? '可写' : '只读'}
-              </Chip>
-            </div>
-            <div className="space-y-2">
-              <CardTitle className="text-3xl font-semibold tracking-tight">
-                简历编辑
-              </CardTitle>
-              <CardDescription className="max-w-2xl leading-7">
-                这一页只负责简历草稿维护。内容保存后不会自动影响公开站，仍然需要到发布页手动发布，方便教学上清楚区分“编辑态”和“公开态”。
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent className="stack">
-            {currentUser.capabilities.canEditResume ? (
-              <div className="status-box">
-                当前已接通标准简历主模块编辑，后台可维护草稿后再手动发布到公开站。
-              </div>
-            ) : (
-              <div className="readonly-box">
-                viewer 进入本页时保持只读提示，不开放草稿保存。
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="border border-zinc-200/70 dark:border-zinc-800">
-          <CardHeader className="flex flex-col items-start gap-2">
-            <p className="eyebrow">模块规划</p>
-            <CardTitle>内容分组入口</CardTitle>
-            <CardDescription>
-              v1 先把分组结构立住，让后续教育、经历、项目、技能扩展时不会把页面结构越做越乱。
+      <Card className="border border-zinc-200/70 dark:border-zinc-800">
+        <CardHeader className="flex flex-col items-start gap-3">
+          <div className="flex flex-wrap gap-2">
+            <Chip size="sm">
+              当前账号：{currentUser.username}
+            </Chip>
+            <Chip size="sm">
+              编辑模式：{currentUser.capabilities.canEditResume ? '可写' : '只读'}
+            </Chip>
+          </div>
+          <div className="space-y-2">
+            <CardTitle className="text-3xl font-semibold tracking-tight">
+              简历编辑
+            </CardTitle>
+            <CardDescription className="max-w-3xl leading-7">
+              这一页只负责简历草稿维护。内容保存后不会自动影响公开站，仍然需要到发布页手动发布，方便教学上清楚区分“编辑态”和“公开态”。
             </CardDescription>
-          </CardHeader>
-          <CardContent className="stack">
+          </div>
+        </CardHeader>
+        <CardContent className="stack">
+          {currentUser.capabilities.canEditResume ? (
+            <div className="dashboard-inline-note">
+              当前已接通标准简历主模块编辑。模块已按基础信息、教育、工作、项目、技能与亮点分组，便于逐段维护与后续继续重构。
+            </div>
+          ) : (
+            <div className="readonly-box">
+              viewer 进入本页时保持只读提示，不开放草稿保存。
+            </div>
+          )}
+
+          <div className="dashboard-badge-row">
             {moduleRoadmap.map((module) => (
-              <div className="status-box" key={module.key}>
-                <div className="flex items-center gap-2">
-                  <strong>{module.title}</strong>
-                  <Chip size="sm">
-                    {module.status}
-                  </Chip>
-                </div>
-                <span>{module.description}</span>
+              <div className="display-pill" key={module.key}>
+                <strong>{module.title}</strong>
+                <Chip size="sm">
+                  {module.status}
+                </Chip>
               </div>
             ))}
-          </CardContent>
-        </Card>
-      </section>
+          </div>
+        </CardContent>
+      </Card>
 
       <ResumeDraftEditorPanel
         accessToken={accessToken}

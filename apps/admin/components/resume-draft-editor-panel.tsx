@@ -7,10 +7,12 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  Chip,
+  Disclosure,
   Input,
   TextArea,
 } from '@heroui/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { fetchDraftResume, updateDraftResume } from '../lib/resume-draft-api';
 import type {
@@ -197,6 +199,133 @@ function buildDraftFieldValues(resume: StandardResume): DraftFieldValues {
     formatLocalizedLines(resume.profile.interests, 'en');
 
   return nextValues;
+}
+
+function DisclosureChevron() {
+  return (
+    <svg aria-hidden="true" fill="none" height="16" viewBox="0 0 20 20" width="16">
+      <path
+        d="m5.5 7.5 4.5 4.5 4.5-4.5"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
+interface EditorSectionProps {
+  title: string;
+  description: string;
+  count?: number;
+  defaultExpanded?: boolean;
+  action?: ReactNode;
+  children: ReactNode;
+}
+
+function EditorSection({
+  title,
+  description,
+  count,
+  defaultExpanded = true,
+  action,
+  children,
+}: EditorSectionProps) {
+  return (
+    <Disclosure.Root
+      className="overflow-hidden rounded-[28px] border border-zinc-200/70 bg-white/85 dark:border-zinc-800 dark:bg-zinc-950/70"
+      defaultExpanded={defaultExpanded}
+    >
+      <div className="flex flex-col gap-3 border-b border-zinc-200/70 px-5 py-5 dark:border-zinc-800 md:flex-row md:items-start md:justify-between md:px-6">
+        <Disclosure.Heading className="min-w-0 flex-1">
+          <Disclosure.Trigger
+            aria-label={`${title} 模块开关`}
+            className="flex w-full items-start justify-between gap-4 text-left"
+          >
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-base font-semibold text-zinc-950 dark:text-white">
+                  {title}
+                </h3>
+                {typeof count === 'number' ? (
+                  <Chip size="sm">
+                    {count}
+                    {' '}
+                    条
+                  </Chip>
+                ) : null}
+              </div>
+              <p className="muted">{description}</p>
+            </div>
+            <span className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-300">
+              <Disclosure.Indicator>
+                <DisclosureChevron />
+              </Disclosure.Indicator>
+            </span>
+          </Disclosure.Trigger>
+        </Disclosure.Heading>
+        {action ? <div className="shrink-0">{action}</div> : null}
+      </div>
+      <Disclosure.Content>
+        <Disclosure.Body className="stack px-5 py-5 md:px-6">
+          {children}
+        </Disclosure.Body>
+      </Disclosure.Content>
+    </Disclosure.Root>
+  );
+}
+
+interface EditorEntryProps {
+  title: string;
+  summary: string;
+  toggleLabel: string;
+  defaultExpanded?: boolean;
+  action?: ReactNode;
+  children: ReactNode;
+}
+
+function EditorEntry({
+  title,
+  summary,
+  toggleLabel,
+  defaultExpanded = true,
+  action,
+  children,
+}: EditorEntryProps) {
+  return (
+    <Disclosure.Root
+      className="overflow-hidden rounded-[24px] border border-zinc-200/70 bg-white dark:border-zinc-800 dark:bg-zinc-950/80"
+      defaultExpanded={defaultExpanded}
+    >
+      <div className="flex flex-col gap-3 px-4 py-4 md:flex-row md:items-start md:justify-between md:px-5">
+        <Disclosure.Heading className="min-w-0 flex-1">
+          <Disclosure.Trigger
+            aria-label={toggleLabel}
+            className="flex w-full items-start justify-between gap-4 text-left"
+          >
+            <div className="space-y-1">
+              <h4 className="text-sm font-semibold text-zinc-950 dark:text-white">
+                {title}
+              </h4>
+              <p className="muted">{summary}</p>
+            </div>
+            <span className="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-300">
+              <Disclosure.Indicator>
+                <DisclosureChevron />
+              </Disclosure.Indicator>
+            </span>
+          </Disclosure.Trigger>
+        </Disclosure.Heading>
+        {action ? <div className="shrink-0">{action}</div> : null}
+      </div>
+      <Disclosure.Content>
+        <Disclosure.Body className="stack border-t border-zinc-200/70 px-4 py-4 dark:border-zinc-800 md:px-5">
+          {children}
+        </Disclosure.Body>
+      </Disclosure.Content>
+    </Disclosure.Root>
+  );
 }
 
 export function ResumeDraftEditorPanel({
@@ -678,20 +807,28 @@ export function ResumeDraftEditorPanel({
 
         {status === 'ready' && resumeDraft && draftSnapshot ? (
           <form className="stack" onSubmit={(event) => void handleSubmit(event)}>
-            <div className="status-box">
-              <strong>草稿态与发布态分离</strong>
-              <span>保存只会更新后台草稿，公开站仍读取最近一次手动发布的版本。</span>
-              {lastUpdatedLabel ? <span>最近保存：{lastUpdatedLabel}</span> : null}
+            <div className="flex flex-col gap-3 rounded-[24px] border border-zinc-200/70 bg-zinc-50/90 px-5 py-4 dark:border-zinc-800 dark:bg-zinc-900/60 md:flex-row md:items-center md:justify-between">
+              <div className="space-y-1">
+                <strong className="block text-sm text-zinc-950 dark:text-white">
+                  草稿态与发布态分离
+                </strong>
+                <span className="text-sm text-zinc-500 dark:text-zinc-400">
+                  保存只会更新后台草稿，公开站仍读取最近一次手动发布的版本。
+                </span>
+              </div>
+              {lastUpdatedLabel ? (
+                <Chip size="sm">
+                  最近保存：
+                  {lastUpdatedLabel}
+                </Chip>
+              ) : null}
             </div>
 
-            <section className="stack">
-              <div className="space-y-1">
-                <h3 className="text-base font-semibold text-zinc-950 dark:text-white">
-                  基础信息
-                </h3>
-                <p className="muted">先保留原有 profile 编辑，继续作为标准简历的稳定基础层。</p>
-              </div>
-
+            <EditorSection
+              count={4 + resumeDraft.profile.links.length + resumeDraft.profile.interests.length}
+              description="先保留原有 profile 编辑，继续作为标准简历的稳定基础层。"
+              title="基础信息"
+            >
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="field">
                   <span>中文姓名</span>
@@ -928,21 +1065,18 @@ export function ResumeDraftEditorPanel({
                   />
                 </label>
               </div>
-            </section>
+            </EditorSection>
 
-            <section className="stack">
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div className="space-y-1">
-                  <h3 className="text-base font-semibold text-zinc-950 dark:text-white">
-                    教育经历
-                  </h3>
-                  <p className="muted">补齐学校、学历、专业、时间、地点与教育亮点的双语维护。</p>
-                </div>
+            <EditorSection
+              action={
                 <Button onClick={addEducation} size="sm" type="button" variant="outline">
                   新增教育经历
                 </Button>
-              </div>
-
+              }
+              count={resumeDraft.education.length}
+              description="补齐学校、学历、专业、时间、地点与教育亮点的双语维护。"
+              title="教育经历"
+            >
               {resumeDraft.education.length === 0 ? (
                 <div className="status-box">
                   <strong>当前还没有教育经历</strong>
@@ -951,16 +1085,8 @@ export function ResumeDraftEditorPanel({
               ) : null}
 
               {resumeDraft.education.map((education, index) => (
-                <div className="card stack" key={`education-${index}`}>
-                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-semibold text-zinc-950 dark:text-white">
-                        教育经历 {index + 1}
-                      </h4>
-                      <p className="muted">
-                        {education.schoolName.zh || education.schoolName.en || '未命名教育经历'}
-                      </p>
-                    </div>
+                <EditorEntry
+                  action={
                     <Button
                       onClick={() => removeEducation(index)}
                       size="sm"
@@ -969,8 +1095,13 @@ export function ResumeDraftEditorPanel({
                     >
                       删除本段
                     </Button>
-                  </div>
-
+                  }
+                  defaultExpanded={resumeDraft.education.length === 1 || index === resumeDraft.education.length - 1}
+                  key={`education-${index}`}
+                  summary={education.schoolName.zh || education.schoolName.en || '未命名教育经历'}
+                  title={`教育经历 ${index + 1}`}
+                  toggleLabel={`教育经历 ${index + 1} 条目开关`}
+                >
                   <div className="grid gap-4 md:grid-cols-2">
                     <label className="field">
                       <span>{`教育经历 ${index + 1} 中文学校`}</span>
@@ -1162,25 +1293,20 @@ export function ResumeDraftEditorPanel({
                       />
                     </label>
                   </div>
-                </div>
+                </EditorEntry>
               ))}
-            </section>
+            </EditorSection>
 
-            <section className="stack">
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div className="space-y-1">
-                  <h3 className="text-base font-semibold text-zinc-950 dark:text-white">
-                    工作经历
-                  </h3>
-                  <p className="muted">
-                    优先开放公司、岗位、时间、摘要、亮点和技术栈，满足岗位定向调整的主需求。
-                  </p>
-                </div>
+            <EditorSection
+              action={
                 <Button onClick={addExperience} size="sm" type="button" variant="outline">
                   新增工作经历
                 </Button>
-              </div>
-
+              }
+              count={resumeDraft.experiences.length}
+              description="优先开放公司、岗位、时间、摘要、亮点和技术栈，满足岗位定向调整的主需求。"
+              title="工作经历"
+            >
               {resumeDraft.experiences.length === 0 ? (
                 <div className="status-box">
                   <strong>当前还没有工作经历</strong>
@@ -1189,16 +1315,8 @@ export function ResumeDraftEditorPanel({
               ) : null}
 
               {resumeDraft.experiences.map((experience, index) => (
-                <div className="card stack" key={`experience-${index}`}>
-                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-semibold text-zinc-950 dark:text-white">
-                        工作经历 {index + 1}
-                      </h4>
-                      <p className="muted">
-                        {experience.companyName.zh || experience.companyName.en || '未命名工作经历'}
-                      </p>
-                    </div>
+                <EditorEntry
+                  action={
                     <Button
                       onClick={() => removeExperience(index)}
                       size="sm"
@@ -1207,8 +1325,18 @@ export function ResumeDraftEditorPanel({
                     >
                       删除本段
                     </Button>
-                  </div>
-
+                  }
+                  defaultExpanded={
+                    resumeDraft.experiences.length === 1 ||
+                    index === resumeDraft.experiences.length - 1
+                  }
+                  key={`experience-${index}`}
+                  summary={
+                    experience.companyName.zh || experience.companyName.en || '未命名工作经历'
+                  }
+                  title={`工作经历 ${index + 1}`}
+                  toggleLabel={`工作经历 ${index + 1} 条目开关`}
+                >
                   <div className="grid gap-4 md:grid-cols-2">
                     <label className="field">
                       <span>{`工作经历 ${index + 1} 中文公司`}</span>
@@ -1443,25 +1571,20 @@ export function ResumeDraftEditorPanel({
                       variant="secondary"
                     />
                   </label>
-                </div>
+                </EditorEntry>
               ))}
-            </section>
+            </EditorSection>
 
-            <section className="stack">
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div className="space-y-1">
-                  <h3 className="text-base font-semibold text-zinc-950 dark:text-white">
-                    项目经历
-                  </h3>
-                  <p className="muted">
-                    当前已接通项目名称、角色、时间、摘要、亮点、技术栈与项目链接，保持与公开展示结构一致。
-                  </p>
-                </div>
+            <EditorSection
+              action={
                 <Button onClick={addProject} size="sm" type="button" variant="outline">
                   新增项目经历
                 </Button>
-              </div>
-
+              }
+              count={resumeDraft.projects.length}
+              description="当前已接通项目名称、角色、时间、摘要、亮点、技术栈与项目链接，保持与公开展示结构一致。"
+              title="项目经历"
+            >
               {resumeDraft.projects.length === 0 ? (
                 <div className="status-box">
                   <strong>当前还没有项目经历</strong>
@@ -1470,16 +1593,8 @@ export function ResumeDraftEditorPanel({
               ) : null}
 
               {resumeDraft.projects.map((project, index) => (
-                <div className="card stack" key={`project-${index}`}>
-                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-semibold text-zinc-950 dark:text-white">
-                        项目经历 {index + 1}
-                      </h4>
-                      <p className="muted">
-                        {project.name.zh || project.name.en || '未命名项目'}
-                      </p>
-                    </div>
+                <EditorEntry
+                  action={
                     <Button
                       onClick={() => removeProject(index)}
                       size="sm"
@@ -1488,8 +1603,16 @@ export function ResumeDraftEditorPanel({
                     >
                       删除本段
                     </Button>
-                  </div>
-
+                  }
+                  defaultExpanded={
+                    resumeDraft.projects.length === 1 ||
+                    index === resumeDraft.projects.length - 1
+                  }
+                  key={`project-${index}`}
+                  summary={project.name.zh || project.name.en || '未命名项目'}
+                  title={`项目经历 ${index + 1}`}
+                  toggleLabel={`项目经历 ${index + 1} 条目开关`}
+                >
                   <div className="grid gap-4 md:grid-cols-2">
                     <label className="field">
                       <span>{`项目经历 ${index + 1} 中文名称`}</span>
@@ -1734,23 +1857,20 @@ export function ResumeDraftEditorPanel({
                       </div>
                     ))}
                   </div>
-                </div>
+                </EditorEntry>
               ))}
-            </section>
+            </EditorSection>
 
-            <section className="stack">
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div className="space-y-1">
-                  <h3 className="text-base font-semibold text-zinc-950 dark:text-white">
-                    技能组
-                  </h3>
-                  <p className="muted">按技能组维护关键词，公开页会按组展示能力结构。</p>
-                </div>
+            <EditorSection
+              action={
                 <Button onClick={addSkillGroup} size="sm" type="button" variant="outline">
                   新增技能组
                 </Button>
-              </div>
-
+              }
+              count={resumeDraft.skills.length}
+              description="按技能组维护关键词，公开页会按组展示能力结构。"
+              title="技能组"
+            >
               {resumeDraft.skills.length === 0 ? (
                 <div className="status-box">
                   <strong>当前还没有技能组</strong>
@@ -1759,14 +1879,8 @@ export function ResumeDraftEditorPanel({
               ) : null}
 
               {resumeDraft.skills.map((skill, index) => (
-                <div className="card stack" key={`skill-${index}`}>
-                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-semibold text-zinc-950 dark:text-white">
-                        技能组 {index + 1}
-                      </h4>
-                      <p className="muted">{skill.name.zh || skill.name.en || '未命名技能组'}</p>
-                    </div>
+                <EditorEntry
+                  action={
                     <Button
                       onClick={() => removeSkillGroup(index)}
                       size="sm"
@@ -1775,8 +1889,16 @@ export function ResumeDraftEditorPanel({
                     >
                       删除本组
                     </Button>
-                  </div>
-
+                  }
+                  defaultExpanded={
+                    resumeDraft.skills.length === 1 ||
+                    index === resumeDraft.skills.length - 1
+                  }
+                  key={`skill-${index}`}
+                  summary={skill.name.zh || skill.name.en || '未命名技能组'}
+                  title={`技能组 ${index + 1}`}
+                  toggleLabel={`技能组 ${index + 1} 条目开关`}
+                >
                   <div className="grid gap-4 md:grid-cols-2">
                     <label className="field">
                       <span>{`技能组 ${index + 1} 中文名称`}</span>
@@ -1814,23 +1936,20 @@ export function ResumeDraftEditorPanel({
                       variant="secondary"
                     />
                   </label>
-                </div>
+                </EditorEntry>
               ))}
-            </section>
+            </EditorSection>
 
-            <section className="stack">
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div className="space-y-1">
-                  <h3 className="text-base font-semibold text-zinc-950 dark:text-white">
-                    亮点
-                  </h3>
-                  <p className="muted">维护个人优势、开源、团队协作等补充亮点，丰富公开页结尾信息。</p>
-                </div>
+            <EditorSection
+              action={
                 <Button onClick={addHighlight} size="sm" type="button" variant="outline">
                   新增亮点
                 </Button>
-              </div>
-
+              }
+              count={resumeDraft.highlights.length}
+              description="维护个人优势、开源、团队协作等补充亮点，丰富公开页结尾信息。"
+              title="亮点"
+            >
               {resumeDraft.highlights.length === 0 ? (
                 <div className="status-box">
                   <strong>当前还没有亮点</strong>
@@ -1839,16 +1958,8 @@ export function ResumeDraftEditorPanel({
               ) : null}
 
               {resumeDraft.highlights.map((highlight, index) => (
-                <div className="card stack" key={`highlight-${index}`}>
-                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-semibold text-zinc-950 dark:text-white">
-                        亮点 {index + 1}
-                      </h4>
-                      <p className="muted">
-                        {highlight.title.zh || highlight.title.en || '未命名亮点'}
-                      </p>
-                    </div>
+                <EditorEntry
+                  action={
                     <Button
                       onClick={() => removeHighlight(index)}
                       size="sm"
@@ -1857,8 +1968,16 @@ export function ResumeDraftEditorPanel({
                     >
                       删除本条
                     </Button>
-                  </div>
-
+                  }
+                  defaultExpanded={
+                    resumeDraft.highlights.length === 1 ||
+                    index === resumeDraft.highlights.length - 1
+                  }
+                  key={`highlight-${index}`}
+                  summary={highlight.title.zh || highlight.title.en || '未命名亮点'}
+                  title={`亮点 ${index + 1}`}
+                  toggleLabel={`亮点 ${index + 1} 条目开关`}
+                >
                   <div className="grid gap-4 md:grid-cols-2">
                     <label className="field">
                       <span>{`亮点 ${index + 1} 中文标题`}</span>
@@ -1930,9 +2049,9 @@ export function ResumeDraftEditorPanel({
                       />
                     </label>
                   </div>
-                </div>
+                </EditorEntry>
               ))}
-            </section>
+            </EditorSection>
 
             {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
             {feedbackMessage ? (
