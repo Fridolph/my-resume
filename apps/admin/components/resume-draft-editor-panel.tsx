@@ -288,13 +288,13 @@ function PlusIcon() {
 
 function TrashIcon() {
   return (
-    <svg aria-hidden="true" fill="none" height="18" viewBox="0 0 20 20" width="18">
+    <svg aria-hidden="true" fill="none" height="22" viewBox="0 0 24 24" width="22">
       <path
-        d="M7.5 4.75h5m-7 2h9m-7.5 2.5v4.75m3-4.75v4.75m2.75-7.5-.4 5.34a1.5 1.5 0 0 1-1.5 1.39H8.65a1.5 1.5 0 0 1-1.5-1.39l-.4-5.34m1.5-2.25.27-.79a1 1 0 0 1 .95-.67h1.06a1 1 0 0 1 .95.67l.27.79"
+        d="M9.25 5.5h5.5m-7.5 2.5h9.5m-8 3.25v5.25m4-5.25v5.25m3.25-8.5-.45 6.02a1.75 1.75 0 0 1-1.75 1.6H10.2a1.75 1.75 0 0 1-1.75-1.6L8 8m1.75-2.5.35-1.05a1.2 1.2 0 0 1 1.13-.8h1.54a1.2 1.2 0 0 1 1.13.8l.35 1.05"
         stroke="currentColor"
         strokeLinecap="round"
         strokeLinejoin="round"
-        strokeWidth="1.7"
+        strokeWidth="2"
       />
     </svg>
   );
@@ -306,6 +306,7 @@ interface IconActionButtonProps {
   onClick: () => void;
   variant?: 'ghost' | 'outline';
   className?: string;
+  tone?: 'default' | 'danger';
 }
 
 function IconActionButton({
@@ -314,6 +315,7 @@ function IconActionButton({
   onClick,
   variant = 'outline',
   className,
+  tone = 'default',
 }: IconActionButtonProps) {
   return (
     <Tooltip delay={300}>
@@ -321,7 +323,10 @@ function IconActionButton({
         <Button
           aria-label={label}
           className={[
-            'h-10 w-10 min-w-10 rounded-full border-zinc-200/80 text-zinc-600 transition-colors hover:border-zinc-300 hover:bg-zinc-100 hover:text-zinc-950 focus-visible:ring-2 focus-visible:ring-blue-500/30 dark:border-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-700 dark:hover:bg-zinc-900 dark:hover:text-white',
+            'h-11 w-11 min-w-11 rounded-full transition-colors focus-visible:ring-2',
+            tone === 'danger'
+              ? 'border-rose-200/80 text-zinc-500 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600 focus-visible:ring-rose-500/30 dark:border-zinc-800 dark:text-zinc-300 dark:hover:border-rose-500/40 dark:hover:bg-rose-500/10 dark:hover:text-rose-300'
+              : 'border-zinc-200/80 text-zinc-600 hover:border-zinc-300 hover:bg-zinc-100 hover:text-zinc-950 focus-visible:ring-blue-500/30 dark:border-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-700 dark:hover:bg-zinc-900 dark:hover:text-white',
             className,
           ]
             .filter(Boolean)
@@ -461,6 +466,7 @@ interface EditorEntryProps {
   defaultExpanded?: boolean;
   action?: ReactNode;
   children: ReactNode;
+  variant?: 'default' | 'embedded';
 }
 
 function EditorEntry({
@@ -470,35 +476,47 @@ function EditorEntry({
   defaultExpanded = true,
   action,
   children,
+  variant = 'default',
 }: EditorEntryProps) {
+  const entryShellClassName =
+    variant === 'embedded'
+      ? 'overflow-hidden rounded-[24px] border border-zinc-200/60 bg-zinc-50/55 shadow-none dark:border-zinc-800/80 dark:bg-zinc-950/60'
+      : 'overflow-hidden rounded-[24px] border border-zinc-200/70 bg-white dark:border-zinc-800 dark:bg-zinc-950/80';
+
+  const entryHeaderClassName =
+    'flex flex-col gap-3 px-4 py-4 md:flex-row md:items-start md:justify-between md:px-5';
+
+  const entryBodyClassName =
+    'stack border-t border-zinc-200/60 px-4 py-4 dark:border-zinc-800/80 md:px-5';
+
   return (
     <Disclosure.Root
-      className="overflow-hidden rounded-[24px] border border-zinc-200/70 bg-white dark:border-zinc-800 dark:bg-zinc-950/80"
+      className={entryShellClassName}
       defaultExpanded={defaultExpanded}
     >
-      <div className="flex flex-col gap-3 px-4 py-4 md:flex-row md:items-start md:justify-between md:px-5">
+      <div className={entryHeaderClassName}>
         <Disclosure.Heading className="min-w-0 flex-1">
           <Disclosure.Trigger
             aria-label={toggleLabel}
             className="flex w-full items-start justify-between gap-4 text-left"
           >
             <div className="space-y-1">
-              <h4 className="text-sm font-semibold text-zinc-950 dark:text-white">
-                {title}
-              </h4>
-              <p className="muted">{summary}</p>
-            </div>
-            <span className="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-300">
-              <Disclosure.Indicator>
-                <DisclosureChevron />
-              </Disclosure.Indicator>
-            </span>
-          </Disclosure.Trigger>
+                <h4 className="text-sm font-semibold text-zinc-950 dark:text-white">
+                  {title}
+                </h4>
+                <p className="muted">{summary}</p>
+              </div>
+              <span className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-300">
+                <Disclosure.Indicator>
+                  <DisclosureChevron />
+                </Disclosure.Indicator>
+              </span>
+            </Disclosure.Trigger>
         </Disclosure.Heading>
         {action ? <div className="shrink-0">{action}</div> : null}
       </div>
       <Disclosure.Content>
-        <Disclosure.Body className="stack border-t border-zinc-200/70 px-4 py-4 dark:border-zinc-800 md:px-5">
+        <Disclosure.Body className={entryBodyClassName}>
           {children}
         </Disclosure.Body>
       </Disclosure.Content>
@@ -1611,6 +1629,7 @@ export function ResumeDraftEditorPanel({
                         icon={<TrashIcon />}
                         label={`删除教育经历 ${index + 1}`}
                         onClick={() => removeEducation(index)}
+                        tone="danger"
                         variant="ghost"
                       />
                     ) : null
@@ -1620,6 +1639,7 @@ export function ResumeDraftEditorPanel({
                   summary={education.schoolName.zh || education.schoolName.en || '未命名教育经历'}
                   title={`教育经历 ${index + 1}`}
                   toggleLabel={`教育经历 ${index + 1} 条目开关`}
+                  variant="embedded"
                 >
                   <div className="grid gap-4 md:grid-cols-2">
                     <LocalizedEditorField
@@ -1768,6 +1788,7 @@ export function ResumeDraftEditorPanel({
                         icon={<TrashIcon />}
                         label={`删除工作经历 ${index + 1}`}
                         onClick={() => removeExperience(index)}
+                        tone="danger"
                         variant="ghost"
                       />
                     ) : null
@@ -1782,6 +1803,7 @@ export function ResumeDraftEditorPanel({
                   }
                   title={`工作经历 ${index + 1}`}
                   toggleLabel={`工作经历 ${index + 1} 条目开关`}
+                  variant="embedded"
                 >
                   <div className="grid gap-4 md:grid-cols-2">
                     <LocalizedEditorField
@@ -1965,6 +1987,7 @@ export function ResumeDraftEditorPanel({
                         icon={<TrashIcon />}
                         label={`删除项目经历 ${index + 1}`}
                         onClick={() => removeProject(index)}
+                        tone="danger"
                         variant="ghost"
                       />
                     ) : null
@@ -1977,6 +2000,7 @@ export function ResumeDraftEditorPanel({
                   summary={project.name.zh || project.name.en || '未命名项目'}
                   title={`项目经历 ${index + 1}`}
                   toggleLabel={`项目经历 ${index + 1} 条目开关`}
+                  variant="embedded"
                 >
                   <div className="grid gap-4 md:grid-cols-2">
                     <LocalizedEditorField
@@ -2098,7 +2122,10 @@ export function ResumeDraftEditorPanel({
                     ) : null}
 
                     {project.links.map((link, linkIndex) => (
-                      <div className="card stack min-w-0" key={`project-${index}-link-${linkIndex}`}>
+                      <div
+                        className="grid min-w-0 gap-4 rounded-[20px] border border-zinc-200/60 bg-zinc-50/60 p-4 shadow-none dark:border-zinc-800/80 dark:bg-zinc-950/55"
+                        key={`project-${index}-link-${linkIndex}`}
+                      >
                         <div className="flex min-w-0 items-start justify-between gap-3">
                           <div className="min-w-0 space-y-1">
                             <h6 className="text-sm font-semibold text-zinc-950 dark:text-white">
@@ -2112,6 +2139,7 @@ export function ResumeDraftEditorPanel({
                               icon={<TrashIcon />}
                               label={`删除项目经历 ${index + 1} 的链接 ${linkIndex + 1}`}
                               onClick={() => removeProjectLink(index, linkIndex)}
+                              tone="danger"
                               variant="ghost"
                             />
                           ) : null}
@@ -2192,6 +2220,7 @@ export function ResumeDraftEditorPanel({
                         icon={<TrashIcon />}
                         label={`删除技能组 ${index + 1}`}
                         onClick={() => removeSkillGroup(index)}
+                        tone="danger"
                         variant="ghost"
                       />
                     ) : null
@@ -2204,6 +2233,7 @@ export function ResumeDraftEditorPanel({
                   summary={skill.name.zh || skill.name.en || '未命名技能组'}
                   title={`技能组 ${index + 1}`}
                   toggleLabel={`技能组 ${index + 1} 条目开关`}
+                  variant="embedded"
                 >
                   <LocalizedEditorField
                     label={`技能组 ${index + 1} 名称`}
@@ -2272,6 +2302,7 @@ export function ResumeDraftEditorPanel({
                         icon={<TrashIcon />}
                         label={`删除亮点 ${index + 1}`}
                         onClick={() => removeHighlight(index)}
+                        tone="danger"
                         variant="ghost"
                       />
                     ) : null
@@ -2284,6 +2315,7 @@ export function ResumeDraftEditorPanel({
                   summary={highlight.title.zh || highlight.title.en || '未命名亮点'}
                   title={`亮点 ${index + 1}`}
                   toggleLabel={`亮点 ${index + 1} 条目开关`}
+                  variant="embedded"
                 >
                   <LocalizedEditorField
                     label={`亮点 ${index + 1} 标题`}

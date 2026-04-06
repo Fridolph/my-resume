@@ -555,6 +555,9 @@ Build systems, not just pages`,
         screen.getByLabelText('教育经历 1 亮点（每行一条）'),
         '通信工程本科',
       );
+      expect(
+        screen.getByRole('button', { name: '删除教育经历 1' }),
+      ).toBeInTheDocument();
 
       await user.click(screen.getByRole('button', { name: '添加技能组' }));
       await user.type(screen.getByLabelText('技能组 1 名称'), '前端工程化');
@@ -564,10 +567,14 @@ Build systems, not just pages`,
 React
 Next.js`,
       );
+      expect(
+        screen.getByRole('button', { name: '删除技能组 1' }),
+      ).toBeInTheDocument();
 
       await user.click(screen.getByRole('button', { name: '添加亮点' }));
       await user.type(screen.getByLabelText('亮点 1 标题'), '技术写作');
       await user.type(screen.getByLabelText('亮点 1 描述'), '持续输出教程与博客');
+      expect(screen.getByRole('button', { name: '删除亮点 1' })).toBeInTheDocument();
 
       await user.click(screen.getByRole('button', { name: '添加个人链接' }));
       await user.type(screen.getByLabelText('个人链接 1 标签'), 'GitHub');
