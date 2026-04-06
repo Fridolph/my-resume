@@ -111,6 +111,40 @@ function joinApiUrl(apiBaseUrl: string, pathname: string): string {
   return `${apiBaseUrl.replace(/\/$/, '')}${pathname}`;
 }
 
+async function resolveApiErrorMessage(
+  response: Response,
+  fallbackMessage: string,
+): Promise<string> {
+  try {
+    const payload = (await response.json()) as {
+      error?: unknown;
+      message?: unknown;
+    };
+
+    if (typeof payload.message === 'string' && payload.message.trim()) {
+      return payload.message;
+    }
+
+    if (Array.isArray(payload.message)) {
+      const messages = payload.message.filter(
+        (item): item is string => typeof item === 'string' && item.trim().length > 0,
+      );
+
+      if (messages.length > 0) {
+        return messages.join('；');
+      }
+    }
+
+    if (typeof payload.error === 'string' && payload.error.trim()) {
+      return payload.error;
+    }
+  } catch {
+    // Ignore parsing errors and fall back to the default message.
+  }
+
+  return fallbackMessage;
+}
+
 export function buildPublishedResumeExportUrl(input: {
   apiBaseUrl: string;
   format: ResumeExportFormat;
@@ -147,7 +181,12 @@ export async function fetchDraftResume(
   });
 
   if (!response.ok) {
-    throw new Error('草稿读取失败，请确认当前账号拥有编辑权限');
+    throw new Error(
+      await resolveApiErrorMessage(
+        response,
+        '草稿读取失败，请确认当前账号拥有编辑权限',
+      ),
+    );
   }
 
   return (await response.json()) as ResumeDraftSnapshot;
@@ -166,7 +205,12 @@ export async function updateDraftResume(
   });
 
   if (!response.ok) {
-    throw new Error('草稿保存失败，请检查内容是否符合当前模型');
+    throw new Error(
+      await resolveApiErrorMessage(
+        response,
+        '草稿保存失败，请检查内容是否符合当前模型',
+      ),
+    );
   }
 
   return (await response.json()) as ResumeDraftSnapshot;
@@ -183,7 +227,12 @@ export async function publishResume(
   });
 
   if (!response.ok) {
-    throw new Error('发布失败，请确认当前账号拥有发布权限');
+    throw new Error(
+      await resolveApiErrorMessage(
+        response,
+        '发布失败，请确认当前账号拥有发布权限',
+      ),
+    );
   }
 
   return (await response.json()) as ResumePublishedSnapshot;

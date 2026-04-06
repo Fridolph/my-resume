@@ -1,3 +1,4 @@
+import { ServiceUnavailableException } from '@nestjs/common';
 import { mkdtempSync, rmSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -9,6 +10,7 @@ import {
   createDatabaseClient,
 } from '../../database/database.client';
 import type { DatabaseClient } from '../../database/database.client';
+import { SQLITE_LOCKED_ERROR_MESSAGE } from '../../database/sqlite-lock';
 import { ResumePublicationRepository } from './resume-publication.repository';
 import { createExampleStandardResume } from './domain/standard-resume';
 import { ResumePublicationService } from './resume-publication.service';
@@ -307,5 +309,90 @@ describe('ResumePublicationService', () => {
     });
 
     secondHarness.client.close();
+  });
+
+  it('should surface a friendly message when draft save hits a SQLite file lock', async () => {
+    const service = new ResumePublicationService({
+      findDraft: async () => ({
+        resumeJson: createExampleStandardResume(),
+        updatedAt: new Date('2026-04-05T08:00:00.000Z'),
+      }),
+      saveDraft: async () => {
+        throw new Error('Failed query', {
+          cause: new Error('database is locked', {
+            cause: {
+              code: 'SQLITE_BUSY',
+            },
+          }),
+        });
+      },
+      createPublishedSnapshot: async () => {
+        throw new Error('not used');
+      },
+      findLatestPublishedSnapshot: async () => null,
+    } as unknown as ResumePublicationRepository);
+
+    await expect(
+      service.updateDraft(createExampleStandardResume()),
+    ).rejects.toEqual(
+      expect.objectContaining({
+        message: SQLITE_LOCKED_ERROR_MESSAGE,
+      }),
+    );
+  });
+
+  it('should surface a friendly message when publish hits a SQLite file lock', async () => {
+    const service = new ResumePublicationService({
+      findDraft: async () => ({
+        resumeJson: createExampleStandardResume(),
+        updatedAt: new Date('2026-04-05T08:00:00.000Z'),
+      }),
+      saveDraft: async () => ({
+        resumeJson: createExampleStandardResume(),
+        updatedAt: new Date('2026-04-05T08:00:00.000Z'),
+      }),
+      createPublishedSnapshot: async () => {
+        throw new Error('publish failed', {
+          cause: {
+            code: 'SQLITE_BUSY',
+            message: 'database is locked',
+          },
+        });
+      },
+      findLatestPublishedSnapshot: async () => null,
+    } as unknown as ResumePublicationRepository);
+
+    await expect(service.publish()).rejects.toEqual(
+      expect.objectContaining({
+        message: SQLITE_LOCKED_ERROR_MESSAGE,
+      }),
+    );
+  });
+
+  it('should surface a friendly message when draft seeding hits a SQLite file lock', async () => {
+    const service = new ResumePublicationService({
+      findDraft: async () => null,
+      saveDraft: async () => {
+        throw new Error('seed failed', {
+          cause: {
+            code: 'SQLITE_BUSY',
+            message: 'database is locked',
+          },
+        });
+      },
+      createPublishedSnapshot: async () => {
+        throw new Error('not used');
+      },
+      findLatestPublishedSnapshot: async () => null,
+    } as unknown as ResumePublicationRepository);
+
+    await expect(service.getDraft()).rejects.toBeInstanceOf(
+      ServiceUnavailableException,
+    );
+    await expect(service.getDraft()).rejects.toEqual(
+      expect.objectContaining({
+        message: SQLITE_LOCKED_ERROR_MESSAGE,
+      }),
+    );
   });
 });

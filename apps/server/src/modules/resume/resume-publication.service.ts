@@ -1,4 +1,13 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  ServiceUnavailableException,
+} from '@nestjs/common';
+
+import {
+  isSqliteLockedError,
+  SQLITE_LOCKED_ERROR_MESSAGE,
+} from '../../database/sqlite-lock';
 
 import {
   createExampleStandardResume,
@@ -30,25 +39,27 @@ export class ResumePublicationService {
   ) {}
 
   async getDraft(): Promise<ResumeDraftSnapshot> {
-    const existingDraft = await this.resumePublicationRepository.findDraft();
+    return this.runWithDatabaseLockHint(async () => {
+      const existingDraft = await this.resumePublicationRepository.findDraft();
 
-    if (!existingDraft) {
-      const seededDraft = await this.resumePublicationRepository.saveDraft(
-        createExampleStandardResume(),
-      );
+      if (!existingDraft) {
+        const seededDraft = await this.resumePublicationRepository.saveDraft(
+          createExampleStandardResume(),
+        );
+
+        return {
+          status: 'draft',
+          resume: cloneStandardResume(seededDraft.resumeJson),
+          updatedAt: seededDraft.updatedAt.toISOString(),
+        };
+      }
 
       return {
         status: 'draft',
-        resume: cloneStandardResume(seededDraft.resumeJson),
-        updatedAt: seededDraft.updatedAt.toISOString(),
+        resume: cloneStandardResume(existingDraft.resumeJson),
+        updatedAt: existingDraft.updatedAt.toISOString(),
       };
-    }
-
-    return {
-      status: 'draft',
-      resume: cloneStandardResume(existingDraft.resumeJson),
-      updatedAt: existingDraft.updatedAt.toISOString(),
-    };
+    });
   }
 
   async getPublished(): Promise<ResumePublishedSnapshot | null> {
@@ -67,28 +78,46 @@ export class ResumePublicationService {
   }
 
   async updateDraft(resume: StandardResume): Promise<ResumeDraftSnapshot> {
-    const savedDraft = await this.resumePublicationRepository.saveDraft(
-      cloneStandardResume(resume),
-    );
+    return this.runWithDatabaseLockHint(async () => {
+      const savedDraft = await this.resumePublicationRepository.saveDraft(
+        cloneStandardResume(resume),
+      );
 
-    return {
-      status: 'draft',
-      resume: cloneStandardResume(savedDraft.resumeJson),
-      updatedAt: savedDraft.updatedAt.toISOString(),
-    };
+      return {
+        status: 'draft',
+        resume: cloneStandardResume(savedDraft.resumeJson),
+        updatedAt: savedDraft.updatedAt.toISOString(),
+      };
+    });
   }
 
   async publish(): Promise<ResumePublishedSnapshot> {
-    const draft = await this.getDraft();
-    const publishedSnapshot =
-      await this.resumePublicationRepository.createPublishedSnapshot(
-        cloneStandardResume(draft.resume),
-      );
+    return this.runWithDatabaseLockHint(async () => {
+      const draft = await this.getDraft();
+      const publishedSnapshot =
+        await this.resumePublicationRepository.createPublishedSnapshot(
+          cloneStandardResume(draft.resume),
+        );
 
-    return {
-      status: 'published',
-      resume: cloneStandardResume(publishedSnapshot.resumeJson),
-      publishedAt: publishedSnapshot.publishedAt.toISOString(),
-    };
+      return {
+        status: 'published',
+        resume: cloneStandardResume(publishedSnapshot.resumeJson),
+        publishedAt: publishedSnapshot.publishedAt.toISOString(),
+      };
+    });
+  }
+
+  private async runWithDatabaseLockHint<T>(
+    operation: () => Promise<T>,
+  ): Promise<T> {
+    try {
+      return await operation();
+    } catch (error) {
+      if (isSqliteLockedError(error)) {
+        throw new ServiceUnavailableException(SQLITE_LOCKED_ERROR_MESSAGE);
+      }
+
+      throw error;
+    }
   }
 }

@@ -178,4 +178,44 @@ describe('api-client resume contract', () => {
       }),
     ).toBe('http://localhost:5577/resume/published/export/markdown?locale=en');
   });
+
+  it('should surface server-side error messages for draft and publish failures', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce({
+          ok: false,
+          json: async () => ({
+            statusCode: 503,
+            message:
+              '当前本地 SQLite 数据库正被其他进程占用，请关闭 DB Browser 等工具后重试。',
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: false,
+          json: async () => ({
+            statusCode: 503,
+            message: ['发布失败，请稍后重试', '请关闭外部数据库工具后重试'],
+          }),
+        }),
+    );
+
+    await expect(
+      updateDraftResume({
+        apiBaseUrl: 'http://localhost:5577',
+        accessToken: 'demo-token',
+        resume: draftSnapshot.resume,
+      }),
+    ).rejects.toThrow(
+      '当前本地 SQLite 数据库正被其他进程占用，请关闭 DB Browser 等工具后重试。',
+    );
+
+    await expect(
+      publishResume({
+        apiBaseUrl: 'http://localhost:5577',
+        accessToken: 'demo-token',
+      }),
+    ).rejects.toThrow('发布失败，请稍后重试；请关闭外部数据库工具后重试');
+  });
 });
