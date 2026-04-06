@@ -15,8 +15,8 @@ export function PublishedResumeSectionCard({
   children,
 }: PublishedResumeSectionCardProps) {
   return (
-    <Card className="web-section-card">
-      <CardHeader className="gap-3">
+    <Card className="web-section-card web-content-section-card">
+      <CardHeader className="gap-2.5 pb-3">
         <p className="web-eyebrow">{eyebrow}</p>
         <CardTitle className="text-2xl text-slate-950 dark:text-white">
           {title}
@@ -27,7 +27,7 @@ export function PublishedResumeSectionCard({
           </CardDescription>
         ) : null}
       </CardHeader>
-      <CardContent className="grid gap-4">{children}</CardContent>
+      <CardContent className="grid gap-4 pt-1">{children}</CardContent>
     </Card>
   );
 }

@@ -149,10 +149,16 @@ describe('PublishedResumeShell', () => {
     expect(screen.getByText('工程化')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '图表' }));
-    expect(screen.getByText('4 个能力点')).toBeInTheDocument();
-    expect(screen.getByText('3 个能力点')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '雷达图' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '饼图' })).toBeInTheDocument();
+    expect(screen.getByLabelText('技能雷达图')).toBeInTheDocument();
+    expect(screen.getAllByText('4 个能力点').length).toBeGreaterThan(0);
     expect(screen.queryByText(/占比/)).not.toBeInTheDocument();
     expect(screen.queryByText(/%/)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '饼图' }));
+    expect(screen.getByLabelText('技能饼图')).toBeInTheDocument();
+    expect(screen.getByText('总条目数')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '结构' }));
     expect(screen.getAllByText('TypeScript').length).toBeGreaterThan(0);
