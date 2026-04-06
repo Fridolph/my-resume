@@ -439,6 +439,24 @@ a {
   letter-spacing: 0.04em;
 }
 
+.item-tag {
+  min-height: 1.8rem;
+  border-radius: 999px;
+  border: 1px solid rgba(191, 219, 254, 0.9);
+  background: rgba(239, 246, 255, 0.9);
+  padding: 0.28rem 0.62rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #1d4ed8;
+}
+
+[data-theme='dark'] .item-tag {
+  border-color: rgba(96, 165, 250, 0.26);
+  background: rgba(37, 99, 235, 0.12);
+  color: #bfdbfe;
+}
+
 .contact-item {
   position: relative;
   overflow: hidden;
@@ -454,10 +472,10 @@ a {
   content: '';
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(8, 145, 178, 0.08), transparent 70%);
-  opacity: 0;
-  transition: opacity 0.24s ease;
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.16), rgba(8, 145, 178, 0.1), transparent 72%);
+  opacity: 1;
+  transform: translateX(-108%);
+  transition: transform 0.34s ease;
 }
 
 .contact-item:hover {
@@ -467,7 +485,7 @@ a {
 }
 
 .contact-item:hover::before {
-  opacity: 1;
+  transform: translateX(0);
 }
 
 [data-theme='dark'] .contact-item {
@@ -629,6 +647,16 @@ a {
 
 [data-theme='dark'] .interest-card-label {
   color: #e2e8f0;
+}
+
+.interest-card--plain {
+  justify-content: center;
+  padding-inline: 0.8rem;
+}
+
+.interest-card-label--plain {
+  font-size: 0.75rem;
+  line-height: 1.35;
 }
 
 @media (max-width: 767px) {

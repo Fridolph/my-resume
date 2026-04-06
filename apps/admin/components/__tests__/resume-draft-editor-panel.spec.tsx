@@ -5,7 +5,10 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { ResumeDraftSnapshot } from '../../lib/resume-types';
-import { ResumeDraftEditorPanel } from '../resume-draft-editor-panel';
+import {
+  reorderResumeCollection,
+  ResumeDraftEditorPanel,
+} from '../resume-draft-editor-panel';
 
 const draftSnapshot: ResumeDraftSnapshot = {
   status: 'draft' as const,
@@ -263,6 +266,70 @@ describe('ResumeDraftEditorPanel', () => {
         zh: '全栈开发工程师',
         en: 'Senior Full-Stack Engineer',
       });
+    },
+    10000,
+  );
+
+  it(
+    'should render drag handles and reorder education entries with helper logic',
+    async () => {
+      cleanup();
+      const sortableDraftSnapshot = {
+        ...draftSnapshot,
+        resume: {
+          ...draftSnapshot.resume,
+          education: [
+            {
+              schoolName: { zh: '第一大学', en: 'First University' },
+              degree: { zh: '本科', en: 'Bachelor' },
+              fieldOfStudy: { zh: '计算机科学', en: 'Computer Science' },
+              startDate: '2015-09',
+              endDate: '2019-06',
+              location: { zh: '上海', en: 'Shanghai' },
+              highlights: [],
+            },
+            {
+              schoolName: { zh: '第二大学', en: 'Second University' },
+              degree: { zh: '硕士', en: 'Master' },
+              fieldOfStudy: { zh: '软件工程', en: 'Software Engineering' },
+              startDate: '2019-09',
+              endDate: '2022-06',
+              location: { zh: '杭州', en: 'Hangzhou' },
+              highlights: [],
+            },
+          ],
+        },
+      };
+      const loadDraft = vi.fn().mockResolvedValue(sortableDraftSnapshot);
+
+      render(
+        <ResumeDraftEditorPanel
+          accessToken="demo-token"
+          apiBaseUrl="http://localhost:5577"
+          canEdit
+          loadDraft={loadDraft}
+          saveDraft={vi.fn()}
+        />,
+      );
+
+      await screen.findByDisplayValue('付寅生');
+
+      expect(
+        screen.getByRole('button', { name: '拖拽排序教育经历 1' }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: '拖拽排序教育经历 2' }),
+      ).toBeInTheDocument();
+
+      const reorderedResume = reorderResumeCollection(
+        sortableDraftSnapshot.resume,
+        'education',
+        0,
+        1,
+      );
+
+      expect(reorderedResume.education[0]?.schoolName.zh).toBe('第二大学');
+      expect(reorderedResume.education[1]?.schoolName.zh).toBe('第一大学');
     },
     10000,
   );

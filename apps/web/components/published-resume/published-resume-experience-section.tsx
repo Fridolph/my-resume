@@ -1,4 +1,4 @@
-import { DisplayPill } from '@my-resume/ui/display';
+import { Tag, TagGroup } from '@heroui/react';
 
 import {
   ResumeExperienceItem,
@@ -85,13 +85,21 @@ export function PublishedResumeExperienceSection({
             {experience.technologies.length > 0 ? (
               <div className="item-block">
                 <p className="item-block-label">{locale === 'zh' ? '技术栈' : 'Tech Stack'}</p>
-                <div className="tag-grid tag-grid--compact">
-                  {experience.technologies.map((tech) => (
-                    <DisplayPill className="item-badge" key={tech}>
-                      {tech}
-                    </DisplayPill>
-                  ))}
-                </div>
+                <TagGroup.Root aria-label={`${readLocalizedText(experience.companyName, locale)} 技术栈`}>
+                  <TagGroup.List
+                    className="tag-grid tag-grid--compact"
+                    items={experience.technologies.map((tech) => ({
+                      id: tech,
+                      label: tech,
+                    }))}
+                  >
+                    {(tech) => (
+                      <Tag.Root className="item-tag" id={tech.id} textValue={tech.label}>
+                        {tech.label}
+                      </Tag.Root>
+                    )}
+                  </TagGroup.List>
+                </TagGroup.Root>
               </div>
             ) : null}
           </article>

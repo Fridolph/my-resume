@@ -141,7 +141,12 @@ export function PublicSiteHeader({
             </Button>
           </div>
 
-          <div className="inline-flex h-8 items-center gap-2 rounded-full border border-slate-200 bg-white/75 px-3 dark:border-white/10 dark:bg-white/5">
+          <Switch.Root
+            aria-label="切换明暗主题"
+            className="inline-flex h-8 items-center gap-2 rounded-full border border-slate-200 bg-white/75 px-3 text-slate-500 transition dark:border-white/10 dark:bg-white/5 dark:text-slate-300"
+            isSelected={theme === 'dark'}
+            onChange={(isSelected) => setTheme(isSelected ? 'dark' : 'light')}
+          >
             <ThemeSunIcon
               className={
                 theme === 'light'
@@ -149,12 +154,9 @@ export function PublicSiteHeader({
                   : 'text-slate-300 dark:text-slate-500'
               }
             />
-            <Switch
-              aria-label="切换明暗主题"
-              isSelected={theme === 'dark'}
-              onChange={(isSelected) => setTheme(isSelected ? 'dark' : 'light')}
-              size="sm"
-            />
+            <Switch.Control className="inline-flex h-5 w-9 items-center rounded-full border border-slate-200/80 bg-slate-100/90 px-0.5 transition dark:border-white/10 dark:bg-white/10">
+              <Switch.Thumb className="inline-flex h-4 w-4 rounded-full bg-white shadow-sm dark:bg-slate-950" />
+            </Switch.Control>
             <ThemeMoonIcon
               className={
                 theme === 'dark'
@@ -162,7 +164,7 @@ export function PublicSiteHeader({
                   : 'text-slate-300 dark:text-slate-500'
               }
             />
-          </div>
+          </Switch.Root>
 
           <a
             href={PROJECT_GITHUB_URL}

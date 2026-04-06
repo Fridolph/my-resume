@@ -1,4 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, Chip } from '@heroui/react';
+import { Card, CardContent, CardHeader, Chip } from '@heroui/react';
 import { Icon } from '@iconify/react';
 
 import { ResumeLocale, ResumePublishedSnapshot } from '../../lib/published-resume-types';
@@ -155,8 +155,8 @@ export function PublishedResumeHero({
             </div>
           </div>
 
-          <div className="grid gap-2">
-            <h2 className="text-[clamp(2.2rem,5vw,3.4rem)] leading-none tracking-[-0.08em] text-slate-950 dark:text-white">
+          <div className="grid gap-2 text-center">
+            <h2 className="text-[clamp(2rem,4.2vw,2.7rem)] leading-none tracking-[-0.06em] text-slate-950 dark:text-white">
               {name}
             </h2>
             <p className="text-base font-semibold tracking-[-0.03em] text-slate-500 dark:text-slate-300">
@@ -252,15 +252,26 @@ export function PublishedResumeHero({
             </p>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {localizedInterests.map((interest) => (
-                <article
-                  className="interest-card group"
-                  key={`${interest.localizedLabel}-${interest.icon ?? 'plain'}`}
-                >
-                  <span className="interest-card-icon">
-                    {interest.icon ? <Icon icon={interest.icon} /> : <span className="text-base">•</span>}
-                  </span>
-                  <span className="interest-card-label">{interest.localizedLabel}</span>
-                </article>
+                interest.icon ? (
+                  <article
+                    className="interest-card group"
+                    key={`${interest.localizedLabel}-${interest.icon}`}
+                  >
+                    <span className="interest-card-icon">
+                      <Icon icon={interest.icon} />
+                    </span>
+                    <span className="interest-card-label">{interest.localizedLabel}</span>
+                  </article>
+                ) : (
+                  <article
+                    className="interest-card interest-card--plain group"
+                    key={`${interest.localizedLabel}-plain`}
+                  >
+                    <span className="interest-card-label interest-card-label--plain">
+                      {interest.localizedLabel}
+                    </span>
+                  </article>
+                )
               ))}
             </div>
           </div>

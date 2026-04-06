@@ -1,6 +1,25 @@
 'use client';
 
 import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  closestCenter,
+  type DragEndEvent,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  rectSortingStrategy,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import {
   Button,
   Card,
   CardContent,
@@ -13,7 +32,15 @@ import {
   TextArea,
   Tooltip,
 } from '@heroui/react';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentProps,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
 
 import { fetchDraftResume, updateDraftResume } from '../lib/resume-draft-api';
 import type {
@@ -42,6 +69,15 @@ interface ResumeDraftEditorPanelProps {
 type DraftEditorStatus = 'idle' | 'loading' | 'ready' | 'error';
 type DraftFieldValues = Record<string, string>;
 type EditorLocaleMode = 'zh' | 'en';
+type SortableCollectionKey =
+  | 'profileLinks'
+  | 'profileInterests'
+  | 'education'
+  | 'experiences'
+  | 'projects'
+  | 'skills'
+  | 'highlights';
+type SortableCollectionState = Record<SortableCollectionKey, string[]>;
 
 function cloneResume(resume: StandardResume): StandardResume {
   return JSON.parse(JSON.stringify(resume)) as StandardResume;
@@ -132,6 +168,98 @@ function createEmptyHighlight(): ResumeHighlightItem {
   return {
     title: createEmptyLocalizedText(),
     description: createEmptyLocalizedText(),
+  };
+}
+
+function createEmptySortableCollectionState(): SortableCollectionState {
+  return {
+    profileLinks: [],
+    profileInterests: [],
+    education: [],
+    experiences: [],
+    projects: [],
+    skills: [],
+    highlights: [],
+  };
+}
+
+function buildSortableCollectionState(
+  resume: StandardResume,
+  createId: (scope: SortableCollectionKey) => string,
+): SortableCollectionState {
+  return {
+    profileLinks: resume.profile.links.map(() => createId('profileLinks')),
+    profileInterests: resume.profile.interests.map(() => createId('profileInterests')),
+    education: resume.education.map(() => createId('education')),
+    experiences: resume.experiences.map(() => createId('experiences')),
+    projects: resume.projects.map(() => createId('projects')),
+    skills: resume.skills.map(() => createId('skills')),
+    highlights: resume.highlights.map(() => createId('highlights')),
+  };
+}
+
+function collectionNeedsDraftFieldSync(collection: SortableCollectionKey): boolean {
+  return (
+    collection === 'education' ||
+    collection === 'experiences' ||
+    collection === 'projects' ||
+    collection === 'skills'
+  );
+}
+
+export function reorderResumeCollection(
+  resume: StandardResume,
+  collection: SortableCollectionKey,
+  fromIndex: number,
+  toIndex: number,
+): StandardResume {
+  const nextResume = cloneResume(resume);
+
+  if (collection === 'profileLinks') {
+    nextResume.profile.links = arrayMove(nextResume.profile.links, fromIndex, toIndex);
+    return nextResume;
+  }
+
+  if (collection === 'profileInterests') {
+    nextResume.profile.interests = arrayMove(nextResume.profile.interests, fromIndex, toIndex);
+    return nextResume;
+  }
+
+  if (collection === 'education') {
+    nextResume.education = arrayMove(nextResume.education, fromIndex, toIndex);
+    return nextResume;
+  }
+
+  if (collection === 'experiences') {
+    nextResume.experiences = arrayMove(nextResume.experiences, fromIndex, toIndex);
+    return nextResume;
+  }
+
+  if (collection === 'projects') {
+    nextResume.projects = arrayMove(nextResume.projects, fromIndex, toIndex);
+    return nextResume;
+  }
+
+  if (collection === 'skills') {
+    nextResume.skills = arrayMove(nextResume.skills, fromIndex, toIndex);
+    return nextResume;
+  }
+
+  nextResume.highlights = arrayMove(nextResume.highlights, fromIndex, toIndex);
+  return nextResume;
+}
+
+function buildSortableTransformStyle(
+  transform: { x: number; y: number; scaleX?: number; scaleY?: number } | null,
+  transition: string | undefined,
+  isDragging: boolean,
+): CSSProperties {
+  return {
+    transform: transform
+      ? `translate3d(${transform.x}px, ${transform.y}px, 0) scale(${transform.scaleX ?? 1}, ${transform.scaleY ?? 1})`
+      : undefined,
+    transition,
+    zIndex: isDragging ? 20 : undefined,
   };
 }
 
@@ -327,6 +455,19 @@ function TrashIcon() {
   );
 }
 
+function DragHandleIcon() {
+  return (
+    <svg aria-hidden="true" fill="none" height="22" viewBox="0 0 24 24" width="22">
+      <circle cx="8" cy="7" fill="currentColor" r="1.7" />
+      <circle cx="16" cy="7" fill="currentColor" r="1.7" />
+      <circle cx="8" cy="12" fill="currentColor" r="1.7" />
+      <circle cx="16" cy="12" fill="currentColor" r="1.7" />
+      <circle cx="8" cy="17" fill="currentColor" r="1.7" />
+      <circle cx="16" cy="17" fill="currentColor" r="1.7" />
+    </svg>
+  );
+}
+
 interface IconActionButtonProps {
   icon: ReactNode;
   label: string;
@@ -334,6 +475,7 @@ interface IconActionButtonProps {
   variant?: 'ghost' | 'outline';
   className?: string;
   tone?: 'default' | 'danger';
+  buttonProps?: ComponentProps<typeof Button>;
 }
 
 function IconActionButton({
@@ -343,17 +485,22 @@ function IconActionButton({
   variant = 'outline',
   className,
   tone = 'default',
+  buttonProps,
 }: IconActionButtonProps) {
+  const forwardedButtonProps = (buttonProps ?? {}) as ComponentProps<typeof Button>;
+
   return (
     <Tooltip delay={300}>
       <Tooltip.Trigger>
         <Button
+          {...forwardedButtonProps}
           aria-label={label}
           className={[
-            'h-11 w-11 min-w-11 rounded-full transition-colors focus-visible:ring-2',
+            'h-11 w-11 min-w-11 rounded-full px-0 transition-colors focus-visible:ring-2 [&_svg]:h-6 [&_svg]:w-6 [&_svg]:shrink-0',
             tone === 'danger'
               ? 'border-rose-200/80 text-zinc-500 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600 focus-visible:ring-rose-500/30 dark:border-zinc-800 dark:text-zinc-300 dark:hover:border-rose-500/40 dark:hover:bg-rose-500/10 dark:hover:text-rose-300'
               : 'border-zinc-200/80 text-zinc-600 hover:border-zinc-300 hover:bg-zinc-100 hover:text-zinc-950 focus-visible:ring-blue-500/30 dark:border-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-700 dark:hover:bg-zinc-900 dark:hover:text-white',
+            forwardedButtonProps.className,
             className,
           ]
             .filter(Boolean)
@@ -371,6 +518,90 @@ function IconActionButton({
         {label}
       </Tooltip.Content>
     </Tooltip>
+  );
+}
+
+function SortableHandleButton({
+  label,
+  attributes,
+  listeners,
+}: {
+  label: string;
+  attributes?: Record<string, unknown>;
+  listeners?: Record<string, unknown>;
+}) {
+  return (
+    <IconActionButton
+      buttonProps={{
+        ...(attributes as ComponentProps<typeof Button>),
+        ...(listeners as ComponentProps<typeof Button>),
+      }}
+      icon={<DragHandleIcon />}
+      label={label}
+      onClick={() => undefined}
+      variant="ghost"
+    />
+  );
+}
+
+function buildEntryActions({
+  dragHandle,
+  deleteAction,
+}: {
+  dragHandle: ReactNode;
+  deleteAction: ReactNode;
+}) {
+  if (!dragHandle && !deleteAction) {
+    return null;
+  }
+
+  return <div className="flex items-center gap-2">{dragHandle}{deleteAction}</div>;
+}
+
+function SortableItemShell({
+  id,
+  dragHandleLabel,
+  disabled = false,
+  className,
+  children,
+}: {
+  id: string;
+  dragHandleLabel: string;
+  disabled?: boolean;
+  className?: string;
+  children: (params: { dragHandle: ReactNode; isDragging: boolean }) => ReactNode;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id,
+    disabled,
+  });
+
+  const dragHandle = !disabled ? (
+    <SortableHandleButton
+      attributes={attributes as unknown as Record<string, unknown>}
+      label={dragHandleLabel}
+      listeners={listeners as unknown as Record<string, unknown>}
+    />
+  ) : null;
+
+  return (
+    <div
+      className={className}
+      ref={setNodeRef}
+      style={buildSortableTransformStyle(transform, transition, isDragging)}
+    >
+      {children({
+        dragHandle,
+        isDragging,
+      })}
+    </div>
   );
 }
 
@@ -564,10 +795,50 @@ export function ResumeDraftEditorPanel({
   );
   const [resumeDraft, setResumeDraft] = useState<StandardResume | null>(null);
   const [draftFieldValues, setDraftFieldValues] = useState<DraftFieldValues>({});
+  const [sortableCollections, setSortableCollections] = useState<SortableCollectionState>(
+    createEmptySortableCollectionState(),
+  );
   const [editorLocaleMode, setEditorLocaleMode] = useState<EditorLocaleMode>('zh');
   const [pendingSave, setPendingSave] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const sortableIdCounterRef = useRef(0);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 180,
+        tolerance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  function nextSortableId(scope: SortableCollectionKey) {
+    sortableIdCounterRef.current += 1;
+    return `${scope}-${sortableIdCounterRef.current}`;
+  }
+
+  function replaceSortableCollections(nextResume: StandardResume) {
+    setSortableCollections(buildSortableCollectionState(nextResume, nextSortableId));
+  }
+
+  function updateSortableCollection(
+    collection: SortableCollectionKey,
+    updater: (currentIds: string[]) => string[],
+  ) {
+    setSortableCollections((current) => ({
+      ...current,
+      [collection]: updater(current[collection]),
+    }));
+  }
 
   useEffect(() => {
     if (!canEdit) {
@@ -586,6 +857,7 @@ export function ResumeDraftEditorPanel({
         setDraftSnapshot(snapshot);
         setResumeDraft(cloneResume(snapshot.resume));
         setDraftFieldValues(buildDraftFieldValues(snapshot.resume));
+        replaceSortableCollections(snapshot.resume);
         setStatus('ready');
       })
       .catch((error) => {
@@ -605,6 +877,46 @@ export function ResumeDraftEditorPanel({
   }, [draftSnapshot]);
 
   const isTranslationMode = editorLocaleMode === 'en';
+
+  function handleCollectionDragEnd(
+    collection: SortableCollectionKey,
+    event: DragEndEvent,
+  ) {
+    const { active, over } = event;
+
+    if (!resumeDraft || !over || active.id === over.id) {
+      return;
+    }
+
+    const collectionIds = sortableCollections[collection];
+    const fromIndex = collectionIds.indexOf(String(active.id));
+    const toIndex = collectionIds.indexOf(String(over.id));
+
+    if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) {
+      return;
+    }
+
+    updateSortableCollection(collection, (currentIds) =>
+      arrayMove(currentIds, fromIndex, toIndex),
+    );
+
+    updateResumeDraft(
+      (draft) => {
+        const nextDraft = reorderResumeCollection(draft, collection, fromIndex, toIndex);
+
+        draft.meta = nextDraft.meta;
+        draft.profile = nextDraft.profile;
+        draft.education = nextDraft.education;
+        draft.experiences = nextDraft.experiences;
+        draft.projects = nextDraft.projects;
+        draft.skills = nextDraft.skills;
+        draft.highlights = nextDraft.highlights;
+      },
+      {
+        syncDraftFields: collectionNeedsDraftFieldSync(collection),
+      },
+    );
+  }
 
   function updateResumeDraft(
     mutator: (draft: StandardResume) => void,
@@ -957,24 +1269,38 @@ export function ResumeDraftEditorPanel({
     updateResumeDraft((draft) => {
       draft.profile.links.push(createEmptyProfileLink());
     });
+    updateSortableCollection('profileLinks', (currentIds) => [
+      ...currentIds,
+      nextSortableId('profileLinks'),
+    ]);
   }
 
   function addProfileInterest() {
     updateResumeDraft((draft) => {
       draft.profile.interests.push(createEmptyProfileInterest());
     });
+    updateSortableCollection('profileInterests', (currentIds) => [
+      ...currentIds,
+      nextSortableId('profileInterests'),
+    ]);
   }
 
   function removeProfileLink(index: number) {
     updateResumeDraft((draft) => {
       draft.profile.links.splice(index, 1);
     });
+    updateSortableCollection('profileLinks', (currentIds) =>
+      currentIds.filter((_, currentIndex) => currentIndex !== index),
+    );
   }
 
   function removeProfileInterest(index: number) {
     updateResumeDraft((draft) => {
       draft.profile.interests.splice(index, 1);
     });
+    updateSortableCollection('profileInterests', (currentIds) =>
+      currentIds.filter((_, currentIndex) => currentIndex !== index),
+    );
   }
 
   function updateEducationLocalizedField(
@@ -1027,6 +1353,10 @@ export function ResumeDraftEditorPanel({
       },
       { syncDraftFields: true },
     );
+    updateSortableCollection('education', (currentIds) => [
+      ...currentIds,
+      nextSortableId('education'),
+    ]);
   }
 
   function removeEducation(index: number) {
@@ -1035,6 +1365,9 @@ export function ResumeDraftEditorPanel({
         draft.education.splice(index, 1);
       },
       { syncDraftFields: true },
+    );
+    updateSortableCollection('education', (currentIds) =>
+      currentIds.filter((_, currentIndex) => currentIndex !== index),
     );
   }
 
@@ -1096,12 +1429,19 @@ export function ResumeDraftEditorPanel({
     updateResumeDraft((draft) => {
       draft.experiences.push(createEmptyExperience());
     }, { syncDraftFields: true });
+    updateSortableCollection('experiences', (currentIds) => [
+      ...currentIds,
+      nextSortableId('experiences'),
+    ]);
   }
 
   function removeExperience(index: number) {
     updateResumeDraft((draft) => {
       draft.experiences.splice(index, 1);
     }, { syncDraftFields: true });
+    updateSortableCollection('experiences', (currentIds) =>
+      currentIds.filter((_, currentIndex) => currentIndex !== index),
+    );
   }
 
   function updateProjectLocalizedField(
@@ -1184,12 +1524,19 @@ export function ResumeDraftEditorPanel({
     updateResumeDraft((draft) => {
       draft.projects.push(createEmptyProject());
     }, { syncDraftFields: true });
+    updateSortableCollection('projects', (currentIds) => [
+      ...currentIds,
+      nextSortableId('projects'),
+    ]);
   }
 
   function removeProject(index: number) {
     updateResumeDraft((draft) => {
       draft.projects.splice(index, 1);
     }, { syncDraftFields: true });
+    updateSortableCollection('projects', (currentIds) =>
+      currentIds.filter((_, currentIndex) => currentIndex !== index),
+    );
   }
 
   function updateSkillLocalizedField(
@@ -1220,6 +1567,10 @@ export function ResumeDraftEditorPanel({
       },
       { syncDraftFields: true },
     );
+    updateSortableCollection('skills', (currentIds) => [
+      ...currentIds,
+      nextSortableId('skills'),
+    ]);
   }
 
   function removeSkillGroup(index: number) {
@@ -1228,6 +1579,9 @@ export function ResumeDraftEditorPanel({
         draft.skills.splice(index, 1);
       },
       { syncDraftFields: true },
+    );
+    updateSortableCollection('skills', (currentIds) =>
+      currentIds.filter((_, currentIndex) => currentIndex !== index),
     );
   }
 
@@ -1246,12 +1600,19 @@ export function ResumeDraftEditorPanel({
     updateResumeDraft((draft) => {
       draft.highlights.push(createEmptyHighlight());
     });
+    updateSortableCollection('highlights', (currentIds) => [
+      ...currentIds,
+      nextSortableId('highlights'),
+    ]);
   }
 
   function removeHighlight(index: number) {
     updateResumeDraft((draft) => {
       draft.highlights.splice(index, 1);
     });
+    updateSortableCollection('highlights', (currentIds) =>
+      currentIds.filter((_, currentIndex) => currentIndex !== index),
+    );
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -1275,6 +1636,7 @@ export function ResumeDraftEditorPanel({
       setDraftSnapshot(nextSnapshot);
       setResumeDraft(cloneResume(nextSnapshot.resume));
       setDraftFieldValues(buildDraftFieldValues(nextSnapshot.resume));
+      replaceSortableCollections(nextSnapshot.resume);
       setFeedbackMessage('草稿已保存。公开站内容不会自动变化，仍需手动发布。');
     } catch (error) {
       setErrorMessage(
@@ -1551,72 +1913,101 @@ export function ResumeDraftEditorPanel({
                   </div>
                 ) : null}
 
-                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                  {resumeDraft.profile.links.map((link, index) => (
-                    <div
-                      className="card stack min-h-full min-w-0 gap-3 rounded-[22px] p-4"
-                      key={`profile-link-${index}`}
-                    >
-                      <div className="flex min-w-0 items-start justify-between gap-3">
-                        <div className="min-w-0 space-y-1">
-                          <h5 className="text-sm font-semibold text-zinc-950 dark:text-white">
-                            个人链接 {index + 1}
-                          </h5>
-                          <p className="muted truncate">{link.url || link.label.zh || '未命名链接'}</p>
-                        </div>
-                        {!isTranslationMode ? (
-                          <IconActionButton
-                            className="mt-0.5"
-                            icon={<TrashIcon />}
-                            label={`删除个人链接 ${index + 1}`}
-                            onClick={() => removeProfileLink(index)}
-                            variant="ghost"
-                          />
-                        ) : null}
-                      </div>
+                <DndContext
+                  collisionDetection={closestCenter}
+                  onDragEnd={(event) => handleCollectionDragEnd('profileLinks', event)}
+                  sensors={sensors}
+                >
+                  <SortableContext
+                    items={sortableCollections.profileLinks}
+                    strategy={rectSortingStrategy}
+                  >
+                    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                      {resumeDraft.profile.links.map((link, index) => (
+                        <SortableItemShell
+                          className="min-w-0"
+                          disabled={isTranslationMode}
+                          dragHandleLabel={`拖拽排序个人链接 ${index + 1}`}
+                          id={sortableCollections.profileLinks[index] ?? `profile-link-${index}`}
+                          key={sortableCollections.profileLinks[index] ?? `profile-link-${index}`}
+                        >
+                          {({ dragHandle, isDragging }) => (
+                            <div
+                              className={[
+                                'card stack min-h-full min-w-0 gap-3 rounded-[22px] p-4 transition-shadow',
+                                isDragging
+                                  ? 'border-blue-300 shadow-[0_18px_38px_rgba(37,99,235,0.18)] dark:border-blue-400/40'
+                                  : '',
+                              ].join(' ')}
+                            >
+                              <div className="flex min-w-0 items-start justify-between gap-3">
+                                <div className="min-w-0 space-y-1">
+                                  <h5 className="text-sm font-semibold text-zinc-950 dark:text-white">
+                                    个人链接 {index + 1}
+                                  </h5>
+                                  <p className="muted truncate">{link.url || link.label.zh || '未命名链接'}</p>
+                                </div>
+                                {buildEntryActions({
+                                  deleteAction: !isTranslationMode ? (
+                                    <IconActionButton
+                                      className="mt-0.5"
+                                      icon={<TrashIcon />}
+                                      label={`删除个人链接 ${index + 1}`}
+                                      onClick={() => removeProfileLink(index)}
+                                      tone="danger"
+                                      variant="ghost"
+                                    />
+                                  ) : null,
+                                  dragHandle,
+                                })}
+                              </div>
 
-                      <LocalizedEditorField
-                        label={`个人链接 ${index + 1} 标签`}
-                        localeMode={editorLocaleMode}
-                        onChange={(value) =>
-                          updateProfileLinkField(index, 'label', value, editorLocaleMode)
-                        }
-                        sourceValue={link.label.zh}
-                        value={link.label[editorLocaleMode]}
-                      />
+                              <LocalizedEditorField
+                                label={`个人链接 ${index + 1} 标签`}
+                                localeMode={editorLocaleMode}
+                                onChange={(value) =>
+                                  updateProfileLinkField(index, 'label', value, editorLocaleMode)
+                                }
+                                sourceValue={link.label.zh}
+                                value={link.label[editorLocaleMode]}
+                              />
 
-                      {!isTranslationMode ? (
-                        <>
-                          <label className="field min-w-0">
-                            <span>{`个人链接 ${index + 1} 地址`}</span>
-                            <Input
-                              className="min-w-0"
-                              fullWidth
-                              onChange={(event) =>
-                                updateProfileLinkField(index, 'url', event.target.value)
-                              }
-                              value={link.url}
-                              variant="secondary"
-                            />
-                          </label>
-                          <label className="field min-w-0">
-                            <span>{`个人链接 ${index + 1} Iconify 图标`}</span>
-                            <Input
-                              className="min-w-0"
-                              fullWidth
-                              onChange={(event) =>
-                                updateProfileLinkField(index, 'icon', event.target.value)
-                              }
-                              placeholder="ri:github-fill"
-                              value={link.icon ?? ''}
-                              variant="secondary"
-                            />
-                          </label>
-                        </>
-                      ) : null}
+                              {!isTranslationMode ? (
+                                <>
+                                  <label className="field min-w-0">
+                                    <span>{`个人链接 ${index + 1} 地址`}</span>
+                                    <Input
+                                      className="min-w-0"
+                                      fullWidth
+                                      onChange={(event) =>
+                                        updateProfileLinkField(index, 'url', event.target.value)
+                                      }
+                                      value={link.url}
+                                      variant="secondary"
+                                    />
+                                  </label>
+                                  <label className="field min-w-0">
+                                    <span>{`个人链接 ${index + 1} Iconify 图标`}</span>
+                                    <Input
+                                      className="min-w-0"
+                                      fullWidth
+                                      onChange={(event) =>
+                                        updateProfileLinkField(index, 'icon', event.target.value)
+                                      }
+                                      placeholder="ri:github-fill"
+                                      value={link.icon ?? ''}
+                                      variant="secondary"
+                                    />
+                                  </label>
+                                </>
+                              ) : null}
+                            </div>
+                          )}
+                        </SortableItemShell>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </SortableContext>
+                </DndContext>
               </div>
 
               <LocalizedEditorField
@@ -1659,60 +2050,89 @@ export function ResumeDraftEditorPanel({
                   </div>
                 ) : null}
 
-                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                  {resumeDraft.profile.interests.map((interest, index) => (
-                    <div
-                      className="card stack min-h-full min-w-0 gap-3 rounded-[22px] p-4"
-                      key={`profile-interest-${index}`}
-                    >
-                      <div className="flex min-w-0 items-start justify-between gap-3">
-                        <div className="min-w-0 space-y-1">
-                          <h5 className="text-sm font-semibold text-zinc-950 dark:text-white">
-                            兴趣方向 {index + 1}
-                          </h5>
-                          <p className="muted truncate">
-                            {interest.label.zh || interest.label.en || interest.icon || '未命名兴趣'}
-                          </p>
-                        </div>
-                        {!isTranslationMode ? (
-                          <IconActionButton
-                            className="mt-0.5"
-                            icon={<TrashIcon />}
-                            label={`删除兴趣方向 ${index + 1}`}
-                            onClick={() => removeProfileInterest(index)}
-                            variant="ghost"
-                          />
-                        ) : null}
-                      </div>
+                <DndContext
+                  collisionDetection={closestCenter}
+                  onDragEnd={(event) => handleCollectionDragEnd('profileInterests', event)}
+                  sensors={sensors}
+                >
+                  <SortableContext
+                    items={sortableCollections.profileInterests}
+                    strategy={rectSortingStrategy}
+                  >
+                    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                      {resumeDraft.profile.interests.map((interest, index) => (
+                        <SortableItemShell
+                          className="min-w-0"
+                          disabled={isTranslationMode}
+                          dragHandleLabel={`拖拽排序兴趣方向 ${index + 1}`}
+                          id={sortableCollections.profileInterests[index] ?? `profile-interest-${index}`}
+                          key={sortableCollections.profileInterests[index] ?? `profile-interest-${index}`}
+                        >
+                          {({ dragHandle, isDragging }) => (
+                            <div
+                              className={[
+                                'card stack min-h-full min-w-0 gap-3 rounded-[22px] p-4 transition-shadow',
+                                isDragging
+                                  ? 'border-blue-300 shadow-[0_18px_38px_rgba(37,99,235,0.18)] dark:border-blue-400/40'
+                                  : '',
+                              ].join(' ')}
+                            >
+                              <div className="flex min-w-0 items-start justify-between gap-3">
+                                <div className="min-w-0 space-y-1">
+                                  <h5 className="text-sm font-semibold text-zinc-950 dark:text-white">
+                                    兴趣方向 {index + 1}
+                                  </h5>
+                                  <p className="muted truncate">
+                                    {interest.label.zh || interest.label.en || interest.icon || '未命名兴趣'}
+                                  </p>
+                                </div>
+                                {buildEntryActions({
+                                  deleteAction: !isTranslationMode ? (
+                                    <IconActionButton
+                                      className="mt-0.5"
+                                      icon={<TrashIcon />}
+                                      label={`删除兴趣方向 ${index + 1}`}
+                                      onClick={() => removeProfileInterest(index)}
+                                      tone="danger"
+                                      variant="ghost"
+                                    />
+                                  ) : null,
+                                  dragHandle,
+                                })}
+                              </div>
 
-                      <LocalizedEditorField
-                        label={`兴趣方向 ${index + 1} 名称`}
-                        localeMode={editorLocaleMode}
-                        onChange={(value) =>
-                          updateProfileInterestField(index, 'label', value, editorLocaleMode)
-                        }
-                        sourceValue={interest.label.zh}
-                        value={interest.label[editorLocaleMode]}
-                      />
+                              <LocalizedEditorField
+                                label={`兴趣方向 ${index + 1} 名称`}
+                                localeMode={editorLocaleMode}
+                                onChange={(value) =>
+                                  updateProfileInterestField(index, 'label', value, editorLocaleMode)
+                                }
+                                sourceValue={interest.label.zh}
+                                value={interest.label[editorLocaleMode]}
+                              />
 
-                      {!isTranslationMode ? (
-                        <label className="field min-w-0">
-                          <span>{`兴趣方向 ${index + 1} Iconify 图标`}</span>
-                          <Input
-                            className="min-w-0"
-                            fullWidth
-                            onChange={(event) =>
-                              updateProfileInterestField(index, 'icon', event.target.value)
-                            }
-                            placeholder="ri:rocket-line"
-                            value={interest.icon ?? ''}
-                            variant="secondary"
-                          />
-                        </label>
-                      ) : null}
+                              {!isTranslationMode ? (
+                                <label className="field min-w-0">
+                                  <span>{`兴趣方向 ${index + 1} Iconify 图标`}</span>
+                                  <Input
+                                    className="min-w-0"
+                                    fullWidth
+                                    onChange={(event) =>
+                                      updateProfileInterestField(index, 'icon', event.target.value)
+                                    }
+                                    placeholder="ri:rocket-line"
+                                    value={interest.icon ?? ''}
+                                    variant="secondary"
+                                  />
+                                </label>
+                              ) : null}
+                            </div>
+                          )}
+                        </SortableItemShell>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </SortableContext>
+                </DndContext>
               </div>
             </EditorSection>
 
@@ -1746,133 +2166,158 @@ export function ResumeDraftEditorPanel({
                 </div>
               ) : null}
 
-              {resumeDraft.education.map((education, index) => (
-                <EditorEntry
-                  action={
-                    !isTranslationMode ? (
-                      <IconActionButton
-                        icon={<TrashIcon />}
-                        label={`删除教育经历 ${index + 1}`}
-                        onClick={() => removeEducation(index)}
-                        tone="danger"
-                        variant="ghost"
-                      />
-                    ) : null
-                  }
-                  defaultExpanded={resumeDraft.education.length === 1 || index === resumeDraft.education.length - 1}
-                  key={`education-${index}`}
-                  summary={education.schoolName.zh || education.schoolName.en || '未命名教育经历'}
-                  title={`教育经历 ${index + 1}`}
-                  toggleLabel={`教育经历 ${index + 1} 条目开关`}
-                  variant="embedded"
+              <DndContext
+                collisionDetection={closestCenter}
+                modifiers={[restrictToVerticalAxis]}
+                onDragEnd={(event) => handleCollectionDragEnd('education', event)}
+                sensors={sensors}
+              >
+                <SortableContext
+                  items={sortableCollections.education}
+                  strategy={verticalListSortingStrategy}
                 >
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <LocalizedEditorField
-                      label={`教育经历 ${index + 1} 学校`}
-                      localeMode={editorLocaleMode}
-                      onChange={(value) =>
-                        updateEducationLocalizedField(
-                          index,
-                          'schoolName',
-                          editorLocaleMode,
-                          value,
-                        )
-                      }
-                      sourceValue={education.schoolName.zh}
-                      value={education.schoolName[editorLocaleMode]}
-                    />
-                    <LocalizedEditorField
-                      label={`教育经历 ${index + 1} 学位`}
-                      localeMode={editorLocaleMode}
-                      onChange={(value) =>
-                        updateEducationLocalizedField(
-                          index,
-                          'degree',
-                          editorLocaleMode,
-                          value,
-                        )
-                      }
-                      sourceValue={education.degree.zh}
-                      value={education.degree[editorLocaleMode]}
-                    />
-                    <LocalizedEditorField
-                      label={`教育经历 ${index + 1} 专业`}
-                      localeMode={editorLocaleMode}
-                      onChange={(value) =>
-                        updateEducationLocalizedField(
-                          index,
-                          'fieldOfStudy',
-                          editorLocaleMode,
-                          value,
-                        )
-                      }
-                      sourceValue={education.fieldOfStudy.zh}
-                      value={education.fieldOfStudy[editorLocaleMode]}
-                    />
-                    {!isTranslationMode ? (
-                      <>
-                        <label className="field">
-                          <span>{`教育经历 ${index + 1} 开始时间`}</span>
-                          <Input
-                            fullWidth
-                            onChange={(event) =>
-                              updateEducationPlainField(index, 'startDate', event.target.value)
-                            }
-                            value={education.startDate}
-                            variant="secondary"
-                          />
-                        </label>
-                        <label className="field">
-                          <span>{`教育经历 ${index + 1} 结束时间`}</span>
-                          <Input
-                            fullWidth
-                            onChange={(event) =>
-                              updateEducationPlainField(index, 'endDate', event.target.value)
-                            }
-                            value={education.endDate}
-                            variant="secondary"
-                          />
-                        </label>
-                      </>
-                    ) : null}
-                    <LocalizedEditorField
-                      label={`教育经历 ${index + 1} 地点`}
-                      localeMode={editorLocaleMode}
-                      onChange={(value) =>
-                        updateEducationLocalizedField(
-                          index,
-                          'location',
-                          editorLocaleMode,
-                          value,
-                        )
-                      }
-                      sourceValue={education.location.zh}
-                      value={education.location[editorLocaleMode]}
-                    />
-                  </div>
+                  <div className="grid gap-4">
+                    {resumeDraft.education.map((education, index) => (
+                      <SortableItemShell
+                        disabled={isTranslationMode}
+                        dragHandleLabel={`拖拽排序教育经历 ${index + 1}`}
+                        id={sortableCollections.education[index] ?? `education-${index}`}
+                        key={sortableCollections.education[index] ?? `education-${index}`}
+                      >
+                        {({ dragHandle, isDragging }) => (
+                          <div className={isDragging ? 'rounded-[24px]' : undefined}>
+                            <EditorEntry
+                              action={buildEntryActions({
+                                deleteAction: !isTranslationMode ? (
+                                  <IconActionButton
+                                    icon={<TrashIcon />}
+                                    label={`删除教育经历 ${index + 1}`}
+                                    onClick={() => removeEducation(index)}
+                                    tone="danger"
+                                    variant="ghost"
+                                  />
+                                ) : null,
+                                dragHandle,
+                              })}
+                              defaultExpanded={resumeDraft.education.length === 1 || index === resumeDraft.education.length - 1}
+                              summary={education.schoolName.zh || education.schoolName.en || '未命名教育经历'}
+                              title={`教育经历 ${index + 1}`}
+                              toggleLabel={`教育经历 ${index + 1} 条目开关`}
+                              variant="embedded"
+                            >
+                              <div className="grid gap-4 md:grid-cols-2">
+                                <LocalizedEditorField
+                                  label={`教育经历 ${index + 1} 学校`}
+                                  localeMode={editorLocaleMode}
+                                  onChange={(value) =>
+                                    updateEducationLocalizedField(
+                                      index,
+                                      'schoolName',
+                                      editorLocaleMode,
+                                      value,
+                                    )
+                                  }
+                                  sourceValue={education.schoolName.zh}
+                                  value={education.schoolName[editorLocaleMode]}
+                                />
+                                <LocalizedEditorField
+                                  label={`教育经历 ${index + 1} 学位`}
+                                  localeMode={editorLocaleMode}
+                                  onChange={(value) =>
+                                    updateEducationLocalizedField(
+                                      index,
+                                      'degree',
+                                      editorLocaleMode,
+                                      value,
+                                    )
+                                  }
+                                  sourceValue={education.degree.zh}
+                                  value={education.degree[editorLocaleMode]}
+                                />
+                                <LocalizedEditorField
+                                  label={`教育经历 ${index + 1} 专业`}
+                                  localeMode={editorLocaleMode}
+                                  onChange={(value) =>
+                                    updateEducationLocalizedField(
+                                      index,
+                                      'fieldOfStudy',
+                                      editorLocaleMode,
+                                      value,
+                                    )
+                                  }
+                                  sourceValue={education.fieldOfStudy.zh}
+                                  value={education.fieldOfStudy[editorLocaleMode]}
+                                />
+                                {!isTranslationMode ? (
+                                  <>
+                                    <label className="field">
+                                      <span>{`教育经历 ${index + 1} 开始时间`}</span>
+                                      <Input
+                                        fullWidth
+                                        onChange={(event) =>
+                                          updateEducationPlainField(index, 'startDate', event.target.value)
+                                        }
+                                        value={education.startDate}
+                                        variant="secondary"
+                                      />
+                                    </label>
+                                    <label className="field">
+                                      <span>{`教育经历 ${index + 1} 结束时间`}</span>
+                                      <Input
+                                        fullWidth
+                                        onChange={(event) =>
+                                          updateEducationPlainField(index, 'endDate', event.target.value)
+                                        }
+                                        value={education.endDate}
+                                        variant="secondary"
+                                      />
+                                    </label>
+                                  </>
+                                ) : null}
+                                <LocalizedEditorField
+                                  label={`教育经历 ${index + 1} 地点`}
+                                  localeMode={editorLocaleMode}
+                                  onChange={(value) =>
+                                    updateEducationLocalizedField(
+                                      index,
+                                      'location',
+                                      editorLocaleMode,
+                                      value,
+                                    )
+                                  }
+                                  sourceValue={education.location.zh}
+                                  value={education.location[editorLocaleMode]}
+                                />
+                              </div>
 
-                  <LocalizedEditorField
-                    label={`教育经历 ${index + 1} 亮点（每行一条）`}
-                    localeMode={editorLocaleMode}
-                    onChange={(value) =>
-                      updateEducationHighlights(index, editorLocaleMode, value)
-                    }
-                    rows={4}
-                    sourceValue={formatLocalizedLines(education.highlights, 'zh')}
-                    value={
-                      draftFieldValues[
-                        buildDraftFieldKey(
-                          'education',
-                          index,
-                          'highlights',
-                          editorLocaleMode,
-                        )
-                      ] ?? formatLocalizedLines(education.highlights, editorLocaleMode)
-                    }
-                    variant="textarea"
-                  />
-                </EditorEntry>
-              ))}
+                              <LocalizedEditorField
+                                label={`教育经历 ${index + 1} 亮点（每行一条）`}
+                                localeMode={editorLocaleMode}
+                                onChange={(value) =>
+                                  updateEducationHighlights(index, editorLocaleMode, value)
+                                }
+                                rows={4}
+                                sourceValue={formatLocalizedLines(education.highlights, 'zh')}
+                                value={
+                                  draftFieldValues[
+                                    buildDraftFieldKey(
+                                      'education',
+                                      index,
+                                      'highlights',
+                                      editorLocaleMode,
+                                    )
+                                  ] ?? formatLocalizedLines(education.highlights, editorLocaleMode)
+                                }
+                                variant="textarea"
+                              />
+                            </EditorEntry>
+                          </div>
+                        )}
+                      </SortableItemShell>
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
             </EditorSection>
 
             <EditorSection
@@ -1905,173 +2350,196 @@ export function ResumeDraftEditorPanel({
                 </div>
               ) : null}
 
-              {resumeDraft.experiences.map((experience, index) => (
-                <EditorEntry
-                  action={
-                    !isTranslationMode ? (
-                      <IconActionButton
-                        icon={<TrashIcon />}
-                        label={`删除工作经历 ${index + 1}`}
-                        onClick={() => removeExperience(index)}
-                        tone="danger"
-                        variant="ghost"
-                      />
-                    ) : null
-                  }
-                  defaultExpanded={
-                    resumeDraft.experiences.length === 1 ||
-                    index === resumeDraft.experiences.length - 1
-                  }
-                  key={`experience-${index}`}
-                  summary={
-                    experience.companyName.zh || experience.companyName.en || '未命名工作经历'
-                  }
-                  title={`工作经历 ${index + 1}`}
-                  toggleLabel={`工作经历 ${index + 1} 条目开关`}
-                  variant="embedded"
+              <DndContext
+                collisionDetection={closestCenter}
+                modifiers={[restrictToVerticalAxis]}
+                onDragEnd={(event) => handleCollectionDragEnd('experiences', event)}
+                sensors={sensors}
+              >
+                <SortableContext
+                  items={sortableCollections.experiences}
+                  strategy={verticalListSortingStrategy}
                 >
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <LocalizedEditorField
-                      label={`工作经历 ${index + 1} 公司`}
-                      localeMode={editorLocaleMode}
-                      onChange={(value) =>
-                        updateExperienceLocalizedField(
-                          index,
-                          'companyName',
-                          editorLocaleMode,
-                          value,
-                        )
-                      }
-                      sourceValue={experience.companyName.zh}
-                      value={experience.companyName[editorLocaleMode]}
-                    />
-                    <LocalizedEditorField
-                      label={`工作经历 ${index + 1} 岗位`}
-                      localeMode={editorLocaleMode}
-                      onChange={(value) =>
-                        updateExperienceLocalizedField(
-                          index,
-                          'role',
-                          editorLocaleMode,
-                          value,
-                        )
-                      }
-                      sourceValue={experience.role.zh}
-                      value={experience.role[editorLocaleMode]}
-                    />
-                    <LocalizedEditorField
-                      label={`工作经历 ${index + 1} 类型`}
-                      localeMode={editorLocaleMode}
-                      onChange={(value) =>
-                        updateExperienceLocalizedField(
-                          index,
-                          'employmentType',
-                          editorLocaleMode,
-                          value,
-                        )
-                      }
-                      sourceValue={experience.employmentType.zh}
-                      value={experience.employmentType[editorLocaleMode]}
-                    />
-                    {!isTranslationMode ? (
-                      <>
-                        <label className="field">
-                          <span>{`工作经历 ${index + 1} 开始时间`}</span>
-                          <Input
-                            fullWidth
-                            onChange={(event) =>
-                              updateExperiencePlainField(index, 'startDate', event.target.value)
+                  <div className="grid gap-4">
+                    {resumeDraft.experiences.map((experience, index) => (
+                      <SortableItemShell
+                        disabled={isTranslationMode}
+                        dragHandleLabel={`拖拽排序工作经历 ${index + 1}`}
+                        id={sortableCollections.experiences[index] ?? `experience-${index}`}
+                        key={sortableCollections.experiences[index] ?? `experience-${index}`}
+                      >
+                        {({ dragHandle }) => (
+                          <EditorEntry
+                            action={buildEntryActions({
+                              deleteAction: !isTranslationMode ? (
+                                <IconActionButton
+                                  icon={<TrashIcon />}
+                                  label={`删除工作经历 ${index + 1}`}
+                                  onClick={() => removeExperience(index)}
+                                  tone="danger"
+                                  variant="ghost"
+                                />
+                              ) : null,
+                              dragHandle,
+                            })}
+                            defaultExpanded={
+                              resumeDraft.experiences.length === 1 ||
+                              index === resumeDraft.experiences.length - 1
                             }
-                            value={experience.startDate}
-                            variant="secondary"
-                          />
-                        </label>
-                        <label className="field">
-                          <span>{`工作经历 ${index + 1} 结束时间`}</span>
-                          <Input
-                            fullWidth
-                            onChange={(event) =>
-                              updateExperiencePlainField(index, 'endDate', event.target.value)
+                            summary={
+                              experience.companyName.zh || experience.companyName.en || '未命名工作经历'
                             }
-                            value={experience.endDate}
-                            variant="secondary"
-                          />
-                        </label>
-                      </>
-                    ) : null}
-                    <LocalizedEditorField
-                      label={`工作经历 ${index + 1} 地点`}
-                      localeMode={editorLocaleMode}
-                      onChange={(value) =>
-                        updateExperienceLocalizedField(
-                          index,
-                          'location',
-                          editorLocaleMode,
-                          value,
-                        )
-                      }
-                      sourceValue={experience.location.zh}
-                      value={experience.location[editorLocaleMode]}
-                    />
+                            title={`工作经历 ${index + 1}`}
+                            toggleLabel={`工作经历 ${index + 1} 条目开关`}
+                            variant="embedded"
+                          >
+                            <div className="grid gap-4 md:grid-cols-2">
+                              <LocalizedEditorField
+                                label={`工作经历 ${index + 1} 公司`}
+                                localeMode={editorLocaleMode}
+                                onChange={(value) =>
+                                  updateExperienceLocalizedField(
+                                    index,
+                                    'companyName',
+                                    editorLocaleMode,
+                                    value,
+                                  )
+                                }
+                                sourceValue={experience.companyName.zh}
+                                value={experience.companyName[editorLocaleMode]}
+                              />
+                              <LocalizedEditorField
+                                label={`工作经历 ${index + 1} 岗位`}
+                                localeMode={editorLocaleMode}
+                                onChange={(value) =>
+                                  updateExperienceLocalizedField(
+                                    index,
+                                    'role',
+                                    editorLocaleMode,
+                                    value,
+                                  )
+                                }
+                                sourceValue={experience.role.zh}
+                                value={experience.role[editorLocaleMode]}
+                              />
+                              <LocalizedEditorField
+                                label={`工作经历 ${index + 1} 类型`}
+                                localeMode={editorLocaleMode}
+                                onChange={(value) =>
+                                  updateExperienceLocalizedField(
+                                    index,
+                                    'employmentType',
+                                    editorLocaleMode,
+                                    value,
+                                  )
+                                }
+                                sourceValue={experience.employmentType.zh}
+                                value={experience.employmentType[editorLocaleMode]}
+                              />
+                              {!isTranslationMode ? (
+                                <>
+                                  <label className="field">
+                                    <span>{`工作经历 ${index + 1} 开始时间`}</span>
+                                    <Input
+                                      fullWidth
+                                      onChange={(event) =>
+                                        updateExperiencePlainField(index, 'startDate', event.target.value)
+                                      }
+                                      value={experience.startDate}
+                                      variant="secondary"
+                                    />
+                                  </label>
+                                  <label className="field">
+                                    <span>{`工作经历 ${index + 1} 结束时间`}</span>
+                                    <Input
+                                      fullWidth
+                                      onChange={(event) =>
+                                        updateExperiencePlainField(index, 'endDate', event.target.value)
+                                      }
+                                      value={experience.endDate}
+                                      variant="secondary"
+                                    />
+                                  </label>
+                                </>
+                              ) : null}
+                              <LocalizedEditorField
+                                label={`工作经历 ${index + 1} 地点`}
+                                localeMode={editorLocaleMode}
+                                onChange={(value) =>
+                                  updateExperienceLocalizedField(
+                                    index,
+                                    'location',
+                                    editorLocaleMode,
+                                    value,
+                                  )
+                                }
+                                sourceValue={experience.location.zh}
+                                value={experience.location[editorLocaleMode]}
+                              />
+                            </div>
+
+                            <LocalizedEditorField
+                              label={`工作经历 ${index + 1} 摘要`}
+                              localeMode={editorLocaleMode}
+                              onChange={(value) =>
+                                updateExperienceLocalizedField(
+                                  index,
+                                  'summary',
+                                  editorLocaleMode,
+                                  value,
+                                )
+                              }
+                              rows={4}
+                              sourceValue={experience.summary.zh}
+                              value={experience.summary[editorLocaleMode]}
+                              variant="textarea"
+                            />
+
+                            <LocalizedEditorField
+                              label={`工作经历 ${index + 1} 亮点（每行一条）`}
+                              localeMode={editorLocaleMode}
+                              onChange={(value) =>
+                                updateExperienceHighlights(index, editorLocaleMode, value)
+                              }
+                              rows={5}
+                              sourceValue={formatLocalizedLines(experience.highlights, 'zh')}
+                              value={
+                                draftFieldValues[
+                                  buildDraftFieldKey(
+                                    'experience',
+                                    index,
+                                    'highlights',
+                                    editorLocaleMode,
+                                  )
+                                ] ?? formatLocalizedLines(experience.highlights, editorLocaleMode)
+                              }
+                              variant="textarea"
+                            />
+
+                            {!isTranslationMode ? (
+                              <label className="field">
+                                <span>{`工作经历 ${index + 1} 技术栈（逗号分隔）`}</span>
+                                <Input
+                                  fullWidth
+                                  onChange={(event) =>
+                                    updateExperienceTechnologies(index, event.target.value)
+                                  }
+                                  value={
+                                    draftFieldValues[
+                                      buildDraftFieldKey('experience', index, 'technologies')
+                                    ] ?? formatCommaSeparatedValues(experience.technologies)
+                                  }
+                                  variant="secondary"
+                                />
+                              </label>
+                            ) : null}
+                          </EditorEntry>
+                        )}
+                      </SortableItemShell>
+                    ))}
                   </div>
-
-                  <LocalizedEditorField
-                    label={`工作经历 ${index + 1} 摘要`}
-                    localeMode={editorLocaleMode}
-                    onChange={(value) =>
-                      updateExperienceLocalizedField(
-                        index,
-                        'summary',
-                        editorLocaleMode,
-                        value,
-                      )
-                    }
-                    rows={4}
-                    sourceValue={experience.summary.zh}
-                    value={experience.summary[editorLocaleMode]}
-                    variant="textarea"
-                  />
-
-                  <LocalizedEditorField
-                    label={`工作经历 ${index + 1} 亮点（每行一条）`}
-                    localeMode={editorLocaleMode}
-                    onChange={(value) =>
-                      updateExperienceHighlights(index, editorLocaleMode, value)
-                    }
-                    rows={5}
-                    sourceValue={formatLocalizedLines(experience.highlights, 'zh')}
-                    value={
-                      draftFieldValues[
-                        buildDraftFieldKey(
-                          'experience',
-                          index,
-                          'highlights',
-                          editorLocaleMode,
-                        )
-                      ] ?? formatLocalizedLines(experience.highlights, editorLocaleMode)
-                    }
-                    variant="textarea"
-                  />
-
-                  {!isTranslationMode ? (
-                    <label className="field">
-                      <span>{`工作经历 ${index + 1} 技术栈（逗号分隔）`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) =>
-                          updateExperienceTechnologies(index, event.target.value)
-                        }
-                        value={
-                          draftFieldValues[
-                            buildDraftFieldKey('experience', index, 'technologies')
-                          ] ?? formatCommaSeparatedValues(experience.technologies)
-                        }
-                        variant="secondary"
-                      />
-                    </label>
-                  ) : null}
-                </EditorEntry>
-              ))}
+                </SortableContext>
+              </DndContext>
             </EditorSection>
 
             <EditorSection
@@ -2104,207 +2572,230 @@ export function ResumeDraftEditorPanel({
                 </div>
               ) : null}
 
-              {resumeDraft.projects.map((project, index) => (
-                <EditorEntry
-                  action={
-                    !isTranslationMode ? (
-                      <IconActionButton
-                        icon={<TrashIcon />}
-                        label={`删除项目经历 ${index + 1}`}
-                        onClick={() => removeProject(index)}
-                        tone="danger"
-                        variant="ghost"
-                      />
-                    ) : null
-                  }
-                  defaultExpanded={
-                    resumeDraft.projects.length === 1 ||
-                    index === resumeDraft.projects.length - 1
-                  }
-                  key={`project-${index}`}
-                  summary={project.name.zh || project.name.en || '未命名项目'}
-                  title={`项目经历 ${index + 1}`}
-                  toggleLabel={`项目经历 ${index + 1} 条目开关`}
-                  variant="embedded"
+              <DndContext
+                collisionDetection={closestCenter}
+                modifiers={[restrictToVerticalAxis]}
+                onDragEnd={(event) => handleCollectionDragEnd('projects', event)}
+                sensors={sensors}
+              >
+                <SortableContext
+                  items={sortableCollections.projects}
+                  strategy={verticalListSortingStrategy}
                 >
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <LocalizedEditorField
-                      label={`项目经历 ${index + 1} 名称`}
-                      localeMode={editorLocaleMode}
-                      onChange={(value) =>
-                        updateProjectLocalizedField(index, 'name', editorLocaleMode, value)
-                      }
-                      sourceValue={project.name.zh}
-                      value={project.name[editorLocaleMode]}
-                    />
-                    <LocalizedEditorField
-                      label={`项目经历 ${index + 1} 角色`}
-                      localeMode={editorLocaleMode}
-                      onChange={(value) =>
-                        updateProjectLocalizedField(index, 'role', editorLocaleMode, value)
-                      }
-                      sourceValue={project.role.zh}
-                      value={project.role[editorLocaleMode]}
-                    />
-                    {!isTranslationMode ? (
-                      <>
-                        <label className="field">
-                          <span>{`项目经历 ${index + 1} 开始时间`}</span>
-                          <Input
-                            fullWidth
-                            onChange={(event) =>
-                              updateProjectPlainField(index, 'startDate', event.target.value)
-                            }
-                            value={project.startDate}
-                            variant="secondary"
-                          />
-                        </label>
-                        <label className="field">
-                          <span>{`项目经历 ${index + 1} 结束时间`}</span>
-                          <Input
-                            fullWidth
-                            onChange={(event) =>
-                              updateProjectPlainField(index, 'endDate', event.target.value)
-                            }
-                            value={project.endDate}
-                            variant="secondary"
-                          />
-                        </label>
-                      </>
-                    ) : null}
-                  </div>
-
-                  <LocalizedEditorField
-                    label={`项目经历 ${index + 1} 摘要`}
-                    localeMode={editorLocaleMode}
-                    onChange={(value) =>
-                      updateProjectLocalizedField(index, 'summary', editorLocaleMode, value)
-                    }
-                    rows={4}
-                    sourceValue={project.summary.zh}
-                    value={project.summary[editorLocaleMode]}
-                    variant="textarea"
-                  />
-
-                  <LocalizedEditorField
-                    label={`项目经历 ${index + 1} 亮点（每行一条）`}
-                    localeMode={editorLocaleMode}
-                    onChange={(value) =>
-                      updateProjectHighlights(index, editorLocaleMode, value)
-                    }
-                    rows={5}
-                    sourceValue={formatLocalizedLines(project.highlights, 'zh')}
-                    value={
-                      draftFieldValues[
-                        buildDraftFieldKey('project', index, 'highlights', editorLocaleMode)
-                      ] ?? formatLocalizedLines(project.highlights, editorLocaleMode)
-                    }
-                    variant="textarea"
-                  />
-
-                  {!isTranslationMode ? (
-                    <label className="field">
-                      <span>{`项目经历 ${index + 1} 技术栈（逗号分隔）`}</span>
-                      <Input
-                        fullWidth
-                        onChange={(event) => updateProjectTechnologies(index, event.target.value)}
-                        value={
-                          draftFieldValues[
-                            buildDraftFieldKey('project', index, 'technologies')
-                          ] ?? formatCommaSeparatedValues(project.technologies)
-                        }
-                        variant="secondary"
-                      />
-                    </label>
-                  ) : null}
-
-                  <div className="stack">
-                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                      <div className="space-y-1">
-                        <h5 className="text-sm font-semibold text-zinc-950 dark:text-white">
-                          项目链接
-                        </h5>
-                        <p className="muted">
-                          {isTranslationMode
-                            ? '这里集中维护项目链接标签的英文版本。链接地址与新增删除动作仍在中文主编辑处理。'
-                            : '可补充项目地址、演示入口或仓库链接，公开页和导出内容会复用这些字段。'}
-                        </p>
-                      </div>
-                      {!isTranslationMode ? (
-                        <IconActionButton
-                          icon={<PlusIcon />}
-                          label={`为项目经历 ${index + 1} 添加项目链接`}
-                          onClick={() => addProjectLink(index)}
-                        />
-                      ) : null}
-                    </div>
-
-                    {project.links.length === 0 ? (
-                      <div className="status-box">
-                        <strong>当前还没有项目链接</strong>
-                        <span>可按项目补充 demo、仓库或案例文章入口。</span>
-                      </div>
-                    ) : null}
-
-                    {project.links.map((link, linkIndex) => (
-                      <div
-                        className="grid min-w-0 gap-4 rounded-[20px] border border-zinc-200/60 bg-zinc-50/60 p-4 shadow-none dark:border-zinc-800/80 dark:bg-zinc-950/55"
-                        key={`project-${index}-link-${linkIndex}`}
+                  <div className="grid gap-4">
+                    {resumeDraft.projects.map((project, index) => (
+                      <SortableItemShell
+                        disabled={isTranslationMode}
+                        dragHandleLabel={`拖拽排序项目经历 ${index + 1}`}
+                        id={sortableCollections.projects[index] ?? `project-${index}`}
+                        key={sortableCollections.projects[index] ?? `project-${index}`}
                       >
-                        <div className="flex min-w-0 items-start justify-between gap-3">
-                          <div className="min-w-0 space-y-1">
-                            <h6 className="text-sm font-semibold text-zinc-950 dark:text-white">
-                              {`项目链接 ${linkIndex + 1}`}
-                            </h6>
-                            <p className="muted truncate">{link.url || link.label.zh || '未命名链接'}</p>
-                          </div>
-                          {!isTranslationMode ? (
-                            <IconActionButton
-                              className="mt-0.5"
-                              icon={<TrashIcon />}
-                              label={`删除项目经历 ${index + 1} 的链接 ${linkIndex + 1}`}
-                              onClick={() => removeProjectLink(index, linkIndex)}
-                              tone="danger"
-                              variant="ghost"
-                            />
-                          ) : null}
-                        </div>
+                        {({ dragHandle }) => (
+                          <EditorEntry
+                            action={buildEntryActions({
+                              deleteAction: !isTranslationMode ? (
+                                <IconActionButton
+                                  icon={<TrashIcon />}
+                                  label={`删除项目经历 ${index + 1}`}
+                                  onClick={() => removeProject(index)}
+                                  tone="danger"
+                                  variant="ghost"
+                                />
+                              ) : null,
+                              dragHandle,
+                            })}
+                            defaultExpanded={
+                              resumeDraft.projects.length === 1 ||
+                              index === resumeDraft.projects.length - 1
+                            }
+                            summary={project.name.zh || project.name.en || '未命名项目'}
+                            title={`项目经历 ${index + 1}`}
+                            toggleLabel={`项目经历 ${index + 1} 条目开关`}
+                            variant="embedded"
+                          >
+                            <div className="grid gap-4 md:grid-cols-2">
+                              <LocalizedEditorField
+                                label={`项目经历 ${index + 1} 名称`}
+                                localeMode={editorLocaleMode}
+                                onChange={(value) =>
+                                  updateProjectLocalizedField(index, 'name', editorLocaleMode, value)
+                                }
+                                sourceValue={project.name.zh}
+                                value={project.name[editorLocaleMode]}
+                              />
+                              <LocalizedEditorField
+                                label={`项目经历 ${index + 1} 角色`}
+                                localeMode={editorLocaleMode}
+                                onChange={(value) =>
+                                  updateProjectLocalizedField(index, 'role', editorLocaleMode, value)
+                                }
+                                sourceValue={project.role.zh}
+                                value={project.role[editorLocaleMode]}
+                              />
+                              {!isTranslationMode ? (
+                                <>
+                                  <label className="field">
+                                    <span>{`项目经历 ${index + 1} 开始时间`}</span>
+                                    <Input
+                                      fullWidth
+                                      onChange={(event) =>
+                                        updateProjectPlainField(index, 'startDate', event.target.value)
+                                      }
+                                      value={project.startDate}
+                                      variant="secondary"
+                                    />
+                                  </label>
+                                  <label className="field">
+                                    <span>{`项目经历 ${index + 1} 结束时间`}</span>
+                                    <Input
+                                      fullWidth
+                                      onChange={(event) =>
+                                        updateProjectPlainField(index, 'endDate', event.target.value)
+                                      }
+                                      value={project.endDate}
+                                      variant="secondary"
+                                    />
+                                  </label>
+                                </>
+                              ) : null}
+                            </div>
 
-                        <LocalizedEditorField
-                          label={`项目经历 ${index + 1} 链接 ${linkIndex + 1} 标签`}
-                          localeMode={editorLocaleMode}
-                          onChange={(value) =>
-                            updateProjectLinkField(
-                              index,
-                              linkIndex,
-                              'label',
-                              value,
-                              editorLocaleMode,
-                            )
-                          }
-                          sourceValue={link.label.zh}
-                          value={link.label[editorLocaleMode]}
-                        />
-
-                        {!isTranslationMode ? (
-                          <label className="field min-w-0">
-                            <span>{`项目经历 ${index + 1} 链接 ${linkIndex + 1} 地址`}</span>
-                            <Input
-                              className="min-w-0"
-                              fullWidth
-                              onChange={(event) =>
-                                updateProjectLinkField(index, linkIndex, 'url', event.target.value)
+                            <LocalizedEditorField
+                              label={`项目经历 ${index + 1} 摘要`}
+                              localeMode={editorLocaleMode}
+                              onChange={(value) =>
+                                updateProjectLocalizedField(index, 'summary', editorLocaleMode, value)
                               }
-                              value={link.url}
-                              variant="secondary"
+                              rows={4}
+                              sourceValue={project.summary.zh}
+                              value={project.summary[editorLocaleMode]}
+                              variant="textarea"
                             />
-                          </label>
-                        ) : null}
-                      </div>
+
+                            <LocalizedEditorField
+                              label={`项目经历 ${index + 1} 亮点（每行一条）`}
+                              localeMode={editorLocaleMode}
+                              onChange={(value) =>
+                                updateProjectHighlights(index, editorLocaleMode, value)
+                              }
+                              rows={5}
+                              sourceValue={formatLocalizedLines(project.highlights, 'zh')}
+                              value={
+                                draftFieldValues[
+                                  buildDraftFieldKey('project', index, 'highlights', editorLocaleMode)
+                                ] ?? formatLocalizedLines(project.highlights, editorLocaleMode)
+                              }
+                              variant="textarea"
+                            />
+
+                            {!isTranslationMode ? (
+                              <label className="field">
+                                <span>{`项目经历 ${index + 1} 技术栈（逗号分隔）`}</span>
+                                <Input
+                                  fullWidth
+                                  onChange={(event) => updateProjectTechnologies(index, event.target.value)}
+                                  value={
+                                    draftFieldValues[
+                                      buildDraftFieldKey('project', index, 'technologies')
+                                    ] ?? formatCommaSeparatedValues(project.technologies)
+                                  }
+                                  variant="secondary"
+                                />
+                              </label>
+                            ) : null}
+
+                            <div className="stack">
+                              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                <div className="space-y-1">
+                                  <h5 className="text-sm font-semibold text-zinc-950 dark:text-white">
+                                    项目链接
+                                  </h5>
+                                  <p className="muted">
+                                    {isTranslationMode
+                                      ? '这里集中维护项目链接标签的英文版本。链接地址与新增删除动作仍在中文主编辑处理。'
+                                      : '可补充项目地址、演示入口或仓库链接，公开页和导出内容会复用这些字段。'}
+                                  </p>
+                                </div>
+                                {!isTranslationMode ? (
+                                  <IconActionButton
+                                    icon={<PlusIcon />}
+                                    label={`为项目经历 ${index + 1} 添加项目链接`}
+                                    onClick={() => addProjectLink(index)}
+                                  />
+                                ) : null}
+                              </div>
+
+                              {project.links.length === 0 ? (
+                                <div className="status-box">
+                                  <strong>当前还没有项目链接</strong>
+                                  <span>可按项目补充 demo、仓库或案例文章入口。</span>
+                                </div>
+                              ) : null}
+
+                              {project.links.map((link, linkIndex) => (
+                                <div
+                                  className="grid min-w-0 gap-4 rounded-[20px] border border-zinc-200/60 bg-zinc-50/60 p-4 shadow-none dark:border-zinc-800/80 dark:bg-zinc-950/55"
+                                  key={`project-${index}-link-${linkIndex}`}
+                                >
+                                  <div className="flex min-w-0 items-start justify-between gap-3">
+                                    <div className="min-w-0 space-y-1">
+                                      <h6 className="text-sm font-semibold text-zinc-950 dark:text-white">
+                                        {`项目链接 ${linkIndex + 1}`}
+                                      </h6>
+                                      <p className="muted truncate">{link.url || link.label.zh || '未命名链接'}</p>
+                                    </div>
+                                    {!isTranslationMode ? (
+                                      <IconActionButton
+                                        className="mt-0.5"
+                                        icon={<TrashIcon />}
+                                        label={`删除项目经历 ${index + 1} 的链接 ${linkIndex + 1}`}
+                                        onClick={() => removeProjectLink(index, linkIndex)}
+                                        tone="danger"
+                                        variant="ghost"
+                                      />
+                                    ) : null}
+                                  </div>
+
+                                  <LocalizedEditorField
+                                    label={`项目经历 ${index + 1} 链接 ${linkIndex + 1} 标签`}
+                                    localeMode={editorLocaleMode}
+                                    onChange={(value) =>
+                                      updateProjectLinkField(
+                                        index,
+                                        linkIndex,
+                                        'label',
+                                        value,
+                                        editorLocaleMode,
+                                      )
+                                    }
+                                    sourceValue={link.label.zh}
+                                    value={link.label[editorLocaleMode]}
+                                  />
+
+                                  {!isTranslationMode ? (
+                                    <label className="field min-w-0">
+                                      <span>{`项目经历 ${index + 1} 链接 ${linkIndex + 1} 地址`}</span>
+                                      <Input
+                                        className="min-w-0"
+                                        fullWidth
+                                        onChange={(event) =>
+                                          updateProjectLinkField(index, linkIndex, 'url', event.target.value)
+                                        }
+                                        value={link.url}
+                                        variant="secondary"
+                                      />
+                                    </label>
+                                  ) : null}
+                                </div>
+                              ))}
+                            </div>
+                          </EditorEntry>
+                        )}
+                      </SortableItemShell>
                     ))}
                   </div>
-                </EditorEntry>
-              ))}
+                </SortableContext>
+              </DndContext>
             </EditorSection>
 
             <EditorSection
@@ -2337,56 +2828,79 @@ export function ResumeDraftEditorPanel({
                 </div>
               ) : null}
 
-              {resumeDraft.skills.map((skill, index) => (
-                <EditorEntry
-                  action={
-                    !isTranslationMode ? (
-                      <IconActionButton
-                        icon={<TrashIcon />}
-                        label={`删除技能组 ${index + 1}`}
-                        onClick={() => removeSkillGroup(index)}
-                        tone="danger"
-                        variant="ghost"
-                      />
-                    ) : null
-                  }
-                  defaultExpanded={
-                    resumeDraft.skills.length === 1 ||
-                    index === resumeDraft.skills.length - 1
-                  }
-                  key={`skill-${index}`}
-                  summary={skill.name.zh || skill.name.en || '未命名技能组'}
-                  title={`技能组 ${index + 1}`}
-                  toggleLabel={`技能组 ${index + 1} 条目开关`}
-                  variant="embedded"
+              <DndContext
+                collisionDetection={closestCenter}
+                modifiers={[restrictToVerticalAxis]}
+                onDragEnd={(event) => handleCollectionDragEnd('skills', event)}
+                sensors={sensors}
+              >
+                <SortableContext
+                  items={sortableCollections.skills}
+                  strategy={verticalListSortingStrategy}
                 >
-                  <LocalizedEditorField
-                    label={`技能组 ${index + 1} 名称`}
-                    localeMode={editorLocaleMode}
-                    onChange={(value) =>
-                      updateSkillLocalizedField(index, editorLocaleMode, value)
-                    }
-                    sourceValue={skill.name.zh}
-                    value={skill.name[editorLocaleMode]}
-                  />
+                  <div className="grid gap-4">
+                    {resumeDraft.skills.map((skill, index) => (
+                      <SortableItemShell
+                        disabled={isTranslationMode}
+                        dragHandleLabel={`拖拽排序技能组 ${index + 1}`}
+                        id={sortableCollections.skills[index] ?? `skill-${index}`}
+                        key={sortableCollections.skills[index] ?? `skill-${index}`}
+                      >
+                        {({ dragHandle }) => (
+                          <EditorEntry
+                            action={buildEntryActions({
+                              deleteAction: !isTranslationMode ? (
+                                <IconActionButton
+                                  icon={<TrashIcon />}
+                                  label={`删除技能组 ${index + 1}`}
+                                  onClick={() => removeSkillGroup(index)}
+                                  tone="danger"
+                                  variant="ghost"
+                                />
+                              ) : null,
+                              dragHandle,
+                            })}
+                            defaultExpanded={
+                              resumeDraft.skills.length === 1 ||
+                              index === resumeDraft.skills.length - 1
+                            }
+                            summary={skill.name.zh || skill.name.en || '未命名技能组'}
+                            title={`技能组 ${index + 1}`}
+                            toggleLabel={`技能组 ${index + 1} 条目开关`}
+                            variant="embedded"
+                          >
+                            <LocalizedEditorField
+                              label={`技能组 ${index + 1} 名称`}
+                              localeMode={editorLocaleMode}
+                              onChange={(value) =>
+                                updateSkillLocalizedField(index, editorLocaleMode, value)
+                              }
+                              sourceValue={skill.name.zh}
+                              value={skill.name[editorLocaleMode]}
+                            />
 
-                  {!isTranslationMode ? (
-                    <label className="field">
-                      <span>{`技能组 ${index + 1} 关键词（每行一条）`}</span>
-                      <TextArea
-                        fullWidth
-                        onChange={(event) => updateSkillKeywords(index, event.target.value)}
-                        rows={5}
-                        value={
-                          draftFieldValues[buildDraftFieldKey('skill', index, 'keywords')] ??
-                          formatLineSeparatedValues(skill.keywords)
-                        }
-                        variant="secondary"
-                      />
-                    </label>
-                  ) : null}
-                </EditorEntry>
-              ))}
+                            {!isTranslationMode ? (
+                              <label className="field">
+                                <span>{`技能组 ${index + 1} 关键词（每行一条）`}</span>
+                                <TextArea
+                                  fullWidth
+                                  onChange={(event) => updateSkillKeywords(index, event.target.value)}
+                                  rows={5}
+                                  value={
+                                    draftFieldValues[buildDraftFieldKey('skill', index, 'keywords')] ??
+                                    formatLineSeparatedValues(skill.keywords)
+                                  }
+                                  variant="secondary"
+                                />
+                              </label>
+                            ) : null}
+                          </EditorEntry>
+                        )}
+                      </SortableItemShell>
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
             </EditorSection>
 
             <EditorSection
@@ -2419,57 +2933,80 @@ export function ResumeDraftEditorPanel({
                 </div>
               ) : null}
 
-              {resumeDraft.highlights.map((highlight, index) => (
-                <EditorEntry
-                  action={
-                    !isTranslationMode ? (
-                      <IconActionButton
-                        icon={<TrashIcon />}
-                        label={`删除亮点 ${index + 1}`}
-                        onClick={() => removeHighlight(index)}
-                        tone="danger"
-                        variant="ghost"
-                      />
-                    ) : null
-                  }
-                  defaultExpanded={
-                    resumeDraft.highlights.length === 1 ||
-                    index === resumeDraft.highlights.length - 1
-                  }
-                  key={`highlight-${index}`}
-                  summary={highlight.title.zh || highlight.title.en || '未命名亮点'}
-                  title={`亮点 ${index + 1}`}
-                  toggleLabel={`亮点 ${index + 1} 条目开关`}
-                  variant="embedded"
+              <DndContext
+                collisionDetection={closestCenter}
+                modifiers={[restrictToVerticalAxis]}
+                onDragEnd={(event) => handleCollectionDragEnd('highlights', event)}
+                sensors={sensors}
+              >
+                <SortableContext
+                  items={sortableCollections.highlights}
+                  strategy={verticalListSortingStrategy}
                 >
-                  <LocalizedEditorField
-                    label={`亮点 ${index + 1} 标题`}
-                    localeMode={editorLocaleMode}
-                    onChange={(value) =>
-                      updateHighlightLocalizedField(index, 'title', editorLocaleMode, value)
-                    }
-                    sourceValue={highlight.title.zh}
-                    value={highlight.title[editorLocaleMode]}
-                  />
+                  <div className="grid gap-4">
+                    {resumeDraft.highlights.map((highlight, index) => (
+                      <SortableItemShell
+                        disabled={isTranslationMode}
+                        dragHandleLabel={`拖拽排序亮点 ${index + 1}`}
+                        id={sortableCollections.highlights[index] ?? `highlight-${index}`}
+                        key={sortableCollections.highlights[index] ?? `highlight-${index}`}
+                      >
+                        {({ dragHandle }) => (
+                          <EditorEntry
+                            action={buildEntryActions({
+                              deleteAction: !isTranslationMode ? (
+                                <IconActionButton
+                                  icon={<TrashIcon />}
+                                  label={`删除亮点 ${index + 1}`}
+                                  onClick={() => removeHighlight(index)}
+                                  tone="danger"
+                                  variant="ghost"
+                                />
+                              ) : null,
+                              dragHandle,
+                            })}
+                            defaultExpanded={
+                              resumeDraft.highlights.length === 1 ||
+                              index === resumeDraft.highlights.length - 1
+                            }
+                            summary={highlight.title.zh || highlight.title.en || '未命名亮点'}
+                            title={`亮点 ${index + 1}`}
+                            toggleLabel={`亮点 ${index + 1} 条目开关`}
+                            variant="embedded"
+                          >
+                            <LocalizedEditorField
+                              label={`亮点 ${index + 1} 标题`}
+                              localeMode={editorLocaleMode}
+                              onChange={(value) =>
+                                updateHighlightLocalizedField(index, 'title', editorLocaleMode, value)
+                              }
+                              sourceValue={highlight.title.zh}
+                              value={highlight.title[editorLocaleMode]}
+                            />
 
-                  <LocalizedEditorField
-                    label={`亮点 ${index + 1} 描述`}
-                    localeMode={editorLocaleMode}
-                    onChange={(value) =>
-                      updateHighlightLocalizedField(
-                        index,
-                        'description',
-                        editorLocaleMode,
-                        value,
-                      )
-                    }
-                    rows={4}
-                    sourceValue={highlight.description.zh}
-                    value={highlight.description[editorLocaleMode]}
-                    variant="textarea"
-                  />
-                </EditorEntry>
-              ))}
+                            <LocalizedEditorField
+                              label={`亮点 ${index + 1} 描述`}
+                              localeMode={editorLocaleMode}
+                              onChange={(value) =>
+                                updateHighlightLocalizedField(
+                                  index,
+                                  'description',
+                                  editorLocaleMode,
+                                  value,
+                                )
+                              }
+                              rows={4}
+                              sourceValue={highlight.description.zh}
+                              value={highlight.description[editorLocaleMode]}
+                              variant="textarea"
+                            />
+                          </EditorEntry>
+                        )}
+                      </SortableItemShell>
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
             </EditorSection>
 
             {errorMessage ? <p className="error-text">{errorMessage}</p> : null}

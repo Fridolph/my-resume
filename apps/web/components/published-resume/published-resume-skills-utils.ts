@@ -222,8 +222,6 @@ export function buildPieChartOption(
 ): EChartsOption {
   const legendColor = themeMode === 'dark' ? '#cbd5e1' : '#64748b';
   const labelColor = themeMode === 'dark' ? '#e2e8f0' : '#334155';
-  const centerFill = themeMode === 'dark' ? '#0f172a' : '#ffffff';
-  const centerStroke = themeMode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(226,232,240,0.9)';
   const centerText = themeMode === 'dark' ? '#f8fafc' : '#0f172a';
 
   return {
@@ -266,26 +264,13 @@ export function buildPieChartOption(
     },
     graphic: [
       {
-        type: 'circle',
-        left: 'center',
-        top: '36%',
-        shape: {
-          r: 34,
-        },
-        style: {
-          fill: centerFill,
-          stroke: centerStroke,
-          lineWidth: 1,
-        },
-      },
-      {
         type: 'text',
         left: 'center',
-        top: '31.5%',
+        top: '34%',
         style: {
           text: locale === 'zh' ? '技能分布' : 'Skill Map',
           fill: centerText,
-          fontSize: 12,
+          fontSize: 13,
           fontWeight: 600,
         },
       },

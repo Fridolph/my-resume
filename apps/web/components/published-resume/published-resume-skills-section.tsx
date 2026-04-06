@@ -1,6 +1,7 @@
 'use client';
 
 import { Button, Tooltip } from '@heroui/react';
+import { useThemeMode } from '@my-resume/ui/theme';
 import * as echarts from 'echarts';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -94,13 +95,7 @@ export function PublishedResumeSkillsSection({
   const localLabels = skillViewLabels[locale];
   const [viewMode, setViewMode] = useState<SkillViewMode>('structure');
   const [chartMode, setChartMode] = useState<SkillChartMode>('radar');
-
-  const themeMode =
-    typeof document === 'undefined'
-      ? 'light'
-      : document.documentElement.dataset.theme === 'dark'
-        ? 'dark'
-        : 'light';
+  const { theme: themeMode } = useThemeMode();
 
   const normalizedGroups = useMemo(
     () => normalizeSkillGroups(skills),
