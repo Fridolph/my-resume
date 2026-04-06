@@ -46,39 +46,54 @@ export function PublishedResumeProjectsSection({
               <span className="meta-text">{formatPeriod(project)}</span>
             </div>
 
-            <p className="item-summary">{readLocalizedText(project.summary, locale)}</p>
+            <div className="item-stack">
+              <div className="item-block">
+                <p className="item-block-label">{locale === 'zh' ? '项目概览' : 'Summary'}</p>
+                <p className="item-summary">{readLocalizedText(project.summary, locale)}</p>
+              </div>
+            </div>
 
             {project.highlights.length > 0 ? (
-              <ul className="bullet-list">
-                {project.highlights.map((highlight) => (
-                  <li key={`${project.name.en}-${highlight.en}`}>
-                    {readLocalizedText(highlight, locale)}
-                  </li>
-                ))}
-              </ul>
+              <div className="item-block">
+                <p className="item-block-label">{locale === 'zh' ? '关键亮点' : 'Highlights'}</p>
+                <ul className="bullet-list">
+                  {project.highlights.map((highlight) => (
+                    <li key={`${project.name.en}-${highlight.en}`}>
+                      {readLocalizedText(highlight, locale)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ) : null}
 
             {project.technologies.length > 0 ? (
-              <div className="tag-grid">
-                {project.technologies.map((tech) => (
-                  <DisplayPill key={tech}>
-                    {tech}
-                  </DisplayPill>
-                ))}
+              <div className="item-block">
+                <p className="item-block-label">{locale === 'zh' ? '技术栈' : 'Tech Stack'}</p>
+                <div className="tag-grid tag-grid--compact">
+                  {project.technologies.map((tech) => (
+                    <DisplayPill className="item-badge" key={tech}>
+                      {tech}
+                    </DisplayPill>
+                  ))}
+                </div>
               </div>
             ) : null}
 
             {project.links.length > 0 ? (
-              <div className="link-grid">
-                {project.links.map((link) => (
-                  <DisplayPill
-                    external
-                    href={link.url}
-                    key={link.url}
-                  >
-                    {readLocalizedText(link.label, locale)}
-                  </DisplayPill>
-                ))}
+              <div className="item-block">
+                <p className="item-block-label">{locale === 'zh' ? '项目链接' : 'Links'}</p>
+                <div className="link-grid link-grid--compact">
+                  {project.links.map((link) => (
+                    <DisplayPill
+                      className="item-badge"
+                      external
+                      href={link.url}
+                      key={link.url}
+                    >
+                      {readLocalizedText(link.label, locale)}
+                    </DisplayPill>
+                  ))}
+                </div>
               </div>
             ) : null}
           </article>

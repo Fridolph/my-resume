@@ -54,30 +54,44 @@ export function PublishedResumeExperienceSection({
               <span className="meta-text">{formatPeriod(experience)}</span>
             </div>
 
-            <p className="item-summary">
-              {readLocalizedText(experience.summary, locale)}
-            </p>
-            <p className="meta-text">
-              {readLocalizedText(experience.location, locale)}
-            </p>
+            <div className="item-stack">
+              <div className="item-block">
+                <p className="item-block-label">{locale === 'zh' ? '职责概览' : 'Summary'}</p>
+                <p className="item-summary">
+                  {readLocalizedText(experience.summary, locale)}
+                </p>
+              </div>
+              <div className="item-block">
+                <p className="item-block-label">{locale === 'zh' ? '地点' : 'Location'}</p>
+                <p className="meta-text">
+                  {readLocalizedText(experience.location, locale)}
+                </p>
+              </div>
+            </div>
 
             {experience.highlights.length > 0 ? (
-              <ul className="bullet-list">
-                {experience.highlights.map((highlight) => (
-                  <li key={`${experience.companyName.en}-${highlight.en}`}>
-                    {readLocalizedText(highlight, locale)}
-                  </li>
-                ))}
-              </ul>
+              <div className="item-block">
+                <p className="item-block-label">{locale === 'zh' ? '关键亮点' : 'Highlights'}</p>
+                <ul className="bullet-list">
+                  {experience.highlights.map((highlight) => (
+                    <li key={`${experience.companyName.en}-${highlight.en}`}>
+                      {readLocalizedText(highlight, locale)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ) : null}
 
             {experience.technologies.length > 0 ? (
-              <div className="tag-grid">
-                {experience.technologies.map((tech) => (
-                  <DisplayPill key={tech}>
-                    {tech}
-                  </DisplayPill>
-                ))}
+              <div className="item-block">
+                <p className="item-block-label">{locale === 'zh' ? '技术栈' : 'Tech Stack'}</p>
+                <div className="tag-grid tag-grid--compact">
+                  {experience.technologies.map((tech) => (
+                    <DisplayPill className="item-badge" key={tech}>
+                      {tech}
+                    </DisplayPill>
+                  ))}
+                </div>
               </div>
             ) : null}
           </article>

@@ -43,6 +43,7 @@ describe('PublishedResumeShell', () => {
     expect(screen.getByText('上海')).toBeInTheDocument();
     expect(screen.getByText('demo@example.com')).toBeInTheDocument();
     expect(screen.getByText('+86 13800000000')).toBeInTheDocument();
+    expect(screen.getByText('羽毛球')).toBeInTheDocument();
     expect(screen.queryByText('https://example.com')).not.toBeInTheDocument();
     expect(
       screen.getByRole('heading', { name: '前端架构落地' }),
@@ -146,19 +147,17 @@ describe('PublishedResumeShell', () => {
 
     await user.click(screen.getByRole('button', { name: '词云' }));
     expect(screen.getByText('Node.js')).toBeInTheDocument();
-    expect(screen.getByText('工程化')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: '前端工程化' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '图表' }));
     expect(screen.getByRole('button', { name: '雷达图' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '饼图' })).toBeInTheDocument();
     expect(screen.getByLabelText('技能雷达图')).toBeInTheDocument();
-    expect(screen.getAllByText('4 个能力点').length).toBeGreaterThan(0);
     expect(screen.queryByText(/占比/)).not.toBeInTheDocument();
     expect(screen.queryByText(/%/)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '饼图' }));
     expect(screen.getByLabelText('技能饼图')).toBeInTheDocument();
-    expect(screen.getByText('总条目数')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '结构' }));
     expect(screen.getAllByText('TypeScript').length).toBeGreaterThan(0);

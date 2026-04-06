@@ -92,6 +92,7 @@ describe('standard resume domain', () => {
         en: 'Repository',
       },
       url: 'https://github.com/Fridolph/my-resume',
+      icon: 'ri:github-fill',
     });
 
     expect(validateStandardResume(resume)).toEqual({
@@ -118,13 +119,41 @@ describe('standard resume domain', () => {
     expect(normalized.profile.hero.slogans).toHaveLength(2);
   });
 
+  it('should normalize legacy interests into labeled interest items', () => {
+    const resume = createExampleStandardResume() as ReturnType<
+      typeof createExampleStandardResume
+    > & {
+      profile: Omit<ReturnType<typeof createExampleStandardResume>['profile'], 'interests'> & {
+        interests: Array<{ zh: string; en: string }>;
+      };
+    };
+
+    resume.profile.interests = [
+      {
+        zh: '羽毛球',
+        en: 'Badminton',
+      },
+    ];
+
+    const normalized = normalizeStandardResume(resume);
+
+    expect(normalized.profile.interests).toEqual([
+      {
+        label: {
+          zh: '羽毛球',
+          en: 'Badminton',
+        },
+      },
+    ]);
+  });
+
   it('should reject invalid module arrays and nested field shapes', () => {
     const resume = createExampleStandardResume() as ReturnType<
       typeof createExampleStandardResume
     > & {
       profile: {
         links: Array<{ label: { zh: string }; url: number }>;
-        interests: string;
+        interests: Array<{ label: { zh: string }; icon: number }> | string;
       };
       education: string;
       experiences: Array<{ technologies: string }>;
@@ -139,9 +168,17 @@ describe('standard resume domain', () => {
           zh: '只写中文',
         },
         url: 123,
+        icon: 1,
       },
     ];
-    resume.profile.interests = 'badminton';
+    resume.profile.interests = [
+      {
+        label: {
+          zh: '只写中文',
+        },
+        icon: 123,
+      },
+    ];
     resume.education = 'education' as unknown as string;
     resume.experiences = [
       {
@@ -178,7 +215,9 @@ describe('standard resume domain', () => {
       errors: [
         'profile.links[0].label must be a localized text object',
         'profile.links[0].url must be a string',
-        'profile.interests must be an array',
+        'profile.links[0].icon must be a string when provided',
+        'profile.interests[0].label must be a localized text object',
+        'profile.interests[0].icon must be a string when provided',
         'education must be an array',
         'experiences[0].companyName must be a localized text object',
         'experiences[0].role must be a localized text object',

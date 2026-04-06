@@ -15,6 +15,12 @@ export interface ResumeMeta {
 export interface ResumeProfileLink {
   label: LocalizedText;
   url: string;
+  icon?: string;
+}
+
+export interface ResumeProfileInterestItem {
+  label: LocalizedText;
+  icon?: string;
 }
 
 export interface ResumeProfileHero {
@@ -34,7 +40,7 @@ export interface ResumeProfile {
   website: string;
   hero: ResumeProfileHero;
   links: ResumeProfileLink[];
-  interests: LocalizedText[];
+  interests: ResumeProfileInterestItem[];
 }
 
 export interface ResumeEducationItem {
@@ -214,21 +220,36 @@ export function createExampleStandardResume(): StandardResume {
         {
           label: createLocalizedText('GitHub', 'GitHub'),
           url: 'https://github.com/Fridolph',
+          icon: 'ri:github-fill',
         },
         {
           label: createLocalizedText('技术博客', 'Tech Blog'),
           url: 'https://blog.fridolph.top',
+          icon: 'ri:article-line',
         },
         {
           label: createLocalizedText('掘金', 'Juejin'),
           url: 'https://juejin.cn/user/3984288320609918',
+          icon: 'ri:code-s-slash-line',
         },
       ],
       interests: [
-        createLocalizedText('羽毛球', 'Badminton'),
-        createLocalizedText('动漫', 'Anime'),
-        createLocalizedText('音乐', 'Music'),
-        createLocalizedText('AI Agent 实践', 'AI Agent Practice'),
+        {
+          label: createLocalizedText('羽毛球', 'Badminton'),
+          icon: 'ri:dribbble-line',
+        },
+        {
+          label: createLocalizedText('动漫', 'Anime'),
+          icon: 'ri:sparkling-line',
+        },
+        {
+          label: createLocalizedText('音乐', 'Music'),
+          icon: 'ri:music-2-line',
+        },
+        {
+          label: createLocalizedText('AI Agent 实践', 'AI Agent Practice'),
+          icon: 'ri:robot-2-line',
+        },
       ],
     },
     education: [
@@ -432,6 +453,7 @@ export function createExampleStandardResume(): StandardResume {
           {
             label: createLocalizedText('项目地址', 'Project URL'),
             url: 'https://c.greensketch.ai/au',
+            icon: 'ri:external-link-line',
           },
         ],
       },
@@ -569,10 +591,12 @@ export function createExampleStandardResume(): StandardResume {
           {
             label: createLocalizedText('GitHub 仓库', 'GitHub Repository'),
             url: 'https://github.com/Fridolph/my-resume',
+            icon: 'ri:github-fill',
           },
           {
             label: createLocalizedText('在线简历', 'Online Resume'),
             url: 'https://resume.fridolph.top',
+            icon: 'ri:link-m',
           },
         ],
       },
@@ -672,6 +696,47 @@ function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === 'string');
 }
 
+function normalizeResumeLink(value: unknown): ResumeProfileLink | null {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  const candidate = value as Record<string, unknown>;
+
+  if (!isLocalizedText(candidate.label) || typeof candidate.url !== 'string') {
+    return null;
+  }
+
+  return {
+    label: candidate.label,
+    url: candidate.url,
+    icon: typeof candidate.icon === 'string' && candidate.icon.trim() ? candidate.icon : undefined,
+  };
+}
+
+function normalizeResumeInterestItem(value: unknown): ResumeProfileInterestItem | null {
+  if (isLocalizedText(value)) {
+    return {
+      label: value,
+    };
+  }
+
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  const candidate = value as Record<string, unknown>;
+
+  if (!isLocalizedText(candidate.label)) {
+    return null;
+  }
+
+  return {
+    label: candidate.label,
+    icon: typeof candidate.icon === 'string' && candidate.icon.trim() ? candidate.icon : undefined,
+  };
+}
+
 function normalizeResumeProfileHero(value: unknown): ResumeProfileHero {
   const defaults = createDefaultResumeProfileHero();
 
@@ -709,9 +774,15 @@ export function normalizeStandardResume(resume: StandardResume): StandardResume 
       hero: normalizeResumeProfileHero(
         (resume.profile as ResumeProfile & { hero?: ResumeProfileHero }).hero,
       ),
-      links: Array.isArray(resume.profile.links) ? resume.profile.links : [],
+      links: Array.isArray(resume.profile.links)
+        ? resume.profile.links
+            .map((item) => normalizeResumeLink(item))
+            .filter((item): item is ResumeProfileLink => item !== null)
+        : [],
       interests: Array.isArray(resume.profile.interests)
         ? resume.profile.interests
+            .map((item) => normalizeResumeInterestItem(item))
+            .filter((item): item is ResumeProfileInterestItem => item !== null)
         : [],
     },
     education: Array.isArray(resume.education) ? resume.education : [],
@@ -774,6 +845,48 @@ function validateResumeLinks(
     if (typeof candidate.url !== 'string') {
       errors.push(`${path}[${index}].url must be a string`);
     }
+
+    if (
+      typeof candidate.icon !== 'undefined' &&
+      typeof candidate.icon !== 'string'
+    ) {
+      errors.push(`${path}[${index}].icon must be a string when provided`);
+    }
+  });
+}
+
+function validateResumeInterestItems(
+  value: unknown,
+  path: string,
+  errors: string[],
+) {
+  if (!Array.isArray(value)) {
+    errors.push(`${path} must be an array`);
+    return;
+  }
+
+  value.forEach((item, index) => {
+    if (isLocalizedText(item)) {
+      return;
+    }
+
+    if (!item || typeof item !== 'object') {
+      errors.push(`${path}[${index}] must be an object`);
+      return;
+    }
+
+    const candidate = item as Record<string, unknown>;
+
+    if (!isLocalizedText(candidate.label)) {
+      errors.push(`${path}[${index}].label must be a localized text object`);
+    }
+
+    if (
+      typeof candidate.icon !== 'undefined' &&
+      typeof candidate.icon !== 'string'
+    ) {
+      errors.push(`${path}[${index}].icon must be a string when provided`);
+    }
   });
 }
 
@@ -805,7 +918,7 @@ export function validateStandardResume(
     );
   }
   validateResumeLinks(resume.profile.links, 'profile.links', errors);
-  validateLocalizedTextArray(resume.profile.interests, 'profile.interests', errors);
+  validateResumeInterestItems(resume.profile.interests, 'profile.interests', errors);
 
   if (!Array.isArray(resume.education)) {
     errors.push('education must be an array');

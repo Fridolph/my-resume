@@ -582,13 +582,21 @@ Next.js`,
         screen.getByLabelText('个人链接 1 地址'),
         'https://github.com/Fridolph',
       );
-
-      await user.type(screen.getByLabelText('兴趣方向（每行一条）'), '羽毛球');
+      await user.type(
+        screen.getByLabelText('个人链接 1 Iconify 图标'),
+        'ri:github-fill',
+      );
+      await user.click(screen.getByRole('button', { name: '添加兴趣方向' }));
+      await user.type(screen.getByLabelText('兴趣方向 1 名称'), '羽毛球');
+      await user.type(
+        screen.getByLabelText('兴趣方向 1 Iconify 图标'),
+        'ri:dribbble-line',
+      );
       await user.click(screen.getByRole('button', { name: '英文翻译工作区' }));
-      const translationPanel = screen.getByLabelText(/兴趣方向（每行一条）/, {
-        selector: 'textarea',
-      });
-      await user.type(translationPanel, 'Badminton');
+      await user.type(
+        screen.getByLabelText(/兴趣方向 1 名称/, { selector: 'input' }),
+        'Badminton',
+      );
 
       await user.click(screen.getByRole('button', { name: '保存当前草稿' }));
 
@@ -619,10 +627,14 @@ Next.js`,
       expect(submittedResume.profile.links[0]?.url).toBe(
         'https://github.com/Fridolph',
       );
+      expect(submittedResume.profile.links[0]?.icon).toBe('ri:github-fill');
       expect(submittedResume.profile.interests).toEqual([
         {
-          zh: '羽毛球',
-          en: 'Badminton',
+          label: {
+            zh: '羽毛球',
+            en: 'Badminton',
+          },
+          icon: 'ri:dribbble-line',
         },
       ]);
     },

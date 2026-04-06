@@ -8,6 +8,7 @@ export type {
   ResumeMeta,
   ResumeProfile,
   ResumeProfileHero,
+  ResumeProfileInterestItem,
   ResumeProfileLink,
   ResumeProjectItem,
   ResumeSkillGroup,

@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Chip } from '@heroui/react';
+import { Icon } from '@iconify/react';
 
 import { ResumeLocale, ResumePublishedSnapshot } from '../../lib/published-resume-types';
 import {
@@ -82,7 +83,10 @@ export function PublishedResumeHero({
   const hero = profile.hero;
   const highlights = publishedResume.resume.highlights;
   const localizedInterests = profile.interests.map((item) =>
-    readLocalizedText(item, locale),
+    ({
+      ...item,
+      localizedLabel: readLocalizedText(item.label, locale),
+    }),
   );
   const localizedHeroSlogans = hero.slogans
     .map((item) => readLocalizedText(item, locale))
@@ -152,13 +156,12 @@ export function PublishedResumeHero({
           </div>
 
           <div className="grid gap-2">
-            <p className="web-eyebrow">{labels.profileCardLabel}</p>
-            <CardTitle className="text-[clamp(2.2rem,5vw,3.4rem)] leading-none tracking-[-0.08em] text-slate-950 dark:text-white">
+            <h2 className="text-[clamp(2.2rem,5vw,3.4rem)] leading-none tracking-[-0.08em] text-slate-950 dark:text-white">
               {name}
-            </CardTitle>
-            <CardDescription className="text-base font-semibold tracking-[-0.03em] text-slate-500 dark:text-slate-300">
+            </h2>
+            <p className="text-base font-semibold tracking-[-0.03em] text-slate-500 dark:text-slate-300">
               {readLocalizedText(profile.headline, locale)}
-            </CardDescription>
+            </p>
           </div>
 
           <p className="text-sm leading-7 text-slate-500 dark:text-slate-400">
@@ -175,10 +178,10 @@ export function PublishedResumeHero({
           <div className="grid gap-2">
             {contactItems.map((item) => (
               <div
-                className="flex items-start gap-3 rounded-2xl bg-white/80 px-3 py-2.5 text-sm font-medium text-slate-600 dark:bg-white/[0.04] dark:text-slate-300"
+                className="contact-item group grid grid-cols-[1.25rem_minmax(0,1fr)] items-start gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300"
                 key={item.key}
               >
-                <span className="mt-1 text-slate-400 dark:text-slate-500">{item.icon}</span>
+                <span className="contact-item-icon mt-1 text-slate-400 dark:text-slate-500">{item.icon}</span>
                 <span className="min-w-0 break-all leading-6">{item.value}</span>
               </div>
             ))}
@@ -197,15 +200,32 @@ export function PublishedResumeHero({
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
               {profile.links.map((link) => (
-                <a
-                  className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-slate-200/80 bg-white/80 px-3 text-center text-sm font-semibold text-slate-600 transition hover:border-blue-300 hover:text-blue-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300 dark:hover:border-blue-300 dark:hover:text-blue-200"
-                  href={link.url}
-                  key={link.url}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  <span className="truncate">{readLocalizedText(link.label, locale)}</span>
-                </a>
+                link.icon ? (
+                  <a
+                    className="profile-link-chip group"
+                    href={link.url}
+                    key={link.url}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    <span className="profile-link-chip-icon">
+                      <Icon icon={link.icon} />
+                    </span>
+                    <span className="profile-link-chip-label">
+                      {readLocalizedText(link.label, locale)}
+                    </span>
+                  </a>
+                ) : (
+                  <a
+                    className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-slate-200/80 bg-white/80 px-3 text-center text-sm font-semibold text-slate-600 transition hover:border-blue-300 hover:text-blue-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300 dark:hover:border-blue-300 dark:hover:text-blue-200"
+                    href={link.url}
+                    key={link.url}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    <span className="truncate">{readLocalizedText(link.label, locale)}</span>
+                  </a>
+                )
               ))}
             </div>
           </div>
@@ -230,11 +250,17 @@ export function PublishedResumeHero({
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
               {labels.interestsTitle}
             </p>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {localizedInterests.map((interest) => (
-                <Chip key={interest} size="sm" variant="soft">
-                  {interest}
-                </Chip>
+                <article
+                  className="interest-card group"
+                  key={`${interest.localizedLabel}-${interest.icon ?? 'plain'}`}
+                >
+                  <span className="interest-card-icon">
+                    {interest.icon ? <Icon icon={interest.icon} /> : <span className="text-base">•</span>}
+                  </span>
+                  <span className="interest-card-label">{interest.localizedLabel}</span>
+                </article>
               ))}
             </div>
           </div>

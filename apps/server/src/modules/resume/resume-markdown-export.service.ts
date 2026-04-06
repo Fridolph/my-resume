@@ -119,7 +119,7 @@ export class ResumeMarkdownExportService {
       lines.push(
         ...renderBulletList(
           profile.interests.map((interest) =>
-            readLocalizedText(interest, locale),
+            readLocalizedText(interest.label, locale),
           ),
         ),
       );

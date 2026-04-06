@@ -52,12 +52,16 @@ export const publishedResumeFixture: ResumePublishedSnapshot = {
             en: 'GitHub',
           },
           url: 'https://github.com/Fridolph',
+          icon: 'ri:github-fill',
         },
       ],
       interests: [
         {
-          zh: '羽毛球',
-          en: 'Badminton',
+          label: {
+            zh: '羽毛球',
+            en: 'Badminton',
+          },
+          icon: 'ri:dribbble-line',
         },
       ],
     },

@@ -16,6 +16,12 @@ export interface ResumeMeta {
 export interface ResumeProfileLink {
   label: LocalizedText;
   url: string;
+  icon?: string;
+}
+
+export interface ResumeProfileInterestItem {
+  label: LocalizedText;
+  icon?: string;
 }
 
 export interface ResumeProfileHero {
@@ -35,7 +41,7 @@ export interface ResumeProfile {
   website: string;
   hero: ResumeProfileHero;
   links: ResumeProfileLink[];
-  interests: LocalizedText[];
+  interests: ResumeProfileInterestItem[];
 }
 
 export interface ResumeEducationItem {

@@ -24,6 +24,7 @@ import type {
   ResumeHighlightItem,
   ResumeProfile,
   ResumeProfileHero,
+  ResumeProfileInterestItem,
   ResumeProfileLink,
   ResumeProjectItem,
   ResumeSkillGroup,
@@ -77,6 +78,12 @@ function createEmptyProfileLink(): ResumeProfileLink {
   return {
     label: createEmptyLocalizedText(),
     url: '',
+  };
+}
+
+function createEmptyProfileInterest(): ResumeProfileInterestItem {
+  return {
+    label: createEmptyLocalizedText(),
   };
 }
 
@@ -213,10 +220,6 @@ function buildDraftFieldValues(resume: StandardResume): DraftFieldValues {
       formatLineSeparatedValues(skill.keywords);
   });
 
-  nextValues[buildDraftFieldKey('profile', 'interests', 'interests', 'zh')] =
-    formatLocalizedLines(resume.profile.interests, 'zh');
-  nextValues[buildDraftFieldKey('profile', 'interests', 'interests', 'en')] =
-    formatLocalizedLines(resume.profile.interests, 'en');
   nextValues[buildDraftFieldKey('profile', 'hero', 'slogans', 'zh')] =
     formatLocalizedLines(resume.profile.hero.slogans, 'zh');
   nextValues[buildDraftFieldKey('profile', 'hero', 'slogans', 'en')] =
@@ -244,6 +247,30 @@ function clearLocalizedLineValues(values: LocalizedText[]): LocalizedText[] {
   return values.map((item) => ({
     zh: item.zh,
     en: '',
+  }));
+}
+
+function copyProfileInterestValues(
+  values: ResumeProfileInterestItem[],
+): ResumeProfileInterestItem[] {
+  return values.map((item) => ({
+    ...item,
+    label: {
+      zh: item.label.zh,
+      en: item.label.zh,
+    },
+  }));
+}
+
+function clearProfileInterestValues(
+  values: ResumeProfileInterestItem[],
+): ResumeProfileInterestItem[] {
+  return values.map((item) => ({
+    ...item,
+    label: {
+      zh: item.label.zh,
+      en: '',
+    },
   }));
 }
 
@@ -617,7 +644,7 @@ export function ResumeDraftEditorPanel({
         draft.profile.links.forEach((link) => {
           copyLocalizedTextValue(link.label);
         });
-        draft.profile.interests = copyLocalizedLineValues(draft.profile.interests);
+        draft.profile.interests = copyProfileInterestValues(draft.profile.interests);
         draft.profile.hero.slogans = copyLocalizedLineValues(draft.profile.hero.slogans);
       },
       { syncDraftFields: true },
@@ -637,7 +664,7 @@ export function ResumeDraftEditorPanel({
         draft.profile.links.forEach((link) => {
           clearLocalizedTextValue(link.label);
         });
-        draft.profile.interests = clearLocalizedLineValues(draft.profile.interests);
+        draft.profile.interests = clearProfileInterestValues(draft.profile.interests);
         draft.profile.hero.slogans = clearLocalizedLineValues(draft.profile.hero.slogans);
       },
       { syncDraftFields: true },
@@ -891,7 +918,7 @@ export function ResumeDraftEditorPanel({
 
   function updateProfileLinkField(
     index: number,
-    field: 'label' | 'url',
+    field: 'label' | 'url' | 'icon',
     value: string,
     locale?: 'zh' | 'en',
   ) {
@@ -901,22 +928,28 @@ export function ResumeDraftEditorPanel({
         return;
       }
 
+      if (field === 'icon') {
+        draft.profile.links[index].icon = value.trim() ? value : undefined;
+        return;
+      }
+
       draft.profile.links[index].label[locale ?? 'zh'] = value;
     });
   }
 
-  function updateProfileInterests(locale: 'zh' | 'en', value: string) {
-    setDraftFieldValues((current) => ({
-      ...current,
-      [buildDraftFieldKey('profile', 'interests', 'interests', locale)]: value,
-    }));
-
+  function updateProfileInterestField(
+    index: number,
+    field: 'label' | 'icon',
+    value: string,
+    locale?: 'zh' | 'en',
+  ) {
     updateResumeDraft((draft) => {
-      draft.profile.interests = mergeLocalizedLines(
-        draft.profile.interests,
-        locale,
-        value,
-      );
+      if (field === 'icon') {
+        draft.profile.interests[index].icon = value.trim() ? value : undefined;
+        return;
+      }
+
+      draft.profile.interests[index].label[locale ?? 'zh'] = value;
     });
   }
 
@@ -926,9 +959,21 @@ export function ResumeDraftEditorPanel({
     });
   }
 
+  function addProfileInterest() {
+    updateResumeDraft((draft) => {
+      draft.profile.interests.push(createEmptyProfileInterest());
+    });
+  }
+
   function removeProfileLink(index: number) {
     updateResumeDraft((draft) => {
       draft.profile.links.splice(index, 1);
+    });
+  }
+
+  function removeProfileInterest(index: number) {
+    updateResumeDraft((draft) => {
+      draft.profile.interests.splice(index, 1);
     });
   }
 
@@ -1541,18 +1586,33 @@ export function ResumeDraftEditorPanel({
                       />
 
                       {!isTranslationMode ? (
-                        <label className="field min-w-0">
-                          <span>{`个人链接 ${index + 1} 地址`}</span>
-                          <Input
-                            className="min-w-0"
-                            fullWidth
-                            onChange={(event) =>
-                              updateProfileLinkField(index, 'url', event.target.value)
-                            }
-                            value={link.url}
-                            variant="secondary"
-                          />
-                        </label>
+                        <>
+                          <label className="field min-w-0">
+                            <span>{`个人链接 ${index + 1} 地址`}</span>
+                            <Input
+                              className="min-w-0"
+                              fullWidth
+                              onChange={(event) =>
+                                updateProfileLinkField(index, 'url', event.target.value)
+                              }
+                              value={link.url}
+                              variant="secondary"
+                            />
+                          </label>
+                          <label className="field min-w-0">
+                            <span>{`个人链接 ${index + 1} Iconify 图标`}</span>
+                            <Input
+                              className="min-w-0"
+                              fullWidth
+                              onChange={(event) =>
+                                updateProfileLinkField(index, 'icon', event.target.value)
+                              }
+                              placeholder="ri:github-fill"
+                              value={link.icon ?? ''}
+                              variant="secondary"
+                            />
+                          </label>
+                        </>
                       ) : null}
                     </div>
                   ))}
@@ -1571,24 +1631,89 @@ export function ResumeDraftEditorPanel({
                 variant="textarea"
               />
 
-              <LocalizedEditorField
-                label="兴趣方向（每行一条）"
-                localeMode={editorLocaleMode}
-                onChange={(value) => updateProfileInterests(editorLocaleMode, value)}
-                rows={4}
-                sourceValue={formatLocalizedLines(resumeDraft.profile.interests, 'zh')}
-                value={
-                  draftFieldValues[
-                    buildDraftFieldKey(
-                      'profile',
-                      'interests',
-                      'interests',
-                      editorLocaleMode,
-                    )
-                  ] ?? formatLocalizedLines(resumeDraft.profile.interests, editorLocaleMode)
-                }
-                variant="textarea"
-              />
+              <div className="stack">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-semibold text-zinc-950 dark:text-white">
+                      兴趣方向
+                    </h4>
+                    <p className="muted">
+                      {isTranslationMode
+                        ? '这里只维护兴趣名称的英文内容。图标、增删与排序保持在中文主编辑里处理。'
+                        : '可为公开侧栏的兴趣模块维护双语名称与 Iconify 图标，例如 ri:music-2-line。'}
+                    </p>
+                  </div>
+                  {!isTranslationMode ? (
+                    <IconActionButton
+                      icon={<PlusIcon />}
+                      label="添加兴趣方向"
+                      onClick={addProfileInterest}
+                    />
+                  ) : null}
+                </div>
+
+                {resumeDraft.profile.interests.length === 0 ? (
+                  <div className="status-box min-h-0 px-4 py-3">
+                    <strong>当前还没有兴趣方向</strong>
+                    <span>可继续补兴趣名称和 Iconify 图标，让公开侧栏更有个性。</span>
+                  </div>
+                ) : null}
+
+                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                  {resumeDraft.profile.interests.map((interest, index) => (
+                    <div
+                      className="card stack min-h-full min-w-0 gap-3 rounded-[22px] p-4"
+                      key={`profile-interest-${index}`}
+                    >
+                      <div className="flex min-w-0 items-start justify-between gap-3">
+                        <div className="min-w-0 space-y-1">
+                          <h5 className="text-sm font-semibold text-zinc-950 dark:text-white">
+                            兴趣方向 {index + 1}
+                          </h5>
+                          <p className="muted truncate">
+                            {interest.label.zh || interest.label.en || interest.icon || '未命名兴趣'}
+                          </p>
+                        </div>
+                        {!isTranslationMode ? (
+                          <IconActionButton
+                            className="mt-0.5"
+                            icon={<TrashIcon />}
+                            label={`删除兴趣方向 ${index + 1}`}
+                            onClick={() => removeProfileInterest(index)}
+                            variant="ghost"
+                          />
+                        ) : null}
+                      </div>
+
+                      <LocalizedEditorField
+                        label={`兴趣方向 ${index + 1} 名称`}
+                        localeMode={editorLocaleMode}
+                        onChange={(value) =>
+                          updateProfileInterestField(index, 'label', value, editorLocaleMode)
+                        }
+                        sourceValue={interest.label.zh}
+                        value={interest.label[editorLocaleMode]}
+                      />
+
+                      {!isTranslationMode ? (
+                        <label className="field min-w-0">
+                          <span>{`兴趣方向 ${index + 1} Iconify 图标`}</span>
+                          <Input
+                            className="min-w-0"
+                            fullWidth
+                            onChange={(event) =>
+                              updateProfileInterestField(index, 'icon', event.target.value)
+                            }
+                            placeholder="ri:rocket-line"
+                            value={interest.icon ?? ''}
+                            variant="secondary"
+                          />
+                        </label>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </EditorSection>
 
             <EditorSection

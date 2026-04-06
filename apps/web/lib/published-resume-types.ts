@@ -6,6 +6,7 @@ export type {
   ResumeLocale,
   ResumeProfile,
   ResumeProfileHero,
+  ResumeProfileInterestItem,
   ResumeProfileLink,
   ResumeProjectItem,
   ResumePublishedSnapshot,

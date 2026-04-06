@@ -196,6 +196,7 @@ describe('ResumePublicationService', () => {
           en: 'Live Demo',
         },
         url: 'https://demo.example.com/resume-project',
+        icon: 'ri:links-line',
       },
     ];
     nextDraft.skills[0]!.keywords = ['TypeScript', 'Next.js', 'NestJS'];
@@ -210,12 +211,16 @@ describe('ResumePublicationService', () => {
           en: 'Portfolio',
         },
         url: 'https://portfolio.example.com',
+        icon: 'ri:folder-open-line',
       },
     ];
     nextDraft.profile.interests = [
       {
-        zh: '知识库构建',
-        en: 'Knowledge Base Design',
+        label: {
+          zh: '知识库构建',
+          en: 'Knowledge Base Design',
+        },
+        icon: 'ri:database-2-line',
       },
     ];
 
@@ -233,6 +238,7 @@ describe('ResumePublicationService', () => {
           en: 'Live Demo',
         },
         url: 'https://demo.example.com/resume-project',
+        icon: 'ri:links-line',
       },
     ]);
     expect(publishedBeforeRepublish?.resume.profile.links).not.toEqual([
@@ -242,6 +248,7 @@ describe('ResumePublicationService', () => {
           en: 'Portfolio',
         },
         url: 'https://portfolio.example.com',
+        icon: 'ri:folder-open-line',
       },
     ]);
 
@@ -257,6 +264,7 @@ describe('ResumePublicationService', () => {
           en: 'Live Demo',
         },
         url: 'https://demo.example.com/resume-project',
+        icon: 'ri:links-line',
       },
     ]);
     expect(republished.resume.skills[0]?.keywords).toEqual([
@@ -272,12 +280,16 @@ describe('ResumePublicationService', () => {
           en: 'Portfolio',
         },
         url: 'https://portfolio.example.com',
+        icon: 'ri:folder-open-line',
       },
     ]);
     expect(republished.resume.profile.interests).toEqual([
       {
-        zh: '知识库构建',
-        en: 'Knowledge Base Design',
+        label: {
+          zh: '知识库构建',
+          en: 'Knowledge Base Design',
+        },
+        icon: 'ri:database-2-line',
       },
     ]);
 
