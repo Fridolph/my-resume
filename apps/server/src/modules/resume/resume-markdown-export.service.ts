@@ -46,6 +46,29 @@ const SECTION_TITLES: Record<
   },
 };
 
+const PROJECT_FIELD_LABELS: Record<
+  ResumeLocale,
+  {
+    summary: string;
+    coreFunctions: string;
+    highlights: string;
+    tech: string;
+  }
+> = {
+  zh: {
+    summary: '项目概览',
+    coreFunctions: '项目核心功能',
+    highlights: '亮点、难点与解决方案',
+    tech: '技术栈',
+  },
+  en: {
+    summary: 'Summary',
+    coreFunctions: 'Core Functions',
+    highlights: 'Highlights, Challenges & Solutions',
+    tech: 'Tech',
+  },
+};
+
 function readLocalizedText(value: LocalizedText, locale: ResumeLocale): string {
   return value[locale].trim();
 }
@@ -190,6 +213,7 @@ export class ResumeMarkdownExportService {
       return null;
     }
 
+    const fieldLabels = PROJECT_FIELD_LABELS[locale];
     const lines = resume.projects.flatMap((item) => [
       `### ${readLocalizedText(item.name, locale)}`,
       joinNonEmpty([
@@ -197,14 +221,20 @@ export class ResumeMarkdownExportService {
         `${item.startDate} - ${item.endDate}`,
       ]),
       '',
-      readLocalizedText(item.summary, locale),
+      readLocalizedText(item.summary, locale)
+        ? `**${fieldLabels.summary}:** ${readLocalizedText(item.summary, locale)}`
+        : '',
+      readLocalizedText(item.coreFunctions, locale)
+        ? `**${fieldLabels.coreFunctions}:** ${readLocalizedText(item.coreFunctions, locale)}`
+        : '',
+      item.highlights.length > 0 ? `**${fieldLabels.highlights}:**` : '',
       ...renderBulletList(
         item.highlights.map((highlight) =>
           readLocalizedText(highlight, locale),
         ),
       ),
       item.technologies.length > 0
-        ? `**Tech:** ${item.technologies.join(' / ')}`
+        ? `**${fieldLabels.tech}:** ${item.technologies.join(' / ')}`
         : '',
       ...renderBulletList(
         item.links.map((link) => {

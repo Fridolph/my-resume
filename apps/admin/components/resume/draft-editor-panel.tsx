@@ -30,6 +30,7 @@ import {
   useState,
 } from 'react';
 
+import { adminPrimaryButtonClass } from '../../lib/button-styles';
 import { fetchDraftResume, updateDraftResume } from '../../lib/resume-draft-api';
 import type {
   ResumeDraftSnapshot,
@@ -371,6 +372,7 @@ export function ResumeDraftEditorPanel({
           copyLocalizedTextValue(project.name);
           copyLocalizedTextValue(project.role);
           copyLocalizedTextValue(project.summary);
+          copyLocalizedTextValue(project.coreFunctions);
           project.highlights = copyLocalizedLineValues(project.highlights);
           project.links.forEach((link) => {
             copyLocalizedTextValue(link.label);
@@ -390,6 +392,7 @@ export function ResumeDraftEditorPanel({
           clearLocalizedTextValue(project.name);
           clearLocalizedTextValue(project.role);
           clearLocalizedTextValue(project.summary);
+          clearLocalizedTextValue(project.coreFunctions);
           project.highlights = clearLocalizedLineValues(project.highlights);
           project.links.forEach((link) => {
             clearLocalizedTextValue(link.label);
@@ -755,7 +758,7 @@ export function ResumeDraftEditorPanel({
 
   function updateProjectLocalizedField(
     index: number,
-    field: keyof Pick<ResumeProjectItem, 'name' | 'role' | 'summary'>,
+    field: keyof Pick<ResumeProjectItem, 'name' | 'role' | 'summary' | 'coreFunctions'>,
     locale: 'zh' | 'en',
     value: string,
   ) {
@@ -1178,6 +1181,7 @@ export function ResumeDraftEditorPanel({
             ) : null}
 
             <Button
+              className={adminPrimaryButtonClass}
               fullWidth
               isDisabled={pendingSave}
               size="md"

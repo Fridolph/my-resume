@@ -472,6 +472,10 @@ Build systems, not just pages`,
                 zh: '推进 Vue3 + TS 重构。',
                 en: 'Migrated the project to Vue 3 and TypeScript.',
               },
+              coreFunctions: {
+                zh: '覆盖结算管理与任务执行流程。',
+                en: 'Covers settlement management and task execution flows.',
+              },
               highlights: [
                 {
                   zh: '落地 monorepo 结构',
@@ -522,9 +526,14 @@ Build systems, not just pages`,
       );
       await user.clear(screen.getByLabelText('项目经历 1 名称'));
       await user.type(screen.getByLabelText('项目经历 1 名称'), '云药客 SaaS 平台');
-      await user.clear(screen.getByLabelText('项目经历 1 亮点（每行一条）'));
+      await user.clear(screen.getByLabelText('项目经历 1 项目核心功能'));
       await user.type(
-        screen.getByLabelText('项目经历 1 亮点（每行一条）'),
+        screen.getByLabelText('项目经历 1 项目核心功能'),
+        '覆盖结算、活动配置与多组织协作流程。',
+      );
+      await user.clear(screen.getByLabelText('项目经历 1 亮点、难点与解决方案（每行一条）'));
+      await user.type(
+        screen.getByLabelText('项目经历 1 亮点、难点与解决方案（每行一条）'),
         `落地 monorepo 结构
 建立共享组件基线`,
       );
@@ -570,6 +579,9 @@ Build systems, not just pages`,
           en: '',
         },
       ]);
+      expect(submittedResume.projects[0]?.coreFunctions.zh).toBe(
+        '覆盖结算、活动配置与多组织协作流程。',
+      );
       expect(submittedResume.projects[0]?.links).toEqual([
         {
           label: {

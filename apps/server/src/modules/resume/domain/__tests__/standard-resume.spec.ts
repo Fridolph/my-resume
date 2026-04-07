@@ -119,6 +119,27 @@ describe('standard resume domain', () => {
     expect(normalized.profile.hero.slogans).toHaveLength(2);
   });
 
+  it('should normalize legacy projects when coreFunctions is missing', () => {
+    const resume = createExampleStandardResume() as ReturnType<
+      typeof createExampleStandardResume
+    > & {
+      projects: Array<
+        Omit<ReturnType<typeof createExampleStandardResume>['projects'][number], 'coreFunctions'> & {
+          coreFunctions?: undefined;
+        }
+      >;
+    };
+
+    delete resume.projects[0]!.coreFunctions;
+
+    const normalized = normalizeStandardResume(resume);
+
+    expect(normalized.projects[0]?.coreFunctions).toEqual({
+      zh: '',
+      en: '',
+    });
+  });
+
   it('should normalize legacy interests into labeled interest items', () => {
     const resume = createExampleStandardResume() as ReturnType<
       typeof createExampleStandardResume
@@ -229,6 +250,7 @@ describe('standard resume domain', () => {
         'projects[0].name must be a localized text object',
         'projects[0].role must be a localized text object',
         'projects[0].summary must be a localized text object',
+        'projects[0].coreFunctions must be a localized text object',
         'projects[0].highlights must be an array',
         'projects[0].links must be an array',
         'skills[0].name must be a localized text object',

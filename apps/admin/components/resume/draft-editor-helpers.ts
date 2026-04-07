@@ -99,6 +99,7 @@ export function createEmptyProject(): ResumeProjectItem {
     startDate: '',
     endDate: '',
     summary: createEmptyLocalizedText(),
+    coreFunctions: createEmptyLocalizedText(),
     highlights: [],
     technologies: [],
     links: [],

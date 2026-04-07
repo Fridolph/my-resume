@@ -94,6 +94,10 @@ export const publishedResumeFixture: ResumePublishedSnapshot = {
           zh: '使用 Vite、Vue3、TypeScript 与 TailwindCSS 搭建的在线简历项目。',
           en: 'An online resume project built with Vite, Vue 3, TypeScript, and Tailwind CSS.',
         },
+        coreFunctions: {
+          zh: '覆盖公开展示、后台编辑与内容发布链路。',
+          en: 'Covers public presentation, admin editing, and content publishing flows.',
+        },
         highlights: [
           {
             zh: '持续以教程和开源形式迭代。',

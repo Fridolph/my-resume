@@ -142,6 +142,7 @@ export class RagChunkService {
         `所属公司：${experience.company}`,
         `所属阶段：${experience.period}`,
         `简介：${project.summary}`,
+        project.coreFunctions ? `核心功能：${project.coreFunctions}` : null,
         project.techStack?.length
           ? `技术栈：${project.techStack.join('、')}`
           : null,
@@ -163,6 +164,7 @@ export class RagChunkService {
         `角色：${item.role}`,
         `时间：${item.period}`,
         `简介：${item.summary}`,
+        item.coreFunctions ? `核心功能：${item.coreFunctions}` : null,
         item.techStack?.length ? `技术栈：${item.techStack.join('、')}` : null,
         ...(item.contributions ?? []).map((detail) => `贡献：${detail}`),
       ]),

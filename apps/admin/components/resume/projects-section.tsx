@@ -49,7 +49,7 @@ interface ProjectsSectionProps {
   ) => void;
   updateProjectLocalizedField: (
     index: number,
-    field: 'name' | 'role' | 'summary',
+    field: 'name' | 'role' | 'summary' | 'coreFunctions',
     locale: 'zh' | 'en',
     value: string,
   ) => void;
@@ -96,15 +96,15 @@ export function ProjectsSection({
       count={resumeDraft.projects.length}
       description={
         isTranslationMode
-          ? '英文翻译工作区只维护项目名称、角色、摘要、亮点与链接标签的英文内容。'
-          : '当前已接通项目名称、角色、时间、摘要、亮点、技术栈与项目链接，保持与公开展示结构一致。'
+          ? '英文翻译工作区只维护项目名称、角色、项目概览、项目核心功能、亮点与链接标签的英文内容。'
+          : '当前已接通项目名称、角色、时间、项目概览、项目核心功能、亮点、技术栈与项目链接，保持与公开展示结构一致。'
       }
       title="项目经历"
     >
       {resumeDraft.projects.length === 0 ? (
         <div className="status-box">
           <strong>当前还没有项目经历</strong>
-          <span>可先新增一个项目，再补摘要、亮点和技术栈。</span>
+          <span>可先新增一个项目，再补项目概览、核心功能、亮点和技术栈。</span>
         </div>
       ) : null}
 
@@ -197,7 +197,7 @@ export function ProjectsSection({
                     </div>
 
                     <LocalizedEditorField
-                      label={`项目经历 ${index + 1} 摘要`}
+                      label={`项目经历 ${index + 1} 项目概览`}
                       localeMode={editorLocaleMode}
                       onChange={(value) =>
                         updateProjectLocalizedField(index, 'summary', editorLocaleMode, value)
@@ -209,7 +209,19 @@ export function ProjectsSection({
                     />
 
                     <LocalizedEditorField
-                      label={`项目经历 ${index + 1} 亮点（每行一条）`}
+                      label={`项目经历 ${index + 1} 项目核心功能`}
+                      localeMode={editorLocaleMode}
+                      onChange={(value) =>
+                        updateProjectLocalizedField(index, 'coreFunctions', editorLocaleMode, value)
+                      }
+                      rows={4}
+                      sourceValue={project.coreFunctions.zh}
+                      value={project.coreFunctions[editorLocaleMode]}
+                      variant="textarea"
+                    />
+
+                    <LocalizedEditorField
+                      label={`项目经历 ${index + 1} 亮点、难点与解决方案（每行一条）`}
                       localeMode={editorLocaleMode}
                       onChange={(value) =>
                         updateProjectHighlights(index, editorLocaleMode, value)

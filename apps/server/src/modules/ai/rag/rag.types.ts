@@ -12,6 +12,7 @@ export interface RagSourceExperienceProjectItem {
   id: string;
   name: string;
   summary: string;
+  coreFunctions?: string;
   techStack?: string[];
   contributions?: string[];
 }
@@ -34,6 +35,7 @@ export interface RagSourceStandaloneProjectItem {
   role: string;
   period: string;
   summary: string;
+  coreFunctions?: string;
   techStack?: string[];
   contributions?: string[];
 }

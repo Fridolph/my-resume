@@ -71,6 +71,7 @@ export interface ResumeProjectItem {
   startDate: string;
   endDate: string;
   summary: LocalizedText;
+  coreFunctions: LocalizedText;
   highlights: LocalizedText[];
   technologies: string[];
   links: ResumeProfileLink[];
@@ -425,6 +426,10 @@ export function createExampleStandardResume(): StandardResume {
           '为全球光伏安装商提供在线项目设计与报价服务，支持多国家、多税率、多币种的复杂业务场景。',
           'An online design and quotation platform for global solar installers, supporting multi-country, multi-tax, and multi-currency business scenarios.',
         ),
+        coreFunctions: createLocalizedText(
+          '覆盖项目设计、报价生成、收益测算、地图选址与多国家业务规则适配等核心能力。',
+          'Covers project design, quotation generation, revenue forecasting, map-based planning, and adaptation to multi-country business rules.',
+        ),
         highlights: [
           createLocalizedText(
             '设计可扩展的配置计算与收益预测链路，支撑 10+ 配置项联动。',
@@ -466,6 +471,10 @@ export function createExampleStandardResume(): StandardResume {
           '为药械企业提供推广与结算管理的 SaaS 方案，支持多组织、多任务与合规流程。',
           'A SaaS solution for pharmaceutical and medical device companies, supporting multi-organization task settlement and compliance workflows.',
         ),
+        coreFunctions: createLocalizedText(
+          '覆盖活动配置、任务执行、结算管理、权限协作与多组织业务流程编排。',
+          'Covers campaign configuration, task execution, settlement management, permission collaboration, and multi-organization workflow orchestration.',
+        ),
         highlights: [
           createLocalizedText(
             '将系统中的 Vue2 代码和组件重构到 Vue3 + TypeScript，并升级 antdVue 版本。',
@@ -495,6 +504,10 @@ export function createExampleStandardResume(): StandardResume {
           '面向政企安全场景的终端侦测与响应平台，聚焦资产、告警、终端与进程的可视化管理与实时响应。',
           'A security platform for enterprise environments that visualizes assets, alerts, terminals, and processes for real-time response.',
         ),
+        coreFunctions: createLocalizedText(
+          '覆盖安全概览、资产视图、告警处置、终端详情、进程链路与实时数据展示。',
+          'Covers security overviews, asset views, alert handling, terminal details, process chains, and realtime data visualization.',
+        ),
         highlights: [
           createLocalizedText(
             '主导前端架构、基础模块和示例文档建设，引导团队遵循最佳实践。',
@@ -520,6 +533,10 @@ export function createExampleStandardResume(): StandardResume {
         summary: createLocalizedText(
           '公司核心综合管理后台，用于统一管理用户权限、子系统入口与定制模块展示。',
           'The company’s integrated admin platform used to manage user permissions, subsystem access, and customized module visibility.',
+        ),
+        coreFunctions: createLocalizedText(
+          '覆盖用户与角色权限、菜单路由控制、子系统入口配置、主题能力与通用后台组件建设。',
+          'Covers user and role permissions, menu and route controls, subsystem entry configuration, theming capabilities, and shared admin components.',
         ),
         highlights: [
           createLocalizedText(
@@ -547,6 +564,10 @@ export function createExampleStandardResume(): StandardResume {
           '结合安全数据做态势感知与可视化展示，帮助用户快速理解整体安全状态。',
           'A security visualization dashboard built on top of platform data to help users quickly understand the overall security situation.',
         ),
+        coreFunctions: createLocalizedText(
+          '覆盖安全态势总览、攻击链路展示、热力图分析、响应式大屏适配与图表联动。',
+          'Covers security posture overviews, attack-chain visualizations, heatmap analysis, responsive large-screen layouts, and linked chart interactions.',
+        ),
         highlights: [
           createLocalizedText(
             '通过 CSS、SVG、响应式布局和 ATT&CK 热力图优化大屏体验。',
@@ -568,6 +589,10 @@ export function createExampleStandardResume(): StandardResume {
         summary: createLocalizedText(
           '围绕个人履历、全栈重构、AI 分析与教程写作持续迭代的在线简历项目，也是当前公开知识库与 RAG 实验的承载体。',
           'An online resume project continuously iterated around personal resume content, full-stack refactoring, AI analysis, and tutorial writing. It also serves as the public knowledge base and RAG playground.',
+        ),
+        coreFunctions: createLocalizedText(
+          '覆盖公开简历展示、后台草稿编辑、发布导出、AI 分析、RAG 检索与教程化开发日志沉淀。',
+          'Covers public resume presentation, admin draft editing, publish/export flows, AI analysis, RAG retrieval, and tutorial-style development logs.',
         ),
         highlights: [
           createLocalizedText(
@@ -787,7 +812,22 @@ export function normalizeStandardResume(resume: StandardResume): StandardResume 
     },
     education: Array.isArray(resume.education) ? resume.education : [],
     experiences: Array.isArray(resume.experiences) ? resume.experiences : [],
-    projects: Array.isArray(resume.projects) ? resume.projects : [],
+    projects: Array.isArray(resume.projects)
+      ? resume.projects.map((item) => {
+          if (!item || typeof item !== 'object') {
+            return item as ResumeProjectItem;
+          }
+
+          const candidate = item as ResumeProjectItem;
+
+          return {
+            ...candidate,
+            coreFunctions: isLocalizedText(candidate.coreFunctions)
+              ? candidate.coreFunctions
+              : createEmptyLocalizedText(),
+          };
+        })
+      : [],
     skills: Array.isArray(resume.skills) ? resume.skills : [],
     highlights: Array.isArray(resume.highlights) ? resume.highlights : [],
   };
@@ -980,6 +1020,11 @@ export function validateStandardResume(
       validateLocalizedTextField(item.name, `projects[${index}].name`, errors);
       validateLocalizedTextField(item.role, `projects[${index}].role`, errors);
       validateLocalizedTextField(item.summary, `projects[${index}].summary`, errors);
+      validateLocalizedTextField(
+        item.coreFunctions,
+        `projects[${index}].coreFunctions`,
+        errors,
+      );
       validateLocalizedTextArray(
         item.highlights,
         `projects[${index}].highlights`,

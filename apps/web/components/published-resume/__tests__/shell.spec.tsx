@@ -55,12 +55,16 @@ describe('PublishedResumeShell', () => {
     expect(
       screen.getByRole('heading', { name: 'AI 工程化实践' }),
     ).toBeInTheDocument();
+    expect(screen.getByText('项目核心功能')).toBeInTheDocument();
+    expect(screen.getByText('亮点、难点与解决方案')).toBeInTheDocument();
+    expect(screen.getByText('覆盖公开展示、后台编辑与内容发布链路。')).toBeInTheDocument();
     expect(screen.getByText('技能结构')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '图表' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '结构' })).toBeInTheDocument();
     expect(screen.getByLabelText('技能雷达图')).toBeInTheDocument();
     expect(screen.getByText('关键词云')).toBeInTheDocument();
     expect(screen.getAllByText('Node.js').length).toBeGreaterThan(0);
+    expect(document.querySelector('aside')?.className).toContain('lg:top-[5.5rem]');
     expect(
       screen.queryByRole('heading', { name: '公开简历速览' }),
     ).not.toBeInTheDocument();
@@ -85,18 +89,49 @@ describe('PublishedResumeShell', () => {
     expect(
       screen.getByRole('heading', { name: 'AI Engineering Practice' }),
     ).toBeInTheDocument();
+    expect(screen.getByText('Core Functions')).toBeInTheDocument();
+    expect(screen.getByText('Highlights, Challenges & Solutions')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Skill Structure' })).toBeInTheDocument();
     expect(screen.getByLabelText('Skill radar chart')).toBeInTheDocument();
     expect(screen.getByText('Keyword Cloud')).toBeInTheDocument();
   });
 
+  it('should hide empty optional field blocks like experience location', () => {
+    const fixtureWithoutLocation = {
+      ...publishedResumeFixture,
+      resume: {
+        ...publishedResumeFixture.resume,
+        experiences: publishedResumeFixture.resume.experiences.map((item, index) =>
+          index === 0
+            ? {
+                ...item,
+                location: {
+                  zh: '',
+                  en: '',
+                },
+              }
+            : item,
+        ),
+      },
+    };
+
+    render(
+      <ThemeModeProvider>
+        <PublishedResumeShell publishedResume={fixtureWithoutLocation} />
+      </ThemeModeProvider>,
+    );
+
+    expect(screen.queryByText('地点')).not.toBeInTheDocument();
+    expect(screen.queryByText('Location')).not.toBeInTheDocument();
+  });
+
   it('should toggle light and dark theme on the document element', async () => {
     const user = userEvent.setup();
 
-    renderShell();
+    const { container } = renderShell();
 
-    expect(document.querySelector('.public-header-theme-switch')).toBeInTheDocument();
-    expect(document.querySelector('.public-header-theme-switch-control')).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: '切换明暗主题' })).toBeInTheDocument();
+    expect(container.querySelector('[data-slot="switch-control"]')).toBeInTheDocument();
     expect(document.documentElement.dataset.theme).toBe('light');
 
     await user.click(screen.getByRole('switch', { name: '切换明暗主题' }));

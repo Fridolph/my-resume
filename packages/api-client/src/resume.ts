@@ -72,6 +72,7 @@ export interface ResumeProjectItem {
   startDate: string;
   endDate: string;
   summary: LocalizedText;
+  coreFunctions: LocalizedText;
   highlights: LocalizedText[];
   technologies: string[];
   links: ResumeProfileLink[];

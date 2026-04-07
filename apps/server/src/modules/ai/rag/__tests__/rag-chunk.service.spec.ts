@@ -39,6 +39,7 @@ experiences:
       - id: yyk
         name: 云药客 SaaS 系统
         summary: SaaS 系统
+        coreFunctions: 任务执行与结算协同
         contributions:
           - 重构 Vue2 到 Vue3
 projects:
@@ -47,6 +48,7 @@ projects:
     role: 作者
     period: 2024 - 至今
     summary: 在线简历项目
+    coreFunctions: 简历展示与后台编辑
 extras:
   openSource:
     - my-resume
@@ -75,7 +77,13 @@ describe('RagChunkService', () => {
       '职责：参与需求规划',
     );
     expect(chunks.find((item) => item.id === 'project-yixie-yyk')?.content).toContain(
+      '核心功能：任务执行与结算协同',
+    );
+    expect(chunks.find((item) => item.id === 'project-yixie-yyk')?.content).toContain(
       '贡献：重构 Vue2 到 Vue3',
+    );
+    expect(chunks.find((item) => item.id === 'project-standalone-resume')?.content).toContain(
+      '核心功能：简历展示与后台编辑',
     );
     expect(chunks.find((item) => item.id === 'strengths-overview')?.content).toContain(
       'OpenClaw',
