@@ -120,6 +120,7 @@ describe('RagService', () => {
     const matches = await service.search('他做过 EDR 安全平台吗', 3);
 
     expect(status.indexed).toBe(true);
+    expect(status.stale).toBe(false);
     expect(status.chunkCount).toBeGreaterThan(0);
     expect(status.knowledgeChunkCount).toBeGreaterThan(0);
     expect(status.providerSummary.chatModel).toBe('mock-resume-advisor');
@@ -132,6 +133,68 @@ describe('RagService', () => {
       ),
     ).toBe(true);
     expect(matches[0].score).toBeGreaterThan(0);
+  });
+
+  it('should mark the index as stale when the resume source changes after rebuild', async () => {
+    const aiService = new AiService(
+      createAiProvider(
+        {
+          provider: 'mock',
+          mode: 'mock',
+          model: 'mock-resume-advisor',
+        },
+        vi.fn<typeof fetch>(),
+      ),
+    );
+    const service = new RagService(
+      aiService,
+      new RagChunkService(),
+      new RagKnowledgeService(),
+      new RagIndexRepository(),
+    );
+
+    await service.rebuildIndex();
+    writeFileSync(
+      process.env.RAG_RESUME_SOURCE_PATH!,
+      `${source}\nstrengths:\n  - 新增 stale 信号\n`,
+    );
+
+    const status = service.getStatus();
+
+    expect(status.indexed).toBe(true);
+    expect(status.stale).toBe(true);
+    expect(status.currentSourceHash).not.toBe(status.indexedSourceHash);
+  });
+
+  it('should mark the index as stale when the knowledge source changes after rebuild', async () => {
+    const aiService = new AiService(
+      createAiProvider(
+        {
+          provider: 'mock',
+          mode: 'mock',
+          model: 'mock-resume-advisor',
+        },
+        vi.fn<typeof fetch>(),
+      ),
+    );
+    const service = new RagService(
+      aiService,
+      new RagChunkService(),
+      new RagKnowledgeService(),
+      new RagIndexRepository(),
+    );
+
+    await service.rebuildIndex();
+    writeFileSync(
+      join(process.env.RAG_BLOG_DIRECTORY_PATH!, 'rag-2.md'),
+      `---\ntitle: 新文章\ndate: 2026-04-07\n---\n\n## 一、新增内容\n\n这是新的知识块。`,
+    );
+
+    const status = service.getStatus();
+
+    expect(status.indexed).toBe(true);
+    expect(status.stale).toBe(true);
+    expect(status.currentKnowledgeHash).not.toBe(status.indexedKnowledgeHash);
   });
 
   it('should answer questions from retrieved resume context', async () => {

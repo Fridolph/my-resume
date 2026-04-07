@@ -113,6 +113,7 @@ describe('AI RAG (e2e)', () => {
       .expect(201);
 
     expect(rebuildResponse.body.indexed).toBe(true);
+    expect(rebuildResponse.body.stale).toBe(false);
     expect(rebuildResponse.body.chunkCount).toBeGreaterThan(0);
     expect(rebuildResponse.body.knowledgeChunkCount).toBeGreaterThan(0);
     expect(rebuildResponse.body.providerSummary.chatModel).toBe(
@@ -172,5 +173,21 @@ describe('AI RAG (e2e)', () => {
           item.section === 'strengths' && item.content.includes('OpenClaw'),
       ),
     ).toBe(true);
+
+    writeFileSync(
+      process.env.RAG_RESUME_SOURCE_PATH!,
+      `${source}\nstrengths:\n  - 新增 stale 信号\n`,
+    );
+
+    const statusResponse = await request(app.getHttpServer())
+      .get('/ai/rag/status')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    expect(statusResponse.body.indexed).toBe(true);
+    expect(statusResponse.body.stale).toBe(true);
+    expect(statusResponse.body.currentSourceHash).not.toBe(
+      statusResponse.body.indexedSourceHash,
+    );
   });
 });

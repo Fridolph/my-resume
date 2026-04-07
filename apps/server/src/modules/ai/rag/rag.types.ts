@@ -78,8 +78,11 @@ export interface RagIndexedChunk extends RagChunk {
 
 export interface RagIndexFile {
   sourcePath: string;
+  blogDirectoryPath: string;
   generatedAt: string;
   chunkCount: number;
+  sourceHash: string;
+  knowledgeHash: string;
   providerSummary?: {
     provider: string;
     model: string;

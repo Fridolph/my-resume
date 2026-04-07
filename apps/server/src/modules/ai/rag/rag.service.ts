@@ -1,11 +1,37 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { readFileSync } from 'fs';
+import { createHash } from 'crypto';
+import { existsSync, readFileSync, readdirSync } from 'fs';
+import { join } from 'path';
 
 import { AiService } from '../ai.service';
 import { RagChunkService } from './rag-chunk.service';
 import { RagIndexRepository } from './rag-index.repository';
 import { RagKnowledgeService } from './rag-knowledge.service';
 import { RagIndexFile, RagSearchMatch } from './rag.types';
+
+function computeContentHash(content: string): string {
+  return createHash('sha256').update(content).digest('hex');
+}
+
+function computeKnowledgeDirectoryHash(directoryPath: string): string {
+  if (!existsSync(directoryPath)) {
+    return computeContentHash('');
+  }
+
+  const markdownFiles = readdirSync(directoryPath)
+    .filter((fileName) => fileName.endsWith('.md'))
+    .sort((left, right) => left.localeCompare(right, 'zh-Hans-CN'));
+
+  const fingerprint = markdownFiles
+    .map((fileName) => {
+      const content = readFileSync(join(directoryPath, fileName), 'utf8');
+
+      return `FILE:${fileName}\n${content}`;
+    })
+    .join('\n\n====\n\n');
+
+  return computeContentHash(fingerprint);
+}
 
 function buildSearchTokens(text: string): string[] {
   const normalized = text.trim().toLowerCase();
@@ -84,6 +110,12 @@ export class RagService {
       this.ragIndexRepository.getPaths();
     const index = this.ragIndexRepository.readIndex();
     const providerSummary = this.aiService.getProviderSummary();
+    const currentSourceHash = computeContentHash(readFileSync(sourcePath, 'utf8'));
+    const currentKnowledgeHash = computeKnowledgeDirectoryHash(blogDirectoryPath);
+    const stale = !index
+      ? true
+      : index.sourceHash !== currentSourceHash ||
+        index.knowledgeHash !== currentKnowledgeHash;
 
     return {
       sourcePath,
@@ -91,6 +123,7 @@ export class RagService {
       indexPath,
       providerSummary,
       indexed: Boolean(index),
+      stale,
       chunkCount: index?.chunkCount ?? 0,
       resumeChunkCount:
         index?.chunks.filter((item) => item.sourceType !== 'knowledge').length ??
@@ -99,6 +132,10 @@ export class RagService {
         index?.chunks.filter((item) => item.sourceType === 'knowledge').length ??
         0,
       generatedAt: index?.generatedAt ?? null,
+      currentSourceHash,
+      currentKnowledgeHash,
+      indexedSourceHash: index?.sourceHash ?? null,
+      indexedKnowledgeHash: index?.knowledgeHash ?? null,
       indexedProviderSummary: index?.providerSummary ?? null,
     };
   }
@@ -106,6 +143,8 @@ export class RagService {
   async rebuildIndex() {
     const { sourcePath, blogDirectoryPath } = this.ragIndexRepository.getPaths();
     const source = readFileSync(sourcePath, 'utf8');
+    const sourceHash = computeContentHash(source);
+    const knowledgeHash = computeKnowledgeDirectoryHash(blogDirectoryPath);
     const document = this.ragChunkService.parseSource(source);
     const chunks = [
       ...this.ragChunkService.buildChunks(document),
@@ -120,8 +159,11 @@ export class RagService {
 
     const index: RagIndexFile = {
       sourcePath,
+      blogDirectoryPath,
       generatedAt: new Date().toISOString(),
       chunkCount: chunks.length,
+      sourceHash,
+      knowledgeHash,
       providerSummary,
       chunks: chunks.map((chunk, indexPosition) => ({
         ...chunk,
