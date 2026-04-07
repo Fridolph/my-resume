@@ -20,6 +20,25 @@ import {
   rankSkillGroups,
 } from './published-resume-skills-utils';
 
+const toolbarClass = 'flex flex-col gap-3 md:min-w-0 md:items-end';
+const toolbarControlsClass = 'flex flex-wrap gap-3 md:justify-end';
+const chartLayoutClass = 'grid gap-4 md:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)] md:items-start';
+const chartStackClass = 'grid gap-4';
+const chartSurfaceClass =
+  'rounded-[28px] border border-slate-200/90 bg-slate-50/80 p-5 dark:border-white/8 dark:bg-white/[0.04]';
+const cloudSurfaceClass =
+  'overflow-hidden rounded-[28px] border border-slate-200/90 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.09),transparent_32%),rgba(248,250,252,0.8)] p-5 dark:border-white/8 dark:bg-[radial-gradient(circle_at_top,rgba(96,165,250,0.14),transparent_30%),rgba(255,255,255,0.035)]';
+const cloudTokenBaseClass =
+  'inline-flex cursor-help items-center justify-center rounded-full border border-slate-200/90 bg-white/90 px-4 py-3 font-semibold leading-[1.1] text-slate-700 transition-[transform,border-color,box-shadow,color] duration-200 dark:border-white/8 dark:bg-white/[0.05] dark:text-slate-200';
+const cloudTokenToneClasses = [
+  'hover:border-blue-600/50 hover:text-blue-700 hover:shadow-[0_14px_30px_rgba(37,99,235,0.16)] dark:hover:text-blue-300',
+  'hover:border-cyan-700/50 hover:text-teal-700 hover:shadow-[0_14px_30px_rgba(8,145,178,0.16)] dark:hover:text-cyan-300',
+  'hover:border-indigo-500/50 hover:text-indigo-600 hover:shadow-[0_14px_30px_rgba(99,102,241,0.16)] dark:hover:text-indigo-300',
+  'hover:border-purple-500/45 hover:text-violet-600 hover:shadow-[0_14px_30px_rgba(168,85,247,0.15)] dark:hover:text-violet-300',
+  'hover:border-rose-500/45 hover:text-rose-600 hover:shadow-[0_14px_30px_rgba(244,63,94,0.15)] dark:hover:text-rose-300',
+  'hover:border-emerald-500/45 hover:text-emerald-600 hover:shadow-[0_14px_30px_rgba(16,185,129,0.15)] dark:hover:text-emerald-300',
+] as const;
+
 interface PublishedResumeSkillsSectionProps {
   locale: ResumeLocale;
   skills: ResumeSkillGroup[];
@@ -86,7 +105,7 @@ function SkillChartCanvas({
     };
   }, [isJsdom, option]);
 
-  return <div aria-label={ariaLabel} className="skills-echart-canvas" ref={containerRef} role="img" />;
+  return <div aria-label={ariaLabel} className="min-h-[340px] w-full" ref={containerRef} role="img" />;
 }
 
 export function PublishedResumeSkillsSection({
@@ -126,8 +145,8 @@ export function PublishedResumeSkillsSection({
   }
 
   const toolbar = (
-    <div className="skills-toolbar">
-      <div className="skills-toolbar-controls">
+    <div className={toolbarClass}>
+      <div className={toolbarControlsClass}>
         <div className="inline-flex rounded-full border border-slate-200/80 bg-slate-50/90 p-1 dark:border-white/10 dark:bg-white/[0.04]">
           {([
             ['chart', localLabels.chart],
@@ -148,7 +167,7 @@ export function PublishedResumeSkillsSection({
       </div>
 
       {viewMode === 'chart' ? (
-        <div className="skills-toolbar-controls">
+        <div className={toolbarControlsClass}>
           <div className="inline-flex rounded-full border border-slate-200/80 bg-slate-50/90 p-1 dark:border-white/10 dark:bg-white/[0.04]">
             {([
               ['radar', localLabels.radar],
@@ -221,9 +240,9 @@ export function PublishedResumeSkillsSection({
       ) : null}
 
       {viewMode === 'chart' ? (
-        <div className="skills-chart-layout">
-          <div className="skills-chart-stack">
-            <article className="skills-chart-surface">
+        <div className={chartLayoutClass}>
+          <div className={chartStackClass}>
+            <article className={chartSurfaceClass}>
               <div className="space-y-1">
                 <h3 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
                   {chartMode === 'radar' ? localLabels.radar : localLabels.pie}
@@ -233,7 +252,7 @@ export function PublishedResumeSkillsSection({
                 </p>
               </div>
 
-              <div className="skills-chart-visual">
+              <div className="mt-4 grid place-items-center">
                 <SkillChartCanvas
                   ariaLabel={chartMode === 'radar'
                     ? locale === 'zh'
@@ -247,7 +266,7 @@ export function PublishedResumeSkillsSection({
               </div>
             </article>
 
-            <div className="skills-cloud-surface">
+            <div className={cloudSurfaceClass}>
               <div className="mb-3 space-y-1">
                 <h3 className="text-base font-semibold tracking-tight text-slate-900 dark:text-white">
                   {localLabels.cloudTitle}
@@ -256,17 +275,17 @@ export function PublishedResumeSkillsSection({
                   {localLabels.cloudCaption}
                 </p>
               </div>
-              <div className="skills-cloud-wall">
+              <div className="flex flex-wrap items-center justify-start gap-3">
                 {cloudTokens.map((token) => (
                   <Tooltip key={token.id}>
                     <Tooltip.Trigger>
                       <span
                         className={[
-                          'skills-cloud-token',
+                          cloudTokenBaseClass,
                           token.sizeClassName,
                           token.rotateClassName,
+                          cloudTokenToneClasses[token.toneIndex % cloudTokenToneClasses.length],
                         ].join(' ')}
-                        data-tone={token.toneIndex % 6}
                       >
                         {token.label}
                       </span>

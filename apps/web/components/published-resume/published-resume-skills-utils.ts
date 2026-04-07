@@ -1,29 +1,26 @@
-import type { EChartsOption } from 'echarts';
+import type { EChartsOption } from 'echarts'
 
-import type {
-  ResumeLocale,
-  ResumeSkillGroup,
-} from '../../lib/published-resume-types';
-import { readLocalizedText } from './published-resume-utils';
+import type { ResumeLocale, ResumeSkillGroup } from '../../lib/published-resume-types'
+import { readLocalizedText } from './published-resume-utils'
 
 export interface ParsedSkillLine {
-  label: string | null;
-  content: string;
-  raw: string;
+  label: string | null
+  content: string
+  raw: string
 }
 
 export interface NormalizedSkillGroup extends ResumeSkillGroup {
-  parsedKeywords: ParsedSkillLine[];
+  parsedKeywords: ParsedSkillLine[]
 }
 
 export interface SkillCloudToken {
-  id: string;
-  label: string;
-  raw: string;
-  groupLabel: string;
-  toneIndex: number;
-  sizeClassName: string;
-  rotateClassName: string;
+  id: string
+  label: string
+  raw: string
+  groupLabel: string
+  toneIndex: number
+  sizeClassName: string
+  rotateClassName: string
 }
 
 const chartPalette = [
@@ -35,45 +32,42 @@ const chartPalette = [
   '#10b981',
   '#f59e0b',
   '#0f766e',
-] as const;
+] as const
 
 function stripMarkdownBold(value: string): string {
-  return value.replace(/^\*\*(.+)\*\*$/u, '$1').trim();
+  return value.replace(/^\*\*(.+)\*\*$/u, '$1').trim()
 }
 
 export function parseSkillLine(raw: string): ParsedSkillLine {
-  const trimmed = raw.trim().replace(/^[\-•]\s*/u, '');
-  const dividerIndex = trimmed.search(/[:：]/u);
+  const trimmed = raw.trim().replace(/^[\-•]\s*/u, '')
+  const dividerIndex = trimmed.search(/[:：]/u)
 
   if (dividerIndex === -1) {
     return {
       label: null,
       content: stripMarkdownBold(trimmed),
       raw,
-    };
+    }
   }
 
-  const left = stripMarkdownBold(trimmed.slice(0, dividerIndex).trim());
-  const right = trimmed.slice(dividerIndex + 1).trim();
+  const left = stripMarkdownBold(trimmed.slice(0, dividerIndex).trim())
+  const right = trimmed.slice(dividerIndex + 1).trim()
 
   return {
     label: left || null,
     content: right || stripMarkdownBold(trimmed),
     raw,
-  };
+  }
 }
 
 export function normalizeSkillGroups(skills: ResumeSkillGroup[]): NormalizedSkillGroup[] {
   return skills.map((group) => ({
     ...group,
     parsedKeywords: group.keywords.map(parseSkillLine),
-  }));
+  }))
 }
 
-export function rankSkillGroups(
-  groups: NormalizedSkillGroup[],
-  locale: ResumeLocale,
-) {
+export function rankSkillGroups(groups: NormalizedSkillGroup[], locale: ResumeLocale) {
   return [...groups]
     .map((group, index) => ({
       ...group,
@@ -82,25 +76,25 @@ export function rankSkillGroups(
     }))
     .sort((left, right) => {
       if (right.parsedKeywords.length !== left.parsedKeywords.length) {
-        return right.parsedKeywords.length - left.parsedKeywords.length;
+        return right.parsedKeywords.length - left.parsedKeywords.length
       }
 
-      return left.originalIndex - right.originalIndex;
-    });
+      return left.originalIndex - right.originalIndex
+    })
 }
 
 export function buildSkillCloudTokens(
   groups: NormalizedSkillGroup[],
   locale: ResumeLocale,
 ): SkillCloudToken[] {
-  const sizeClasses = ['text-sm', 'text-base', 'text-lg'] as const;
-  const rotateClasses = ['rotate-0', '-rotate-2', 'rotate-2'] as const;
+  const sizeClasses = ['text-sm', 'text-base', 'text-lg'] as const
+  const rotateClasses = ['rotate-0', '-rotate-2', 'rotate-2'] as const
 
   return groups.flatMap((group, groupIndex) => {
-    const groupLabel = readLocalizedText(group.name, locale);
+    const groupLabel = readLocalizedText(group.name, locale)
 
     return group.parsedKeywords.map((item, itemIndex) => {
-      const label = item.label ?? item.content;
+      const label = item.label ?? item.content
 
       return {
         id: `${groupLabel}-${label}-${itemIndex}`,
@@ -110,17 +104,17 @@ export function buildSkillCloudTokens(
         toneIndex: (groupIndex + itemIndex) % chartPalette.length,
         sizeClassName: sizeClasses[(groupIndex + itemIndex) % sizeClasses.length],
         rotateClassName: rotateClasses[(groupIndex + itemIndex) % rotateClasses.length],
-      };
-    });
-  });
+      }
+    })
+  })
 }
 
 function wrapAxisLabel(value: string): string {
   if (value.length <= 6) {
-    return value;
+    return value
   }
 
-  return value.replace(/(.{1,6})/gu, '$1\n').trim();
+  return value.replace(/(.{1,6})/gu, '$1\n').trim()
 }
 
 export function buildRadarChartOption(
@@ -128,12 +122,12 @@ export function buildRadarChartOption(
   locale: ResumeLocale,
   themeMode: 'light' | 'dark',
 ): EChartsOption {
-  const maxItemCount = Math.max(...groups.map((group) => group.parsedKeywords.length), 1);
-  const axisTextColor = themeMode === 'dark' ? '#cbd5e1' : '#64748b';
+  const maxItemCount = Math.max(...groups.map((group) => group.parsedKeywords.length), 1)
+  const axisTextColor = themeMode === 'dark' ? '#cbd5e1' : '#64748b'
   const splitAreaColors =
     themeMode === 'dark'
       ? ['rgba(96,165,250,0.08)', 'rgba(96,165,250,0.03)']
-      : ['rgba(37,99,235,0.03)', 'rgba(37,99,235,0.015)'];
+      : ['rgba(37,99,235,0.03)', 'rgba(37,99,235,0.015)']
 
   return {
     animationDuration: 500,
@@ -182,8 +176,9 @@ export function buildRadarChartOption(
       },
       formatter: () =>
         groups
-          .map((group) =>
-            `${group.displayName}${locale === 'zh' ? '：' : ': '}${group.parsedKeywords.length}`,
+          .map(
+            (group) =>
+              `${group.displayName}${locale === 'zh' ? '：' : ': '}${group.parsedKeywords.length}`,
           )
           .join('<br/>'),
     },
@@ -212,7 +207,7 @@ export function buildRadarChartOption(
         ],
       },
     ],
-  };
+  }
 }
 
 export function buildPieChartOption(
@@ -220,9 +215,9 @@ export function buildPieChartOption(
   locale: ResumeLocale,
   themeMode: 'light' | 'dark',
 ): EChartsOption {
-  const legendColor = themeMode === 'dark' ? '#cbd5e1' : '#64748b';
-  const labelColor = themeMode === 'dark' ? '#e2e8f0' : '#334155';
-  const centerText = themeMode === 'dark' ? '#f8fafc' : '#0f172a';
+  const legendColor = themeMode === 'dark' ? '#cbd5e1' : '#64748b'
+  const labelColor = themeMode === 'dark' ? '#e2e8f0' : '#334155'
+  const centerText = themeMode === 'dark' ? '#f8fafc' : '#0f172a'
 
   return {
     animationDuration: 500,
@@ -237,9 +232,9 @@ export function buildPieChartOption(
       formatter: ((params: unknown) => {
         const payload = Array.isArray(params)
           ? params[0]
-          : params as { name?: string; value?: unknown };
+          : (params as { name?: string; value?: unknown })
 
-        return `${payload?.name ?? ''}${locale === 'zh' ? '：' : ': '}${Number(payload?.value ?? 0)}`;
+        return `${payload?.name ?? ''}${locale === 'zh' ? '：' : ': '}${Number(payload?.value ?? 0)}`
       }) as NonNullable<EChartsOption['tooltip']> extends infer T
         ? T extends { formatter?: infer F }
           ? F
@@ -256,10 +251,8 @@ export function buildPieChartOption(
         fontSize: 12,
       },
       formatter: (name: string) => {
-        const match = groups.find((group) => group.displayName === name);
-        return match
-          ? `${name} · ${match.parsedKeywords.length}`
-          : name;
+        const match = groups.find((group) => group.displayName === name)
+        return match ? `${name} · ${match.parsedKeywords.length}` : name
       },
     },
     graphic: [
@@ -301,9 +294,9 @@ export function buildPieChartOption(
         })),
       },
     ],
-  };
+  }
 }
 
 export function getSkillChartPalette(index: number): string {
-  return chartPalette[index % chartPalette.length];
+  return chartPalette[index % chartPalette.length]
 }

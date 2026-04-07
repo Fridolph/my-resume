@@ -27,6 +27,7 @@ export function PublishedResumeShell({
 
   const { education, experiences, projects, skills } =
     publishedResume.resume;
+  const sidebarStickyClass = 'lg:sticky lg:top-[5.5rem] lg:self-start';
 
   return (
     <main className="web-page-shell" data-template="standard">
@@ -38,7 +39,7 @@ export function PublishedResumeShell({
 
       <section className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 sm:px-6">
         <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[360px_minmax(0,1fr)]">
-          <aside className="lg:sticky lg:top-24 lg:self-start">
+          <aside className={sidebarStickyClass}>
             <PublishedResumeHero
               locale={locale}
               publishedResume={publishedResume}

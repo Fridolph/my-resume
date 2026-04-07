@@ -9,6 +9,7 @@ import { usePathname } from 'next/navigation';
 import { DEFAULT_API_BASE_URL } from '../../lib/env';
 import type { ResumeLocale } from '../../lib/published-resume-types';
 import { resumeLabels } from '../published-resume/published-resume-utils';
+import styles from './header.module.css';
 
 interface PublicSiteHeaderProps {
   apiBaseUrl?: string;
@@ -17,6 +18,13 @@ interface PublicSiteHeaderProps {
 }
 
 const PROJECT_GITHUB_URL = 'https://github.com/Fridolph/my-resume';
+const localeSwitchWrapperClass =
+  'inline-flex h-[30px] items-center rounded-full border border-slate-200 bg-white/75 p-[2px] dark:border-white/10 dark:bg-white/5';
+const localeSwitchButtonClass =
+  'h-[26px] min-w-[26px] rounded-full px-2.5 text-[0.72rem] font-semibold';
+const primaryNavButtonClass = 'h-[30px] rounded-full px-4 text-[14px] font-semibold';
+const primaryNavWrapperClass =
+  'flex flex-wrap items-center justify-center gap-1.5 rounded-full border border-slate-200/80 bg-white/82 p-[3px] shadow-[0_8px_30px_rgba(15,23,42,0.05)] dark:border-white/10 dark:bg-white/5';
 
 const navItems = [
   {
@@ -71,7 +79,7 @@ export function PublicSiteHeader({
         <div className="order-3 flex w-full justify-center md:order-none md:w-auto md:justify-self-center">
           <div
             aria-label="Public site navigation"
-            className="flex flex-wrap items-center justify-center gap-2 rounded-full border border-slate-200/80 bg-white/82 p-1 shadow-[0_8px_30px_rgba(15,23,42,0.05)] dark:border-white/10 dark:bg-white/5"
+            className={primaryNavWrapperClass}
           >
             {navItems.map((item) => {
               const isActive =
@@ -88,7 +96,7 @@ export function PublicSiteHeader({
               return (
                 <Link href={item.href} key={item.href}>
                   <Button
-                    className="h-9 rounded-full px-4 text-sm"
+                    className={primaryNavButtonClass}
                     size="sm"
                     variant={isActive ? 'primary' : 'ghost'}
                   >
@@ -120,9 +128,9 @@ export function PublicSiteHeader({
             </Dropdown.Popover>
           </Dropdown.Root>
 
-          <div className="inline-flex items-center rounded-full border border-slate-200 bg-white/75 p-0.5 dark:border-white/10 dark:bg-white/5">
+          <div className={localeSwitchWrapperClass}>
             <Button
-              className="h-[30px] min-w-[30px] rounded-full px-3 text-xs"
+              className={localeSwitchButtonClass}
               onClick={() => onChangeLocale('zh')}
               size="sm"
               type="button"
@@ -131,7 +139,7 @@ export function PublicSiteHeader({
               中
             </Button>
             <Button
-              className="h-[30px] min-w-[30px] rounded-full px-3 text-xs"
+              className={localeSwitchButtonClass}
               onClick={() => onChangeLocale('en')}
               size="sm"
               type="button"
@@ -143,19 +151,25 @@ export function PublicSiteHeader({
 
           <Switch.Root
             aria-label="切换明暗主题"
-            className="public-header-theme-switch"
+            className={styles.themeSwitch}
             isSelected={theme === 'dark'}
             onChange={(isSelected) => setTheme(isSelected ? 'dark' : 'light')}
           >
             {({ isSelected }) => (
               <Switch.Control
-                className={`public-header-theme-switch-control ${isSelected ? 'is-dark' : 'is-light'}`}
+                className={[
+                  styles.themeSwitchControl,
+                  isSelected ? styles.themeSwitchControlDark : styles.themeSwitchControlLight,
+                ].join(' ')}
               >
                 <Switch.Thumb
-                  className={`public-header-theme-switch-thumb ${isSelected ? 'is-dark' : 'is-light'}`}
+                  className={[
+                    styles.themeSwitchThumb,
+                    isSelected ? styles.themeSwitchThumbDark : styles.themeSwitchThumbLight,
+                  ].join(' ')}
                   style={{ marginInlineStart: isSelected ? '18px' : '0px' }}
                 >
-                  <Switch.Icon className="public-header-theme-switch-icon">
+                  <Switch.Icon className={styles.themeSwitchIcon}>
                     {isSelected ? <ThemeMoonIcon /> : <ThemeSunIcon />}
                   </Switch.Icon>
                 </Switch.Thumb>

@@ -7,6 +7,23 @@ import {
   readLocalizedText,
   resumeLabels,
 } from './published-resume-utils';
+import styles from './hero.module.css';
+
+const heroCardClass =
+  'overflow-hidden border border-white/70 bg-white/82 shadow-[0_28px_80px_rgba(15,23,42,0.08)] dark:border-white/8 dark:bg-slate-900/[0.84]';
+const contactItemClass =
+  'group grid grid-cols-[1.25rem_minmax(0,1fr)] items-start gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300';
+const iconLinkChipClass =
+  'group inline-flex h-12 w-12 items-center justify-center rounded-full border border-slate-200/90 bg-white/80 p-0 transition hover:-translate-y-px hover:border-blue-400/50 hover:shadow-[0_12px_24px_rgba(37,99,235,0.12)] dark:border-white/8 dark:bg-white/[0.05]';
+const iconLinkInnerClass =
+  'inline-flex h-[2.15rem] w-[2.15rem] items-center justify-center rounded-full bg-[linear-gradient(135deg,rgba(37,99,235,0.14),rgba(14,165,233,0.16))] text-base text-blue-600 dark:bg-[linear-gradient(135deg,rgba(59,130,246,0.18),rgba(56,189,248,0.18))] dark:text-blue-200';
+const interestCardClass =
+  'group relative inline-flex min-h-11 max-w-full w-fit items-center gap-2.5 overflow-hidden rounded-[1.1rem] border border-slate-200/90 bg-white/85 px-3 py-2 transition hover:-translate-y-px hover:scale-[1.01] hover:border-blue-400/50 hover:shadow-[0_14px_24px_rgba(37,99,235,0.08)] dark:border-white/8 dark:bg-white/[0.05]';
+const interestCardPlainClass = 'justify-center px-3.5';
+const interestCardIconClass =
+  'relative z-[1] inline-flex h-[1.85rem] w-[1.85rem] shrink-0 items-center justify-center rounded-full bg-blue-600/10 text-base text-blue-600 transition group-hover:-translate-y-px group-hover:scale-[1.08] dark:bg-blue-400/15 dark:text-blue-200';
+const interestCardLabelClass = 'relative z-[1] min-w-0 whitespace-nowrap text-[0.84rem] font-bold text-slate-700 dark:text-slate-200';
+const interestCardLabelPlainClass = 'text-[0.78rem] leading-[1.35]';
 
 interface PublishedResumeHeroProps {
   locale: ResumeLocale;
@@ -113,18 +130,18 @@ export function PublishedResumeHero({
   const name = readLocalizedText(profile.fullName, locale);
 
   return (
-    <Card className="web-section-card overflow-hidden">
+    <Card className={heroCardClass}>
       <CardHeader className="grid gap-5 border-b border-slate-200/80 pb-5 dark:border-white/10">
         <div className="grid gap-4">
           <div className="mx-auto flex w-full max-w-[17rem] flex-col items-center gap-4 text-center">
             <a
-              className="web-avatar-flip w-full max-w-[13.5rem]"
+              className={`${styles.avatarFlip} w-full max-w-[13.5rem]`}
               href={hero.linkUrl}
               rel="noreferrer"
               target="_blank"
             >
-              <div className="web-avatar-flip-inner">
-                <div className="web-avatar-face web-avatar-face-front">
+              <div className={styles.avatarFlipInner}>
+                <div className={styles.avatarFace}>
                   <img
                     alt={`${name}头像正面`}
                     className="h-full w-full object-cover"
@@ -132,7 +149,7 @@ export function PublishedResumeHero({
                     src={hero.frontImageUrl}
                   />
                 </div>
-                <div className="web-avatar-face web-avatar-face-back">
+                <div className={[styles.avatarFace, styles.avatarFaceBack].join(' ')}>
                   <img
                     alt={`${name}头像背面`}
                     className="h-full w-full object-cover"
@@ -146,7 +163,7 @@ export function PublishedResumeHero({
             <div className="grid gap-2">
               {localizedHeroSlogans.map((line) => (
                 <p
-                  className="web-gradient-copy text-sm font-semibold leading-6 text-slate-600 dark:text-slate-200"
+                  className={`${styles.gradientCopy} text-sm font-semibold leading-6 text-slate-600 dark:text-slate-200`}
                   key={line}
                 >
                   {line}
@@ -178,7 +195,7 @@ export function PublishedResumeHero({
           <div className="grid gap-2">
             {contactItems.map((item) => (
               <div
-                className="contact-item group grid grid-cols-[1.25rem_minmax(0,1fr)] items-start gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300"
+                className={`${styles.contactItem} ${contactItemClass}`}
                 key={item.key}
               >
                 <span className="contact-item-icon mt-1 text-slate-400 dark:text-slate-500">{item.icon}</span>
@@ -205,12 +222,12 @@ export function PublishedResumeHero({
                     <Tooltip.Trigger>
                       <a
                         aria-label={readLocalizedText(link.label, locale)}
-                        className="profile-link-chip group"
+                        className={iconLinkChipClass}
                         href={link.url}
                         rel="noreferrer"
                         target="_blank"
                       >
-                        <span className="profile-link-chip-icon">
+                        <span className={iconLinkInnerClass}>
                           <Icon icon={link.icon} />
                         </span>
                       </a>
@@ -244,7 +261,7 @@ export function PublishedResumeHero({
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
             GitHub
           </p>
-          <p className="web-gradient-copy mt-2 text-sm font-semibold leading-6 text-slate-700 dark:text-slate-100">
+          <p className={`${styles.gradientCopy} mt-2 text-sm font-semibold leading-6 text-slate-700 dark:text-slate-100`}>
             {sidebarProjectNote[locale]}
           </p>
         </a>
@@ -258,20 +275,20 @@ export function PublishedResumeHero({
               {localizedInterests.map((interest) => (
                 interest.icon ? (
                   <article
-                    className="interest-card group"
+                    className={`${styles.interestCard} ${interestCardClass}`}
                     key={`${interest.localizedLabel}-${interest.icon}`}
                   >
-                    <span className="interest-card-icon">
+                    <span className={interestCardIconClass}>
                       <Icon icon={interest.icon} />
                     </span>
-                    <span className="interest-card-label">{interest.localizedLabel}</span>
+                    <span className={interestCardLabelClass}>{interest.localizedLabel}</span>
                   </article>
                 ) : (
                   <article
-                    className="interest-card interest-card--plain group"
+                    className={`${styles.interestCard} ${interestCardClass} ${interestCardPlainClass}`}
                     key={`${interest.localizedLabel}-plain`}
                   >
-                    <span className="interest-card-label interest-card-label--plain">
+                    <span className={`${interestCardLabelClass} ${interestCardLabelPlainClass}`}>
                       {interest.localizedLabel}
                     </span>
                   </article>

@@ -39,7 +39,7 @@ export function PublishedResumeEducationSection({
             <div className="grid gap-4">
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div className="space-y-1.5">
-                  <h3 className="text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
+                  <h3 className="text-[20px] font-bold tracking-tight text-slate-950 dark:text-white">
                     {readLocalizedText(item.schoolName, locale)}
                   </h3>
                   <p className="text-base leading-7 text-slate-500 dark:text-slate-300">

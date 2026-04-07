@@ -54,7 +54,7 @@ export function ProfileOverviewShell({
     <main className="web-page-shell">
       <PublicSiteHeader locale={locale} onChangeLocale={setLocale} />
 
-      <section className="mx-auto grid w-full max-w-7xl gap-6">
+      <section className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 sm:px-6">
         <Card className="border-white/70 bg-white/82 shadow-[0_30px_80px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-slate-950/84">
           <CardHeader className="gap-3">
             <p className="web-eyebrow">{labels.profileEyebrow}</p>
