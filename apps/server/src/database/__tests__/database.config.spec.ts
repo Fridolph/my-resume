@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildDefaultDatabaseUrl,
   resolveDatabaseConfig,
-} from './database.config';
+} from '../database.config';
 
 describe('database.config', () => {
   it('should fall back to a repo local sqlite file when DATABASE_URL is absent', () => {

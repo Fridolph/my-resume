@@ -34,11 +34,24 @@ export class MockAiProvider implements AiProvider {
     private readonly config: Extract<AiRuntimeConfig, { mode: 'mock' }>,
   ) {}
 
+  private getChatModel(): string {
+    return this.config.chatModel?.trim() || this.config.model;
+  }
+
+  private getEmbeddingModel(): string {
+    return this.config.embeddingModel?.trim() || this.config.model;
+  }
+
   getSummary() {
+    const chatModel = this.getChatModel();
+    const embeddingModel = this.getEmbeddingModel();
+
     return {
       provider: this.config.provider,
-      model: this.config.model,
+      model: chatModel,
       mode: this.config.mode,
+      chatModel,
+      embeddingModel,
     };
   }
 
@@ -51,7 +64,7 @@ export class MockAiProvider implements AiProvider {
 
     return {
       provider: this.config.provider,
-      model: this.config.model,
+      model: this.getChatModel(),
       text: fragments.join(' | '),
       raw: {
         mocked: true,
@@ -62,7 +75,7 @@ export class MockAiProvider implements AiProvider {
   async embedTexts(input: EmbedTextsInput): Promise<EmbedTextsResult> {
     return {
       provider: this.config.provider,
-      model: this.config.model,
+      model: this.getEmbeddingModel(),
       embeddings: input.texts.map((item) => buildMockEmbedding(item)),
       raw: {
         mocked: true,

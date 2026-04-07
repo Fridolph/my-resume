@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { AnalysisReportCacheService } from './analysis-report-cache.service';
+import { AnalysisReportCacheService } from '../analysis-report-cache.service';
 
 describe('AnalysisReportCacheService', () => {
   const service = new AnalysisReportCacheService();

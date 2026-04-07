@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { createExampleStandardResume } from '../modules/resume/domain/standard-resume';
+import { createExampleStandardResume } from '../../modules/resume/domain/standard-resume';
 
 import {
   STANDARD_RESUME_KEY,
   createResumeDraftRecord,
   createResumePublicationSnapshotRecord,
-} from './resume-records';
+} from '../resume-records';
 
 describe('resume records', () => {
   it('should build a single draft record for the standard resume', () => {

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { AiService } from './ai.service';
-import { createAiProvider } from './providers/ai-provider.factory';
+import { AiService } from '../ai.service';
+import { createAiProvider } from '../providers/ai-provider.factory';
 
 describe('AiService', () => {
   it('should expose the current provider summary through the unified service', async () => {
@@ -10,6 +10,8 @@ describe('AiService', () => {
         provider: 'mock',
         mode: 'mock',
         model: 'mock-resume-advisor',
+        chatModel: 'mock-chat-model',
+        embeddingModel: 'mock-embedding-model',
       },
       vi.fn<typeof fetch>(),
     );
@@ -17,8 +19,10 @@ describe('AiService', () => {
 
     expect(aiService.getProviderSummary()).toEqual({
       provider: 'mock',
-      model: 'mock-resume-advisor',
+      model: 'mock-chat-model',
       mode: 'mock',
+      chatModel: 'mock-chat-model',
+      embeddingModel: 'mock-embedding-model',
     });
   });
 
@@ -28,6 +32,8 @@ describe('AiService', () => {
         provider: 'mock',
         mode: 'mock',
         model: 'mock-resume-advisor',
+        chatModel: 'mock-chat-model',
+        embeddingModel: 'mock-embedding-model',
       },
       vi.fn<typeof fetch>(),
     );
@@ -46,6 +52,8 @@ describe('AiService', () => {
         provider: 'mock',
         mode: 'mock',
         model: 'mock-resume-advisor',
+        chatModel: 'mock-chat-model',
+        embeddingModel: 'mock-embedding-model',
       },
       vi.fn<typeof fetch>(),
     );
@@ -57,5 +65,6 @@ describe('AiService', () => {
 
     expect(result.embeddings).toHaveLength(2);
     expect(result.embeddings[0].length).toBeGreaterThan(0);
+    expect(result.model).toBe('mock-embedding-model');
   });
 });

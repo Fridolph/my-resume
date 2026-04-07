@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { RagKnowledgeService } from './rag-knowledge.service';
+import { RagKnowledgeService } from '../rag-knowledge.service';
 
 const markdown = `---
 title: 「JS全栈 AI Agent 学习」RAG篇①：先翻书，再答题——RAG 是什么？

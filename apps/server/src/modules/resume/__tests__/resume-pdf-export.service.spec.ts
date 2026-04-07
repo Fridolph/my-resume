@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { createExampleStandardResume } from './domain/standard-resume';
-import { ResumeMarkdownExportService } from './resume-markdown-export.service';
-import { ResumePdfExportService } from './resume-pdf-export.service';
+import { createExampleStandardResume } from '../domain/standard-resume';
+import { ResumeMarkdownExportService } from '../resume-markdown-export.service';
+import { ResumePdfExportService } from '../resume-pdf-export.service';
 
 describe('ResumePdfExportService', () => {
   const markdownService = new ResumeMarkdownExportService();

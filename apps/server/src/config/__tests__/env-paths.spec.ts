@@ -1,8 +1,8 @@
 import { join, resolve } from 'path';
 import { describe, expect, it } from 'vitest';
 
-import { buildServerEnvFilePaths } from './env-paths';
-import { resolveRepoRoot } from './repo-root';
+import { buildServerEnvFilePaths } from '../env-paths';
+import { resolveRepoRoot } from '../repo-root';
 
 describe('buildServerEnvFilePaths', () => {
   it('should prefer development local env files first', () => {

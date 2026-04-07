@@ -83,11 +83,13 @@ export class RagService {
     const { sourcePath, blogDirectoryPath, indexPath } =
       this.ragIndexRepository.getPaths();
     const index = this.ragIndexRepository.readIndex();
+    const providerSummary = this.aiService.getProviderSummary();
 
     return {
       sourcePath,
       blogDirectoryPath,
       indexPath,
+      providerSummary,
       indexed: Boolean(index),
       chunkCount: index?.chunkCount ?? 0,
       resumeChunkCount:
@@ -97,6 +99,7 @@ export class RagService {
         index?.chunks.filter((item) => item.sourceType === 'knowledge').length ??
         0,
       generatedAt: index?.generatedAt ?? null,
+      indexedProviderSummary: index?.providerSummary ?? null,
     };
   }
 
@@ -113,11 +116,13 @@ export class RagService {
     const embeddingResult = await this.aiService.embedTexts({
       texts: chunks.map((item) => item.content),
     });
+    const providerSummary = this.aiService.getProviderSummary();
 
     const index: RagIndexFile = {
       sourcePath,
       generatedAt: new Date().toISOString(),
       chunkCount: chunks.length,
+      providerSummary,
       chunks: chunks.map((chunk, indexPosition) => ({
         ...chunk,
         embedding: embeddingResult.embeddings[indexPosition] ?? [],
@@ -128,7 +133,6 @@ export class RagService {
 
     return {
       ...this.getStatus(),
-      providerSummary: this.aiService.getProviderSummary(),
     };
   }
 

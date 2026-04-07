@@ -11,7 +11,7 @@ vi.mock('pdf-parse', () => ({
   })),
 }));
 
-import { FileExtractionService } from './file-extraction.service';
+import { FileExtractionService } from '../file-extraction.service';
 
 function createPdfBuffer(text: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {

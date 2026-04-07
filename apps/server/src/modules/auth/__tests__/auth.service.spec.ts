@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { JwtService } from '@nestjs/jwt';
 
-import { AuthService } from './auth.service';
-import { UserRole } from './domain/user-role.enum';
+import { AuthService } from '../auth.service';
+import { UserRole } from '../domain/user-role.enum';
 
 describe('AuthService', () => {
   const jwtService = new JwtService({

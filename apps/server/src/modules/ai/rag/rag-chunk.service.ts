@@ -25,11 +25,31 @@ export class RagChunkService {
   buildChunks(document: RagSourceDocument): RagChunk[] {
     return [
       this.buildProfileChunk(document),
+      ...this.buildStrengthsChunks(document),
       this.buildSkillsChunk(document),
       ...document.education.map((item) => this.buildEducationChunk(item)),
       ...document.experiences.flatMap((item) => this.buildExperienceChunks(item)),
       ...document.projects.map((item) => this.buildStandaloneProjectChunk(item)),
       ...this.buildExtraChunks(document),
+    ];
+  }
+
+  private buildStrengthsChunks(document: RagSourceDocument): RagChunk[] {
+    if (!document.strengths?.length) {
+      return [];
+    }
+
+    return [
+      {
+        id: 'strengths-overview',
+        title: '核心竞争力',
+        section: 'strengths',
+        sourceType: 'resume',
+        content: compactLines([
+          '核心竞争力：',
+          ...document.strengths.map((item, index) => `${index + 1}. ${item}`),
+        ]),
+      },
     ];
   }
 

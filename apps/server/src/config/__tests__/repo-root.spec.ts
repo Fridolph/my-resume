@@ -1,7 +1,7 @@
 import { join, resolve } from 'path';
 import { describe, expect, it } from 'vitest';
 
-import { resolveRepoRoot } from './repo-root';
+import { resolveRepoRoot } from '../repo-root';
 
 describe('resolveRepoRoot', () => {
   const repoRoot = resolve(process.cwd(), '../..');

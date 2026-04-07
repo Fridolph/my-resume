@@ -5,7 +5,7 @@ import {
   resumeDrafts,
   resumePublicationSnapshots,
   systemMeta,
-} from './schema';
+} from '../schema';
 
 describe('database schema', () => {
   it('should keep the system meta table for infrastructure bootstrap', () => {

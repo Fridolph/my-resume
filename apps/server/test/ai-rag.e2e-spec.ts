@@ -19,6 +19,8 @@ profile:
   summary: 擅长 Vue3 与前端工程化
 skills:
   - 熟悉 Vue3 与 TypeScript
+strengths:
+  - 从 0 到 1 搭建 OpenClaw 多 Agent 工作流
 education:
   - id: scu
     school: 四川大学锦江学院
@@ -113,6 +115,12 @@ describe('AI RAG (e2e)', () => {
     expect(rebuildResponse.body.indexed).toBe(true);
     expect(rebuildResponse.body.chunkCount).toBeGreaterThan(0);
     expect(rebuildResponse.body.knowledgeChunkCount).toBeGreaterThan(0);
+    expect(rebuildResponse.body.providerSummary.chatModel).toBe(
+      'mock-resume-advisor',
+    );
+    expect(rebuildResponse.body.indexedProviderSummary.embeddingModel).toBe(
+      'mock-resume-advisor-embedding',
+    );
 
     const searchResponse = await request(app.getHttpServer())
       .post('/ai/rag/search')
@@ -148,5 +156,21 @@ describe('AI RAG (e2e)', () => {
 
     expect(knowledgeSearchResponse.body[0].section).toBe('knowledge');
     expect(knowledgeSearchResponse.body[0].title).toContain('RAG篇①');
+
+    const strengthsSearchResponse = await request(app.getHttpServer())
+      .post('/ai/rag/search')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        query: '他有 OpenClaw 多 Agent 工作流实践吗',
+        limit: 5,
+      })
+      .expect(201);
+
+    expect(
+      strengthsSearchResponse.body.some(
+        (item: { section: string; content: string }) =>
+          item.section === 'strengths' && item.content.includes('OpenClaw'),
+      ),
+    ).toBe(true);
   });
 });

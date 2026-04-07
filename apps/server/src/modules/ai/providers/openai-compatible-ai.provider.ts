@@ -59,15 +59,29 @@ export class OpenAiCompatibleAiProvider implements AiProvider {
     private readonly fetchFn: FetchLike,
   ) {}
 
+  private getChatModel(): string {
+    return this.config.chatModel?.trim() || this.config.model;
+  }
+
+  private getEmbeddingModel(): string {
+    return this.config.embeddingModel?.trim() || this.config.model;
+  }
+
   getSummary() {
+    const chatModel = this.getChatModel();
+    const embeddingModel = this.getEmbeddingModel();
+
     return {
       provider: this.config.provider,
-      model: this.config.model,
+      model: chatModel,
       mode: this.config.mode,
+      chatModel,
+      embeddingModel,
     };
   }
 
   async generateText(input: GenerateTextInput): Promise<GenerateTextResult> {
+    const chatModel = this.getChatModel();
     const response = await this.fetchFn(
       joinChatCompletionsUrl(this.config.baseUrl),
       {
@@ -77,7 +91,7 @@ export class OpenAiCompatibleAiProvider implements AiProvider {
           Authorization: `Bearer ${this.config.apiKey}`,
         },
         body: JSON.stringify({
-          model: this.config.model,
+          model: chatModel,
           temperature: input.temperature ?? 0.2,
           messages: [
             ...(input.systemPrompt
@@ -107,13 +121,14 @@ export class OpenAiCompatibleAiProvider implements AiProvider {
 
     return {
       provider: this.config.provider,
-      model: this.config.model,
+      model: chatModel,
       text: extractMessageContent(payload),
       raw: payload,
     };
   }
 
   async embedTexts(input: EmbedTextsInput): Promise<EmbedTextsResult> {
+    const embeddingModel = this.getEmbeddingModel();
     const response = await this.fetchFn(joinEmbeddingsUrl(this.config.baseUrl), {
       method: 'POST',
       headers: {
@@ -121,7 +136,7 @@ export class OpenAiCompatibleAiProvider implements AiProvider {
         Authorization: `Bearer ${this.config.apiKey}`,
       },
       body: JSON.stringify({
-        model: this.config.model,
+        model: embeddingModel,
         input: input.texts,
       }),
     });
@@ -137,7 +152,7 @@ export class OpenAiCompatibleAiProvider implements AiProvider {
 
     return {
       provider: this.config.provider,
-      model: this.config.model,
+      model: embeddingModel,
       embeddings,
       raw: payload,
     };

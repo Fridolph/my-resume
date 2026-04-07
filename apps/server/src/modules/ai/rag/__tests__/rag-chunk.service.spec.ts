@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { RagChunkService } from './rag-chunk.service';
+import { RagChunkService } from '../rag-chunk.service';
 
 const source = `
 profile:
@@ -13,6 +13,8 @@ profile:
   summary: 负责前端开发与团队协作
 skills:
   - 熟悉 Vue3 与 TypeScript
+strengths:
+  - 从 0 到 1 搭建 OpenClaw 多 Agent 工作流
 education:
   - id: scu
     school: 四川大学锦江学院
@@ -60,6 +62,7 @@ describe('RagChunkService', () => {
     expect(chunks.map((item) => item.id)).toEqual(
       expect.arrayContaining([
         'profile-overview',
+        'strengths-overview',
         'skills-overview',
         'education-scu',
         'experience-yixie',
@@ -73,6 +76,9 @@ describe('RagChunkService', () => {
     );
     expect(chunks.find((item) => item.id === 'project-yixie-yyk')?.content).toContain(
       '贡献：重构 Vue2 到 Vue3',
+    );
+    expect(chunks.find((item) => item.id === 'strengths-overview')?.content).toContain(
+      'OpenClaw',
     );
   });
 });

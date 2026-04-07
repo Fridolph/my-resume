@@ -22,12 +22,16 @@ export interface EmbedTextsResult {
   raw?: unknown;
 }
 
+export interface AiProviderSummary {
+  provider: string;
+  model: string;
+  mode: string;
+  chatModel?: string;
+  embeddingModel?: string;
+}
+
 export interface AiProvider {
-  getSummary(): {
-    provider: string;
-    model: string;
-    mode: string;
-  };
+  getSummary(): AiProviderSummary;
   generateText(input: GenerateTextInput): Promise<GenerateTextResult>;
   embedTexts(input: EmbedTextsInput): Promise<EmbedTextsResult>;
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { OpenAiCompatibleAiProvider } from './openai-compatible-ai.provider';
+import { OpenAiCompatibleAiProvider } from '../openai-compatible-ai.provider';
 
 describe('OpenAiCompatibleAiProvider', () => {
   it('should call the chat completions endpoint with unified payload', async () => {
@@ -25,6 +25,8 @@ describe('OpenAiCompatibleAiProvider', () => {
         apiKey: 'sk-qiniu-demo',
         baseUrl: 'https://api.qnaigc.com/v1',
         model: 'deepseek-v3',
+        chatModel: 'deepseek-v3',
+        embeddingModel: 'text-embedding-v1',
         providerLabel: 'Qiniu AI',
       },
       fetchMock,
@@ -43,6 +45,7 @@ describe('OpenAiCompatibleAiProvider', () => {
         headers: expect.objectContaining({
           Authorization: 'Bearer sk-qiniu-demo',
         }),
+        body: expect.stringContaining('"model":"deepseek-v3"'),
       }),
     );
     expect(result.provider).toBe('qiniu');
@@ -74,6 +77,8 @@ describe('OpenAiCompatibleAiProvider', () => {
         apiKey: 'sk-qiniu-demo',
         baseUrl: 'https://api.qnaigc.com/v1',
         model: 'deepseek-v3',
+        chatModel: 'deepseek-v3',
+        embeddingModel: 'text-embedding-v1',
         providerLabel: 'Qiniu AI',
       },
       fetchMock,
@@ -90,11 +95,19 @@ describe('OpenAiCompatibleAiProvider', () => {
         headers: expect.objectContaining({
           Authorization: 'Bearer sk-qiniu-demo',
         }),
+        body: expect.stringContaining('"model":"text-embedding-v1"'),
       }),
     );
     expect(result.embeddings).toEqual([
       [0.1, 0.2, 0.3],
       [0.3, 0.2, 0.1],
     ]);
+    expect(provider.getSummary()).toEqual({
+      provider: 'qiniu',
+      model: 'deepseek-v3',
+      mode: 'openai-compatible',
+      chatModel: 'deepseek-v3',
+      embeddingModel: 'text-embedding-v1',
+    });
   });
 });

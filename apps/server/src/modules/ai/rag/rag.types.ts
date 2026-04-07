@@ -52,6 +52,7 @@ export interface RagSourceDocument {
       url: string;
     }>;
   };
+  strengths?: string[];
   skills: string[];
   education: RagSourceEducationItem[];
   experiences: RagSourceExperienceItem[];
@@ -79,6 +80,13 @@ export interface RagIndexFile {
   sourcePath: string;
   generatedAt: string;
   chunkCount: number;
+  providerSummary?: {
+    provider: string;
+    model: string;
+    mode: string;
+    chatModel?: string;
+    embeddingModel?: string;
+  };
   chunks: RagIndexedChunk[];
 }
 

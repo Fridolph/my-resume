@@ -8,8 +8,8 @@ import {
   canReadPublishedResume,
   canReadViewerExperience,
   canTriggerAiAnalysis,
-} from './auth-role-policy';
-import { UserRole } from './user-role.enum';
+} from '../auth-role-policy';
+import { UserRole } from '../user-role.enum';
 
 describe('auth role policy', () => {
   it('should allow admin to access all current role capabilities', () => {

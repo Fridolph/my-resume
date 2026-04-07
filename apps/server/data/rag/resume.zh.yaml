@@ -18,13 +18,20 @@ profile:
     - label: 掘金专栏
       url: https://juejin.cn/user/3984288320609918
 
+strengths:
+  - 10 年全栈开发经验，主导 8+ 大型项目架构设计与关键模块交付，覆盖安全、SaaS、能源等 ToB 场景。
+  - 具备 Vue / React / Node.js 全栈能力，擅长复杂业务建模、工程化治理与跨团队协作推进。
+  - 持续进行 AI Agent 工程化实践，已从 0 到 1 搭建 OpenClaw 工作流，并沉淀 Vibe Coding 经验与技术专栏。
+  - 有团队管理、规范制定、知识库建设与 Code Review 推进经验，重视系统可解释性与长期协作效率。
+  - 保持跨界学习与方法论沉淀，关注 Agent 设计、RAG 检索与可持续软件生成过程。
+
 skills:
   - 具备 10 年 JavaScript 全栈开发经验，经历安全、SaaS、能源和内容社区等多类 ToB / ToC 业务。
   - 熟练掌握 Vue2/3、Nuxt、Composition API、Pinia，主导过多个项目 Vue2 -> Vue3 架构升级。
   - 熟悉 React、Hooks、Next.js，能在学习型项目中完成 React 全栈重构和工程落地。
   - 熟练使用 Node.js、NestJS，具备 RESTful API、JWT 认证、数据库设计与服务端工程化能力。
   - 熟悉 pnpm workspace、Monorepo、CI/CD、测试策略、性能优化和前端规范建设。
-  - 持续进行 AI Agent 开发实践，熟悉 Claude Code、Cursor、Codex、Coze、Prompt Engineering 与 RAG 基础链路。
+  - 持续进行 AI Agent 开发实践，熟悉 Claude Code、Cursor、Codex、Coze、Prompt Engineering、OpenClaw 工作流与 RAG 基础链路。
   - 熟悉 TailwindCSS、Sass/Less、ECharts、D3.js、WebSocket、Web Worker 和多端响应式设计。
   - 有团队管理、Code Review、知识库建设与技术分享经验，重视工程可解释性与可持续协作。
 
@@ -76,6 +83,8 @@ experiences:
           - 设计可扩展的配置计算与收益预测链路，支撑 10+ 配置项联动。
           - 使用 Web Worker 与复杂表单状态管理，保证报价生成的稳定性和性能。
           - 抽象国家策略层，支持税率、币种和法规的动态适配。
+          - 支撑澳洲、荷兰、法国等多国家业务扩展，帮助核心报价链路保持快速上线能力。
+          - 在真实交付中实践 AI 辅助开发，沉淀 API 调用模板与新页面生成流程。
 
   - id: yixie
     company: 成都一蟹科技有限公司
@@ -223,7 +232,7 @@ projects:
     name: my-resume 在线简历
     role: 作者 / 维护者
     period: 2024.02 - 至今
-    summary: 围绕个人履历、全栈重构、AI 分析与教程写作持续迭代的在线简历项目，也是当前公开知识库与 RAG 实验的承载体。
+    summary: 围绕个人履历、全栈重构、AI 分析、RAG 知识检索与教程写作持续迭代的在线简历项目，也是当前公开知识库与 Agent 实践的承载体。
     techStack:
       - Next.js
       - NestJS
@@ -232,7 +241,7 @@ projects:
       - RAG
     contributions:
       - 持续记录从开发到部署的全过程，并沉淀为教程、开发日志与可复用模板。
-      - 作为当前 monorepo 重构、简历智能分析和知识库实验的统一内容基线。
+      - 作为当前 monorepo 重构、简历智能分析、RAG 检索和 Agent 协作实验的统一内容基线。
 
 extras:
   openSource:

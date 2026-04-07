@@ -7,8 +7,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   createDatabaseClient,
   probeDatabaseConnection,
-} from './database.client';
-import { DatabaseRuntimeConfig } from './database.config';
+} from '../database.client';
+import { DatabaseRuntimeConfig } from '../database.config';
 
 describe('database.client', () => {
   const tempDirectories: string[] = [];

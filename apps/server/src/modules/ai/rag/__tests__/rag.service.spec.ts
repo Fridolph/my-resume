@@ -3,12 +3,12 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AiService } from '../ai.service';
-import { createAiProvider } from '../providers/ai-provider.factory';
-import { RagChunkService } from './rag-chunk.service';
-import { RagIndexRepository } from './rag-index.repository';
-import { RagKnowledgeService } from './rag-knowledge.service';
-import { RagService } from './rag.service';
+import { AiService } from '../../ai.service';
+import { createAiProvider } from '../../providers/ai-provider.factory';
+import { RagChunkService } from '../rag-chunk.service';
+import { RagIndexRepository } from '../rag-index.repository';
+import { RagKnowledgeService } from '../rag-knowledge.service';
+import { RagService } from '../rag.service';
 
 const source = `
 profile:
@@ -21,6 +21,8 @@ profile:
   summary: 擅长 Vue3、TypeScript、前端工程化
 skills:
   - 熟悉 Vue3、TypeScript、NestJS
+strengths:
+  - 从 0 到 1 搭建 OpenClaw 多 Agent 工作流
 education:
   - id: scu
     school: 四川大学锦江学院
@@ -120,6 +122,10 @@ describe('RagService', () => {
     expect(status.indexed).toBe(true);
     expect(status.chunkCount).toBeGreaterThan(0);
     expect(status.knowledgeChunkCount).toBeGreaterThan(0);
+    expect(status.providerSummary.chatModel).toBe('mock-resume-advisor');
+    expect(status.indexedProviderSummary?.embeddingModel).toBe(
+      'mock-resume-advisor',
+    );
     expect(
       matches.some(
         (item) => item.title.includes('EDR') || item.content.includes('EDR'),
@@ -187,5 +193,33 @@ describe('RagService', () => {
     expect(matches[0]?.section).toBe('knowledge');
     expect(matches[0]?.title).toContain('RAG篇①');
     expect(matches[0]?.content).toContain('检索增强生成');
+  });
+
+  it('should search newly added strengths from the latest resume source split', async () => {
+    const aiService = new AiService(
+      createAiProvider(
+        {
+          provider: 'mock',
+          mode: 'mock',
+          model: 'mock-resume-advisor',
+        },
+        vi.fn<typeof fetch>(),
+      ),
+    );
+    const service = new RagService(
+      aiService,
+      new RagChunkService(),
+      new RagKnowledgeService(),
+      new RagIndexRepository(),
+    );
+
+    await service.rebuildIndex();
+    const matches = await service.search('OpenClaw 工作流实践', 5);
+
+    expect(
+      matches.some(
+        (item) => item.section === 'strengths' && item.content.includes('OpenClaw'),
+      ),
+    ).toBe(true);
   });
 });

@@ -8,7 +8,7 @@ import {
   isLocalizedText,
   normalizeStandardResume,
   validateStandardResume,
-} from './standard-resume';
+} from '../standard-resume';
 
 describe('standard resume domain', () => {
   it('should expose stable module boundaries for the standard resume', () => {

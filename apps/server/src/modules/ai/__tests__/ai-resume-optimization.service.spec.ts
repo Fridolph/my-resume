@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { ResumePublicationService } from '../resume/resume-publication.service';
+import { ResumePublicationService } from '../../resume/resume-publication.service';
 import {
   createExampleStandardResume,
   type StandardResume,
-} from '../resume/domain/standard-resume';
-import { AiService } from './ai.service';
-import { AiResumeOptimizationService } from './ai-resume-optimization.service';
+} from '../../resume/domain/standard-resume';
+import { AiService } from '../ai.service';
+import { AiResumeOptimizationService } from '../ai-resume-optimization.service';
 
 describe('AiResumeOptimizationService', () => {
   it('should build a valid suggested resume in mock mode', async () => {

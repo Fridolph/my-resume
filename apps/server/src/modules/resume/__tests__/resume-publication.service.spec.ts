@@ -8,12 +8,12 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   createDatabase,
   createDatabaseClient,
-} from '../../database/database.client';
-import type { DatabaseClient } from '../../database/database.client';
-import { SQLITE_LOCKED_ERROR_MESSAGE } from '../../database/sqlite-lock';
-import { ResumePublicationRepository } from './resume-publication.repository';
-import { createExampleStandardResume } from './domain/standard-resume';
-import { ResumePublicationService } from './resume-publication.service';
+} from '../../../database/database.client';
+import type { DatabaseClient } from '../../../database/database.client';
+import { SQLITE_LOCKED_ERROR_MESSAGE } from '../../../database/sqlite-lock';
+import { ResumePublicationRepository } from '../resume-publication.repository';
+import { createExampleStandardResume } from '../domain/standard-resume';
+import { ResumePublicationService } from '../resume-publication.service';
 
 interface ServiceHarness {
   client: DatabaseClient;
