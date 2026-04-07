@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-
 import { AuthModule } from '../auth/auth.module';
 import { ResumeModule } from '../resume/resume.module';
 import { AiFileController } from './ai-file.controller';

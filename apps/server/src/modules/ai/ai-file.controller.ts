@@ -6,11 +6,11 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
-} from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+} from '@nestjs/common'
+import { FileInterceptor } from '@nestjs/platform-express'
 
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { FileExtractionService } from './file-extraction.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
+import { FileExtractionService } from './file-extraction.service'
 
 @Controller('ai')
 @UseGuards(JwtAuthGuard)
@@ -24,7 +24,7 @@ export class AiFileController {
   @UseInterceptors(FileInterceptor('file'))
   async extractText(@UploadedFile() file?: Express.Multer.File) {
     if (!file) {
-      throw new BadRequestException('File is required');
+      throw new BadRequestException('File is required')
     }
 
     return this.fileExtractionService.extractText({
@@ -32,6 +32,6 @@ export class AiFileController {
       originalname: file.originalname,
       mimetype: file.mimetype,
       size: file.size,
-    });
+    })
   }
 }
