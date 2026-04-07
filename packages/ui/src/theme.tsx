@@ -30,6 +30,25 @@ export function readStoredTheme(
   return normalizeThemeMode(rawValue);
 }
 
+export function readDocumentTheme(
+  documentNode:
+    | {
+        documentElement: {
+          dataset: DOMStringMap;
+        };
+      }
+    | null
+    | undefined,
+): ThemeMode | null {
+  const rawTheme = documentNode?.documentElement.dataset.theme;
+
+  if (rawTheme !== 'dark' && rawTheme !== 'light') {
+    return null;
+  }
+
+  return rawTheme;
+}
+
 export function writeStoredTheme(
   storage: Pick<Storage, 'setItem'> | null | undefined,
   theme: ThemeMode,
@@ -81,13 +100,23 @@ export function ThemeModeProvider({
   defaultTheme?: ThemeMode;
   storageKey?: string;
 }) {
-  const [theme, setTheme] = useState<ThemeMode>(defaultTheme);
+  const [theme, setTheme] = useState<ThemeMode>(() => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return defaultTheme;
+    }
+
+    return (
+      readStoredTheme(window.localStorage, storageKey) ??
+      readDocumentTheme(document) ??
+      defaultTheme
+    );
+  });
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const resolvedTheme =
       readStoredTheme(window.localStorage, storageKey) ??
-      normalizeThemeMode(document.documentElement.dataset.theme) ??
+      readDocumentTheme(document) ??
       defaultTheme;
 
     setTheme(resolvedTheme);

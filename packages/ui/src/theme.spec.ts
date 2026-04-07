@@ -1,14 +1,26 @@
-import { describe, expect, it } from 'vitest';
+import { render, screen, cleanup } from '@testing-library/react';
+import { createElement } from 'react';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import {
   THEME_STORAGE_KEY,
+  ThemeModeProvider,
   applyThemeToDocument,
   normalizeThemeMode,
+  readDocumentTheme,
   readStoredTheme,
+  useThemeMode,
   writeStoredTheme,
 } from './theme';
 
 describe('theme helpers', () => {
+  afterEach(() => {
+    cleanup();
+    window.localStorage.clear();
+    document.documentElement.dataset.theme = 'light';
+    document.documentElement.classList.remove('dark');
+  });
+
   it('should normalize any unknown value to light', () => {
     expect(normalizeThemeMode('dark')).toBe('dark');
     expect(normalizeThemeMode('light')).toBe('light');
@@ -52,5 +64,42 @@ describe('theme helpers', () => {
 
     expect(documentNode.documentElement.dataset.theme).toBe('dark');
     expect(documentNode.documentElement.style.colorScheme).toBe('dark');
+  });
+
+  it('should read an existing document theme before client hydration', () => {
+    expect(
+      readDocumentTheme({
+        documentElement: {
+          dataset: {
+            theme: 'dark',
+          } as DOMStringMap,
+        },
+      }),
+    ).toBe('dark');
+
+    expect(
+      readDocumentTheme({
+        documentElement: {
+          dataset: {
+            theme: 'system',
+          } as DOMStringMap,
+        },
+      }),
+    ).toBeNull();
+  });
+
+  it('should initialize the provider from stored theme before the first effect', () => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
+    document.documentElement.dataset.theme = 'light';
+
+    function ThemeReader() {
+      const { theme } = useThemeMode();
+
+      return createElement('div', { 'data-testid': 'theme-mode' }, theme);
+    }
+
+    render(createElement(ThemeModeProvider, null, createElement(ThemeReader)));
+
+    expect(screen.getByTestId('theme-mode')).toHaveTextContent('dark');
   });
 });

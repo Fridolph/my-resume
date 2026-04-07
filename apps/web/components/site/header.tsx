@@ -104,7 +104,7 @@ export function PublicSiteHeader({
           <Dropdown.Root>
             <Dropdown.Trigger
               aria-label={labels.downloadAriaLabel}
-              className="inline-flex h-8 min-w-8 items-center justify-center rounded-full border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-white/80 hover:text-slate-950 dark:text-slate-300 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-white"
+              className="inline-flex h-[30px] min-w-[30px] items-center justify-center rounded-full border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-white/80 hover:text-slate-950 dark:text-slate-300 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-white"
             >
                 <DownloadIcon className="h-4 w-4" />
             </Dropdown.Trigger>
@@ -120,9 +120,9 @@ export function PublicSiteHeader({
             </Dropdown.Popover>
           </Dropdown.Root>
 
-          <div className="inline-flex items-center rounded-full border border-slate-200 bg-white/75 p-1 dark:border-white/10 dark:bg-white/5">
+          <div className="inline-flex items-center rounded-full border border-slate-200 bg-white/75 p-0.5 dark:border-white/10 dark:bg-white/5">
             <Button
-              className="h-8 min-w-8 rounded-full px-3 text-xs"
+              className="h-[30px] min-w-[30px] rounded-full px-3 text-xs"
               onClick={() => onChangeLocale('zh')}
               size="sm"
               type="button"
@@ -131,7 +131,7 @@ export function PublicSiteHeader({
               中
             </Button>
             <Button
-              className="h-8 min-w-8 rounded-full px-3 text-xs"
+              className="h-[30px] min-w-[30px] rounded-full px-3 text-xs"
               onClick={() => onChangeLocale('en')}
               size="sm"
               type="button"
@@ -143,27 +143,24 @@ export function PublicSiteHeader({
 
           <Switch.Root
             aria-label="切换明暗主题"
-            className="inline-flex h-8 items-center gap-2 rounded-full border border-slate-200 bg-white/75 px-3 text-slate-500 transition dark:border-white/10 dark:bg-white/5 dark:text-slate-300"
+            className="public-header-theme-switch"
             isSelected={theme === 'dark'}
             onChange={(isSelected) => setTheme(isSelected ? 'dark' : 'light')}
           >
-            <ThemeSunIcon
-              className={
-                theme === 'light'
-                  ? 'text-amber-500'
-                  : 'text-slate-300 dark:text-slate-500'
-              }
-            />
-            <Switch.Control className="inline-flex h-5 w-9 items-center rounded-full border border-slate-200/80 bg-slate-100/90 px-0.5 transition dark:border-white/10 dark:bg-white/10">
-              <Switch.Thumb className="inline-flex h-4 w-4 rounded-full bg-white shadow-sm dark:bg-slate-950" />
-            </Switch.Control>
-            <ThemeMoonIcon
-              className={
-                theme === 'dark'
-                  ? 'text-blue-300'
-                  : 'text-slate-300 dark:text-slate-500'
-              }
-            />
+            {({ isSelected }) => (
+              <Switch.Control
+                className={`public-header-theme-switch-control ${isSelected ? 'is-dark' : 'is-light'}`}
+              >
+                <Switch.Thumb
+                  className={`public-header-theme-switch-thumb ${isSelected ? 'is-dark' : 'is-light'}`}
+                  style={{ marginInlineStart: isSelected ? '18px' : '0px' }}
+                >
+                  <Switch.Icon className="public-header-theme-switch-icon">
+                    {isSelected ? <ThemeMoonIcon /> : <ThemeSunIcon />}
+                  </Switch.Icon>
+                </Switch.Thumb>
+              </Switch.Control>
+            )}
           </Switch.Root>
 
           <a
@@ -173,7 +170,7 @@ export function PublicSiteHeader({
           >
             <Button
               aria-label={labels.githubAriaLabel}
-              className="h-8 min-w-8 rounded-full px-0"
+              className="h-[30px] min-w-[30px] rounded-full px-0"
               isIconOnly
               size="sm"
               variant="ghost"
@@ -214,9 +211,9 @@ function ThemeSunIcon({ className }: { className?: string }) {
       aria-hidden="true"
       className={className}
       fill="none"
-      height="14"
+      height="12"
       viewBox="0 0 24 24"
-      width="14"
+      width="12"
     >
       <path
         d="M12 3V5M12 19V21M4.93 4.93L6.34 6.34M17.66 17.66L19.07 19.07M3 12H5M19 12H21M4.93 19.07L6.34 17.66M17.66 6.34L19.07 4.93M16 12A4 4 0 1 1 8 12A4 4 0 0 1 16 12Z"
@@ -235,9 +232,9 @@ function ThemeMoonIcon({ className }: { className?: string }) {
       aria-hidden="true"
       className={className}
       fill="none"
-      height="14"
+      height="12"
       viewBox="0 0 24 24"
-      width="14"
+      width="12"
     >
       <path
         d="M20 15.39A8 8 0 1 1 8.61 4A6.5 6.5 0 0 0 20 15.39Z"

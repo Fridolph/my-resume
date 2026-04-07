@@ -95,6 +95,8 @@ describe('PublishedResumeShell', () => {
 
     renderShell();
 
+    expect(document.querySelector('.public-header-theme-switch')).toBeInTheDocument();
+    expect(document.querySelector('.public-header-theme-switch-control')).toBeInTheDocument();
     expect(document.documentElement.dataset.theme).toBe('light');
 
     await user.click(screen.getByRole('switch', { name: '切换明暗主题' }));
