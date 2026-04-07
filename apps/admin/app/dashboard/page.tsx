@@ -1,4 +1,4 @@
-import { AdminDashboardShell } from '../../components/admin-dashboard-shell';
+import { AdminDashboardShell } from '../../components/admin/dashboard-shell';
 
 export default function AdminDashboardPage() {
   return <AdminDashboardShell />;

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { AdminProtectedLayout } from '../../components/admin-protected-layout';
+import { AdminProtectedLayout } from '../../components/admin/protected-layout';
 import { AdminSessionProvider } from '../../lib/admin-session';
 
 export default function DashboardLayout({
