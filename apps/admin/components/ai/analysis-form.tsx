@@ -1,6 +1,8 @@
 'use client';
 
 import { Button, ListBox, Select, TextArea } from '@heroui/react';
+
+import { adminPrimaryButtonClass } from '../../lib/button-styles';
 import type { ReactNode } from 'react';
 
 import type {
@@ -149,6 +151,7 @@ export function AnalysisForm({
 
         <div className="dashboard-entry-actions">
           <Button
+            className={adminPrimaryButtonClass}
             isDisabled={pending}
             size="md"
             type="submit"

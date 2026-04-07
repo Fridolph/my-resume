@@ -9,14 +9,13 @@ describe('ThemeModeToggle', () => {
   it('should switch theme mode and persist the latest selection', async () => {
     const user = userEvent.setup();
 
-    const { container } = render(
+    render(
       <Providers>
         <ThemeModeToggle />
       </Providers>,
     );
 
-    expect(container.querySelector('.header-theme-switch')).toBeInTheDocument();
-    expect(container.querySelector('.header-theme-switch-control')).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: '切换明暗主题' })).toBeInTheDocument();
 
     await waitFor(() => {
       expect(document.documentElement.dataset.theme).toBe('light');

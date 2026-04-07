@@ -1,6 +1,8 @@
 'use client';
 
 import { Button, Checkbox } from '@heroui/react';
+
+import { adminPrimaryButtonClass } from '../../lib/button-styles';
 import {
   DisplayPill,
   DisplaySectionIntro,
@@ -11,6 +13,15 @@ import type {
   AiResumeOptimizationChangedModule,
   AiResumeOptimizationResult,
 } from '../../lib/ai-workbench-types';
+
+const analysisTextBlockClass = 'whitespace-pre-wrap leading-7 text-zinc-900 dark:text-zinc-100';
+const analysisSectionCardClass = 'grid gap-3.5';
+const analysisSectionCardLinkedClass =
+  'grid gap-3.5 border-blue-500/50 shadow-[0_0_0_3px_rgba(59,130,246,0.14)]';
+const moduleDiffHeaderClass = 'grid gap-3';
+const moduleCheckClass = 'inline-flex items-center gap-2.5 text-zinc-500 dark:text-zinc-400';
+const moduleDiffStackClass = 'grid gap-3.5';
+const moduleDiffEntryClass = 'grid gap-3';
 
 interface AnalysisSuggestionPanelProps {
   applyPending: boolean;
@@ -47,7 +58,7 @@ export function AnalysisSuggestionPanel({
             {suggestion.providerSummary.model}
           </DisplayPill>
         </div>
-        <div className="analysis-text-block">{suggestion.summary}</div>
+        <div className={analysisTextBlockClass}>{suggestion.summary}</div>
         {suggestion.focusAreas.length > 0 ? (
           <ul className="muted-list">
             {suggestion.focusAreas.map((item) => (
@@ -64,11 +75,15 @@ export function AnalysisSuggestionPanel({
           return (
             <DisplaySurfaceCard
               as="article"
-              className={`analysis-section-card${linkedModule === moduleDiff.module ? ' is-linked-module' : ''}`}
+              className={
+                linkedModule === moduleDiff.module
+                  ? analysisSectionCardLinkedClass
+                  : analysisSectionCardClass
+              }
               id={`module-diff-${moduleDiff.module}`}
               key={moduleDiff.module}
             >
-              <div className="module-diff-header">
+              <div className={moduleDiffHeaderClass}>
                 <DisplaySectionIntro
                   compact
                   description={moduleDiff.reason}
@@ -77,7 +92,7 @@ export function AnalysisSuggestionPanel({
                   titleAs="h3"
                 />
                 <Checkbox
-                  className="module-check"
+                  className={moduleCheckClass}
                   isSelected={checked}
                   onChange={() => onToggleSelectedModule(moduleDiff.module)}
                 >
@@ -85,9 +100,9 @@ export function AnalysisSuggestionPanel({
                 </Checkbox>
               </div>
 
-              <div className="module-diff-stack">
+              <div className={moduleDiffStackClass}>
                 {moduleDiff.entries.map((entry) => (
-                  <div className="module-diff-entry" key={entry.key}>
+                  <div className={moduleDiffEntryClass} key={entry.key}>
                     <strong>{entry.label}</strong>
                     <div className="grid gap-3 md:grid-cols-2">
                       <div className="status-box">
@@ -120,6 +135,7 @@ export function AnalysisSuggestionPanel({
         </div>
         <div className="dashboard-entry-actions">
           <Button
+            className={adminPrimaryButtonClass}
             isDisabled={applyPending || selectedModules.length === 0}
             onClick={onApplySuggestion}
             size="md"

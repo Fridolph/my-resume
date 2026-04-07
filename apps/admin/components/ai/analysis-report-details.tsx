@@ -11,6 +11,9 @@ import type {
   AiWorkbenchReport,
 } from '../../lib/ai-workbench-types';
 
+const analysisTextBlockClass = 'whitespace-pre-wrap leading-7 text-zinc-900 dark:text-zinc-100';
+const analysisSectionCardClass = 'grid gap-3.5';
+
 interface AnalysisReportDetailsProps {
   onLinkSuggestionModule: (module: AiResumeOptimizationChangedModule) => void;
   report: AiWorkbenchReport;
@@ -30,7 +33,7 @@ export function AnalysisReportDetails({
           title="结论摘要"
           titleAs="h3"
         />
-        <div className="analysis-text-block">{report.summary}</div>
+        <div className={analysisTextBlockClass}>{report.summary}</div>
         <div className="status-box">
           <strong>判断理由</strong>
           <span>{report.score.reason}</span>
@@ -149,7 +152,7 @@ export function AnalysisReportDetails({
             {report.sections.map((section) => (
               <DisplaySurfaceCard
                 as="article"
-                className="analysis-section-card"
+                className={analysisSectionCardClass}
                 key={`legacy-${section.key}`}
               >
                 <DisplaySectionIntro

@@ -4,12 +4,19 @@ import {
   Button,
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
-  CardTitle,
 } from '@heroui/react';
+import { DisplaySectionIntro } from '@my-resume/ui/display';
 
 import { AuthUserView } from '../../lib/auth-types';
+import { adminPrimaryButtonClass, adminSecondaryButtonClass } from '../../lib/button-styles';
+
+const actionGridClass =
+  'grid grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))] gap-4';
+const primaryActionButtonClass =
+  `${adminPrimaryButtonClass} min-h-[46px] justify-center rounded-full font-semibold`;
+const secondaryActionButtonClass =
+  `${adminSecondaryButtonClass} min-h-[46px] justify-center rounded-full font-semibold`;
 
 interface RoleActionPanelProps {
   currentUser: AuthUserView;
@@ -31,11 +38,13 @@ export function RoleActionPanel({
   return (
     <Card className="border border-zinc-200/70 dark:border-zinc-800">
       <CardHeader className="flex flex-col items-start gap-2">
-        <p className="eyebrow">角色动作</p>
-        <CardTitle>动作中心</CardTitle>
-        <CardDescription>
-          当前阶段用最小动作集验证“viewer 只读、admin 可写”的权限边界。
-        </CardDescription>
+        <DisplaySectionIntro
+          className="gap-2"
+          description="当前阶段用最小动作集验证“viewer 只读、admin 可写”的权限边界。"
+          descriptionClassName="text-[var(--admin-text-muted)]"
+          eyebrow="角色动作"
+          title="动作中心"
+        />
       </CardHeader>
       <CardContent className="stack">
         {isViewer ? (
@@ -48,9 +57,9 @@ export function RoleActionPanel({
           </div>
         )}
 
-        <div className="action-grid">
+        <div className={actionGridClass}>
           <Button
-            className="action-grid-button is-primary"
+            className={primaryActionButtonClass}
             fullWidth
             isDisabled={isViewer || pendingAction !== null}
             onClick={() => void onPublish()}
@@ -61,7 +70,7 @@ export function RoleActionPanel({
             {pendingAction === 'publish' ? '发布中...' : '发布简历（管理员）'}
           </Button>
           <Button
-            className="action-grid-button is-secondary"
+            className={secondaryActionButtonClass}
             fullWidth
             isDisabled={isViewer || pendingAction !== null}
             onClick={() => void onTriggerAi()}

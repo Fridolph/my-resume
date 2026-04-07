@@ -18,6 +18,10 @@ import { fetchDraftResume } from '../../lib/resume-draft-api';
 import type { ResumeDraftSnapshot } from '../../lib/resume-types';
 import { useAdminSession } from '../../lib/admin-session';
 
+const workflowListClass = 'm-0 grid list-none gap-3.5 p-0';
+const workflowItemClass =
+  'grid gap-1.5 rounded-[18px] border border-[color:var(--admin-border)] bg-[var(--admin-surface-muted)] p-4';
+
 type AsyncState = 'idle' | 'loading' | 'ready' | 'error';
 
 const quickEntryCards = [
@@ -244,16 +248,16 @@ export function AdminDashboardShell() {
               </div>
             )}
 
-            <ol className="workflow-list">
-              <li className="workflow-item">
+            <ol className={workflowListClass}>
+              <li className={workflowItemClass}>
                 <strong>先维护草稿</strong>
                 <span>简历编辑页优先服务草稿态，不直接影响公开站。</span>
               </li>
-              <li className="workflow-item">
+              <li className={workflowItemClass}>
                 <strong>再验证 AI 与发布</strong>
                 <span>AI 工作台和发布页负责动作型入口，不和内容编辑混在一起。</span>
               </li>
-              <li className="workflow-item">
+              <li className={workflowItemClass}>
                 <strong>最后再做展示端升级</strong>
                 <span>本轮只升级 admin，不把样式迁移一次扩到整个 monorepo。</span>
               </li>

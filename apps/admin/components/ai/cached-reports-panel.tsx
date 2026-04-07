@@ -17,6 +17,12 @@ import {
   AiWorkbenchReport,
 } from '../../lib/ai-workbench-types';
 
+const cachedReportListClass = 'flex flex-wrap gap-3';
+const analysisSummaryCardClass = 'grid gap-3.5';
+const analysisSectionGridClass = 'grid gap-4';
+const analysisSectionCardClass = 'grid gap-3.5';
+const analysisTextBlockClass = 'whitespace-pre-wrap leading-7 text-zinc-900 dark:text-zinc-100';
+
 interface AiCachedReportsPanelProps {
   accessToken: string;
   apiBaseUrl: string;
@@ -174,7 +180,7 @@ export function AiCachedReportsPanel({
       ) : null}
 
       {reports.length > 0 ? (
-        <div className="cached-report-list">
+        <div className={cachedReportListClass}>
           {reports.map((report) => (
             <Button
               className={activeReportId === report.reportId ? 'secondary-button' : ''}
@@ -200,7 +206,7 @@ export function AiCachedReportsPanel({
             <DisplayPill>来源：{formatGenerator(activeReport.generator)}</DisplayPill>
           </div>
 
-          <DisplaySurfaceCard className="analysis-summary-card">
+          <DisplaySurfaceCard className={analysisSummaryCardClass}>
             <DisplaySectionIntro
               compact
               description={activeReport.inputPreview}
@@ -208,14 +214,14 @@ export function AiCachedReportsPanel({
               title="当前报告概览"
               titleAs="h3"
             />
-            <div className="analysis-text-block">{activeReport.summary}</div>
+            <div className={analysisTextBlockClass}>{activeReport.summary}</div>
           </DisplaySurfaceCard>
 
-          <div className="analysis-section-grid">
+          <div className={analysisSectionGridClass}>
             {activeReport.sections.map((section) => (
               <DisplaySurfaceCard
                 as="article"
-                className="analysis-section-card"
+                className={analysisSectionCardClass}
                 key={section.key}
               >
                 <DisplaySectionIntro compact title={section.title} titleAs="h3" />

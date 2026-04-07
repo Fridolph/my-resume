@@ -1,6 +1,8 @@
 'use client';
 
 import { Button, Input, TextArea } from '@heroui/react';
+
+import { adminPrimaryButtonClass } from '../../lib/button-styles';
 import { useState } from 'react';
 
 import { extractTextFromFile } from '../../lib/ai-file-api';
@@ -124,6 +126,7 @@ export function AiFileExtractionPanel({
 
         <div className="dashboard-entry-actions">
           <Button
+            className={adminPrimaryButtonClass}
             isDisabled={!selectedFile || pending}
             size="md"
             type="submit"

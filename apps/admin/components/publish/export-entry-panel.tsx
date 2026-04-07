@@ -1,7 +1,8 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, Chip } from '@heroui/react';
+import { Card, CardContent, CardHeader, Chip } from '@heroui/react';
 import { buildPublishedResumeExportUrl, type ResumeLocale } from '@my-resume/api-client';
+import { DisplaySectionIntro } from '@my-resume/ui/display';
 
 type ExportEntryPanelProps = {
   apiBaseUrl: string;
@@ -23,10 +24,12 @@ export function ExportEntryPanel({
             {locale.toUpperCase()}
           </Chip>
         </div>
-        <CardTitle>后台下载入口</CardTitle>
-        <CardDescription>
-          当前后台下载入口仅导出已发布版本，草稿仍以后台编辑流为准。
-        </CardDescription>
+        <DisplaySectionIntro
+          className="gap-2"
+          description="当前后台下载入口仅导出已发布版本，草稿仍以后台编辑流为准。"
+          descriptionClassName="text-[var(--admin-text-muted)]"
+          title="后台下载入口"
+        />
       </CardHeader>
       <CardContent className="stack">
         <div className="toolbar-group">

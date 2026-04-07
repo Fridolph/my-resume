@@ -27,11 +27,55 @@ import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { adminNavigationItems, getAdminPageMeta } from '../../lib/admin-navigation';
 import { useAdminSession } from '../../lib/admin-session';
 import { ThemeModeToggle } from '../shared/theme-mode-toggle';
+ 
+const navButtonBaseClass =
+  'inline-flex w-full items-center justify-start gap-2 rounded-xl border border-transparent px-[0.35rem] py-1.5 text-[0.88rem] font-semibold text-zinc-500 transition-[background-color,border-color,color] duration-150 hover:bg-zinc-100/90 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/[0.06] dark:hover:text-zinc-50';
+const navButtonActiveClass =
+  'border-blue-200/80 bg-blue-50/90 text-zinc-900 dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-zinc-50';
+const navButtonCollapsedClass =
+  'h-14 w-14 min-h-14 justify-center rounded-[18px] px-0 py-0';
+const navBadgeBaseClass =
+  'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[9px] bg-zinc-100/90 text-current dark:bg-white/[0.06]';
+const navBadgeCollapsedClass = 'h-10 w-10 bg-transparent';
+const sidebarShellClass = 'sticky top-0 hidden h-screen self-start border-none bg-transparent md:block';
+const sidebarHeaderClass = 'flex flex-col items-stretch gap-4 px-3 py-4 pb-3';
+const sidebarHeaderCollapsedClass = 'items-center px-[0.55rem]';
+const sidebarBrandClass = 'flex w-full items-center justify-between gap-2';
+const sidebarBrandCollapsedClass = 'flex-col justify-start gap-3';
+const sidebarToggleButtonClass =
+  'inline-flex h-9 w-9 items-center justify-center rounded-full border border-zinc-200/80 bg-zinc-100 text-sm font-bold text-zinc-500 dark:border-white/8 dark:bg-white/[0.06] dark:text-zinc-300';
+const sidebarLogoClass =
+  'flex h-12 w-12 items-center justify-center rounded-[18px] bg-zinc-900 text-[1.15rem] font-extrabold tracking-[-0.04em] text-white dark:bg-white dark:text-zinc-950';
+const sidebarContentClass = 'flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-3 pb-4';
+const sidebarContentCollapsedClass = 'items-center px-[0.55rem]';
+const headerPageMetaRowClass =
+  'flex min-w-0 items-center gap-3 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-md:flex-wrap max-md:gap-2 max-md:overflow-x-visible max-md:whitespace-normal';
+const headerPageBadgeClass =
+  'inline-flex min-h-6 items-center rounded-full border border-blue-500/20 bg-blue-50 px-2.5 text-[0.72rem] font-bold tracking-[0.04em] text-blue-700 dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-blue-300';
+const headerPageDescriptionClass = 'm-0 text-xs leading-[1.4] text-[#999]';
+const headerActionsClass = 'flex items-center justify-end gap-2.5';
+const headerIconButtonClass =
+  'inline-flex h-[30px] w-[30px] min-w-[30px] items-center justify-center rounded-full border border-zinc-200/80 bg-zinc-100/85 p-0 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/15 dark:border-white/8 dark:bg-white/[0.06] dark:text-zinc-300 dark:hover:bg-white/[0.08] dark:hover:text-white';
+const headerAvatarButtonClass =
+  'inline-flex h-[30px] w-[30px] min-w-[30px] items-center justify-center rounded-full border border-zinc-200/80 bg-zinc-100/85 p-0 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/15 dark:border-white/8 dark:bg-white/[0.06] dark:text-zinc-300 dark:hover:bg-white/[0.08] dark:hover:text-white';
+const headerAvatarClass =
+  'h-[22px] w-[22px] rounded-full bg-zinc-900 text-[0.66rem] font-bold text-white dark:bg-white dark:text-zinc-950';
+const sessionDropdownPopoverClass = 'min-w-[220px]';
+const sessionDropdownMenuClass = 'p-[0.35rem]';
+const sessionDropdownItemContentClass = 'grid gap-0.5';
+const sessionDropdownItemLabelClass = 'text-[0.72rem] text-zinc-500 dark:text-zinc-400';
+const sessionDropdownItemValueClass = 'text-[0.88rem] font-semibold';
 
-function AdminNavIcon({ itemKey }: { itemKey: (typeof adminNavigationItems)[number]['key'] }) {
+function AdminNavIcon({
+  itemKey,
+  size = 18,
+}: {
+  itemKey: (typeof adminNavigationItems)[number]['key'];
+  size?: number;
+}) {
   if (itemKey === 'overview') {
     return (
-      <svg aria-hidden="true" fill="none" height="18" viewBox="0 0 24 24" width="18">
+      <svg aria-hidden="true" fill="none" height={size} viewBox="0 0 24 24" width={size}>
         <rect height="7" rx="2" stroke="currentColor" strokeWidth="1.8" width="7" x="3.5" y="3.5" />
         <rect height="7" rx="2" stroke="currentColor" strokeWidth="1.8" width="9" x="11.5" y="3.5" />
         <rect height="9" rx="2" stroke="currentColor" strokeWidth="1.8" width="7" x="3.5" y="11.5" />
@@ -42,7 +86,7 @@ function AdminNavIcon({ itemKey }: { itemKey: (typeof adminNavigationItems)[numb
 
   if (itemKey === 'resume') {
     return (
-      <svg aria-hidden="true" fill="none" height="18" viewBox="0 0 24 24" width="18">
+      <svg aria-hidden="true" fill="none" height={size} viewBox="0 0 24 24" width={size}>
         <path d="M7 4.5h7l4 4v10A1.5 1.5 0 0 1 16.5 20h-9A1.5 1.5 0 0 1 6 18.5v-12A2 2 0 0 1 8 4.5Z" stroke="currentColor" strokeWidth="1.8" />
         <path d="M13.5 4.5v4h4" stroke="currentColor" strokeWidth="1.8" />
         <path d="M9 12h6M9 15.5h6" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
@@ -52,7 +96,7 @@ function AdminNavIcon({ itemKey }: { itemKey: (typeof adminNavigationItems)[numb
 
   if (itemKey === 'ai') {
     return (
-      <svg aria-hidden="true" fill="none" height="18" viewBox="0 0 24 24" width="18">
+      <svg aria-hidden="true" fill="none" height={size} viewBox="0 0 24 24" width={size}>
         <rect height="11" rx="3" stroke="currentColor" strokeWidth="1.8" width="14" x="5" y="7" />
         <path d="M9 3.5v3M15 3.5v3M9 18v2.5M15 18v2.5M3.5 10H5M19 10h1.5M3.5 15H5M19 15h1.5" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
         <path d="M9.5 12h5M12 9.5v5" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
@@ -61,7 +105,7 @@ function AdminNavIcon({ itemKey }: { itemKey: (typeof adminNavigationItems)[numb
   }
 
   return (
-    <svg aria-hidden="true" fill="none" height="18" viewBox="0 0 24 24" width="18">
+    <svg aria-hidden="true" fill="none" height={size} viewBox="0 0 24 24" width={size}>
       <path d="M6 7.5h12M6 12h12M6 16.5h7" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
       <path d="M17 14.5 20.5 18 17 21.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
       <path d="M20.5 18H12" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
@@ -102,15 +146,11 @@ function AdminNavItems({
           <Button
             aria-current={isActive ? 'page' : undefined}
             aria-label={item.title}
-            className={
-              collapsed
-                ? isActive
-                  ? 'admin-nav-item is-active is-collapsed'
-                  : 'admin-nav-item is-collapsed'
-                : isActive
-                  ? 'admin-nav-item is-active'
-                  : 'admin-nav-item'
-            }
+            className={[
+              navButtonBaseClass,
+              collapsed ? navButtonCollapsedClass : 'min-h-[42px]',
+              isActive ? navButtonActiveClass : '',
+            ].join(' ').trim()}
             fullWidth
             onClick={() => {
               onNavigate?.();
@@ -120,11 +160,11 @@ function AdminNavItems({
             type="button"
             variant="ghost"
           >
-            <span className="admin-nav-item-badge">
-              <AdminNavIcon itemKey={item.key} />
+            <span className={[navBadgeBaseClass, collapsed ? navBadgeCollapsedClass : ''].join(' ').trim()}>
+              <AdminNavIcon itemKey={item.key} size={collapsed ? 24 : 18} />
             </span>
             {!collapsed ? (
-              <span className="admin-nav-item-label">{item.title}</span>
+              <span className="min-w-0 whitespace-nowrap">{item.title}</span>
             ) : null}
           </Button>
         );
@@ -237,25 +277,23 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
           className="grid min-h-screen w-full grid-cols-1 md:gap-4 md:[grid-template-columns:var(--admin-sidebar-width)_minmax(0,1fr)] xl:gap-5"
           style={{ '--admin-sidebar-width': sidebarCollapsed ? '88px' : '176px' } as CSSProperties}
         >
-          <aside className="admin-sidebar-shell hidden border-none bg-transparent md:block">
-            <Card className="admin-sidebar-card p-1! rounded-none border-none bg-transparent shadow-none">
+          <aside className={sidebarShellClass}>
+            <Card className="h-screen rounded-none border-none bg-transparent p-1! shadow-none">
               <CardHeader
-                className={
-                  sidebarCollapsed
-                    ? 'admin-sidebar-header is-collapsed'
-                    : 'admin-sidebar-header'
-                }
+                className={[
+                  sidebarHeaderClass,
+                  sidebarCollapsed ? sidebarHeaderCollapsedClass : '',
+                ].join(' ').trim()}
               >
                 <div
-                  className={
-                    sidebarCollapsed
-                      ? 'admin-sidebar-brand is-collapsed'
-                      : 'admin-sidebar-brand'
-                  }
+                  className={[
+                    sidebarBrandClass,
+                    sidebarCollapsed ? sidebarBrandCollapsedClass : '',
+                  ].join(' ').trim()}
                 >
                   <Button
                     aria-label={sidebarCollapsed ? '展开侧边栏' : '折叠侧边栏'}
-                    className="sidebar-toggle-button"
+                    className={sidebarToggleButtonClass}
                     isIconOnly
                     onClick={toggleSidebarCollapsed}
                     size="sm"
@@ -264,7 +302,7 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
                   >
                     {sidebarCollapsed ? '>' : '<'}
                   </Button>
-                  <div className="admin-sidebar-logo">
+                  <div className={sidebarLogoClass}>
                     MR
                   </div>
                 </div>
@@ -278,17 +316,16 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
                 ) : null}
               </CardHeader>
               <CardContent
-                className={
-                  sidebarCollapsed
-                    ? 'admin-sidebar-content is-collapsed'
-                    : 'admin-sidebar-content'
-                }
+                className={[
+                  sidebarContentClass,
+                  sidebarCollapsed ? sidebarContentCollapsedClass : '',
+                ].join(' ').trim()}
               >
                 <AdminNavItems
                   collapsed={sidebarCollapsed}
                   currentPathname={pathname}
                 />
-                <Separator className="sidebar-separator" />
+                <Separator className="my-[0.2rem] mt-[0.3rem]" />
                 <div className="mt-auto hidden md:block" />
               </CardContent>
             </Card>
@@ -308,12 +345,12 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
                     菜单
                   </Button>
                   <div className="space-y-2">
-                    <div className="header-page-meta-row">
+                    <div className={headerPageMetaRowClass}>
                       <h1 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-white">
                         {pageMeta.title}
                       </h1>
-                      <span className="header-page-badge">{pageMeta.eyebrow}</span>
-                      <p className="header-page-description">
+                      <span className={headerPageBadgeClass}>{pageMeta.eyebrow}</span>
+                      <p className={headerPageDescriptionClass}>
                         {pageMeta.description}
                       </p>
                     </div>
@@ -329,12 +366,12 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
                   </div>
                 </div>
 
-                <div className="header-actions">
+                <div className={headerActionsClass}>
                   <Tooltip>
                     <Tooltip.Trigger>
                       <Button
                         aria-label="打开项目 GitHub 仓库"
-                        className="header-icon-button"
+                        className={headerIconButtonClass}
                         isIconOnly
                         onClick={() => {
                           window.open(
@@ -358,11 +395,11 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
                   <Dropdown>
                     <Dropdown.Trigger
                       aria-label="打开当前会话菜单"
-                      className="header-avatar-button"
+                      className={headerAvatarButtonClass}
                     >
                       <Avatar.Root
                         aria-hidden="true"
-                        className="header-avatar"
+                        className={headerAvatarClass}
                         size="sm"
                       >
                         <Avatar.Fallback>
@@ -370,10 +407,10 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
                         </Avatar.Fallback>
                       </Avatar.Root>
                     </Dropdown.Trigger>
-                    <Dropdown.Popover className="session-dropdown-popover" placement="bottom end">
+                    <Dropdown.Popover className={sessionDropdownPopoverClass} placement="bottom end">
                       <Dropdown.Menu
                         aria-label="当前会话菜单"
-                        className="session-dropdown-menu"
+                        className={sessionDropdownMenuClass}
                         onAction={(key) => {
                           if (key === 'logout') {
                             logout();
@@ -382,21 +419,21 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
                         }}
                       >
                         <Dropdown.Item id="session-user" isDisabled textValue={`账号：${currentUser.username}`}>
-                          <div className="session-dropdown-item-content">
-                            <span className="session-dropdown-item-label">账号</span>
-                            <span className="session-dropdown-item-value">{currentUser.username}</span>
+                          <div className={sessionDropdownItemContentClass}>
+                            <span className={sessionDropdownItemLabelClass}>账号</span>
+                            <span className={sessionDropdownItemValueClass}>{currentUser.username}</span>
                           </div>
                         </Dropdown.Item>
                         <Dropdown.Item id="session-role" isDisabled textValue={`角色：${currentUser.role}`}>
-                          <div className="session-dropdown-item-content">
-                            <span className="session-dropdown-item-label">角色</span>
-                            <span className="session-dropdown-item-value">{currentUser.role}</span>
+                          <div className={sessionDropdownItemContentClass}>
+                            <span className={sessionDropdownItemLabelClass}>角色</span>
+                            <span className={sessionDropdownItemValueClass}>{currentUser.role}</span>
                           </div>
                         </Dropdown.Item>
                         <Dropdown.Item id="logout" textValue="退出登录">
-                          <div className="session-dropdown-item-content">
-                            <span className="session-dropdown-item-label">操作</span>
-                            <span className="session-dropdown-item-value">退出登录</span>
+                          <div className={sessionDropdownItemContentClass}>
+                            <span className={sessionDropdownItemLabelClass}>操作</span>
+                            <span className={sessionDropdownItemValueClass}>退出登录</span>
                           </div>
                         </Dropdown.Item>
                       </Dropdown.Menu>

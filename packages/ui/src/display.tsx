@@ -40,19 +40,25 @@ export function DisplaySurfaceCard<T extends ElementType = 'section'>({
 interface DisplaySectionIntroProps<T extends ElementType = 'h2'> {
   compact?: boolean;
   description?: ReactNode;
+  descriptionClassName?: string;
   eyebrow?: ReactNode;
+  eyebrowClassName?: string;
   title: ReactNode;
   titleAs?: T;
   className?: string;
+  titleClassName?: string;
 }
 
 export function DisplaySectionIntro<T extends ElementType = 'h2'>({
   compact = false,
   description,
+  descriptionClassName,
   eyebrow,
+  eyebrowClassName,
   title,
   titleAs,
   className,
+  titleClassName,
 }: DisplaySectionIntroProps<T>) {
   const TitleComponent = (titleAs ?? 'h2') as ElementType;
 
@@ -64,10 +70,23 @@ export function DisplaySectionIntro<T extends ElementType = 'h2'>({
         className,
       )}
     >
-      {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
-      {createElement(TitleComponent, { className: 'display-section-title' }, title)}
+      {eyebrow ? (
+        <p className={joinClassNames('eyebrow', eyebrowClassName)}>{eyebrow}</p>
+      ) : null}
+      {createElement(
+        TitleComponent,
+        { className: joinClassNames('display-section-title', titleClassName) },
+        title,
+      )}
       {description ? (
-        <p className="display-section-description">{description}</p>
+        <p
+          className={joinClassNames(
+            'display-section-description',
+            descriptionClassName,
+          )}
+        >
+          {description}
+        </p>
       ) : null}
     </div>
   );

@@ -3,6 +3,8 @@
 import { Switch } from '@heroui/react';
 import { useTheme } from 'next-themes';
 
+import styles from './theme-mode-toggle.module.css';
+
 function SunIcon() {
   return (
     <svg aria-hidden="true" fill="currentColor" height="12" viewBox="0 0 24 24" width="12">
@@ -25,20 +27,26 @@ export function ThemeModeToggle() {
   return (
     <Switch.Root
       aria-label="切换明暗主题"
-      className="header-theme-switch"
+      className={styles.switchRoot}
       isSelected={resolvedTheme === 'dark'}
       onChange={(nextSelected) => setTheme(nextSelected ? 'dark' : 'light')}
       size="sm"
     >
       {({ isSelected }) => (
         <Switch.Control
-          className={`header-theme-switch-control ${isSelected ? 'is-dark' : 'is-light'}`}
+          className={[
+            styles.switchControl,
+            isSelected ? styles.switchControlDark : styles.switchControlLight,
+          ].join(' ')}
         >
           <Switch.Thumb
-            className={`header-theme-switch-thumb ${isSelected ? 'is-dark' : 'is-light'}`}
+            className={[
+              styles.switchThumb,
+              isSelected ? styles.switchThumbDark : styles.switchThumbLight,
+            ].join(' ')}
             style={{ marginInlineStart: isSelected ? '18px' : '0px' }}
           >
-            <Switch.Icon className="header-theme-switch-icon">
+            <Switch.Icon className={styles.switchIcon}>
               {isSelected ? <MoonIcon /> : <SunIcon />}
             </Switch.Icon>
           </Switch.Thumb>

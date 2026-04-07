@@ -10,6 +10,8 @@ import {
   Chip,
   Input,
 } from '@heroui/react';
+
+import { adminPrimaryButtonClass } from '../../lib/button-styles';
 import { FormEvent, useState } from 'react';
 
 interface LoginFormProps {
@@ -90,6 +92,7 @@ export function LoginForm({
           ) : null}
 
           <Button
+            className={adminPrimaryButtonClass}
             fullWidth
             isDisabled={pending}
             size="md"

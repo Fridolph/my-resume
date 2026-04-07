@@ -39,6 +39,29 @@ describe('display primitives', () => {
     expect(screen.getByText('帮助两端共享标题块结构。')).toBeInTheDocument();
   });
 
+  it('should merge custom slot class names for shared intro reuse', () => {
+    render(
+      <DisplaySectionIntro
+        description="可复用描述"
+        descriptionClassName="custom-description"
+        eyebrow="共享标题"
+        eyebrowClassName="custom-eyebrow"
+        title="标题"
+        titleClassName="custom-title"
+      />,
+    );
+
+    expect(screen.getByText('共享标题')).toHaveClass('eyebrow', 'custom-eyebrow');
+    expect(screen.getByText('标题')).toHaveClass(
+      'display-section-title',
+      'custom-title',
+    );
+    expect(screen.getByText('可复用描述')).toHaveClass(
+      'display-section-description',
+      'custom-description',
+    );
+  });
+
   it('should render stat card with label, value and description', () => {
     render(
       <DisplayStatCard
