@@ -7,8 +7,8 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/',
 }));
 
-import { PublishedResumeShell } from '../published-resume-shell';
-import { publishedResumeFixture } from './resume-published-fixture';
+import { PublishedResumeShell } from '../shell';
+import { publishedResumeFixture } from './fixture';
 
 describe('PublishedResumeShell', () => {
   function renderShell() {
@@ -44,7 +44,11 @@ describe('PublishedResumeShell', () => {
     expect(screen.getByText('demo@example.com')).toBeInTheDocument();
     expect(screen.getByText('+86 13800000000')).toBeInTheDocument();
     expect(screen.getByText('羽毛球')).toBeInTheDocument();
+    expect(screen.getByText('摄影')).toBeInTheDocument();
     expect(screen.queryByText('https://example.com')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: '技术博客' }),
+    ).toHaveAttribute('href', 'https://example.com/blog');
     expect(
       screen.getByRole('heading', { name: '前端架构落地' }),
     ).toBeInTheDocument();
@@ -52,14 +56,19 @@ describe('PublishedResumeShell', () => {
       screen.getByRole('heading', { name: 'AI 工程化实践' }),
     ).toBeInTheDocument();
     expect(screen.getByText('技能结构')).toBeInTheDocument();
-    expect(screen.getByText('Vue 生态')).toBeInTheDocument();
-    expect(screen.getByText(/熟练掌握 Vue2\/3、Nuxt/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '图表' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '结构' })).toBeInTheDocument();
+    expect(screen.getByLabelText('技能雷达图')).toBeInTheDocument();
+    expect(screen.getByText('关键词云')).toBeInTheDocument();
+    expect(screen.getAllByText('Node.js').length).toBeGreaterThan(0);
     expect(
       screen.queryByRole('heading', { name: '公开简历速览' }),
     ).not.toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: '打开项目 GitHub 仓库' }).closest('a'),
     ).toHaveAttribute('href', 'https://github.com/Fridolph/my-resume');
+    await user.hover(screen.getByRole('link', { name: 'GitHub' }));
+    expect(await screen.findByText('GitHub')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'EN' }));
 
@@ -77,7 +86,8 @@ describe('PublishedResumeShell', () => {
       screen.getByRole('heading', { name: 'AI Engineering Practice' }),
     ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Skill Structure' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Frontend Engineering' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Skill radar chart')).toBeInTheDocument();
+    expect(screen.getByText('Keyword Cloud')).toBeInTheDocument();
   });
 
   it('should toggle light and dark theme on the document element', async () => {
@@ -135,24 +145,16 @@ describe('PublishedResumeShell', () => {
     );
   });
 
-  it('should switch skill views between structure, tag cloud, and chart', async () => {
+  it('should switch skill views between chart and structure', async () => {
     const user = userEvent.setup();
 
     renderShell();
 
-    expect(screen.getByText('Vue 生态')).toBeInTheDocument();
-    expect(
-      screen.getByText(/熟练掌握 Vue2\/3、Nuxt、Composition API、Pinia/)
-    ).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: '词云' }));
-    expect(screen.getByText('Node.js')).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: '前端工程化' })).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: '图表' }));
+    expect(screen.getByLabelText('技能雷达图')).toBeInTheDocument();
+    expect(screen.getByText('关键词云')).toBeInTheDocument();
+    expect(screen.getAllByText('Node.js').length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: '雷达图' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '饼图' })).toBeInTheDocument();
-    expect(screen.getByLabelText('技能雷达图')).toBeInTheDocument();
     expect(screen.queryByText(/占比/)).not.toBeInTheDocument();
     expect(screen.queryByText(/%/)).not.toBeInTheDocument();
 
@@ -161,6 +163,10 @@ describe('PublishedResumeShell', () => {
 
     await user.click(screen.getByRole('button', { name: '结构' }));
     expect(screen.getAllByText('TypeScript').length).toBeGreaterThan(0);
+    expect(
+      screen.getByText(/熟练掌握 Vue2\/3、Nuxt、Composition API、Pinia/)
+    ).toBeInTheDocument();
+    expect(screen.queryByText('关键词云')).not.toBeInTheDocument();
   });
 
   it('should render empty state when no published content is available', () => {

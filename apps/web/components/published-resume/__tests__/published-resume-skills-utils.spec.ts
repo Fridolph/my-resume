@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { publishedResumeFixture } from '../../__tests__/resume-published-fixture';
+import { publishedResumeFixture } from './fixture';
 import {
   buildPieChartOption,
   buildRadarChartOption,

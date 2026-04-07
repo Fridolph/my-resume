@@ -25,13 +25,12 @@ interface PublishedResumeSkillsSectionProps {
   skills: ResumeSkillGroup[];
 }
 
-type SkillViewMode = 'structure' | 'tag-cloud' | 'chart';
+type SkillViewMode = 'structure' | 'chart';
 type SkillChartMode = 'radar' | 'pie';
 
 const skillViewLabels = {
   zh: {
     structure: '结构',
-    tagCloud: '词云',
     chart: '图表',
     radar: '雷达图',
     pie: '饼图',
@@ -39,10 +38,11 @@ const skillViewLabels = {
     points: '个技能点',
     radarCaption: '按技能组条目数生成的覆盖轮廓',
     pieCaption: '按技能组条目数生成的分布关系',
+    cloudTitle: '关键词云',
+    cloudCaption: '把所有技能关键词统一聚合到一个高密度词云画布中。',
   },
   en: {
     structure: 'Structure',
-    tagCloud: 'Tag Cloud',
     chart: 'Chart',
     radar: 'Radar',
     pie: 'Pie',
@@ -50,6 +50,8 @@ const skillViewLabels = {
     points: 'capability points',
     radarCaption: 'Coverage contour based on item counts per group',
     pieCaption: 'Distribution based on item counts per group',
+    cloudTitle: 'Keyword Cloud',
+    cloudCaption: 'A unified high-density cloud composed of all skill keywords.',
   },
 } as const;
 
@@ -93,7 +95,7 @@ export function PublishedResumeSkillsSection({
 }: PublishedResumeSkillsSectionProps) {
   const labels = resumeLabels[locale];
   const localLabels = skillViewLabels[locale];
-  const [viewMode, setViewMode] = useState<SkillViewMode>('structure');
+  const [viewMode, setViewMode] = useState<SkillViewMode>('chart');
   const [chartMode, setChartMode] = useState<SkillChartMode>('radar');
   const { theme: themeMode } = useThemeMode();
 
@@ -128,9 +130,8 @@ export function PublishedResumeSkillsSection({
       <div className="skills-toolbar-controls">
         <div className="inline-flex rounded-full border border-slate-200/80 bg-slate-50/90 p-1 dark:border-white/10 dark:bg-white/[0.04]">
           {([
-            ['structure', localLabels.structure],
-            ['tag-cloud', localLabels.tagCloud],
             ['chart', localLabels.chart],
+            ['structure', localLabels.structure],
           ] as const).map(([mode, label]) => (
             <Button
               className="rounded-full px-4"
@@ -219,62 +220,70 @@ export function PublishedResumeSkillsSection({
         </div>
       ) : null}
 
-      {viewMode === 'tag-cloud' ? (
-        <div className="skills-cloud-surface">
-          <div className="skills-cloud-wall">
-            {cloudTokens.map((token) => (
-              <Tooltip key={token.id}>
-                <Tooltip.Trigger>
-                  <span
-                    className={[
-                      'skills-cloud-token',
-                      token.sizeClassName,
-                      token.rotateClassName,
-                    ].join(' ')}
-                    data-tone={token.toneIndex % 6}
-                  >
-                    {token.label}
-                  </span>
-                </Tooltip.Trigger>
-                <Tooltip.Content offset={10} placement="top">
-                  <div className="max-w-xs space-y-1">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                      {token.groupLabel}
-                    </p>
-                    <p className="text-sm leading-6">{token.raw}</p>
-                  </div>
-                </Tooltip.Content>
-              </Tooltip>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
       {viewMode === 'chart' ? (
         <div className="skills-chart-layout">
-          <article className="skills-chart-surface">
-            <div className="space-y-1">
-              <h3 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
-                {chartMode === 'radar' ? localLabels.radar : localLabels.pie}
-              </h3>
-              <p className="text-sm leading-6 text-slate-500 dark:text-slate-400">
-                {chartMode === 'radar' ? localLabels.radarCaption : localLabels.pieCaption}
-              </p>
-            </div>
+          <div className="skills-chart-stack">
+            <article className="skills-chart-surface">
+              <div className="space-y-1">
+                <h3 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
+                  {chartMode === 'radar' ? localLabels.radar : localLabels.pie}
+                </h3>
+                <p className="text-sm leading-6 text-slate-500 dark:text-slate-400">
+                  {chartMode === 'radar' ? localLabels.radarCaption : localLabels.pieCaption}
+                </p>
+              </div>
 
-            <div className="skills-chart-visual">
-              <SkillChartCanvas
-                ariaLabel={chartMode === 'radar'
-                  ? locale === 'zh'
-                    ? '技能雷达图'
-                    : 'Skill radar chart'
-                  : locale === 'zh'
-                    ? '技能饼图'
-                    : 'Skill pie chart'}
-                option={chartMode === 'radar' ? radarOption : pieOption}
-              />
+              <div className="skills-chart-visual">
+                <SkillChartCanvas
+                  ariaLabel={chartMode === 'radar'
+                    ? locale === 'zh'
+                      ? '技能雷达图'
+                      : 'Skill radar chart'
+                    : locale === 'zh'
+                      ? '技能饼图'
+                      : 'Skill pie chart'}
+                  option={chartMode === 'radar' ? radarOption : pieOption}
+                />
+              </div>
+            </article>
+
+            <div className="skills-cloud-surface">
+              <div className="mb-3 space-y-1">
+                <h3 className="text-base font-semibold tracking-tight text-slate-900 dark:text-white">
+                  {localLabels.cloudTitle}
+                </h3>
+                <p className="text-sm leading-6 text-slate-500 dark:text-slate-400">
+                  {localLabels.cloudCaption}
+                </p>
+              </div>
+              <div className="skills-cloud-wall">
+                {cloudTokens.map((token) => (
+                  <Tooltip key={token.id}>
+                    <Tooltip.Trigger>
+                      <span
+                        className={[
+                          'skills-cloud-token',
+                          token.sizeClassName,
+                          token.rotateClassName,
+                        ].join(' ')}
+                        data-tone={token.toneIndex % 6}
+                      >
+                        {token.label}
+                      </span>
+                    </Tooltip.Trigger>
+                    <Tooltip.Content offset={10} placement="top">
+                      <div className="max-w-xs space-y-1">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                          {token.groupLabel}
+                        </p>
+                        <p className="text-sm leading-6">{token.raw}</p>
+                      </div>
+                    </Tooltip.Content>
+                  </Tooltip>
+                ))}
+              </div>
             </div>
-          </article>
+          </div>
 
           <div className="grid gap-3">
             {chartGroups.map((group, index) => {

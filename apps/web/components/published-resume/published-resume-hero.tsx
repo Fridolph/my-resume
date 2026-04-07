@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, Chip } from '@heroui/react';
+import { Card, CardContent, CardHeader, Chip, Tooltip } from '@heroui/react';
 import { Icon } from '@iconify/react';
 
 import { ResumeLocale, ResumePublishedSnapshot } from '../../lib/published-resume-types';
@@ -198,23 +198,27 @@ export function PublishedResumeHero({
                 {profile.links.length}
               </Chip>
             </div>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
+            <div className="flex flex-wrap gap-2.5">
               {profile.links.map((link) => (
                 link.icon ? (
-                  <a
-                    className="profile-link-chip group"
-                    href={link.url}
-                    key={link.url}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    <span className="profile-link-chip-icon">
-                      <Icon icon={link.icon} />
-                    </span>
-                    <span className="profile-link-chip-label">
+                  <Tooltip delay={220} key={link.url}>
+                    <Tooltip.Trigger>
+                      <a
+                        aria-label={readLocalizedText(link.label, locale)}
+                        className="profile-link-chip group"
+                        href={link.url}
+                        rel="noreferrer"
+                        target="_blank"
+                      >
+                        <span className="profile-link-chip-icon">
+                          <Icon icon={link.icon} />
+                        </span>
+                      </a>
+                    </Tooltip.Trigger>
+                    <Tooltip.Content offset={10} placement="top">
                       {readLocalizedText(link.label, locale)}
-                    </span>
-                  </a>
+                    </Tooltip.Content>
+                  </Tooltip>
                 ) : (
                   <a
                     className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-slate-200/80 bg-white/80 px-3 text-center text-sm font-semibold text-slate-600 transition hover:border-blue-300 hover:text-blue-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300 dark:hover:border-blue-300 dark:hover:text-blue-200"
@@ -250,7 +254,7 @@ export function PublishedResumeHero({
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
               {labels.interestsTitle}
             </p>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <div className="flex flex-wrap gap-2.5">
               {localizedInterests.map((interest) => (
                 interest.icon ? (
                   <article

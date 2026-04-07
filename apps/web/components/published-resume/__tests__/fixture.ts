@@ -1,4 +1,4 @@
-import type { ResumePublishedSnapshot } from '../../lib/published-resume-types';
+import type { ResumePublishedSnapshot } from '../../../lib/published-resume-types';
 
 export const publishedResumeFixture: ResumePublishedSnapshot = {
   status: 'published' as const,
@@ -54,6 +54,13 @@ export const publishedResumeFixture: ResumePublishedSnapshot = {
           url: 'https://github.com/Fridolph',
           icon: 'ri:github-fill',
         },
+        {
+          label: {
+            zh: '技术博客',
+            en: 'Tech Blog',
+          },
+          url: 'https://example.com/blog',
+        },
       ],
       interests: [
         {
@@ -62,6 +69,12 @@ export const publishedResumeFixture: ResumePublishedSnapshot = {
             en: 'Badminton',
           },
           icon: 'ri:dribbble-line',
+        },
+        {
+          label: {
+            zh: '摄影',
+            en: 'Photography',
+          },
         },
       ],
     },
