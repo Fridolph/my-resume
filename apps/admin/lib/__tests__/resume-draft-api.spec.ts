@@ -1,7 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { fetchDraftResume, updateDraftResume } from '../resume-draft-api';
-import type { ResumeDraftSnapshot } from '../resume-types';
+import {
+  fetchDraftResume,
+  fetchDraftResumeSummary,
+  updateDraftResume,
+} from '../resume-draft-api';
+import type {
+  ResumeDraftSnapshot,
+  ResumeDraftSummarySnapshot,
+} from '../resume-types';
 
 const draftSnapshot: ResumeDraftSnapshot = {
   status: 'draft' as const,
@@ -59,6 +66,29 @@ const draftSnapshot: ResumeDraftSnapshot = {
   },
 };
 
+const draftSummarySnapshot: ResumeDraftSummarySnapshot = {
+  status: 'draft',
+  updatedAt: '2026-03-25T09:20:00.000Z',
+  resume: {
+    meta: {
+      slug: 'standard-resume',
+      defaultLocale: 'zh',
+      locale: 'zh',
+    },
+    profile: {
+      headline: '全栈开发工程师',
+      summary: '草稿摘要',
+    },
+    counts: {
+      education: 0,
+      experiences: 0,
+      projects: 0,
+      skills: 0,
+      highlights: 0,
+    },
+  },
+};
+
 describe('resume draft api client', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -87,6 +117,32 @@ describe('resume draft api client', () => {
       }),
     );
     expect(response.resume.profile.fullName.zh).toBe('付寅生');
+  });
+
+  it('should fetch draft summary with bearer token', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => draftSummarySnapshot,
+      }),
+    );
+
+    const response = await fetchDraftResumeSummary({
+      apiBaseUrl: 'http://localhost:5577',
+      accessToken: 'demo-token',
+      locale: 'zh',
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5577/resume/draft/summary?locale=zh',
+      expect.objectContaining({
+        headers: {
+          Authorization: 'Bearer demo-token',
+        },
+      }),
+    );
+    expect(response.resume.profile.headline).toBe('全栈开发工程师');
   });
 
   it('should save draft resume with bearer token', async () => {

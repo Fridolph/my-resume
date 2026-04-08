@@ -1,13 +1,18 @@
 'use client';
 
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import { StrictMode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { useAdminSessionMock, fetchAiWorkbenchRuntimeMock, fetchDraftResumeMock } =
+const {
+  useAdminSessionMock,
+  fetchAiWorkbenchRuntimeMock,
+  fetchDraftResumeSummaryMock,
+} =
   vi.hoisted(() => ({
     useAdminSessionMock: vi.fn(),
     fetchAiWorkbenchRuntimeMock: vi.fn(),
-    fetchDraftResumeMock: vi.fn(),
+    fetchDraftResumeSummaryMock: vi.fn(),
   }));
 
 vi.mock('../../../lib/admin-session', () => ({
@@ -19,9 +24,10 @@ vi.mock('../../../lib/ai-workbench-api', () => ({
 }));
 
 vi.mock('../../../lib/resume-draft-api', () => ({
-  fetchDraftResume: fetchDraftResumeMock,
+  fetchDraftResumeSummary: fetchDraftResumeSummaryMock,
 }));
 
+import { resetAdminResourceStore } from '../../../lib/admin-resource-store';
 import { AdminDashboardShell } from '../dashboard-shell';
 
 const adminUser = {
@@ -50,9 +56,10 @@ const viewerUser = {
 
 describe('AdminDashboardShell', () => {
   beforeEach(() => {
+    resetAdminResourceStore();
     useAdminSessionMock.mockReset();
     fetchAiWorkbenchRuntimeMock.mockReset();
-    fetchDraftResumeMock.mockReset();
+    fetchDraftResumeSummaryMock.mockReset();
   });
 
   afterEach(() => {
@@ -73,24 +80,34 @@ describe('AdminDashboardShell', () => {
       mode: 'live',
       supportedScenarios: ['jd-match', 'resume-review', 'offer-compare'],
     });
-    fetchDraftResumeMock.mockResolvedValue({
+    fetchDraftResumeSummaryMock.mockResolvedValue({
       status: 'draft',
       updatedAt: '2026-04-03T10:00:00.000Z',
       resume: {
+        meta: {
+          slug: 'standard-resume',
+          defaultLocale: 'zh',
+          locale: 'zh',
+        },
         profile: {
-          headline: {
-            zh: '资深前端工程师',
-            en: 'Senior Frontend Engineer',
-          },
-          summary: {
-            zh: '负责前端架构与团队协作。',
-            en: 'Leading frontend architecture and team collaboration.',
-          },
+          headline: '资深前端工程师',
+          summary: '负责前端架构与团队协作。',
+        },
+        counts: {
+          education: 1,
+          experiences: 2,
+          projects: 3,
+          skills: 4,
+          highlights: 5,
         },
       },
     });
 
-    render(<AdminDashboardShell />);
+    render(
+      <StrictMode>
+        <AdminDashboardShell />
+      </StrictMode>,
+    );
 
     expect(await screen.findByRole('heading', { name: '工作区概览' })).toBeInTheDocument();
     expect(screen.getByText('当前账号：admin')).toBeInTheDocument();
@@ -106,6 +123,10 @@ describe('AdminDashboardShell', () => {
     expect(
       screen.getByRole('link', { name: '进入 AI 工作台' }),
     ).toHaveAttribute('href', '/dashboard/ai');
+    await waitFor(() => {
+      expect(fetchAiWorkbenchRuntimeMock).toHaveBeenCalledTimes(1);
+      expect(fetchDraftResumeSummaryMock).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('should render viewer-specific guidance and skip draft summary fetch', async () => {
@@ -123,13 +144,17 @@ describe('AdminDashboardShell', () => {
       supportedScenarios: ['jd-match', 'resume-review', 'offer-compare'],
     });
 
-    render(<AdminDashboardShell />);
+    render(
+      <StrictMode>
+        <AdminDashboardShell />
+      </StrictMode>,
+    );
 
     expect(await screen.findByText('当前账号：viewer')).toBeInTheDocument();
     expect(
       screen.getByText('viewer 当前只能体验缓存结果与只读链路，不能触发真实敏感操作。'),
     ).toBeInTheDocument();
     expect(screen.getByText('当前角色没有草稿读取与编辑权限。')).toBeInTheDocument();
-    expect(fetchDraftResumeMock).not.toHaveBeenCalled();
+    expect(fetchDraftResumeSummaryMock).not.toHaveBeenCalled();
   });
 });

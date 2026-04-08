@@ -13,11 +13,19 @@ import { useEffect, useMemo, useState } from 'react';
 import { AiFileExtractionPanel } from '../ai/file-extraction-panel';
 import { AiAnalysisPanel } from '../ai/analysis-panel';
 import { AiCachedReportsPanel } from '../ai/cached-reports-panel';
-import { fetchAiWorkbenchRuntime } from '../../lib/ai-workbench-api';
 import type { AiWorkbenchRuntimeSummary } from '../../lib/ai-workbench-types';
+import {
+  ensureAiRuntimeSummary,
+  ensureDraftResumeSummary,
+  invalidateDraftResumeResources,
+} from '../../lib/admin-resource-store';
 import { DEFAULT_API_BASE_URL } from '../../lib/env';
-import { fetchDraftResume } from '../../lib/resume-draft-api';
-import type { ResumeDraftSnapshot } from '../../lib/resume-types';
+import { readResumeLocaleCookie } from '../../lib/resume-locale';
+import { buildDraftSummarySnapshot } from '../../lib/resume-summary';
+import type {
+  ResumeDraftSnapshot,
+  ResumeDraftSummarySnapshot,
+} from '../../lib/resume-types';
 import { useAdminSession } from '../../lib/admin-session';
 import type { FileExtractionResult } from '../../lib/ai-file-types';
 
@@ -38,6 +46,7 @@ const scenarioCards = {
 
 export function AdminAiWorkbenchShell() {
   const { accessToken, currentUser, status } = useAdminSession();
+  const summaryLocale = readResumeLocaleCookie();
   const [runtimeSummary, setRuntimeSummary] =
     useState<AiWorkbenchRuntimeSummary | null>(null);
   const [runtimeState, setRuntimeState] = useState<'idle' | 'loading' | 'ready' | 'error'>(
@@ -48,7 +57,7 @@ export function AdminAiWorkbenchShell() {
   const [analysisHelperMessage, setAnalysisHelperMessage] = useState<string | null>(
     null,
   );
-  const [draftSnapshot, setDraftSnapshot] = useState<ResumeDraftSnapshot | null>(
+  const [draftSnapshot, setDraftSnapshot] = useState<ResumeDraftSummarySnapshot | null>(
     null,
   );
   const [draftSnapshotStatus, setDraftSnapshotStatus] = useState<
@@ -67,7 +76,7 @@ export function AdminAiWorkbenchShell() {
     setRuntimeState('loading');
     setRuntimeMessage(null);
 
-    fetchAiWorkbenchRuntime({
+    ensureAiRuntimeSummary({
       apiBaseUrl: DEFAULT_API_BASE_URL,
       accessToken,
     })
@@ -109,9 +118,10 @@ export function AdminAiWorkbenchShell() {
     setDraftSnapshotStatus('loading');
     setDraftSnapshotMessage(null);
 
-    fetchDraftResume({
+    ensureDraftResumeSummary({
       apiBaseUrl: DEFAULT_API_BASE_URL,
       accessToken,
+      locale: summaryLocale,
     })
       .then((snapshot) => {
         if (cancelled) {
@@ -136,7 +146,7 @@ export function AdminAiWorkbenchShell() {
     return () => {
       cancelled = true;
     };
-  }, [accessToken, currentUser?.capabilities.canEditResume, status]);
+  }, [accessToken, currentUser?.capabilities.canEditResume, status, summaryLocale]);
 
   const isAdmin = Boolean(currentUser?.capabilities.canTriggerAiAnalysis);
   const roleMessage = isAdmin
@@ -167,7 +177,18 @@ export function AdminAiWorkbenchShell() {
   }
 
   function handleDraftApplied(snapshot: ResumeDraftSnapshot) {
-    setDraftSnapshot(snapshot);
+    if (accessToken) {
+      invalidateDraftResumeResources({
+        accessToken,
+        apiBaseUrl: DEFAULT_API_BASE_URL,
+      });
+    }
+    setDraftSnapshot(
+      buildDraftSummarySnapshot(
+        snapshot,
+        summaryLocale ?? snapshot.resume.meta.defaultLocale,
+      ),
+    );
     setDraftSnapshotStatus('ready');
     setDraftSnapshotMessage('当前草稿快照已刷新，可直接确认 AI 改写结果。');
   }
@@ -301,21 +322,15 @@ export function AdminAiWorkbenchShell() {
               <div className="dashboard-inline-note">{draftSnapshotMessage}</div>
             ) : null}
             {draftSnapshot ? (
-              <div className="grid gap-4 xl:grid-cols-2">
-                <div className="status-box">
-                  <strong>{draftSnapshot.resume.profile.headline.zh}</strong>
-                  <span>{draftSnapshot.resume.profile.summary.zh}</span>
-                  <span>
-                    最近更新时间：
-                    {new Date(draftSnapshot.updatedAt).toLocaleString('zh-CN', {
-                      hour12: false,
-                    })}
-                  </span>
-                </div>
-                <div className="status-box">
-                  <strong>{draftSnapshot.resume.profile.headline.en}</strong>
-                  <span>{draftSnapshot.resume.profile.summary.en}</span>
-                </div>
+              <div className="status-box">
+                <strong>{draftSnapshot.resume.profile.headline}</strong>
+                <span>{draftSnapshot.resume.profile.summary}</span>
+                <span>
+                  最近更新时间：
+                  {new Date(draftSnapshot.updatedAt).toLocaleString('zh-CN', {
+                    hour12: false,
+                  })}
+                </span>
               </div>
             ) : null}
           </CardContent>

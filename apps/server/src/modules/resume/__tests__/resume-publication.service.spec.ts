@@ -168,6 +168,53 @@ describe('ResumePublicationService', () => {
     client.close();
   });
 
+  it('should build lightweight draft and published summaries without full module bodies', async () => {
+    const { client, service } = await createServiceHarness();
+    const draft = createExampleStandardResume();
+
+    draft.profile.headline = {
+      zh: '摘要标题',
+      en: 'Summary Headline',
+    };
+    draft.profile.summary = {
+      zh: '摘要中文',
+      en: 'Summary English',
+    };
+
+    await service.updateDraft(draft);
+    await service.publish();
+
+    const draftSummary = await service.getDraftSummary('zh');
+    const publishedSummary = await service.getPublishedSummary('en');
+
+    expect(draftSummary.resume).toEqual({
+      meta: {
+        slug: 'standard-resume',
+        defaultLocale: draft.meta.defaultLocale,
+        locale: 'zh',
+      },
+      profile: {
+        headline: '摘要标题',
+        summary: '摘要中文',
+      },
+      counts: {
+        education: draft.education.length,
+        experiences: draft.experiences.length,
+        projects: draft.projects.length,
+        skills: draft.skills.length,
+        highlights: draft.highlights.length,
+      },
+    });
+    expect(publishedSummary?.resume.meta.locale).toBe('en');
+    expect(publishedSummary?.resume.profile.headline).toBe('Summary Headline');
+    expect(publishedSummary?.resume.counts.projects).toBe(draft.projects.length);
+    expect(
+      'education' in (draftSummary.resume as Record<string, unknown>),
+    ).toBe(false);
+
+    client.close();
+  });
+
   it('should publish edited module content only after manual publish', async () => {
     const { client, service } = await createServiceHarness();
     const initialDraft = createExampleStandardResume();

@@ -1,21 +1,24 @@
 'use client';
 
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
+import { StrictMode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import type { ResumeDraftSnapshot } from '../../../lib/resume-types';
 
 const {
   useAdminSessionMock,
   fetchAiWorkbenchRuntimeMock,
-  fetchDraftResumeMock,
+  fetchDraftResumeSummaryMock,
   fetchCachedAiWorkbenchReportMock,
   fetchCachedAiWorkbenchReportsMock,
 } =
   vi.hoisted(() => ({
     useAdminSessionMock: vi.fn(),
     fetchAiWorkbenchRuntimeMock: vi.fn(),
-    fetchDraftResumeMock: vi.fn(),
+    fetchDraftResumeSummaryMock: vi.fn(),
     fetchCachedAiWorkbenchReportMock: vi.fn(),
     fetchCachedAiWorkbenchReportsMock: vi.fn(),
   }));
@@ -31,7 +34,7 @@ vi.mock('../../../lib/ai-workbench-api', () => ({
 }));
 
 vi.mock('../../../lib/resume-draft-api', () => ({
-  fetchDraftResume: fetchDraftResumeMock,
+  fetchDraftResumeSummary: fetchDraftResumeSummaryMock,
 }));
 
 vi.mock('../../ai/file-extraction-panel', () => ({
@@ -81,22 +84,7 @@ vi.mock('../../ai/analysis-panel', () => ({
     canAnalyze: boolean;
     content: string;
     inputAccessory?: ReactNode;
-    onDraftApplied?: (snapshot: {
-      status: 'draft';
-      updatedAt: string;
-      resume: {
-        profile: {
-          headline: {
-            zh: string;
-            en: string;
-          };
-          summary: {
-            zh: string;
-            en: string;
-          };
-        };
-      };
-    }) => void;
+    onDraftApplied?: (snapshot: ResumeDraftSnapshot) => void;
   }) => (
     <div>
       {inputAccessory}
@@ -109,7 +97,17 @@ vi.mock('../../ai/analysis-panel', () => ({
               status: 'draft',
               updatedAt: '2026-03-31T10:00:00.000Z',
               resume: {
+                meta: {
+                  slug: 'standard-resume',
+                  version: 1,
+                  defaultLocale: 'zh',
+                  locales: ['zh', 'en'],
+                },
                 profile: {
+                  fullName: {
+                    zh: '付寅生',
+                    en: 'Yinsheng Fu',
+                  },
                   headline: {
                     zh: 'AI 优化后标题',
                     en: 'AI Optimized Headline',
@@ -118,7 +116,27 @@ vi.mock('../../ai/analysis-panel', () => ({
                     zh: 'AI 优化后的中文摘要',
                     en: 'AI optimized English summary',
                   },
+                  location: {
+                    zh: '上海',
+                    en: 'Shanghai',
+                  },
+                  email: 'demo@example.com',
+                  phone: '+86 13800000000',
+                  website: 'https://example.com',
+                  hero: {
+                    frontImageUrl: '/img/avatar.jpg',
+                    backImageUrl: '/img/avatar2.jpg',
+                    linkUrl: 'https://github.com/Fridolph/my-resume',
+                    slogans: [],
+                  },
+                  links: [],
+                  interests: [],
                 },
+                education: [],
+                experiences: [],
+                projects: [],
+                skills: [],
+                highlights: [],
               },
             })
           }
@@ -132,6 +150,7 @@ vi.mock('../../ai/analysis-panel', () => ({
 }));
 
 import { AdminAiWorkbenchShell } from '../ai-workbench-shell';
+import { resetAdminResourceStore } from '../../../lib/admin-resource-store';
 
 const runtimeSummary = {
   provider: 'qiniu',
@@ -144,15 +163,21 @@ const draftSnapshot = {
   status: 'draft' as const,
   updatedAt: '2026-03-31T09:00:00.000Z',
   resume: {
+    meta: {
+      slug: 'standard-resume' as const,
+      defaultLocale: 'zh' as const,
+      locale: 'zh' as const,
+    },
     profile: {
-      headline: {
-        zh: '当前草稿标题',
-        en: 'Current Draft Headline',
-      },
-      summary: {
-        zh: '当前草稿摘要',
-        en: 'Current draft summary',
-      },
+      headline: '当前草稿标题',
+      summary: '当前草稿摘要',
+    },
+    counts: {
+      education: 1,
+      experiences: 2,
+      projects: 3,
+      skills: 4,
+      highlights: 5,
     },
   },
 };
@@ -183,9 +208,10 @@ const viewerUser = {
 
 describe('AdminAiWorkbenchShell', () => {
   beforeEach(() => {
+    resetAdminResourceStore();
     useAdminSessionMock.mockReset();
     fetchAiWorkbenchRuntimeMock.mockReset();
-    fetchDraftResumeMock.mockReset();
+    fetchDraftResumeSummaryMock.mockReset();
     fetchCachedAiWorkbenchReportMock.mockReset();
     fetchCachedAiWorkbenchReportsMock.mockReset();
     fetchCachedAiWorkbenchReportsMock.mockResolvedValue([]);
@@ -205,9 +231,13 @@ describe('AdminAiWorkbenchShell', () => {
       status: 'ready',
     });
     fetchAiWorkbenchRuntimeMock.mockResolvedValue(runtimeSummary);
-    fetchDraftResumeMock.mockResolvedValue(draftSnapshot);
+    fetchDraftResumeSummaryMock.mockResolvedValue(draftSnapshot);
 
-    render(<AdminAiWorkbenchShell />);
+    render(
+      <StrictMode>
+        <AdminAiWorkbenchShell />
+      </StrictMode>,
+    );
 
     expect(await screen.findByRole('heading', { name: 'AI 工作台' })).toBeInTheDocument();
     expect(screen.getByText('当前 Provider：qiniu')).toBeInTheDocument();
@@ -239,6 +269,12 @@ describe('AdminAiWorkbenchShell', () => {
 
     expect(await screen.findByText('AI 优化后标题')).toBeInTheDocument();
     expect(screen.getByText('AI 优化后的中文摘要')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(fetchAiWorkbenchRuntimeMock).toHaveBeenCalledTimes(1);
+      expect(fetchDraftResumeSummaryMock).toHaveBeenCalledTimes(1);
+      expect(fetchCachedAiWorkbenchReportsMock).toHaveBeenCalledTimes(1);
+      expect(fetchCachedAiWorkbenchReportMock).not.toHaveBeenCalled();
+    });
   });
 
   it('should render viewer-specific read-only guidance', async () => {
@@ -253,7 +289,11 @@ describe('AdminAiWorkbenchShell', () => {
     });
     fetchAiWorkbenchRuntimeMock.mockResolvedValue(runtimeSummary);
 
-    render(<AdminAiWorkbenchShell />);
+    render(
+      <StrictMode>
+        <AdminAiWorkbenchShell />
+      </StrictMode>,
+    );
 
     expect(await screen.findByText('当前账号：viewer')).toBeInTheDocument();
     expect(
@@ -268,6 +308,6 @@ describe('AdminAiWorkbenchShell', () => {
     expect(screen.getByText('当前还没有可阅读的缓存报告。')).toBeInTheDocument();
     expect(screen.getByText('文件提取只读占位')).toBeInTheDocument();
     expect(screen.getByText('真实分析只读占位')).toBeInTheDocument();
-    expect(fetchDraftResumeMock).not.toHaveBeenCalled();
+    expect(fetchDraftResumeSummaryMock).not.toHaveBeenCalled();
   });
 });

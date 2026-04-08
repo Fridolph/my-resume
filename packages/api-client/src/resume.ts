@@ -98,6 +98,31 @@ export interface StandardResume {
   highlights: ResumeHighlightItem[];
 }
 
+export interface ResumeSummaryMeta {
+  slug: ResumeMeta['slug'];
+  defaultLocale: ResumeMeta['defaultLocale'];
+  locale: ResumeLocale;
+}
+
+export interface ResumeSummaryProfile {
+  headline: string;
+  summary: string;
+}
+
+export interface ResumeSummaryCounts {
+  education: number;
+  experiences: number;
+  projects: number;
+  skills: number;
+  highlights: number;
+}
+
+export interface ResumeSummary {
+  meta: ResumeSummaryMeta;
+  profile: ResumeSummaryProfile;
+  counts: ResumeSummaryCounts;
+}
+
 export interface ResumeDraftSnapshot {
   status: 'draft';
   updatedAt: string;
@@ -110,6 +135,18 @@ export interface ResumePublishedSnapshot {
   resume: StandardResume;
 }
 
+export interface ResumeDraftSummarySnapshot {
+  status: 'draft';
+  updatedAt: string;
+  resume: ResumeSummary;
+}
+
+export interface ResumePublishedSummarySnapshot {
+  status: 'published';
+  publishedAt: string;
+  resume: ResumeSummary;
+}
+
 interface ResumeRequestInput {
   apiBaseUrl: string;
 }
@@ -118,12 +155,35 @@ interface AuthenticatedResumeRequestInput extends ResumeRequestInput {
   accessToken: string;
 }
 
+interface ResumeSummaryRequestInput extends ResumeRequestInput {
+  locale?: ResumeLocale;
+}
+
+interface AuthenticatedResumeSummaryRequestInput
+  extends AuthenticatedResumeRequestInput {
+  locale?: ResumeLocale;
+}
+
 interface UpdateResumeDraftInput extends AuthenticatedResumeRequestInput {
   resume: StandardResume;
 }
 
 function joinApiUrl(apiBaseUrl: string, pathname: string): string {
   return `${apiBaseUrl.replace(/\/$/, '')}${pathname}`;
+}
+
+function buildResumeSummaryUrl(
+  apiBaseUrl: string,
+  pathname: string,
+  locale?: ResumeLocale,
+): string {
+  const baseUrl = joinApiUrl(apiBaseUrl, pathname);
+
+  if (!locale) {
+    return baseUrl;
+  }
+
+  return `${baseUrl}?locale=${locale}`;
 }
 
 async function resolveApiErrorMessage(
@@ -207,6 +267,30 @@ export async function fetchDraftResume(
   return (await response.json()) as ResumeDraftSnapshot;
 }
 
+export async function fetchDraftResumeSummary(
+  input: AuthenticatedResumeSummaryRequestInput,
+): Promise<ResumeDraftSummarySnapshot> {
+  const response = await fetch(
+    buildResumeSummaryUrl(input.apiBaseUrl, '/resume/draft/summary', input.locale),
+    {
+      headers: {
+        Authorization: `Bearer ${input.accessToken}`,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      await resolveApiErrorMessage(
+        response,
+        '草稿摘要读取失败，请确认当前账号拥有编辑权限',
+      ),
+    );
+  }
+
+  return (await response.json()) as ResumeDraftSummarySnapshot;
+}
+
 export async function updateDraftResume(
   input: UpdateResumeDraftInput,
 ): Promise<ResumeDraftSnapshot> {
@@ -251,4 +335,29 @@ export async function publishResume(
   }
 
   return (await response.json()) as ResumePublishedSnapshot;
+}
+
+export async function fetchPublishedResumeSummary(
+  input: ResumeSummaryRequestInput,
+): Promise<ResumePublishedSummarySnapshot | null> {
+  const response = await fetch(
+    buildResumeSummaryUrl(
+      input.apiBaseUrl,
+      '/resume/published/summary',
+      input.locale,
+    ),
+    {
+      cache: 'no-store',
+    },
+  );
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error('公开简历摘要读取失败');
+  }
+
+  return (await response.json()) as ResumePublishedSummarySnapshot;
 }

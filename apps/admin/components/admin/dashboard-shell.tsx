@@ -11,11 +11,14 @@ import {
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
-import { fetchAiWorkbenchRuntime } from '../../lib/ai-workbench-api';
 import type { AiWorkbenchRuntimeSummary } from '../../lib/ai-workbench-types';
+import {
+  ensureAiRuntimeSummary,
+  ensureDraftResumeSummary,
+} from '../../lib/admin-resource-store';
 import { DEFAULT_API_BASE_URL } from '../../lib/env';
-import { fetchDraftResume } from '../../lib/resume-draft-api';
-import type { ResumeDraftSnapshot } from '../../lib/resume-types';
+import { readResumeLocaleCookie } from '../../lib/resume-locale';
+import type { ResumeDraftSummarySnapshot } from '../../lib/resume-types';
 import { useAdminSession } from '../../lib/admin-session';
 
 const workflowListClass = 'm-0 grid list-none gap-3.5 p-0';
@@ -47,12 +50,13 @@ const quickEntryCards = [
 
 export function AdminDashboardShell() {
   const { accessToken, currentUser, status } = useAdminSession();
+  const summaryLocale = readResumeLocaleCookie();
   const [runtimeState, setRuntimeState] = useState<AsyncState>('idle');
   const [runtimeSummary, setRuntimeSummary] =
     useState<AiWorkbenchRuntimeSummary | null>(null);
   const [runtimeMessage, setRuntimeMessage] = useState<string | null>(null);
   const [draftState, setDraftState] = useState<AsyncState>('idle');
-  const [draftSnapshot, setDraftSnapshot] = useState<ResumeDraftSnapshot | null>(
+  const [draftSnapshot, setDraftSnapshot] = useState<ResumeDraftSummarySnapshot | null>(
     null,
   );
   const [draftMessage, setDraftMessage] = useState<string | null>(null);
@@ -66,7 +70,7 @@ export function AdminDashboardShell() {
     setRuntimeState('loading');
     setRuntimeMessage(null);
 
-    fetchAiWorkbenchRuntime({
+    ensureAiRuntimeSummary({
       apiBaseUrl: DEFAULT_API_BASE_URL,
       accessToken,
     })
@@ -108,9 +112,10 @@ export function AdminDashboardShell() {
     setDraftState('loading');
     setDraftMessage(null);
 
-    fetchDraftResume({
+    ensureDraftResumeSummary({
       apiBaseUrl: DEFAULT_API_BASE_URL,
       accessToken,
+      locale: summaryLocale,
     })
       .then((result) => {
         if (cancelled) {
@@ -135,7 +140,7 @@ export function AdminDashboardShell() {
     return () => {
       cancelled = true;
     };
-  }, [accessToken, currentUser?.capabilities.canEditResume, status]);
+  }, [accessToken, currentUser?.capabilities.canEditResume, status, summaryLocale]);
 
   const capabilityCards = useMemo(() => {
     if (!currentUser) {
@@ -326,16 +331,10 @@ export function AdminDashboardShell() {
               <p className="error-text">{draftMessage}</p>
             ) : null}
             {draftSnapshot ? (
-              <>
-                <div className="status-box">
-                  <strong>{draftSnapshot.resume.profile.headline.zh}</strong>
-                  <span>{draftSnapshot.resume.profile.summary.zh}</span>
-                </div>
-                <div className="status-box">
-                  <strong>{draftSnapshot.resume.profile.headline.en}</strong>
-                  <span>{draftSnapshot.resume.profile.summary.en}</span>
-                </div>
-              </>
+              <div className="status-box">
+                <strong>{draftSnapshot.resume.profile.headline}</strong>
+                <span>{draftSnapshot.resume.profile.summary}</span>
+              </div>
             ) : null}
           </CardContent>
         </Card>

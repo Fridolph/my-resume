@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   HttpCode,
   HttpStatus,
   Inject,
@@ -23,6 +24,7 @@ import type { StandardResume } from './domain/standard-resume';
 import { ResumeMarkdownExportService } from './resume-markdown-export.service';
 import { ResumePdfExportService } from './resume-pdf-export.service';
 import { ResumePublicationService } from './resume-publication.service';
+import { buildResumeSummary, resolveResumeSummaryLocale } from './resume-summary';
 
 @Controller('resume')
 export class ResumeController {
@@ -44,6 +46,34 @@ export class ResumeController {
     }
 
     return published;
+  }
+
+  @Get('published/summary')
+  async getPublishedResumeSummary(
+    @Query('locale') localeQuery: string | undefined,
+    @Headers('cookie') cookieHeader: string | undefined,
+  ) {
+    const publishedResume = await this.resumePublicationService.getPublished();
+
+    if (!publishedResume) {
+      throw new NotFoundException('Published resume is not available');
+    }
+
+    const { locale, queryInvalid } = resolveResumeSummaryLocale({
+      localeQuery,
+      cookieHeader,
+      fallbackLocale: publishedResume.resume.meta.defaultLocale,
+    });
+
+    if (queryInvalid) {
+      throw new BadRequestException(`Unsupported locale: ${localeQuery}`);
+    }
+
+    return {
+      status: publishedResume.status,
+      publishedAt: publishedResume.publishedAt,
+      resume: buildResumeSummary(publishedResume.resume, locale),
+    };
   }
 
   @Get('published/export/markdown')
@@ -109,6 +139,31 @@ export class ResumeController {
   @RequireCapability('canEditResume')
   async getDraftResume() {
     return this.resumePublicationService.getDraft();
+  }
+
+  @Get('draft/summary')
+  @UseGuards(JwtAuthGuard, RoleCapabilitiesGuard)
+  @RequireCapability('canEditResume')
+  async getDraftResumeSummary(
+    @Query('locale') localeQuery: string | undefined,
+    @Headers('cookie') cookieHeader: string | undefined,
+  ) {
+    const draft = await this.resumePublicationService.getDraft();
+    const { locale, queryInvalid } = resolveResumeSummaryLocale({
+      localeQuery,
+      cookieHeader,
+      fallbackLocale: draft.resume.meta.defaultLocale,
+    });
+
+    if (queryInvalid) {
+      throw new BadRequestException(`Unsupported locale: ${localeQuery}`);
+    }
+
+    return {
+      status: draft.status,
+      updatedAt: draft.updatedAt,
+      resume: buildResumeSummary(draft.resume, locale),
+    };
   }
 
   @Put('draft')

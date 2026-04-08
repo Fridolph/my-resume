@@ -13,8 +13,13 @@ import {
   createExampleStandardResume,
   normalizeStandardResume,
   StandardResume,
+  type ResumeLocale,
 } from './domain/standard-resume';
 import { ResumePublicationRepository } from './resume-publication.repository';
+import {
+  buildResumeSummary,
+  type ResumeSummary,
+} from './resume-summary';
 
 export interface ResumeDraftSnapshot {
   status: 'draft';
@@ -25,6 +30,18 @@ export interface ResumeDraftSnapshot {
 export interface ResumePublishedSnapshot {
   status: 'published';
   resume: StandardResume;
+  publishedAt: string;
+}
+
+export interface ResumeDraftSummarySnapshot {
+  status: 'draft';
+  resume: ResumeSummary;
+  updatedAt: string;
+}
+
+export interface ResumePublishedSummarySnapshot {
+  status: 'published';
+  resume: ResumeSummary;
   publishedAt: string;
 }
 
@@ -63,6 +80,16 @@ export class ResumePublicationService {
     });
   }
 
+  async getDraftSummary(locale: ResumeLocale): Promise<ResumeDraftSummarySnapshot> {
+    const draft = await this.getDraft();
+
+    return {
+      status: draft.status,
+      updatedAt: draft.updatedAt,
+      resume: buildResumeSummary(draft.resume, locale),
+    };
+  }
+
   async getPublished(): Promise<ResumePublishedSnapshot | null> {
     const publishedSnapshot =
       await this.resumePublicationRepository.findLatestPublishedSnapshot();
@@ -75,6 +102,22 @@ export class ResumePublicationService {
       status: 'published',
       resume: normalizeStandardResume(cloneStandardResume(publishedSnapshot.resumeJson)),
       publishedAt: publishedSnapshot.publishedAt.toISOString(),
+    };
+  }
+
+  async getPublishedSummary(
+    locale: ResumeLocale,
+  ): Promise<ResumePublishedSummarySnapshot | null> {
+    const published = await this.getPublished();
+
+    if (!published) {
+      return null;
+    }
+
+    return {
+      status: published.status,
+      publishedAt: published.publishedAt,
+      resume: buildResumeSummary(published.resume, locale),
     };
   }
 
