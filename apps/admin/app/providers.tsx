@@ -3,6 +3,8 @@
 import { ThemeProvider, useTheme } from 'next-themes';
 import { useEffect, type ReactNode } from 'react';
 
+import { AdminSessionProvider } from '../lib/admin-session';
+
 function ThemeDatasetBridge() {
   const { resolvedTheme } = useTheme();
 
@@ -24,8 +26,10 @@ export function Providers({ children }: { children: ReactNode }) {
       enableSystem={false}
       storageKey="my-resume-theme-mode"
     >
-      <ThemeDatasetBridge />
-      {children}
+      <AdminSessionProvider>
+        <ThemeDatasetBridge />
+        {children}
+      </AdminSessionProvider>
     </ThemeProvider>
   );
 }

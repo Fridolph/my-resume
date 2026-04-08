@@ -2,8 +2,8 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
-import { fetchCurrentUser } from './auth-api';
 import type { AuthUserView } from './auth-types';
+import { clearAdminResourceStore, ensureCurrentUserSession } from './admin-resource-store';
 import { DEFAULT_API_BASE_URL } from './env';
 import {
   clearAccessToken,
@@ -28,7 +28,13 @@ export function AdminSessionProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<AuthUserView | null>(null);
 
   const logout = useCallback(() => {
+    const activeAccessToken = readAccessToken();
+
     clearAccessToken();
+    clearAdminResourceStore({
+      accessToken: activeAccessToken,
+      apiBaseUrl: DEFAULT_API_BASE_URL,
+    });
     setAccessToken(null);
     setCurrentUser(null);
     setStatus('unauthorized');
@@ -47,7 +53,7 @@ export function AdminSessionProvider({ children }: { children: ReactNode }) {
     setStatus('loading');
 
     try {
-      const nextUser = await fetchCurrentUser({
+      const nextUser = await ensureCurrentUserSession({
         apiBaseUrl: DEFAULT_API_BASE_URL,
         accessToken: nextAccessToken,
       });

@@ -10,43 +10,27 @@ import {
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-import { fetchCurrentUser, loginWithPassword } from '../../lib/auth-api';
-import { AuthUserView } from '../../lib/auth-types';
+import { loginWithPassword } from '../../lib/auth-api';
+import { primeCurrentUserSession } from '../../lib/admin-resource-store';
 import { DEFAULT_API_BASE_URL } from '../../lib/env';
-import { readAccessToken, writeAccessToken } from '../../lib/session-storage';
+import { writeAccessToken } from '../../lib/session-storage';
+import { useAdminSession } from '../../lib/admin-session';
 import { LoginForm } from '../auth/login-form';
 import { ThemeModeToggle } from '../shared/theme-mode-toggle';
 
 export function AdminLoginShell() {
   const router = useRouter();
+  const { currentUser, refreshSession, status } = useAdminSession();
   const [pending, setPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [currentUser, setCurrentUser] = useState<AuthUserView | null>(null);
-  const [checkingSession, setCheckingSession] = useState(true);
 
   useEffect(() => {
-    const accessToken = readAccessToken();
-
-    if (!accessToken) {
-      setCheckingSession(false);
-      return;
+    if (status === 'ready' && currentUser) {
+      router.replace('/dashboard');
     }
+  }, [currentUser, router, status]);
 
-    fetchCurrentUser({
-      apiBaseUrl: DEFAULT_API_BASE_URL,
-      accessToken,
-    })
-      .then((user) => {
-        setCurrentUser(user);
-        router.replace('/dashboard');
-      })
-      .catch(() => {
-        setCurrentUser(null);
-      })
-      .finally(() => {
-        setCheckingSession(false);
-      });
-  }, [router]);
+  const checkingSession = status === 'loading';
 
   async function handleLogin(values: { username: string; password: string }) {
     setPending(true);
@@ -60,8 +44,12 @@ export function AdminLoginShell() {
       });
 
       writeAccessToken(loginResult.accessToken);
-      setCurrentUser(loginResult.user);
-      router.push('/dashboard');
+      primeCurrentUserSession({
+        accessToken: loginResult.accessToken,
+        apiBaseUrl: DEFAULT_API_BASE_URL,
+        user: loginResult.user,
+      });
+      await refreshSession();
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : '登录失败，请稍后重试',

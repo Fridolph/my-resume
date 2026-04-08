@@ -9,9 +9,9 @@ import {
 import { useEffect, useState } from 'react';
 
 import {
-  fetchCachedAiWorkbenchReport,
-  fetchCachedAiWorkbenchReports,
-} from '../../lib/ai-workbench-api';
+  ensureCachedAiWorkbenchReport,
+  ensureCachedAiWorkbenchReports,
+} from '../../lib/admin-resource-store';
 import {
   AiWorkbenchCachedReportSummary,
   AiWorkbenchReport,
@@ -27,8 +27,8 @@ interface AiCachedReportsPanelProps {
   accessToken: string;
   apiBaseUrl: string;
   isViewerExperience: boolean;
-  fetchReportDetail?: typeof fetchCachedAiWorkbenchReport;
-  fetchReportList?: typeof fetchCachedAiWorkbenchReports;
+  fetchReportDetail?: typeof ensureCachedAiWorkbenchReport;
+  fetchReportList?: typeof ensureCachedAiWorkbenchReports;
 }
 
 const scenarioLabels = {
@@ -49,8 +49,8 @@ export function AiCachedReportsPanel({
   accessToken,
   apiBaseUrl,
   isViewerExperience,
-  fetchReportDetail = fetchCachedAiWorkbenchReport,
-  fetchReportList = fetchCachedAiWorkbenchReports,
+  fetchReportDetail = ensureCachedAiWorkbenchReport,
+  fetchReportList = ensureCachedAiWorkbenchReports,
 }: AiCachedReportsPanelProps) {
   const [reports, setReports] = useState<AiWorkbenchCachedReportSummary[]>([]);
   const [activeReportId, setActiveReportId] = useState<string | null>(null);
