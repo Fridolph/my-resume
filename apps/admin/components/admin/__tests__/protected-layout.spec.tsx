@@ -1,6 +1,7 @@
 'use client';
 
 import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -8,8 +9,18 @@ const { useAdminSessionMock } = vi.hoisted(() => ({
   useAdminSessionMock: vi.fn(),
 }));
 
+const { pathnameState } = vi.hoisted(() => ({
+  pathnameState: {
+    value: '/dashboard',
+  },
+}));
+
 vi.mock('@heroui/react', async () => {
   const actual = await vi.importActual<typeof import('@heroui/react')>('@heroui/react');
+  const passthroughDiv = ({
+    children,
+    ...props
+  }: { children?: ReactNode } & Record<string, unknown>) => <div {...props}>{children}</div>;
   const DropdownMock = Object.assign(
     ({ children }: { children: ReactNode }) => <div>{children}</div>,
     {
@@ -29,6 +40,20 @@ vi.mock('@heroui/react', async () => {
       Content: ({ children }: { children: ReactNode }) => <div>{children}</div>,
     },
   );
+  const DrawerMock = ({
+    children,
+    isOpen,
+    onOpenChange,
+    ...props
+  }: {
+    children: ReactNode;
+    isOpen?: boolean;
+    onOpenChange?: (open: boolean) => void;
+  } & Record<string, unknown>) => (
+    <div data-open={String(Boolean(isOpen))} {...props}>
+      {children}
+    </div>
+  );
 
   return {
     ...actual,
@@ -37,26 +62,19 @@ vi.mock('@heroui/react', async () => {
       Fallback: ({ children }: { children: ReactNode }) => <div>{children}</div>,
     },
     Dropdown: DropdownMock,
-    Drawer: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+    Drawer: DrawerMock,
     DrawerBackdrop: () => null,
-    DrawerBody: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-    DrawerContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-    DrawerDialog: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-    DrawerHeader: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-    DrawerHeading: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+    DrawerBody: passthroughDiv,
+    DrawerContent: passthroughDiv,
+    DrawerDialog: passthroughDiv,
+    DrawerHeader: passthroughDiv,
+    DrawerHeading: passthroughDiv,
     Tooltip: TooltipMock,
-    useOverlayState: () => ({
-      open: vi.fn(),
-      close: vi.fn(),
-      toggle: vi.fn(),
-      setOpen: vi.fn(),
-      isOpen: false,
-    }),
   };
 });
 
 vi.mock('next/navigation', () => ({
-  usePathname: () => '/dashboard',
+  usePathname: () => pathnameState.value,
   useRouter: () => ({
     push: vi.fn(),
     replace: vi.fn(),
@@ -77,6 +95,7 @@ describe('AdminProtectedLayout', () => {
   afterEach(() => {
     cleanup();
     useAdminSessionMock.mockReset();
+    pathnameState.value = '/dashboard';
   });
 
   it('should show unauthorized guidance when session is missing', () => {
@@ -137,5 +156,114 @@ describe('AdminProtectedLayout', () => {
     expect(screen.getByText('账号')).toBeInTheDocument();
     expect(screen.getByText('角色')).toBeInTheDocument();
     expect(screen.getByText('退出登录')).toBeInTheDocument();
+    expect(screen.getByTestId('admin-mobile-header')).toHaveClass('px-3', 'py-2.5');
+    expect(screen.getByTestId('admin-mobile-header-secondary')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '菜单' })).toHaveClass('h-9');
+    expect(screen.getByLabelText('关闭导航菜单')).toBeInTheDocument();
+    expect(screen.getByTestId('admin-mobile-drawer-content')).toHaveClass('z-50');
+    expect(screen.getByTestId('admin-mobile-drawer-dialog')).toHaveClass(
+      'border-r',
+      'bg-white/95',
+      'shadow-2xl',
+    );
+  });
+
+  it('should close mobile drawer when pathname changes', () => {
+    useAdminSessionMock.mockReturnValue({
+      accessToken: 'admin-token',
+      currentUser: {
+        id: 'admin-demo-user',
+        username: 'admin',
+        role: 'admin',
+        isActive: true,
+        capabilities: {
+          canEditResume: true,
+          canPublishResume: true,
+          canTriggerAiAnalysis: true,
+        },
+      },
+      logout: vi.fn(),
+      refreshSession: vi.fn(),
+      status: 'ready',
+    });
+
+    const { rerender } = render(
+      <AdminProtectedLayout>
+        <div>受保护内容</div>
+      </AdminProtectedLayout>,
+    );
+
+    expect(screen.getByTestId('admin-mobile-drawer-root')).toHaveAttribute(
+      'data-open',
+      'false',
+    );
+
+    pathnameState.value = '/dashboard/ai';
+
+    rerender(
+      <AdminProtectedLayout>
+        <div>受保护内容</div>
+      </AdminProtectedLayout>,
+    );
+
+    expect(screen.getByTestId('admin-mobile-drawer-root')).toHaveAttribute(
+      'data-open',
+      'false',
+    );
+  });
+
+  it('should open drawer from menu button and reopen after route change', async () => {
+    const user = userEvent.setup();
+
+    useAdminSessionMock.mockReturnValue({
+      accessToken: 'admin-token',
+      currentUser: {
+        id: 'admin-demo-user',
+        username: 'admin',
+        role: 'admin',
+        isActive: true,
+        capabilities: {
+          canEditResume: true,
+          canPublishResume: true,
+          canTriggerAiAnalysis: true,
+        },
+      },
+      logout: vi.fn(),
+      refreshSession: vi.fn(),
+      status: 'ready',
+    });
+
+    const { rerender } = render(
+      <AdminProtectedLayout>
+        <div>受保护内容</div>
+      </AdminProtectedLayout>,
+    );
+
+    const drawerRoot = screen.getByTestId('admin-mobile-drawer-root');
+    const menuButton = screen.getByRole('button', { name: '菜单' });
+
+    expect(drawerRoot).toHaveAttribute('data-open', 'false');
+
+    await user.click(menuButton);
+    expect(drawerRoot).toHaveAttribute('data-open', 'true');
+
+    pathnameState.value = '/dashboard/ai';
+
+    rerender(
+      <AdminProtectedLayout>
+        <div>受保护内容</div>
+      </AdminProtectedLayout>,
+    );
+
+    expect(screen.getByTestId('admin-mobile-drawer-root')).toHaveAttribute(
+      'data-open',
+      'false',
+    );
+
+    await user.click(screen.getByRole('button', { name: '菜单' }));
+    expect(screen.getByTestId('admin-mobile-drawer-root')).toHaveAttribute(
+      'data-open',
+      'true',
+    );
   });
 });

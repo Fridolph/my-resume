@@ -56,7 +56,7 @@ export function AdminResumeShell() {
   return (
     <div className="stack">
       <Card className="border border-zinc-200/70 dark:border-zinc-800">
-        <CardHeader className="flex flex-col items-start gap-3">
+        <CardHeader className="flex flex-col items-start gap-2.5 px-4 py-4 sm:px-5 md:gap-3">
           <div className="flex flex-wrap gap-2">
             <Chip size="sm">
               当前账号：{currentUser.username}
@@ -65,16 +65,16 @@ export function AdminResumeShell() {
               编辑模式：{currentUser.capabilities.canEditResume ? '可写' : '只读'}
             </Chip>
           </div>
-          <div className="space-y-2">
-            <CardTitle className="text-3xl font-semibold tracking-tight">
+          <div className="space-y-1.5 md:space-y-2">
+            <CardTitle className="text-[1.85rem] font-semibold tracking-tight sm:text-[2.1rem] md:text-3xl">
               简历编辑
             </CardTitle>
-            <CardDescription className="max-w-3xl leading-7">
+            <CardDescription className="max-w-3xl text-sm leading-6 md:leading-7">
               这一页只负责简历草稿维护。内容保存后不会自动影响公开站，仍然需要到发布页手动发布，方便教学上清楚区分“编辑态”和“公开态”。
             </CardDescription>
           </div>
         </CardHeader>
-        <CardContent className="stack">
+        <CardContent className="grid gap-3 px-4 pb-4 sm:px-5 md:gap-4">
           {currentUser.capabilities.canEditResume ? (
             <div className="dashboard-inline-note">
               当前已接通标准简历主模块编辑，并切到“中文主编辑 + 英文翻译工作区”的维护方式。模块继续按基础信息、教育、工作、项目、技能与亮点分组，便于逐段维护与后续继续扩展翻译能力。
@@ -85,7 +85,7 @@ export function AdminResumeShell() {
             </div>
           )}
 
-          <div className="dashboard-badge-row">
+          <div className="dashboard-badge-row text-sm">
             {moduleRoadmap.map((module) => (
               <div className="display-pill" key={module.key}>
                 <strong>{module.title}</strong>

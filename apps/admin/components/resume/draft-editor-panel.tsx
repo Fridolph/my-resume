@@ -31,7 +31,8 @@ import {
 } from 'react';
 
 import { adminPrimaryButtonClass } from '../../lib/button-styles';
-import { fetchDraftResume, updateDraftResume } from '../../lib/resume-draft-api';
+import { ensureDraftResume, invalidateDraftResumeResources } from '../../lib/admin-resource-store';
+import { updateDraftResume } from '../../lib/resume-draft-api';
 import type {
   ResumeDraftSnapshot,
   ResumeEducationItem,
@@ -88,7 +89,7 @@ interface ResumeDraftEditorPanelProps {
   apiBaseUrl: string;
   accessToken: string;
   canEdit: boolean;
-  loadDraft?: typeof fetchDraftResume;
+  loadDraft?: typeof ensureDraftResume;
   saveDraft?: typeof updateDraftResume;
 }
 
@@ -96,7 +97,7 @@ export function ResumeDraftEditorPanel({
   apiBaseUrl,
   accessToken,
   canEdit,
-  loadDraft = fetchDraftResume,
+  loadDraft = ensureDraftResume,
   saveDraft = updateDraftResume,
 }: ResumeDraftEditorPanelProps) {
   const [status, setStatus] = useState<DraftEditorStatus>('idle');
@@ -945,6 +946,10 @@ export function ResumeDraftEditorPanel({
         resume: cloneResume(resumeDraft),
       });
 
+      invalidateDraftResumeResources({
+        accessToken,
+        apiBaseUrl,
+      });
       setDraftSnapshot(nextSnapshot);
       setResumeDraft(cloneResume(nextSnapshot.resume));
       setDraftFieldValues(buildDraftFieldValues(nextSnapshot.resume));
@@ -978,14 +983,14 @@ export function ResumeDraftEditorPanel({
 
   return (
     <Card className="border border-zinc-200/70 dark:border-zinc-800">
-      <CardHeader className="flex flex-col items-start gap-2">
+      <CardHeader className="flex flex-col items-start gap-1.5 px-4 py-4 sm:px-5 md:gap-2">
         <p className="eyebrow">草稿编辑</p>
-        <CardTitle>完整标准简历模块编辑</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-[1.2rem] sm:text-[1.35rem]">完整标准简历模块编辑</CardTitle>
+        <CardDescription className="text-sm leading-6">
           当前后台已按标准简历模型接通基础信息、教育、工作、项目、技能与亮点编辑，并改成“中文主编辑 + 英文翻译工作区”的维护方式，保存后仍需手动发布。
         </CardDescription>
       </CardHeader>
-      <CardContent className="stack">
+      <CardContent className="grid gap-3 px-4 pb-4 sm:px-5 md:gap-4">
         {status === 'loading' ? <p className="muted">正在加载草稿...</p> : null}
 
         {status === 'error' && errorMessage ? (
@@ -993,13 +998,13 @@ export function ResumeDraftEditorPanel({
         ) : null}
 
         {status === 'ready' && resumeDraft && draftSnapshot ? (
-          <form className="stack" onSubmit={(event) => void handleSubmit(event)}>
-            <div className="flex flex-col gap-3 rounded-[24px] border border-zinc-200/70 bg-zinc-50/90 px-5 py-4 dark:border-zinc-800 dark:bg-zinc-900/60 md:flex-row md:items-center md:justify-between">
-              <div className="space-y-1">
+          <form className="grid gap-3 md:gap-4" onSubmit={(event) => void handleSubmit(event)}>
+            <div className="flex flex-col gap-2.5 rounded-[20px] border border-zinc-200/70 bg-zinc-50/90 px-4 py-3.5 dark:border-zinc-800 dark:bg-zinc-900/60 md:flex-row md:items-center md:justify-between md:gap-3 md:rounded-[24px] md:px-5 md:py-4">
+              <div className="space-y-0.5 md:space-y-1">
                 <strong className="block text-sm text-zinc-950 dark:text-white">
                   草稿态与发布态分离
                 </strong>
-                <span className="text-sm text-zinc-500 dark:text-zinc-400">
+                <span className="text-sm leading-5 text-zinc-500 dark:text-zinc-400 md:leading-6">
                   保存只会更新后台草稿，公开站仍读取最近一次手动发布的版本。
                 </span>
               </div>
@@ -1011,12 +1016,12 @@ export function ResumeDraftEditorPanel({
               ) : null}
             </div>
 
-            <div className="flex flex-col gap-4 rounded-[24px] border border-zinc-200/70 bg-white/90 px-5 py-4 dark:border-zinc-800 dark:bg-zinc-950/70 md:flex-row md:items-center md:justify-between">
-              <div className="space-y-1">
+            <div className="flex flex-col gap-3 rounded-[20px] border border-zinc-200/70 bg-white/90 px-4 py-3.5 dark:border-zinc-800 dark:bg-zinc-950/70 md:flex-row md:items-center md:justify-between md:gap-4 md:rounded-[24px] md:px-5 md:py-4">
+              <div className="space-y-0.5 md:space-y-1">
                 <strong className="block text-sm text-zinc-950 dark:text-white">
                   {isTranslationMode ? '英文翻译工作区' : '中文主编辑'}
                 </strong>
-                <p className="text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+                <p className="text-sm leading-5 text-zinc-500 dark:text-zinc-400 md:leading-6">
                   {isTranslationMode
                     ? '这里集中维护所有英文字段。条目增删、时间、技术栈、链接地址等结构性信息仍回到中文主编辑处理。'
                     : '中文主编辑负责维护主文案与结构字段。英文字段改到独立翻译工作区，避免继续双列直填。'}
@@ -1029,7 +1034,7 @@ export function ResumeDraftEditorPanel({
               >
                 <Button
                   aria-selected={editorLocaleMode === 'zh'}
-                  className="flex-1 md:flex-none"
+                  className="h-9 flex-1 px-3 text-sm md:h-10 md:flex-none"
                   onClick={() => setEditorLocaleMode('zh')}
                   size="sm"
                   type="button"
@@ -1039,7 +1044,7 @@ export function ResumeDraftEditorPanel({
                 </Button>
                 <Button
                   aria-selected={editorLocaleMode === 'en'}
-                  className="flex-1 md:flex-none"
+                  className="h-9 flex-1 px-3 text-sm md:h-10 md:flex-none"
                   onClick={() => setEditorLocaleMode('en')}
                   size="sm"
                   type="button"

@@ -96,7 +96,7 @@ export function IconActionButton({
           {...forwardedButtonProps}
           aria-label={label}
           className={[
-            'h-11 w-11 min-w-11 rounded-full px-0 transition-colors focus-visible:ring-2 [&_svg]:h-6 [&_svg]:w-6 [&_svg]:shrink-0',
+            'h-9 w-9 min-w-9 rounded-full px-0 transition-colors focus-visible:ring-2 md:h-11 md:w-11 md:min-w-11 [&_svg]:h-5 [&_svg]:w-5 [&_svg]:shrink-0 md:[&_svg]:h-6 md:[&_svg]:w-6',
             tone === 'danger'
               ? 'border-rose-200/80 text-zinc-500 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600 focus-visible:ring-rose-500/30 dark:border-zinc-800 dark:text-zinc-300 dark:hover:border-rose-500/40 dark:hover:bg-rose-500/10 dark:hover:text-rose-300'
               : 'border-zinc-200/80 text-zinc-600 hover:border-zinc-300 hover:bg-zinc-100 hover:text-zinc-950 focus-visible:ring-blue-500/30 dark:border-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-700 dark:hover:bg-zinc-900 dark:hover:text-white',
@@ -155,7 +155,7 @@ export function buildEntryActions({
     return null;
   }
 
-  return <div className="flex items-center gap-2">{dragHandle}{deleteAction}</div>;
+  return <div className="flex items-center gap-1.5 md:gap-2">{dragHandle}{deleteAction}</div>;
 }
 
 export function SortableItemShell({
@@ -230,7 +230,7 @@ export function LocalizedEditorField({
       {localeMode === 'en' ? (
         <span
           aria-hidden="true"
-          className="rounded-2xl border border-dashed border-zinc-200/80 bg-zinc-50 px-3 py-2 text-sm leading-6 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-400"
+          className="rounded-[18px] border border-dashed border-zinc-200/80 bg-zinc-50 px-2.5 py-2 text-xs leading-5 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-400 md:rounded-2xl md:px-3 md:text-sm md:leading-6"
         >
           主文案参考：
           {sourceValue || '当前主编辑还没有内容，可先回主编辑工作区补充文案。'}
@@ -275,18 +275,22 @@ export function EditorSection({
 }: EditorSectionProps) {
   return (
     <Disclosure.Root
-      className="overflow-hidden rounded-[28px] border border-zinc-200/70 bg-white/85 dark:border-zinc-800 dark:bg-zinc-950/70"
+      className="overflow-hidden rounded-[22px] border border-zinc-200/70 bg-white/85 dark:border-zinc-800 dark:bg-zinc-950/70 md:rounded-[28px]"
       defaultExpanded={defaultExpanded}
+      data-slot="editor-section"
     >
-      <div className="flex flex-col gap-3 border-b border-zinc-200/70 px-5 py-5 dark:border-zinc-800 md:flex-row md:items-start md:justify-between md:px-6">
+      <div
+        className="flex flex-col gap-2.5 border-b border-zinc-200/70 px-4 py-4 dark:border-zinc-800 md:flex-row md:items-start md:justify-between md:gap-3 md:px-6 md:py-5"
+        data-slot="editor-section-header"
+      >
         <Disclosure.Heading className="min-w-0 flex-1">
           <Disclosure.Trigger
             aria-label={`${title} 模块开关`}
             className="flex w-full items-start justify-between gap-4 text-left"
           >
-            <div className="space-y-1">
+            <div className="space-y-0.5 md:space-y-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-base font-semibold text-zinc-950 dark:text-white">
+                <h3 className="text-[0.95rem] font-semibold text-zinc-950 dark:text-white md:text-base">
                   {title}
                 </h3>
                 {typeof count === 'number' ? (
@@ -297,9 +301,9 @@ export function EditorSection({
                   </Chip>
                 ) : null}
               </div>
-              <p className="muted">{description}</p>
+              <p className="muted text-sm leading-5 md:leading-6">{description}</p>
             </div>
-            <span className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-300">
+            <span className="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-300 md:h-9 md:w-9">
               <Disclosure.Indicator>
                 <DisclosureChevron />
               </Disclosure.Indicator>
@@ -309,7 +313,10 @@ export function EditorSection({
         {action ? <div className="shrink-0">{action}</div> : null}
       </div>
       <Disclosure.Content>
-        <Disclosure.Body className="stack px-5 py-5 md:px-6">
+        <Disclosure.Body
+          className="stack px-4 py-4 md:px-6 md:py-5"
+          data-slot="editor-section-body"
+        >
           {children}
         </Disclosure.Body>
       </Disclosure.Content>
@@ -338,33 +345,34 @@ export function EditorEntry({
 }: EditorEntryProps) {
   const entryShellClassName =
     variant === 'embedded'
-      ? 'overflow-hidden rounded-[24px] border border-zinc-200/60 bg-zinc-50/55 shadow-none dark:border-zinc-800/80 dark:bg-zinc-950/60'
-      : 'overflow-hidden rounded-[24px] border border-zinc-200/70 bg-white dark:border-zinc-800 dark:bg-zinc-950/80';
+      ? 'overflow-hidden rounded-[18px] border border-zinc-200/40 bg-transparent shadow-none dark:border-zinc-800/70 dark:bg-transparent md:rounded-[24px] md:border-zinc-200/60 md:bg-zinc-50/55 md:dark:bg-zinc-950/60'
+      : 'overflow-hidden rounded-[18px] border border-zinc-200/50 bg-white/72 shadow-none dark:border-zinc-800/70 dark:bg-zinc-950/60 md:rounded-[24px] md:border-zinc-200/70 md:bg-white md:dark:bg-zinc-950/80';
 
   const entryHeaderClassName =
-    'flex flex-col gap-3 px-4 py-4 md:flex-row md:items-start md:justify-between md:px-5';
+    'flex flex-col gap-2.5 px-3.5 py-3 md:flex-row md:items-start md:justify-between md:gap-3 md:px-5 md:py-4';
 
   const entryBodyClassName =
-    'stack border-t border-zinc-200/60 px-4 py-4 dark:border-zinc-800/80 md:px-5';
+    'stack border-t border-zinc-200/50 px-3.5 py-3 dark:border-zinc-800/70 md:border-zinc-200/60 md:px-5 md:py-4 md:dark:border-zinc-800/80';
 
   return (
     <Disclosure.Root
       className={entryShellClassName}
       defaultExpanded={defaultExpanded}
+      data-slot="editor-entry"
     >
-      <div className={entryHeaderClassName}>
+      <div className={entryHeaderClassName} data-slot="editor-entry-header">
         <Disclosure.Heading className="min-w-0 flex-1">
           <Disclosure.Trigger
             aria-label={toggleLabel}
             className="flex w-full items-start justify-between gap-4 text-left"
           >
-            <div className="space-y-1">
-              <h4 className="text-sm font-semibold text-zinc-950 dark:text-white">
+            <div className="space-y-0.5 md:space-y-1">
+              <h4 className="text-[0.95rem] font-semibold text-zinc-950 dark:text-white md:text-sm">
                 {title}
               </h4>
-              <p className="muted">{summary}</p>
+              <p className="muted text-sm leading-5 md:leading-6">{summary}</p>
             </div>
-            <span className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-300">
+            <span className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-300 md:h-10 md:w-10">
               <Disclosure.Indicator>
                 <DisclosureChevron />
               </Disclosure.Indicator>
@@ -374,7 +382,7 @@ export function EditorEntry({
         {action ? <div className="shrink-0">{action}</div> : null}
       </div>
       <Disclosure.Content>
-        <Disclosure.Body className={entryBodyClassName}>
+        <Disclosure.Body className={entryBodyClassName} data-slot="editor-entry-body">
           {children}
         </Disclosure.Body>
       </Disclosure.Content>

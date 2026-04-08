@@ -123,6 +123,65 @@ describe('ResumeDraftEditorPanel', () => {
     expect(screen.getByLabelText('姓名')).toBeInTheDocument();
   });
 
+  it('should use compact mobile section and flattened entry shells', async () => {
+    cleanup();
+    const loadDraft = vi.fn().mockResolvedValue({
+      ...draftSnapshot,
+      resume: {
+        ...draftSnapshot.resume,
+        projects: [
+          {
+            name: {
+              zh: 'GreenSketch',
+              en: 'GreenSketch',
+            },
+            role: {
+              zh: '核心开发',
+              en: 'Core Engineer',
+            },
+            startDate: '2025-01',
+            endDate: '2025-03',
+            summary: {
+              zh: '移动端编辑体验优化。',
+              en: 'Optimized mobile editing experience.',
+            },
+            coreFunctions: {
+              zh: '收口项目表单与排序体验。',
+              en: 'Consolidated project form and sorting flows.',
+            },
+            highlights: [],
+            technologies: ['Next.js'],
+            links: [],
+          },
+        ],
+      },
+    });
+
+    render(
+      <ResumeDraftEditorPanel
+        accessToken="demo-token"
+        apiBaseUrl="http://localhost:5577"
+        canEdit
+        loadDraft={loadDraft}
+        saveDraft={vi.fn()}
+      />,
+    );
+
+    const profileSectionTrigger = await screen.findByRole('button', {
+      name: '基础信息 模块开关',
+    });
+    const projectEntryTrigger = await screen.findByRole('button', {
+      name: '项目经历 1 条目开关',
+    });
+
+    expect(
+      profileSectionTrigger.closest('[data-slot="editor-section"]'),
+    ).toHaveClass('rounded-[22px]');
+    expect(
+      projectEntryTrigger.closest('[data-slot="editor-entry"]'),
+    ).toHaveClass('rounded-[18px]', 'bg-transparent');
+  });
+
   it('should switch between chinese main editing and english translation workspace', async () => {
     cleanup();
     const user = userEvent.setup();

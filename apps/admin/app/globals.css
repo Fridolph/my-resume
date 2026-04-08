@@ -260,6 +260,87 @@ button:disabled {
   border-color: color-mix(in srgb, var(--admin-primary) 42%, transparent);
 }
 
+@media (max-width: 767px) {
+  .card,
+  .display-surface-card {
+    border-radius: 20px;
+    padding: 1rem;
+  }
+
+  .stack,
+  .display-section-intro,
+  .preview-stack {
+    gap: 0.75rem;
+  }
+
+  .field {
+    gap: 0.45rem;
+    font-size: 0.9rem;
+  }
+
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+    padding: 0.75rem 0.9rem;
+    font-size: 0.95rem;
+    line-height: 1.45;
+  }
+
+  textarea {
+    min-height: 120px;
+  }
+
+  .muted,
+  .display-section-description,
+  .display-stat-description,
+  .display-stat-label,
+  .dashboard-inline-note,
+  .readonly-box,
+  .status-box {
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .status-box,
+  .display-stat-card,
+  .readonly-box {
+    gap: 0.5rem;
+    border-radius: 16px;
+    padding: 0.85rem 0.95rem;
+  }
+
+  .dashboard-inline-note {
+    border-radius: 14px;
+    padding: 0.8rem 0.9rem;
+  }
+
+  .dashboard-entry-actions,
+  .dashboard-badge-row,
+  .toolbar-group {
+    gap: 0.55rem;
+  }
+
+  .display-pill {
+    min-height: 34px;
+    padding: 0.5rem 0.8rem;
+    font-size: 0.84rem;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .card,
+  .display-surface-card {
+    padding: 1.2rem;
+  }
+
+  .stack,
+  .display-section-intro,
+  .preview-stack {
+    gap: 0.9rem;
+  }
+}
+
 .display-section-title,
 .display-stat-value {
   margin: 0;

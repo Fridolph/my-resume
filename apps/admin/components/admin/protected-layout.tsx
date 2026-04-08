@@ -12,17 +12,23 @@ import {
   Drawer,
   DrawerBackdrop,
   DrawerBody,
+  DrawerCloseTrigger,
   DrawerContent,
   DrawerDialog,
   DrawerHeader,
   DrawerHeading,
   Separator,
   Tooltip,
-  useOverlayState,
 } from '@heroui/react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
 
 import { adminNavigationItems, getAdminPageMeta } from '../../lib/admin-navigation';
 import { useAdminSession } from '../../lib/admin-session';
@@ -49,11 +55,20 @@ const sidebarLogoClass =
 const sidebarContentClass = 'flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-3 pb-4';
 const sidebarContentCollapsedClass = 'items-center px-[0.55rem]';
 const headerPageMetaRowClass =
-  'flex min-w-0 items-center gap-3 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-md:flex-wrap max-md:gap-2 max-md:overflow-x-visible max-md:whitespace-normal';
+  'flex min-w-0 flex-wrap items-center gap-2 sm:gap-2.5 md:overflow-x-auto md:flex-nowrap md:gap-3 md:whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden';
 const headerPageBadgeClass =
   'inline-flex min-h-6 items-center rounded-full border border-blue-500/20 bg-blue-50 px-2.5 text-[0.72rem] font-bold tracking-[0.04em] text-blue-700 dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-blue-300';
-const headerPageDescriptionClass = 'm-0 text-xs leading-[1.4] text-[#999]';
-const headerActionsClass = 'flex items-center justify-end gap-2.5';
+const headerPageDescriptionClass =
+  'm-0 text-[0.82rem] leading-[1.5] text-[#999] sm:text-[0.88rem] md:text-xs md:leading-[1.4]';
+const headerActionsClass = 'flex shrink-0 items-center justify-end gap-2 sm:gap-2.5';
+const headerShellClass =
+  'sticky top-0 z-20 border-b border-zinc-200/70 bg-white/78 px-3 py-2.5 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/78 sm:px-4 sm:py-3 md:rounded-[28px] md:border md:px-5 lg:px-6';
+const headerBodyClass = 'flex items-start justify-between gap-3 sm:gap-4';
+const headerPrimaryContentClass = 'flex min-w-0 flex-1 items-start gap-2.5 sm:gap-3';
+const headerTextStackClass = 'min-w-0 flex-1 space-y-1.5 sm:space-y-2';
+const headerSecondaryMetaClass = 'grid gap-1 sm:gap-1.5';
+const headerTitleClass =
+  'text-[2rem] leading-none font-semibold tracking-tight text-zinc-950 dark:text-white sm:text-[2.15rem] md:text-2xl';
 const headerIconButtonClass =
   'inline-flex h-[30px] w-[30px] min-w-[30px] items-center justify-center rounded-full border border-zinc-200/80 bg-zinc-100/85 p-0 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/15 dark:border-white/8 dark:bg-white/[0.06] dark:text-zinc-300 dark:hover:bg-white/[0.08] dark:hover:text-white';
 const headerAvatarButtonClass =
@@ -65,6 +80,12 @@ const sessionDropdownMenuClass = 'p-[0.35rem]';
 const sessionDropdownItemContentClass = 'grid gap-0.5';
 const sessionDropdownItemLabelClass = 'text-[0.72rem] text-zinc-500 dark:text-zinc-400';
 const sessionDropdownItemValueClass = 'text-[0.88rem] font-semibold';
+const mobileDrawerBackdropClass = 'z-40 pointer-events-none';
+const mobileDrawerContentClass = 'z-50';
+const mobileDrawerDialogClass =
+  'border-r border-zinc-200/70 bg-white/95 shadow-2xl dark:border-zinc-800 dark:bg-zinc-950/95';
+const mobileDrawerCloseButtonClass =
+  'inline-flex h-9 w-9 items-center justify-center rounded-full border border-zinc-200/80 bg-zinc-100/90 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900 dark:border-white/8 dark:bg-white/[0.06] dark:text-zinc-300 dark:hover:bg-white/[0.08] dark:hover:text-white';
 
 function AdminNavIcon({
   itemKey,
@@ -193,10 +214,11 @@ function AdminNavItems({
 export function AdminProtectedLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const drawerState = useOverlayState();
   const { currentUser, logout, status } = useAdminSession();
   const pageMeta = getAdminPageMeta(pathname);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+  const hasHydratedRouteRef = useRef(false);
 
   useEffect(() => {
     const storedValue = window.localStorage.getItem(
@@ -205,6 +227,15 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
 
     setSidebarCollapsed(storedValue === 'true');
   }, []);
+
+  useEffect(() => {
+    if (!hasHydratedRouteRef.current) {
+      hasHydratedRouteRef.current = true;
+      return;
+    }
+
+    setIsMobileDrawerOpen(false);
+  }, [pathname]);
 
   function toggleSidebarCollapsed() {
     setSidebarCollapsed((current) => {
@@ -332,28 +363,32 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
           </aside>
 
           <div className="flex min-h-screen flex-col">
-            <header className="sticky top-0 z-20 border-b border-zinc-200/70 bg-white/78 px-4 py-3 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/78 md:rounded-[28px] md:border md:px-5 lg:px-6">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div className="flex items-start gap-3">
+            <header className={headerShellClass} data-testid="admin-mobile-header">
+              <div className={headerBodyClass}>
+                <div className={headerPrimaryContentClass}>
                   <Button
-                    className="secondary-button h-10 min-w-0 px-3 text-sm md:hidden"
-                    onClick={drawerState.open}
+                    className="secondary-button h-9 min-w-0 px-3 text-sm sm:h-10 md:hidden"
+                    onClick={() => setIsMobileDrawerOpen(true)}
                     size="sm"
                     type="button"
                     variant="outline"
                   >
                     菜单
                   </Button>
-                  <div className="space-y-2">
+                  <div className={headerTextStackClass}>
                     <div className={headerPageMetaRowClass}>
-                      <h1 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-white">
+                      <h1 className={headerTitleClass}>
                         {pageMeta.title}
                       </h1>
                       <span className={headerPageBadgeClass}>{pageMeta.eyebrow}</span>
+                    </div>
+                    <div
+                      className={headerSecondaryMetaClass}
+                      data-testid="admin-mobile-header-secondary"
+                    >
                       <p className={headerPageDescriptionClass}>
                         {pageMeta.description}
                       </p>
-                    </div>
                     <nav aria-label="Breadcrumbs" className="text-sm text-zinc-500 dark:text-zinc-400">
                       <ol className="flex items-center gap-2">
                         <li>
@@ -363,6 +398,7 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
                         <li aria-current="page">{pageMeta.title}</li>
                       </ol>
                     </nav>
+                    </div>
                   </div>
                 </div>
 
@@ -452,12 +488,34 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
         </div>
       </div>
 
-      <Drawer state={drawerState}>
-        <DrawerBackdrop />
-        <DrawerContent placement="left">
-          <DrawerDialog>
-            <DrawerHeader>
+      <Drawer
+        data-testid="admin-mobile-drawer-root"
+        isOpen={isMobileDrawerOpen}
+        key={pathname}
+        onOpenChange={setIsMobileDrawerOpen}
+      >
+        <DrawerBackdrop
+          className={mobileDrawerBackdropClass}
+          isDismissable={false}
+          variant="transparent"
+        />
+        <DrawerContent
+          className={mobileDrawerContentClass}
+          data-testid="admin-mobile-drawer-content"
+          placement="left"
+        >
+          <DrawerDialog
+            className={mobileDrawerDialogClass}
+            data-testid="admin-mobile-drawer-dialog"
+          >
+            <DrawerHeader className="flex items-center justify-between gap-3">
               <DrawerHeading>后台导航</DrawerHeading>
+              <DrawerCloseTrigger
+                aria-label="关闭导航菜单"
+                className={mobileDrawerCloseButtonClass}
+              >
+                <span aria-hidden="true">×</span>
+              </DrawerCloseTrigger>
             </DrawerHeader>
             <DrawerBody className="space-y-5">
               <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/70">
@@ -468,7 +526,7 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
               </div>
               <AdminNavItems
                 currentPathname={pathname}
-                onNavigate={() => drawerState.close()}
+                onNavigate={() => setIsMobileDrawerOpen(false)}
               />
             </DrawerBody>
           </DrawerDialog>
