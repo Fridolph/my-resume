@@ -22,9 +22,10 @@ const localeSwitchWrapperClass =
   'inline-flex h-[30px] items-center rounded-full border border-slate-200 bg-white/75 p-[2px] dark:border-white/10 dark:bg-white/5';
 const localeSwitchButtonClass =
   'h-[26px] min-w-[26px] rounded-full px-2.5 text-[0.72rem] font-semibold';
-const primaryNavButtonClass = 'h-[30px] rounded-full px-4 text-[14px] font-semibold';
+const primaryNavButtonClass =
+  'h-[30px] rounded-full px-3 text-[13px] font-semibold whitespace-nowrap sm:px-4 sm:text-[14px]';
 const primaryNavWrapperClass =
-  'flex flex-wrap items-center justify-center gap-1.5 rounded-full border border-slate-200/80 bg-white/82 p-[3px] shadow-[0_8px_30px_rgba(15,23,42,0.05)] dark:border-white/10 dark:bg-white/5';
+  'inline-flex flex-nowrap items-center gap-1.5 whitespace-nowrap rounded-full border border-slate-200/80 bg-white/82 p-[3px] shadow-[0_8px_30px_rgba(15,23,42,0.05)] dark:border-white/10 dark:bg-white/5';
 
 const navItems = [
   {
@@ -68,7 +69,10 @@ export function PublicSiteHeader({
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-sm font-extrabold tracking-[-0.08em] text-white dark:bg-white dark:text-slate-950">
               FY
             </span>
-            <span className="flex min-w-0 flex-col">
+            <span
+              className="hidden min-w-0 flex-col md:flex"
+              data-testid="public-site-brand-text"
+            >
               <span className="truncate text-lg font-semibold text-slate-950 dark:text-white">
                 Fridolph Resume
               </span>
@@ -76,10 +80,11 @@ export function PublicSiteHeader({
           </Link>
         </div>
 
-        <div className="order-3 flex w-full justify-center md:order-none md:w-auto md:justify-self-center">
+        <div className="order-3 flex w-full justify-start overflow-x-auto pb-1 sm:justify-center md:order-none md:w-auto md:justify-self-center md:overflow-visible md:pb-0">
           <div
             aria-label="Public site navigation"
             className={primaryNavWrapperClass}
+            data-testid="public-site-nav"
           >
             {navItems.map((item) => {
               const isActive =
@@ -108,7 +113,7 @@ export function PublicSiteHeader({
           </div>
         </div>
 
-        <div className="ml-auto flex flex-wrap items-center justify-end gap-2 md:justify-self-end">
+        <div className="ml-auto flex shrink-0 flex-nowrap items-center justify-end gap-2 md:justify-self-end">
           <Dropdown.Root>
             <Dropdown.Trigger
               aria-label={labels.downloadAriaLabel}

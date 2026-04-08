@@ -34,7 +34,7 @@ export function formatPublishedAt(
 export const resumeLabels = {
   zh: {
     resumeNav: '简历',
-    profileNav: '履历概览',
+    profileNav: '概览',
     aiTalkNav: 'AI Talk',
     githubAriaLabel: '打开项目 GitHub 仓库',
     downloadAriaLabel: '打开下载菜单',

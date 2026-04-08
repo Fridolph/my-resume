@@ -25,13 +25,19 @@ describe('PublishedResumeShell', () => {
     renderShell();
 
     expect(screen.getByRole('link', { name: '简历' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '履历概览' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: '概览' })).toHaveAttribute(
       'href',
       '/profile',
     );
     expect(screen.getByRole('link', { name: 'AI Talk' })).toHaveAttribute(
       'href',
       '/ai-talk',
+    );
+    expect(screen.getByTestId('public-site-brand-text')).toHaveClass('hidden', 'md:flex');
+    expect(screen.getByTestId('public-site-nav')).toHaveClass(
+      'inline-flex',
+      'flex-nowrap',
+      'whitespace-nowrap',
     );
     expect(screen.getByRole('heading', { name: '付寅生' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '职业经历' })).toBeInTheDocument();
