@@ -1,0 +1,10 @@
+# 忽略以 .git .svn .hg 为后缀的文件
+**/.git
+**/.svn
+**/.hg
+
+# 忽略 node_modules 下的所有文件
+**/node_modules
+**/dist
+**/mock
+**/public 
