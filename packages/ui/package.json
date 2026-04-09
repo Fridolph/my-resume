@@ -9,6 +9,8 @@
     "./display": "./src/display.tsx"
   },
   "scripts": {
+    "lint": "oxlint --config ../../.oxlintrc.json --ignore-path ../../.eslintignore .",
+    "format:check": "oxfmt --config ../../.oxfmtrc.json --ignore-path ../../.prettierignore --check .",
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },

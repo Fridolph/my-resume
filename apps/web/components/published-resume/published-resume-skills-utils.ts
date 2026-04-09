@@ -39,7 +39,7 @@ function stripMarkdownBold(value: string): string {
 }
 
 export function parseSkillLine(raw: string): ParsedSkillLine {
-  const trimmed = raw.trim().replace(/^[\-•]\s*/u, '')
+  const trimmed = raw.trim().replace(/^[-•]\s*/u, '')
   const dividerIndex = trimmed.search(/[:：]/u)
 
   if (dividerIndex === -1) {

@@ -1,19 +1,14 @@
-'use client';
+'use client'
 
 import {
-  DndContext,
   KeyboardSensor,
   PointerSensor,
   TouchSensor,
-  closestCenter,
   type DragEndEvent,
   useSensor,
   useSensors,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  sortableKeyboardCoordinates,
-} from '@dnd-kit/sortable';
+} from '@dnd-kit/core'
+import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import {
   Button,
   Card,
@@ -22,17 +17,15 @@ import {
   CardHeader,
   CardTitle,
   Chip,
-} from '@heroui/react';
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+} from '@heroui/react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { adminPrimaryButtonClass } from '../../lib/button-styles';
-import { ensureDraftResume, invalidateDraftResumeResources } from '../../lib/admin-resource-store';
-import { updateDraftResume } from '../../lib/resume-draft-api';
+import { adminPrimaryButtonClass } from '../../lib/button-styles'
+import {
+  ensureDraftResume,
+  invalidateDraftResumeResources,
+} from '../../lib/admin-resource-store'
+import { updateDraftResume } from '../../lib/resume-draft-api'
 import type {
   ResumeDraftSnapshot,
   ResumeEducationItem,
@@ -40,17 +33,14 @@ import type {
   ResumeHighlightItem,
   ResumeProfile,
   ResumeProfileHero,
-  ResumeProfileInterestItem,
-  ResumeProfileLink,
   ResumeProjectItem,
-  ResumeSkillGroup,
   StandardResume,
-} from '../../lib/resume-types';
-import { EducationSection } from './education-section';
-import { ExperiencesSection } from './experiences-section';
-import { ProfileSection } from './profile-section';
-import { ProjectsSection } from './projects-section';
-import { HighlightsSection, SkillsSection } from './skills-highlights-sections';
+} from '../../lib/resume-types'
+import { EducationSection } from './education-section'
+import { ExperiencesSection } from './experiences-section'
+import { ProfileSection } from './profile-section'
+import { ProjectsSection } from './projects-section'
+import { HighlightsSection, SkillsSection } from './skills-highlights-sections'
 import {
   buildDraftFieldKey,
   buildDraftFieldValues,
@@ -83,14 +73,14 @@ import {
   type EditorLocaleMode,
   type SortableCollectionKey,
   type SortableCollectionState,
-} from './draft-editor-helpers';
+} from './draft-editor-helpers'
 
 interface ResumeDraftEditorPanelProps {
-  apiBaseUrl: string;
-  accessToken: string;
-  canEdit: boolean;
-  loadDraft?: typeof ensureDraftResume;
-  saveDraft?: typeof updateDraftResume;
+  apiBaseUrl: string
+  accessToken: string
+  canEdit: boolean
+  loadDraft?: typeof ensureDraftResume
+  saveDraft?: typeof updateDraftResume
 }
 
 export function ResumeDraftEditorPanel({
@@ -100,20 +90,18 @@ export function ResumeDraftEditorPanel({
   loadDraft = ensureDraftResume,
   saveDraft = updateDraftResume,
 }: ResumeDraftEditorPanelProps) {
-  const [status, setStatus] = useState<DraftEditorStatus>('idle');
-  const [draftSnapshot, setDraftSnapshot] = useState<ResumeDraftSnapshot | null>(
-    null,
-  );
-  const [resumeDraft, setResumeDraft] = useState<StandardResume | null>(null);
-  const [draftFieldValues, setDraftFieldValues] = useState<DraftFieldValues>({});
+  const [status, setStatus] = useState<DraftEditorStatus>('idle')
+  const [draftSnapshot, setDraftSnapshot] = useState<ResumeDraftSnapshot | null>(null)
+  const [resumeDraft, setResumeDraft] = useState<StandardResume | null>(null)
+  const [draftFieldValues, setDraftFieldValues] = useState<DraftFieldValues>({})
   const [sortableCollections, setSortableCollections] = useState<SortableCollectionState>(
     createEmptySortableCollectionState(),
-  );
-  const [editorLocaleMode, setEditorLocaleMode] = useState<EditorLocaleMode>('zh');
-  const [pendingSave, setPendingSave] = useState(false);
-  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const sortableIdCounterRef = useRef(0);
+  )
+  const [editorLocaleMode, setEditorLocaleMode] = useState<EditorLocaleMode>('zh')
+  const [pendingSave, setPendingSave] = useState(false)
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const sortableIdCounterRef = useRef(0)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -130,15 +118,15 @@ export function ResumeDraftEditorPanel({
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
-  );
+  )
 
   function nextSortableId(scope: SortableCollectionKey) {
-    sortableIdCounterRef.current += 1;
-    return `${scope}-${sortableIdCounterRef.current}`;
+    sortableIdCounterRef.current += 1
+    return `${scope}-${sortableIdCounterRef.current}`
   }
 
   function replaceSortableCollections(nextResume: StandardResume) {
-    setSortableCollections(buildSortableCollectionState(nextResume, nextSortableId));
+    setSortableCollections(buildSortableCollectionState(nextResume, nextSortableId))
   }
 
   function updateSortableCollection(
@@ -148,315 +136,317 @@ export function ResumeDraftEditorPanel({
     setSortableCollections((current) => ({
       ...current,
       [collection]: updater(current[collection]),
-    }));
+    }))
   }
 
   useEffect(() => {
     if (!canEdit) {
-      return;
+      return
     }
 
-    setStatus('loading');
-    setErrorMessage(null);
-    setFeedbackMessage(null);
+    setStatus('loading')
+    setErrorMessage(null)
+    setFeedbackMessage(null)
 
     loadDraft({
       apiBaseUrl,
       accessToken,
     })
       .then((snapshot) => {
-        setDraftSnapshot(snapshot);
-        setResumeDraft(cloneResume(snapshot.resume));
-        setDraftFieldValues(buildDraftFieldValues(snapshot.resume));
-        replaceSortableCollections(snapshot.resume);
-        setStatus('ready');
+        setDraftSnapshot(snapshot)
+        setResumeDraft(cloneResume(snapshot.resume))
+        setDraftFieldValues(buildDraftFieldValues(snapshot.resume))
+        replaceSortableCollections(snapshot.resume)
+        setStatus('ready')
       })
       .catch((error) => {
         setErrorMessage(
           error instanceof Error ? error.message : '草稿读取失败，请稍后重试',
-        );
-        setStatus('error');
-      });
-  }, [accessToken, apiBaseUrl, canEdit, loadDraft]);
+        )
+        setStatus('error')
+      })
+  }, [accessToken, apiBaseUrl, canEdit, loadDraft])
 
   const lastUpdatedLabel = useMemo(() => {
     if (!draftSnapshot) {
-      return null;
+      return null
     }
 
-    return formatIsoDateTime(draftSnapshot.updatedAt);
-  }, [draftSnapshot]);
+    return formatIsoDateTime(draftSnapshot.updatedAt)
+  }, [draftSnapshot])
 
-  const isTranslationMode = editorLocaleMode === 'en';
+  const isTranslationMode = editorLocaleMode === 'en'
 
   function handleCollectionDragEnd(
     collection: SortableCollectionKey,
     event: DragEndEvent,
   ) {
-    const { active, over } = event;
+    const { active, over } = event
 
     if (!resumeDraft || !over || active.id === over.id) {
-      return;
+      return
     }
 
-    const collectionIds = sortableCollections[collection];
-    const fromIndex = collectionIds.indexOf(String(active.id));
-    const toIndex = collectionIds.indexOf(String(over.id));
+    const collectionIds = sortableCollections[collection]
+    const fromIndex = collectionIds.indexOf(String(active.id))
+    const toIndex = collectionIds.indexOf(String(over.id))
 
     if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) {
-      return;
+      return
     }
 
     updateSortableCollection(collection, (currentIds) =>
       arrayMove(currentIds, fromIndex, toIndex),
-    );
+    )
 
     updateResumeDraft(
       (draft) => {
-        const nextDraft = reorderResumeCollection(draft, collection, fromIndex, toIndex);
+        const nextDraft = reorderResumeCollection(draft, collection, fromIndex, toIndex)
 
-        draft.meta = nextDraft.meta;
-        draft.profile = nextDraft.profile;
-        draft.education = nextDraft.education;
-        draft.experiences = nextDraft.experiences;
-        draft.projects = nextDraft.projects;
-        draft.skills = nextDraft.skills;
-        draft.highlights = nextDraft.highlights;
+        draft.meta = nextDraft.meta
+        draft.profile = nextDraft.profile
+        draft.education = nextDraft.education
+        draft.experiences = nextDraft.experiences
+        draft.projects = nextDraft.projects
+        draft.skills = nextDraft.skills
+        draft.highlights = nextDraft.highlights
       },
       {
         syncDraftFields: collectionNeedsDraftFieldSync(collection),
       },
-    );
+    )
   }
 
   function updateResumeDraft(
     mutator: (draft: StandardResume) => void,
     options?: { syncDraftFields?: boolean },
   ) {
-    let nextDraftForDraftFields: StandardResume | null = null;
+    let nextDraftForDraftFields: StandardResume | null = null
 
     setResumeDraft((current) => {
       if (!current) {
-        return current;
+        return current
       }
 
-      const nextDraft = cloneResume(current);
-      mutator(nextDraft);
-      nextDraftForDraftFields = nextDraft;
-      return nextDraft;
-    });
+      const nextDraft = cloneResume(current)
+      mutator(nextDraft)
+      nextDraftForDraftFields = nextDraft
+      return nextDraft
+    })
 
     if (options?.syncDraftFields && nextDraftForDraftFields) {
-      setDraftFieldValues(buildDraftFieldValues(nextDraftForDraftFields));
+      setDraftFieldValues(buildDraftFieldValues(nextDraftForDraftFields))
     }
   }
 
   function showTranslationPlaceholder(scopeTitle: string) {
-    setErrorMessage(null);
-    setFeedbackMessage(`${scopeTitle} 的 AI 翻译入口将在后续 issue 接入，这里先把工作区和人工校对路径立住。`);
+    setErrorMessage(null)
+    setFeedbackMessage(
+      `${scopeTitle} 的 AI 翻译入口将在后续 issue 接入，这里先把工作区和人工校对路径立住。`,
+    )
   }
 
   function copyProfileTranslations() {
     updateResumeDraft(
       (draft) => {
-        copyLocalizedTextValue(draft.profile.fullName);
-        copyLocalizedTextValue(draft.profile.headline);
-        copyLocalizedTextValue(draft.profile.summary);
-        copyLocalizedTextValue(draft.profile.location);
-        draft.profile.hero = ensureHeroSlogans(draft.profile.hero);
+        copyLocalizedTextValue(draft.profile.fullName)
+        copyLocalizedTextValue(draft.profile.headline)
+        copyLocalizedTextValue(draft.profile.summary)
+        copyLocalizedTextValue(draft.profile.location)
+        draft.profile.hero = ensureHeroSlogans(draft.profile.hero)
         draft.profile.links.forEach((link) => {
-          copyLocalizedTextValue(link.label);
-        });
-        draft.profile.interests = copyProfileInterestValues(draft.profile.interests);
-        draft.profile.hero.slogans = copyLocalizedLineValues(draft.profile.hero.slogans);
+          copyLocalizedTextValue(link.label)
+        })
+        draft.profile.interests = copyProfileInterestValues(draft.profile.interests)
+        draft.profile.hero.slogans = copyLocalizedLineValues(draft.profile.hero.slogans)
       },
       { syncDraftFields: true },
-    );
-    setErrorMessage(null);
-    setFeedbackMessage('已将基础信息中的中文内容复制到英文翻译工作区。');
+    )
+    setErrorMessage(null)
+    setFeedbackMessage('已将基础信息中的中文内容复制到英文翻译工作区。')
   }
 
   function clearProfileTranslations() {
     updateResumeDraft(
       (draft) => {
-        clearLocalizedTextValue(draft.profile.fullName);
-        clearLocalizedTextValue(draft.profile.headline);
-        clearLocalizedTextValue(draft.profile.summary);
-        clearLocalizedTextValue(draft.profile.location);
-        draft.profile.hero = ensureHeroSlogans(draft.profile.hero);
+        clearLocalizedTextValue(draft.profile.fullName)
+        clearLocalizedTextValue(draft.profile.headline)
+        clearLocalizedTextValue(draft.profile.summary)
+        clearLocalizedTextValue(draft.profile.location)
+        draft.profile.hero = ensureHeroSlogans(draft.profile.hero)
         draft.profile.links.forEach((link) => {
-          clearLocalizedTextValue(link.label);
-        });
-        draft.profile.interests = clearProfileInterestValues(draft.profile.interests);
-        draft.profile.hero.slogans = clearLocalizedLineValues(draft.profile.hero.slogans);
+          clearLocalizedTextValue(link.label)
+        })
+        draft.profile.interests = clearProfileInterestValues(draft.profile.interests)
+        draft.profile.hero.slogans = clearLocalizedLineValues(draft.profile.hero.slogans)
       },
       { syncDraftFields: true },
-    );
-    setErrorMessage(null);
-    setFeedbackMessage('已清空基础信息中的英文翻译字段。');
+    )
+    setErrorMessage(null)
+    setFeedbackMessage('已清空基础信息中的英文翻译字段。')
   }
 
   function copyEducationTranslations() {
     updateResumeDraft(
       (draft) => {
         draft.education.forEach((education) => {
-          copyLocalizedTextValue(education.schoolName);
-          copyLocalizedTextValue(education.degree);
-          copyLocalizedTextValue(education.fieldOfStudy);
-          copyLocalizedTextValue(education.location);
-          education.highlights = copyLocalizedLineValues(education.highlights);
-        });
+          copyLocalizedTextValue(education.schoolName)
+          copyLocalizedTextValue(education.degree)
+          copyLocalizedTextValue(education.fieldOfStudy)
+          copyLocalizedTextValue(education.location)
+          education.highlights = copyLocalizedLineValues(education.highlights)
+        })
       },
       { syncDraftFields: true },
-    );
-    setErrorMessage(null);
-    setFeedbackMessage('已将教育经历中的中文内容复制到英文翻译工作区。');
+    )
+    setErrorMessage(null)
+    setFeedbackMessage('已将教育经历中的中文内容复制到英文翻译工作区。')
   }
 
   function clearEducationTranslations() {
     updateResumeDraft(
       (draft) => {
         draft.education.forEach((education) => {
-          clearLocalizedTextValue(education.schoolName);
-          clearLocalizedTextValue(education.degree);
-          clearLocalizedTextValue(education.fieldOfStudy);
-          clearLocalizedTextValue(education.location);
-          education.highlights = clearLocalizedLineValues(education.highlights);
-        });
+          clearLocalizedTextValue(education.schoolName)
+          clearLocalizedTextValue(education.degree)
+          clearLocalizedTextValue(education.fieldOfStudy)
+          clearLocalizedTextValue(education.location)
+          education.highlights = clearLocalizedLineValues(education.highlights)
+        })
       },
       { syncDraftFields: true },
-    );
-    setErrorMessage(null);
-    setFeedbackMessage('已清空教育经历中的英文翻译字段。');
+    )
+    setErrorMessage(null)
+    setFeedbackMessage('已清空教育经历中的英文翻译字段。')
   }
 
   function copyExperienceTranslations() {
     updateResumeDraft(
       (draft) => {
         draft.experiences.forEach((experience) => {
-          copyLocalizedTextValue(experience.companyName);
-          copyLocalizedTextValue(experience.role);
-          copyLocalizedTextValue(experience.employmentType);
-          copyLocalizedTextValue(experience.location);
-          copyLocalizedTextValue(experience.summary);
-          experience.highlights = copyLocalizedLineValues(experience.highlights);
-        });
+          copyLocalizedTextValue(experience.companyName)
+          copyLocalizedTextValue(experience.role)
+          copyLocalizedTextValue(experience.employmentType)
+          copyLocalizedTextValue(experience.location)
+          copyLocalizedTextValue(experience.summary)
+          experience.highlights = copyLocalizedLineValues(experience.highlights)
+        })
       },
       { syncDraftFields: true },
-    );
-    setErrorMessage(null);
-    setFeedbackMessage('已将工作经历中的中文内容复制到英文翻译工作区。');
+    )
+    setErrorMessage(null)
+    setFeedbackMessage('已将工作经历中的中文内容复制到英文翻译工作区。')
   }
 
   function clearExperienceTranslations() {
     updateResumeDraft(
       (draft) => {
         draft.experiences.forEach((experience) => {
-          clearLocalizedTextValue(experience.companyName);
-          clearLocalizedTextValue(experience.role);
-          clearLocalizedTextValue(experience.employmentType);
-          clearLocalizedTextValue(experience.location);
-          clearLocalizedTextValue(experience.summary);
-          experience.highlights = clearLocalizedLineValues(experience.highlights);
-        });
+          clearLocalizedTextValue(experience.companyName)
+          clearLocalizedTextValue(experience.role)
+          clearLocalizedTextValue(experience.employmentType)
+          clearLocalizedTextValue(experience.location)
+          clearLocalizedTextValue(experience.summary)
+          experience.highlights = clearLocalizedLineValues(experience.highlights)
+        })
       },
       { syncDraftFields: true },
-    );
-    setErrorMessage(null);
-    setFeedbackMessage('已清空工作经历中的英文翻译字段。');
+    )
+    setErrorMessage(null)
+    setFeedbackMessage('已清空工作经历中的英文翻译字段。')
   }
 
   function copyProjectTranslations() {
     updateResumeDraft(
       (draft) => {
         draft.projects.forEach((project) => {
-          copyLocalizedTextValue(project.name);
-          copyLocalizedTextValue(project.role);
-          copyLocalizedTextValue(project.summary);
-          copyLocalizedTextValue(project.coreFunctions);
-          project.highlights = copyLocalizedLineValues(project.highlights);
+          copyLocalizedTextValue(project.name)
+          copyLocalizedTextValue(project.role)
+          copyLocalizedTextValue(project.summary)
+          copyLocalizedTextValue(project.coreFunctions)
+          project.highlights = copyLocalizedLineValues(project.highlights)
           project.links.forEach((link) => {
-            copyLocalizedTextValue(link.label);
-          });
-        });
+            copyLocalizedTextValue(link.label)
+          })
+        })
       },
       { syncDraftFields: true },
-    );
-    setErrorMessage(null);
-    setFeedbackMessage('已将项目经历中的中文内容复制到英文翻译工作区。');
+    )
+    setErrorMessage(null)
+    setFeedbackMessage('已将项目经历中的中文内容复制到英文翻译工作区。')
   }
 
   function clearProjectTranslations() {
     updateResumeDraft(
       (draft) => {
         draft.projects.forEach((project) => {
-          clearLocalizedTextValue(project.name);
-          clearLocalizedTextValue(project.role);
-          clearLocalizedTextValue(project.summary);
-          clearLocalizedTextValue(project.coreFunctions);
-          project.highlights = clearLocalizedLineValues(project.highlights);
+          clearLocalizedTextValue(project.name)
+          clearLocalizedTextValue(project.role)
+          clearLocalizedTextValue(project.summary)
+          clearLocalizedTextValue(project.coreFunctions)
+          project.highlights = clearLocalizedLineValues(project.highlights)
           project.links.forEach((link) => {
-            clearLocalizedTextValue(link.label);
-          });
-        });
+            clearLocalizedTextValue(link.label)
+          })
+        })
       },
       { syncDraftFields: true },
-    );
-    setErrorMessage(null);
-    setFeedbackMessage('已清空项目经历中的英文翻译字段。');
+    )
+    setErrorMessage(null)
+    setFeedbackMessage('已清空项目经历中的英文翻译字段。')
   }
 
   function copySkillTranslations() {
     updateResumeDraft((draft) => {
       draft.skills.forEach((skill) => {
-        copyLocalizedTextValue(skill.name);
-      });
-    });
-    setErrorMessage(null);
-    setFeedbackMessage('已将技能组名称复制到英文翻译工作区。');
+        copyLocalizedTextValue(skill.name)
+      })
+    })
+    setErrorMessage(null)
+    setFeedbackMessage('已将技能组名称复制到英文翻译工作区。')
   }
 
   function clearSkillTranslations() {
     updateResumeDraft((draft) => {
       draft.skills.forEach((skill) => {
-        clearLocalizedTextValue(skill.name);
-      });
-    });
-    setErrorMessage(null);
-    setFeedbackMessage('已清空技能组中的英文翻译字段。');
+        clearLocalizedTextValue(skill.name)
+      })
+    })
+    setErrorMessage(null)
+    setFeedbackMessage('已清空技能组中的英文翻译字段。')
   }
 
   function copyHighlightTranslations() {
     updateResumeDraft((draft) => {
       draft.highlights.forEach((highlight) => {
-        copyLocalizedTextValue(highlight.title);
-        copyLocalizedTextValue(highlight.description);
-      });
-    });
-    setErrorMessage(null);
-    setFeedbackMessage('已将亮点中的中文内容复制到英文翻译工作区。');
+        copyLocalizedTextValue(highlight.title)
+        copyLocalizedTextValue(highlight.description)
+      })
+    })
+    setErrorMessage(null)
+    setFeedbackMessage('已将亮点中的中文内容复制到英文翻译工作区。')
   }
 
   function clearHighlightTranslations() {
     updateResumeDraft((draft) => {
       draft.highlights.forEach((highlight) => {
-        clearLocalizedTextValue(highlight.title);
-        clearLocalizedTextValue(highlight.description);
-      });
-    });
-    setErrorMessage(null);
-    setFeedbackMessage('已清空亮点中的英文翻译字段。');
+        clearLocalizedTextValue(highlight.title)
+        clearLocalizedTextValue(highlight.description)
+      })
+    })
+    setErrorMessage(null)
+    setFeedbackMessage('已清空亮点中的英文翻译字段。')
   }
 
   function renderTranslationActions(
     scopeTitle: string,
     handlers: {
-      onCopy: () => void;
-      onClear: () => void;
+      onCopy: () => void
+      onClear: () => void
     },
   ) {
     if (!isTranslationMode) {
-      return null;
+      return null
     }
 
     return (
@@ -466,8 +456,7 @@ export function ResumeDraftEditorPanel({
           onClick={handlers.onCopy}
           size="sm"
           type="button"
-          variant="outline"
-        >
+          variant="outline">
           复制中文到英文
         </Button>
         <Button
@@ -475,8 +464,7 @@ export function ResumeDraftEditorPanel({
           onClick={handlers.onClear}
           size="sm"
           type="button"
-          variant="ghost"
-        >
+          variant="ghost">
           清空英文
         </Button>
         <Button
@@ -484,12 +472,11 @@ export function ResumeDraftEditorPanel({
           onClick={() => showTranslationPlaceholder(scopeTitle)}
           size="sm"
           type="button"
-          variant="ghost"
-        >
+          variant="ghost">
           AI 翻译入口预留
         </Button>
       </div>
-    );
+    )
   }
 
   function updateProfileLocalizedField(
@@ -498,8 +485,8 @@ export function ResumeDraftEditorPanel({
     value: string,
   ) {
     updateResumeDraft((draft) => {
-      draft.profile[field][locale] = value;
-    });
+      draft.profile[field][locale] = value
+    })
   }
 
   function updateProfilePlainField(
@@ -507,8 +494,8 @@ export function ResumeDraftEditorPanel({
     value: string,
   ) {
     updateResumeDraft((draft) => {
-      draft.profile[field] = value;
-    });
+      draft.profile[field] = value
+    })
   }
 
   function updateProfileHeroField(
@@ -516,29 +503,33 @@ export function ResumeDraftEditorPanel({
     value: string,
   ) {
     updateResumeDraft((draft) => {
-      draft.profile.hero = ensureHeroSlogans(draft.profile.hero ?? createEmptyProfileHero());
-      draft.profile.hero[field] = value;
-    });
+      draft.profile.hero = ensureHeroSlogans(
+        draft.profile.hero ?? createEmptyProfileHero(),
+      )
+      draft.profile.hero[field] = value
+    })
   }
 
   function updateProfileHeroSlogans(locale: 'zh' | 'en', value: string) {
     setDraftFieldValues((current) => ({
       ...current,
       [buildDraftFieldKey('profile', 'hero', 'slogans', locale)]: value,
-    }));
+    }))
 
     updateResumeDraft((draft) => {
-      draft.profile.hero = ensureHeroSlogans(draft.profile.hero ?? createEmptyProfileHero());
+      draft.profile.hero = ensureHeroSlogans(
+        draft.profile.hero ?? createEmptyProfileHero(),
+      )
       draft.profile.hero.slogans = mergeLocalizedLines(
         draft.profile.hero.slogans,
         locale,
         value,
-      ).slice(0, 2);
+      ).slice(0, 2)
 
       if (draft.profile.hero.slogans.length < 2) {
-        draft.profile.hero = ensureHeroSlogans(draft.profile.hero);
+        draft.profile.hero = ensureHeroSlogans(draft.profile.hero)
       }
-    });
+    })
   }
 
   function updateProfileLinkField(
@@ -549,17 +540,17 @@ export function ResumeDraftEditorPanel({
   ) {
     updateResumeDraft((draft) => {
       if (field === 'url') {
-        draft.profile.links[index].url = value;
-        return;
+        draft.profile.links[index].url = value
+        return
       }
 
       if (field === 'icon') {
-        draft.profile.links[index].icon = value.trim() ? value : undefined;
-        return;
+        draft.profile.links[index].icon = value.trim() ? value : undefined
+        return
       }
 
-      draft.profile.links[index].label[locale ?? 'zh'] = value;
-    });
+      draft.profile.links[index].label[locale ?? 'zh'] = value
+    })
   }
 
   function updateProfileInterestField(
@@ -570,50 +561,50 @@ export function ResumeDraftEditorPanel({
   ) {
     updateResumeDraft((draft) => {
       if (field === 'icon') {
-        draft.profile.interests[index].icon = value.trim() ? value : undefined;
-        return;
+        draft.profile.interests[index].icon = value.trim() ? value : undefined
+        return
       }
 
-      draft.profile.interests[index].label[locale ?? 'zh'] = value;
-    });
+      draft.profile.interests[index].label[locale ?? 'zh'] = value
+    })
   }
 
   function addProfileLink() {
     updateResumeDraft((draft) => {
-      draft.profile.links.push(createEmptyProfileLink());
-    });
+      draft.profile.links.push(createEmptyProfileLink())
+    })
     updateSortableCollection('profileLinks', (currentIds) => [
       ...currentIds,
       nextSortableId('profileLinks'),
-    ]);
+    ])
   }
 
   function addProfileInterest() {
     updateResumeDraft((draft) => {
-      draft.profile.interests.push(createEmptyProfileInterest());
-    });
+      draft.profile.interests.push(createEmptyProfileInterest())
+    })
     updateSortableCollection('profileInterests', (currentIds) => [
       ...currentIds,
       nextSortableId('profileInterests'),
-    ]);
+    ])
   }
 
   function removeProfileLink(index: number) {
     updateResumeDraft((draft) => {
-      draft.profile.links.splice(index, 1);
-    });
+      draft.profile.links.splice(index, 1)
+    })
     updateSortableCollection('profileLinks', (currentIds) =>
       currentIds.filter((_, currentIndex) => currentIndex !== index),
-    );
+    )
   }
 
   function removeProfileInterest(index: number) {
     updateResumeDraft((draft) => {
-      draft.profile.interests.splice(index, 1);
-    });
+      draft.profile.interests.splice(index, 1)
+    })
     updateSortableCollection('profileInterests', (currentIds) =>
       currentIds.filter((_, currentIndex) => currentIndex !== index),
-    );
+    )
   }
 
   function updateEducationLocalizedField(
@@ -626,8 +617,8 @@ export function ResumeDraftEditorPanel({
     value: string,
   ) {
     updateResumeDraft((draft) => {
-      draft.education[index][field][locale] = value;
-    });
+      draft.education[index][field][locale] = value
+    })
   }
 
   function updateEducationPlainField(
@@ -636,52 +627,48 @@ export function ResumeDraftEditorPanel({
     value: string,
   ) {
     updateResumeDraft((draft) => {
-      draft.education[index][field] = value;
-    });
+      draft.education[index][field] = value
+    })
   }
 
-  function updateEducationHighlights(
-    index: number,
-    locale: 'zh' | 'en',
-    value: string,
-  ) {
+  function updateEducationHighlights(index: number, locale: 'zh' | 'en', value: string) {
     setDraftFieldValues((current) => ({
       ...current,
       [buildDraftFieldKey('education', index, 'highlights', locale)]: value,
-    }));
+    }))
 
     updateResumeDraft((draft) => {
       draft.education[index].highlights = mergeLocalizedLines(
         draft.education[index].highlights,
         locale,
         value,
-      );
-    });
+      )
+    })
   }
 
   function addEducation() {
     updateResumeDraft(
       (draft) => {
-        draft.education.push(createEmptyEducation());
+        draft.education.push(createEmptyEducation())
       },
       { syncDraftFields: true },
-    );
+    )
     updateSortableCollection('education', (currentIds) => [
       ...currentIds,
       nextSortableId('education'),
-    ]);
+    ])
   }
 
   function removeEducation(index: number) {
     updateResumeDraft(
       (draft) => {
-        draft.education.splice(index, 1);
+        draft.education.splice(index, 1)
       },
       { syncDraftFields: true },
-    );
+    )
     updateSortableCollection('education', (currentIds) =>
       currentIds.filter((_, currentIndex) => currentIndex !== index),
-    );
+    )
   }
 
   function updateExperienceLocalizedField(
@@ -694,8 +681,8 @@ export function ResumeDraftEditorPanel({
     value: string,
   ) {
     updateResumeDraft((draft) => {
-      draft.experiences[index][field][locale] = value;
-    });
+      draft.experiences[index][field][locale] = value
+    })
   }
 
   function updateExperiencePlainField(
@@ -704,57 +691,59 @@ export function ResumeDraftEditorPanel({
     value: string,
   ) {
     updateResumeDraft((draft) => {
-      draft.experiences[index][field] = value;
-    });
+      draft.experiences[index][field] = value
+    })
   }
 
-  function updateExperienceHighlights(
-    index: number,
-    locale: 'zh' | 'en',
-    value: string,
-  ) {
+  function updateExperienceHighlights(index: number, locale: 'zh' | 'en', value: string) {
     setDraftFieldValues((current) => ({
       ...current,
       [buildDraftFieldKey('experience', index, 'highlights', locale)]: value,
-    }));
+    }))
 
     updateResumeDraft((draft) => {
       draft.experiences[index].highlights = mergeLocalizedLines(
         draft.experiences[index].highlights,
         locale,
         value,
-      );
-    });
+      )
+    })
   }
 
   function updateExperienceTechnologies(index: number, value: string) {
     setDraftFieldValues((current) => ({
       ...current,
       [buildDraftFieldKey('experience', index, 'technologies')]: value,
-    }));
+    }))
 
     updateResumeDraft((draft) => {
-      draft.experiences[index].technologies = parseCommaSeparatedValues(value);
-    });
+      draft.experiences[index].technologies = parseCommaSeparatedValues(value)
+    })
   }
 
   function addExperience() {
-    updateResumeDraft((draft) => {
-      draft.experiences.push(createEmptyExperience());
-    }, { syncDraftFields: true });
+    updateResumeDraft(
+      (draft) => {
+        draft.experiences.push(createEmptyExperience())
+      },
+      { syncDraftFields: true },
+    )
     updateSortableCollection('experiences', (currentIds) => [
       ...currentIds,
       nextSortableId('experiences'),
-    ]);
+    ])
   }
 
   function removeExperience(index: number) {
-    updateResumeDraft((draft) => {
-      draft.experiences.splice(index, 1);
-    }, { syncDraftFields: true });
+    updateResumeDraft(
+      (draft) => {
+        draft.experiences.splice(index, 1)
+      },
+      { syncDraftFields: true },
+    )
     updateSortableCollection('experiences', (currentIds) =>
       currentIds.filter((_, currentIndex) => currentIndex !== index),
-    );
+    )
   }
 
   function updateProjectLocalizedField(
@@ -764,8 +753,8 @@ export function ResumeDraftEditorPanel({
     value: string,
   ) {
     updateResumeDraft((draft) => {
-      draft.projects[index][field][locale] = value;
-    });
+      draft.projects[index][field][locale] = value
+    })
   }
 
   function updateProjectPlainField(
@@ -774,34 +763,34 @@ export function ResumeDraftEditorPanel({
     value: string,
   ) {
     updateResumeDraft((draft) => {
-      draft.projects[index][field] = value;
-    });
+      draft.projects[index][field] = value
+    })
   }
 
   function updateProjectHighlights(index: number, locale: 'zh' | 'en', value: string) {
     setDraftFieldValues((current) => ({
       ...current,
       [buildDraftFieldKey('project', index, 'highlights', locale)]: value,
-    }));
+    }))
 
     updateResumeDraft((draft) => {
       draft.projects[index].highlights = mergeLocalizedLines(
         draft.projects[index].highlights,
         locale,
         value,
-      );
-    });
+      )
+    })
   }
 
   function updateProjectTechnologies(index: number, value: string) {
     setDraftFieldValues((current) => ({
       ...current,
       [buildDraftFieldKey('project', index, 'technologies')]: value,
-    }));
+    }))
 
     updateResumeDraft((draft) => {
-      draft.projects[index].technologies = parseCommaSeparatedValues(value);
-    });
+      draft.projects[index].technologies = parseCommaSeparatedValues(value)
+    })
   }
 
   function updateProjectLinkField(
@@ -813,89 +802,91 @@ export function ResumeDraftEditorPanel({
   ) {
     updateResumeDraft((draft) => {
       if (field === 'url') {
-        draft.projects[projectIndex].links[linkIndex].url = value;
-        return;
+        draft.projects[projectIndex].links[linkIndex].url = value
+        return
       }
 
-      draft.projects[projectIndex].links[linkIndex].label[locale ?? 'zh'] = value;
-    });
+      draft.projects[projectIndex].links[linkIndex].label[locale ?? 'zh'] = value
+    })
   }
 
   function addProjectLink(projectIndex: number) {
     updateResumeDraft((draft) => {
-      draft.projects[projectIndex].links.push(createEmptyProfileLink());
-    });
+      draft.projects[projectIndex].links.push(createEmptyProfileLink())
+    })
   }
 
   function removeProjectLink(projectIndex: number, linkIndex: number) {
     updateResumeDraft((draft) => {
-      draft.projects[projectIndex].links.splice(linkIndex, 1);
-    });
+      draft.projects[projectIndex].links.splice(linkIndex, 1)
+    })
   }
 
   function addProject() {
-    updateResumeDraft((draft) => {
-      draft.projects.push(createEmptyProject());
-    }, { syncDraftFields: true });
+    updateResumeDraft(
+      (draft) => {
+        draft.projects.push(createEmptyProject())
+      },
+      { syncDraftFields: true },
+    )
     updateSortableCollection('projects', (currentIds) => [
       ...currentIds,
       nextSortableId('projects'),
-    ]);
+    ])
   }
 
   function removeProject(index: number) {
-    updateResumeDraft((draft) => {
-      draft.projects.splice(index, 1);
-    }, { syncDraftFields: true });
+    updateResumeDraft(
+      (draft) => {
+        draft.projects.splice(index, 1)
+      },
+      { syncDraftFields: true },
+    )
     updateSortableCollection('projects', (currentIds) =>
       currentIds.filter((_, currentIndex) => currentIndex !== index),
-    );
+    )
   }
 
-  function updateSkillLocalizedField(
-    index: number,
-    locale: 'zh' | 'en',
-    value: string,
-  ) {
+  function updateSkillLocalizedField(index: number, locale: 'zh' | 'en', value: string) {
     updateResumeDraft((draft) => {
-      draft.skills[index].name[locale] = value;
-    });
+      draft.skills[index].name[locale] = value
+    })
   }
 
   function updateSkillKeywords(index: number, value: string) {
     setDraftFieldValues((current) => ({
       ...current,
       [buildDraftFieldKey('skill', index, 'keywords')]: value,
-    }));
+    }))
 
     updateResumeDraft((draft) => {
-      draft.skills[index].keywords = parseLineSeparatedValues(value);
-    });
+      draft.skills[index].keywords = parseLineSeparatedValues(value)
+    })
   }
 
   function addSkillGroup() {
     updateResumeDraft(
       (draft) => {
-        draft.skills.push(createEmptySkillGroup());
+        draft.skills.push(createEmptySkillGroup())
       },
       { syncDraftFields: true },
-    );
+    )
     updateSortableCollection('skills', (currentIds) => [
       ...currentIds,
       nextSortableId('skills'),
-    ]);
+    ])
   }
 
   function removeSkillGroup(index: number) {
     updateResumeDraft(
       (draft) => {
-        draft.skills.splice(index, 1);
+        draft.skills.splice(index, 1)
       },
       { syncDraftFields: true },
-    );
+    )
     updateSortableCollection('skills', (currentIds) =>
       currentIds.filter((_, currentIndex) => currentIndex !== index),
-    );
+    )
   }
 
   function updateHighlightLocalizedField(
@@ -905,62 +896,60 @@ export function ResumeDraftEditorPanel({
     value: string,
   ) {
     updateResumeDraft((draft) => {
-      draft.highlights[index][field][locale] = value;
-    });
+      draft.highlights[index][field][locale] = value
+    })
   }
 
   function addHighlight() {
     updateResumeDraft((draft) => {
-      draft.highlights.push(createEmptyHighlight());
-    });
+      draft.highlights.push(createEmptyHighlight())
+    })
     updateSortableCollection('highlights', (currentIds) => [
       ...currentIds,
       nextSortableId('highlights'),
-    ]);
+    ])
   }
 
   function removeHighlight(index: number) {
     updateResumeDraft((draft) => {
-      draft.highlights.splice(index, 1);
-    });
+      draft.highlights.splice(index, 1)
+    })
     updateSortableCollection('highlights', (currentIds) =>
       currentIds.filter((_, currentIndex) => currentIndex !== index),
-    );
+    )
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+    event.preventDefault()
 
     if (!draftSnapshot || !resumeDraft) {
-      return;
+      return
     }
 
-    setPendingSave(true);
-    setErrorMessage(null);
-    setFeedbackMessage(null);
+    setPendingSave(true)
+    setErrorMessage(null)
+    setFeedbackMessage(null)
 
     try {
       const nextSnapshot = await saveDraft({
         apiBaseUrl,
         accessToken,
         resume: cloneResume(resumeDraft),
-      });
+      })
 
       invalidateDraftResumeResources({
         accessToken,
         apiBaseUrl,
-      });
-      setDraftSnapshot(nextSnapshot);
-      setResumeDraft(cloneResume(nextSnapshot.resume));
-      setDraftFieldValues(buildDraftFieldValues(nextSnapshot.resume));
-      replaceSortableCollections(nextSnapshot.resume);
-      setFeedbackMessage('草稿已保存。公开站内容不会自动变化，仍需手动发布。');
+      })
+      setDraftSnapshot(nextSnapshot)
+      setResumeDraft(cloneResume(nextSnapshot.resume))
+      setDraftFieldValues(buildDraftFieldValues(nextSnapshot.resume))
+      replaceSortableCollections(nextSnapshot.resume)
+      setFeedbackMessage('草稿已保存。公开站内容不会自动变化，仍需手动发布。')
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : '草稿保存失败，请稍后重试',
-      );
+      setErrorMessage(error instanceof Error ? error.message : '草稿保存失败，请稍后重试')
     } finally {
-      setPendingSave(false);
+      setPendingSave(false)
     }
   }
 
@@ -978,16 +967,19 @@ export function ResumeDraftEditorPanel({
           </div>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
     <Card className="border border-zinc-200/70 dark:border-zinc-800">
       <CardHeader className="flex flex-col items-start gap-1.5 px-4 py-4 sm:px-5 md:gap-2">
         <p className="eyebrow">草稿编辑</p>
-        <CardTitle className="text-[1.2rem] sm:text-[1.35rem]">完整标准简历模块编辑</CardTitle>
+        <CardTitle className="text-[1.2rem] sm:text-[1.35rem]">
+          完整标准简历模块编辑
+        </CardTitle>
         <CardDescription className="text-sm leading-6">
-          当前后台已按标准简历模型接通基础信息、教育、工作、项目、技能与亮点编辑，并改成“中文主编辑 + 英文翻译工作区”的维护方式，保存后仍需手动发布。
+          当前后台已按标准简历模型接通基础信息、教育、工作、项目、技能与亮点编辑，并改成“中文主编辑
+          + 英文翻译工作区”的维护方式，保存后仍需手动发布。
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3 px-4 pb-4 sm:px-5 md:gap-4">
@@ -998,7 +990,9 @@ export function ResumeDraftEditorPanel({
         ) : null}
 
         {status === 'ready' && resumeDraft && draftSnapshot ? (
-          <form className="grid gap-3 md:gap-4" onSubmit={(event) => void handleSubmit(event)}>
+          <form
+            className="grid gap-3 md:gap-4"
+            onSubmit={(event) => void handleSubmit(event)}>
             <div className="flex flex-col gap-2.5 rounded-[20px] border border-zinc-200/70 bg-zinc-50/90 px-4 py-3.5 dark:border-zinc-800 dark:bg-zinc-900/60 md:flex-row md:items-center md:justify-between md:gap-3 md:rounded-[24px] md:px-5 md:py-4">
               <div className="space-y-0.5 md:space-y-1">
                 <strong className="block text-sm text-zinc-950 dark:text-white">
@@ -1030,16 +1024,14 @@ export function ResumeDraftEditorPanel({
               <div
                 aria-label="编辑模式切换"
                 className="inline-flex w-full rounded-full border border-zinc-200/80 bg-zinc-50 p-1 dark:border-zinc-800 dark:bg-zinc-900/70 md:w-auto"
-                role="tablist"
-              >
+                role="tablist">
                 <Button
                   aria-selected={editorLocaleMode === 'zh'}
                   className="h-9 flex-1 px-3 text-sm md:h-10 md:flex-none"
                   onClick={() => setEditorLocaleMode('zh')}
                   size="sm"
                   type="button"
-                  variant={editorLocaleMode === 'zh' ? 'primary' : 'ghost'}
-                >
+                  variant={editorLocaleMode === 'zh' ? 'primary' : 'ghost'}>
                   中文主编辑
                 </Button>
                 <Button
@@ -1048,8 +1040,7 @@ export function ResumeDraftEditorPanel({
                   onClick={() => setEditorLocaleMode('en')}
                   size="sm"
                   type="button"
-                  variant={editorLocaleMode === 'en' ? 'primary' : 'ghost'}
-                >
+                  variant={editorLocaleMode === 'en' ? 'primary' : 'ghost'}>
                   英文翻译工作区
                 </Button>
               </div>
@@ -1191,13 +1182,12 @@ export function ResumeDraftEditorPanel({
               isDisabled={pendingSave}
               size="md"
               type="submit"
-              variant="primary"
-            >
+              variant="primary">
               {pendingSave ? '保存中...' : '保存当前草稿'}
             </Button>
           </form>
         ) : null}
       </CardContent>
     </Card>
-  );
+  )
 }

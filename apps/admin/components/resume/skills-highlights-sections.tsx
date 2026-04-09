@@ -1,19 +1,19 @@
-'use client';
+'use client'
 
-import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core';
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { Input, TextArea } from '@heroui/react';
-import type { ComponentProps, ReactNode } from 'react';
+import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core'
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { TextArea } from '@heroui/react'
+import type { ComponentProps, ReactNode } from 'react'
 
-import type { StandardResume } from '../../lib/resume-types';
+import type { StandardResume } from '../../lib/resume-types'
 import {
   buildDraftFieldKey,
   formatLineSeparatedValues,
   type DraftFieldValues,
   type EditorLocaleMode,
   type SortableCollectionState,
-} from './draft-editor-helpers';
+} from './draft-editor-helpers'
 import {
   buildEntryActions,
   EditorEntry,
@@ -23,21 +23,21 @@ import {
   PlusIcon,
   SortableItemShell,
   TrashIcon,
-} from './editor-primitives';
+} from './editor-primitives'
 
 interface SkillsSectionProps {
-  draftFieldValues: DraftFieldValues;
-  editorLocaleMode: EditorLocaleMode;
-  isTranslationMode: boolean;
-  resumeDraft: StandardResume;
-  sensors: ComponentProps<typeof DndContext>['sensors'];
-  sortableCollections: SortableCollectionState;
-  translationAction?: ReactNode;
-  addSkillGroup: () => void;
-  handleDragEnd: (event: DragEndEvent) => void;
-  removeSkillGroup: (index: number) => void;
-  updateSkillKeywords: (index: number, value: string) => void;
-  updateSkillLocalizedField: (index: number, locale: 'zh' | 'en', value: string) => void;
+  draftFieldValues: DraftFieldValues
+  editorLocaleMode: EditorLocaleMode
+  isTranslationMode: boolean
+  resumeDraft: StandardResume
+  sensors: ComponentProps<typeof DndContext>['sensors']
+  sortableCollections: SortableCollectionState
+  translationAction?: ReactNode
+  addSkillGroup: () => void
+  handleDragEnd: (event: DragEndEvent) => void
+  removeSkillGroup: (index: number) => void
+  updateSkillKeywords: (index: number, value: string) => void
+  updateSkillLocalizedField: (index: number, locale: 'zh' | 'en', value: string) => void
 }
 
 export function SkillsSection({
@@ -57,15 +57,15 @@ export function SkillsSection({
   return (
     <EditorSection
       action={
-        isTranslationMode
-          ? translationAction
-          : (
-            <IconActionButton
-              icon={<PlusIcon />}
-              label="添加技能组"
-              onClick={addSkillGroup}
-            />
-            )
+        isTranslationMode ? (
+          translationAction
+        ) : (
+          <IconActionButton
+            icon={<PlusIcon />}
+            label="添加技能组"
+            onClick={addSkillGroup}
+          />
+        )
       }
       count={resumeDraft.skills.length}
       description={
@@ -73,8 +73,7 @@ export function SkillsSection({
           ? '英文翻译工作区只维护技能组名称。关键词仍按当前原始技术名在中文主编辑中维护。'
           : '按技能组维护关键词，公开页会按组展示能力结构。'
       }
-      title="技能组"
-    >
+      title="技能组">
       {resumeDraft.skills.length === 0 ? (
         <div className="status-box">
           <strong>当前还没有技能组</strong>
@@ -86,20 +85,17 @@ export function SkillsSection({
         collisionDetection={closestCenter}
         modifiers={[restrictToVerticalAxis]}
         onDragEnd={handleDragEnd}
-        sensors={sensors}
-      >
+        sensors={sensors}>
         <SortableContext
           items={sortableCollections.skills}
-          strategy={verticalListSortingStrategy}
-        >
+          strategy={verticalListSortingStrategy}>
           <div className="grid gap-4">
             {resumeDraft.skills.map((skill, index) => (
               <SortableItemShell
                 disabled={isTranslationMode}
                 dragHandleLabel={`拖拽排序技能组 ${index + 1}`}
                 id={sortableCollections.skills[index] ?? `skill-${index}`}
-                key={sortableCollections.skills[index] ?? `skill-${index}`}
-              >
+                key={sortableCollections.skills[index] ?? `skill-${index}`}>
                 {({ dragHandle }) => (
                   <EditorEntry
                     action={buildEntryActions({
@@ -121,8 +117,7 @@ export function SkillsSection({
                     summary={skill.name.zh || skill.name.en || '未命名技能组'}
                     title={`技能组 ${index + 1}`}
                     toggleLabel={`技能组 ${index + 1} 条目开关`}
-                    variant="embedded"
-                  >
+                    variant="embedded">
                     <LocalizedEditorField
                       label={`技能组 ${index + 1} 名称`}
                       localeMode={editorLocaleMode}
@@ -138,11 +133,14 @@ export function SkillsSection({
                         <span>{`技能组 ${index + 1} 关键词（每行一条）`}</span>
                         <TextArea
                           fullWidth
-                          onChange={(event) => updateSkillKeywords(index, event.target.value)}
+                          onChange={(event) =>
+                            updateSkillKeywords(index, event.target.value)
+                          }
                           rows={5}
                           value={
-                            draftFieldValues[buildDraftFieldKey('skill', index, 'keywords')] ??
-                            formatLineSeparatedValues(skill.keywords)
+                            draftFieldValues[
+                              buildDraftFieldKey('skill', index, 'keywords')
+                            ] ?? formatLineSeparatedValues(skill.keywords)
                           }
                           variant="secondary"
                         />
@@ -156,25 +154,25 @@ export function SkillsSection({
         </SortableContext>
       </DndContext>
     </EditorSection>
-  );
+  )
 }
 
 interface HighlightsSectionProps {
-  editorLocaleMode: EditorLocaleMode;
-  isTranslationMode: boolean;
-  resumeDraft: StandardResume;
-  sensors: ComponentProps<typeof DndContext>['sensors'];
-  sortableCollections: SortableCollectionState;
-  translationAction?: ReactNode;
-  addHighlight: () => void;
-  handleDragEnd: (event: DragEndEvent) => void;
-  removeHighlight: (index: number) => void;
+  editorLocaleMode: EditorLocaleMode
+  isTranslationMode: boolean
+  resumeDraft: StandardResume
+  sensors: ComponentProps<typeof DndContext>['sensors']
+  sortableCollections: SortableCollectionState
+  translationAction?: ReactNode
+  addHighlight: () => void
+  handleDragEnd: (event: DragEndEvent) => void
+  removeHighlight: (index: number) => void
   updateHighlightLocalizedField: (
     index: number,
     field: 'title' | 'description',
     locale: 'zh' | 'en',
     value: string,
-  ) => void;
+  ) => void
 }
 
 export function HighlightsSection({
@@ -192,15 +190,11 @@ export function HighlightsSection({
   return (
     <EditorSection
       action={
-        isTranslationMode
-          ? translationAction
-          : (
-            <IconActionButton
-              icon={<PlusIcon />}
-              label="添加亮点"
-              onClick={addHighlight}
-            />
-            )
+        isTranslationMode ? (
+          translationAction
+        ) : (
+          <IconActionButton icon={<PlusIcon />} label="添加亮点" onClick={addHighlight} />
+        )
       }
       count={resumeDraft.highlights.length}
       description={
@@ -208,8 +202,7 @@ export function HighlightsSection({
           ? '英文翻译工作区集中维护亮点标题和描述，方便后续对接 AI / 工具翻译。'
           : '维护个人优势、开源、团队协作等补充亮点，丰富公开页结尾信息。'
       }
-      title="亮点"
-    >
+      title="亮点">
       {resumeDraft.highlights.length === 0 ? (
         <div className="status-box">
           <strong>当前还没有亮点</strong>
@@ -221,20 +214,17 @@ export function HighlightsSection({
         collisionDetection={closestCenter}
         modifiers={[restrictToVerticalAxis]}
         onDragEnd={handleDragEnd}
-        sensors={sensors}
-      >
+        sensors={sensors}>
         <SortableContext
           items={sortableCollections.highlights}
-          strategy={verticalListSortingStrategy}
-        >
+          strategy={verticalListSortingStrategy}>
           <div className="grid gap-4">
             {resumeDraft.highlights.map((highlight, index) => (
               <SortableItemShell
                 disabled={isTranslationMode}
                 dragHandleLabel={`拖拽排序亮点 ${index + 1}`}
                 id={sortableCollections.highlights[index] ?? `highlight-${index}`}
-                key={sortableCollections.highlights[index] ?? `highlight-${index}`}
-              >
+                key={sortableCollections.highlights[index] ?? `highlight-${index}`}>
                 {({ dragHandle }) => (
                   <EditorEntry
                     action={buildEntryActions({
@@ -256,13 +246,17 @@ export function HighlightsSection({
                     summary={highlight.title.zh || highlight.title.en || '未命名亮点'}
                     title={`亮点 ${index + 1}`}
                     toggleLabel={`亮点 ${index + 1} 条目开关`}
-                    variant="embedded"
-                  >
+                    variant="embedded">
                     <LocalizedEditorField
                       label={`亮点 ${index + 1} 标题`}
                       localeMode={editorLocaleMode}
                       onChange={(value) =>
-                        updateHighlightLocalizedField(index, 'title', editorLocaleMode, value)
+                        updateHighlightLocalizedField(
+                          index,
+                          'title',
+                          editorLocaleMode,
+                          value,
+                        )
                       }
                       sourceValue={highlight.title.zh}
                       value={highlight.title[editorLocaleMode]}
@@ -292,5 +286,5 @@ export function HighlightsSection({
         </SortableContext>
       </DndContext>
     </EditorSection>
-  );
+  )
 }

@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
   content: ['./index.html', './src/**/*.{ts,tsx,vue}'],
   darkMode: 'class',
   theme: {
@@ -16,7 +16,7 @@ export default {
     },
     extend: {
       animation: {
-        'singerShake': 'singerShake linear infinite',
+        singerShake: 'singerShake linear infinite',
       },
       keyframes: {
         circleLoadRight: {

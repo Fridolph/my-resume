@@ -7,7 +7,8 @@
     "dev": "next dev --port 5555",
     "build": "next build",
     "start": "next start --port 5555",
-    "lint": "tsc --noEmit",
+    "lint": "oxlint --config ../../.oxlintrc.json --ignore-path ../../.eslintignore .",
+    "format:check": "oxfmt --config ../../.oxfmtrc.json --ignore-path ../../.prettierignore --check .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
