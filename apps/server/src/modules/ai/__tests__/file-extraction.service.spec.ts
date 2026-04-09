@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
-import { Document, Packer, Paragraph } from 'docx';
-import PDFDocument from 'pdfkit';
+import { describe, expect, it, vi } from 'vitest'
+import { Document, Packer, Paragraph } from 'docx'
+import PDFDocument from 'pdfkit'
 
 vi.mock('pdf-parse', () => ({
   PDFParse: vi.fn().mockImplementation(() => ({
@@ -9,28 +9,26 @@ vi.mock('pdf-parse', () => ({
     }),
     destroy: vi.fn().mockResolvedValue(undefined),
   })),
-}));
+}))
 
-import { FileExtractionService } from '../file-extraction.service';
+import { FileExtractionService } from '../file-extraction.service'
 
 function createPdfBuffer(text: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    const document = new PDFDocument();
-    const chunks: Buffer[] = [];
+    const document = new PDFDocument()
+    const chunks: Buffer[] = []
 
     document.on('data', (chunk: Buffer | Uint8Array | string) => {
-      chunks.push(
-        Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk as Uint8Array),
-      );
-    });
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk as Uint8Array))
+    })
     document.on('end', () => {
-      resolve(Buffer.concat(chunks));
-    });
-    document.on('error', reject);
+      resolve(Buffer.concat(chunks))
+    })
+    document.on('error', reject)
 
-    document.text(text);
-    document.end();
-  });
+    document.text(text)
+    document.end()
+  })
 }
 
 async function createDocxBuffer(text: string): Promise<Buffer> {
@@ -40,13 +38,13 @@ async function createDocxBuffer(text: string): Promise<Buffer> {
         children: [new Paragraph(text)],
       },
     ],
-  });
+  })
 
-  return Buffer.from(await Packer.toBuffer(document));
+  return Buffer.from(await Packer.toBuffer(document))
 }
 
 describe('FileExtractionService', () => {
-  const service = new FileExtractionService();
+  const service = new FileExtractionService()
 
   it('should extract plain text from txt files', async () => {
     const result = await service.extractText({
@@ -54,11 +52,11 @@ describe('FileExtractionService', () => {
       originalname: 'resume.txt',
       mimetype: 'text/plain',
       size: 15,
-    });
+    })
 
-    expect(result.fileType).toBe('txt');
-    expect(result.text).toContain('hello txt world');
-  });
+    expect(result.fileType).toBe('txt')
+    expect(result.text).toContain('hello txt world')
+  })
 
   it('should extract markdown source as plain text content', async () => {
     const result = await service.extractText({
@@ -66,41 +64,40 @@ describe('FileExtractionService', () => {
       originalname: 'resume.md',
       mimetype: 'text/markdown',
       size: 32,
-    });
+    })
 
-    expect(result.fileType).toBe('md');
-    expect(result.text).toContain('# Resume');
-    expect(result.text).toContain('NestJS');
-  });
+    expect(result.fileType).toBe('md')
+    expect(result.text).toContain('# Resume')
+    expect(result.text).toContain('NestJS')
+  })
 
   it('should extract text from pdf files', async () => {
-    const buffer = await createPdfBuffer('PDF resume content');
+    const buffer = await createPdfBuffer('PDF resume content')
 
     const result = await service.extractText({
       buffer,
       originalname: 'resume.pdf',
       mimetype: 'application/pdf',
       size: buffer.byteLength,
-    });
+    })
 
-    expect(result.fileType).toBe('pdf');
-    expect(result.text).toContain('PDF resume content');
-  });
+    expect(result.fileType).toBe('pdf')
+    expect(result.text).toContain('PDF resume content')
+  })
 
   it('should extract text from docx files', async () => {
-    const buffer = await createDocxBuffer('DOCX resume content');
+    const buffer = await createDocxBuffer('DOCX resume content')
 
     const result = await service.extractText({
       buffer,
       originalname: 'resume.docx',
-      mimetype:
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      mimetype: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       size: buffer.byteLength,
-    });
+    })
 
-    expect(result.fileType).toBe('docx');
-    expect(result.text).toContain('DOCX resume content');
-  });
+    expect(result.fileType).toBe('docx')
+    expect(result.text).toContain('DOCX resume content')
+  })
 
   it('should reject unsupported file types', async () => {
     await expect(
@@ -110,6 +107,6 @@ describe('FileExtractionService', () => {
         mimetype: 'text/csv',
         size: 4,
       }),
-    ).rejects.toThrow('Unsupported file type: csv');
-  });
-});
+    ).rejects.toThrow('Unsupported file type: csv')
+  })
+})

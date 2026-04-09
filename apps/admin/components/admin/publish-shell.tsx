@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import {
   Card,
@@ -7,68 +7,66 @@ import {
   CardHeader,
   CardTitle,
   Chip,
-} from '@heroui/react';
-import { useState } from 'react';
+} from '@heroui/react'
+import { useState } from 'react'
 
-import { ExportEntryPanel } from '../publish/export-entry-panel';
-import { RoleActionPanel } from '../shared/role-action-panel';
-import { DEFAULT_API_BASE_URL } from '../../lib/env';
-import { postProtectedAction, publishResume } from '../../lib/auth-api';
-import { useAdminSession } from '../../lib/admin-session';
+import { ExportEntryPanel } from '../publish/export-entry-panel'
+import { RoleActionPanel } from '../shared/role-action-panel'
+import { DEFAULT_API_BASE_URL } from '../../lib/env'
+import { postProtectedAction, publishResume } from '../../lib/auth-api'
+import { useAdminSession } from '../../lib/admin-session'
 
 export function AdminPublishShell() {
-  const { accessToken, currentUser, status } = useAdminSession();
+  const { accessToken, currentUser, status } = useAdminSession()
   const [pendingAction, setPendingAction] = useState<'publish' | 'ai-analysis' | null>(
     null,
-  );
-  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  )
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null)
 
   if (status !== 'ready' || !currentUser || !accessToken) {
-    return null;
+    return null
   }
 
-  const sessionToken = accessToken;
+  const sessionToken = accessToken
 
   async function handlePublish() {
-    setPendingAction('publish');
-    setFeedbackMessage(null);
+    setPendingAction('publish')
+    setFeedbackMessage(null)
 
     try {
       const result = await publishResume({
         apiBaseUrl: DEFAULT_API_BASE_URL,
         accessToken: sessionToken,
-      });
+      })
 
       setFeedbackMessage(
         `简历已发布：${result.resume.meta.slug}，请刷新公开站查看最新内容。`,
-      );
+      )
     } catch (error) {
-      setFeedbackMessage(
-        error instanceof Error ? error.message : '发布失败，请稍后重试',
-      );
+      setFeedbackMessage(error instanceof Error ? error.message : '发布失败，请稍后重试')
     } finally {
-      setPendingAction(null);
+      setPendingAction(null)
     }
   }
 
   async function handleAiAction() {
-    setPendingAction('ai-analysis');
-    setFeedbackMessage(null);
+    setPendingAction('ai-analysis')
+    setFeedbackMessage(null)
 
     try {
       const result = await postProtectedAction({
         apiBaseUrl: DEFAULT_API_BASE_URL,
         accessToken: sessionToken,
         pathname: '/auth/demo/ai-analysis',
-      });
+      })
 
-      setFeedbackMessage(result.message);
+      setFeedbackMessage(result.message)
     } catch (error) {
       setFeedbackMessage(
         error instanceof Error ? error.message : '当前角色无权执行该操作',
-      );
+      )
     } finally {
-      setPendingAction(null);
+      setPendingAction(null)
     }
   }
 
@@ -78,19 +76,16 @@ export function AdminPublishShell() {
         <Card className="border border-zinc-200/70 dark:border-zinc-800">
           <CardHeader className="flex flex-col items-start gap-3">
             <div className="flex flex-wrap gap-2">
-              <Chip size="sm">
-                当前角色：{currentUser.role}
-              </Chip>
-              <Chip size="sm">
-                导出语言：ZH / EN
-              </Chip>
+              <Chip size="sm">当前角色：{currentUser.role}</Chip>
+              <Chip size="sm">导出语言：ZH / EN</Chip>
             </div>
             <div className="space-y-2">
               <CardTitle className="text-3xl font-semibold tracking-tight">
                 发布与导出
               </CardTitle>
               <CardDescription className="max-w-2xl leading-7">
-                这一页集中处理角色动作、手动发布和导出下载。这样内容编辑页可以保持更纯粹，AI 工作台也不会混入发布职责。
+                这一页集中处理角色动作、手动发布和导出下载。这样内容编辑页可以保持更纯粹，AI
+                工作台也不会混入发布职责。
               </CardDescription>
             </div>
           </CardHeader>
@@ -154,5 +149,5 @@ export function AdminPublishShell() {
         </div>
       </section>
     </div>
-  );
+  )
 }

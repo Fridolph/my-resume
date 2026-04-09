@@ -1,27 +1,24 @@
-import { ServiceUnavailableException } from '@nestjs/common';
-import { mkdtempSync, rmSync } from 'fs';
-import { tmpdir } from 'os';
-import { join } from 'path';
+import { ServiceUnavailableException } from '@nestjs/common'
+import { mkdtempSync, rmSync } from 'fs'
+import { tmpdir } from 'os'
+import { join } from 'path'
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest'
 
-import {
-  createDatabase,
-  createDatabaseClient,
-} from '../../../database/database.client';
-import type { DatabaseClient } from '../../../database/database.client';
-import { SQLITE_LOCKED_ERROR_MESSAGE } from '../../../database/sqlite-lock';
-import { ResumePublicationRepository } from '../resume-publication.repository';
-import { createExampleStandardResume } from '../domain/standard-resume';
-import { ResumePublicationService } from '../resume-publication.service';
+import { createDatabase, createDatabaseClient } from '../../../database/database.client'
+import type { DatabaseClient } from '../../../database/database.client'
+import { SQLITE_LOCKED_ERROR_MESSAGE } from '../../../database/sqlite-lock'
+import { ResumePublicationRepository } from '../resume-publication.repository'
+import { createExampleStandardResume } from '../domain/standard-resume'
+import { ResumePublicationService } from '../resume-publication.service'
 
 interface ServiceHarness {
-  client: DatabaseClient;
-  databaseFilePath: string;
-  service: ResumePublicationService;
+  client: DatabaseClient
+  databaseFilePath: string
+  service: ResumePublicationService
 }
 
-const tempDirectories: string[] = [];
+const tempDirectories: string[] = []
 
 async function prepareTables(client: DatabaseClient) {
   await client.execute(`
@@ -31,7 +28,7 @@ async function prepareTables(client: DatabaseClient) {
       resume_json text NOT NULL,
       updated_at integer NOT NULL
     );
-  `);
+  `)
 
   await client.execute(`
     CREATE TABLE IF NOT EXISTS resume_publication_snapshots (
@@ -41,44 +38,39 @@ async function prepareTables(client: DatabaseClient) {
       resume_json text NOT NULL,
       published_at integer NOT NULL
     );
-  `);
+  `)
 
   await client.execute(`
     CREATE INDEX IF NOT EXISTS resume_publication_snapshots_resume_key_published_at_idx
     ON resume_publication_snapshots (resume_key, published_at);
-  `);
+  `)
 }
 
-async function createServiceHarness(
-  databaseFilePath?: string,
-): Promise<ServiceHarness> {
+async function createServiceHarness(databaseFilePath?: string): Promise<ServiceHarness> {
   const nextDatabaseFilePath =
     databaseFilePath ??
-    join(
-      mkdtempSync(join(tmpdir(), 'my-resume-publication-')),
-      'resume.db',
-    );
+    join(mkdtempSync(join(tmpdir(), 'my-resume-publication-')), 'resume.db')
 
   if (!databaseFilePath) {
-    tempDirectories.push(nextDatabaseFilePath.replace(/\/resume\.db$/, ''));
+    tempDirectories.push(nextDatabaseFilePath.replace(/\/resume\.db$/, ''))
   }
 
   const client = createDatabaseClient({
     url: `file:${nextDatabaseFilePath}`,
     dialect: 'libsql',
     isRemote: false,
-  });
-  await prepareTables(client);
+  })
+  await prepareTables(client)
 
-  const database = createDatabase(client);
-  const repository = new ResumePublicationRepository(database);
-  const service = new ResumePublicationService(repository);
+  const database = createDatabase(client)
+  const repository = new ResumePublicationRepository(database)
+  const service = new ResumePublicationService(repository)
 
   return {
     client,
     databaseFilePath: nextDatabaseFilePath,
     service,
-  };
+  }
 }
 
 describe('ResumePublicationService', () => {
@@ -87,105 +79,105 @@ describe('ResumePublicationService', () => {
       rmSync(directory, {
         force: true,
         recursive: true,
-      });
+      })
     }
 
-    tempDirectories.length = 0;
-  });
+    tempDirectories.length = 0
+  })
 
   it('should keep draft editable before publishing', async () => {
-    const { client, service } = await createServiceHarness();
-    const nextDraft = createExampleStandardResume();
+    const { client, service } = await createServiceHarness()
+    const nextDraft = createExampleStandardResume()
 
     nextDraft.profile.headline = {
       zh: '资深全栈工程师',
       en: 'Senior Full-Stack Engineer',
-    };
+    }
 
-    await service.updateDraft(nextDraft);
+    await service.updateDraft(nextDraft)
 
     expect((await service.getDraft()).resume.profile.headline).toEqual({
       zh: '资深全栈工程师',
       en: 'Senior Full-Stack Engineer',
-    });
-    expect(await service.getPublished()).toBeNull();
+    })
+    expect(await service.getPublished()).toBeNull()
 
-    client.close();
-  });
+    client.close()
+  })
 
   it('should publish the current draft snapshot', async () => {
-    const { client, service } = await createServiceHarness();
-    const draft = createExampleStandardResume();
+    const { client, service } = await createServiceHarness()
+    const draft = createExampleStandardResume()
 
     draft.profile.headline = {
       zh: '可发布版本',
       en: 'Ready to Publish',
-    };
+    }
 
-    await service.updateDraft(draft);
+    await service.updateDraft(draft)
 
-    const published = await service.publish();
+    const published = await service.publish()
 
-    expect(published.status).toBe('published');
+    expect(published.status).toBe('published')
     expect(published.resume.profile.headline).toEqual({
       zh: '可发布版本',
       en: 'Ready to Publish',
-    });
-    expect(published.publishedAt).toEqual(expect.any(String));
+    })
+    expect(published.publishedAt).toEqual(expect.any(String))
 
-    client.close();
-  });
+    client.close()
+  })
 
   it('should keep published content stable after draft changes until republish', async () => {
-    const { client, service } = await createServiceHarness();
-    const firstDraft = createExampleStandardResume();
+    const { client, service } = await createServiceHarness()
+    const firstDraft = createExampleStandardResume()
 
     firstDraft.profile.headline = {
       zh: '第一版',
       en: 'First Version',
-    };
+    }
 
-    await service.updateDraft(firstDraft);
-    await service.publish();
+    await service.updateDraft(firstDraft)
+    await service.publish()
 
-    const secondDraft = createExampleStandardResume();
+    const secondDraft = createExampleStandardResume()
     secondDraft.profile.headline = {
       zh: '第二版草稿',
       en: 'Second Draft',
-    };
+    }
 
-    await service.updateDraft(secondDraft);
+    await service.updateDraft(secondDraft)
 
     expect((await service.getDraft()).resume.profile.headline).toEqual({
       zh: '第二版草稿',
       en: 'Second Draft',
-    });
+    })
     expect((await service.getPublished())?.resume.profile.headline).toEqual({
       zh: '第一版',
       en: 'First Version',
-    });
+    })
 
-    client.close();
-  });
+    client.close()
+  })
 
   it('should build lightweight draft and published summaries without full module bodies', async () => {
-    const { client, service } = await createServiceHarness();
-    const draft = createExampleStandardResume();
+    const { client, service } = await createServiceHarness()
+    const draft = createExampleStandardResume()
 
     draft.profile.headline = {
       zh: '摘要标题',
       en: 'Summary Headline',
-    };
+    }
     draft.profile.summary = {
       zh: '摘要中文',
       en: 'Summary English',
-    };
+    }
 
-    await service.updateDraft(draft);
-    await service.publish();
+    await service.updateDraft(draft)
+    await service.publish()
 
-    const draftSummary = await service.getDraftSummary('zh');
-    const publishedSummary = await service.getPublishedSummary('en');
+    const draftSummary = await service.getDraftSummary('zh')
+    const publishedSummary = await service.getPublishedSummary('en')
 
     expect(draftSummary.resume).toEqual({
       meta: {
@@ -204,39 +196,37 @@ describe('ResumePublicationService', () => {
         skills: draft.skills.length,
         highlights: draft.highlights.length,
       },
-    });
-    expect(publishedSummary?.resume.meta.locale).toBe('en');
-    expect(publishedSummary?.resume.profile.headline).toBe('Summary Headline');
-    expect(publishedSummary?.resume.counts.projects).toBe(draft.projects.length);
-    expect(
-      'education' in (draftSummary.resume as Record<string, unknown>),
-    ).toBe(false);
+    })
+    expect(publishedSummary?.resume.meta.locale).toBe('en')
+    expect(publishedSummary?.resume.profile.headline).toBe('Summary Headline')
+    expect(publishedSummary?.resume.counts.projects).toBe(draft.projects.length)
+    expect('education' in (draftSummary.resume as Record<string, unknown>)).toBe(false)
 
-    client.close();
-  });
+    client.close()
+  })
 
   it('should publish edited module content only after manual publish', async () => {
-    const { client, service } = await createServiceHarness();
-    const initialDraft = createExampleStandardResume();
+    const { client, service } = await createServiceHarness()
+    const initialDraft = createExampleStandardResume()
 
-    await service.updateDraft(initialDraft);
-    await service.publish();
+    await service.updateDraft(initialDraft)
+    await service.publish()
 
-    const nextDraft = createExampleStandardResume();
+    const nextDraft = createExampleStandardResume()
 
-    nextDraft.education[0]!.schoolName = {
+    nextDraft.education[0].schoolName = {
       zh: '升级后的学校信息',
       en: 'Updated Education Entry',
-    };
-    nextDraft.experiences[0]!.companyName = {
+    }
+    nextDraft.experiences[0].companyName = {
       zh: '新的工作经历公司',
       en: 'Updated Experience Company',
-    };
-    nextDraft.projects[0]!.name = {
+    }
+    nextDraft.projects[0].name = {
       zh: '新的项目名称',
       en: 'Updated Project Name',
-    };
-    nextDraft.projects[0]!.links = [
+    }
+    nextDraft.projects[0].links = [
       {
         label: {
           zh: '在线演示',
@@ -245,12 +235,12 @@ describe('ResumePublicationService', () => {
         url: 'https://demo.example.com/resume-project',
         icon: 'ri:links-line',
       },
-    ];
-    nextDraft.skills[0]!.keywords = ['TypeScript', 'Next.js', 'NestJS'];
-    nextDraft.highlights[0]!.title = {
+    ]
+    nextDraft.skills[0].keywords = ['TypeScript', 'Next.js', 'NestJS']
+    nextDraft.highlights[0].title = {
       zh: '新的优势总结',
       en: 'Updated Highlight',
-    };
+    }
     nextDraft.profile.links = [
       {
         label: {
@@ -260,7 +250,7 @@ describe('ResumePublicationService', () => {
         url: 'https://portfolio.example.com',
         icon: 'ri:folder-open-line',
       },
-    ];
+    ]
     nextDraft.profile.interests = [
       {
         label: {
@@ -269,15 +259,15 @@ describe('ResumePublicationService', () => {
         },
         icon: 'ri:database-2-line',
       },
-    ];
+    ]
 
-    await service.updateDraft(nextDraft);
+    await service.updateDraft(nextDraft)
 
-    const publishedBeforeRepublish = await service.getPublished();
+    const publishedBeforeRepublish = await service.getPublished()
 
     expect(publishedBeforeRepublish?.resume.education[0]?.schoolName.zh).not.toBe(
       '升级后的学校信息',
-    );
+    )
     expect(publishedBeforeRepublish?.resume.projects[0]?.links).not.toEqual([
       {
         label: {
@@ -287,7 +277,7 @@ describe('ResumePublicationService', () => {
         url: 'https://demo.example.com/resume-project',
         icon: 'ri:links-line',
       },
-    ]);
+    ])
     expect(publishedBeforeRepublish?.resume.profile.links).not.toEqual([
       {
         label: {
@@ -297,13 +287,13 @@ describe('ResumePublicationService', () => {
         url: 'https://portfolio.example.com',
         icon: 'ri:folder-open-line',
       },
-    ]);
+    ])
 
-    const republished = await service.publish();
+    const republished = await service.publish()
 
-    expect(republished.resume.education[0]?.schoolName.zh).toBe('升级后的学校信息');
-    expect(republished.resume.experiences[0]?.companyName.zh).toBe('新的工作经历公司');
-    expect(republished.resume.projects[0]?.name.zh).toBe('新的项目名称');
+    expect(republished.resume.education[0]?.schoolName.zh).toBe('升级后的学校信息')
+    expect(republished.resume.experiences[0]?.companyName.zh).toBe('新的工作经历公司')
+    expect(republished.resume.projects[0]?.name.zh).toBe('新的项目名称')
     expect(republished.resume.projects[0]?.links).toEqual([
       {
         label: {
@@ -313,13 +303,13 @@ describe('ResumePublicationService', () => {
         url: 'https://demo.example.com/resume-project',
         icon: 'ri:links-line',
       },
-    ]);
+    ])
     expect(republished.resume.skills[0]?.keywords).toEqual([
       'TypeScript',
       'Next.js',
       'NestJS',
-    ]);
-    expect(republished.resume.highlights[0]?.title.zh).toBe('新的优势总结');
+    ])
+    expect(republished.resume.highlights[0]?.title.zh).toBe('新的优势总结')
     expect(republished.resume.profile.links).toEqual([
       {
         label: {
@@ -329,7 +319,7 @@ describe('ResumePublicationService', () => {
         url: 'https://portfolio.example.com',
         icon: 'ri:folder-open-line',
       },
-    ]);
+    ])
     expect(republished.resume.profile.interests).toEqual([
       {
         label: {
@@ -338,37 +328,39 @@ describe('ResumePublicationService', () => {
         },
         icon: 'ri:database-2-line',
       },
-    ]);
+    ])
 
-    client.close();
-  });
+    client.close()
+  })
 
   it('should keep draft and published data after recreating the service on the same database', async () => {
-    const firstHarness = await createServiceHarness();
-    const draft = createExampleStandardResume();
+    const firstHarness = await createServiceHarness()
+    const draft = createExampleStandardResume()
 
     draft.profile.headline = {
       zh: '持久化版本',
       en: 'Persistent Version',
-    };
+    }
 
-    await firstHarness.service.updateDraft(draft);
-    await firstHarness.service.publish();
-    firstHarness.client.close();
+    await firstHarness.service.updateDraft(draft)
+    await firstHarness.service.publish()
+    firstHarness.client.close()
 
-    const secondHarness = await createServiceHarness(firstHarness.databaseFilePath);
+    const secondHarness = await createServiceHarness(firstHarness.databaseFilePath)
 
     expect((await secondHarness.service.getDraft()).resume.profile.headline).toEqual({
       zh: '持久化版本',
       en: 'Persistent Version',
-    });
-    expect((await secondHarness.service.getPublished())?.resume.profile.headline).toEqual({
-      zh: '持久化版本',
-      en: 'Persistent Version',
-    });
+    })
+    expect((await secondHarness.service.getPublished())?.resume.profile.headline).toEqual(
+      {
+        zh: '持久化版本',
+        en: 'Persistent Version',
+      },
+    )
 
-    secondHarness.client.close();
-  });
+    secondHarness.client.close()
+  })
 
   it('should normalize legacy draft and published snapshots when hero config is missing', async () => {
     const service = new ResumePublicationService({
@@ -379,21 +371,21 @@ describe('ResumePublicationService', () => {
           profile: Omit<
             ReturnType<typeof createExampleStandardResume>['profile'],
             'hero'
-          > & { hero?: undefined };
-        };
+          > & { hero?: undefined }
+        }
 
-        delete legacyDraft.profile.hero;
+        delete legacyDraft.profile.hero
 
         return {
           resumeJson: legacyDraft,
           updatedAt: new Date('2026-04-06T00:00:00.000Z'),
-        };
+        }
       },
       saveDraft: async () => {
-        throw new Error('not used');
+        throw new Error('not used')
       },
       createPublishedSnapshot: async () => {
-        throw new Error('not used');
+        throw new Error('not used')
       },
       findLatestPublishedSnapshot: async () => {
         const legacyPublished = createExampleStandardResume() as ReturnType<
@@ -402,10 +394,10 @@ describe('ResumePublicationService', () => {
           profile: Omit<
             ReturnType<typeof createExampleStandardResume>['profile'],
             'hero'
-          > & { hero?: undefined };
-        };
+          > & { hero?: undefined }
+        }
 
-        delete legacyPublished.profile.hero;
+        delete legacyPublished.profile.hero
 
         return {
           id: 'published-legacy',
@@ -413,20 +405,20 @@ describe('ResumePublicationService', () => {
           schemaVersion: 1,
           resumeJson: legacyPublished,
           publishedAt: new Date('2026-04-06T00:00:00.000Z'),
-        };
+        }
       },
-    } as unknown as ResumePublicationRepository);
+    } as unknown as ResumePublicationRepository)
 
-    const draft = await service.getDraft();
-    const published = await service.getPublished();
+    const draft = await service.getDraft()
+    const published = await service.getPublished()
 
-    expect(draft.resume.profile.hero.frontImageUrl).toBe('/img/avatar.jpg');
-    expect(draft.resume.profile.hero.slogans).toHaveLength(2);
-    expect(published?.resume.profile.hero.backImageUrl).toBe('/img/avatar2.jpg');
+    expect(draft.resume.profile.hero.frontImageUrl).toBe('/img/avatar.jpg')
+    expect(draft.resume.profile.hero.slogans).toHaveLength(2)
+    expect(published?.resume.profile.hero.backImageUrl).toBe('/img/avatar2.jpg')
     expect(published?.resume.profile.hero.linkUrl).toBe(
       'https://github.com/Fridolph/my-resume',
-    );
-  });
+    )
+  })
 
   it('should surface a friendly message when draft save hits a SQLite file lock', async () => {
     const service = new ResumePublicationService({
@@ -441,22 +433,20 @@ describe('ResumePublicationService', () => {
               code: 'SQLITE_BUSY',
             },
           }),
-        });
+        })
       },
       createPublishedSnapshot: async () => {
-        throw new Error('not used');
+        throw new Error('not used')
       },
       findLatestPublishedSnapshot: async () => null,
-    } as unknown as ResumePublicationRepository);
+    } as unknown as ResumePublicationRepository)
 
-    await expect(
-      service.updateDraft(createExampleStandardResume()),
-    ).rejects.toEqual(
+    await expect(service.updateDraft(createExampleStandardResume())).rejects.toEqual(
       expect.objectContaining({
         message: SQLITE_LOCKED_ERROR_MESSAGE,
       }),
-    );
-  });
+    )
+  })
 
   it('should surface a friendly message when publish hits a SQLite file lock', async () => {
     const service = new ResumePublicationService({
@@ -474,17 +464,17 @@ describe('ResumePublicationService', () => {
             code: 'SQLITE_BUSY',
             message: 'database is locked',
           },
-        });
+        })
       },
       findLatestPublishedSnapshot: async () => null,
-    } as unknown as ResumePublicationRepository);
+    } as unknown as ResumePublicationRepository)
 
     await expect(service.publish()).rejects.toEqual(
       expect.objectContaining({
         message: SQLITE_LOCKED_ERROR_MESSAGE,
       }),
-    );
-  });
+    )
+  })
 
   it('should surface a friendly message when draft seeding hits a SQLite file lock', async () => {
     const service = new ResumePublicationService({
@@ -495,21 +485,19 @@ describe('ResumePublicationService', () => {
             code: 'SQLITE_BUSY',
             message: 'database is locked',
           },
-        });
+        })
       },
       createPublishedSnapshot: async () => {
-        throw new Error('not used');
+        throw new Error('not used')
       },
       findLatestPublishedSnapshot: async () => null,
-    } as unknown as ResumePublicationRepository);
+    } as unknown as ResumePublicationRepository)
 
-    await expect(service.getDraft()).rejects.toBeInstanceOf(
-      ServiceUnavailableException,
-    );
+    await expect(service.getDraft()).rejects.toBeInstanceOf(ServiceUnavailableException)
     await expect(service.getDraft()).rejects.toEqual(
       expect.objectContaining({
         message: SQLITE_LOCKED_ERROR_MESSAGE,
       }),
-    );
-  });
-});
+    )
+  })
+})

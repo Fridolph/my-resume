@@ -1,22 +1,20 @@
-'use client';
+'use client'
 
-import { Button } from '@heroui/react';
-import {
-  DisplaySectionIntro,
-  DisplaySurfaceCard,
-} from '@my-resume/ui/display';
+import { Button } from '@heroui/react'
+import { DisplaySectionIntro, DisplaySurfaceCard } from '@my-resume/ui/display'
 
 import type {
   AiResumeOptimizationChangedModule,
   AiWorkbenchReport,
-} from '../../lib/ai-workbench-types';
+} from '../../lib/ai-workbench-types'
 
-const analysisTextBlockClass = 'whitespace-pre-wrap leading-7 text-zinc-900 dark:text-zinc-100';
-const analysisSectionCardClass = 'grid gap-3.5';
+const analysisTextBlockClass =
+  'whitespace-pre-wrap leading-7 text-zinc-900 dark:text-zinc-100'
+const analysisSectionCardClass = 'grid gap-3.5'
 
 interface AnalysisReportDetailsProps {
-  onLinkSuggestionModule: (module: AiResumeOptimizationChangedModule) => void;
-  report: AiWorkbenchReport;
+  onLinkSuggestionModule: (module: AiResumeOptimizationChangedModule) => void
+  report: AiWorkbenchReport
 }
 
 export function AnalysisReportDetails({
@@ -97,14 +95,10 @@ export function AnalysisReportDetails({
         />
         <div className="stack">
           {report.suggestions.map((item) => {
-            const suggestionModule = item.module;
+            const suggestionModule = item.module
 
             return (
-              <DisplaySurfaceCard
-                as="section"
-                className="card stack"
-                key={item.key}
-              >
+              <DisplaySurfaceCard as="section" className="card stack" key={item.key}>
                 <DisplaySectionIntro
                   compact
                   description={item.reason}
@@ -127,14 +121,13 @@ export function AnalysisReportDetails({
                       onClick={() => onLinkSuggestionModule(suggestionModule)}
                       size="sm"
                       type="button"
-                      variant="outline"
-                    >
+                      variant="outline">
                       {`定位到 ${suggestionModule} 改写模块`}
                     </Button>
                   </div>
                 ) : null}
               </DisplaySurfaceCard>
-            );
+            )
           })}
         </div>
       </DisplaySurfaceCard>
@@ -153,8 +146,7 @@ export function AnalysisReportDetails({
               <DisplaySurfaceCard
                 as="article"
                 className={analysisSectionCardClass}
-                key={`legacy-${section.key}`}
-              >
+                key={`legacy-${section.key}`}>
                 <DisplaySectionIntro
                   compact
                   description="兼容缓存阅读面板的过渡结构。"
@@ -172,5 +164,5 @@ export function AnalysisReportDetails({
         </DisplaySurfaceCard>
       ) : null}
     </>
-  );
+  )
 }

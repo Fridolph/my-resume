@@ -12,4 +12,4 @@ export type {
   ResumePublishedSnapshot,
   ResumeSkillGroup,
   StandardResume,
-} from '@my-resume/api-client';
+} from '@my-resume/api-client'

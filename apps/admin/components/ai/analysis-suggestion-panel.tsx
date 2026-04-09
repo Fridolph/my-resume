@@ -1,35 +1,37 @@
-'use client';
+'use client'
 
-import { Button, Checkbox } from '@heroui/react';
+import { Button, Checkbox } from '@heroui/react'
 
-import { adminPrimaryButtonClass } from '../../lib/button-styles';
+import { adminPrimaryButtonClass } from '../../lib/button-styles'
 import {
   DisplayPill,
   DisplaySectionIntro,
   DisplaySurfaceCard,
-} from '@my-resume/ui/display';
+} from '@my-resume/ui/display'
 
 import type {
   AiResumeOptimizationChangedModule,
   AiResumeOptimizationResult,
-} from '../../lib/ai-workbench-types';
+} from '../../lib/ai-workbench-types'
 
-const analysisTextBlockClass = 'whitespace-pre-wrap leading-7 text-zinc-900 dark:text-zinc-100';
-const analysisSectionCardClass = 'grid gap-3.5';
+const analysisTextBlockClass =
+  'whitespace-pre-wrap leading-7 text-zinc-900 dark:text-zinc-100'
+const analysisSectionCardClass = 'grid gap-3.5'
 const analysisSectionCardLinkedClass =
-  'grid gap-3.5 border-blue-500/50 shadow-[0_0_0_3px_rgba(59,130,246,0.14)]';
-const moduleDiffHeaderClass = 'grid gap-3';
-const moduleCheckClass = 'inline-flex items-center gap-2.5 text-zinc-500 dark:text-zinc-400';
-const moduleDiffStackClass = 'grid gap-3.5';
-const moduleDiffEntryClass = 'grid gap-3';
+  'grid gap-3.5 border-blue-500/50 shadow-[0_0_0_3px_rgba(59,130,246,0.14)]'
+const moduleDiffHeaderClass = 'grid gap-3'
+const moduleCheckClass =
+  'inline-flex items-center gap-2.5 text-zinc-500 dark:text-zinc-400'
+const moduleDiffStackClass = 'grid gap-3.5'
+const moduleDiffEntryClass = 'grid gap-3'
 
 interface AnalysisSuggestionPanelProps {
-  applyPending: boolean;
-  linkedModule: AiResumeOptimizationChangedModule | null;
-  onApplySuggestion: () => void;
-  onToggleSelectedModule: (module: AiResumeOptimizationChangedModule) => void;
-  selectedModules: AiResumeOptimizationChangedModule[];
-  suggestion: AiResumeOptimizationResult;
+  applyPending: boolean
+  linkedModule: AiResumeOptimizationChangedModule | null
+  onApplySuggestion: () => void
+  onToggleSelectedModule: (module: AiResumeOptimizationChangedModule) => void
+  selectedModules: AiResumeOptimizationChangedModule[]
+  suggestion: AiResumeOptimizationResult
 }
 
 export function AnalysisSuggestionPanel({
@@ -70,7 +72,7 @@ export function AnalysisSuggestionPanel({
 
       <div className="grid gap-4">
         {suggestion.moduleDiffs.map((moduleDiff) => {
-          const checked = selectedModules.includes(moduleDiff.module);
+          const checked = selectedModules.includes(moduleDiff.module)
 
           return (
             <DisplaySurfaceCard
@@ -81,8 +83,7 @@ export function AnalysisSuggestionPanel({
                   : analysisSectionCardClass
               }
               id={`module-diff-${moduleDiff.module}`}
-              key={moduleDiff.module}
-            >
+              key={moduleDiff.module}>
               <div className={moduleDiffHeaderClass}>
                 <DisplaySectionIntro
                   compact
@@ -94,8 +95,7 @@ export function AnalysisSuggestionPanel({
                 <Checkbox
                   className={moduleCheckClass}
                   isSelected={checked}
-                  onChange={() => onToggleSelectedModule(moduleDiff.module)}
-                >
+                  onChange={() => onToggleSelectedModule(moduleDiff.module)}>
                   {`应用模块：${moduleDiff.module}`}
                 </Checkbox>
               </div>
@@ -118,7 +118,7 @@ export function AnalysisSuggestionPanel({
                 ))}
               </div>
             </DisplaySurfaceCard>
-          );
+          )
         })}
       </div>
 
@@ -131,7 +131,8 @@ export function AnalysisSuggestionPanel({
           titleAs="h3"
         />
         <div className="dashboard-inline-note">
-          当前已选择 {selectedModules.length} / {suggestion.changedModules.length} 个模块。
+          当前已选择 {selectedModules.length} / {suggestion.changedModules.length}{' '}
+          个模块。
         </div>
         <div className="dashboard-entry-actions">
           <Button
@@ -140,12 +141,11 @@ export function AnalysisSuggestionPanel({
             onClick={onApplySuggestion}
             size="md"
             type="button"
-            variant="primary"
-          >
+            variant="primary">
             {applyPending ? '正在应用到草稿...' : '应用已选模块到当前草稿'}
           </Button>
         </div>
       </DisplaySurfaceCard>
     </>
-  );
+  )
 }

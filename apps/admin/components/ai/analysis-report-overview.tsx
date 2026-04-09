@@ -1,25 +1,25 @@
-'use client';
+'use client'
 
 import {
   DisplayPill,
   DisplaySectionIntro,
   DisplaySurfaceCard,
-} from '@my-resume/ui/display';
+} from '@my-resume/ui/display'
 
 import type {
   AiWorkbenchReport,
   AiWorkbenchRuntimeSummary,
-} from '../../lib/ai-workbench-types';
+} from '../../lib/ai-workbench-types'
 import {
   formatGenerator,
   formatLocale,
   formatScenario,
   formatScore,
-} from './analysis-utils';
+} from './analysis-utils'
 
 interface AnalysisReportOverviewProps {
-  report: AiWorkbenchReport | null;
-  runtimeSummary: AiWorkbenchRuntimeSummary;
+  report: AiWorkbenchReport | null
+  runtimeSummary: AiWorkbenchRuntimeSummary
 }
 
 export function AnalysisReportOverview({
@@ -68,5 +68,5 @@ export function AnalysisReportOverview({
         </div>
       )}
     </DisplaySurfaceCard>
-  );
+  )
 }

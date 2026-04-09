@@ -1,17 +1,17 @@
-import { Card, CardContent, CardHeader } from '@heroui/react';
-import { ReactNode } from 'react';
-import { DisplaySectionIntro } from '@my-resume/ui/display';
+import { Card, CardContent, CardHeader } from '@heroui/react'
+import { ReactNode } from 'react'
+import { DisplaySectionIntro } from '@my-resume/ui/display'
 
 interface PublishedResumeSectionCardProps {
-  eyebrow: string;
-  title: string;
-  description?: string;
-  action?: ReactNode;
-  children: ReactNode;
+  eyebrow: string
+  title: string
+  description?: string
+  action?: ReactNode
+  children: ReactNode
 }
 
 const sectionCardClass =
-  'border border-slate-200/90 bg-white/72 shadow-[0_16px_40px_rgba(15,23,42,0.045)] dark:border-white/6 dark:bg-slate-900/[0.74] dark:shadow-[0_14px_36px_rgba(2,6,23,0.24)]';
+  'border border-slate-200/90 bg-white/72 shadow-[0_16px_40px_rgba(15,23,42,0.045)] dark:border-white/6 dark:bg-slate-900/[0.74] dark:shadow-[0_14px_36px_rgba(2,6,23,0.24)]'
 
 export function PublishedResumeSectionCard({
   eyebrow,
@@ -38,5 +38,5 @@ export function PublishedResumeSectionCard({
       </CardHeader>
       <CardContent className="grid gap-4 pt-0.5">{children}</CardContent>
     </Card>
-  );
+  )
 }

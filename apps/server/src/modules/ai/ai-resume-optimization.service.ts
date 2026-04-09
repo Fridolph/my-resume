@@ -4,9 +4,9 @@ import {
   ConflictException,
   Inject,
   Injectable,
-} from '@nestjs/common';
+} from '@nestjs/common'
 
-import { ResumePublicationService } from '../resume/resume-publication.service';
+import { ResumePublicationService } from '../resume/resume-publication.service'
 import {
   getStandardResumeModuleKeys,
   isLocalizedText,
@@ -14,112 +14,112 @@ import {
   type ResumeHighlightItem,
   type StandardResume,
   validateStandardResume,
-} from '../resume/domain/standard-resume';
-import { AiService } from './ai.service';
-import { type AnalysisLocale } from './analysis-report-cache.service';
+} from '../resume/domain/standard-resume'
+import { AiService } from './ai.service'
+import { type AnalysisLocale } from './analysis-report-cache.service'
 
 export type ResumeOptimizationModule =
   | 'profile'
   | 'experiences'
   | 'projects'
-  | 'highlights';
+  | 'highlights'
 
 export interface ResumeOptimizationProfilePatch {
-  headline?: LocalizedText;
-  summary?: LocalizedText;
+  headline?: LocalizedText
+  summary?: LocalizedText
 }
 
 export interface ResumeOptimizationExperiencePatch {
-  index: number;
-  summary?: LocalizedText;
-  highlights?: LocalizedText[];
+  index: number
+  summary?: LocalizedText
+  highlights?: LocalizedText[]
 }
 
 export interface ResumeOptimizationProjectPatch {
-  index: number;
-  summary?: LocalizedText;
-  highlights?: LocalizedText[];
+  index: number
+  summary?: LocalizedText
+  highlights?: LocalizedText[]
 }
 
 export interface ResumeOptimizationPatch {
-  profile?: ResumeOptimizationProfilePatch;
-  experiences?: ResumeOptimizationExperiencePatch[];
-  projects?: ResumeOptimizationProjectPatch[];
-  highlights?: ResumeHighlightItem[];
+  profile?: ResumeOptimizationProfilePatch
+  experiences?: ResumeOptimizationExperiencePatch[]
+  projects?: ResumeOptimizationProjectPatch[]
+  highlights?: ResumeHighlightItem[]
 }
 
 interface ResumeOptimizationProviderPayload {
-  summary: string;
-  focusAreas: string[];
-  patch: ResumeOptimizationPatch;
+  summary: string
+  focusAreas: string[]
+  patch: ResumeOptimizationPatch
 }
 
 export interface GenerateResumeOptimizationInput {
-  instruction: string;
-  locale?: AnalysisLocale;
+  instruction: string
+  locale?: AnalysisLocale
 }
 
 export interface GenerateResumeOptimizationResult {
-  summary: string;
-  focusAreas: string[];
-  changedModules: ResumeOptimizationModule[];
-  moduleDiffs: ResumeOptimizationModuleDiff[];
-  applyPayload: ResumeOptimizationApplyPayload;
-  suggestedResume: StandardResume;
+  summary: string
+  focusAreas: string[]
+  changedModules: ResumeOptimizationModule[]
+  moduleDiffs: ResumeOptimizationModuleDiff[]
+  applyPayload: ResumeOptimizationApplyPayload
+  suggestedResume: StandardResume
   providerSummary: {
-    provider: string;
-    model: string;
-    mode: string;
-  };
+    provider: string
+    model: string
+    mode: string
+  }
 }
 
 export interface ResumeOptimizationDiffEntry {
-  key: string;
-  label: string;
-  before: string;
-  after: string;
+  key: string
+  label: string
+  before: string
+  after: string
 }
 
 export interface ResumeOptimizationModuleDiff {
-  module: ResumeOptimizationModule;
-  title: string;
+  module: ResumeOptimizationModule
+  title: string
   /**
    * reason 会直接展示给管理员，解释“为什么这个模块值得先确认再应用”。
    * 开源版先把业务意图写清楚，避免 AI 建议被理解成黑盒覆盖。
    */
-  reason: string;
-  entries: ResumeOptimizationDiffEntry[];
+  reason: string
+  entries: ResumeOptimizationDiffEntry[]
 }
 
 export interface ResumeOptimizationApplyPayload {
   /**
    * 用于校验建议稿是不是基于当前草稿生成的，避免旧建议误覆盖新草稿。
    */
-  draftUpdatedAt: string;
+  draftUpdatedAt: string
   /**
    * applyPayload 只承载结构化 patch，而不是整份 suggestedResume。
    * 这样服务端才能继续掌控模块级 apply 和最终结构校验。
    */
-  patch: ResumeOptimizationPatch;
+  patch: ResumeOptimizationPatch
 }
 
 export interface ApplyResumeOptimizationInput {
-  draftUpdatedAt: string;
-  patch: unknown;
-  modules: ResumeOptimizationModule[];
+  draftUpdatedAt: string
+  patch: unknown
+  modules: ResumeOptimizationModule[]
 }
 
 function cloneResume(resume: StandardResume): StandardResume {
-  return JSON.parse(JSON.stringify(resume)) as StandardResume;
+  return JSON.parse(JSON.stringify(resume)) as StandardResume
 }
 
 function normalizeInstruction(instruction: string): string {
-  return instruction.replace(/\s+/g, ' ').trim();
+  return instruction.replace(/\s+/g, ' ').trim()
 }
 
 function normalizeModules(modules: unknown): ResumeOptimizationModule[] {
   if (!Array.isArray(modules)) {
-    throw new BadRequestException('请选择要应用的简历模块');
+    throw new BadRequestException('请选择要应用的简历模块')
   }
 
   const validModules: ResumeOptimizationModule[] = [
@@ -127,19 +127,19 @@ function normalizeModules(modules: unknown): ResumeOptimizationModule[] {
     'experiences',
     'projects',
     'highlights',
-  ];
+  ]
 
   const normalized = Array.from(new Set(modules)).flatMap((item) =>
     validModules.includes(item as ResumeOptimizationModule)
       ? [item as ResumeOptimizationModule]
       : [],
-  );
+  )
 
   if (normalized.length === 0) {
-    throw new BadRequestException('请至少选择一个要应用的简历模块');
+    throw new BadRequestException('请至少选择一个要应用的简历模块')
   }
 
-  return normalized;
+  return normalized
 }
 
 function extractKeywords(
@@ -147,41 +147,37 @@ function extractKeywords(
   locale: AnalysisLocale,
   limit = 3,
 ): string[] {
-  const englishMatches = instruction.match(/[A-Za-z0-9.+#-]{2,}/g) ?? [];
-  const chineseMatches = instruction.match(/[\u4e00-\u9fa5]{2,}/g) ?? [];
-  const combined = [...englishMatches, ...chineseMatches].map((item) =>
-    item.trim(),
-  );
-  const unique = Array.from(new Set(combined));
+  const englishMatches = instruction.match(/[A-Za-z0-9.+#-]{2,}/g) ?? []
+  const chineseMatches = instruction.match(/[\u4e00-\u9fa5]{2,}/g) ?? []
+  const combined = [...englishMatches, ...chineseMatches].map((item) => item.trim())
+  const unique = Array.from(new Set(combined))
 
   if (unique.length > 0) {
-    return unique.slice(0, limit);
+    return unique.slice(0, limit)
   }
 
-  return locale === 'en'
-    ? ['resume', 'impact', 'delivery']
-    : ['简历', '成果', '交付'];
+  return locale === 'en' ? ['resume', 'impact', 'delivery'] : ['简历', '成果', '交付']
 }
 
 function extractJsonObject(rawText: string): string {
-  const fencedMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const fencedMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/i)
 
   if (fencedMatch?.[1]) {
-    return fencedMatch[1].trim();
+    return fencedMatch[1].trim()
   }
 
-  const firstBrace = rawText.indexOf('{');
-  const lastBrace = rawText.lastIndexOf('}');
+  const firstBrace = rawText.indexOf('{')
+  const lastBrace = rawText.lastIndexOf('}')
 
   if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
-    throw new BadGatewayException('AI 未返回可解析的 JSON 结果');
+    throw new BadGatewayException('AI 未返回可解析的 JSON 结果')
   }
 
-  return rawText.slice(firstBrace, lastBrace + 1).trim();
+  return rawText.slice(firstBrace, lastBrace + 1).trim()
 }
 
 function isLocalizedTextArray(value: unknown): value is LocalizedText[] {
-  return Array.isArray(value) && value.every((item) => isLocalizedText(item));
+  return Array.isArray(value) && value.every((item) => isLocalizedText(item))
 }
 
 function isResumeHighlightArray(value: unknown): value is ResumeHighlightItem[] {
@@ -189,157 +185,148 @@ function isResumeHighlightArray(value: unknown): value is ResumeHighlightItem[] 
     Array.isArray(value) &&
     value.every((item) => {
       if (!item || typeof item !== 'object') {
-        return false;
+        return false
       }
 
-      const candidate = item as Record<string, unknown>;
+      const candidate = item as Record<string, unknown>
 
-      return (
-        isLocalizedText(candidate.title) && isLocalizedText(candidate.description)
-      );
+      return isLocalizedText(candidate.title) && isLocalizedText(candidate.description)
     })
-  );
+  )
 }
 
-function validatePatch(
-  patch: unknown,
-  resume: StandardResume,
-): ResumeOptimizationPatch {
+function validatePatch(patch: unknown, resume: StandardResume): ResumeOptimizationPatch {
   if (!patch || typeof patch !== 'object') {
-    return {};
+    return {}
   }
 
-  const candidate = patch as Record<string, unknown>;
-  const nextPatch: ResumeOptimizationPatch = {};
+  const candidate = patch as Record<string, unknown>
+  const nextPatch: ResumeOptimizationPatch = {}
 
   if (candidate.profile && typeof candidate.profile === 'object') {
-    const profilePatch = candidate.profile as Record<string, unknown>;
-    const nextProfilePatch: ResumeOptimizationProfilePatch = {};
+    const profilePatch = candidate.profile as Record<string, unknown>
+    const nextProfilePatch: ResumeOptimizationProfilePatch = {}
 
     if (profilePatch.headline) {
       if (!isLocalizedText(profilePatch.headline)) {
-        throw new BadGatewayException('AI 返回的 profile.headline 结构无效');
+        throw new BadGatewayException('AI 返回的 profile.headline 结构无效')
       }
 
-      nextProfilePatch.headline = profilePatch.headline;
+      nextProfilePatch.headline = profilePatch.headline
     }
 
     if (profilePatch.summary) {
       if (!isLocalizedText(profilePatch.summary)) {
-        throw new BadGatewayException('AI 返回的 profile.summary 结构无效');
+        throw new BadGatewayException('AI 返回的 profile.summary 结构无效')
       }
 
-      nextProfilePatch.summary = profilePatch.summary;
+      nextProfilePatch.summary = profilePatch.summary
     }
 
     if (Object.keys(nextProfilePatch).length > 0) {
-      nextPatch.profile = nextProfilePatch;
+      nextPatch.profile = nextProfilePatch
     }
   }
 
   if (candidate.experiences) {
     if (!Array.isArray(candidate.experiences)) {
-      throw new BadGatewayException('AI 返回的 experiences patch 结构无效');
+      throw new BadGatewayException('AI 返回的 experiences patch 结构无效')
     }
 
     nextPatch.experiences = candidate.experiences.flatMap((item) => {
       if (!item || typeof item !== 'object') {
-        throw new BadGatewayException('AI 返回的 experiences item 结构无效');
+        throw new BadGatewayException('AI 返回的 experiences item 结构无效')
       }
 
-      const currentItem = item as Record<string, unknown>;
-      const index = currentItem.index;
+      const currentItem = item as Record<string, unknown>
+      const index = currentItem.index
 
       if (typeof index !== 'number' || !Number.isInteger(index)) {
-        throw new BadGatewayException('AI 返回的 experiences index 无效');
+        throw new BadGatewayException('AI 返回的 experiences index 无效')
       }
 
       if (index < 0 || index >= resume.experiences.length) {
-        return [];
+        return []
       }
 
       const nextItem: ResumeOptimizationExperiencePatch = {
         index,
-      };
+      }
 
       if (currentItem.summary) {
         if (!isLocalizedText(currentItem.summary)) {
-          throw new BadGatewayException('AI 返回的 experiences.summary 结构无效');
+          throw new BadGatewayException('AI 返回的 experiences.summary 结构无效')
         }
 
-        nextItem.summary = currentItem.summary;
+        nextItem.summary = currentItem.summary
       }
 
       if (currentItem.highlights) {
         if (!isLocalizedTextArray(currentItem.highlights)) {
-          throw new BadGatewayException(
-            'AI 返回的 experiences.highlights 结构无效',
-          );
+          throw new BadGatewayException('AI 返回的 experiences.highlights 结构无效')
         }
 
-        nextItem.highlights = currentItem.highlights;
+        nextItem.highlights = currentItem.highlights
       }
 
-      return Object.keys(nextItem).length > 1 ? [nextItem] : [];
-    });
+      return Object.keys(nextItem).length > 1 ? [nextItem] : []
+    })
   }
 
   if (candidate.projects) {
     if (!Array.isArray(candidate.projects)) {
-      throw new BadGatewayException('AI 返回的 projects patch 结构无效');
+      throw new BadGatewayException('AI 返回的 projects patch 结构无效')
     }
 
     nextPatch.projects = candidate.projects.flatMap((item) => {
       if (!item || typeof item !== 'object') {
-        throw new BadGatewayException('AI 返回的 projects item 结构无效');
+        throw new BadGatewayException('AI 返回的 projects item 结构无效')
       }
 
-      const currentItem = item as Record<string, unknown>;
-      const index = currentItem.index;
+      const currentItem = item as Record<string, unknown>
+      const index = currentItem.index
 
       if (typeof index !== 'number' || !Number.isInteger(index)) {
-        throw new BadGatewayException('AI 返回的 projects index 无效');
+        throw new BadGatewayException('AI 返回的 projects index 无效')
       }
 
       if (index < 0 || index >= resume.projects.length) {
-        return [];
+        return []
       }
 
       const nextItem: ResumeOptimizationProjectPatch = {
         index,
-      };
+      }
 
       if (currentItem.summary) {
         if (!isLocalizedText(currentItem.summary)) {
-          throw new BadGatewayException('AI 返回的 projects.summary 结构无效');
+          throw new BadGatewayException('AI 返回的 projects.summary 结构无效')
         }
 
-        nextItem.summary = currentItem.summary;
+        nextItem.summary = currentItem.summary
       }
 
       if (currentItem.highlights) {
         if (!isLocalizedTextArray(currentItem.highlights)) {
-          throw new BadGatewayException(
-            'AI 返回的 projects.highlights 结构无效',
-          );
+          throw new BadGatewayException('AI 返回的 projects.highlights 结构无效')
         }
 
-        nextItem.highlights = currentItem.highlights;
+        nextItem.highlights = currentItem.highlights
       }
 
-      return Object.keys(nextItem).length > 1 ? [nextItem] : [];
-    });
+      return Object.keys(nextItem).length > 1 ? [nextItem] : []
+    })
   }
 
   if (candidate.highlights) {
     if (!isResumeHighlightArray(candidate.highlights)) {
-      throw new BadGatewayException('AI 返回的 highlights 结构无效');
+      throw new BadGatewayException('AI 返回的 highlights 结构无效')
     }
 
-    nextPatch.highlights = candidate.highlights;
+    nextPatch.highlights = candidate.highlights
   }
 
-  return nextPatch;
+  return nextPatch
 }
 
 function validateProviderPayload(
@@ -347,20 +334,20 @@ function validateProviderPayload(
   resume: StandardResume,
 ): ResumeOptimizationProviderPayload {
   if (!payload || typeof payload !== 'object') {
-    throw new BadGatewayException('AI 未返回结构化简历建议');
+    throw new BadGatewayException('AI 未返回结构化简历建议')
   }
 
-  const candidate = payload as Record<string, unknown>;
+  const candidate = payload as Record<string, unknown>
 
   if (typeof candidate.summary !== 'string' || !candidate.summary.trim()) {
-    throw new BadGatewayException('AI 返回的 summary 无效');
+    throw new BadGatewayException('AI 返回的 summary 无效')
   }
 
   if (
     !Array.isArray(candidate.focusAreas) ||
     candidate.focusAreas.some((item) => typeof item !== 'string')
   ) {
-    throw new BadGatewayException('AI 返回的 focusAreas 无效');
+    throw new BadGatewayException('AI 返回的 focusAreas 无效')
   }
 
   return {
@@ -370,62 +357,62 @@ function validateProviderPayload(
       .filter((item) => item.length > 0)
       .slice(0, 4),
     patch: validatePatch(candidate.patch, resume),
-  };
+  }
 }
 
 function applyPatch(
   resume: StandardResume,
   patch: ResumeOptimizationPatch,
 ): StandardResume {
-  const nextResume = cloneResume(resume);
+  const nextResume = cloneResume(resume)
 
   if (patch.profile?.headline) {
-    nextResume.profile.headline = patch.profile.headline;
+    nextResume.profile.headline = patch.profile.headline
   }
 
   if (patch.profile?.summary) {
-    nextResume.profile.summary = patch.profile.summary;
+    nextResume.profile.summary = patch.profile.summary
   }
 
   patch.experiences?.forEach((item) => {
     if (item.summary) {
-      nextResume.experiences[item.index]!.summary = item.summary;
+      nextResume.experiences[item.index].summary = item.summary
     }
 
     if (item.highlights) {
-      nextResume.experiences[item.index]!.highlights = item.highlights;
+      nextResume.experiences[item.index].highlights = item.highlights
     }
-  });
+  })
 
   patch.projects?.forEach((item) => {
     if (item.summary) {
-      nextResume.projects[item.index]!.summary = item.summary;
+      nextResume.projects[item.index].summary = item.summary
     }
 
     if (item.highlights) {
-      nextResume.projects[item.index]!.highlights = item.highlights;
+      nextResume.projects[item.index].highlights = item.highlights
     }
-  });
+  })
 
   if (patch.highlights) {
-    nextResume.highlights = patch.highlights;
+    nextResume.highlights = patch.highlights
   }
 
-  return nextResume;
+  return nextResume
 }
 
 function pickPatchByModules(
   patch: ResumeOptimizationPatch,
   modules: ResumeOptimizationModule[],
 ): ResumeOptimizationPatch {
-  const selected = new Set(modules);
+  const selected = new Set(modules)
 
   return {
     profile: selected.has('profile') ? patch.profile : undefined,
     experiences: selected.has('experiences') ? patch.experiences : undefined,
     projects: selected.has('projects') ? patch.projects : undefined,
     highlights: selected.has('highlights') ? patch.highlights : undefined,
-  };
+  }
 }
 
 function detectChangedModules(
@@ -439,26 +426,25 @@ function detectChangedModules(
       moduleKey !== 'projects' &&
       moduleKey !== 'highlights'
     ) {
-      return false;
+      return false
     }
 
     return (
-      JSON.stringify(previousResume[moduleKey]) !==
-      JSON.stringify(nextResume[moduleKey])
-    );
-  }) as ResumeOptimizationModule[];
+      JSON.stringify(previousResume[moduleKey]) !== JSON.stringify(nextResume[moduleKey])
+    )
+  }) as ResumeOptimizationModule[]
 }
 
 function formatLocalizedValue(value: LocalizedText | undefined): string {
-  const zh = value?.zh.trim() || '（空）';
-  const en = value?.en.trim() || '(empty)';
+  const zh = value?.zh.trim() || '（空）'
+  const en = value?.en.trim() || '(empty)'
 
-  return `中文：${zh} | English: ${en}`;
+  return `中文：${zh} | English: ${en}`
 }
 
 function getModulePresentation(module: ResumeOptimizationModule): {
-  title: string;
-  reason: string;
+  title: string
+  reason: string
 } {
   switch (module) {
     case 'profile':
@@ -466,25 +452,25 @@ function getModulePresentation(module: ResumeOptimizationModule): {
         title: '个人定位与摘要',
         reason:
           '个人摘要和标题决定面试官最先如何理解你的岗位定位，是“是否继续看下去”的第一印象模块。',
-      };
+      }
     case 'experiences':
       return {
         title: '工作经历与职责边界',
         reason:
           '工作经历是证明职责范围、协作方式和交付结果的主证据，直接影响面试官是否相信你的经历深度。',
-      };
+      }
     case 'projects':
       return {
         title: '项目摘要与亮点',
         reason:
           '项目经历通常承载技术方案、业务场景和个人贡献，是和目标 JD 对齐时最容易被追问的部分。',
-      };
+      }
     case 'highlights':
       return {
         title: '差异化亮点总结',
         reason:
           '亮点总结负责帮助招聘方快速记住你最值得被记住的信号，适合在 apply 前再次确认表达是否可信。',
-      };
+      }
   }
 }
 
@@ -494,10 +480,10 @@ function buildProfileDiff(
   patch: ResumeOptimizationPatch,
 ): ResumeOptimizationModuleDiff | null {
   if (!patch.profile) {
-    return null;
+    return null
   }
 
-  const entries: ResumeOptimizationDiffEntry[] = [];
+  const entries: ResumeOptimizationDiffEntry[] = []
 
   if (patch.profile.headline) {
     entries.push({
@@ -505,7 +491,7 @@ function buildProfileDiff(
       label: '个人标题',
       before: formatLocalizedValue(previousResume.profile.headline),
       after: formatLocalizedValue(nextResume.profile.headline),
-    });
+    })
   }
 
   if (patch.profile.summary) {
@@ -514,18 +500,18 @@ function buildProfileDiff(
       label: '个人摘要',
       before: formatLocalizedValue(previousResume.profile.summary),
       after: formatLocalizedValue(nextResume.profile.summary),
-    });
+    })
   }
 
   if (entries.length === 0) {
-    return null;
+    return null
   }
 
   return {
     module: 'profile',
     ...getModulePresentation('profile'),
     entries,
-  };
+  }
 }
 
 function buildExperiencesDiff(
@@ -534,20 +520,20 @@ function buildExperiencesDiff(
   patch: ResumeOptimizationPatch,
 ): ResumeOptimizationModuleDiff | null {
   if (!patch.experiences || patch.experiences.length === 0) {
-    return null;
+    return null
   }
 
-  const entries: ResumeOptimizationDiffEntry[] = [];
+  const entries: ResumeOptimizationDiffEntry[] = []
 
   patch.experiences.forEach((item) => {
-    const previousItem = previousResume.experiences[item.index];
-    const nextItem = nextResume.experiences[item.index];
+    const previousItem = previousResume.experiences[item.index]
+    const nextItem = nextResume.experiences[item.index]
 
     if (!previousItem || !nextItem) {
-      return;
+      return
     }
 
-    const scopeLabel = `${previousItem.companyName.zh} · ${previousItem.role.zh}`;
+    const scopeLabel = `${previousItem.companyName.zh} · ${previousItem.role.zh}`
 
     if (item.summary) {
       entries.push({
@@ -555,7 +541,7 @@ function buildExperiencesDiff(
         label: `${scopeLabel} / 经历摘要`,
         before: formatLocalizedValue(previousItem.summary),
         after: formatLocalizedValue(nextItem.summary),
-      });
+      })
     }
 
     if (item.highlights) {
@@ -569,20 +555,20 @@ function buildExperiencesDiff(
           after: formatLocalizedValue(
             nextItem.highlights[highlightIndex] as LocalizedText | undefined,
           ),
-        });
-      });
+        })
+      })
     }
-  });
+  })
 
   if (entries.length === 0) {
-    return null;
+    return null
   }
 
   return {
     module: 'experiences',
     ...getModulePresentation('experiences'),
     entries,
-  };
+  }
 }
 
 function buildProjectsDiff(
@@ -591,20 +577,20 @@ function buildProjectsDiff(
   patch: ResumeOptimizationPatch,
 ): ResumeOptimizationModuleDiff | null {
   if (!patch.projects || patch.projects.length === 0) {
-    return null;
+    return null
   }
 
-  const entries: ResumeOptimizationDiffEntry[] = [];
+  const entries: ResumeOptimizationDiffEntry[] = []
 
   patch.projects.forEach((item) => {
-    const previousItem = previousResume.projects[item.index];
-    const nextItem = nextResume.projects[item.index];
+    const previousItem = previousResume.projects[item.index]
+    const nextItem = nextResume.projects[item.index]
 
     if (!previousItem || !nextItem) {
-      return;
+      return
     }
 
-    const scopeLabel = `${previousItem.name.zh} · ${previousItem.role.zh}`;
+    const scopeLabel = `${previousItem.name.zh} · ${previousItem.role.zh}`
 
     if (item.summary) {
       entries.push({
@@ -612,7 +598,7 @@ function buildProjectsDiff(
         label: `${scopeLabel} / 项目摘要`,
         before: formatLocalizedValue(previousItem.summary),
         after: formatLocalizedValue(nextItem.summary),
-      });
+      })
     }
 
     if (item.highlights) {
@@ -626,20 +612,20 @@ function buildProjectsDiff(
           after: formatLocalizedValue(
             nextItem.highlights[highlightIndex] as LocalizedText | undefined,
           ),
-        });
-      });
+        })
+      })
     }
-  });
+  })
 
   if (entries.length === 0) {
-    return null;
+    return null
   }
 
   return {
     module: 'projects',
     ...getModulePresentation('projects'),
     entries,
-  };
+  }
 }
 
 function buildHighlightsDiff(
@@ -648,10 +634,10 @@ function buildHighlightsDiff(
   patch: ResumeOptimizationPatch,
 ): ResumeOptimizationModuleDiff | null {
   if (!patch.highlights || patch.highlights.length === 0) {
-    return null;
+    return null
   }
 
-  const entries: ResumeOptimizationDiffEntry[] = [];
+  const entries: ResumeOptimizationDiffEntry[] = []
 
   patch.highlights.forEach((_, index) => {
     entries.push({
@@ -659,20 +645,20 @@ function buildHighlightsDiff(
       label: `亮点 ${index + 1} / 标题`,
       before: formatLocalizedValue(previousResume.highlights[index]?.title),
       after: formatLocalizedValue(nextResume.highlights[index]?.title),
-    });
+    })
     entries.push({
       key: `highlight-${index}-description`,
       label: `亮点 ${index + 1} / 描述`,
       before: formatLocalizedValue(previousResume.highlights[index]?.description),
       after: formatLocalizedValue(nextResume.highlights[index]?.description),
-    });
-  });
+    })
+  })
 
   return {
     module: 'highlights',
     ...getModulePresentation('highlights'),
     entries,
-  };
+  }
 }
 
 function buildModuleDiffs(
@@ -689,10 +675,10 @@ function buildModuleDiffs(
           ? buildExperiencesDiff(previousResume, nextResume, patch)
           : module === 'projects'
             ? buildProjectsDiff(previousResume, nextResume, patch)
-            : buildHighlightsDiff(previousResume, nextResume, patch);
+            : buildHighlightsDiff(previousResume, nextResume, patch)
 
-    return diff ? [diff] : [];
-  });
+    return diff ? [diff] : []
+  })
 }
 
 function buildMockSuggestion(
@@ -700,12 +686,12 @@ function buildMockSuggestion(
   instruction: string,
   locale: AnalysisLocale,
 ): ResumeOptimizationProviderPayload {
-  const keywords = extractKeywords(instruction, locale, 3);
-  const firstKeyword = keywords[0] ?? (locale === 'en' ? 'impact' : '成果');
-  const zhFocus = keywords.join('、');
-  const enFocus = keywords.join(', ');
-  const currentHeadlineZh = resume.profile.headline.zh.trim();
-  const currentHeadlineEn = resume.profile.headline.en.trim();
+  const keywords = extractKeywords(instruction, locale, 3)
+  const firstKeyword = keywords[0] ?? (locale === 'en' ? 'impact' : '成果')
+  const zhFocus = keywords.join('、')
+  const enFocus = keywords.join(', ')
+  const currentHeadlineZh = resume.profile.headline.zh.trim()
+  const currentHeadlineEn = resume.profile.headline.en.trim()
 
   return {
     summary:
@@ -753,7 +739,7 @@ function buildMockSuggestion(
                     zh: `以 ${zhFocus} 为主线补强亮点描述，优先强调可迁移的交付成果与职责边界。`,
                     en: `Reframed the highlights around ${enFocus}, prioritizing transferable impact and ownership boundaries.`,
                   },
-                  ...resume.experiences[0]!.highlights.slice(0, 2),
+                  ...resume.experiences[0].highlights.slice(0, 2),
                 ],
               },
             ]
@@ -772,7 +758,7 @@ function buildMockSuggestion(
                     zh: `补一条与 ${zhFocus} 直接相关的成果描述，方便后续投递时快速贴近岗位要求。`,
                     en: `Added a highlight tied to ${enFocus} so the project reads closer to the target role during future applications.`,
                   },
-                  ...resume.projects[0]!.highlights.slice(0, 2),
+                  ...resume.projects[0].highlights.slice(0, 2),
                 ],
               },
             ]
@@ -791,7 +777,7 @@ function buildMockSuggestion(
         ...resume.highlights.slice(0, 2),
       ],
     },
-  };
+  }
 }
 
 @Injectable()
@@ -806,29 +792,29 @@ export class AiResumeOptimizationService {
   async generateSuggestion(
     input: GenerateResumeOptimizationInput,
   ): Promise<GenerateResumeOptimizationResult> {
-    const instruction = normalizeInstruction(input.instruction);
-    const locale = input.locale ?? 'zh';
+    const instruction = normalizeInstruction(input.instruction)
+    const locale = input.locale ?? 'zh'
 
     if (!instruction) {
-      throw new BadRequestException('Instruction is required');
+      throw new BadRequestException('Instruction is required')
     }
 
-    const draft = await this.resumePublicationService.getDraft();
-    const providerSummary = this.aiService.getProviderSummary();
+    const draft = await this.resumePublicationService.getDraft()
+    const providerSummary = this.aiService.getProviderSummary()
 
     const payload =
       providerSummary.mode === 'mock'
         ? buildMockSuggestion(draft.resume, instruction, locale)
-        : await this.generateProviderSuggestion(draft.resume, instruction, locale);
+        : await this.generateProviderSuggestion(draft.resume, instruction, locale)
 
-    const suggestedResume = applyPatch(draft.resume, payload.patch);
-    const validationResult = validateStandardResume(suggestedResume);
-    const changedModules = detectChangedModules(draft.resume, suggestedResume);
+    const suggestedResume = applyPatch(draft.resume, payload.patch)
+    const validationResult = validateStandardResume(suggestedResume)
+    const changedModules = detectChangedModules(draft.resume, suggestedResume)
 
     if (!validationResult.valid) {
       throw new BadGatewayException(
         validationResult.errors[0] ?? 'AI 建议稿未通过当前简历结构校验',
-      );
+      )
     }
 
     return {
@@ -847,37 +833,35 @@ export class AiResumeOptimizationService {
       },
       suggestedResume,
       providerSummary,
-    };
+    }
   }
 
   async applySuggestion(input: ApplyResumeOptimizationInput) {
-    const selectedModules = normalizeModules(input.modules);
-    const draft = await this.resumePublicationService.getDraft();
+    const selectedModules = normalizeModules(input.modules)
+    const draft = await this.resumePublicationService.getDraft()
 
     if (draft.updatedAt !== input.draftUpdatedAt) {
-      throw new ConflictException(
-        '当前草稿已发生变化，请重新生成建议稿后再应用',
-      );
+      throw new ConflictException('当前草稿已发生变化，请重新生成建议稿后再应用')
     }
 
-    const validatedPatch = validatePatch(input.patch, draft.resume);
-    const selectedPatch = pickPatchByModules(validatedPatch, selectedModules);
-    const nextResume = applyPatch(draft.resume, selectedPatch);
-    const appliedModules = detectChangedModules(draft.resume, nextResume);
+    const validatedPatch = validatePatch(input.patch, draft.resume)
+    const selectedPatch = pickPatchByModules(validatedPatch, selectedModules)
+    const nextResume = applyPatch(draft.resume, selectedPatch)
+    const appliedModules = detectChangedModules(draft.resume, nextResume)
 
     if (appliedModules.length === 0) {
-      throw new BadRequestException('当前选择的模块没有实际改动可应用');
+      throw new BadRequestException('当前选择的模块没有实际改动可应用')
     }
 
-    const validationResult = validateStandardResume(nextResume);
+    const validationResult = validateStandardResume(nextResume)
 
     if (!validationResult.valid) {
       throw new BadGatewayException(
         validationResult.errors[0] ?? 'AI 建议稿未通过当前简历结构校验',
-      );
+      )
     }
 
-    return this.resumePublicationService.updateDraft(nextResume);
+    return this.resumePublicationService.updateDraft(nextResume)
   }
 
   private async generateProviderSuggestion(
@@ -892,24 +876,24 @@ export class AiResumeOptimizationService {
           : '你是一个简历优化助手。你只能输出合法 JSON，不要输出 Markdown。',
       temperature: 0.2,
       prompt: this.buildPrompt(resume, instruction, locale),
-    });
+    })
 
-    const jsonText = extractJsonObject(result.text);
+    const jsonText = extractJsonObject(result.text)
 
     try {
-      const payload = JSON.parse(jsonText) as unknown;
+      const payload = JSON.parse(jsonText) as unknown
 
-      return validateProviderPayload(payload, resume);
+      return validateProviderPayload(payload, resume)
     } catch (error) {
       if (error instanceof BadGatewayException) {
-        throw error;
+        throw error
       }
 
       throw new BadGatewayException(
         error instanceof Error
           ? `AI 返回的结构化建议无法解析：${error.message}`
           : 'AI 返回的结构化建议无法解析',
-      );
+      )
     }
   }
 
@@ -938,7 +922,7 @@ export class AiResumeOptimizationService {
         highlights: item.highlights,
       })),
       highlights: resume.highlights,
-    };
+    }
 
     const schema = {
       summary: locale === 'en' ? 'string' : '字符串',
@@ -997,7 +981,7 @@ export class AiResumeOptimizationService {
           },
         ],
       },
-    };
+    }
 
     if (locale === 'en') {
       return [
@@ -1014,7 +998,7 @@ export class AiResumeOptimizationService {
         `Editable resume context:\n${JSON.stringify(editableResumeContext, null, 2)}`,
         '',
         `Required JSON schema:\n${JSON.stringify(schema, null, 2)}`,
-      ].join('\n');
+      ].join('\n')
     }
 
     return [
@@ -1031,6 +1015,6 @@ export class AiResumeOptimizationService {
       `当前可编辑上下文：\n${JSON.stringify(editableResumeContext, null, 2)}`,
       '',
       `必须匹配的 JSON 结构：\n${JSON.stringify(schema, null, 2)}`,
-    ].join('\n');
+    ].join('\n')
   }
 }

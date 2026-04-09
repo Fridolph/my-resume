@@ -1,12 +1,12 @@
-'use client';
+'use client'
 
-import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core';
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { Input } from '@heroui/react';
-import type { ComponentProps, ReactNode } from 'react';
+import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core'
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { Input } from '@heroui/react'
+import type { ComponentProps, ReactNode } from 'react'
 
-import type { StandardResume } from '../../lib/resume-types';
+import type { StandardResume } from '../../lib/resume-types'
 import {
   buildDraftFieldKey,
   formatCommaSeparatedValues,
@@ -14,7 +14,7 @@ import {
   type DraftFieldValues,
   type EditorLocaleMode,
   type SortableCollectionState,
-} from './draft-editor-helpers';
+} from './draft-editor-helpers'
 import {
   buildEntryActions,
   EditorEntry,
@@ -24,41 +24,41 @@ import {
   PlusIcon,
   SortableItemShell,
   TrashIcon,
-} from './editor-primitives';
+} from './editor-primitives'
 
 interface ProjectsSectionProps {
-  draftFieldValues: DraftFieldValues;
-  editorLocaleMode: EditorLocaleMode;
-  isTranslationMode: boolean;
-  resumeDraft: StandardResume;
-  sensors: ComponentProps<typeof DndContext>['sensors'];
-  sortableCollections: SortableCollectionState;
-  translationAction?: ReactNode;
-  addProject: () => void;
-  addProjectLink: (projectIndex: number) => void;
-  handleDragEnd: (event: DragEndEvent) => void;
-  removeProject: (index: number) => void;
-  removeProjectLink: (projectIndex: number, linkIndex: number) => void;
-  updateProjectHighlights: (index: number, locale: 'zh' | 'en', value: string) => void;
+  draftFieldValues: DraftFieldValues
+  editorLocaleMode: EditorLocaleMode
+  isTranslationMode: boolean
+  resumeDraft: StandardResume
+  sensors: ComponentProps<typeof DndContext>['sensors']
+  sortableCollections: SortableCollectionState
+  translationAction?: ReactNode
+  addProject: () => void
+  addProjectLink: (projectIndex: number) => void
+  handleDragEnd: (event: DragEndEvent) => void
+  removeProject: (index: number) => void
+  removeProjectLink: (projectIndex: number, linkIndex: number) => void
+  updateProjectHighlights: (index: number, locale: 'zh' | 'en', value: string) => void
   updateProjectLinkField: (
     projectIndex: number,
     linkIndex: number,
     field: 'label' | 'url',
     value: string,
     locale?: 'zh' | 'en',
-  ) => void;
+  ) => void
   updateProjectLocalizedField: (
     index: number,
     field: 'name' | 'role' | 'summary' | 'coreFunctions',
     locale: 'zh' | 'en',
     value: string,
-  ) => void;
+  ) => void
   updateProjectPlainField: (
     index: number,
     field: 'startDate' | 'endDate',
     value: string,
-  ) => void;
-  updateProjectTechnologies: (index: number, value: string) => void;
+  ) => void
+  updateProjectTechnologies: (index: number, value: string) => void
 }
 
 export function ProjectsSection({
@@ -83,15 +83,15 @@ export function ProjectsSection({
   return (
     <EditorSection
       action={
-        isTranslationMode
-          ? translationAction
-          : (
-            <IconActionButton
-              icon={<PlusIcon />}
-              label="添加项目经历"
-              onClick={addProject}
-            />
-            )
+        isTranslationMode ? (
+          translationAction
+        ) : (
+          <IconActionButton
+            icon={<PlusIcon />}
+            label="添加项目经历"
+            onClick={addProject}
+          />
+        )
       }
       count={resumeDraft.projects.length}
       description={
@@ -99,8 +99,7 @@ export function ProjectsSection({
           ? '英文翻译工作区只维护项目名称、角色、项目概览、项目核心功能、亮点与链接标签的英文内容。'
           : '当前已接通项目名称、角色、时间、项目概览、项目核心功能、亮点、技术栈与项目链接，保持与公开展示结构一致。'
       }
-      title="项目经历"
-    >
+      title="项目经历">
       {resumeDraft.projects.length === 0 ? (
         <div className="status-box">
           <strong>当前还没有项目经历</strong>
@@ -112,20 +111,17 @@ export function ProjectsSection({
         collisionDetection={closestCenter}
         modifiers={[restrictToVerticalAxis]}
         onDragEnd={handleDragEnd}
-        sensors={sensors}
-      >
+        sensors={sensors}>
         <SortableContext
           items={sortableCollections.projects}
-          strategy={verticalListSortingStrategy}
-        >
+          strategy={verticalListSortingStrategy}>
           <div className="grid gap-4">
             {resumeDraft.projects.map((project, index) => (
               <SortableItemShell
                 disabled={isTranslationMode}
                 dragHandleLabel={`拖拽排序项目经历 ${index + 1}`}
                 id={sortableCollections.projects[index] ?? `project-${index}`}
-                key={sortableCollections.projects[index] ?? `project-${index}`}
-              >
+                key={sortableCollections.projects[index] ?? `project-${index}`}>
                 {({ dragHandle }) => (
                   <EditorEntry
                     action={buildEntryActions({
@@ -147,14 +143,18 @@ export function ProjectsSection({
                     summary={project.name.zh || project.name.en || '未命名项目'}
                     title={`项目经历 ${index + 1}`}
                     toggleLabel={`项目经历 ${index + 1} 条目开关`}
-                    variant="embedded"
-                  >
+                    variant="embedded">
                     <div className="grid gap-4 md:grid-cols-2">
                       <LocalizedEditorField
                         label={`项目经历 ${index + 1} 名称`}
                         localeMode={editorLocaleMode}
                         onChange={(value) =>
-                          updateProjectLocalizedField(index, 'name', editorLocaleMode, value)
+                          updateProjectLocalizedField(
+                            index,
+                            'name',
+                            editorLocaleMode,
+                            value,
+                          )
                         }
                         sourceValue={project.name.zh}
                         value={project.name[editorLocaleMode]}
@@ -163,7 +163,12 @@ export function ProjectsSection({
                         label={`项目经历 ${index + 1} 角色`}
                         localeMode={editorLocaleMode}
                         onChange={(value) =>
-                          updateProjectLocalizedField(index, 'role', editorLocaleMode, value)
+                          updateProjectLocalizedField(
+                            index,
+                            'role',
+                            editorLocaleMode,
+                            value,
+                          )
                         }
                         sourceValue={project.role.zh}
                         value={project.role[editorLocaleMode]}
@@ -175,7 +180,11 @@ export function ProjectsSection({
                             <Input
                               fullWidth
                               onChange={(event) =>
-                                updateProjectPlainField(index, 'startDate', event.target.value)
+                                updateProjectPlainField(
+                                  index,
+                                  'startDate',
+                                  event.target.value,
+                                )
                               }
                               value={project.startDate}
                               variant="secondary"
@@ -186,7 +195,11 @@ export function ProjectsSection({
                             <Input
                               fullWidth
                               onChange={(event) =>
-                                updateProjectPlainField(index, 'endDate', event.target.value)
+                                updateProjectPlainField(
+                                  index,
+                                  'endDate',
+                                  event.target.value,
+                                )
                               }
                               value={project.endDate}
                               variant="secondary"
@@ -200,7 +213,12 @@ export function ProjectsSection({
                       label={`项目经历 ${index + 1} 项目概览`}
                       localeMode={editorLocaleMode}
                       onChange={(value) =>
-                        updateProjectLocalizedField(index, 'summary', editorLocaleMode, value)
+                        updateProjectLocalizedField(
+                          index,
+                          'summary',
+                          editorLocaleMode,
+                          value,
+                        )
                       }
                       rows={4}
                       sourceValue={project.summary.zh}
@@ -212,7 +230,12 @@ export function ProjectsSection({
                       label={`项目经历 ${index + 1} 项目核心功能`}
                       localeMode={editorLocaleMode}
                       onChange={(value) =>
-                        updateProjectLocalizedField(index, 'coreFunctions', editorLocaleMode, value)
+                        updateProjectLocalizedField(
+                          index,
+                          'coreFunctions',
+                          editorLocaleMode,
+                          value,
+                        )
                       }
                       rows={4}
                       sourceValue={project.coreFunctions.zh}
@@ -230,7 +253,12 @@ export function ProjectsSection({
                       sourceValue={formatLocalizedLines(project.highlights, 'zh')}
                       value={
                         draftFieldValues[
-                          buildDraftFieldKey('project', index, 'highlights', editorLocaleMode)
+                          buildDraftFieldKey(
+                            'project',
+                            index,
+                            'highlights',
+                            editorLocaleMode,
+                          )
                         ] ?? formatLocalizedLines(project.highlights, editorLocaleMode)
                       }
                       variant="textarea"
@@ -241,7 +269,9 @@ export function ProjectsSection({
                         <span>{`项目经历 ${index + 1} 技术栈（逗号分隔）`}</span>
                         <Input
                           fullWidth
-                          onChange={(event) => updateProjectTechnologies(index, event.target.value)}
+                          onChange={(event) =>
+                            updateProjectTechnologies(index, event.target.value)
+                          }
                           value={
                             draftFieldValues[
                               buildDraftFieldKey('project', index, 'technologies')
@@ -283,14 +313,15 @@ export function ProjectsSection({
                       {project.links.map((link, linkIndex) => (
                         <div
                           className="grid min-w-0 gap-4 rounded-[20px] border border-zinc-200/60 bg-zinc-50/60 p-4 shadow-none dark:border-zinc-800/80 dark:bg-zinc-950/55"
-                          key={`project-${index}-link-${linkIndex}`}
-                        >
+                          key={`project-${index}-link-${linkIndex}`}>
                           <div className="flex min-w-0 items-start justify-between gap-3">
                             <div className="min-w-0 space-y-1">
                               <h6 className="text-sm font-semibold text-zinc-950 dark:text-white">
                                 {`项目链接 ${linkIndex + 1}`}
                               </h6>
-                              <p className="muted truncate">{link.url || link.label.zh || '未命名链接'}</p>
+                              <p className="muted truncate">
+                                {link.url || link.label.zh || '未命名链接'}
+                              </p>
                             </div>
                             {!isTranslationMode ? (
                               <IconActionButton
@@ -327,7 +358,12 @@ export function ProjectsSection({
                                 className="min-w-0"
                                 fullWidth
                                 onChange={(event) =>
-                                  updateProjectLinkField(index, linkIndex, 'url', event.target.value)
+                                  updateProjectLinkField(
+                                    index,
+                                    linkIndex,
+                                    'url',
+                                    event.target.value,
+                                  )
                                 }
                                 value={link.url}
                                 variant="secondary"
@@ -345,5 +381,5 @@ export function ProjectsSection({
         </SortableContext>
       </DndContext>
     </EditorSection>
-  );
+  )
 }

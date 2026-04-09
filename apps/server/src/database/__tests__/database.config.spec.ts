@@ -1,16 +1,13 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest'
 
-import {
-  buildDefaultDatabaseUrl,
-  resolveDatabaseConfig,
-} from '../database.config';
+import { buildDefaultDatabaseUrl, resolveDatabaseConfig } from '../database.config'
 
 describe('database.config', () => {
   it('should fall back to a repo local sqlite file when DATABASE_URL is absent', () => {
-    const databaseUrl = buildDefaultDatabaseUrl('/workspace/my-resume');
+    const databaseUrl = buildDefaultDatabaseUrl('/workspace/my-resume')
 
-    expect(databaseUrl).toBe('file:/workspace/my-resume/.data/my-resume.db');
-  });
+    expect(databaseUrl).toBe('file:/workspace/my-resume/.data/my-resume.db')
+  })
 
   it('should prefer explicit DATABASE_URL and DATABASE_AUTH_TOKEN', () => {
     const config = resolveDatabaseConfig(
@@ -19,15 +16,15 @@ describe('database.config', () => {
         DATABASE_AUTH_TOKEN: 'demo-token',
       },
       '/workspace/my-resume',
-    );
+    )
 
     expect(config).toEqual({
       url: 'libsql://demo.turso.io',
       authToken: 'demo-token',
       isRemote: true,
       dialect: 'libsql',
-    });
-  });
+    })
+  })
 
   it('should support turbso style auth token fallback for compatibility', () => {
     const config = resolveDatabaseConfig(
@@ -35,10 +32,10 @@ describe('database.config', () => {
         TURSO_AUTH_TOKEN: 'turso-token',
       },
       '/workspace/my-resume',
-    );
+    )
 
-    expect(config.url).toBe('file:/workspace/my-resume/.data/my-resume.db');
-    expect(config.authToken).toBe('turso-token');
-    expect(config.isRemote).toBe(false);
-  });
-});
+    expect(config.url).toBe('file:/workspace/my-resume/.data/my-resume.db')
+    expect(config.authToken).toBe('turso-token')
+    expect(config.isRemote).toBe(false)
+  })
+})

@@ -33,7 +33,8 @@
   background: rgba(37, 99, 235, 0.08);
 }
 
-.themeSwitchControlLight {}
+.themeSwitchControlLight {
+}
 
 .themeSwitchThumb {
   display: inline-flex;

@@ -6,14 +6,14 @@ date: 2026-03-25
 
 > 🗺️ **「全栈 AI Agent 学习」系列**
 >
-> | 篇 | 主题 | 状态 |
-> |----|------|------|
-> | 第一篇 | 提示链 · 路由 · 并行化 | ✅ |
-> | 第二篇 | 反思 · 工具使用 · 规划 | ✅ |
-> | 第三篇 | 多智能体 · 记忆管理 · 学习适应 | ✅ |
-> | RAG篇① | RAG 是什么？核心概念与完整流程 | ✅ |
-> | RAG篇② | RAG 怎么做？从切片到向量检索 | ✅ |
-> | **RAG篇③（本篇）** | **RAG 怎么做好？意图提取、重排序与答案质量** | ✅ |
+> | 篇                 | 主题                                         | 状态 |
+> | ------------------ | -------------------------------------------- | ---- |
+> | 第一篇             | 提示链 · 路由 · 并行化                       | ✅   |
+> | 第二篇             | 反思 · 工具使用 · 规划                       | ✅   |
+> | 第三篇             | 多智能体 · 记忆管理 · 学习适应               | ✅   |
+> | RAG篇①             | RAG 是什么？核心概念与完整流程               | ✅   |
+> | RAG篇②             | RAG 怎么做？从切片到向量检索                 | ✅   |
+> | **RAG篇③（本篇）** | **RAG 怎么做好？意图提取、重排序与答案质量** | ✅   |
 
 ---
 
@@ -81,6 +81,7 @@ date: 2026-03-25
 ```
 
 把自然语言问题拆成两部分：
+
 - **核心问题**：用来做向量搜索
 - **过滤条件**：用来缩小搜索范围
 
@@ -92,20 +93,20 @@ date: 2026-03-25
 function extractIntent_v1(userQuery) {
   const intent = {
     query: userQuery,
-    filters: {}
+    filters: {},
   }
 
   // 公司关键词映射
   const companies = {
-    '某科技公司': 'company_a',
-    '另一家公司': 'company_b'
+    某科技公司: 'company_a',
+    另一家公司: 'company_b',
   }
 
   // 类型关键词映射
   const sections = {
-    '项目': 'project',
-    '技能': 'skills',
-    '工作经历': 'experience'
+    项目: 'project',
+    技能: 'skills',
+    工作经历: 'experience',
   }
 
   // 匹配公司
@@ -208,30 +209,26 @@ async function hybridSearch(userQuery, vectorStore, topK = 3) {
   const queryVector = await embedText(intent.query)
 
   // 第三步：用 filters 先过滤候选
-  const candidates = vectorStore.chunks.filter(chunk => {
-    if (intent.filters.company &&
-        chunk.metadata.company !== intent.filters.company) {
+  const candidates = vectorStore.chunks.filter((chunk) => {
+    if (intent.filters.company && chunk.metadata.company !== intent.filters.company) {
       return false
     }
-    if (intent.filters.section &&
-        chunk.metadata.type !== intent.filters.section) {
+    if (intent.filters.section && chunk.metadata.type !== intent.filters.section) {
       return false
     }
     return true
   })
 
   // 第四步：在候选里计算相似度
-  const results = candidates.map(chunk => ({
+  const results = candidates.map((chunk) => ({
     ...chunk,
-    score: cosineSimilarity(queryVector, chunk.vector)
+    score: cosineSimilarity(queryVector, chunk.vector),
   }))
 
   // 第五步：排序返回 Top K
   return {
     intent,
-    chunks: results
-      .sort((a, b) => b.score - a.score)
-      .slice(0, topK)
+    chunks: results.sort((a, b) => b.score - a.score).slice(0, topK),
   }
 }
 ```
@@ -290,34 +287,35 @@ async function hybridSearch(userQuery, vectorStore, topK = 3) {
 
 ```javascript
 function rerank(chunks, intent) {
-  return chunks.map(chunk => {
-    let score = chunk.score  // 基础向量得分
+  return chunks
+    .map((chunk) => {
+      let score = chunk.score // 基础向量得分
 
-    // 维度 1：类型完全匹配，加分
-    if (chunk.metadata.type === intent.filters.section) {
-      score += 0.2
-    }
+      // 维度 1：类型完全匹配，加分
+      if (chunk.metadata.type === intent.filters.section) {
+        score += 0.2
+      }
 
-    // 维度 2：公司完全匹配，加分
-    if (chunk.metadata.company === intent.filters.company) {
-      score += 0.15
-    }
+      // 维度 2：公司完全匹配，加分
+      if (chunk.metadata.company === intent.filters.company) {
+        score += 0.15
+      }
 
-    // 维度 3：技术栈匹配，每匹配一个加一点
-    if (intent.filters.tech_stack) {
-      const matchCount = intent.filters.tech_stack.filter(
-        tech => chunk.metadata.tech_stack?.includes(tech)
-      ).length
-      score += matchCount * 0.05
-    }
+      // 维度 3：技术栈匹配，每匹配一个加一点
+      if (intent.filters.tech_stack) {
+        const matchCount = intent.filters.tech_stack.filter((tech) =>
+          chunk.metadata.tech_stack?.includes(tech),
+        ).length
+        score += matchCount * 0.05
+      }
 
-    // 维度 4：内容完整度（太短的块信息量不够）
-    const completeness = Math.min(chunk.content.length / 500, 1)
-    score += completeness * 0.1
+      // 维度 4：内容完整度（太短的块信息量不够）
+      const completeness = Math.min(chunk.content.length / 500, 1)
+      score += completeness * 0.1
 
-    return { ...chunk, finalScore: score }
-  })
-  .sort((a, b) => b.finalScore - a.finalScore)
+      return { ...chunk, finalScore: score }
+    })
+    .sort((a, b) => b.finalScore - a.finalScore)
 }
 ```
 
@@ -350,7 +348,7 @@ function rerankWithDiversity(chunks, lambda = 0.5) {
 
       // 与已选内容的最大相似度（越高说明越重复）
       const maxSimilarity = Math.max(
-        ...selected.map(s => cosineSimilarity(chunk.vector, s.vector))
+        ...selected.map((s) => cosineSimilarity(chunk.vector, s.vector)),
       )
 
       // MMR 分数：相关性高 + 重复度低 = 好
@@ -370,6 +368,7 @@ function rerankWithDiversity(chunks, lambda = 0.5) {
 ```
 
 `lambda` 控制两者的权重：
+
 - `lambda = 1`：只看相关性，不管多样性
 - `lambda = 0`：只看多样性，不管相关性
 - `lambda = 0.5`：两者各占一半（通常这个值效果最好）
@@ -419,6 +418,7 @@ const prompt = `根据以下信息回答用户问题。\n\n${context}\n\n${userQ
 ```
 
 这样写有几个问题：
+
 - LLM 可能把自己训练数据里的知识混进来
 - 不知道答案是从哪个来源来的
 - 格式不可控，有时候答得长，有时候答得短
@@ -461,7 +461,7 @@ ${userQuery}
 
   // 验证引用合法性（防止 LLM 编造来源编号）
   result.citations = result.citations.filter(
-    c => c.source_index >= 1 && c.source_index <= chunks.length
+    (c) => c.source_index >= 1 && c.source_index <= chunks.length,
   )
 
   return {
@@ -470,8 +470,8 @@ ${userQuery}
     sources: chunks.map((c, i) => ({
       index: i + 1,
       title: c.title || c.section,
-      cited: result.citations.some(citation => citation.source_index === i + 1)
-    }))
+      cited: result.citations.some((citation) => citation.source_index === i + 1),
+    })),
   }
 }
 ```
@@ -488,7 +488,7 @@ async function verifyAnswer(answer, chunks) {
 ${answer}
 
 【原始信息】
-${chunks.map(c => c.content).join('\n\n---\n\n')}
+${chunks.map((c) => c.content).join('\n\n---\n\n')}
 
 【任务】
 检查答案是否有以下问题：
@@ -510,7 +510,7 @@ ${chunks.map(c => c.content).join('\n\n---\n\n')}
     return {
       answer: verification.corrected_answer,
       original_answer: answer,
-      corrected: true
+      corrected: true,
     }
   }
 
@@ -536,9 +536,9 @@ class RAGSystem {
 
   // 构建阶段：只做一次
   async build(resumeYaml) {
-    const chunks = chunkByStructure(resumeYaml)   // 切片
-    await embedAllChunks(chunks)                   // 向量化
-    this.vectorStore.addChunks(chunks)             // 存储
+    const chunks = chunkByStructure(resumeYaml) // 切片
+    await embedAllChunks(chunks) // 向量化
+    this.vectorStore.addChunks(chunks) // 存储
     await this.vectorStore.save('./vectors.json')
     console.log(`✅ 构建完成，共 ${chunks.length} 个 chunks`)
   }
@@ -556,21 +556,27 @@ class RAGSystem {
     const candidates = this.vectorStore.search({
       vector: queryVector,
       filters: intent.filters,
-      topK: 10                   // 先多捞一些，后面重排序再筛
+      topK: 10, // 先多捞一些，后面重排序再筛
     })
     console.log(`🔍 候选：${candidates.length} 个`)
 
     // 第三步：重排序
     const reranked = rerank(candidates, intent)
     const diverse = rerankWithDiversity(reranked)
-    console.log(`📊 重排序后 Top 3：`, diverse.map(c => c.id))
+    console.log(
+      `📊 重排序后 Top 3：`,
+      diverse.map((c) => c.id),
+    )
 
     // 第四步：生成答案
     const result = await generateAnswer(userQuery, diverse.slice(0, 3))
 
     console.log(`\n💬 答案：${result.answer}`)
     console.log(`✨ 置信度：${result.confidence}`)
-    console.log(`📚 来源：`, result.sources.filter(s => s.cited))
+    console.log(
+      `📚 来源：`,
+      result.sources.filter((s) => s.cited),
+    )
 
     return result
   }
@@ -585,9 +591,9 @@ const rag = new RAGSystem()
 await rag.build(resumeYaml)
 
 // 问答
-await rag.ask("他会什么技术？")
-await rag.ask("他在某科技公司做过什么安全相关的项目？")
-await rag.ask("他有 Vue3 相关的项目经验吗？")
+await rag.ask('他会什么技术？')
+await rag.ask('他在某科技公司做过什么安全相关的项目？')
+await rag.ask('他有 Vue3 相关的项目经验吗？')
 ```
 
 输出示例：
@@ -681,6 +687,7 @@ MMR 的思路很优雅：**相关性高 + 重复度低 = 好**。
 一开始我以为 LLM 越自由越好，让它自己判断怎么回答。
 
 但实际上，在 RAG 场景里，**约束比自由更重要**：
+
 - 明确说"只根据提供的信息回答"
 - 要求输出 JSON，不要自由发挥格式
 - 引用来源，让答案可验证
@@ -714,13 +721,13 @@ MMR 的思路很优雅：**相关性高 + 重复度低 = 好**。
 
 RAG 三篇走完，一张表格收尾：
 
-| 步骤 | 解决的问题 | 准确率提升 |
-|------|-----------|-----------|
-| 切片 + 向量化 + 检索 | 能跑起来 | 基础 ~60% |
-| 意图提取 + 混合检索 | 不混进不相关内容 | +20% |
-| 多维度重排序 | 最该出现的排最前 | +10% |
-| MMR 多样性 | 不返回重复内容 | 体验提升 |
-| 结构化 Prompt + 验证 | LLM 不乱编，有来源 | +5% |
+| 步骤                 | 解决的问题         | 准确率提升 |
+| -------------------- | ------------------ | ---------- |
+| 切片 + 向量化 + 检索 | 能跑起来           | 基础 ~60%  |
+| 意图提取 + 混合检索  | 不混进不相关内容   | +20%       |
+| 多维度重排序         | 最该出现的排最前   | +10%       |
+| MMR 多样性           | 不返回重复内容     | 体验提升   |
+| 结构化 Prompt + 验证 | LLM 不乱编，有来源 | +5%        |
 
 RAG 不复杂，但细节决定成败。
 每一步都有优化空间，每一步的优化都看得到效果。

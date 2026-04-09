@@ -1,29 +1,42 @@
-'use client';
+'use client'
 
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Chip } from '@heroui/react';
-import Link from 'next/link';
-import { useState } from 'react';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Chip,
+} from '@heroui/react'
+import Link from 'next/link'
+import { useState } from 'react'
 
-import type { ResumeLocale, ResumePublishedSnapshot } from '../../lib/published-resume-types';
-import { PublishedResumeEmptyState } from '../published-resume/published-resume-empty-state';
-import { formatPublishedAt, readLocalizedText, resumeLabels } from '../published-resume/published-resume-utils';
-import { PublicSiteHeader } from '../site/header';
+import type {
+  ResumeLocale,
+  ResumePublishedSnapshot,
+} from '../../lib/published-resume-types'
+import { PublishedResumeEmptyState } from '../published-resume/published-resume-empty-state'
+import {
+  formatPublishedAt,
+  readLocalizedText,
+  resumeLabels,
+} from '../published-resume/published-resume-utils'
+import { PublicSiteHeader } from '../site/header'
 
 interface ProfileOverviewShellProps {
-  publishedResume: ResumePublishedSnapshot | null;
+  publishedResume: ResumePublishedSnapshot | null
 }
 
-export function ProfileOverviewShell({
-  publishedResume,
-}: ProfileOverviewShellProps) {
-  const [locale, setLocale] = useState<ResumeLocale>('zh');
+export function ProfileOverviewShell({ publishedResume }: ProfileOverviewShellProps) {
+  const [locale, setLocale] = useState<ResumeLocale>('zh')
 
   if (!publishedResume) {
-    return <PublishedResumeEmptyState />;
+    return <PublishedResumeEmptyState />
   }
 
-  const labels = resumeLabels[locale];
-  const profile = publishedResume.resume.profile;
+  const labels = resumeLabels[locale]
+  const profile = publishedResume.resume.profile
   const signalCards = [
     {
       label: labels.experienceCountLabel,
@@ -48,7 +61,7 @@ export function ProfileOverviewShell({
         locale,
       )}`,
     },
-  ];
+  ]
 
   return (
     <main className="web-page-shell">
@@ -69,8 +82,7 @@ export function ProfileOverviewShell({
             {signalCards.map((card) => (
               <div
                 className="rounded-[1.75rem] border border-slate-200 bg-slate-50/80 p-5 dark:border-white/10 dark:bg-white/5"
-                key={card.label}
-              >
+                key={card.label}>
                 <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
                   {card.label}
                 </p>
@@ -112,8 +124,7 @@ export function ProfileOverviewShell({
                       href={link.url}
                       key={link.url}
                       rel="noreferrer"
-                      target="_blank"
-                    >
+                      target="_blank">
                       {readLocalizedText(link.label, locale)}
                     </a>
                   ))}
@@ -143,5 +154,5 @@ export function ProfileOverviewShell({
         </div>
       </section>
     </main>
-  );
+  )
 }

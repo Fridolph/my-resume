@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest'
 
 import {
   createEmptyLocalizedText,
@@ -8,7 +8,7 @@ import {
   isLocalizedText,
   normalizeStandardResume,
   validateStandardResume,
-} from '../standard-resume';
+} from '../standard-resume'
 
 describe('standard resume domain', () => {
   it('should expose stable module boundaries for the standard resume', () => {
@@ -19,72 +19,68 @@ describe('standard resume domain', () => {
       'projects',
       'skills',
       'highlights',
-    ]);
-  });
+    ])
+  })
 
   it('should create an empty bilingual resume skeleton', () => {
-    const resume = createEmptyStandardResume();
+    const resume = createEmptyStandardResume()
 
-    expect(resume.meta.defaultLocale).toBe('zh');
-    expect(resume.meta.locales).toEqual(['zh', 'en']);
+    expect(resume.meta.defaultLocale).toBe('zh')
+    expect(resume.meta.locales).toEqual(['zh', 'en'])
     expect(resume.profile.fullName).toEqual({
       zh: '',
       en: '',
-    });
-    expect(resume.profile.hero.frontImageUrl).toBe('/img/avatar.jpg');
-    expect(resume.profile.hero.slogans).toHaveLength(2);
-    expect(resume.education).toEqual([]);
-    expect(resume.experiences).toEqual([]);
-    expect(resume.projects).toEqual([]);
-    expect(resume.skills).toEqual([]);
-    expect(resume.highlights).toEqual([]);
-  });
+    })
+    expect(resume.profile.hero.frontImageUrl).toBe('/img/avatar.jpg')
+    expect(resume.profile.hero.slogans).toHaveLength(2)
+    expect(resume.education).toEqual([])
+    expect(resume.experiences).toEqual([])
+    expect(resume.projects).toEqual([])
+    expect(resume.skills).toEqual([])
+    expect(resume.highlights).toEqual([])
+  })
 
   it('should keep localized text objects strict and bilingual', () => {
-    expect(isLocalizedText(createEmptyLocalizedText())).toBe(true);
-    expect(isLocalizedText({ zh: '你好', en: 'Hello' })).toBe(true);
-    expect(isLocalizedText({ zh: '只有中文' })).toBe(false);
-    expect(isLocalizedText({ zh: '你好', en: 'Hello', ja: 'こんにちは' })).toBe(
-      false,
-    );
-  });
+    expect(isLocalizedText(createEmptyLocalizedText())).toBe(true)
+    expect(isLocalizedText({ zh: '你好', en: 'Hello' })).toBe(true)
+    expect(isLocalizedText({ zh: '只有中文' })).toBe(false)
+    expect(isLocalizedText({ zh: '你好', en: 'Hello', ja: 'こんにちは' })).toBe(false)
+  })
 
   it('should validate a complete standard resume example', () => {
-    const resume = createExampleStandardResume();
+    const resume = createExampleStandardResume()
 
     expect(validateStandardResume(resume)).toEqual({
       valid: true,
       errors: [],
-    });
-    expect(resume.profile.headline.zh).toContain('AI Agent');
-    expect(resume.profile.hero.linkUrl).toBe('https://github.com/Fridolph/my-resume');
-    expect(resume.experiences[0]?.companyName.zh).toBe('成都澳昇能源科技有限责任公司');
-    expect(
-      resume.projects.some((item) => item.name.zh === 'GreenSketch'),
-    ).toBe(true);
-  });
+    })
+    expect(resume.profile.headline.zh).toContain('AI Agent')
+    expect(resume.profile.hero.linkUrl).toBe('https://github.com/Fridolph/my-resume')
+    expect(resume.experiences[0]?.companyName.zh).toBe('成都澳昇能源科技有限责任公司')
+    expect(resume.projects.some((item) => item.name.zh === 'GreenSketch')).toBe(true)
+  })
 
   it('should reject invalid bilingual content shapes', () => {
     const resume = createExampleStandardResume() as ReturnType<
       typeof createExampleStandardResume
     > & {
       profile: {
-        fullName: { zh: string };
-      };
-    };
+        fullName: { zh: string }
+      }
+    }
 
     resume.profile.fullName = {
       zh: '付寅生',
-    };
+    }
 
     expect(validateStandardResume(resume)).toEqual({
       valid: false,
       errors: ['profile.fullName must be a localized text object'],
-    });
-  });
+    })
+  })
 
   it('should validate all standard resume module structures', () => {
-    const resume = createExampleStandardResume();
+    const resume = createExampleStandardResume()
 
     resume.profile.links.push({
       label: {
@@ -93,70 +89,76 @@ describe('standard resume domain', () => {
       },
       url: 'https://github.com/Fridolph/my-resume',
       icon: 'ri:github-fill',
-    });
+    })
 
     expect(validateStandardResume(resume)).toEqual({
       valid: true,
       errors: [],
-    });
-  });
+    })
+  })
 
   it('should normalize legacy resumes when hero config is missing', () => {
     const resume = createExampleStandardResume() as ReturnType<
       typeof createExampleStandardResume
     > & {
       profile: Omit<ReturnType<typeof createExampleStandardResume>['profile'], 'hero'> & {
-        hero?: undefined;
-      };
-    };
+        hero?: undefined
+      }
+    }
 
-    delete resume.profile.hero;
+    delete resume.profile.hero
 
-    const normalized = normalizeStandardResume(resume);
+    const normalized = normalizeStandardResume(resume)
 
-    expect(normalized.profile.hero.frontImageUrl).toBe('/img/avatar.jpg');
-    expect(normalized.profile.hero.backImageUrl).toBe('/img/avatar2.jpg');
-    expect(normalized.profile.hero.slogans).toHaveLength(2);
-  });
+    expect(normalized.profile.hero.frontImageUrl).toBe('/img/avatar.jpg')
+    expect(normalized.profile.hero.backImageUrl).toBe('/img/avatar2.jpg')
+    expect(normalized.profile.hero.slogans).toHaveLength(2)
+  })
 
   it('should normalize legacy projects when coreFunctions is missing', () => {
     const resume = createExampleStandardResume() as ReturnType<
       typeof createExampleStandardResume
     > & {
       projects: Array<
-        Omit<ReturnType<typeof createExampleStandardResume>['projects'][number], 'coreFunctions'> & {
-          coreFunctions?: undefined;
+        Omit<
+          ReturnType<typeof createExampleStandardResume>['projects'][number],
+          'coreFunctions'
+        > & {
+          coreFunctions?: undefined
         }
-      >;
-    };
+      >
+    }
 
-    delete resume.projects[0]!.coreFunctions;
+    delete resume.projects[0].coreFunctions
 
-    const normalized = normalizeStandardResume(resume);
+    const normalized = normalizeStandardResume(resume)
 
     expect(normalized.projects[0]?.coreFunctions).toEqual({
       zh: '',
       en: '',
-    });
-  });
+    })
+  })
 
   it('should normalize legacy interests into labeled interest items', () => {
     const resume = createExampleStandardResume() as ReturnType<
       typeof createExampleStandardResume
     > & {
-      profile: Omit<ReturnType<typeof createExampleStandardResume>['profile'], 'interests'> & {
-        interests: Array<{ zh: string; en: string }>;
-      };
-    };
+      profile: Omit<
+        ReturnType<typeof createExampleStandardResume>['profile'],
+        'interests'
+      > & {
+        interests: Array<{ zh: string; en: string }>
+      }
+    }
 
     resume.profile.interests = [
       {
         zh: '羽毛球',
         en: 'Badminton',
       },
-    ];
+    ]
 
-    const normalized = normalizeStandardResume(resume);
+    const normalized = normalizeStandardResume(resume)
 
     expect(normalized.profile.interests).toEqual([
       {
@@ -165,23 +167,23 @@ describe('standard resume domain', () => {
           en: 'Badminton',
         },
       },
-    ]);
-  });
+    ])
+  })
 
   it('should reject invalid module arrays and nested field shapes', () => {
     const resume = createExampleStandardResume() as ReturnType<
       typeof createExampleStandardResume
     > & {
       profile: {
-        links: Array<{ label: { zh: string }; url: number }>;
-        interests: Array<{ label: { zh: string }; icon: number }> | string;
-      };
-      education: string;
-      experiences: Array<{ technologies: string }>;
-      projects: Array<{ links: string; technologies: string[] }>;
-      skills: Array<{ keywords: string; name: { zh: string } }>;
-      highlights: Array<{ title: { zh: string }; description: { zh: string } }>;
-    };
+        links: Array<{ label: { zh: string }; url: number }>
+        interests: Array<{ label: { zh: string }; icon: number }> | string
+      }
+      education: string
+      experiences: Array<{ technologies: string }>
+      projects: Array<{ links: string; technologies: string[] }>
+      skills: Array<{ keywords: string; name: { zh: string } }>
+      highlights: Array<{ title: { zh: string }; description: { zh: string } }>
+    }
 
     resume.profile.links = [
       {
@@ -191,7 +193,7 @@ describe('standard resume domain', () => {
         url: 123,
         icon: 1,
       },
-    ];
+    ]
     resume.profile.interests = [
       {
         label: {
@@ -199,19 +201,19 @@ describe('standard resume domain', () => {
         },
         icon: 123,
       },
-    ];
-    resume.education = 'education' as unknown as string;
+    ]
+    resume.education = 'education' as unknown as string
     resume.experiences = [
       {
         technologies: 'Vue 3',
       },
-    ];
+    ]
     resume.projects = [
       {
         links: 'https://example.com',
         technologies: ['Vue 3'],
       },
-    ];
+    ]
     resume.skills = [
       {
         keywords: 'TypeScript',
@@ -219,7 +221,7 @@ describe('standard resume domain', () => {
           zh: '前端工程化',
         },
       },
-    ];
+    ]
     resume.highlights = [
       {
         title: {
@@ -229,7 +231,7 @@ describe('standard resume domain', () => {
           zh: '持续输出',
         },
       },
-    ];
+    ]
 
     expect(validateStandardResume(resume)).toEqual({
       valid: false,
@@ -258,6 +260,6 @@ describe('standard resume domain', () => {
         'highlights[0].title must be a localized text object',
         'highlights[0].description must be a localized text object',
       ],
-    });
-  });
-});
+    })
+  })
+})

@@ -1,27 +1,27 @@
-'use client';
+'use client'
 
-import { Button, Input, TextArea } from '@heroui/react';
+import { Button, Input, TextArea } from '@heroui/react'
 
-import { adminPrimaryButtonClass } from '../../lib/button-styles';
-import { useState } from 'react';
+import { adminPrimaryButtonClass } from '../../lib/button-styles'
+import { useState } from 'react'
 
-import { extractTextFromFile } from '../../lib/ai-file-api';
-import { FileExtractionResult } from '../../lib/ai-file-types';
+import { extractTextFromFile } from '../../lib/ai-file-api'
+import { FileExtractionResult } from '../../lib/ai-file-types'
 
 interface AiFileExtractionPanelProps {
-  apiBaseUrl: string;
-  accessToken: string;
-  canUpload: boolean;
-  extractFileText?: typeof extractTextFromFile;
-  onExtractedText?: (result: FileExtractionResult) => void;
+  apiBaseUrl: string
+  accessToken: string
+  canUpload: boolean
+  extractFileText?: typeof extractTextFromFile
+  onExtractedText?: (result: FileExtractionResult) => void
 }
 
 function formatFileSize(size: number): string {
   if (size < 1024) {
-    return `${size} B`;
+    return `${size} B`
   }
 
-  return `${(size / 1024).toFixed(1)} KB`;
+  return `${(size / 1024).toFixed(1)} KB`
 }
 
 export function AiFileExtractionPanel({
@@ -31,10 +31,10 @@ export function AiFileExtractionPanel({
   extractFileText = extractTextFromFile,
   onExtractedText,
 }: AiFileExtractionPanelProps) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [result, setResult] = useState<FileExtractionResult | null>(null);
-  const [pending, setPending] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [result, setResult] = useState<FileExtractionResult | null>(null)
+  const [pending, setPending] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   if (!canUpload) {
     return (
@@ -48,35 +48,33 @@ export function AiFileExtractionPanel({
           viewer 当前只保留缓存结果与预设体验，文件上传入口会在管理员链路中继续推进。
         </div>
       </section>
-    );
+    )
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+    event.preventDefault()
 
     if (!selectedFile) {
-      return;
+      return
     }
 
-    setPending(true);
-    setErrorMessage(null);
+    setPending(true)
+    setErrorMessage(null)
 
     try {
       const nextResult = await extractFileText({
         apiBaseUrl,
         accessToken,
         file: selectedFile,
-      });
+      })
 
-      setResult(nextResult);
-      onExtractedText?.(nextResult);
+      setResult(nextResult)
+      onExtractedText?.(nextResult)
     } catch (error) {
-      setResult(null);
-      setErrorMessage(
-        error instanceof Error ? error.message : '文件提取失败，请稍后重试',
-      );
+      setResult(null)
+      setErrorMessage(error instanceof Error ? error.message : '文件提取失败，请稍后重试')
     } finally {
-      setPending(false);
+      setPending(false)
     }
   }
 
@@ -98,11 +96,11 @@ export function AiFileExtractionPanel({
             aria-label="选择文件"
             fullWidth
             onChange={(event) => {
-              const file = event.target.files?.[0] ?? null;
+              const file = event.target.files?.[0] ?? null
 
-              setSelectedFile(file);
-              setErrorMessage(null);
-              setResult(null);
+              setSelectedFile(file)
+              setErrorMessage(null)
+              setResult(null)
             }}
             type="file"
             variant="secondary"
@@ -130,8 +128,7 @@ export function AiFileExtractionPanel({
             isDisabled={!selectedFile || pending}
             size="md"
             type="submit"
-            variant="primary"
-          >
+            variant="primary">
             {pending ? '正在提取文本...' : '开始提取文本'}
           </Button>
         </div>
@@ -163,5 +160,5 @@ export function AiFileExtractionPanel({
         </div>
       ) : null}
     </section>
-  );
+  )
 }

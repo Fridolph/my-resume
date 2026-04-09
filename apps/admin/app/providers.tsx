@@ -1,20 +1,20 @@
-'use client';
+'use client'
 
-import { ThemeProvider, useTheme } from 'next-themes';
-import { useEffect, type ReactNode } from 'react';
+import { ThemeProvider, useTheme } from 'next-themes'
+import { useEffect, type ReactNode } from 'react'
 
-import { AdminSessionProvider } from '../lib/admin-session';
+import { AdminSessionProvider } from '../lib/admin-session'
 
 function ThemeDatasetBridge() {
-  const { resolvedTheme } = useTheme();
+  const { resolvedTheme } = useTheme()
 
   useEffect(() => {
-    const nextTheme = resolvedTheme === 'dark' ? 'dark' : 'light';
+    const nextTheme = resolvedTheme === 'dark' ? 'dark' : 'light'
 
-    document.documentElement.dataset.theme = nextTheme;
-  }, [resolvedTheme]);
+    document.documentElement.dataset.theme = nextTheme
+  }, [resolvedTheme])
 
-  return null;
+  return null
 }
 
 export function Providers({ children }: { children: ReactNode }) {
@@ -24,12 +24,11 @@ export function Providers({ children }: { children: ReactNode }) {
       defaultTheme="light"
       disableTransitionOnChange
       enableSystem={false}
-      storageKey="my-resume-theme-mode"
-    >
+      storageKey="my-resume-theme-mode">
       <AdminSessionProvider>
         <ThemeDatasetBridge />
         {children}
       </AdminSessionProvider>
     </ThemeProvider>
-  );
+  )
 }

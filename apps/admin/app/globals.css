@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "@heroui/react/styles";
+@import 'tailwindcss';
+@import '@heroui/react/styles';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -67,11 +67,7 @@ body {
   background: var(--admin-page-bg);
   color: var(--admin-text);
   font-family:
-    "IBM Plex Sans",
-    "PingFang SC",
-    "Hiragino Sans GB",
-    "Microsoft YaHei",
-    sans-serif;
+    'IBM Plex Sans', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 a {
@@ -177,7 +173,11 @@ button:disabled {
   gap: 0.6rem;
   border-radius: 20px;
   border: 1px solid var(--admin-border);
-  background: color-mix(in srgb, var(--admin-primary-soft) 42%, var(--admin-surface-strong));
+  background: color-mix(
+    in srgb,
+    var(--admin-primary-soft) 42%,
+    var(--admin-surface-strong)
+  );
   padding: 1rem 1.1rem;
 }
 

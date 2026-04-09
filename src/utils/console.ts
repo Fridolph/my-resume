@@ -16,5 +16,8 @@ export function print() {
     'color:#00FF3B',
     'color:#00FFB1',
   )
-  console.log('https://github.com/Fridolph/my-resume/', '如果您感兴趣或者对您有帮助，麻烦给个STAR吧，谢谢！~')
+  console.log(
+    'https://github.com/Fridolph/my-resume/',
+    '如果您感兴趣或者对您有帮助，麻烦给个STAR吧，谢谢！~',
+  )
 }

@@ -1,13 +1,13 @@
-import './globals.css';
+import './globals.css'
 
-import { ThemeModeProvider } from '@my-resume/ui/theme';
-import type { Metadata } from 'next';
-import type { ReactNode } from 'react';
+import { ThemeModeProvider } from '@my-resume/ui/theme'
+import type { Metadata } from 'next'
+import type { ReactNode } from 'react'
 
 export const metadata: Metadata = {
   title: 'my-resume web',
   description: 'Public resume web shell',
-};
+}
 
 const themeInitScript = `
   (function () {
@@ -25,15 +25,19 @@ const themeInitScript = `
       }
     } catch (error) {}
   })();
-`;
+`
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: ReactNode;
+  children: ReactNode
 }>) {
   return (
-    <html data-template="default" data-theme="light" lang="zh-CN" suppressHydrationWarning>
+    <html
+      data-template="default"
+      data-theme="light"
+      lang="zh-CN"
+      suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
@@ -41,5 +45,5 @@ export default function RootLayout({
         <ThemeModeProvider>{children}</ThemeModeProvider>
       </body>
     </html>
-  );
+  )
 }

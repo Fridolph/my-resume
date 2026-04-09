@@ -1,12 +1,12 @@
-'use client';
+'use client'
 
-import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core';
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { Input } from '@heroui/react';
-import type { ComponentProps, ReactNode } from 'react';
+import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core'
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { Input } from '@heroui/react'
+import type { ComponentProps, ReactNode } from 'react'
 
-import type { StandardResume } from '../../lib/resume-types';
+import type { StandardResume } from '../../lib/resume-types'
 import {
   buildDraftFieldKey,
   formatCommaSeparatedValues,
@@ -14,7 +14,7 @@ import {
   type DraftFieldValues,
   type EditorLocaleMode,
   type SortableCollectionState,
-} from './draft-editor-helpers';
+} from './draft-editor-helpers'
 import {
   buildEntryActions,
   EditorEntry,
@@ -24,32 +24,32 @@ import {
   PlusIcon,
   SortableItemShell,
   TrashIcon,
-} from './editor-primitives';
+} from './editor-primitives'
 
 interface ExperiencesSectionProps {
-  draftFieldValues: DraftFieldValues;
-  editorLocaleMode: EditorLocaleMode;
-  isTranslationMode: boolean;
-  resumeDraft: StandardResume;
-  sensors: ComponentProps<typeof DndContext>['sensors'];
-  sortableCollections: SortableCollectionState;
-  translationAction?: ReactNode;
-  addExperience: () => void;
-  handleDragEnd: (event: DragEndEvent) => void;
-  removeExperience: (index: number) => void;
-  updateExperienceHighlights: (index: number, locale: 'zh' | 'en', value: string) => void;
+  draftFieldValues: DraftFieldValues
+  editorLocaleMode: EditorLocaleMode
+  isTranslationMode: boolean
+  resumeDraft: StandardResume
+  sensors: ComponentProps<typeof DndContext>['sensors']
+  sortableCollections: SortableCollectionState
+  translationAction?: ReactNode
+  addExperience: () => void
+  handleDragEnd: (event: DragEndEvent) => void
+  removeExperience: (index: number) => void
+  updateExperienceHighlights: (index: number, locale: 'zh' | 'en', value: string) => void
   updateExperienceLocalizedField: (
     index: number,
     field: 'companyName' | 'role' | 'employmentType' | 'location' | 'summary',
     locale: 'zh' | 'en',
     value: string,
-  ) => void;
+  ) => void
   updateExperiencePlainField: (
     index: number,
     field: 'startDate' | 'endDate',
     value: string,
-  ) => void;
-  updateExperienceTechnologies: (index: number, value: string) => void;
+  ) => void
+  updateExperienceTechnologies: (index: number, value: string) => void
 }
 
 export function ExperiencesSection({
@@ -71,15 +71,15 @@ export function ExperiencesSection({
   return (
     <EditorSection
       action={
-        isTranslationMode
-          ? translationAction
-          : (
-            <IconActionButton
-              icon={<PlusIcon />}
-              label="添加工作经历"
-              onClick={addExperience}
-            />
-            )
+        isTranslationMode ? (
+          translationAction
+        ) : (
+          <IconActionButton
+            icon={<PlusIcon />}
+            label="添加工作经历"
+            onClick={addExperience}
+          />
+        )
       }
       count={resumeDraft.experiences.length}
       description={
@@ -87,8 +87,7 @@ export function ExperiencesSection({
           ? '英文翻译工作区只维护公司、岗位、类型、地点、摘要和亮点的英文内容。'
           : '优先开放公司、岗位、时间、摘要、亮点和技术栈，满足岗位定向调整的主需求。'
       }
-      title="工作经历"
-    >
+      title="工作经历">
       {resumeDraft.experiences.length === 0 ? (
         <div className="status-box">
           <strong>当前还没有工作经历</strong>
@@ -100,20 +99,17 @@ export function ExperiencesSection({
         collisionDetection={closestCenter}
         modifiers={[restrictToVerticalAxis]}
         onDragEnd={handleDragEnd}
-        sensors={sensors}
-      >
+        sensors={sensors}>
         <SortableContext
           items={sortableCollections.experiences}
-          strategy={verticalListSortingStrategy}
-        >
+          strategy={verticalListSortingStrategy}>
           <div className="grid gap-4">
             {resumeDraft.experiences.map((experience, index) => (
               <SortableItemShell
                 disabled={isTranslationMode}
                 dragHandleLabel={`拖拽排序工作经历 ${index + 1}`}
                 id={sortableCollections.experiences[index] ?? `experience-${index}`}
-                key={sortableCollections.experiences[index] ?? `experience-${index}`}
-              >
+                key={sortableCollections.experiences[index] ?? `experience-${index}`}>
                 {({ dragHandle }) => (
                   <EditorEntry
                     action={buildEntryActions({
@@ -133,12 +129,13 @@ export function ExperiencesSection({
                       index === resumeDraft.experiences.length - 1
                     }
                     summary={
-                      experience.companyName.zh || experience.companyName.en || '未命名工作经历'
+                      experience.companyName.zh ||
+                      experience.companyName.en ||
+                      '未命名工作经历'
                     }
                     title={`工作经历 ${index + 1}`}
                     toggleLabel={`工作经历 ${index + 1} 条目开关`}
-                    variant="embedded"
-                  >
+                    variant="embedded">
                     <div className="grid gap-4 md:grid-cols-2">
                       <LocalizedEditorField
                         label={`工作经历 ${index + 1} 公司`}
@@ -189,7 +186,11 @@ export function ExperiencesSection({
                             <Input
                               fullWidth
                               onChange={(event) =>
-                                updateExperiencePlainField(index, 'startDate', event.target.value)
+                                updateExperiencePlainField(
+                                  index,
+                                  'startDate',
+                                  event.target.value,
+                                )
                               }
                               value={experience.startDate}
                               variant="secondary"
@@ -200,7 +201,11 @@ export function ExperiencesSection({
                             <Input
                               fullWidth
                               onChange={(event) =>
-                                updateExperiencePlainField(index, 'endDate', event.target.value)
+                                updateExperiencePlainField(
+                                  index,
+                                  'endDate',
+                                  event.target.value,
+                                )
                               }
                               value={experience.endDate}
                               variant="secondary"
@@ -287,5 +292,5 @@ export function ExperiencesSection({
         </SortableContext>
       </DndContext>
     </EditorSection>
-  );
+  )
 }

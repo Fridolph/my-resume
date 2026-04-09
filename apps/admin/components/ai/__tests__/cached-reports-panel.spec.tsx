@@ -1,14 +1,14 @@
-'use client';
+'use client'
 
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { AiCachedReportsPanel } from '../cached-reports-panel';
+import { AiCachedReportsPanel } from '../cached-reports-panel'
 
 afterEach(() => {
-  cleanup();
-});
+  cleanup()
+})
 
 const cachedReports = [
   {
@@ -27,7 +27,7 @@ const cachedReports = [
     generator: 'mock-cache' as const,
     createdAt: '2026-03-27T00:00:00.000Z',
   },
-];
+]
 
 const reportDetails = {
   'jd-match-demo': {
@@ -66,16 +66,16 @@ const reportDetails = {
     generator: 'mock-cache' as const,
     createdAt: '2026-03-27T00:00:00.000Z',
   },
-};
+}
 
 describe('AiCachedReportsPanel', () => {
   it('should show viewer-specific cache guidance and load first cached report', async () => {
-    const fetchReportList = vi.fn().mockResolvedValue(cachedReports);
+    const fetchReportList = vi.fn().mockResolvedValue(cachedReports)
     const fetchReportDetail = vi
       .fn()
       .mockImplementation(({ reportId }: { reportId: keyof typeof reportDetails }) =>
         Promise.resolve(reportDetails[reportId]),
-      );
+      )
 
     render(
       <AiCachedReportsPanel
@@ -85,34 +85,34 @@ describe('AiCachedReportsPanel', () => {
         fetchReportList={fetchReportList}
         isViewerExperience
       />,
-    );
+    )
 
     expect(
       screen.getByText(
         'viewer 当前只读取缓存或预设分析结果，不能上传文件，也不能触发新的真实分析请求。',
       ),
-    ).toBeInTheDocument();
+    ).toBeInTheDocument()
 
     await waitFor(() => {
       expect(fetchReportList).toHaveBeenCalledWith({
         accessToken: 'viewer-token',
         apiBaseUrl: 'http://localhost:5577',
-      });
-    });
+      })
+    })
 
-    expect(await screen.findByText('缓存版 JD 匹配预览')).toBeInTheDocument();
-    expect(screen.getByText('场景：JD 匹配分析')).toBeInTheDocument();
-    expect(screen.getByText('匹配概览')).toBeInTheDocument();
-  });
+    expect(await screen.findByText('缓存版 JD 匹配预览')).toBeInTheDocument()
+    expect(screen.getByText('场景：JD 匹配分析')).toBeInTheDocument()
+    expect(screen.getByText('匹配概览')).toBeInTheDocument()
+  })
 
   it('should switch cached report detail when another report is selected', async () => {
-    const user = userEvent.setup();
-    const fetchReportList = vi.fn().mockResolvedValue(cachedReports);
+    const user = userEvent.setup()
+    const fetchReportList = vi.fn().mockResolvedValue(cachedReports)
     const fetchReportDetail = vi
       .fn()
       .mockImplementation(({ reportId }: { reportId: keyof typeof reportDetails }) =>
         Promise.resolve(reportDetails[reportId]),
-      );
+      )
 
     render(
       <AiCachedReportsPanel
@@ -122,20 +122,18 @@ describe('AiCachedReportsPanel', () => {
         fetchReportList={fetchReportList}
         isViewerExperience={false}
       />,
-    );
+    )
 
-    expect(await screen.findByText('缓存版 JD 匹配预览')).toBeInTheDocument();
+    expect(await screen.findByText('缓存版 JD 匹配预览')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: '简历优化建议' }));
+    await user.click(screen.getByRole('button', { name: '简历优化建议' }))
 
-    expect(await screen.findByText('Cached resume review preview')).toBeInTheDocument();
-    expect(screen.getByText('Strengths')).toBeInTheDocument();
-  });
+    expect(await screen.findByText('Cached resume review preview')).toBeInTheDocument()
+    expect(screen.getByText('Strengths')).toBeInTheDocument()
+  })
 
   it('should show error feedback when cached reports fail to load', async () => {
-    const fetchReportList = vi
-      .fn()
-      .mockRejectedValue(new Error('缓存报告列表加载失败'));
+    const fetchReportList = vi.fn().mockRejectedValue(new Error('缓存报告列表加载失败'))
 
     render(
       <AiCachedReportsPanel
@@ -144,8 +142,8 @@ describe('AiCachedReportsPanel', () => {
         fetchReportList={fetchReportList}
         isViewerExperience
       />,
-    );
+    )
 
-    expect(await screen.findByText('缓存报告列表加载失败')).toBeInTheDocument();
-  });
-});
+    expect(await screen.findByText('缓存报告列表加载失败')).toBeInTheDocument()
+  })
+})

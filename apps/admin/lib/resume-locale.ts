@@ -1,39 +1,37 @@
-import type { ResumeLocale } from './resume-types';
+import type { ResumeLocale } from './resume-types'
 
-const RESUME_LOCALE_COOKIE_KEY = 'my-resume-locale';
+const RESUME_LOCALE_COOKIE_KEY = 'my-resume-locale'
 
-export function parseResumeLocale(
-  value: string | undefined,
-): ResumeLocale | undefined {
+export function parseResumeLocale(value: string | undefined): ResumeLocale | undefined {
   if (value === 'zh' || value === 'en') {
-    return value;
+    return value
   }
 
-  return undefined;
+  return undefined
 }
 
 export function readResumeLocaleCookie(): ResumeLocale | undefined {
   if (typeof document === 'undefined') {
-    return undefined;
+    return undefined
   }
 
-  const cookieEntries = document.cookie.split(';');
+  const cookieEntries = document.cookie.split(';')
 
   for (const cookieEntry of cookieEntries) {
-    const [rawKey, ...rawValueParts] = cookieEntry.trim().split('=');
+    const [rawKey, ...rawValueParts] = cookieEntry.trim().split('=')
 
     if (rawKey !== RESUME_LOCALE_COOKIE_KEY) {
-      continue;
+      continue
     }
 
-    const cookieValue = rawValueParts.join('=');
+    const cookieValue = rawValueParts.join('=')
 
     try {
-      return parseResumeLocale(decodeURIComponent(cookieValue));
+      return parseResumeLocale(decodeURIComponent(cookieValue))
     } catch {
-      return parseResumeLocale(cookieValue);
+      return parseResumeLocale(cookieValue)
     }
   }
 
-  return undefined;
+  return undefined
 }

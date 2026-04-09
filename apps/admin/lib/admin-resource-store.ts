@@ -1,71 +1,61 @@
-'use client';
+'use client'
 
-import type { AuthUserView } from './auth-types';
-import {
-  fetchCurrentUser,
-} from './auth-api';
+import type { AuthUserView } from './auth-types'
+import { fetchCurrentUser } from './auth-api'
 import {
   fetchCachedAiWorkbenchReport,
   fetchCachedAiWorkbenchReports,
   fetchAiWorkbenchRuntime,
-} from './ai-workbench-api';
+} from './ai-workbench-api'
 import type {
   AiWorkbenchCachedReportSummary,
   AiWorkbenchReport,
   AiWorkbenchRuntimeSummary,
-} from './ai-workbench-types';
+} from './ai-workbench-types'
 import {
   fetchDraftResume,
   fetchDraftResumeSummary,
   fetchPublishedResumeSummary,
-} from './resume-draft-api';
+} from './resume-draft-api'
 import type {
   ResumeDraftSnapshot,
   ResumeLocale,
   ResumeDraftSummarySnapshot,
   ResumePublishedSummarySnapshot,
-} from './resume-types';
+} from './resume-types'
 
 interface ResourceCacheEntry<T> {
-  promise?: Promise<T>;
-  value?: T;
+  promise?: Promise<T>
+  value?: T
 }
 
-const currentUserCache = new Map<string, ResourceCacheEntry<AuthUserView>>();
-const aiRuntimeCache = new Map<string, ResourceCacheEntry<AiWorkbenchRuntimeSummary>>();
-const draftResumeCache = new Map<string, ResourceCacheEntry<ResumeDraftSnapshot>>();
+const currentUserCache = new Map<string, ResourceCacheEntry<AuthUserView>>()
+const aiRuntimeCache = new Map<string, ResourceCacheEntry<AiWorkbenchRuntimeSummary>>()
+const draftResumeCache = new Map<string, ResourceCacheEntry<ResumeDraftSnapshot>>()
 const draftResumeSummaryCache = new Map<
   string,
   ResourceCacheEntry<ResumeDraftSummarySnapshot>
->();
+>()
 const publishedResumeSummaryCache = new Map<
   string,
   ResourceCacheEntry<ResumePublishedSummarySnapshot | null>
->();
+>()
 const cachedAiReportsCache = new Map<
   string,
   ResourceCacheEntry<AiWorkbenchCachedReportSummary[]>
->();
-const cachedAiReportDetailCache = new Map<string, ResourceCacheEntry<AiWorkbenchReport>>();
+>()
+const cachedAiReportDetailCache = new Map<string, ResourceCacheEntry<AiWorkbenchReport>>()
 
 function createBaseKey(apiBaseUrl: string, accessToken: string) {
-  return `${apiBaseUrl.replace(/\/$/, '')}::${accessToken}`;
+  return `${apiBaseUrl.replace(/\/$/, '')}::${accessToken}`
 }
 
-function createDetailKey(
-  apiBaseUrl: string,
-  accessToken: string,
-  detailKey: string,
-) {
-  return `${createBaseKey(apiBaseUrl, accessToken)}::${detailKey}`;
+function createDetailKey(apiBaseUrl: string, accessToken: string, detailKey: string) {
+  return `${createBaseKey(apiBaseUrl, accessToken)}::${detailKey}`
 }
 
-function createLocaleKey(
-  apiBaseUrl: string,
-  accessToken: string,
-  locale?: ResumeLocale,
-) {
-  return createDetailKey(apiBaseUrl, accessToken, `locale:${locale ?? 'default'}`);
+function createLocaleKey(apiBaseUrl: string, accessToken: string, locale?: ResumeLocale) {
+  return createDetailKey(apiBaseUrl, accessToken, `locale:${locale ?? 'default'}`)
 }
 
 async function ensureCachedValue<T>(
@@ -73,34 +63,34 @@ async function ensureCachedValue<T>(
   key: string,
   loader: () => Promise<T>,
 ): Promise<T> {
-  const existingEntry = cache.get(key);
+  const existingEntry = cache.get(key)
 
   if (existingEntry?.value !== undefined) {
-    return existingEntry.value;
+    return existingEntry.value
   }
 
   if (existingEntry?.promise) {
-    return existingEntry.promise;
+    return existingEntry.promise
   }
 
   const nextPromise = loader()
     .then((value) => {
       cache.set(key, {
         value,
-      });
+      })
 
-      return value;
+      return value
     })
     .catch((error) => {
-      cache.delete(key);
-      throw error;
-    });
+      cache.delete(key)
+      throw error
+    })
 
   cache.set(key, {
     promise: nextPromise,
-  });
+  })
 
-  return nextPromise;
+  return nextPromise
 }
 
 function invalidateCacheByBaseKey<T>(
@@ -109,169 +99,155 @@ function invalidateCacheByBaseKey<T>(
 ) {
   for (const key of cache.keys()) {
     if (key === baseKey || key.startsWith(`${baseKey}::`)) {
-      cache.delete(key);
+      cache.delete(key)
     }
   }
 }
 
 export function primeCurrentUserSession(input: {
-  accessToken: string;
-  apiBaseUrl: string;
-  user: AuthUserView;
+  accessToken: string
+  apiBaseUrl: string
+  user: AuthUserView
 }) {
   currentUserCache.set(createBaseKey(input.apiBaseUrl, input.accessToken), {
     value: input.user,
-  });
+  })
 }
 
 export async function ensureCurrentUserSession(input: {
-  accessToken: string;
-  apiBaseUrl: string;
+  accessToken: string
+  apiBaseUrl: string
 }) {
-  const cacheKey = createBaseKey(input.apiBaseUrl, input.accessToken);
+  const cacheKey = createBaseKey(input.apiBaseUrl, input.accessToken)
 
-  return ensureCachedValue(currentUserCache, cacheKey, () =>
-    fetchCurrentUser(input),
-  );
+  return ensureCachedValue(currentUserCache, cacheKey, () => fetchCurrentUser(input))
 }
 
 export async function ensureAiRuntimeSummary(input: {
-  accessToken: string;
-  apiBaseUrl: string;
+  accessToken: string
+  apiBaseUrl: string
 }) {
-  const cacheKey = createBaseKey(input.apiBaseUrl, input.accessToken);
+  const cacheKey = createBaseKey(input.apiBaseUrl, input.accessToken)
 
-  return ensureCachedValue(aiRuntimeCache, cacheKey, () =>
-    fetchAiWorkbenchRuntime(input),
-  );
+  return ensureCachedValue(aiRuntimeCache, cacheKey, () => fetchAiWorkbenchRuntime(input))
 }
 
 export async function ensureDraftResume(input: {
-  accessToken: string;
-  apiBaseUrl: string;
+  accessToken: string
+  apiBaseUrl: string
 }) {
-  const cacheKey = createBaseKey(input.apiBaseUrl, input.accessToken);
+  const cacheKey = createBaseKey(input.apiBaseUrl, input.accessToken)
 
-  return ensureCachedValue(draftResumeCache, cacheKey, () =>
-    fetchDraftResume(input),
-  );
+  return ensureCachedValue(draftResumeCache, cacheKey, () => fetchDraftResume(input))
 }
 
 export async function ensureDraftResumeSummary(input: {
-  accessToken: string;
-  apiBaseUrl: string;
-  locale?: ResumeLocale;
+  accessToken: string
+  apiBaseUrl: string
+  locale?: ResumeLocale
 }) {
-  const cacheKey = createLocaleKey(
-    input.apiBaseUrl,
-    input.accessToken,
-    input.locale,
-  );
+  const cacheKey = createLocaleKey(input.apiBaseUrl, input.accessToken, input.locale)
 
   return ensureCachedValue(draftResumeSummaryCache, cacheKey, () =>
     fetchDraftResumeSummary(input),
-  );
+  )
 }
 
 export async function ensurePublishedResumeSummary(input: {
-  accessToken: string;
-  apiBaseUrl: string;
-  locale?: ResumeLocale;
+  accessToken: string
+  apiBaseUrl: string
+  locale?: ResumeLocale
 }) {
-  const cacheKey = createLocaleKey(
-    input.apiBaseUrl,
-    input.accessToken,
-    input.locale,
-  );
+  const cacheKey = createLocaleKey(input.apiBaseUrl, input.accessToken, input.locale)
 
   return ensureCachedValue(publishedResumeSummaryCache, cacheKey, () =>
     fetchPublishedResumeSummary({
       apiBaseUrl: input.apiBaseUrl,
       locale: input.locale,
     }),
-  );
+  )
 }
 
 export async function ensureCachedAiWorkbenchReports(input: {
-  accessToken: string;
-  apiBaseUrl: string;
+  accessToken: string
+  apiBaseUrl: string
 }) {
-  const cacheKey = createBaseKey(input.apiBaseUrl, input.accessToken);
+  const cacheKey = createBaseKey(input.apiBaseUrl, input.accessToken)
 
   return ensureCachedValue(cachedAiReportsCache, cacheKey, () =>
     fetchCachedAiWorkbenchReports(input),
-  );
+  )
 }
 
 export async function ensureCachedAiWorkbenchReport(input: {
-  accessToken: string;
-  apiBaseUrl: string;
-  reportId: string;
+  accessToken: string
+  apiBaseUrl: string
+  reportId: string
 }) {
   const cacheKey = createDetailKey(
     input.apiBaseUrl,
     input.accessToken,
     `report:${input.reportId}`,
-  );
+  )
 
   return ensureCachedValue(cachedAiReportDetailCache, cacheKey, () =>
     fetchCachedAiWorkbenchReport(input),
-  );
+  )
 }
 
 export function invalidateDraftResumeResources(input: {
-  accessToken: string;
-  apiBaseUrl: string;
+  accessToken: string
+  apiBaseUrl: string
 }) {
-  const baseKey = createBaseKey(input.apiBaseUrl, input.accessToken);
+  const baseKey = createBaseKey(input.apiBaseUrl, input.accessToken)
 
-  draftResumeCache.delete(baseKey);
-  invalidateCacheByBaseKey(draftResumeSummaryCache, baseKey);
+  draftResumeCache.delete(baseKey)
+  invalidateCacheByBaseKey(draftResumeSummaryCache, baseKey)
 }
 
 export function invalidatePublishedResumeSummaryResource(input: {
-  accessToken: string;
-  apiBaseUrl: string;
+  accessToken: string
+  apiBaseUrl: string
 }) {
   invalidateCacheByBaseKey(
     publishedResumeSummaryCache,
     createBaseKey(input.apiBaseUrl, input.accessToken),
-  );
+  )
 }
 
 export function invalidateAiRuntimeResource(input: {
-  accessToken: string;
-  apiBaseUrl: string;
+  accessToken: string
+  apiBaseUrl: string
 }) {
-  aiRuntimeCache.delete(createBaseKey(input.apiBaseUrl, input.accessToken));
+  aiRuntimeCache.delete(createBaseKey(input.apiBaseUrl, input.accessToken))
 }
 
 export function clearAdminResourceStore(input?: {
-  accessToken?: string | null;
-  apiBaseUrl?: string;
+  accessToken?: string | null
+  apiBaseUrl?: string
 }) {
   if (!input?.accessToken || !input.apiBaseUrl) {
-    currentUserCache.clear();
-    aiRuntimeCache.clear();
-    draftResumeCache.clear();
-    draftResumeSummaryCache.clear();
-    publishedResumeSummaryCache.clear();
-    cachedAiReportsCache.clear();
-    cachedAiReportDetailCache.clear();
-    return;
+    currentUserCache.clear()
+    aiRuntimeCache.clear()
+    draftResumeCache.clear()
+    draftResumeSummaryCache.clear()
+    publishedResumeSummaryCache.clear()
+    cachedAiReportsCache.clear()
+    cachedAiReportDetailCache.clear()
+    return
   }
 
-  const baseKey = createBaseKey(input.apiBaseUrl, input.accessToken);
+  const baseKey = createBaseKey(input.apiBaseUrl, input.accessToken)
 
-  currentUserCache.delete(baseKey);
-  aiRuntimeCache.delete(baseKey);
-  draftResumeCache.delete(baseKey);
-  invalidateCacheByBaseKey(draftResumeSummaryCache, baseKey);
-  invalidateCacheByBaseKey(publishedResumeSummaryCache, baseKey);
-  cachedAiReportsCache.delete(baseKey);
-  invalidateCacheByBaseKey(cachedAiReportDetailCache, baseKey);
+  currentUserCache.delete(baseKey)
+  aiRuntimeCache.delete(baseKey)
+  draftResumeCache.delete(baseKey)
+  invalidateCacheByBaseKey(draftResumeSummaryCache, baseKey)
+  invalidateCacheByBaseKey(publishedResumeSummaryCache, baseKey)
+  cachedAiReportsCache.delete(baseKey)
+  invalidateCacheByBaseKey(cachedAiReportDetailCache, baseKey)
 }
 
 export function resetAdminResourceStore() {
-  clearAdminResourceStore();
+  clearAdminResourceStore()
 }

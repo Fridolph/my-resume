@@ -1,7 +1,7 @@
-import { Request } from 'express';
+import { Request } from 'express'
 
-import { AuthUser } from '../domain/auth-user';
+import { AuthUser } from '../domain/auth-user'
 
 export interface AuthenticatedRequest extends Request {
-  authUser?: AuthUser;
+  authUser?: AuthUser
 }

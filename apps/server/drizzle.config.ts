@@ -1,16 +1,16 @@
-import { defineConfig } from 'drizzle-kit';
+import { defineConfig } from 'drizzle-kit'
 
 import {
   buildDefaultDatabaseUrl,
   ensureLocalDatabaseDirectory,
-} from './src/database/database.config';
+} from './src/database/database.config'
 
 const databaseUrl =
   process.env.DATABASE_URL?.trim() ||
   process.env.TURSO_DATABASE_URL?.trim() ||
-  buildDefaultDatabaseUrl();
+  buildDefaultDatabaseUrl()
 
-ensureLocalDatabaseDirectory(databaseUrl);
+ensureLocalDatabaseDirectory(databaseUrl)
 
 export default defineConfig({
   out: './drizzle',
@@ -21,4 +21,4 @@ export default defineConfig({
   },
   strict: true,
   verbose: true,
-});
+})

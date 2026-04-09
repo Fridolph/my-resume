@@ -1,23 +1,23 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest'
 
-import { createExampleStandardResume } from '../domain/standard-resume';
+import { createExampleStandardResume } from '../domain/standard-resume'
 import {
   buildResumeSummary,
   readResumeLocaleFromCookie,
   resolveResumeSummaryLocale,
-} from '../resume-summary';
+} from '../resume-summary'
 
 describe('resume summary helpers', () => {
   it('should build projected summary with a single locale payload', () => {
-    const resume = createExampleStandardResume();
+    const resume = createExampleStandardResume()
     resume.profile.headline = {
       zh: '中文标题',
       en: 'English Headline',
-    };
+    }
     resume.profile.summary = {
       zh: '中文摘要',
       en: 'English Summary',
-    };
+    }
 
     expect(buildResumeSummary(resume, 'zh')).toEqual({
       meta: {
@@ -36,8 +36,8 @@ describe('resume summary helpers', () => {
         skills: resume.skills.length,
         highlights: resume.highlights.length,
       },
-    });
-  });
+    })
+  })
 
   it('should resolve locale from query first then cookie then fallback', () => {
     expect(
@@ -49,7 +49,7 @@ describe('resume summary helpers', () => {
     ).toEqual({
       locale: 'en',
       queryInvalid: false,
-    });
+    })
 
     expect(
       resolveResumeSummaryLocale({
@@ -59,7 +59,7 @@ describe('resume summary helpers', () => {
     ).toEqual({
       locale: 'en',
       queryInvalid: false,
-    });
+    })
 
     expect(
       resolveResumeSummaryLocale({
@@ -69,11 +69,11 @@ describe('resume summary helpers', () => {
     ).toEqual({
       locale: 'zh',
       queryInvalid: false,
-    });
-  });
+    })
+  })
 
   it('should ignore invalid cookie locale and flag invalid query locale', () => {
-    expect(readResumeLocaleFromCookie('my-resume-locale=ja')).toBeNull();
+    expect(readResumeLocaleFromCookie('my-resume-locale=ja')).toBeNull()
 
     expect(
       resolveResumeSummaryLocale({
@@ -84,6 +84,6 @@ describe('resume summary helpers', () => {
     ).toEqual({
       locale: 'zh',
       queryInvalid: true,
-    });
-  });
-});
+    })
+  })
+})

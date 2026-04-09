@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest'
 
-import { RagChunkService } from '../rag-chunk.service';
+import { RagChunkService } from '../rag-chunk.service'
 
 const source = `
 profile:
@@ -52,15 +52,15 @@ projects:
 extras:
   openSource:
     - my-resume
-`;
+`
 
 describe('RagChunkService', () => {
   it('should parse yaml source and build stable resume chunks', () => {
-    const service = new RagChunkService();
-    const document = service.parseSource(source);
-    const chunks = service.buildChunks(document);
+    const service = new RagChunkService()
+    const document = service.parseSource(source)
+    const chunks = service.buildChunks(document)
 
-    expect(document.profile.name).toBe('付寅生');
+    expect(document.profile.name).toBe('付寅生')
     expect(chunks.map((item) => item.id)).toEqual(
       expect.arrayContaining([
         'profile-overview',
@@ -72,21 +72,21 @@ describe('RagChunkService', () => {
         'project-standalone-resume',
         'extra-open-source',
       ]),
-    );
+    )
     expect(chunks.find((item) => item.id === 'experience-yixie')?.content).toContain(
       '职责：参与需求规划',
-    );
+    )
     expect(chunks.find((item) => item.id === 'project-yixie-yyk')?.content).toContain(
       '核心功能：任务执行与结算协同',
-    );
+    )
     expect(chunks.find((item) => item.id === 'project-yixie-yyk')?.content).toContain(
       '贡献：重构 Vue2 到 Vue3',
-    );
-    expect(chunks.find((item) => item.id === 'project-standalone-resume')?.content).toContain(
-      '核心功能：简历展示与后台编辑',
-    );
+    )
+    expect(
+      chunks.find((item) => item.id === 'project-standalone-resume')?.content,
+    ).toContain('核心功能：简历展示与后台编辑')
     expect(chunks.find((item) => item.id === 'strengths-overview')?.content).toContain(
       'OpenClaw',
-    );
-  });
-});
+    )
+  })
+})

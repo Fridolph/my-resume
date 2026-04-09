@@ -1,41 +1,32 @@
-import {
-  ResumeEducationItem,
-  ResumeLocale,
-} from '../../lib/published-resume-types';
-import {
-  formatPeriod,
-  readLocalizedText,
-  resumeLabels,
-} from './published-resume-utils';
-import { PublishedResumeSectionCard } from './published-resume-section-card';
+import { ResumeEducationItem, ResumeLocale } from '../../lib/published-resume-types'
+import { formatPeriod, readLocalizedText, resumeLabels } from './published-resume-utils'
+import { PublishedResumeSectionCard } from './published-resume-section-card'
 
 interface PublishedResumeEducationSectionProps {
-  locale: ResumeLocale;
-  education: ResumeEducationItem[];
+  locale: ResumeLocale
+  education: ResumeEducationItem[]
 }
 
 export function PublishedResumeEducationSection({
   locale,
   education,
 }: PublishedResumeEducationSectionProps) {
-  const labels = resumeLabels[locale];
+  const labels = resumeLabels[locale]
 
   if (education.length === 0) {
-    return null;
+    return null
   }
 
   return (
     <PublishedResumeSectionCard
       description={labels.educationDescription}
       eyebrow={labels.educationEyebrow}
-      title={labels.educationTitle}
-    >
+      title={labels.educationTitle}>
       <div className="grid gap-4">
         {education.map((item) => (
           <article
             className="rounded-[28px] border border-slate-200/80 bg-slate-50/80 p-5 shadow-[0_12px_28px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-white/[0.04] sm:p-6"
-            key={`${item.schoolName.en}-${item.startDate}`}
-          >
+            key={`${item.schoolName.en}-${item.startDate}`}>
             <div className="grid gap-4">
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div className="space-y-1.5">
@@ -72,5 +63,5 @@ export function PublishedResumeEducationSection({
         ))}
       </div>
     </PublishedResumeSectionCard>
-  );
+  )
 }

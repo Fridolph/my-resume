@@ -1,16 +1,13 @@
-'use client';
+'use client'
 
-import { Button, Tooltip } from '@heroui/react';
-import { useThemeMode } from '@my-resume/ui/theme';
-import * as echarts from 'echarts';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Button, Tooltip } from '@heroui/react'
+import { useThemeMode } from '@my-resume/ui/theme'
+import * as echarts from 'echarts'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
-import {
-  ResumeLocale,
-  ResumeSkillGroup,
-} from '../../lib/published-resume-types';
-import { readLocalizedText, resumeLabels } from './published-resume-utils';
-import { PublishedResumeSectionCard } from './published-resume-section-card';
+import { ResumeLocale, ResumeSkillGroup } from '../../lib/published-resume-types'
+import { readLocalizedText, resumeLabels } from './published-resume-utils'
+import { PublishedResumeSectionCard } from './published-resume-section-card'
 import {
   buildPieChartOption,
   buildRadarChartOption,
@@ -18,18 +15,19 @@ import {
   getSkillChartPalette,
   normalizeSkillGroups,
   rankSkillGroups,
-} from './published-resume-skills-utils';
+} from './published-resume-skills-utils'
 
-const toolbarClass = 'flex flex-col gap-3 md:min-w-0 md:items-end';
-const toolbarControlsClass = 'flex flex-wrap gap-3 md:justify-end';
-const chartLayoutClass = 'grid gap-4 md:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)] md:items-start';
-const chartStackClass = 'grid gap-4';
+const toolbarClass = 'flex flex-col gap-3 md:min-w-0 md:items-end'
+const toolbarControlsClass = 'flex flex-wrap gap-3 md:justify-end'
+const chartLayoutClass =
+  'grid gap-4 md:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)] md:items-start'
+const chartStackClass = 'grid gap-4'
 const chartSurfaceClass =
-  'rounded-[28px] border border-slate-200/90 bg-slate-50/80 p-5 dark:border-white/8 dark:bg-white/[0.04]';
+  'rounded-[28px] border border-slate-200/90 bg-slate-50/80 p-5 dark:border-white/8 dark:bg-white/[0.04]'
 const cloudSurfaceClass =
-  'overflow-hidden rounded-[28px] border border-slate-200/90 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.09),transparent_32%),rgba(248,250,252,0.8)] p-5 dark:border-white/8 dark:bg-[radial-gradient(circle_at_top,rgba(96,165,250,0.14),transparent_30%),rgba(255,255,255,0.035)]';
+  'overflow-hidden rounded-[28px] border border-slate-200/90 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.09),transparent_32%),rgba(248,250,252,0.8)] p-5 dark:border-white/8 dark:bg-[radial-gradient(circle_at_top,rgba(96,165,250,0.14),transparent_30%),rgba(255,255,255,0.035)]'
 const cloudTokenBaseClass =
-  'inline-flex cursor-help items-center justify-center rounded-full border border-slate-200/90 bg-white/90 px-4 py-3 font-semibold leading-[1.1] text-slate-700 transition-[transform,border-color,box-shadow,color] duration-200 dark:border-white/8 dark:bg-white/[0.05] dark:text-slate-200';
+  'inline-flex cursor-help items-center justify-center rounded-full border border-slate-200/90 bg-white/90 px-4 py-3 font-semibold leading-[1.1] text-slate-700 transition-[transform,border-color,box-shadow,color] duration-200 dark:border-white/8 dark:bg-white/[0.05] dark:text-slate-200'
 const cloudTokenToneClasses = [
   'hover:border-blue-600/50 hover:text-blue-700 hover:shadow-[0_14px_30px_rgba(37,99,235,0.16)] dark:hover:text-blue-300',
   'hover:border-cyan-700/50 hover:text-teal-700 hover:shadow-[0_14px_30px_rgba(8,145,178,0.16)] dark:hover:text-cyan-300',
@@ -37,15 +35,15 @@ const cloudTokenToneClasses = [
   'hover:border-purple-500/45 hover:text-violet-600 hover:shadow-[0_14px_30px_rgba(168,85,247,0.15)] dark:hover:text-violet-300',
   'hover:border-rose-500/45 hover:text-rose-600 hover:shadow-[0_14px_30px_rgba(244,63,94,0.15)] dark:hover:text-rose-300',
   'hover:border-emerald-500/45 hover:text-emerald-600 hover:shadow-[0_14px_30px_rgba(16,185,129,0.15)] dark:hover:text-emerald-300',
-] as const;
+] as const
 
 interface PublishedResumeSkillsSectionProps {
-  locale: ResumeLocale;
-  skills: ResumeSkillGroup[];
+  locale: ResumeLocale
+  skills: ResumeSkillGroup[]
 }
 
-type SkillViewMode = 'structure' | 'chart';
-type SkillChartMode = 'radar' | 'pie';
+type SkillViewMode = 'structure' | 'chart'
+type SkillChartMode = 'radar' | 'pie'
 
 const skillViewLabels = {
   zh: {
@@ -72,94 +70,98 @@ const skillViewLabels = {
     cloudTitle: 'Keyword Cloud',
     cloudCaption: 'A unified high-density cloud composed of all skill keywords.',
   },
-} as const;
+} as const
 
 function SkillChartCanvas({
   ariaLabel,
   option,
 }: {
-  ariaLabel: string;
-  option: echarts.EChartsOption;
+  ariaLabel: string
+  option: echarts.EChartsOption
 }) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const isJsdom =
-    typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent);
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const isJsdom = typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent)
 
   useEffect(() => {
     if (!containerRef.current || isJsdom) {
-      return;
+      return
     }
 
     const chart = echarts.init(containerRef.current, undefined, {
       renderer: 'svg',
-    });
+    })
 
-    chart.setOption(option);
+    chart.setOption(option)
 
-    const handleResize = () => chart.resize();
-    window.addEventListener('resize', handleResize);
+    const handleResize = () => chart.resize()
+    window.addEventListener('resize', handleResize)
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      chart.dispose();
-    };
-  }, [isJsdom, option]);
+      window.removeEventListener('resize', handleResize)
+      chart.dispose()
+    }
+  }, [isJsdom, option])
 
-  return <div aria-label={ariaLabel} className="min-h-[340px] w-full" ref={containerRef} role="img" />;
+  return (
+    <div
+      aria-label={ariaLabel}
+      className="min-h-[340px] w-full"
+      ref={containerRef}
+      role="img"
+    />
+  )
 }
 
 export function PublishedResumeSkillsSection({
   locale,
   skills,
 }: PublishedResumeSkillsSectionProps) {
-  const labels = resumeLabels[locale];
-  const localLabels = skillViewLabels[locale];
-  const [viewMode, setViewMode] = useState<SkillViewMode>('chart');
-  const [chartMode, setChartMode] = useState<SkillChartMode>('radar');
-  const { theme: themeMode } = useThemeMode();
+  const labels = resumeLabels[locale]
+  const localLabels = skillViewLabels[locale]
+  const [viewMode, setViewMode] = useState<SkillViewMode>('chart')
+  const [chartMode, setChartMode] = useState<SkillChartMode>('radar')
+  const { theme: themeMode } = useThemeMode()
 
-  const normalizedGroups = useMemo(
-    () => normalizeSkillGroups(skills),
-    [skills],
-  );
+  const normalizedGroups = useMemo(() => normalizeSkillGroups(skills), [skills])
   const chartGroups = useMemo(
     () => rankSkillGroups(normalizedGroups, locale),
     [locale, normalizedGroups],
-  );
+  )
   const cloudTokens = useMemo(
     () => buildSkillCloudTokens(normalizedGroups, locale),
     [locale, normalizedGroups],
-  );
+  )
 
   const radarOption = useMemo(
     () => buildRadarChartOption(chartGroups, locale, themeMode),
     [chartGroups, locale, themeMode],
-  );
+  )
   const pieOption = useMemo(
     () => buildPieChartOption(chartGroups, locale, themeMode),
     [chartGroups, locale, themeMode],
-  );
+  )
 
   if (skills.length === 0) {
-    return null;
+    return null
   }
 
   const toolbar = (
     <div className={toolbarClass}>
       <div className={toolbarControlsClass}>
         <div className="inline-flex rounded-full border border-slate-200/80 bg-slate-50/90 p-1 dark:border-white/10 dark:bg-white/[0.04]">
-          {([
-            ['chart', localLabels.chart],
-            ['structure', localLabels.structure],
-          ] as const).map(([mode, label]) => (
+          {(
+            [
+              ['chart', localLabels.chart],
+              ['structure', localLabels.structure],
+            ] as const
+          ).map(([mode, label]) => (
             <Button
               className="rounded-full px-4"
               key={mode}
               onClick={() => setViewMode(mode)}
               size="sm"
               type="button"
-              variant={viewMode === mode ? 'primary' : 'ghost'}
-            >
+              variant={viewMode === mode ? 'primary' : 'ghost'}>
               {label}
             </Button>
           ))}
@@ -169,18 +171,19 @@ export function PublishedResumeSkillsSection({
       {viewMode === 'chart' ? (
         <div className={toolbarControlsClass}>
           <div className="inline-flex rounded-full border border-slate-200/80 bg-slate-50/90 p-1 dark:border-white/10 dark:bg-white/[0.04]">
-            {([
-              ['radar', localLabels.radar],
-              ['pie', localLabels.pie],
-            ] as const).map(([mode, label]) => (
+            {(
+              [
+                ['radar', localLabels.radar],
+                ['pie', localLabels.pie],
+              ] as const
+            ).map(([mode, label]) => (
               <Button
                 className="rounded-full px-4"
                 key={mode}
                 onClick={() => setChartMode(mode)}
                 size="sm"
                 type="button"
-                variant={chartMode === mode ? 'primary' : 'ghost'}
-              >
+                variant={chartMode === mode ? 'primary' : 'ghost'}>
                 {label}
               </Button>
             ))}
@@ -188,22 +191,20 @@ export function PublishedResumeSkillsSection({
         </div>
       ) : null}
     </div>
-  );
+  )
 
   return (
     <PublishedResumeSectionCard
       action={toolbar}
       description={labels.skillsDescription}
       eyebrow={labels.skillsEyebrow}
-      title={labels.skillsTitle}
-    >
+      title={labels.skillsTitle}>
       {viewMode === 'structure' ? (
         <div className="grid gap-4 xl:grid-cols-2">
           {normalizedGroups.map((group) => (
             <article
               className="rounded-[26px] border border-slate-200/70 bg-slate-50/82 p-5 dark:border-white/10 dark:bg-white/[0.035]"
-              key={`${group.name.en}-${group.keywords.join('-')}`}
-            >
+              key={`${group.name.en}-${group.keywords.join('-')}`}>
               <div className="flex items-center justify-between gap-3">
                 <h3 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
                   {readLocalizedText(group.name, locale)}
@@ -217,8 +218,7 @@ export function PublishedResumeSkillsSection({
                 {group.parsedKeywords.map((item) => (
                   <li
                     className="rounded-2xl border border-slate-200/70 bg-white/84 px-4 py-3.5 text-sm text-slate-600 dark:border-white/10 dark:bg-white/[0.05] dark:text-slate-200"
-                    key={`${group.name.en}-${item.raw}`}
-                  >
+                    key={`${group.name.en}-${item.raw}`}>
                     {item.label ? (
                       <div className="grid gap-1.5">
                         <strong className="text-sm font-semibold leading-6 text-slate-900 dark:text-white">
@@ -229,7 +229,9 @@ export function PublishedResumeSkillsSection({
                         </span>
                       </div>
                     ) : (
-                      <span className="block text-[0.96rem] leading-7">{item.content}</span>
+                      <span className="block text-[0.96rem] leading-7">
+                        {item.content}
+                      </span>
                     )}
                   </li>
                 ))}
@@ -248,19 +250,23 @@ export function PublishedResumeSkillsSection({
                   {chartMode === 'radar' ? localLabels.radar : localLabels.pie}
                 </h3>
                 <p className="text-sm leading-6 text-slate-500 dark:text-slate-400">
-                  {chartMode === 'radar' ? localLabels.radarCaption : localLabels.pieCaption}
+                  {chartMode === 'radar'
+                    ? localLabels.radarCaption
+                    : localLabels.pieCaption}
                 </p>
               </div>
 
               <div className="mt-4 grid place-items-center">
                 <SkillChartCanvas
-                  ariaLabel={chartMode === 'radar'
-                    ? locale === 'zh'
-                      ? '技能雷达图'
-                      : 'Skill radar chart'
-                    : locale === 'zh'
-                      ? '技能饼图'
-                      : 'Skill pie chart'}
+                  ariaLabel={
+                    chartMode === 'radar'
+                      ? locale === 'zh'
+                        ? '技能雷达图'
+                        : 'Skill radar chart'
+                      : locale === 'zh'
+                        ? '技能饼图'
+                        : 'Skill pie chart'
+                  }
                   option={chartMode === 'radar' ? radarOption : pieOption}
                 />
               </div>
@@ -284,9 +290,10 @@ export function PublishedResumeSkillsSection({
                           cloudTokenBaseClass,
                           token.sizeClassName,
                           token.rotateClassName,
-                          cloudTokenToneClasses[token.toneIndex % cloudTokenToneClasses.length],
-                        ].join(' ')}
-                      >
+                          cloudTokenToneClasses[
+                            token.toneIndex % cloudTokenToneClasses.length
+                          ],
+                        ].join(' ')}>
                         {token.label}
                       </span>
                     </Tooltip.Trigger>
@@ -306,16 +313,15 @@ export function PublishedResumeSkillsSection({
 
           <div className="grid gap-3">
             {chartGroups.map((group, index) => {
-              const count = group.parsedKeywords.length;
+              const count = group.parsedKeywords.length
               const featuredLabels = group.parsedKeywords
                 .map((item) => item.label ?? item.content)
-                .slice(0, 4);
+                .slice(0, 4)
 
               return (
                 <article
                   className="rounded-[24px] border border-slate-200/70 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-white/[0.04]"
-                  key={`${group.name.en}-legend-card`}
-                >
+                  key={`${group.name.en}-legend-card`}>
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
@@ -341,18 +347,17 @@ export function PublishedResumeSkillsSection({
                     {featuredLabels.map((label) => (
                       <span
                         className="rounded-full border border-slate-200/70 bg-white/84 px-3 py-1.5 text-xs font-medium text-slate-500 dark:border-white/10 dark:bg-white/[0.05] dark:text-slate-300"
-                        key={`${group.name.en}-${label}-legend`}
-                      >
+                        key={`${group.name.en}-${label}-legend`}>
                         {label}
                       </span>
                     ))}
                   </div>
                 </article>
-              );
+              )
             })}
           </div>
         </div>
       ) : null}
     </PublishedResumeSectionCard>
-  );
+  )
 }

@@ -1,12 +1,12 @@
 <template>
   <div
-    class="group transition-all  duration-600 ease-linear origin-center hover:bg-slate-500 hover:rounded-2xl hover:text-white">
+    class="duration-600 group origin-center transition-all ease-linear hover:rounded-2xl hover:bg-slate-500 hover:text-white">
     <Iconfont
-      class="size-12 absolute left-0 top-1 text-center origin-center duration-300 group-hover:opacity-0"
+      class="absolute left-0 top-1 size-12 origin-center text-center duration-300 group-hover:opacity-0"
       :size="26"
       name="camera" />
     <Iconfont
-      class="size-12 absolute left-0 top-[-2px] opacity-0 text-center transition-opacity invisible ease-linear delay-100 group-hover:visible group-hover:opacity-100"
+      class="invisible absolute left-0 top-[-2px] size-12 text-center opacity-0 transition-opacity delay-100 ease-linear group-hover:visible group-hover:opacity-100"
       :size="34"
       name="camera1196054easyiconnet" />
   </div>

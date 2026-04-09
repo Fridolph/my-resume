@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   applyAiResumeOptimization,
@@ -7,12 +7,12 @@ import {
   fetchAiWorkbenchRuntime,
   generateAiResumeOptimization,
   triggerAiWorkbenchAnalysis,
-} from '../ai-workbench-api';
+} from '../ai-workbench-api'
 
 describe('ai workbench api client', () => {
   beforeEach(() => {
-    vi.restoreAllMocks();
-  });
+    vi.restoreAllMocks()
+  })
 
   it('should fetch ai runtime summary with bearer token', async () => {
     vi.stubGlobal(
@@ -26,12 +26,12 @@ describe('ai workbench api client', () => {
           supportedScenarios: ['jd-match', 'resume-review', 'offer-compare'],
         }),
       }),
-    );
+    )
 
     const response = await fetchAiWorkbenchRuntime({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
-    });
+    })
 
     expect(fetch).toHaveBeenCalledWith(
       'http://localhost:5577/ai/reports/runtime',
@@ -40,11 +40,11 @@ describe('ai workbench api client', () => {
           Authorization: 'Bearer demo-token',
         },
       }),
-    );
-    expect(response.provider).toBe('qiniu');
-    expect(response.model).toBe('deepseek-v3');
-    expect(response.supportedScenarios).toContain('jd-match');
-  });
+    )
+    expect(response.provider).toBe('qiniu')
+    expect(response.model).toBe('deepseek-v3')
+    expect(response.supportedScenarios).toContain('jd-match')
+  })
 
   it('should trigger live analysis with scenario, locale and content', async () => {
     vi.stubGlobal(
@@ -73,7 +73,7 @@ describe('ai workbench api client', () => {
           },
         }),
       }),
-    );
+    )
 
     const response = await triggerAiWorkbenchAnalysis({
       apiBaseUrl: 'http://localhost:5577',
@@ -81,7 +81,7 @@ describe('ai workbench api client', () => {
       scenario: 'resume-review',
       locale: 'zh',
       content: 'NestJS React TypeScript',
-    });
+    })
 
     expect(fetch).toHaveBeenCalledWith(
       'http://localhost:5577/ai/reports/analyze',
@@ -97,10 +97,10 @@ describe('ai workbench api client', () => {
           locale: 'zh',
         }),
       }),
-    );
-    expect(response.report.generator).toBe('ai-provider');
-    expect(response.report.sections[0]?.title).toBe('分析结果');
-  });
+    )
+    expect(response.report.generator).toBe('ai-provider')
+    expect(response.report.sections[0]?.title).toBe('分析结果')
+  })
 
   it('should surface server analysis errors', async () => {
     vi.stubGlobal(
@@ -111,7 +111,7 @@ describe('ai workbench api client', () => {
           message: 'Provider request failed',
         }),
       }),
-    );
+    )
 
     await expect(
       triggerAiWorkbenchAnalysis({
@@ -121,8 +121,8 @@ describe('ai workbench api client', () => {
         locale: 'zh',
         content: 'NestJS React TypeScript',
       }),
-    ).rejects.toThrow('Provider request failed');
-  });
+    ).rejects.toThrow('Provider request failed')
+  })
 
   it('should fetch cached report summaries for read-only viewer experience', async () => {
     vi.stubGlobal(
@@ -142,12 +142,12 @@ describe('ai workbench api client', () => {
           ],
         }),
       }),
-    );
+    )
 
     const response = await fetchCachedAiWorkbenchReports({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'viewer-token',
-    });
+    })
 
     expect(fetch).toHaveBeenCalledWith(
       'http://localhost:5577/ai/reports/cache',
@@ -156,9 +156,9 @@ describe('ai workbench api client', () => {
           Authorization: 'Bearer viewer-token',
         },
       }),
-    );
-    expect(response[0]?.reportId).toBe('jd-match-demo');
-  });
+    )
+    expect(response[0]?.reportId).toBe('jd-match-demo')
+  })
 
   it('should fetch cached report detail by report id', async () => {
     vi.stubGlobal(
@@ -184,13 +184,13 @@ describe('ai workbench api client', () => {
           createdAt: '2026-03-27T00:00:00.000Z',
         }),
       }),
-    );
+    )
 
     const response = await fetchCachedAiWorkbenchReport({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'viewer-token',
       reportId: 'jd-match-demo',
-    });
+    })
 
     expect(fetch).toHaveBeenCalledWith(
       'http://localhost:5577/ai/reports/cache/jd-match-demo',
@@ -199,9 +199,9 @@ describe('ai workbench api client', () => {
           Authorization: 'Bearer viewer-token',
         },
       }),
-    );
-    expect(response.sections[0]?.title).toBe('匹配概览');
-  });
+    )
+    expect(response.sections[0]?.title).toBe('匹配概览')
+  })
 
   it('should request structured resume optimization with bearer token', async () => {
     vi.stubGlobal(
@@ -296,14 +296,14 @@ describe('ai workbench api client', () => {
           },
         }),
       }),
-    );
+    )
 
     const response = await generateAiResumeOptimization({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
       instruction: '请根据 React 和 Next.js 岗位优化当前简历',
       locale: 'zh',
-    });
+    })
 
     expect(fetch).toHaveBeenCalledWith(
       'http://localhost:5577/ai/reports/resume-optimize',
@@ -318,12 +318,12 @@ describe('ai workbench api client', () => {
           locale: 'zh',
         }),
       }),
-    );
-    expect(response.changedModules).toEqual(['profile', 'projects']);
-    expect(response.moduleDiffs[0]?.entries[0]?.label).toBe('个人摘要');
-    expect(response.applyPayload.patch.profile?.summary?.zh).toBe('新的中文摘要');
-    expect(response.suggestedResume.profile.summary.zh).toBe('新的中文摘要');
-  });
+    )
+    expect(response.changedModules).toEqual(['profile', 'projects'])
+    expect(response.moduleDiffs[0]?.entries[0]?.label).toBe('个人摘要')
+    expect(response.applyPayload.patch.profile?.summary?.zh).toBe('新的中文摘要')
+    expect(response.suggestedResume.profile.summary.zh).toBe('新的中文摘要')
+  })
 
   it('should apply selected resume optimization modules with bearer token', async () => {
     vi.stubGlobal(
@@ -386,7 +386,7 @@ describe('ai workbench api client', () => {
           },
         }),
       }),
-    );
+    )
 
     const response = await applyAiResumeOptimization({
       apiBaseUrl: 'http://localhost:5577',
@@ -401,7 +401,7 @@ describe('ai workbench api client', () => {
           },
         },
       },
-    });
+    })
 
     expect(fetch).toHaveBeenCalledWith(
       'http://localhost:5577/ai/reports/resume-optimize/apply',
@@ -424,7 +424,7 @@ describe('ai workbench api client', () => {
           },
         }),
       }),
-    );
-    expect(response.resume.profile.summary.zh).toBe('新的中文摘要');
-  });
-});
+    )
+    expect(response.resume.profile.summary.zh).toBe('新的中文摘要')
+  })
+})

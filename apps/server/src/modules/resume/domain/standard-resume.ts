@@ -1,100 +1,100 @@
-export type ResumeLocale = 'zh' | 'en';
+export type ResumeLocale = 'zh' | 'en'
 
 export interface LocalizedText {
-  zh: string;
-  en: string;
+  zh: string
+  en: string
 }
 
 export interface ResumeMeta {
-  slug: 'standard-resume';
-  version: 1;
-  defaultLocale: ResumeLocale;
-  locales: ResumeLocale[];
+  slug: 'standard-resume'
+  version: 1
+  defaultLocale: ResumeLocale
+  locales: ResumeLocale[]
 }
 
 export interface ResumeProfileLink {
-  label: LocalizedText;
-  url: string;
-  icon?: string;
+  label: LocalizedText
+  url: string
+  icon?: string
 }
 
 export interface ResumeProfileInterestItem {
-  label: LocalizedText;
-  icon?: string;
+  label: LocalizedText
+  icon?: string
 }
 
 export interface ResumeProfileHero {
-  frontImageUrl: string;
-  backImageUrl: string;
-  linkUrl: string;
-  slogans: LocalizedText[];
+  frontImageUrl: string
+  backImageUrl: string
+  linkUrl: string
+  slogans: LocalizedText[]
 }
 
 export interface ResumeProfile {
-  fullName: LocalizedText;
-  headline: LocalizedText;
-  summary: LocalizedText;
-  location: LocalizedText;
-  email: string;
-  phone: string;
-  website: string;
-  hero: ResumeProfileHero;
-  links: ResumeProfileLink[];
-  interests: ResumeProfileInterestItem[];
+  fullName: LocalizedText
+  headline: LocalizedText
+  summary: LocalizedText
+  location: LocalizedText
+  email: string
+  phone: string
+  website: string
+  hero: ResumeProfileHero
+  links: ResumeProfileLink[]
+  interests: ResumeProfileInterestItem[]
 }
 
 export interface ResumeEducationItem {
-  schoolName: LocalizedText;
-  degree: LocalizedText;
-  fieldOfStudy: LocalizedText;
-  startDate: string;
-  endDate: string;
-  location: LocalizedText;
-  highlights: LocalizedText[];
+  schoolName: LocalizedText
+  degree: LocalizedText
+  fieldOfStudy: LocalizedText
+  startDate: string
+  endDate: string
+  location: LocalizedText
+  highlights: LocalizedText[]
 }
 
 export interface ResumeExperienceItem {
-  companyName: LocalizedText;
-  role: LocalizedText;
-  employmentType: LocalizedText;
-  startDate: string;
-  endDate: string;
-  location: LocalizedText;
-  summary: LocalizedText;
-  highlights: LocalizedText[];
-  technologies: string[];
+  companyName: LocalizedText
+  role: LocalizedText
+  employmentType: LocalizedText
+  startDate: string
+  endDate: string
+  location: LocalizedText
+  summary: LocalizedText
+  highlights: LocalizedText[]
+  technologies: string[]
 }
 
 export interface ResumeProjectItem {
-  name: LocalizedText;
-  role: LocalizedText;
-  startDate: string;
-  endDate: string;
-  summary: LocalizedText;
-  coreFunctions: LocalizedText;
-  highlights: LocalizedText[];
-  technologies: string[];
-  links: ResumeProfileLink[];
+  name: LocalizedText
+  role: LocalizedText
+  startDate: string
+  endDate: string
+  summary: LocalizedText
+  coreFunctions: LocalizedText
+  highlights: LocalizedText[]
+  technologies: string[]
+  links: ResumeProfileLink[]
 }
 
 export interface ResumeSkillGroup {
-  name: LocalizedText;
-  keywords: string[];
+  name: LocalizedText
+  keywords: string[]
 }
 
 export interface ResumeHighlightItem {
-  title: LocalizedText;
-  description: LocalizedText;
+  title: LocalizedText
+  description: LocalizedText
 }
 
 export interface StandardResume {
-  meta: ResumeMeta;
-  profile: ResumeProfile;
-  education: ResumeEducationItem[];
-  experiences: ResumeExperienceItem[];
-  projects: ResumeProjectItem[];
-  skills: ResumeSkillGroup[];
-  highlights: ResumeHighlightItem[];
+  meta: ResumeMeta
+  profile: ResumeProfile
+  education: ResumeEducationItem[]
+  experiences: ResumeExperienceItem[]
+  projects: ResumeProjectItem[]
+  skills: ResumeSkillGroup[]
+  highlights: ResumeHighlightItem[]
 }
 
 const STANDARD_RESUME_MODULE_KEYS = [
@@ -104,31 +104,31 @@ const STANDARD_RESUME_MODULE_KEYS = [
   'projects',
   'skills',
   'highlights',
-] as const;
+] as const
 
-type StandardResumeModuleKey = (typeof STANDARD_RESUME_MODULE_KEYS)[number];
+type StandardResumeModuleKey = (typeof STANDARD_RESUME_MODULE_KEYS)[number]
 
 export interface ResumeValidationResult {
-  valid: boolean;
-  errors: string[];
+  valid: boolean
+  errors: string[]
 }
 
 export function getStandardResumeModuleKeys(): StandardResumeModuleKey[] {
-  return [...STANDARD_RESUME_MODULE_KEYS];
+  return [...STANDARD_RESUME_MODULE_KEYS]
 }
 
 export function createEmptyLocalizedText(): LocalizedText {
   return {
     zh: '',
     en: '',
-  };
+  }
 }
 
 export function createLocalizedText(zh: string, en: string): LocalizedText {
   return {
     zh,
     en,
-  };
+  }
 }
 
 export function createDefaultResumeProfileHero(): ResumeProfileHero {
@@ -146,16 +146,16 @@ export function createDefaultResumeProfileHero(): ResumeProfileHero {
         'Badminton lover, happy swings, full-court energy',
       ),
     ],
-  };
+  }
 }
 
 export function isLocalizedText(value: unknown): value is LocalizedText {
   if (!value || typeof value !== 'object') {
-    return false;
+    return false
   }
 
-  const candidate = value as Record<string, unknown>;
-  const keys = Object.keys(candidate).sort();
+  const candidate = value as Record<string, unknown>
+  const keys = Object.keys(candidate).sort()
 
   return (
     keys.length === 2 &&
@@ -163,7 +163,7 @@ export function isLocalizedText(value: unknown): value is LocalizedText {
     keys[1] === 'zh' &&
     typeof candidate.zh === 'string' &&
     typeof candidate.en === 'string'
-  );
+  )
 }
 
 export function createEmptyStandardResume(): StandardResume {
@@ -191,7 +191,7 @@ export function createEmptyStandardResume(): StandardResume {
     projects: [],
     skills: [],
     highlights: [],
-  };
+  }
 }
 
 export function createExampleStandardResume(): StandardResume {
@@ -301,14 +301,7 @@ export function createExampleStandardResume(): StandardResume {
             'Introduced AI tools such as Coze and internal skill libraries to help the team build reusable delivery workflows.',
           ),
         ],
-        technologies: [
-          'Nuxt 4',
-          'Vue 3',
-          'TypeScript',
-          'Pinia',
-          'Nuxt UI',
-          'i18n',
-        ],
+        technologies: ['Nuxt 4', 'Vue 3', 'TypeScript', 'Pinia', 'Nuxt UI', 'i18n'],
       },
       {
         companyName: createLocalizedText(
@@ -390,7 +383,10 @@ export function createExampleStandardResume(): StandardResume {
           '四川爱礼科技有限公司',
           'Sichuan Aili Technology Co., Ltd.',
         ),
-        role: createLocalizedText('Web 开发 / 移动端 WebView', 'Web Developer / Mobile WebView Developer'),
+        role: createLocalizedText(
+          'Web 开发 / 移动端 WebView',
+          'Web Developer / Mobile WebView Developer',
+        ),
         employmentType: createLocalizedText('全职', 'Full-time'),
         startDate: '2016-01',
         endDate: '2017-07',
@@ -464,7 +460,10 @@ export function createExampleStandardResume(): StandardResume {
       },
       {
         name: createLocalizedText('云药客 SaaS 系统', 'YYK SaaS Platform'),
-        role: createLocalizedText('前端主管 / 核心前端开发', 'Frontend Lead / Core Frontend Engineer'),
+        role: createLocalizedText(
+          '前端主管 / 核心前端开发',
+          'Frontend Lead / Core Frontend Engineer',
+        ),
         startDate: '2024-03',
         endDate: '2024-08',
         summary: createLocalizedText(
@@ -526,8 +525,14 @@ export function createExampleStandardResume(): StandardResume {
         links: [],
       },
       {
-        name: createLocalizedText('Admin - 综合管理后台', 'Admin - Integrated Management System'),
-        role: createLocalizedText('核心前端开发 / 架构升级', 'Core Frontend Engineer / Architecture Upgrade'),
+        name: createLocalizedText(
+          'Admin - 综合管理后台',
+          'Admin - Integrated Management System',
+        ),
+        role: createLocalizedText(
+          '核心前端开发 / 架构升级',
+          'Core Frontend Engineer / Architecture Upgrade',
+        ),
         startDate: '2022-01',
         endDate: '2024-01',
         summary: createLocalizedText(
@@ -714,65 +719,71 @@ export function createExampleStandardResume(): StandardResume {
         ),
       },
     ],
-  };
+  }
 }
 
 function isStringArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every((item) => typeof item === 'string');
+  return Array.isArray(value) && value.every((item) => typeof item === 'string')
 }
 
 function normalizeResumeLink(value: unknown): ResumeProfileLink | null {
   if (!value || typeof value !== 'object') {
-    return null;
+    return null
   }
 
-  const candidate = value as Record<string, unknown>;
+  const candidate = value as Record<string, unknown>
 
   if (!isLocalizedText(candidate.label) || typeof candidate.url !== 'string') {
-    return null;
+    return null
   }
 
   return {
     label: candidate.label,
     url: candidate.url,
-    icon: typeof candidate.icon === 'string' && candidate.icon.trim() ? candidate.icon : undefined,
-  };
+    icon:
+      typeof candidate.icon === 'string' && candidate.icon.trim()
+        ? candidate.icon
+        : undefined,
+  }
 }
 
 function normalizeResumeInterestItem(value: unknown): ResumeProfileInterestItem | null {
   if (isLocalizedText(value)) {
     return {
       label: value,
-    };
+    }
   }
 
   if (!value || typeof value !== 'object') {
-    return null;
+    return null
   }
 
-  const candidate = value as Record<string, unknown>;
+  const candidate = value as Record<string, unknown>
 
   if (!isLocalizedText(candidate.label)) {
-    return null;
+    return null
   }
 
   return {
     label: candidate.label,
-    icon: typeof candidate.icon === 'string' && candidate.icon.trim() ? candidate.icon : undefined,
-  };
+    icon:
+      typeof candidate.icon === 'string' && candidate.icon.trim()
+        ? candidate.icon
+        : undefined,
+  }
 }
 
 function normalizeResumeProfileHero(value: unknown): ResumeProfileHero {
-  const defaults = createDefaultResumeProfileHero();
+  const defaults = createDefaultResumeProfileHero()
 
   if (!value || typeof value !== 'object') {
-    return defaults;
+    return defaults
   }
 
-  const candidate = value as Record<string, unknown>;
+  const candidate = value as Record<string, unknown>
   const slogans = Array.isArray(candidate.slogans)
     ? candidate.slogans.filter(isLocalizedText)
-    : defaults.slogans;
+    : defaults.slogans
 
   return {
     frontImageUrl:
@@ -788,7 +799,7 @@ function normalizeResumeProfileHero(value: unknown): ResumeProfileHero {
         ? candidate.linkUrl
         : defaults.linkUrl,
     slogans: slogans.length > 0 ? slogans : defaults.slogans,
-  };
+  }
 }
 
 export function normalizeStandardResume(resume: StandardResume): StandardResume {
@@ -815,257 +826,229 @@ export function normalizeStandardResume(resume: StandardResume): StandardResume 
     projects: Array.isArray(resume.projects)
       ? resume.projects.map((item) => {
           if (!item || typeof item !== 'object') {
-            return item as ResumeProjectItem;
+            return item as ResumeProjectItem
           }
 
-          const candidate = item as ResumeProjectItem;
+          const candidate = item
 
           return {
             ...candidate,
             coreFunctions: isLocalizedText(candidate.coreFunctions)
               ? candidate.coreFunctions
               : createEmptyLocalizedText(),
-          };
+          }
         })
       : [],
     skills: Array.isArray(resume.skills) ? resume.skills : [],
     highlights: Array.isArray(resume.highlights) ? resume.highlights : [],
-  };
-}
-
-function validateLocalizedTextField(
-  value: unknown,
-  path: string,
-  errors: string[],
-) {
-  if (!isLocalizedText(value)) {
-    errors.push(`${path} must be a localized text object`);
   }
 }
 
-function validateLocalizedTextArray(
-  value: unknown,
-  path: string,
-  errors: string[],
-) {
+function validateLocalizedTextField(value: unknown, path: string, errors: string[]) {
+  if (!isLocalizedText(value)) {
+    errors.push(`${path} must be a localized text object`)
+  }
+}
+
+function validateLocalizedTextArray(value: unknown, path: string, errors: string[]) {
   if (!Array.isArray(value)) {
-    errors.push(`${path} must be an array`);
-    return;
+    errors.push(`${path} must be an array`)
+    return
   }
 
   value.forEach((item, index) => {
     if (!isLocalizedText(item)) {
-      errors.push(`${path}[${index}] must be a localized text object`);
+      errors.push(`${path}[${index}] must be a localized text object`)
     }
-  });
+  })
 }
 
-function validateResumeLinks(
-  value: unknown,
-  path: string,
-  errors: string[],
-) {
+function validateResumeLinks(value: unknown, path: string, errors: string[]) {
   if (!Array.isArray(value)) {
-    errors.push(`${path} must be an array`);
-    return;
+    errors.push(`${path} must be an array`)
+    return
   }
 
   value.forEach((item, index) => {
     if (!item || typeof item !== 'object') {
-      errors.push(`${path}[${index}] must be an object`);
-      return;
+      errors.push(`${path}[${index}] must be an object`)
+      return
     }
 
-    const candidate = item as Record<string, unknown>;
+    const candidate = item as Record<string, unknown>
 
     if (!isLocalizedText(candidate.label)) {
-      errors.push(`${path}[${index}].label must be a localized text object`);
+      errors.push(`${path}[${index}].label must be a localized text object`)
     }
 
     if (typeof candidate.url !== 'string') {
-      errors.push(`${path}[${index}].url must be a string`);
+      errors.push(`${path}[${index}].url must be a string`)
     }
 
-    if (
-      typeof candidate.icon !== 'undefined' &&
-      typeof candidate.icon !== 'string'
-    ) {
-      errors.push(`${path}[${index}].icon must be a string when provided`);
+    if (typeof candidate.icon !== 'undefined' && typeof candidate.icon !== 'string') {
+      errors.push(`${path}[${index}].icon must be a string when provided`)
     }
-  });
+  })
 }
 
-function validateResumeInterestItems(
-  value: unknown,
-  path: string,
-  errors: string[],
-) {
+function validateResumeInterestItems(value: unknown, path: string, errors: string[]) {
   if (!Array.isArray(value)) {
-    errors.push(`${path} must be an array`);
-    return;
+    errors.push(`${path} must be an array`)
+    return
   }
 
   value.forEach((item, index) => {
     if (isLocalizedText(item)) {
-      return;
+      return
     }
 
     if (!item || typeof item !== 'object') {
-      errors.push(`${path}[${index}] must be an object`);
-      return;
+      errors.push(`${path}[${index}] must be an object`)
+      return
     }
 
-    const candidate = item as Record<string, unknown>;
+    const candidate = item as Record<string, unknown>
 
     if (!isLocalizedText(candidate.label)) {
-      errors.push(`${path}[${index}].label must be a localized text object`);
+      errors.push(`${path}[${index}].label must be a localized text object`)
     }
 
-    if (
-      typeof candidate.icon !== 'undefined' &&
-      typeof candidate.icon !== 'string'
-    ) {
-      errors.push(`${path}[${index}].icon must be a string when provided`);
+    if (typeof candidate.icon !== 'undefined' && typeof candidate.icon !== 'string') {
+      errors.push(`${path}[${index}].icon must be a string when provided`)
     }
-  });
+  })
 }
 
-export function validateStandardResume(
-  resume: StandardResume,
-): ResumeValidationResult {
-  const errors: string[] = [];
+export function validateStandardResume(resume: StandardResume): ResumeValidationResult {
+  const errors: string[] = []
 
-  validateLocalizedTextField(resume.profile.fullName, 'profile.fullName', errors);
-  validateLocalizedTextField(resume.profile.headline, 'profile.headline', errors);
-  validateLocalizedTextField(resume.profile.summary, 'profile.summary', errors);
-  validateLocalizedTextField(resume.profile.location, 'profile.location', errors);
+  validateLocalizedTextField(resume.profile.fullName, 'profile.fullName', errors)
+  validateLocalizedTextField(resume.profile.headline, 'profile.headline', errors)
+  validateLocalizedTextField(resume.profile.summary, 'profile.summary', errors)
+  validateLocalizedTextField(resume.profile.location, 'profile.location', errors)
   if (!resume.profile.hero || typeof resume.profile.hero !== 'object') {
-    errors.push('profile.hero must be an object');
+    errors.push('profile.hero must be an object')
   } else {
     if (typeof resume.profile.hero.frontImageUrl !== 'string') {
-      errors.push('profile.hero.frontImageUrl must be a string');
+      errors.push('profile.hero.frontImageUrl must be a string')
     }
     if (typeof resume.profile.hero.backImageUrl !== 'string') {
-      errors.push('profile.hero.backImageUrl must be a string');
+      errors.push('profile.hero.backImageUrl must be a string')
     }
     if (typeof resume.profile.hero.linkUrl !== 'string') {
-      errors.push('profile.hero.linkUrl must be a string');
+      errors.push('profile.hero.linkUrl must be a string')
     }
     validateLocalizedTextArray(
       resume.profile.hero.slogans,
       'profile.hero.slogans',
       errors,
-    );
+    )
   }
-  validateResumeLinks(resume.profile.links, 'profile.links', errors);
-  validateResumeInterestItems(resume.profile.interests, 'profile.interests', errors);
+  validateResumeLinks(resume.profile.links, 'profile.links', errors)
+  validateResumeInterestItems(resume.profile.interests, 'profile.interests', errors)
 
   if (!Array.isArray(resume.education)) {
-    errors.push('education must be an array');
+    errors.push('education must be an array')
   } else {
     resume.education.forEach((item, index) => {
       validateLocalizedTextField(
         item.schoolName,
         `education[${index}].schoolName`,
         errors,
-      );
-      validateLocalizedTextField(item.degree, `education[${index}].degree`, errors);
+      )
+      validateLocalizedTextField(item.degree, `education[${index}].degree`, errors)
       validateLocalizedTextField(
         item.fieldOfStudy,
         `education[${index}].fieldOfStudy`,
         errors,
-      );
-      validateLocalizedTextField(item.location, `education[${index}].location`, errors);
+      )
+      validateLocalizedTextField(item.location, `education[${index}].location`, errors)
       validateLocalizedTextArray(
         item.highlights,
         `education[${index}].highlights`,
         errors,
-      );
-    });
+      )
+    })
   }
 
   if (!Array.isArray(resume.experiences)) {
-    errors.push('experiences must be an array');
+    errors.push('experiences must be an array')
   } else {
     resume.experiences.forEach((item, index) => {
       validateLocalizedTextField(
         item.companyName,
         `experiences[${index}].companyName`,
         errors,
-      );
-      validateLocalizedTextField(item.role, `experiences[${index}].role`, errors);
+      )
+      validateLocalizedTextField(item.role, `experiences[${index}].role`, errors)
       validateLocalizedTextField(
         item.employmentType,
         `experiences[${index}].employmentType`,
         errors,
-      );
-      validateLocalizedTextField(item.location, `experiences[${index}].location`, errors);
-      validateLocalizedTextField(item.summary, `experiences[${index}].summary`, errors);
+      )
+      validateLocalizedTextField(item.location, `experiences[${index}].location`, errors)
+      validateLocalizedTextField(item.summary, `experiences[${index}].summary`, errors)
       validateLocalizedTextArray(
         item.highlights,
         `experiences[${index}].highlights`,
         errors,
-      );
+      )
 
       if (!isStringArray(item.technologies)) {
-        errors.push(`experiences[${index}].technologies must be a string array`);
+        errors.push(`experiences[${index}].technologies must be a string array`)
       }
-    });
+    })
   }
 
   if (!Array.isArray(resume.projects)) {
-    errors.push('projects must be an array');
+    errors.push('projects must be an array')
   } else {
     resume.projects.forEach((item, index) => {
-      validateLocalizedTextField(item.name, `projects[${index}].name`, errors);
-      validateLocalizedTextField(item.role, `projects[${index}].role`, errors);
-      validateLocalizedTextField(item.summary, `projects[${index}].summary`, errors);
+      validateLocalizedTextField(item.name, `projects[${index}].name`, errors)
+      validateLocalizedTextField(item.role, `projects[${index}].role`, errors)
+      validateLocalizedTextField(item.summary, `projects[${index}].summary`, errors)
       validateLocalizedTextField(
         item.coreFunctions,
         `projects[${index}].coreFunctions`,
         errors,
-      );
-      validateLocalizedTextArray(
-        item.highlights,
-        `projects[${index}].highlights`,
-        errors,
-      );
+      )
+      validateLocalizedTextArray(item.highlights, `projects[${index}].highlights`, errors)
 
       if (!isStringArray(item.technologies)) {
-        errors.push(`projects[${index}].technologies must be a string array`);
+        errors.push(`projects[${index}].technologies must be a string array`)
       }
 
-      validateResumeLinks(item.links, `projects[${index}].links`, errors);
-    });
+      validateResumeLinks(item.links, `projects[${index}].links`, errors)
+    })
   }
 
   if (!Array.isArray(resume.skills)) {
-    errors.push('skills must be an array');
+    errors.push('skills must be an array')
   } else {
     resume.skills.forEach((item, index) => {
-      validateLocalizedTextField(item.name, `skills[${index}].name`, errors);
+      validateLocalizedTextField(item.name, `skills[${index}].name`, errors)
 
       if (!isStringArray(item.keywords)) {
-        errors.push(`skills[${index}].keywords must be a string array`);
+        errors.push(`skills[${index}].keywords must be a string array`)
       }
-    });
+    })
   }
 
   if (!Array.isArray(resume.highlights)) {
-    errors.push('highlights must be an array');
+    errors.push('highlights must be an array')
   } else {
     resume.highlights.forEach((item, index) => {
-      validateLocalizedTextField(item.title, `highlights[${index}].title`, errors);
+      validateLocalizedTextField(item.title, `highlights[${index}].title`, errors)
       validateLocalizedTextField(
         item.description,
         `highlights[${index}].description`,
         errors,
-      );
-    });
+      )
+    })
   }
 
   return {
     valid: errors.length === 0,
     errors,
-  };
+  }
 }

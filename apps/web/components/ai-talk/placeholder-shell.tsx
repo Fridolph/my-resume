@@ -1,41 +1,55 @@
-'use client';
+'use client'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, Chip } from '@heroui/react';
-import { useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Chip,
+} from '@heroui/react'
+import { useState } from 'react'
 
-import type { ResumeLocale, ResumePublishedSnapshot } from '../../lib/published-resume-types';
-import { PublishedResumeEmptyState } from '../published-resume/published-resume-empty-state';
-import { readLocalizedText, resumeLabels } from '../published-resume/published-resume-utils';
-import { PublicSiteHeader } from '../site/header';
+import type {
+  ResumeLocale,
+  ResumePublishedSnapshot,
+} from '../../lib/published-resume-types'
+import { PublishedResumeEmptyState } from '../published-resume/published-resume-empty-state'
+import {
+  readLocalizedText,
+  resumeLabels,
+} from '../published-resume/published-resume-utils'
+import { PublicSiteHeader } from '../site/header'
 
 interface AiTalkPlaceholderShellProps {
-  apiBaseUrl: string;
-  publishedResume: ResumePublishedSnapshot | null;
+  apiBaseUrl: string
+  publishedResume: ResumePublishedSnapshot | null
 }
 
 export function AiTalkPlaceholderShell({
   apiBaseUrl: _apiBaseUrl,
   publishedResume,
 }: AiTalkPlaceholderShellProps) {
-  const [locale, setLocale] = useState<ResumeLocale>('zh');
+  const [locale, setLocale] = useState<ResumeLocale>('zh')
 
   if (!publishedResume) {
-    return <PublishedResumeEmptyState />;
+    return <PublishedResumeEmptyState />
   }
 
-  const labels = resumeLabels[locale];
-  const profile = publishedResume.resume.profile;
-  const prompts = locale === 'zh'
-    ? [
-        '他最近几年主要做过哪些项目？',
-        '他更偏前端还是全栈？',
-        '如果你是招聘方，最值得追问的亮点是什么？',
-      ]
-    : [
-        'What projects has he focused on in recent years?',
-        'Is he more frontend-oriented or full-stack?',
-        'What should an interviewer ask about next?',
-      ];
+  const labels = resumeLabels[locale]
+  const profile = publishedResume.resume.profile
+  const prompts =
+    locale === 'zh'
+      ? [
+          '他最近几年主要做过哪些项目？',
+          '他更偏前端还是全栈？',
+          '如果你是招聘方，最值得追问的亮点是什么？',
+        ]
+      : [
+          'What projects has he focused on in recent years?',
+          'Is he more frontend-oriented or full-stack?',
+          'What should an interviewer ask about next?',
+        ]
 
   return (
     <main className="web-page-shell">
@@ -56,12 +70,8 @@ export function AiTalkPlaceholderShell({
             <Chip color="accent" variant="primary">
               {labels.aiTalkStatus}
             </Chip>
-            <Chip variant="soft">
-              {readLocalizedText(profile.fullName, locale)}
-            </Chip>
-            <Chip variant="soft">
-              {readLocalizedText(profile.headline, locale)}
-            </Chip>
+            <Chip variant="soft">{readLocalizedText(profile.fullName, locale)}</Chip>
+            <Chip variant="soft">{readLocalizedText(profile.headline, locale)}</Chip>
           </CardContent>
         </Card>
 
@@ -91,8 +101,7 @@ export function AiTalkPlaceholderShell({
               {prompts.map((prompt) => (
                 <div
                   className="rounded-[1.5rem] border border-slate-200 bg-slate-50/80 px-4 py-4 text-sm font-medium text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300"
-                  key={prompt}
-                >
+                  key={prompt}>
                   {prompt}
                 </div>
               ))}
@@ -101,5 +110,5 @@ export function AiTalkPlaceholderShell({
         </div>
       </section>
     </main>
-  );
+  )
 }

@@ -1,9 +1,9 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@heroui/react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@heroui/react'
 
-import { resumeLabels } from './published-resume-utils';
+import { resumeLabels } from './published-resume-utils'
 
 export function PublishedResumeEmptyState() {
-  const labels = resumeLabels.zh;
+  const labels = resumeLabels.zh
 
   return (
     <main className="web-page-shell">
@@ -22,5 +22,5 @@ export function PublishedResumeEmptyState() {
         </Card>
       </section>
     </main>
-  );
+  )
 }

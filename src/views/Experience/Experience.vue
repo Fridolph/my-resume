@@ -1,13 +1,9 @@
 <template>
-  <Section
-    anchor="Experience"
-    :title="t('work')"
-    icon="gongzuoxinxi"
-  >
+  <Section anchor="Experience" :title="t('work')" icon="gongzuoxinxi">
     <CompanyYxkj />
-    <div class="divide flex my-3"></div>
+    <div class="divide my-3 flex"></div>
     <CompanyWskp />
-    <div class="divide flex my-3"></div>
+    <div class="divide my-3 flex"></div>
     <CompanyAili />
   </Section>
 </template>

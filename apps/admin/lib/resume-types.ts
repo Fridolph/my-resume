@@ -20,4 +20,4 @@ export type {
   ResumeSummaryProfile,
   ResumeSkillGroup,
   StandardResume,
-} from '@my-resume/api-client';
+} from '@my-resume/api-client'

@@ -1,61 +1,53 @@
-'use client';
+'use client'
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Chip,
-} from '@heroui/react';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, Chip } from '@heroui/react'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
-import { loginWithPassword } from '../../lib/auth-api';
-import { primeCurrentUserSession } from '../../lib/admin-resource-store';
-import { DEFAULT_API_BASE_URL } from '../../lib/env';
-import { writeAccessToken } from '../../lib/session-storage';
-import { useAdminSession } from '../../lib/admin-session';
-import { LoginForm } from '../auth/login-form';
-import { ThemeModeToggle } from '../shared/theme-mode-toggle';
+import { loginWithPassword } from '../../lib/auth-api'
+import { primeCurrentUserSession } from '../../lib/admin-resource-store'
+import { DEFAULT_API_BASE_URL } from '../../lib/env'
+import { writeAccessToken } from '../../lib/session-storage'
+import { useAdminSession } from '../../lib/admin-session'
+import { LoginForm } from '../auth/login-form'
+import { ThemeModeToggle } from '../shared/theme-mode-toggle'
 
 export function AdminLoginShell() {
-  const router = useRouter();
-  const { currentUser, refreshSession, status } = useAdminSession();
-  const [pending, setPending] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const router = useRouter()
+  const { currentUser, refreshSession, status } = useAdminSession()
+  const [pending, setPending] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
     if (status === 'ready' && currentUser) {
-      router.replace('/dashboard');
+      router.replace('/dashboard')
     }
-  }, [currentUser, router, status]);
+  }, [currentUser, router, status])
 
-  const checkingSession = status === 'loading';
+  const checkingSession = status === 'loading'
 
   async function handleLogin(values: { username: string; password: string }) {
-    setPending(true);
-    setErrorMessage(null);
+    setPending(true)
+    setErrorMessage(null)
 
     try {
       const loginResult = await loginWithPassword({
         apiBaseUrl: DEFAULT_API_BASE_URL,
         username: values.username,
         password: values.password,
-      });
+      })
 
-      writeAccessToken(loginResult.accessToken);
+      writeAccessToken(loginResult.accessToken)
       primeCurrentUserSession({
         accessToken: loginResult.accessToken,
         apiBaseUrl: DEFAULT_API_BASE_URL,
         user: loginResult.user,
-      });
-      await refreshSession();
+      })
+      await refreshSession()
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : '登录失败，请稍后重试',
-      );
+      setErrorMessage(error instanceof Error ? error.message : '登录失败，请稍后重试')
     } finally {
-      setPending(false);
+      setPending(false)
     }
   }
 
@@ -68,7 +60,7 @@ export function AdminLoginShell() {
           </CardContent>
         </Card>
       </main>
-    );
+    )
   }
 
   return (
@@ -76,12 +68,8 @@ export function AdminLoginShell() {
       <Card className="border border-zinc-200/70 bg-white/78 shadow-2xl backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/78">
         <CardHeader className="flex flex-col items-start gap-5">
           <div className="flex items-center gap-2">
-            <Chip size="sm">
-              管理后台
-            </Chip>
-            <Chip size="sm">
-              HeroUI Upgrade
-            </Chip>
+            <Chip size="sm">管理后台</Chip>
+            <Chip size="sm">HeroUI Upgrade</Chip>
           </div>
           <div className="space-y-3">
             <p className="eyebrow">Admin Console</p>
@@ -89,8 +77,8 @@ export function AdminLoginShell() {
               面向内容维护与 AI 操作的标准后台壳
             </CardTitle>
             <p className="max-w-xl text-sm leading-7 text-zinc-500 dark:text-zinc-400">
-              这轮只升级后台信息架构与视觉壳层，不改后端 API，不把业务逻辑挪进
-              Next Route Handlers，也不扩到展示端样式体系。
+              这轮只升级后台信息架构与视觉壳层，不改后端 API，不把业务逻辑挪进 Next Route
+              Handlers，也不扩到展示端样式体系。
             </p>
           </div>
         </CardHeader>
@@ -108,15 +96,16 @@ export function AdminLoginShell() {
           <ul className="muted-list">
             <li>业务逻辑继续只走 `apps/server`，admin 只做后台会话壳和操作入口。</li>
             <li>当前 demo 账号：`admin / admin123456`、`viewer / viewer123456`。</li>
-            <li>登录成功后进入 `/dashboard`，viewer 保持只读体验，admin 可继续写与发布。</li>
+            <li>
+              登录成功后进入 `/dashboard`，viewer 保持只读体验，admin 可继续写与发布。
+            </li>
           </ul>
           <div className="flex flex-wrap items-center gap-3">
             <ThemeModeToggle />
             <a
               className="secondary-link-button"
               href="https://github.com/heroui-inc/heroui"
-              target="_blank"
-            >
+              target="_blank">
               HeroUI 参考
             </a>
           </div>
@@ -129,11 +118,7 @@ export function AdminLoginShell() {
         </CardContent>
       </Card>
 
-      <LoginForm
-        errorMessage={errorMessage}
-        onSubmit={handleLogin}
-        pending={pending}
-      />
+      <LoginForm errorMessage={errorMessage} onSubmit={handleLogin} pending={pending} />
     </main>
-  );
+  )
 }

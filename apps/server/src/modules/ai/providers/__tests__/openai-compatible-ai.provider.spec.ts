@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest'
 
-import { OpenAiCompatibleAiProvider } from '../openai-compatible-ai.provider';
+import { OpenAiCompatibleAiProvider } from '../openai-compatible-ai.provider'
 
 describe('OpenAiCompatibleAiProvider', () => {
   it('should call the chat completions endpoint with unified payload', async () => {
@@ -16,7 +16,7 @@ describe('OpenAiCompatibleAiProvider', () => {
           },
         ],
       }),
-    } as Response);
+    } as Response)
 
     const provider = new OpenAiCompatibleAiProvider(
       {
@@ -30,13 +30,13 @@ describe('OpenAiCompatibleAiProvider', () => {
         providerLabel: 'Qiniu AI',
       },
       fetchMock,
-    );
+    )
 
     const result = await provider.generateText({
       systemPrompt: '你是一名简历顾问',
       prompt: '请用中文给出三条优化建议',
       temperature: 0.2,
-    });
+    })
 
     expect(fetchMock).toHaveBeenCalledWith(
       'https://api.qnaigc.com/v1/chat/completions',
@@ -47,11 +47,11 @@ describe('OpenAiCompatibleAiProvider', () => {
         }),
         body: expect.stringContaining('"model":"deepseek-v3"'),
       }),
-    );
-    expect(result.provider).toBe('qiniu');
-    expect(result.model).toBe('deepseek-v3');
-    expect(result.text).toBe('这是七牛云兼容接口返回的分析内容');
-  });
+    )
+    expect(result.provider).toBe('qiniu')
+    expect(result.model).toBe('deepseek-v3')
+    expect(result.text).toBe('这是七牛云兼容接口返回的分析内容')
+  })
 
   it('should call the embeddings endpoint with unified payload', async () => {
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue({
@@ -68,7 +68,7 @@ describe('OpenAiCompatibleAiProvider', () => {
           },
         ],
       }),
-    } as Response);
+    } as Response)
 
     const provider = new OpenAiCompatibleAiProvider(
       {
@@ -82,11 +82,11 @@ describe('OpenAiCompatibleAiProvider', () => {
         providerLabel: 'Qiniu AI',
       },
       fetchMock,
-    );
+    )
 
     const result = await provider.embedTexts({
       texts: ['Vue3 TypeScript', 'NestJS RAG'],
-    });
+    })
 
     expect(fetchMock).toHaveBeenCalledWith(
       'https://api.qnaigc.com/v1/embeddings',
@@ -97,17 +97,17 @@ describe('OpenAiCompatibleAiProvider', () => {
         }),
         body: expect.stringContaining('"model":"text-embedding-v1"'),
       }),
-    );
+    )
     expect(result.embeddings).toEqual([
       [0.1, 0.2, 0.3],
       [0.3, 0.2, 0.1],
-    ]);
+    ])
     expect(provider.getSummary()).toEqual({
       provider: 'qiniu',
       model: 'deepseek-v3',
       mode: 'openai-compatible',
       chatModel: 'deepseek-v3',
       embeddingModel: 'text-embedding-v1',
-    });
-  });
-});
+    })
+  })
+})

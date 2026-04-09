@@ -26,7 +26,8 @@
     box-shadow 180ms ease;
 }
 
-.switchControlLight {}
+.switchControlLight {
+}
 
 .switchControlDark {
   background: color-mix(in srgb, var(--admin-primary) 14%, var(--admin-surface-muted));

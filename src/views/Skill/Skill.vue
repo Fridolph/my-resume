@@ -1,14 +1,6 @@
 <template>
-  <Section
-    :title="t('skill.title')"
-    anchor="Skill"
-    icon="zhuanyezhishijineng"
-  >
-    <ListWrap
-      type="ul"
-      :list="feList"
-      bold
-    />
+  <Section :title="t('skill.title')" anchor="Skill" icon="zhuanyezhishijineng">
+    <ListWrap type="ul" :list="feList" bold />
   </Section>
 </template>
 

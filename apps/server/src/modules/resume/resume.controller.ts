@@ -13,18 +13,18 @@ import {
   Query,
   Res,
   UseGuards,
-} from '@nestjs/common';
-import type { Response } from 'express';
+} from '@nestjs/common'
+import type { Response } from 'express'
 
-import { RequireCapability } from '../auth/decorators/require-capability.decorator';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RoleCapabilitiesGuard } from '../auth/guards/role-capabilities.guard';
-import { ResumeLocale, validateStandardResume } from './domain/standard-resume';
-import type { StandardResume } from './domain/standard-resume';
-import { ResumeMarkdownExportService } from './resume-markdown-export.service';
-import { ResumePdfExportService } from './resume-pdf-export.service';
-import { ResumePublicationService } from './resume-publication.service';
-import { buildResumeSummary, resolveResumeSummaryLocale } from './resume-summary';
+import { RequireCapability } from '../auth/decorators/require-capability.decorator'
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
+import { RoleCapabilitiesGuard } from '../auth/guards/role-capabilities.guard'
+import { ResumeLocale, validateStandardResume } from './domain/standard-resume'
+import type { StandardResume } from './domain/standard-resume'
+import { ResumeMarkdownExportService } from './resume-markdown-export.service'
+import { ResumePdfExportService } from './resume-pdf-export.service'
+import { ResumePublicationService } from './resume-publication.service'
+import { buildResumeSummary, resolveResumeSummaryLocale } from './resume-summary'
 
 @Controller('resume')
 export class ResumeController {
@@ -39,13 +39,13 @@ export class ResumeController {
 
   @Get('published')
   async getPublishedResume() {
-    const published = await this.resumePublicationService.getPublished();
+    const published = await this.resumePublicationService.getPublished()
 
     if (!published) {
-      throw new NotFoundException('Published resume is not available');
+      throw new NotFoundException('Published resume is not available')
     }
 
-    return published;
+    return published
   }
 
   @Get('published/summary')
@@ -53,27 +53,27 @@ export class ResumeController {
     @Query('locale') localeQuery: string | undefined,
     @Headers('cookie') cookieHeader: string | undefined,
   ) {
-    const publishedResume = await this.resumePublicationService.getPublished();
+    const publishedResume = await this.resumePublicationService.getPublished()
 
     if (!publishedResume) {
-      throw new NotFoundException('Published resume is not available');
+      throw new NotFoundException('Published resume is not available')
     }
 
     const { locale, queryInvalid } = resolveResumeSummaryLocale({
       localeQuery,
       cookieHeader,
       fallbackLocale: publishedResume.resume.meta.defaultLocale,
-    });
+    })
 
     if (queryInvalid) {
-      throw new BadRequestException(`Unsupported locale: ${localeQuery}`);
+      throw new BadRequestException(`Unsupported locale: ${localeQuery}`)
     }
 
     return {
       status: publishedResume.status,
       publishedAt: publishedResume.publishedAt,
       resume: buildResumeSummary(publishedResume.resume, locale),
-    };
+    }
   }
 
   @Get('published/export/markdown')
@@ -81,28 +81,25 @@ export class ResumeController {
     @Query('locale') localeQuery: string | undefined,
     @Res() response: Response,
   ) {
-    const published = await this.resumePublicationService.getPublished();
+    const published = await this.resumePublicationService.getPublished()
 
     if (!published) {
-      throw new NotFoundException('Published resume is not available');
+      throw new NotFoundException('Published resume is not available')
     }
 
     const locale = this.resolveExportLocale(
       localeQuery,
       published.resume.meta.defaultLocale,
-    );
-    const markdown = this.resumeMarkdownExportService.render(
-      published.resume,
-      locale,
-    );
+    )
+    const markdown = this.resumeMarkdownExportService.render(published.resume, locale)
 
-    response.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+    response.setHeader('Content-Type', 'text/markdown; charset=utf-8')
     response.setHeader(
       'Content-Disposition',
       `attachment; filename="${published.resume.meta.slug}-${locale}.md"`,
-    );
+    )
 
-    response.status(HttpStatus.OK).send(markdown);
+    response.status(HttpStatus.OK).send(markdown)
   }
 
   @Get('published/export/pdf')
@@ -110,35 +107,32 @@ export class ResumeController {
     @Query('locale') localeQuery: string | undefined,
     @Res() response: Response,
   ) {
-    const published = await this.resumePublicationService.getPublished();
+    const published = await this.resumePublicationService.getPublished()
 
     if (!published) {
-      throw new NotFoundException('Published resume is not available');
+      throw new NotFoundException('Published resume is not available')
     }
 
     const locale = this.resolveExportLocale(
       localeQuery,
       published.resume.meta.defaultLocale,
-    );
-    const pdfBuffer = await this.resumePdfExportService.render(
-      published.resume,
-      locale,
-    );
+    )
+    const pdfBuffer = await this.resumePdfExportService.render(published.resume, locale)
 
-    response.setHeader('Content-Type', 'application/pdf');
+    response.setHeader('Content-Type', 'application/pdf')
     response.setHeader(
       'Content-Disposition',
       `attachment; filename="${published.resume.meta.slug}-${locale}.pdf"`,
-    );
+    )
 
-    response.status(HttpStatus.OK).send(pdfBuffer);
+    response.status(HttpStatus.OK).send(pdfBuffer)
   }
 
   @Get('draft')
   @UseGuards(JwtAuthGuard, RoleCapabilitiesGuard)
   @RequireCapability('canEditResume')
   async getDraftResume() {
-    return this.resumePublicationService.getDraft();
+    return this.resumePublicationService.getDraft()
   }
 
   @Get('draft/summary')
@@ -148,22 +142,22 @@ export class ResumeController {
     @Query('locale') localeQuery: string | undefined,
     @Headers('cookie') cookieHeader: string | undefined,
   ) {
-    const draft = await this.resumePublicationService.getDraft();
+    const draft = await this.resumePublicationService.getDraft()
     const { locale, queryInvalid } = resolveResumeSummaryLocale({
       localeQuery,
       cookieHeader,
       fallbackLocale: draft.resume.meta.defaultLocale,
-    });
+    })
 
     if (queryInvalid) {
-      throw new BadRequestException(`Unsupported locale: ${localeQuery}`);
+      throw new BadRequestException(`Unsupported locale: ${localeQuery}`)
     }
 
     return {
       status: draft.status,
       updatedAt: draft.updatedAt,
       resume: buildResumeSummary(draft.resume, locale),
-    };
+    }
   }
 
   @Put('draft')
@@ -171,13 +165,13 @@ export class ResumeController {
   @UseGuards(JwtAuthGuard, RoleCapabilitiesGuard)
   @RequireCapability('canEditResume')
   async updateDraftResume(@Body() resume: StandardResume) {
-    const validationResult = validateStandardResume(resume);
+    const validationResult = validateStandardResume(resume)
 
     if (!validationResult.valid) {
-      throw new BadRequestException(validationResult.errors);
+      throw new BadRequestException(validationResult.errors)
     }
 
-    return this.resumePublicationService.updateDraft(resume);
+    return this.resumePublicationService.updateDraft(resume)
   }
 
   @Post('publish')
@@ -185,7 +179,7 @@ export class ResumeController {
   @UseGuards(JwtAuthGuard, RoleCapabilitiesGuard)
   @RequireCapability('canPublishResume')
   async publishResume() {
-    return this.resumePublicationService.publish();
+    return this.resumePublicationService.publish()
   }
 
   private resolveExportLocale(
@@ -193,13 +187,13 @@ export class ResumeController {
     fallbackLocale: ResumeLocale,
   ): ResumeLocale {
     if (!locale) {
-      return fallbackLocale;
+      return fallbackLocale
     }
 
     if (locale !== 'zh' && locale !== 'en') {
-      throw new BadRequestException(`Unsupported locale: ${locale}`);
+      throw new BadRequestException(`Unsupported locale: ${locale}`)
     }
 
-    return locale;
+    return locale
   }
 }

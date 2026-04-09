@@ -11,12 +11,7 @@
       title="wskp-UI"
       :description="t('team.wskpuiDesc')" />
 
-    <ListWrap      
-      :title="t('team.main')"
-      :list="teamContent"
-      inner
-      bold
-      title-size="sm" />
+    <ListWrap :title="t('team.main')" :list="teamContent" inner bold title-size="sm" />
 
     <ListWrap
       type="ul"
@@ -56,11 +51,7 @@ const teamContent = computed(() => [
   t('team.m5'),
 ])
 
-const teamReward = computed(() => [
-  t('team.g1'),
-  t('team.g2'),
-  t('team.g3'),
-])
+const teamReward = computed(() => [t('team.g1'), t('team.g2'), t('team.g3')])
 </script>
 
 <style>

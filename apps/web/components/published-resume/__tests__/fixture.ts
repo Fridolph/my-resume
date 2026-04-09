@@ -1,4 +1,4 @@
-import type { ResumePublishedSnapshot } from '../../../lib/published-resume-types';
+import type { ResumePublishedSnapshot } from '../../../lib/published-resume-types'
 
 export const publishedResumeFixture: ResumePublishedSnapshot = {
   status: 'published' as const,
@@ -222,4 +222,4 @@ export const publishedResumeFixture: ResumePublishedSnapshot = {
       },
     ],
   },
-};
+}

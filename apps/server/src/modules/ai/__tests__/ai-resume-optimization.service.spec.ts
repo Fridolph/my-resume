@@ -1,16 +1,16 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest'
 
-import { ResumePublicationService } from '../../resume/resume-publication.service';
+import { ResumePublicationService } from '../../resume/resume-publication.service'
 import {
   createExampleStandardResume,
   type StandardResume,
-} from '../../resume/domain/standard-resume';
-import { AiService } from '../ai.service';
-import { AiResumeOptimizationService } from '../ai-resume-optimization.service';
+} from '../../resume/domain/standard-resume'
+import { AiService } from '../ai.service'
+import { AiResumeOptimizationService } from '../ai-resume-optimization.service'
 
 describe('AiResumeOptimizationService', () => {
   it('should build a valid suggested resume in mock mode', async () => {
-    const resume = createExampleStandardResume();
+    const resume = createExampleStandardResume()
     const aiService = {
       getProviderSummary: () => ({
         provider: 'mock',
@@ -18,38 +18,35 @@ describe('AiResumeOptimizationService', () => {
         mode: 'mock',
       }),
       generateText: vi.fn(),
-    } as unknown as AiService;
+    } as unknown as AiService
     const resumePublicationService = {
       getDraft: vi.fn().mockResolvedValue({
         status: 'draft',
         resume,
         updatedAt: '2026-03-30T00:00:00.000Z',
       }),
-    } as unknown as ResumePublicationService;
+    } as unknown as ResumePublicationService
 
-    const service = new AiResumeOptimizationService(
-      aiService,
-      resumePublicationService,
-    );
+    const service = new AiResumeOptimizationService(aiService, resumePublicationService)
 
     const result = await service.generateSuggestion({
       instruction: '请针对 Next.js React TypeScript 岗位优化这份简历',
       locale: 'zh',
-    });
+    })
 
-    expect(result.providerSummary.mode).toBe('mock');
-    expect(result.summary.length).toBeGreaterThan(0);
-    expect(result.focusAreas.length).toBeGreaterThan(0);
-    expect(result.changedModules).toContain('profile');
-    expect(result.suggestedResume.profile.summary.zh).toContain('Next.js');
-    expect(result.moduleDiffs.length).toBeGreaterThan(0);
-    expect(result.moduleDiffs[0]?.entries.length).toBeGreaterThan(0);
-    expect(result.applyPayload.draftUpdatedAt).toBe('2026-03-30T00:00:00.000Z');
-    expect(result.applyPayload.patch.profile?.summary?.zh).toContain('Next.js');
-  });
+    expect(result.providerSummary.mode).toBe('mock')
+    expect(result.summary.length).toBeGreaterThan(0)
+    expect(result.focusAreas.length).toBeGreaterThan(0)
+    expect(result.changedModules).toContain('profile')
+    expect(result.suggestedResume.profile.summary.zh).toContain('Next.js')
+    expect(result.moduleDiffs.length).toBeGreaterThan(0)
+    expect(result.moduleDiffs[0]?.entries.length).toBeGreaterThan(0)
+    expect(result.applyPayload.draftUpdatedAt).toBe('2026-03-30T00:00:00.000Z')
+    expect(result.applyPayload.patch.profile?.summary?.zh).toContain('Next.js')
+  })
 
   it('should parse provider JSON and merge it into the current resume draft', async () => {
-    const resume = createExampleStandardResume();
+    const resume = createExampleStandardResume()
     const aiService = {
       getProviderSummary: () => ({
         provider: 'qiniu',
@@ -81,30 +78,27 @@ describe('AiResumeOptimizationService', () => {
           },
         }),
       }),
-    } as unknown as AiService;
+    } as unknown as AiService
     const resumePublicationService = {
       getDraft: vi.fn().mockResolvedValue({
         status: 'draft',
         resume,
         updatedAt: '2026-03-30T00:00:00.000Z',
       }),
-    } as unknown as ResumePublicationService;
+    } as unknown as ResumePublicationService
 
-    const service = new AiResumeOptimizationService(
-      aiService,
-      resumePublicationService,
-    );
+    const service = new AiResumeOptimizationService(aiService, resumePublicationService)
 
     const result = await service.generateSuggestion({
       instruction: '请增强当前简历中与 React 和 Next.js 相关的表达',
       locale: 'zh',
-    });
+    })
 
-    expect(result.summary).toBe('已生成结构化建议');
-    expect(result.focusAreas).toEqual(['强化摘要', '补强项目亮点']);
-    expect(result.suggestedResume.profile.summary.zh).toBe('新的中文摘要');
-    expect(result.suggestedResume.projects[0]?.summary.zh).toBe('新的项目摘要');
-    expect(result.suggestedResume.profile.email).toBe(resume.profile.email);
+    expect(result.summary).toBe('已生成结构化建议')
+    expect(result.focusAreas).toEqual(['强化摘要', '补强项目亮点'])
+    expect(result.suggestedResume.profile.summary.zh).toBe('新的中文摘要')
+    expect(result.suggestedResume.projects[0]?.summary.zh).toBe('新的项目摘要')
+    expect(result.suggestedResume.profile.email).toBe(resume.profile.email)
     expect(result.moduleDiffs).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -118,11 +112,11 @@ describe('AiResumeOptimizationService', () => {
           ]),
         }),
       ]),
-    );
-  });
+    )
+  })
 
   it('should reject invalid provider payloads', async () => {
-    const resume = createExampleStandardResume();
+    const resume = createExampleStandardResume()
     const aiService = {
       getProviderSummary: () => ({
         provider: 'qiniu',
@@ -134,35 +128,34 @@ describe('AiResumeOptimizationService', () => {
         model: 'deepseek-v3',
         text: '{"summary": "", "focusAreas": [], "patch": {}}',
       }),
-    } as unknown as AiService;
+    } as unknown as AiService
     const resumePublicationService = {
       getDraft: vi.fn().mockResolvedValue({
         status: 'draft',
         resume,
         updatedAt: '2026-03-30T00:00:00.000Z',
       }),
-    } as unknown as ResumePublicationService;
+    } as unknown as ResumePublicationService
 
-    const service = new AiResumeOptimizationService(
-      aiService,
-      resumePublicationService,
-    );
+    const service = new AiResumeOptimizationService(aiService, resumePublicationService)
 
     await expect(
       service.generateSuggestion({
         instruction: '请帮我优化简历',
         locale: 'zh',
       }),
-    ).rejects.toThrow('AI 返回的 summary 无效');
-  });
+    ).rejects.toThrow('AI 返回的 summary 无效')
+  })
 
   it('should apply only the selected modules back to the current draft', async () => {
-    const resume = createExampleStandardResume();
-    const updateDraft = vi.fn().mockImplementation(async (nextResume: StandardResume) => ({
-      status: 'draft',
-      resume: nextResume,
-      updatedAt: '2026-03-31T00:00:00.000Z',
-    }));
+    const resume = createExampleStandardResume()
+    const updateDraft = vi
+      .fn()
+      .mockImplementation(async (nextResume: StandardResume) => ({
+        status: 'draft',
+        resume: nextResume,
+        updatedAt: '2026-03-31T00:00:00.000Z',
+      }))
     const aiService = {
       getProviderSummary: () => ({
         provider: 'mock',
@@ -170,7 +163,7 @@ describe('AiResumeOptimizationService', () => {
         mode: 'mock',
       }),
       generateText: vi.fn(),
-    } as unknown as AiService;
+    } as unknown as AiService
     const resumePublicationService = {
       getDraft: vi.fn().mockResolvedValue({
         status: 'draft',
@@ -178,36 +171,33 @@ describe('AiResumeOptimizationService', () => {
         updatedAt: '2026-03-30T00:00:00.000Z',
       }),
       updateDraft,
-    } as unknown as ResumePublicationService;
+    } as unknown as ResumePublicationService
 
-    const service = new AiResumeOptimizationService(
-      aiService,
-      resumePublicationService,
-    );
+    const service = new AiResumeOptimizationService(aiService, resumePublicationService)
 
     const suggestion = await service.generateSuggestion({
       instruction: '请针对 Next.js React TypeScript 岗位优化这份简历',
       locale: 'zh',
-    });
+    })
 
     await service.applySuggestion({
       draftUpdatedAt: suggestion.applyPayload.draftUpdatedAt,
       patch: suggestion.applyPayload.patch,
       modules: ['profile'],
-    });
+    })
 
-    expect(updateDraft).toHaveBeenCalledTimes(1);
-    const nextResume = updateDraft.mock.calls[0]?.[0] as StandardResume;
+    expect(updateDraft).toHaveBeenCalledTimes(1)
+    const nextResume = updateDraft.mock.calls[0]?.[0] as StandardResume
 
-    expect(nextResume.profile.summary.zh).toContain('Next.js');
-    expect(nextResume.projects[0]?.summary.zh).toBe(resume.projects[0]?.summary.zh);
+    expect(nextResume.profile.summary.zh).toContain('Next.js')
+    expect(nextResume.projects[0]?.summary.zh).toBe(resume.projects[0]?.summary.zh)
     expect(nextResume.highlights[0]?.description.zh).toBe(
       resume.highlights[0]?.description.zh,
-    );
-  });
+    )
+  })
 
   it('should reject apply when the draft timestamp is stale', async () => {
-    const resume = createExampleStandardResume();
+    const resume = createExampleStandardResume()
     const aiService = {
       getProviderSummary: () => ({
         provider: 'mock',
@@ -215,7 +205,7 @@ describe('AiResumeOptimizationService', () => {
         mode: 'mock',
       }),
       generateText: vi.fn(),
-    } as unknown as AiService;
+    } as unknown as AiService
     const resumePublicationService = {
       getDraft: vi.fn().mockResolvedValue({
         status: 'draft',
@@ -223,12 +213,9 @@ describe('AiResumeOptimizationService', () => {
         updatedAt: '2026-03-31T00:00:00.000Z',
       }),
       updateDraft: vi.fn(),
-    } as unknown as ResumePublicationService;
+    } as unknown as ResumePublicationService
 
-    const service = new AiResumeOptimizationService(
-      aiService,
-      resumePublicationService,
-    );
+    const service = new AiResumeOptimizationService(aiService, resumePublicationService)
 
     await expect(
       service.applySuggestion({
@@ -243,6 +230,6 @@ describe('AiResumeOptimizationService', () => {
         },
         modules: ['profile'],
       }),
-    ).rejects.toThrow('当前草稿已发生变化，请重新生成建议稿后再应用');
-  });
-});
+    ).rejects.toThrow('当前草稿已发生变化，请重新生成建议稿后再应用')
+  })
+})

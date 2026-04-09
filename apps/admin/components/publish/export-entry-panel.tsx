@@ -1,28 +1,22 @@
-'use client';
+'use client'
 
-import { Card, CardContent, CardHeader, Chip } from '@heroui/react';
-import { buildPublishedResumeExportUrl, type ResumeLocale } from '@my-resume/api-client';
-import { DisplaySectionIntro } from '@my-resume/ui/display';
+import { Card, CardContent, CardHeader, Chip } from '@heroui/react'
+import { buildPublishedResumeExportUrl, type ResumeLocale } from '@my-resume/api-client'
+import { DisplaySectionIntro } from '@my-resume/ui/display'
 
 type ExportEntryPanelProps = {
-  apiBaseUrl: string;
-  locale: ResumeLocale;
-  role: 'admin' | 'viewer';
-};
+  apiBaseUrl: string
+  locale: ResumeLocale
+  role: 'admin' | 'viewer'
+}
 
-export function ExportEntryPanel({
-  apiBaseUrl,
-  locale,
-  role,
-}: ExportEntryPanelProps) {
+export function ExportEntryPanel({ apiBaseUrl, locale, role }: ExportEntryPanelProps) {
   return (
     <Card className="border border-zinc-200/70 dark:border-zinc-800">
       <CardHeader className="flex flex-col items-start gap-2">
         <div className="flex items-center gap-2">
           <p className="eyebrow">导出下载</p>
-          <Chip size="sm">
-            {locale.toUpperCase()}
-          </Chip>
+          <Chip size="sm">{locale.toUpperCase()}</Chip>
         </div>
         <DisplaySectionIntro
           className="gap-2"
@@ -40,8 +34,7 @@ export function ExportEntryPanel({
               format: 'markdown',
               locale,
             })}
-            target="_blank"
-          >
+            target="_blank">
             下载 Markdown
           </a>
           <a
@@ -51,8 +44,7 @@ export function ExportEntryPanel({
               format: 'pdf',
               locale,
             })}
-            target="_blank"
-          >
+            target="_blank">
             下载 PDF
           </a>
         </div>
@@ -64,5 +56,5 @@ export function ExportEntryPanel({
         </p>
       </CardContent>
     </Card>
-  );
+  )
 }

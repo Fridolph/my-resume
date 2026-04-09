@@ -1,7 +1,6 @@
 :root {
   --display-font-family:
-    Inter, -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue',
-    sans-serif;
+    Inter, -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
   --display-color-page-bg: #f5f7fb;
   --display-page-glow: radial-gradient(
     circle at top,

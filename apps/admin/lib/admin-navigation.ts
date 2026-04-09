@@ -1,10 +1,10 @@
 export interface AdminNavigationItem {
-  key: 'overview' | 'resume' | 'ai' | 'publish';
-  href: '/dashboard' | '/dashboard/resume' | '/dashboard/ai' | '/dashboard/publish';
-  title: string;
-  description: string;
-  shortLabel: string;
-  eyebrow: string;
+  key: 'overview' | 'resume' | 'ai' | 'publish'
+  href: '/dashboard' | '/dashboard/resume' | '/dashboard/ai' | '/dashboard/publish'
+  title: string
+  description: string
+  shortLabel: string
+  eyebrow: string
 }
 
 export const adminNavigationItems: AdminNavigationItem[] = [
@@ -40,18 +40,18 @@ export const adminNavigationItems: AdminNavigationItem[] = [
     shortLabel: '发布',
     eyebrow: '交付动作',
   },
-];
+]
 
 export function getAdminPageMeta(pathname: string): AdminNavigationItem {
-  const exactMatch = adminNavigationItems.find((item) => item.href === pathname);
+  const exactMatch = adminNavigationItems.find((item) => item.href === pathname)
 
   if (exactMatch) {
-    return exactMatch;
+    return exactMatch
   }
 
   const nestedMatch = adminNavigationItems.find(
     (item) => item.href !== '/dashboard' && pathname.startsWith(item.href),
-  );
+  )
 
-  return nestedMatch ?? adminNavigationItems[0];
+  return nestedMatch ?? adminNavigationItems[0]
 }

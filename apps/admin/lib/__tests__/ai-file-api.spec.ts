@@ -1,11 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { extractTextFromFile } from '../ai-file-api';
+import { extractTextFromFile } from '../ai-file-api'
 
 describe('ai file api client', () => {
   beforeEach(() => {
-    vi.restoreAllMocks();
-  });
+    vi.restoreAllMocks()
+  })
 
   it('should upload a file to the NestJS extraction endpoint', async () => {
     vi.stubGlobal(
@@ -20,17 +20,17 @@ describe('ai file api client', () => {
           charCount: 8,
         }),
       }),
-    );
+    )
 
     const file = new File(['# Resume'], 'resume.md', {
       type: 'text/markdown',
-    });
+    })
 
     const result = await extractTextFromFile({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
       file,
-    });
+    })
 
     expect(fetch).toHaveBeenCalledWith(
       'http://localhost:5577/ai/extract-text',
@@ -41,10 +41,10 @@ describe('ai file api client', () => {
         },
         body: expect.any(FormData),
       }),
-    );
-    expect(result.fileType).toBe('md');
-    expect(result.text).toContain('Resume');
-  });
+    )
+    expect(result.fileType).toBe('md')
+    expect(result.text).toContain('Resume')
+  })
 
   it('should surface server extraction errors', async () => {
     vi.stubGlobal(
@@ -55,11 +55,11 @@ describe('ai file api client', () => {
           message: 'Unsupported file type: csv',
         }),
       }),
-    );
+    )
 
     const file = new File(['a,b,c'], 'resume.csv', {
       type: 'text/csv',
-    });
+    })
 
     await expect(
       extractTextFromFile({
@@ -67,6 +67,6 @@ describe('ai file api client', () => {
         accessToken: 'demo-token',
         file,
       }),
-    ).rejects.toThrow('Unsupported file type: csv');
-  });
-});
+    ).rejects.toThrow('Unsupported file type: csv')
+  })
+})

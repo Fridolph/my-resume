@@ -3,4 +3,4 @@ export {
   fetchDraftResumeSummary,
   fetchPublishedResumeSummary,
   updateDraftResume,
-} from '@my-resume/api-client';
+} from '@my-resume/api-client'

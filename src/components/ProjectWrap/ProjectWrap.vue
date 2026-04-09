@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col mb-2">
+  <div class="mb-2 flex flex-col">
     <TitleDesc
       :title="title"
       :show-icon="showIcon"
@@ -7,7 +7,7 @@
       :description="description" />
 
     <template v-if="showLib">
-      <div class="h-[60px] sm:h-auto flex flex-wrap my-1 mb-3 px-3">
+      <div class="my-1 mb-3 flex h-[60px] flex-wrap px-3 sm:h-auto">
         <button class="my-btn primary">{{ btnLabel }}</button>
         <slot name="lib"></slot>
       </div>
@@ -26,7 +26,7 @@ withDefaults(defineProps<ProjectWrapProps>(), {
   showIcon: true,
   icon: 'xiangmu',
   showLib: true,
-  btnLabel: '技术栈'
+  btnLabel: '技术栈',
 })
 </script>
 

@@ -11,11 +11,7 @@
       <button class="my-btn info">Naive UI</button>
       <button class="my-btn info">Vue-i18n</button>
     </template>
-    <ListWrap
-      :title="t('contributions')"
-      :list="adminList"
-      inner
-      bold />
+    <ListWrap :title="t('contributions')" :list="adminList" inner bold />
 
     <!-- <ListWrap
       :title="t('hard')"

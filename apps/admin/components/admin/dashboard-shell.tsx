@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import {
   Card,
@@ -7,25 +7,25 @@ import {
   CardHeader,
   CardTitle,
   Chip,
-} from '@heroui/react';
-import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+} from '@heroui/react'
+import Link from 'next/link'
+import { useEffect, useMemo, useState } from 'react'
 
-import type { AiWorkbenchRuntimeSummary } from '../../lib/ai-workbench-types';
+import type { AiWorkbenchRuntimeSummary } from '../../lib/ai-workbench-types'
 import {
   ensureAiRuntimeSummary,
   ensureDraftResumeSummary,
-} from '../../lib/admin-resource-store';
-import { DEFAULT_API_BASE_URL } from '../../lib/env';
-import { readResumeLocaleCookie } from '../../lib/resume-locale';
-import type { ResumeDraftSummarySnapshot } from '../../lib/resume-types';
-import { useAdminSession } from '../../lib/admin-session';
+} from '../../lib/admin-resource-store'
+import { DEFAULT_API_BASE_URL } from '../../lib/env'
+import { readResumeLocaleCookie } from '../../lib/resume-locale'
+import type { ResumeDraftSummarySnapshot } from '../../lib/resume-types'
+import { useAdminSession } from '../../lib/admin-session'
 
-const workflowListClass = 'm-0 grid list-none gap-3.5 p-0';
+const workflowListClass = 'm-0 grid list-none gap-3.5 p-0'
 const workflowItemClass =
-  'grid gap-1.5 rounded-[18px] border border-[color:var(--admin-border)] bg-[var(--admin-surface-muted)] p-4';
+  'grid gap-1.5 rounded-[18px] border border-[color:var(--admin-border)] bg-[var(--admin-surface-muted)] p-4'
 
-type AsyncState = 'idle' | 'loading' | 'ready' | 'error';
+type AsyncState = 'idle' | 'loading' | 'ready' | 'error'
 
 const quickEntryCards = [
   {
@@ -46,29 +46,30 @@ const quickEntryCards = [
     description: '集中查看角色动作边界、发布入口与导出下载。',
     actionLabel: '进入发布与导出',
   },
-] as const;
+] as const
 
 export function AdminDashboardShell() {
-  const { accessToken, currentUser, status } = useAdminSession();
-  const summaryLocale = readResumeLocaleCookie();
-  const [runtimeState, setRuntimeState] = useState<AsyncState>('idle');
-  const [runtimeSummary, setRuntimeSummary] =
-    useState<AiWorkbenchRuntimeSummary | null>(null);
-  const [runtimeMessage, setRuntimeMessage] = useState<string | null>(null);
-  const [draftState, setDraftState] = useState<AsyncState>('idle');
+  const { accessToken, currentUser, status } = useAdminSession()
+  const summaryLocale = readResumeLocaleCookie()
+  const [runtimeState, setRuntimeState] = useState<AsyncState>('idle')
+  const [runtimeSummary, setRuntimeSummary] = useState<AiWorkbenchRuntimeSummary | null>(
+    null,
+  )
+  const [runtimeMessage, setRuntimeMessage] = useState<string | null>(null)
+  const [draftState, setDraftState] = useState<AsyncState>('idle')
   const [draftSnapshot, setDraftSnapshot] = useState<ResumeDraftSummarySnapshot | null>(
     null,
-  );
-  const [draftMessage, setDraftMessage] = useState<string | null>(null);
+  )
+  const [draftMessage, setDraftMessage] = useState<string | null>(null)
 
   useEffect(() => {
     if (status !== 'ready' || !accessToken) {
-      return;
+      return
     }
 
-    let cancelled = false;
-    setRuntimeState('loading');
-    setRuntimeMessage(null);
+    let cancelled = false
+    setRuntimeState('loading')
+    setRuntimeMessage(null)
 
     ensureAiRuntimeSummary({
       apiBaseUrl: DEFAULT_API_BASE_URL,
@@ -76,41 +77,37 @@ export function AdminDashboardShell() {
     })
       .then((result) => {
         if (cancelled) {
-          return;
+          return
         }
 
-        setRuntimeSummary(result);
-        setRuntimeState('ready');
+        setRuntimeSummary(result)
+        setRuntimeState('ready')
       })
       .catch((error) => {
         if (cancelled) {
-          return;
+          return
         }
 
-        setRuntimeSummary(null);
-        setRuntimeState('error');
+        setRuntimeSummary(null)
+        setRuntimeState('error')
         setRuntimeMessage(
           error instanceof Error ? error.message : 'AI 运行时摘要读取失败',
-        );
-      });
+        )
+      })
 
     return () => {
-      cancelled = true;
-    };
-  }, [accessToken, status]);
+      cancelled = true
+    }
+  }, [accessToken, status])
 
   useEffect(() => {
-    if (
-      status !== 'ready' ||
-      !accessToken ||
-      !currentUser?.capabilities.canEditResume
-    ) {
-      return;
+    if (status !== 'ready' || !accessToken || !currentUser?.capabilities.canEditResume) {
+      return
     }
 
-    let cancelled = false;
-    setDraftState('loading');
-    setDraftMessage(null);
+    let cancelled = false
+    setDraftState('loading')
+    setDraftMessage(null)
 
     ensureDraftResumeSummary({
       apiBaseUrl: DEFAULT_API_BASE_URL,
@@ -119,32 +116,30 @@ export function AdminDashboardShell() {
     })
       .then((result) => {
         if (cancelled) {
-          return;
+          return
         }
 
-        setDraftSnapshot(result);
-        setDraftState('ready');
+        setDraftSnapshot(result)
+        setDraftState('ready')
       })
       .catch((error) => {
         if (cancelled) {
-          return;
+          return
         }
 
-        setDraftSnapshot(null);
-        setDraftState('error');
-        setDraftMessage(
-          error instanceof Error ? error.message : '草稿摘要读取失败',
-        );
-      });
+        setDraftSnapshot(null)
+        setDraftState('error')
+        setDraftMessage(error instanceof Error ? error.message : '草稿摘要读取失败')
+      })
 
     return () => {
-      cancelled = true;
-    };
-  }, [accessToken, currentUser?.capabilities.canEditResume, status, summaryLocale]);
+      cancelled = true
+    }
+  }, [accessToken, currentUser?.capabilities.canEditResume, status, summaryLocale])
 
   const capabilityCards = useMemo(() => {
     if (!currentUser) {
-      return [];
+      return []
     }
 
     return [
@@ -164,9 +159,7 @@ export function AdminDashboardShell() {
       },
       {
         label: 'AI 能力',
-        value: currentUser.capabilities.canTriggerAiAnalysis
-          ? '真实调用'
-          : '缓存体验',
+        value: currentUser.capabilities.canTriggerAiAnalysis ? '真实调用' : '缓存体验',
         description: currentUser.capabilities.canTriggerAiAnalysis
           ? '可上传并触发真实分析。'
           : '只保留缓存报告与预设体验。',
@@ -176,11 +169,11 @@ export function AdminDashboardShell() {
         value: 'NestJS',
         description: '后台 UI 只调用 apps/server，不拆第二套业务后端。',
       },
-    ];
-  }, [currentUser]);
+    ]
+  }, [currentUser])
 
   if (status !== 'ready' || !currentUser) {
-    return null;
+    return null
   }
 
   return (
@@ -189,33 +182,24 @@ export function AdminDashboardShell() {
         <Card className="border border-zinc-200/70 dark:border-zinc-800">
           <CardHeader className="flex flex-col items-start gap-3">
             <div className="flex flex-wrap gap-2">
-              <Chip size="sm">
-                当前账号：{currentUser.username}
-              </Chip>
-              <Chip size="sm">
-                当前角色：{currentUser.role}
-              </Chip>
+              <Chip size="sm">当前账号：{currentUser.username}</Chip>
+              <Chip size="sm">当前角色：{currentUser.role}</Chip>
             </div>
             <div className="space-y-2">
               <CardTitle className="text-3xl font-semibold tracking-tight">
                 工作区概览
               </CardTitle>
               <CardDescription className="max-w-2xl leading-7">
-                这一页负责把后台的角色能力、AI 运行时状态、草稿摘要和主工作区入口收束成一个稳定首页，方便后续继续扩展而不散落。
+                这一页负责把后台的角色能力、AI
+                运行时状态、草稿摘要和主工作区入口收束成一个稳定首页，方便后续继续扩展而不散落。
               </CardDescription>
             </div>
           </CardHeader>
           <CardContent className="stack">
             <div className="dashboard-badge-row">
-              <Chip>
-                鉴权模式：localStorage token + /auth/me
-              </Chip>
-              <Chip>
-                单后端：apps/server
-              </Chip>
-              <Chip>
-                公开站只读取发布态
-              </Chip>
+              <Chip>鉴权模式：localStorage token + /auth/me</Chip>
+              <Chip>单后端：apps/server</Chip>
+              <Chip>公开站只读取发布态</Chip>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -320,9 +304,7 @@ export function AdminDashboardShell() {
           </CardHeader>
           <CardContent className="stack">
             {!currentUser.capabilities.canEditResume ? (
-              <div className="readonly-box">
-                当前角色没有草稿读取与编辑权限。
-              </div>
+              <div className="readonly-box">当前角色没有草稿读取与编辑权限。</div>
             ) : null}
             {draftState === 'loading' ? (
               <p className="muted">正在加载草稿摘要...</p>
@@ -350,7 +332,9 @@ export function AdminDashboardShell() {
         </div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {quickEntryCards.map((item) => (
-            <Card className="border border-zinc-200/70 dark:border-zinc-800" key={item.href}>
+            <Card
+              className="border border-zinc-200/70 dark:border-zinc-800"
+              key={item.href}>
               <CardHeader className="flex flex-col items-start gap-2">
                 <CardTitle className="text-xl">{item.title}</CardTitle>
                 <CardDescription>{item.description}</CardDescription>
@@ -365,5 +349,5 @@ export function AdminDashboardShell() {
         </div>
       </section>
     </div>
-  );
+  )
 }

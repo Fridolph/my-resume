@@ -1,18 +1,15 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { desc, eq } from 'drizzle-orm';
+import { Inject, Injectable } from '@nestjs/common'
+import { desc, eq } from 'drizzle-orm'
 
-import { DATABASE_INSTANCE } from '../../database/database.tokens';
-import type { DatabaseInstance } from '../../database/database.client';
+import { DATABASE_INSTANCE } from '../../database/database.tokens'
+import type { DatabaseInstance } from '../../database/database.client'
 import {
   createResumeDraftRecord,
   createResumePublicationSnapshotRecord,
   STANDARD_RESUME_KEY,
-} from '../../database/resume-records';
-import {
-  resumeDrafts,
-  resumePublicationSnapshots,
-} from '../../database/schema';
-import type { StandardResume } from './domain/standard-resume';
+} from '../../database/resume-records'
+import { resumeDrafts, resumePublicationSnapshots } from '../../database/schema'
+import type { StandardResume } from './domain/standard-resume'
 
 @Injectable()
 export class ResumePublicationRepository {
@@ -26,13 +23,13 @@ export class ResumePublicationRepository {
       .select()
       .from(resumeDrafts)
       .where(eq(resumeDrafts.resumeKey, STANDARD_RESUME_KEY))
-      .limit(1);
+      .limit(1)
 
-    return record ?? null;
+    return record ?? null
   }
 
   async saveDraft(resume: StandardResume, updatedAt = new Date()) {
-    const draftRecord = createResumeDraftRecord(resume, updatedAt);
+    const draftRecord = createResumeDraftRecord(resume, updatedAt)
 
     await this.database
       .insert(resumeDrafts)
@@ -44,9 +41,9 @@ export class ResumePublicationRepository {
           resumeJson: draftRecord.resumeJson,
           updatedAt: draftRecord.updatedAt,
         },
-      });
+      })
 
-    return (await this.findDraft())!;
+    return await this.findDraft()
   }
 
   async findLatestPublishedSnapshot() {
@@ -55,16 +52,16 @@ export class ResumePublicationRepository {
       .from(resumePublicationSnapshots)
       .where(eq(resumePublicationSnapshots.resumeKey, STANDARD_RESUME_KEY))
       .orderBy(desc(resumePublicationSnapshots.publishedAt))
-      .limit(1);
+      .limit(1)
 
-    return record ?? null;
+    return record ?? null
   }
 
   async createPublishedSnapshot(resume: StandardResume, publishedAt = new Date()) {
-    const snapshotRecord = createResumePublicationSnapshotRecord(resume, publishedAt);
+    const snapshotRecord = createResumePublicationSnapshotRecord(resume, publishedAt)
 
-    await this.database.insert(resumePublicationSnapshots).values(snapshotRecord);
+    await this.database.insert(resumePublicationSnapshots).values(snapshotRecord)
 
-    return snapshotRecord;
+    return snapshotRecord
   }
 }

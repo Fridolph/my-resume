@@ -1,12 +1,12 @@
-import { Global, Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common'
 
-import { createDatabase, createDatabaseClient } from './database.client';
-import { resolveDatabaseConfig } from './database.config';
+import { createDatabase, createDatabaseClient } from './database.client'
+import { resolveDatabaseConfig } from './database.config'
 import {
   DATABASE_CLIENT,
   DATABASE_INSTANCE,
   DATABASE_RUNTIME_CONFIG,
-} from './database.tokens';
+} from './database.tokens'
 
 @Global()
 @Module({

@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { parse } from 'yaml';
+import { Injectable } from '@nestjs/common'
+import { parse } from 'yaml'
 
 import {
   RagChunk,
@@ -8,18 +8,18 @@ import {
   RagSourceExperienceItem,
   RagSourceExperienceProjectItem,
   RagSourceStandaloneProjectItem,
-} from './rag.types';
+} from './rag.types'
 
 function compactLines(lines: Array<string | undefined | null>): string {
   return lines
     .filter((item): item is string => Boolean(item && item.trim().length > 0))
-    .join('\n');
+    .join('\n')
 }
 
 @Injectable()
 export class RagChunkService {
   parseSource(source: string): RagSourceDocument {
-    return parse(source) as RagSourceDocument;
+    return parse(source) as RagSourceDocument
   }
 
   buildChunks(document: RagSourceDocument): RagChunk[] {
@@ -31,12 +31,12 @@ export class RagChunkService {
       ...document.experiences.flatMap((item) => this.buildExperienceChunks(item)),
       ...document.projects.map((item) => this.buildStandaloneProjectChunk(item)),
       ...this.buildExtraChunks(document),
-    ];
+    ]
   }
 
   private buildStrengthsChunks(document: RagSourceDocument): RagChunk[] {
     if (!document.strengths?.length) {
-      return [];
+      return []
     }
 
     return [
@@ -50,7 +50,7 @@ export class RagChunkService {
           ...document.strengths.map((item, index) => `${index + 1}. ${item}`),
         ]),
       },
-    ];
+    ]
   }
 
   private buildProfileChunk(document: RagSourceDocument): RagChunk {
@@ -67,11 +67,9 @@ export class RagChunkService {
         `当前状态：${document.profile.status}`,
         `求职意向：${document.profile.targetRole}`,
         `总结：${document.profile.summary}`,
-        ...(document.profile.links ?? []).map(
-          (item) => `${item.label}：${item.url}`,
-        ),
+        ...(document.profile.links ?? []).map((item) => `${item.label}：${item.url}`),
       ]),
-    };
+    }
   }
 
   private buildSkillsChunk(document: RagSourceDocument): RagChunk {
@@ -84,7 +82,7 @@ export class RagChunkService {
         '专业技能：',
         ...document.skills.map((item, index) => `${index + 1}. ${item}`),
       ]),
-    };
+    }
   }
 
   private buildEducationChunk(item: RagSourceEducationItem): RagChunk {
@@ -101,7 +99,7 @@ export class RagChunkService {
         `地点：${item.location}`,
         ...(item.details ?? []).map((detail) => `说明：${detail}`),
       ]),
-    };
+    }
   }
 
   private buildExperienceChunks(item: RagSourceExperienceItem): RagChunk[] {
@@ -119,13 +117,13 @@ export class RagChunkService {
         ...(item.achievements ?? []).map((detail) => `成果：${detail}`),
         item.techStack?.length ? `技术栈：${item.techStack.join('、')}` : null,
       ]),
-    };
+    }
 
     const projectChunks = (item.projects ?? []).map((project) =>
       this.buildExperienceProjectChunk(item, project),
-    );
+    )
 
-    return [experienceChunk, ...projectChunks];
+    return [experienceChunk, ...projectChunks]
   }
 
   private buildExperienceProjectChunk(
@@ -143,17 +141,13 @@ export class RagChunkService {
         `所属阶段：${experience.period}`,
         `简介：${project.summary}`,
         project.coreFunctions ? `核心功能：${project.coreFunctions}` : null,
-        project.techStack?.length
-          ? `技术栈：${project.techStack.join('、')}`
-          : null,
+        project.techStack?.length ? `技术栈：${project.techStack.join('、')}` : null,
         ...(project.contributions ?? []).map((detail) => `贡献：${detail}`),
       ]),
-    };
+    }
   }
 
-  private buildStandaloneProjectChunk(
-    item: RagSourceStandaloneProjectItem,
-  ): RagChunk {
+  private buildStandaloneProjectChunk(item: RagSourceStandaloneProjectItem): RagChunk {
     return {
       id: `project-standalone-${item.id}`,
       title: item.name,
@@ -168,11 +162,11 @@ export class RagChunkService {
         item.techStack?.length ? `技术栈：${item.techStack.join('、')}` : null,
         ...(item.contributions ?? []).map((detail) => `贡献：${detail}`),
       ]),
-    };
+    }
   }
 
   private buildExtraChunks(document: RagSourceDocument): RagChunk[] {
-    const chunks: RagChunk[] = [];
+    const chunks: RagChunk[] = []
 
     if (document.extras?.openSource?.length) {
       chunks.push({
@@ -184,7 +178,7 @@ export class RagChunkService {
           '参与开源：',
           ...document.extras.openSource.map((item) => `- ${item}`),
         ]),
-      });
+      })
     }
 
     if (document.extras?.articles?.length) {
@@ -197,9 +191,9 @@ export class RagChunkService {
           '最近文章：',
           ...document.extras.articles.map((item) => `- ${item}`),
         ]),
-      });
+      })
     }
 
-    return chunks;
+    return chunks
   }
 }

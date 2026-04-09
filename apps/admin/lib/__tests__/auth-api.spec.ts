@@ -1,16 +1,16 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   fetchCurrentUser,
   loginWithPassword,
   postProtectedAction,
   publishResume,
-} from '../auth-api';
+} from '../auth-api'
 
 describe('auth api client', () => {
   beforeEach(() => {
-    vi.restoreAllMocks();
-  });
+    vi.restoreAllMocks()
+  })
 
   it('should call the NestJS login endpoint and return login result', async () => {
     vi.stubGlobal(
@@ -32,23 +32,23 @@ describe('auth api client', () => {
           },
         }),
       }),
-    );
+    )
 
     const loginResult = await loginWithPassword({
       apiBaseUrl: 'http://localhost:5577',
       username: 'admin',
       password: 'admin123456',
-    });
+    })
 
     expect(fetch).toHaveBeenCalledWith(
       'http://localhost:5577/auth/login',
       expect.objectContaining({
         method: 'POST',
       }),
-    );
-    expect(loginResult.accessToken).toBe('demo-token');
-    expect(loginResult.user.username).toBe('admin');
-  });
+    )
+    expect(loginResult.accessToken).toBe('demo-token')
+    expect(loginResult.user.username).toBe('admin')
+  })
 
   it('should call the protected current-user endpoint with bearer token', async () => {
     vi.stubGlobal(
@@ -67,12 +67,12 @@ describe('auth api client', () => {
           },
         }),
       }),
-    );
+    )
 
     const currentUser = await fetchCurrentUser({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
-    });
+    })
 
     expect(fetch).toHaveBeenCalledWith(
       'http://localhost:5577/auth/me',
@@ -81,9 +81,9 @@ describe('auth api client', () => {
           Authorization: 'Bearer demo-token',
         },
       }),
-    );
-    expect(currentUser.username).toBe('viewer');
-  });
+    )
+    expect(currentUser.username).toBe('viewer')
+  })
 
   it('should post protected action with bearer token', async () => {
     vi.stubGlobal(
@@ -94,13 +94,13 @@ describe('auth api client', () => {
           message: 'ok',
         }),
       }),
-    );
+    )
 
     const response = await postProtectedAction({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
       pathname: '/auth/demo/publish',
-    });
+    })
 
     expect(fetch).toHaveBeenCalledWith(
       'http://localhost:5577/auth/demo/publish',
@@ -110,9 +110,9 @@ describe('auth api client', () => {
           Authorization: 'Bearer demo-token',
         },
       }),
-    );
-    expect(response.message).toBe('ok');
-  });
+    )
+    expect(response.message).toBe('ok')
+  })
 
   it('should publish resume with bearer token', async () => {
     vi.stubGlobal(
@@ -129,12 +129,12 @@ describe('auth api client', () => {
           },
         }),
       }),
-    );
+    )
 
     const response = await publishResume({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
-    });
+    })
 
     expect(fetch).toHaveBeenCalledWith(
       'http://localhost:5577/resume/publish',
@@ -144,8 +144,8 @@ describe('auth api client', () => {
           Authorization: 'Bearer demo-token',
         },
       }),
-    );
-    expect(response.status).toBe('published');
-    expect(response.resume.meta.slug).toBe('standard-resume');
-  });
-});
+    )
+    expect(response.status).toBe('published')
+    expect(response.resume.meta.slug).toBe('standard-resume')
+  })
+})

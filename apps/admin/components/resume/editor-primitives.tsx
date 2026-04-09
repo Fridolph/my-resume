@@ -1,17 +1,13 @@
-'use client';
+'use client'
 
-import { useSortable } from '@dnd-kit/sortable';
+import { useSortable } from '@dnd-kit/sortable'
+import { Button, Chip, Disclosure, Input, TextArea, Tooltip } from '@heroui/react'
+import type { ComponentProps, ReactNode } from 'react'
+
 import {
-  Button,
-  Chip,
-  Disclosure,
-  Input,
-  TextArea,
-  Tooltip,
-} from '@heroui/react';
-import type { ComponentProps, ReactNode } from 'react';
-
-import { buildSortableTransformStyle, type EditorLocaleMode } from './draft-editor-helpers';
+  buildSortableTransformStyle,
+  type EditorLocaleMode,
+} from './draft-editor-helpers'
 
 export function DisclosureChevron() {
   return (
@@ -24,7 +20,7 @@ export function DisclosureChevron() {
         strokeWidth="1.8"
       />
     </svg>
-  );
+  )
 }
 
 export function PlusIcon() {
@@ -38,7 +34,7 @@ export function PlusIcon() {
         strokeWidth="1.8"
       />
     </svg>
-  );
+  )
 }
 
 export function TrashIcon() {
@@ -52,7 +48,7 @@ export function TrashIcon() {
         strokeWidth="2"
       />
     </svg>
-  );
+  )
 }
 
 export function DragHandleIcon() {
@@ -65,17 +61,17 @@ export function DragHandleIcon() {
       <circle cx="8" cy="17" fill="currentColor" r="1.7" />
       <circle cx="16" cy="17" fill="currentColor" r="1.7" />
     </svg>
-  );
+  )
 }
 
 interface IconActionButtonProps {
-  icon: ReactNode;
-  label: string;
-  onClick: () => void;
-  variant?: 'ghost' | 'outline';
-  className?: string;
-  tone?: 'default' | 'danger';
-  buttonProps?: ComponentProps<typeof Button>;
+  icon: ReactNode
+  label: string
+  onClick: () => void
+  variant?: 'ghost' | 'outline'
+  className?: string
+  tone?: 'default' | 'danger'
+  buttonProps?: ComponentProps<typeof Button>
 }
 
 export function IconActionButton({
@@ -87,7 +83,7 @@ export function IconActionButton({
   tone = 'default',
   buttonProps,
 }: IconActionButtonProps) {
-  const forwardedButtonProps = (buttonProps ?? {}) as ComponentProps<typeof Button>;
+  const forwardedButtonProps = (buttonProps ?? {}) as ComponentProps<typeof Button>
 
   return (
     <Tooltip delay={300}>
@@ -109,8 +105,7 @@ export function IconActionButton({
           onClick={onClick}
           size="sm"
           type="button"
-          variant={variant}
-        >
+          variant={variant}>
           {icon}
         </Button>
       </Tooltip.Trigger>
@@ -118,7 +113,7 @@ export function IconActionButton({
         {label}
       </Tooltip.Content>
     </Tooltip>
-  );
+  )
 }
 
 function SortableHandleButton({
@@ -126,9 +121,9 @@ function SortableHandleButton({
   attributes,
   listeners,
 }: {
-  label: string;
-  attributes?: Record<string, unknown>;
-  listeners?: Record<string, unknown>;
+  label: string
+  attributes?: Record<string, unknown>
+  listeners?: Record<string, unknown>
 }) {
   return (
     <IconActionButton
@@ -141,21 +136,26 @@ function SortableHandleButton({
       onClick={() => undefined}
       variant="ghost"
     />
-  );
+  )
 }
 
 export function buildEntryActions({
   dragHandle,
   deleteAction,
 }: {
-  dragHandle: ReactNode;
-  deleteAction: ReactNode;
+  dragHandle: ReactNode
+  deleteAction: ReactNode
 }) {
   if (!dragHandle && !deleteAction) {
-    return null;
+    return null
   }
 
-  return <div className="flex items-center gap-1.5 md:gap-2">{dragHandle}{deleteAction}</div>;
+  return (
+    <div className="flex items-center gap-1.5 md:gap-2">
+      {dragHandle}
+      {deleteAction}
+    </div>
+  )
 }
 
 export function SortableItemShell({
@@ -165,23 +165,17 @@ export function SortableItemShell({
   className,
   children,
 }: {
-  id: string;
-  dragHandleLabel: string;
-  disabled?: boolean;
-  className?: string;
-  children: (params: { dragHandle: ReactNode; isDragging: boolean }) => ReactNode;
+  id: string
+  dragHandleLabel: string
+  disabled?: boolean
+  className?: string
+  children: (params: { dragHandle: ReactNode; isDragging: boolean }) => ReactNode
 }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id,
-    disabled,
-  });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({
+      id,
+      disabled,
+    })
 
   const dragHandle = !disabled ? (
     <SortableHandleButton
@@ -189,30 +183,29 @@ export function SortableItemShell({
       label={dragHandleLabel}
       listeners={listeners as unknown as Record<string, unknown>}
     />
-  ) : null;
+  ) : null
 
   return (
     <div
       className={className}
       ref={setNodeRef}
-      style={buildSortableTransformStyle(transform, transition, isDragging)}
-    >
+      style={buildSortableTransformStyle(transform, transition, isDragging)}>
       {children({
         dragHandle,
         isDragging,
       })}
     </div>
-  );
+  )
 }
 
 interface LocalizedEditorFieldProps {
-  label: string;
-  localeMode: EditorLocaleMode;
-  onChange: (value: string) => void;
-  rows?: number;
-  sourceValue?: string;
-  value: string;
-  variant?: 'input' | 'textarea';
+  label: string
+  localeMode: EditorLocaleMode
+  onChange: (value: string) => void
+  rows?: number
+  sourceValue?: string
+  value: string
+  variant?: 'input' | 'textarea'
 }
 
 export function LocalizedEditorField({
@@ -230,8 +223,7 @@ export function LocalizedEditorField({
       {localeMode === 'en' ? (
         <span
           aria-hidden="true"
-          className="rounded-[18px] border border-dashed border-zinc-200/80 bg-zinc-50 px-2.5 py-2 text-xs leading-5 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-400 md:rounded-2xl md:px-3 md:text-sm md:leading-6"
-        >
+          className="rounded-[18px] border border-dashed border-zinc-200/80 bg-zinc-50 px-2.5 py-2 text-xs leading-5 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-400 md:rounded-2xl md:px-3 md:text-sm md:leading-6">
           主文案参考：
           {sourceValue || '当前主编辑还没有内容，可先回主编辑工作区补充文案。'}
         </span>
@@ -253,16 +245,16 @@ export function LocalizedEditorField({
         />
       )}
     </label>
-  );
+  )
 }
 
 interface EditorSectionProps {
-  title: string;
-  description: string;
-  count?: number;
-  defaultExpanded?: boolean;
-  action?: ReactNode;
-  children: ReactNode;
+  title: string
+  description: string
+  count?: number
+  defaultExpanded?: boolean
+  action?: ReactNode
+  children: ReactNode
 }
 
 export function EditorSection({
@@ -277,29 +269,20 @@ export function EditorSection({
     <Disclosure.Root
       className="overflow-hidden rounded-[22px] border border-zinc-200/70 bg-white/85 dark:border-zinc-800 dark:bg-zinc-950/70 md:rounded-[28px]"
       defaultExpanded={defaultExpanded}
-      data-slot="editor-section"
-    >
+      data-slot="editor-section">
       <div
         className="flex flex-col gap-2.5 border-b border-zinc-200/70 px-4 py-4 dark:border-zinc-800 md:flex-row md:items-start md:justify-between md:gap-3 md:px-6 md:py-5"
-        data-slot="editor-section-header"
-      >
+        data-slot="editor-section-header">
         <Disclosure.Heading className="min-w-0 flex-1">
           <Disclosure.Trigger
             aria-label={`${title} 模块开关`}
-            className="flex w-full items-start justify-between gap-4 text-left"
-          >
+            className="flex w-full items-start justify-between gap-4 text-left">
             <div className="space-y-0.5 md:space-y-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-[0.95rem] font-semibold text-zinc-950 dark:text-white md:text-base">
                   {title}
                 </h3>
-                {typeof count === 'number' ? (
-                  <Chip size="sm">
-                    {count}
-                    {' '}
-                    条
-                  </Chip>
-                ) : null}
+                {typeof count === 'number' ? <Chip size="sm">{count} 条</Chip> : null}
               </div>
               <p className="muted text-sm leading-5 md:leading-6">{description}</p>
             </div>
@@ -315,23 +298,22 @@ export function EditorSection({
       <Disclosure.Content>
         <Disclosure.Body
           className="stack px-4 py-4 md:px-6 md:py-5"
-          data-slot="editor-section-body"
-        >
+          data-slot="editor-section-body">
           {children}
         </Disclosure.Body>
       </Disclosure.Content>
     </Disclosure.Root>
-  );
+  )
 }
 
 interface EditorEntryProps {
-  title: string;
-  summary: string;
-  toggleLabel: string;
-  defaultExpanded?: boolean;
-  action?: ReactNode;
-  children: ReactNode;
-  variant?: 'default' | 'embedded';
+  title: string
+  summary: string
+  toggleLabel: string
+  defaultExpanded?: boolean
+  action?: ReactNode
+  children: ReactNode
+  variant?: 'default' | 'embedded'
 }
 
 export function EditorEntry({
@@ -346,26 +328,24 @@ export function EditorEntry({
   const entryShellClassName =
     variant === 'embedded'
       ? 'overflow-hidden rounded-[18px] border border-zinc-200/40 bg-transparent shadow-none dark:border-zinc-800/70 dark:bg-transparent md:rounded-[24px] md:border-zinc-200/60 md:bg-zinc-50/55 md:dark:bg-zinc-950/60'
-      : 'overflow-hidden rounded-[18px] border border-zinc-200/50 bg-white/72 shadow-none dark:border-zinc-800/70 dark:bg-zinc-950/60 md:rounded-[24px] md:border-zinc-200/70 md:bg-white md:dark:bg-zinc-950/80';
+      : 'overflow-hidden rounded-[18px] border border-zinc-200/50 bg-white/72 shadow-none dark:border-zinc-800/70 dark:bg-zinc-950/60 md:rounded-[24px] md:border-zinc-200/70 md:bg-white md:dark:bg-zinc-950/80'
 
   const entryHeaderClassName =
-    'flex flex-col gap-2.5 px-3.5 py-3 md:flex-row md:items-start md:justify-between md:gap-3 md:px-5 md:py-4';
+    'flex flex-col gap-2.5 px-3.5 py-3 md:flex-row md:items-start md:justify-between md:gap-3 md:px-5 md:py-4'
 
   const entryBodyClassName =
-    'stack border-t border-zinc-200/50 px-3.5 py-3 dark:border-zinc-800/70 md:border-zinc-200/60 md:px-5 md:py-4 md:dark:border-zinc-800/80';
+    'stack border-t border-zinc-200/50 px-3.5 py-3 dark:border-zinc-800/70 md:border-zinc-200/60 md:px-5 md:py-4 md:dark:border-zinc-800/80'
 
   return (
     <Disclosure.Root
       className={entryShellClassName}
       defaultExpanded={defaultExpanded}
-      data-slot="editor-entry"
-    >
+      data-slot="editor-entry">
       <div className={entryHeaderClassName} data-slot="editor-entry-header">
         <Disclosure.Heading className="min-w-0 flex-1">
           <Disclosure.Trigger
             aria-label={toggleLabel}
-            className="flex w-full items-start justify-between gap-4 text-left"
-          >
+            className="flex w-full items-start justify-between gap-4 text-left">
             <div className="space-y-0.5 md:space-y-1">
               <h4 className="text-[0.95rem] font-semibold text-zinc-950 dark:text-white md:text-sm">
                 {title}
@@ -387,5 +367,5 @@ export function EditorEntry({
         </Disclosure.Body>
       </Disclosure.Content>
     </Disclosure.Root>
-  );
+  )
 }

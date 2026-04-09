@@ -1,8 +1,5 @@
 <template>
-  <Section
-    anchor="Personal"
-    :title="t('personal.title')"
-    icon="github-fill">
+  <Section anchor="Personal" :title="t('personal.title')" icon="github-fill">
     <ProCard />
 
     <ArticleList />

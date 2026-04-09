@@ -6,10 +6,10 @@ import type {
   ResumePublishedSnapshot,
   ResumePublishedSummarySnapshot,
   StandardResume,
-} from './resume-types';
+} from './resume-types'
 
 function projectLocalizedText(value: LocalizedText, locale: ResumeLocale): string {
-  return value[locale];
+  return value[locale]
 }
 
 function buildResumeSummary(
@@ -33,7 +33,7 @@ function buildResumeSummary(
       skills: resume.skills.length,
       highlights: resume.highlights.length,
     },
-  };
+  }
 }
 
 export function buildDraftSummarySnapshot(
@@ -44,7 +44,7 @@ export function buildDraftSummarySnapshot(
     status: snapshot.status,
     updatedAt: snapshot.updatedAt,
     resume: buildResumeSummary(snapshot.resume, locale),
-  };
+  }
 }
 
 export function buildPublishedSummarySnapshot(
@@ -55,5 +55,5 @@ export function buildPublishedSummarySnapshot(
     status: snapshot.status,
     publishedAt: snapshot.publishedAt,
     resume: buildResumeSummary(snapshot.resume, locale),
-  };
+  }
 }

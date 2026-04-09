@@ -1,34 +1,31 @@
-'use client';
+'use client'
 
-import { Button, ListBox, Select, TextArea } from '@heroui/react';
+import { Button, ListBox, Select, TextArea } from '@heroui/react'
 
-import { adminPrimaryButtonClass } from '../../lib/button-styles';
-import type { ReactNode } from 'react';
+import { adminPrimaryButtonClass } from '../../lib/button-styles'
+import type { ReactNode } from 'react'
 
-import type {
-  AiWorkbenchLocale,
-  AiWorkbenchScenario,
-} from '../../lib/ai-workbench-types';
-import { localeOptions, scenarioOptions } from './analysis-utils';
+import type { AiWorkbenchLocale, AiWorkbenchScenario } from '../../lib/ai-workbench-types'
+import { localeOptions, scenarioOptions } from './analysis-utils'
 
 interface AnalysisFormProps {
-  applyFeedbackMessage?: string | null;
-  applyPending: boolean;
-  content: string;
-  errorMessage?: string | null;
-  helperMessage?: string | null;
-  inputAccessory?: ReactNode;
-  locale: AiWorkbenchLocale;
-  moduleLinkMessage?: string | null;
-  onChangeLocale: (locale: AiWorkbenchLocale) => void;
-  onContentChange: (value: string) => void;
-  onGenerateSuggestion: () => void;
-  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
-  onUpdateScenario: (scenario: AiWorkbenchScenario) => void;
-  pending: boolean;
-  scenario: AiWorkbenchScenario;
-  suggestionErrorMessage?: string | null;
-  suggestionPending: boolean;
+  applyFeedbackMessage?: string | null
+  applyPending: boolean
+  content: string
+  errorMessage?: string | null
+  helperMessage?: string | null
+  inputAccessory?: ReactNode
+  locale: AiWorkbenchLocale
+  moduleLinkMessage?: string | null
+  onChangeLocale: (locale: AiWorkbenchLocale) => void
+  onContentChange: (value: string) => void
+  onGenerateSuggestion: () => void
+  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void
+  onUpdateScenario: (scenario: AiWorkbenchScenario) => void
+  pending: boolean
+  scenario: AiWorkbenchScenario
+  suggestionErrorMessage?: string | null
+  suggestionPending: boolean
 }
 
 export function AnalysisForm({
@@ -56,8 +53,7 @@ export function AnalysisForm({
 
       <form
         className="stack rounded-[1.75rem] border border-zinc-200/80 bg-white/80 p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/80"
-        onSubmit={onSubmit}
-      >
+        onSubmit={onSubmit}>
         <div className="grid gap-4 md:grid-cols-2">
           <label className="field">
             <span>分析场景</span>
@@ -68,8 +64,7 @@ export function AnalysisForm({
                 onUpdateScenario(String(key) as AiWorkbenchScenario)
               }
               selectedKey={scenario}
-              variant="secondary"
-            >
+              variant="secondary">
               <Select.Trigger aria-label="分析场景">
                 <Select.Value />
                 <Select.Indicator />
@@ -80,8 +75,7 @@ export function AnalysisForm({
                     <ListBox.Item
                       id={option.value}
                       key={option.value}
-                      textValue={option.label}
-                    >
+                      textValue={option.label}>
                       {option.label}
                     </ListBox.Item>
                   ))}
@@ -99,8 +93,7 @@ export function AnalysisForm({
                 onChangeLocale(String(key) as AiWorkbenchLocale)
               }
               selectedKey={locale}
-              variant="secondary"
-            >
+              variant="secondary">
               <Select.Trigger aria-label="输出语言">
                 <Select.Value />
                 <Select.Indicator />
@@ -111,8 +104,7 @@ export function AnalysisForm({
                     <ListBox.Item
                       id={option.value}
                       key={option.value}
-                      textValue={option.label}
-                    >
+                      textValue={option.label}>
                       {option.label}
                     </ListBox.Item>
                   ))}
@@ -155,8 +147,7 @@ export function AnalysisForm({
             isDisabled={pending}
             size="md"
             type="submit"
-            variant="primary"
-          >
+            variant="primary">
             {pending ? '正在生成分析...' : '开始真实分析'}
           </Button>
           <Button
@@ -164,12 +155,11 @@ export function AnalysisForm({
             onClick={onGenerateSuggestion}
             size="md"
             type="button"
-            variant="outline"
-          >
+            variant="outline">
             {suggestionPending ? '正在生成建议稿...' : '生成结构化简历建议'}
           </Button>
         </div>
       </form>
     </div>
-  );
+  )
 }

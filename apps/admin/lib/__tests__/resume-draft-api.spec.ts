@@ -1,14 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   fetchDraftResume,
   fetchDraftResumeSummary,
   updateDraftResume,
-} from '../resume-draft-api';
-import type {
-  ResumeDraftSnapshot,
-  ResumeDraftSummarySnapshot,
-} from '../resume-types';
+} from '../resume-draft-api'
+import type { ResumeDraftSnapshot, ResumeDraftSummarySnapshot } from '../resume-types'
 
 const draftSnapshot: ResumeDraftSnapshot = {
   status: 'draft' as const,
@@ -64,7 +61,7 @@ const draftSnapshot: ResumeDraftSnapshot = {
     skills: [],
     highlights: [],
   },
-};
+}
 
 const draftSummarySnapshot: ResumeDraftSummarySnapshot = {
   status: 'draft',
@@ -87,12 +84,12 @@ const draftSummarySnapshot: ResumeDraftSummarySnapshot = {
       highlights: 0,
     },
   },
-};
+}
 
 describe('resume draft api client', () => {
   beforeEach(() => {
-    vi.restoreAllMocks();
-  });
+    vi.restoreAllMocks()
+  })
 
   it('should fetch draft resume with bearer token', async () => {
     vi.stubGlobal(
@@ -101,12 +98,12 @@ describe('resume draft api client', () => {
         ok: true,
         json: async () => draftSnapshot,
       }),
-    );
+    )
 
     const response = await fetchDraftResume({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
-    });
+    })
 
     expect(fetch).toHaveBeenCalledWith(
       'http://localhost:5577/resume/draft',
@@ -115,9 +112,9 @@ describe('resume draft api client', () => {
           Authorization: 'Bearer demo-token',
         },
       }),
-    );
-    expect(response.resume.profile.fullName.zh).toBe('付寅生');
-  });
+    )
+    expect(response.resume.profile.fullName.zh).toBe('付寅生')
+  })
 
   it('should fetch draft summary with bearer token', async () => {
     vi.stubGlobal(
@@ -126,13 +123,13 @@ describe('resume draft api client', () => {
         ok: true,
         json: async () => draftSummarySnapshot,
       }),
-    );
+    )
 
     const response = await fetchDraftResumeSummary({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
       locale: 'zh',
-    });
+    })
 
     expect(fetch).toHaveBeenCalledWith(
       'http://localhost:5577/resume/draft/summary?locale=zh',
@@ -141,9 +138,9 @@ describe('resume draft api client', () => {
           Authorization: 'Bearer demo-token',
         },
       }),
-    );
-    expect(response.resume.profile.headline).toBe('全栈开发工程师');
-  });
+    )
+    expect(response.resume.profile.headline).toBe('全栈开发工程师')
+  })
 
   it('should save draft resume with bearer token', async () => {
     vi.stubGlobal(
@@ -152,13 +149,13 @@ describe('resume draft api client', () => {
         ok: true,
         json: async () => draftSnapshot,
       }),
-    );
+    )
 
     const response = await updateDraftResume({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
       resume: draftSnapshot.resume,
-    });
+    })
 
     expect(fetch).toHaveBeenCalledWith(
       'http://localhost:5577/resume/draft',
@@ -170,7 +167,7 @@ describe('resume draft api client', () => {
         },
         body: JSON.stringify(draftSnapshot.resume),
       }),
-    );
-    expect(response.status).toBe('draft');
-  });
-});
+    )
+    expect(response.status).toBe('draft')
+  })
+})

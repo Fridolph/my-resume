@@ -21,12 +21,10 @@
           >
         </div>
         <a
-          class="flex items-center justify-center p-4 cursor-pointer"
+          class="flex cursor-pointer items-center justify-center p-4"
           href="https://github.com/Fridolph/Fridolph"
           target="_blank">
-          <Iconfont
-            name="tiaozhuan"
-            :size="22" />
+          <Iconfont name="tiaozhuan" :size="22" />
         </a>
       </div>
     </RepositoryItem>
@@ -37,16 +35,14 @@
       :description="t('personal.r2')"
       link="https://github.com/Fridolph/my-resume/">
       <div class="flex flex-row">
-        <div class="basis-full flex flex-wrap flex-row gap-1">
+        <div class="flex basis-full flex-row flex-wrap gap-1">
           <img
             alt="Static Badge"
             src="https://img.shields.io/badge/%E8%84%9A%E6%89%8B%E6%9E%B6-vite-red" />
           <img
             alt="Static Badge"
             src="https://img.shields.io/badge/%E5%89%8D%E7%AB%AF%E6%A1%86%E6%9E%B6-Vue3-%236495ed" />
-          <img
-            alt="Static Badge"
-            src="https://img.shields.io/badge/UI-TailWind-green" />
+          <img alt="Static Badge" src="https://img.shields.io/badge/UI-TailWind-green" />
           <img
             alt="Static Badge"
             src="https://img.shields.io/badge/%E8%84%9A%E6%9C%AC%E8%AF%AD%E8%A8%80-TypeScript-%25236495ed" />
@@ -55,12 +51,10 @@
             src="https://img.shields.io/badge/UI-fri_element_plus-%238a2be2" />
         </div>
         <a
-          class="flex items-center justify-center p-4 cursor-pointer"
+          class="flex cursor-pointer items-center justify-center p-4"
           href="https://github.com/Fridolph/Fridolph"
           target="_blank">
-          <Iconfont
-            name="tiaozhuan"
-            :size="22" />
+          <Iconfont name="tiaozhuan" :size="22" />
         </a>
       </div>
     </RepositoryItem>
@@ -87,12 +81,10 @@
           >
         </div>
         <a
-          class="flex items-center justify-center p-4 cursor-pointer"
+          class="flex cursor-pointer items-center justify-center p-4"
           href="https://github.com/Fridolph/Fridolph"
           target="_blank">
-          <Iconfont
-            name="tiaozhuan"
-            :size="22" />
+          <Iconfont name="tiaozhuan" :size="22" />
         </a>
       </div>
     </RepositoryItem>
@@ -103,7 +95,7 @@
       transitionType="fromRight"
       link="https://github.com/Fridolph/my-program">
       <div class="flex flex-row">
-        <div class="basis-full flex flex-wrap flex-row gap-1">
+        <div class="flex basis-full flex-row flex-wrap gap-1">
           <img
             alt="Static Badge"
             src="https://img.shields.io/badge/%E8%84%9A%E6%89%8B%E6%9E%B6-vite-red" />
@@ -119,12 +111,10 @@
             src="https://img.shields.io/badge/%E6%89%93%E5%8C%85%E5%B7%A5%E5%85%B7-Rollup-orange" />
         </div>
         <a
-          class="flex items-center justify-center p-4 cursor-pointer"
+          class="flex cursor-pointer items-center justify-center p-4"
           href="https://github.com/Fridolph/Fridolph"
           target="_blank">
-          <Iconfont
-            name="tiaozhuan"
-            :size="22" />
+          <Iconfont name="tiaozhuan" :size="22" />
         </a>
       </div>
     </RepositoryItem>
@@ -147,12 +137,10 @@
           <button class="my-btn">{{ t('personal.b6') }}</button>
         </div>
         <a
-          class="flex items-center justify-center p-4 cursor-pointer"
+          class="flex cursor-pointer items-center justify-center p-4"
           href="https://github.com/Fridolph/FE-prepare-interview"
           target="_blank">
-          <Iconfont
-            name="tiaozhuan"
-            :size="22" />
+          <Iconfont name="tiaozhuan" :size="22" />
         </a>
       </div>
     </RepositoryItem>

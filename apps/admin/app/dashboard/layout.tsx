@@ -1,11 +1,11 @@
-import type { ReactNode } from 'react';
+import type { ReactNode } from 'react'
 
-import { AdminProtectedLayout } from '../../components/admin/protected-layout';
+import { AdminProtectedLayout } from '../../components/admin/protected-layout'
 
 export default function DashboardLayout({
   children,
 }: Readonly<{
-  children: ReactNode;
+  children: ReactNode
 }>) {
-  return <AdminProtectedLayout>{children}</AdminProtectedLayout>;
+  return <AdminProtectedLayout>{children}</AdminProtectedLayout>
 }

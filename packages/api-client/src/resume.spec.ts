@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   buildPublishedResumeExportUrl,
@@ -10,7 +10,7 @@ import {
   type ResumeDraftSummarySnapshot,
   type ResumeDraftSnapshot,
   updateDraftResume,
-} from './resume';
+} from './resume'
 
 const draftSnapshot: ResumeDraftSnapshot = {
   status: 'draft',
@@ -66,7 +66,7 @@ const draftSnapshot: ResumeDraftSnapshot = {
     skills: [],
     highlights: [],
   },
-};
+}
 
 const draftSummarySnapshot: ResumeDraftSummarySnapshot = {
   status: 'draft',
@@ -89,12 +89,12 @@ const draftSummarySnapshot: ResumeDraftSummarySnapshot = {
       highlights: 5,
     },
   },
-};
+}
 
 describe('api-client resume contract', () => {
   beforeEach(() => {
-    vi.restoreAllMocks();
-  });
+    vi.restoreAllMocks()
+  })
 
   it('should fetch the published resume and return null for 404', async () => {
     vi.stubGlobal(
@@ -114,14 +114,14 @@ describe('api-client resume contract', () => {
           ok: false,
           status: 404,
         }),
-    );
+    )
 
     const published = await fetchPublishedResume({
       apiBaseUrl: 'http://localhost:5577/',
-    });
+    })
     const missing = await fetchPublishedResume({
       apiBaseUrl: 'http://localhost:5577',
-    });
+    })
 
     expect(fetch).toHaveBeenNthCalledWith(
       1,
@@ -129,10 +129,10 @@ describe('api-client resume contract', () => {
       expect.objectContaining({
         cache: 'no-store',
       }),
-    );
-    expect(published?.status).toBe('published');
-    expect(missing).toBeNull();
-  });
+    )
+    expect(published?.status).toBe('published')
+    expect(missing).toBeNull()
+  })
 
   it('should fetch published summary and return null for 404', async () => {
     vi.stubGlobal(
@@ -152,15 +152,15 @@ describe('api-client resume contract', () => {
           ok: false,
           status: 404,
         }),
-    );
+    )
 
     const published = await fetchPublishedResumeSummary({
       apiBaseUrl: 'http://localhost:5577/',
       locale: 'en',
-    });
+    })
     const missing = await fetchPublishedResumeSummary({
       apiBaseUrl: 'http://localhost:5577',
-    });
+    })
 
     expect(fetch).toHaveBeenNthCalledWith(
       1,
@@ -168,10 +168,10 @@ describe('api-client resume contract', () => {
       expect.objectContaining({
         cache: 'no-store',
       }),
-    );
-    expect(published?.status).toBe('published');
-    expect(missing).toBeNull();
-  });
+    )
+    expect(published?.status).toBe('published')
+    expect(missing).toBeNull()
+  })
 
   it('should send bearer token when fetching and updating draft', async () => {
     vi.stubGlobal(
@@ -190,24 +190,24 @@ describe('api-client resume contract', () => {
           ok: true,
           json: async () => draftSnapshot,
         }),
-    );
+    )
 
     await fetchDraftResume({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
-    });
+    })
 
     await fetchDraftResumeSummary({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
       locale: 'zh',
-    });
+    })
 
     await updateDraftResume({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
       resume: draftSnapshot.resume,
-    });
+    })
 
     expect(fetch).toHaveBeenNthCalledWith(
       1,
@@ -217,7 +217,7 @@ describe('api-client resume contract', () => {
           Authorization: 'Bearer demo-token',
         },
       }),
-    );
+    )
     expect(fetch).toHaveBeenNthCalledWith(
       2,
       'http://localhost:5577/resume/draft/summary?locale=zh',
@@ -226,7 +226,7 @@ describe('api-client resume contract', () => {
           Authorization: 'Bearer demo-token',
         },
       }),
-    );
+    )
     expect(fetch).toHaveBeenNthCalledWith(
       3,
       'http://localhost:5577/resume/draft',
@@ -238,8 +238,8 @@ describe('api-client resume contract', () => {
         },
         body: JSON.stringify(draftSnapshot.resume),
       }),
-    );
-  });
+    )
+  })
 
   it('should publish resume and build stable export url', async () => {
     vi.stubGlobal(
@@ -252,12 +252,12 @@ describe('api-client resume contract', () => {
           resume: draftSnapshot.resume,
         }),
       }),
-    );
+    )
 
     const result = await publishResume({
       apiBaseUrl: 'http://localhost:5577/',
       accessToken: 'demo-token',
-    });
+    })
 
     expect(fetch).toHaveBeenCalledWith(
       'http://localhost:5577/resume/publish',
@@ -267,16 +267,16 @@ describe('api-client resume contract', () => {
           Authorization: 'Bearer demo-token',
         },
       }),
-    );
-    expect(result.status).toBe('published');
+    )
+    expect(result.status).toBe('published')
     expect(
       buildPublishedResumeExportUrl({
         apiBaseUrl: 'http://localhost:5577/',
         format: 'markdown',
         locale: 'en',
       }),
-    ).toBe('http://localhost:5577/resume/published/export/markdown?locale=en');
-  });
+    ).toBe('http://localhost:5577/resume/published/export/markdown?locale=en')
+  })
 
   it('should surface server-side error messages for draft and publish failures', async () => {
     vi.stubGlobal(
@@ -298,7 +298,7 @@ describe('api-client resume contract', () => {
             message: ['发布失败，请稍后重试', '请关闭外部数据库工具后重试'],
           }),
         }),
-    );
+    )
 
     await expect(
       updateDraftResume({
@@ -308,13 +308,13 @@ describe('api-client resume contract', () => {
       }),
     ).rejects.toThrow(
       '当前本地 SQLite 数据库正被其他进程占用，请关闭 DB Browser 等工具后重试。',
-    );
+    )
 
     await expect(
       publishResume({
         apiBaseUrl: 'http://localhost:5577',
         accessToken: 'demo-token',
       }),
-    ).rejects.toThrow('发布失败，请稍后重试；请关闭外部数据库工具后重试');
-  });
-});
+    ).rejects.toThrow('发布失败，请稍后重试；请关闭外部数据库工具后重试')
+  })
+})

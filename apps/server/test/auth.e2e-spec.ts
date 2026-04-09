@@ -1,25 +1,25 @@
-import { INestApplication } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
-import request from 'supertest';
-import { App } from 'supertest/types';
+import { INestApplication } from '@nestjs/common'
+import { Test, TestingModule } from '@nestjs/testing'
+import request from 'supertest'
+import { App } from 'supertest/types'
 
-import { AppModule } from './../src/app.module';
+import { AppModule } from './../src/app.module'
 
 describe('AuthModule (e2e)', () => {
-  let app: INestApplication<App>;
+  let app: INestApplication<App>
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    }).compile()
 
-    app = moduleFixture.createNestApplication();
-    await app.init();
-  });
+    app = moduleFixture.createNestApplication()
+    await app.init()
+  })
 
   afterEach(async () => {
-    await app.close();
-  });
+    await app.close()
+  })
 
   it('should login with the demo admin account', async () => {
     const response = await request(app.getHttpServer())
@@ -28,7 +28,7 @@ describe('AuthModule (e2e)', () => {
         username: 'admin',
         password: 'admin123456',
       })
-      .expect(200);
+      .expect(200)
 
     expect(response.body).toMatchObject({
       tokenType: 'Bearer',
@@ -37,9 +37,9 @@ describe('AuthModule (e2e)', () => {
         role: 'admin',
         isActive: true,
       },
-    });
-    expect(response.body.accessToken).toEqual(expect.any(String));
-  });
+    })
+    expect(response.body.accessToken).toEqual(expect.any(String))
+  })
 
   it('should reject invalid credentials', () => {
     return request(app.getHttpServer())
@@ -48,8 +48,8 @@ describe('AuthModule (e2e)', () => {
         username: 'admin',
         password: 'wrong-password',
       })
-      .expect(401);
-  });
+      .expect(401)
+  })
 
   it('should read current user from bearer token', async () => {
     const loginResponse = await request(app.getHttpServer())
@@ -58,14 +58,14 @@ describe('AuthModule (e2e)', () => {
         username: 'viewer',
         password: 'viewer123456',
       })
-      .expect(200);
+      .expect(200)
 
-    const accessToken = loginResponse.body.accessToken as string;
+    const accessToken = loginResponse.body.accessToken as string
 
     const meResponse = await request(app.getHttpServer())
       .get('/auth/me')
       .set('Authorization', `Bearer ${accessToken}`)
-      .expect(200);
+      .expect(200)
 
     expect(meResponse.body).toMatchObject({
       user: {
@@ -78,10 +78,10 @@ describe('AuthModule (e2e)', () => {
           canTriggerAiAnalysis: false,
         },
       },
-    });
-  });
+    })
+  })
 
   it('should reject protected access without bearer token', () => {
-    return request(app.getHttpServer()).get('/auth/me').expect(401);
-  });
-});
+    return request(app.getHttpServer()).get('/auth/me').expect(401)
+  })
+})

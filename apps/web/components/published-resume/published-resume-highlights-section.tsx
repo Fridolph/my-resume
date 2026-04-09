@@ -1,16 +1,16 @@
-import { ResumeHighlightItem, ResumeLocale } from '../../lib/published-resume-types';
-import { readLocalizedText, resumeLabels } from './published-resume-utils';
+import { ResumeHighlightItem, ResumeLocale } from '../../lib/published-resume-types'
+import { readLocalizedText, resumeLabels } from './published-resume-utils'
 
 interface PublishedResumeHighlightsSectionProps {
-  locale: ResumeLocale;
-  highlights: ResumeHighlightItem[];
+  locale: ResumeLocale
+  highlights: ResumeHighlightItem[]
 }
 
 interface HighlightSignalPreset {
-  accentClassName: string;
-  badge: Record<ResumeLocale, string>;
-  keywords: string[];
-  signalTags: Record<ResumeLocale, string[]>;
+  accentClassName: string
+  badge: Record<ResumeLocale, string>
+  keywords: string[]
+  signalTags: Record<ResumeLocale, string[]>
 }
 
 const highlightSignalPresets: HighlightSignalPreset[] = [
@@ -92,39 +92,44 @@ const highlightSignalPresets: HighlightSignalPreset[] = [
       en: ['Tutorials', 'Public Writing', 'Open Source'],
     },
   },
-];
+]
 
 function resolveHighlightSignal(
   item: ResumeHighlightItem,
   locale: ResumeLocale,
   index: number,
 ) {
-  const normalizedText = `${item.title.zh} ${item.title.en} ${item.description.zh} ${item.description.en}`.toLowerCase();
+  const normalizedText =
+    `${item.title.zh} ${item.title.en} ${item.description.zh} ${item.description.en}`.toLowerCase()
   const preset =
     highlightSignalPresets.find((candidate) =>
-      candidate.keywords.some((keyword) => normalizedText.includes(keyword.toLowerCase())),
-    ) ?? highlightSignalPresets[index % highlightSignalPresets.length];
+      candidate.keywords.some((keyword) =>
+        normalizedText.includes(keyword.toLowerCase()),
+      ),
+    ) ?? highlightSignalPresets[index % highlightSignalPresets.length]
 
   return {
     accentClassName: preset.accentClassName,
     badge: preset.badge[locale],
     tags: preset.signalTags[locale],
-  };
+  }
 }
 
 export function PublishedResumeHighlightsSection({
   locale,
   highlights,
 }: PublishedResumeHighlightsSectionProps) {
-  const labels = resumeLabels[locale];
+  const labels = resumeLabels[locale]
 
   if (highlights.length === 0) {
-    return null;
+    return null
   }
 
   const signalSummary = Array.from(
-    new Set(highlights.map((item, index) => resolveHighlightSignal(item, locale, index).badge)),
-  ).slice(0, 4);
+    new Set(
+      highlights.map((item, index) => resolveHighlightSignal(item, locale, index).badge),
+    ),
+  ).slice(0, 4)
 
   return (
     <section className="relative overflow-hidden rounded-[32px] border border-white/65 bg-white/88 px-5 py-6 shadow-[0_28px_80px_rgba(15,23,42,0.08)] dark:border-white/8 dark:bg-slate-950/82 sm:px-6 lg:px-7">
@@ -148,8 +153,7 @@ export function PublishedResumeHighlightsSection({
             {signalSummary.map((signal) => (
               <span
                 className="inline-flex items-center rounded-full border border-slate-200/80 bg-white/80 px-3 py-1 text-sm font-medium text-slate-600 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-slate-200"
-                key={signal}
-              >
+                key={signal}>
                 {signal}
               </span>
             ))}
@@ -169,13 +173,12 @@ export function PublishedResumeHighlightsSection({
 
         <div className="grid gap-4 md:grid-cols-2">
           {highlights.map((item, index) => {
-            const signal = resolveHighlightSignal(item, locale, index);
+            const signal = resolveHighlightSignal(item, locale, index)
 
             return (
               <article
                 className="group relative overflow-hidden rounded-[28px] border border-slate-200/70 bg-slate-50/92 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] transition-transform duration-200 hover:-translate-y-1 dark:border-white/8 dark:bg-white/[0.03]"
-                key={`${item.title.en}-${item.description.en}-${index}`}
-              >
+                key={`${item.title.en}-${item.description.en}-${index}`}>
                 <div
                   className={`pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-br ${signal.accentClassName}`}
                 />
@@ -202,17 +205,16 @@ export function PublishedResumeHighlightsSection({
                   {signal.tags.map((tag) => (
                     <span
                       className="inline-flex items-center rounded-full border border-slate-200/80 bg-white/80 px-3 py-1 text-xs font-medium text-slate-600 dark:border-white/10 dark:bg-white/6 dark:text-slate-200"
-                      key={`${item.title.en}-${tag}`}
-                    >
+                      key={`${item.title.en}-${tag}`}>
                       {tag}
                     </span>
                   ))}
                 </div>
               </article>
-            );
+            )
           })}
         </div>
       </div>
     </section>
-  );
+  )
 }

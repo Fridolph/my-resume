@@ -1,16 +1,16 @@
-'use client';
+'use client'
 
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { useState } from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { useState } from 'react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { AiAnalysisPanel } from '../analysis-panel';
-import type { StandardResume } from '../../../lib/resume-types';
+import { AiAnalysisPanel } from '../analysis-panel'
+import type { StandardResume } from '../../../lib/resume-types'
 
 afterEach(() => {
-  cleanup();
-});
+  cleanup()
+})
 
 function createTestResume(): StandardResume {
   return {
@@ -63,7 +63,7 @@ function createTestResume(): StandardResume {
     projects: [],
     skills: [],
     highlights: [],
-  };
+  }
 }
 
 const runtimeSummary = {
@@ -71,22 +71,22 @@ const runtimeSummary = {
   model: 'deepseek-v3',
   mode: 'live',
   supportedScenarios: ['jd-match', 'resume-review', 'offer-compare'] as const,
-};
+}
 
 function ControlledAnalysisPanel(props: {
-  applyResumeOptimization?: typeof import('../../../lib/ai-workbench-api').applyAiResumeOptimization;
-  canAnalyze: boolean;
-  generateResumeOptimization?: typeof import('../../../lib/ai-workbench-api').generateAiResumeOptimization;
-  helperMessage?: string | null;
+  applyResumeOptimization?: typeof import('../../../lib/ai-workbench-api').applyAiResumeOptimization
+  canAnalyze: boolean
+  generateResumeOptimization?: typeof import('../../../lib/ai-workbench-api').generateAiResumeOptimization
+  helperMessage?: string | null
   onDraftApplied?: (snapshot: {
-    status: 'draft';
-    updatedAt: string;
-    resume: StandardResume;
-  }) => void;
-  triggerAnalysis?: typeof import('../../../lib/ai-workbench-api').triggerAiWorkbenchAnalysis;
-  initialContent?: string;
+    status: 'draft'
+    updatedAt: string
+    resume: StandardResume
+  }) => void
+  triggerAnalysis?: typeof import('../../../lib/ai-workbench-api').triggerAiWorkbenchAnalysis
+  initialContent?: string
 }) {
-  const [content, setContent] = useState(props.initialContent ?? '');
+  const [content, setContent] = useState(props.initialContent ?? '')
 
   return (
     <AiAnalysisPanel
@@ -102,23 +102,23 @@ function ControlledAnalysisPanel(props: {
       generateResumeOptimization={props.generateResumeOptimization}
       triggerAnalysis={props.triggerAnalysis}
     />
-  );
+  )
 }
 
 describe('AiAnalysisPanel', () => {
   it('should show read-only message when current role cannot trigger analysis', () => {
-    render(<ControlledAnalysisPanel canAnalyze={false} />);
+    render(<ControlledAnalysisPanel canAnalyze={false} />)
 
-    expect(screen.getByText('当前角色只读')).toBeInTheDocument();
+    expect(screen.getByText('当前角色只读')).toBeInTheDocument()
     expect(
       screen.getByText(
         'viewer 当前只保留缓存报告体验，真实分析触发入口会在管理员链路中继续开放。',
       ),
-    ).toBeInTheDocument();
-  });
+    ).toBeInTheDocument()
+  })
 
   it('should trigger live analysis and render returned report sections', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup()
     const triggerAnalysis = vi.fn().mockResolvedValue({
       cached: false,
       report: {
@@ -161,7 +161,7 @@ describe('AiAnalysisPanel', () => {
         generator: 'ai-provider',
         createdAt: '2026-03-27T00:00:00.000Z',
       },
-    });
+    })
 
     render(
       <ControlledAnalysisPanel
@@ -170,13 +170,13 @@ describe('AiAnalysisPanel', () => {
         initialContent="NestJS React TypeScript"
         triggerAnalysis={triggerAnalysis}
       />,
-    );
+    )
 
     expect(
       screen.getByText('已将 resume.pdf 的提取结果同步到分析输入区。'),
-    ).toBeInTheDocument();
+    ).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: '开始真实分析' }));
+    await user.click(screen.getByRole('button', { name: '开始真实分析' }))
 
     await waitFor(() => {
       expect(triggerAnalysis).toHaveBeenCalledWith({
@@ -185,35 +185,35 @@ describe('AiAnalysisPanel', () => {
         scenario: 'resume-review',
         locale: 'zh',
         content: 'NestJS React TypeScript',
-      });
-    });
+      })
+    })
 
     expect(
       await screen.findByText('建议继续补充量化结果与职责边界。'),
-    ).toBeInTheDocument();
-    expect(screen.getByText('场景：简历优化建议')).toBeInTheDocument();
-    expect(screen.getByText('Provider：qiniu / deepseek-v3')).toBeInTheDocument();
-    expect(screen.getByText('评分：76 / 100')).toBeInTheDocument();
-    expect(screen.getByText('基础匹配良好')).toBeInTheDocument();
+    ).toBeInTheDocument()
+    expect(screen.getByText('场景：简历优化建议')).toBeInTheDocument()
+    expect(screen.getByText('Provider：qiniu / deepseek-v3')).toBeInTheDocument()
+    expect(screen.getByText('评分：76 / 100')).toBeInTheDocument()
+    expect(screen.getByText('基础匹配良好')).toBeInTheDocument()
     expect(
       screen.getByText('已有核心技术关键词，但成果与职责边界仍需补强。'),
-    ).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '已有优势' })).toBeInTheDocument();
+    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '已有优势' })).toBeInTheDocument()
     expect(
       screen.getByText('已覆盖 NestJS、React、TypeScript 等岗位基础关键词。'),
-    ).toBeInTheDocument();
+    ).toBeInTheDocument()
     expect(
       screen.getByRole('heading', { name: '建议动作', level: 3 }),
-    ).toBeInTheDocument();
-    expect(screen.getByText('建议模块：experiences')).toBeInTheDocument();
-    expect(screen.getByText('补一条量化结果')).toBeInTheDocument();
-  });
+    ).toBeInTheDocument()
+    expect(screen.getByText('建议模块：experiences')).toBeInTheDocument()
+    expect(screen.getByText('补一条量化结果')).toBeInTheDocument()
+  })
 
   it('should show error feedback when live analysis fails', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup()
     const triggerAnalysis = vi
       .fn()
-      .mockRejectedValue(new Error('Provider request failed'));
+      .mockRejectedValue(new Error('Provider request failed'))
 
     render(
       <ControlledAnalysisPanel
@@ -221,31 +221,29 @@ describe('AiAnalysisPanel', () => {
         initialContent="NestJS React TypeScript"
         triggerAnalysis={triggerAnalysis}
       />,
-    );
+    )
 
-    await user.click(screen.getByRole('button', { name: '开始真实分析' }));
+    await user.click(screen.getByRole('button', { name: '开始真实分析' }))
 
-    expect(await screen.findByText('Provider request failed')).toBeInTheDocument();
-  });
+    expect(await screen.findByText('Provider request failed')).toBeInTheDocument()
+  })
 
   it('should guard against empty input before triggering analysis', async () => {
-    const user = userEvent.setup();
-    const triggerAnalysis = vi.fn();
+    const user = userEvent.setup()
+    const triggerAnalysis = vi.fn()
 
-    render(
-      <ControlledAnalysisPanel canAnalyze triggerAnalysis={triggerAnalysis} />,
-    );
+    render(<ControlledAnalysisPanel canAnalyze triggerAnalysis={triggerAnalysis} />)
 
-    await user.click(screen.getByRole('button', { name: '开始真实分析' }));
+    await user.click(screen.getByRole('button', { name: '开始真实分析' }))
 
     expect(
       await screen.findByText('请先输入分析内容，或先通过文件提取生成输入文本。'),
-    ).toBeInTheDocument();
-    expect(triggerAnalysis).not.toHaveBeenCalled();
-  });
+    ).toBeInTheDocument()
+    expect(triggerAnalysis).not.toHaveBeenCalled()
+  })
 
   it('should remind the user to generate a suggestion before linking to a module rewrite', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup()
     const triggerAnalysis = vi.fn().mockResolvedValue({
       cached: false,
       report: {
@@ -277,7 +275,7 @@ describe('AiAnalysisPanel', () => {
         generator: 'ai-provider',
         createdAt: '2026-03-27T00:00:00.000Z',
       },
-    });
+    })
 
     render(
       <ControlledAnalysisPanel
@@ -285,22 +283,20 @@ describe('AiAnalysisPanel', () => {
         initialContent="NestJS React TypeScript"
         triggerAnalysis={triggerAnalysis}
       />,
-    );
+    )
 
-    await user.click(screen.getByRole('button', { name: '开始真实分析' }));
-    await screen.findByText('建议继续补充量化结果与职责边界。');
+    await user.click(screen.getByRole('button', { name: '开始真实分析' }))
+    await screen.findByText('建议继续补充量化结果与职责边界。')
 
-    await user.click(
-      screen.getByRole('button', { name: '定位到 projects 改写模块' }),
-    );
+    await user.click(screen.getByRole('button', { name: '定位到 projects 改写模块' }))
 
     expect(
       await screen.findByText('请先生成结构化简历建议，再定位到具体改写模块。'),
-    ).toBeInTheDocument();
-  });
+    ).toBeInTheDocument()
+  })
 
   it('should preview module diffs and apply only the selected modules', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup()
     const triggerAnalysis = vi.fn().mockResolvedValue({
       cached: false,
       report: {
@@ -339,7 +335,7 @@ describe('AiAnalysisPanel', () => {
         generator: 'ai-provider',
         createdAt: '2026-03-27T00:00:00.000Z',
       },
-    });
+    })
     const generateResumeOptimization = vi.fn().mockResolvedValue({
       summary: '已生成结构化建议稿',
       focusAreas: ['强化摘要', '补强项目亮点'],
@@ -407,13 +403,13 @@ describe('AiAnalysisPanel', () => {
         model: 'deepseek-v3',
         mode: 'openai-compatible',
       },
-    });
+    })
     const applyResumeOptimization = vi.fn().mockResolvedValue({
       status: 'draft',
       resume: createTestResume(),
       updatedAt: '2026-03-30T00:00:00.000Z',
-    });
-    const onDraftApplied = vi.fn();
+    })
+    const onDraftApplied = vi.fn()
 
     render(
       <ControlledAnalysisPanel
@@ -424,11 +420,11 @@ describe('AiAnalysisPanel', () => {
         onDraftApplied={onDraftApplied}
         triggerAnalysis={triggerAnalysis}
       />,
-    );
+    )
 
-    await user.click(screen.getByRole('button', { name: '开始真实分析' }));
-    await screen.findByText('建议先补强个人摘要，再把项目成果写得更贴近岗位。');
-    await user.click(screen.getByRole('button', { name: '生成结构化简历建议' }));
+    await user.click(screen.getByRole('button', { name: '开始真实分析' }))
+    await screen.findByText('建议先补强个人摘要，再把项目成果写得更贴近岗位。')
+    await user.click(screen.getByRole('button', { name: '生成结构化简历建议' }))
 
     await waitFor(() => {
       expect(generateResumeOptimization).toHaveBeenCalledWith({
@@ -436,30 +432,24 @@ describe('AiAnalysisPanel', () => {
         accessToken: 'demo-token',
         instruction: '请根据 React 和 Next.js 岗位优化当前简历',
         locale: 'zh',
-      });
-    });
+      })
+    })
 
-    expect(await screen.findByText('已生成结构化建议稿')).toBeInTheDocument();
-    expect(screen.getAllByText('模块：profile').length).toBeGreaterThan(0);
-    expect(screen.getByText('个人定位与摘要')).toBeInTheDocument();
-    expect(screen.getByText('个人摘要')).toBeInTheDocument();
-    expect(screen.getAllByText('当前草稿').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('建议稿').length).toBeGreaterThan(0);
+    expect(await screen.findByText('已生成结构化建议稿')).toBeInTheDocument()
+    expect(screen.getAllByText('模块：profile').length).toBeGreaterThan(0)
+    expect(screen.getByText('个人定位与摘要')).toBeInTheDocument()
+    expect(screen.getByText('个人摘要')).toBeInTheDocument()
+    expect(screen.getAllByText('当前草稿').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('建议稿').length).toBeGreaterThan(0)
 
-    await user.click(
-      screen.getByRole('checkbox', { name: '应用模块：projects' }),
-    );
-    await user.click(
-      screen.getByRole('button', { name: '定位到 projects 改写模块' }),
-    );
+    await user.click(screen.getByRole('checkbox', { name: '应用模块：projects' }))
+    await user.click(screen.getByRole('button', { name: '定位到 projects 改写模块' }))
 
     expect(
       await screen.findByText('已定位到 projects 改写模块，可继续确认并应用。'),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('checkbox', { name: '应用模块：projects' }),
-    ).toBeChecked();
-    await user.click(screen.getByRole('button', { name: '应用已选模块到当前草稿' }));
+    ).toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: '应用模块：projects' })).toBeChecked()
+    await user.click(screen.getByRole('button', { name: '应用已选模块到当前草稿' }))
 
     await waitFor(() => {
       expect(applyResumeOptimization).toHaveBeenCalledWith({
@@ -475,25 +465,25 @@ describe('AiAnalysisPanel', () => {
             },
           }),
         }),
-      });
-    });
+      })
+    })
 
     expect(onDraftApplied).toHaveBeenCalledWith({
       status: 'draft',
       resume: createTestResume(),
       updatedAt: '2026-03-30T00:00:00.000Z',
-    });
+    })
 
     expect(
       await screen.findByText(
         '已将 2 个模块应用到当前草稿。公开站内容不会自动变化，仍需手动发布。',
       ),
-    ).toBeInTheDocument();
-  });
+    ).toBeInTheDocument()
+  })
 
   it('should restrict structured suggestion to resume-review scenario', async () => {
-    const user = userEvent.setup();
-    const generateResumeOptimization = vi.fn();
+    const user = userEvent.setup()
+    const generateResumeOptimization = vi.fn()
 
     render(
       <ControlledAnalysisPanel
@@ -501,15 +491,15 @@ describe('AiAnalysisPanel', () => {
         generateResumeOptimization={generateResumeOptimization}
         initialContent="请根据 offer 内容给出建议"
       />,
-    );
+    )
 
-    await user.click(screen.getByLabelText('分析场景'));
-    await user.click(await screen.findByRole('option', { name: 'Offer 对比建议' }));
-    await user.click(screen.getByRole('button', { name: '生成结构化简历建议' }));
+    await user.click(screen.getByLabelText('分析场景'))
+    await user.click(await screen.findByRole('option', { name: 'Offer 对比建议' }))
+    await user.click(screen.getByRole('button', { name: '生成结构化简历建议' }))
 
     expect(
       await screen.findByText('结构化简历建议当前只支持“简历优化建议”场景。'),
-    ).toBeInTheDocument();
-    expect(generateResumeOptimization).not.toHaveBeenCalled();
-  });
-});
+    ).toBeInTheDocument()
+    expect(generateResumeOptimization).not.toHaveBeenCalled()
+  })
+})

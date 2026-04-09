@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import {
   Button,
@@ -9,50 +9,44 @@ import {
   CardTitle,
   Chip,
   Input,
-} from '@heroui/react';
+} from '@heroui/react'
 
-import { adminPrimaryButtonClass } from '../../lib/button-styles';
-import { FormEvent, useState } from 'react';
+import { adminPrimaryButtonClass } from '../../lib/button-styles'
+import { FormEvent, useState } from 'react'
 
 interface LoginFormProps {
-  pending: boolean;
-  errorMessage: string | null;
-  onSubmit: (values: { username: string; password: string }) => Promise<void>;
+  pending: boolean
+  errorMessage: string | null
+  onSubmit: (values: { username: string; password: string }) => Promise<void>
 }
 
-export function LoginForm({
-  pending,
-  errorMessage,
-  onSubmit,
-}: LoginFormProps) {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+export function LoginForm({ pending, errorMessage, onSubmit }: LoginFormProps) {
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+    event.preventDefault()
     await onSubmit({
       username,
       password,
-    });
+    })
   }
 
   return (
     <Card className="border border-zinc-200/70 bg-white/90 shadow-2xl dark:border-zinc-800 dark:bg-zinc-950/85">
       <CardHeader className="flex flex-col items-start gap-4">
         <div className="flex items-center gap-2">
-          <Chip size="sm">
-            my-resume admin
-          </Chip>
-          <Chip size="sm">
-            登录页
-          </Chip>
+          <Chip size="sm">my-resume admin</Chip>
+          <Chip size="sm">登录页</Chip>
         </div>
         <div className="space-y-2">
           <CardTitle className="text-3xl font-semibold tracking-tight">
             标准后台登录
           </CardTitle>
           <CardDescription className="max-w-md text-sm leading-6">
-            {'当前只保留用户名与密码登录，继续通过 localStorage token -> /auth/me 校验进入后台，不引入注册与多余入口。'}
+            {
+              '当前只保留用户名与密码登录，继续通过 localStorage token -> /auth/me 校验进入后台，不引入注册与多余入口。'
+            }
           </CardDescription>
         </div>
       </CardHeader>
@@ -97,12 +91,11 @@ export function LoginForm({
             isDisabled={pending}
             size="md"
             type="submit"
-            variant="primary"
-          >
+            variant="primary">
             {pending ? '登录中...' : '登录后台'}
           </Button>
         </form>
       </CardContent>
     </Card>
-  );
+  )
 }

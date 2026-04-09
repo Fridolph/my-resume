@@ -1,19 +1,19 @@
-import './globals.css';
+import './globals.css'
 
-import type { Metadata } from 'next';
-import type { ReactNode } from 'react';
+import type { Metadata } from 'next'
+import type { ReactNode } from 'react'
 
-import { Providers } from './providers';
+import { Providers } from './providers'
 
 export const metadata: Metadata = {
   title: 'my-resume admin',
   description: 'Personal resume admin shell',
-};
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: ReactNode;
+  children: ReactNode
 }>) {
   return (
     <html lang="zh-CN" suppressHydrationWarning>
@@ -21,5 +21,5 @@ export default function RootLayout({
         <Providers>{children}</Providers>
       </body>
     </html>
-  );
+  )
 }

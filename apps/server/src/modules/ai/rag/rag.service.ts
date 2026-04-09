@@ -1,95 +1,93 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { createHash } from 'crypto';
-import { existsSync, readFileSync, readdirSync } from 'fs';
-import { join } from 'path';
+import { Inject, Injectable } from '@nestjs/common'
+import { createHash } from 'crypto'
+import { existsSync, readFileSync, readdirSync } from 'fs'
+import { join } from 'path'
 
-import { AiService } from '../ai.service';
-import { RagChunkService } from './rag-chunk.service';
-import { RagIndexRepository } from './rag-index.repository';
-import { RagKnowledgeService } from './rag-knowledge.service';
-import { RagIndexFile, RagSearchMatch } from './rag.types';
+import { AiService } from '../ai.service'
+import { RagChunkService } from './rag-chunk.service'
+import { RagIndexRepository } from './rag-index.repository'
+import { RagKnowledgeService } from './rag-knowledge.service'
+import { RagIndexFile, RagSearchMatch } from './rag.types'
 
 function computeContentHash(content: string): string {
-  return createHash('sha256').update(content).digest('hex');
+  return createHash('sha256').update(content).digest('hex')
 }
 
 function computeKnowledgeDirectoryHash(directoryPath: string): string {
   if (!existsSync(directoryPath)) {
-    return computeContentHash('');
+    return computeContentHash('')
   }
 
   const markdownFiles = readdirSync(directoryPath)
     .filter((fileName) => fileName.endsWith('.md'))
-    .sort((left, right) => left.localeCompare(right, 'zh-Hans-CN'));
+    .sort((left, right) => left.localeCompare(right, 'zh-Hans-CN'))
 
   const fingerprint = markdownFiles
     .map((fileName) => {
-      const content = readFileSync(join(directoryPath, fileName), 'utf8');
+      const content = readFileSync(join(directoryPath, fileName), 'utf8')
 
-      return `FILE:${fileName}\n${content}`;
+      return `FILE:${fileName}\n${content}`
     })
-    .join('\n\n====\n\n');
+    .join('\n\n====\n\n')
 
-  return computeContentHash(fingerprint);
+  return computeContentHash(fingerprint)
 }
 
 function buildSearchTokens(text: string): string[] {
-  const normalized = text.trim().toLowerCase();
-  const latinTokens = normalized.match(/[a-z0-9.+#-]+/g) ?? [];
-  const hanSequences = normalized.match(/[\p{Script=Han}]+/gu) ?? [];
+  const normalized = text.trim().toLowerCase()
+  const latinTokens = normalized.match(/[a-z0-9.+#-]+/g) ?? []
+  const hanSequences = normalized.match(/[\p{Script=Han}]+/gu) ?? []
   const hanBigrams = hanSequences.flatMap((item) => {
     if (item.length === 1) {
-      return [item];
+      return [item]
     }
 
-    const tokens: string[] = [];
+    const tokens: string[] = []
 
     for (let index = 0; index < item.length - 1; index += 1) {
-      tokens.push(item.slice(index, index + 2));
+      tokens.push(item.slice(index, index + 2))
     }
 
-    return tokens;
-  });
+    return tokens
+  })
 
-  return [...new Set([...latinTokens, ...hanBigrams])];
+  return [...new Set([...latinTokens, ...hanBigrams])]
 }
 
 function calculateKeywordScore(query: string, content: string): number {
-  const queryTokens = buildSearchTokens(query);
+  const queryTokens = buildSearchTokens(query)
 
   if (queryTokens.length === 0) {
-    return 0;
+    return 0
   }
 
-  const normalizedContent = content.toLowerCase();
-  const hitCount = queryTokens.filter((token) =>
-    normalizedContent.includes(token),
-  ).length;
+  const normalizedContent = content.toLowerCase()
+  const hitCount = queryTokens.filter((token) => normalizedContent.includes(token)).length
 
-  return hitCount / queryTokens.length;
+  return hitCount / queryTokens.length
 }
 
 function cosineSimilarity(vectorA: number[], vectorB: number[]): number {
   if (vectorA.length === 0 || vectorB.length === 0) {
-    return 0;
+    return 0
   }
 
-  const length = Math.min(vectorA.length, vectorB.length);
-  let dot = 0;
-  let magnitudeA = 0;
-  let magnitudeB = 0;
+  const length = Math.min(vectorA.length, vectorB.length)
+  let dot = 0
+  let magnitudeA = 0
+  let magnitudeB = 0
 
   for (let index = 0; index < length; index += 1) {
-    dot += vectorA[index] * vectorB[index];
-    magnitudeA += vectorA[index] * vectorA[index];
-    magnitudeB += vectorB[index] * vectorB[index];
+    dot += vectorA[index] * vectorB[index]
+    magnitudeA += vectorA[index] * vectorA[index]
+    magnitudeB += vectorB[index] * vectorB[index]
   }
 
   if (magnitudeA === 0 || magnitudeB === 0) {
-    return 0;
+    return 0
   }
 
-  return dot / (Math.sqrt(magnitudeA) * Math.sqrt(magnitudeB));
+  return dot / (Math.sqrt(magnitudeA) * Math.sqrt(magnitudeB))
 }
 
 @Injectable()
@@ -107,15 +105,15 @@ export class RagService {
 
   getStatus() {
     const { sourcePath, blogDirectoryPath, indexPath } =
-      this.ragIndexRepository.getPaths();
-    const index = this.ragIndexRepository.readIndex();
-    const providerSummary = this.aiService.getProviderSummary();
-    const currentSourceHash = computeContentHash(readFileSync(sourcePath, 'utf8'));
-    const currentKnowledgeHash = computeKnowledgeDirectoryHash(blogDirectoryPath);
+      this.ragIndexRepository.getPaths()
+    const index = this.ragIndexRepository.readIndex()
+    const providerSummary = this.aiService.getProviderSummary()
+    const currentSourceHash = computeContentHash(readFileSync(sourcePath, 'utf8'))
+    const currentKnowledgeHash = computeKnowledgeDirectoryHash(blogDirectoryPath)
     const stale = !index
       ? true
       : index.sourceHash !== currentSourceHash ||
-        index.knowledgeHash !== currentKnowledgeHash;
+        index.knowledgeHash !== currentKnowledgeHash
 
     return {
       sourcePath,
@@ -126,36 +124,32 @@ export class RagService {
       stale,
       chunkCount: index?.chunkCount ?? 0,
       resumeChunkCount:
-        index?.chunks.filter((item) => item.sourceType !== 'knowledge').length ??
-        0,
+        index?.chunks.filter((item) => item.sourceType !== 'knowledge').length ?? 0,
       knowledgeChunkCount:
-        index?.chunks.filter((item) => item.sourceType === 'knowledge').length ??
-        0,
+        index?.chunks.filter((item) => item.sourceType === 'knowledge').length ?? 0,
       generatedAt: index?.generatedAt ?? null,
       currentSourceHash,
       currentKnowledgeHash,
       indexedSourceHash: index?.sourceHash ?? null,
       indexedKnowledgeHash: index?.knowledgeHash ?? null,
       indexedProviderSummary: index?.providerSummary ?? null,
-    };
+    }
   }
 
   async rebuildIndex() {
-    const { sourcePath, blogDirectoryPath } = this.ragIndexRepository.getPaths();
-    const source = readFileSync(sourcePath, 'utf8');
-    const sourceHash = computeContentHash(source);
-    const knowledgeHash = computeKnowledgeDirectoryHash(blogDirectoryPath);
-    const document = this.ragChunkService.parseSource(source);
+    const { sourcePath, blogDirectoryPath } = this.ragIndexRepository.getPaths()
+    const source = readFileSync(sourcePath, 'utf8')
+    const sourceHash = computeContentHash(source)
+    const knowledgeHash = computeKnowledgeDirectoryHash(blogDirectoryPath)
+    const document = this.ragChunkService.parseSource(source)
     const chunks = [
       ...this.ragChunkService.buildChunks(document),
-      ...this.ragKnowledgeService.buildArticleChunksFromDirectory(
-        blogDirectoryPath,
-      ),
-    ];
+      ...this.ragKnowledgeService.buildArticleChunksFromDirectory(blogDirectoryPath),
+    ]
     const embeddingResult = await this.aiService.embedTexts({
       texts: chunks.map((item) => item.content),
-    });
-    const providerSummary = this.aiService.getProviderSummary();
+    })
+    const providerSummary = this.aiService.getProviderSummary()
 
     const index: RagIndexFile = {
       sourcePath,
@@ -169,21 +163,21 @@ export class RagService {
         ...chunk,
         embedding: embeddingResult.embeddings[indexPosition] ?? [],
       })),
-    };
+    }
 
-    this.ragIndexRepository.writeIndex(index);
+    this.ragIndexRepository.writeIndex(index)
 
     return {
       ...this.getStatus(),
-    };
+    }
   }
 
   async search(query: string, limit = 5): Promise<RagSearchMatch[]> {
-    const index = await this.ensureIndex();
+    const index = await this.ensureIndex()
     const queryEmbedding = await this.aiService.embedTexts({
       texts: [query],
-    });
-    const [queryVector] = queryEmbedding.embeddings;
+    })
+    const [queryVector] = queryEmbedding.embeddings
 
     return index.chunks
       .map((chunk) => ({
@@ -201,17 +195,17 @@ export class RagService {
         ),
       }))
       .sort((left, right) => right.score - left.score)
-      .slice(0, limit);
+      .slice(0, limit)
   }
 
   async ask(question: string, limit = 4, locale: 'zh' | 'en' = 'zh') {
-    const matches = await this.search(question, limit);
+    const matches = await this.search(question, limit)
     const context = matches
       .map(
         (item, index) =>
           `[#${index + 1}] ${item.title}\nsection=${item.section}\nsource=${item.sourceType ?? 'resume'}\n${item.content}`,
       )
-      .join('\n\n');
+      .join('\n\n')
 
     const answer = await this.aiService.generateText({
       systemPrompt:
@@ -232,30 +226,30 @@ export class RagService {
               context,
               '请基于这些上下文给出简洁回答，并保持结论可追溯。',
             ].join('\n\n'),
-    });
+    })
 
     return {
       answer: answer.text,
       matches,
       providerSummary: this.aiService.getProviderSummary(),
-    };
+    }
   }
 
   private async ensureIndex(): Promise<RagIndexFile> {
-    const currentIndex = this.ragIndexRepository.readIndex();
+    const currentIndex = this.ragIndexRepository.readIndex()
 
     if (currentIndex) {
-      return currentIndex;
+      return currentIndex
     }
 
-    await this.rebuildIndex();
+    await this.rebuildIndex()
 
-    const rebuiltIndex = this.ragIndexRepository.readIndex();
+    const rebuiltIndex = this.ragIndexRepository.readIndex()
 
     if (!rebuiltIndex) {
-      throw new Error('RAG index rebuild failed');
+      throw new Error('RAG index rebuild failed')
     }
 
-    return rebuiltIndex;
+    return rebuiltIndex
   }
 }

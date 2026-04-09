@@ -97,7 +97,12 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(37, 99, 235, 0.16), rgba(8, 145, 178, 0.1), transparent 72%);
+  background: linear-gradient(
+    90deg,
+    rgba(37, 99, 235, 0.16),
+    rgba(8, 145, 178, 0.1),
+    transparent 72%
+  );
   opacity: 1;
   transform: translateX(-108%);
   transition: transform 0.34s ease;
@@ -132,8 +137,12 @@
   content: '';
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(135deg, rgba(37, 99, 235, 0.09), rgba(56, 189, 248, 0.07), transparent 72%);
+  background: linear-gradient(
+    135deg,
+    rgba(37, 99, 235, 0.09),
+    rgba(56, 189, 248, 0.07),
+    transparent 72%
+  );
   opacity: 0;
   transition: opacity 0.24s ease;
 }

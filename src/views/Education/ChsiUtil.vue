@@ -1,41 +1,34 @@
 <template>
-  <div
-    class="mb-5 text-orange-400 cursor-help"
-    @click="toggle">
+  <div class="mb-5 cursor-help text-orange-400" @click="toggle">
     {{ t('education.verify') }} 👮‍♂️
   </div>
   <div
-    class="flex transition-all duration-500 overflow-hidden"
+    class="flex overflow-hidden transition-all duration-500"
     :class="{
       'h-0': !isShow,
       'h-20': isShow,
     }">
-    <div class="size-20 mr-5">
-      <img
-        class="w-max"
-        src="/img/chsi-qrcode.jpg"
-        :alt="t('education.alt')" />
+    <div class="mr-5 size-20">
+      <img class="w-max" src="/img/chsi-qrcode.jpg" :alt="t('education.alt')" />
     </div>
     <div>
-      <div>{{t('education.alt')}} <strong>ASDNR51E4S4V9WS1</strong></div>
+      <div>{{ t('education.alt') }} <strong>ASDNR51E4S4V9WS1</strong></div>
       <div>
-        {{t('education.p1')}}<a
+        {{ t('education.p1')
+        }}<a
           class="text-sky-600"
           href="https://www.chsi.com.cn/xlcx/bgcx.jsp"
           target="_blank"
           >学信网</a
         >
       </div>
-      <div>{{t('education.p2')}}</div>
+      <div>{{ t('education.p2') }}</div>
       <div>
         3.
-        <a
-          href="/img/chsi.jpg"
-          class="text-sky-600"
-          target="_blank"
-          >{{t('education.check')}}</a
-        >
-        {{t('education.updated')}}
+        <a href="/img/chsi.jpg" class="text-sky-600" target="_blank">{{
+          t('education.check')
+        }}</a>
+        {{ t('education.updated') }}
       </div>
     </div>
   </div>

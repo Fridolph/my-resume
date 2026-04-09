@@ -1,29 +1,25 @@
-'use client';
+'use client'
 
+import { Button, Card, CardContent, CardHeader } from '@heroui/react'
+import { DisplaySectionIntro } from '@my-resume/ui/display'
+
+import { AuthUserView } from '../../lib/auth-types'
 import {
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-} from '@heroui/react';
-import { DisplaySectionIntro } from '@my-resume/ui/display';
-
-import { AuthUserView } from '../../lib/auth-types';
-import { adminPrimaryButtonClass, adminSecondaryButtonClass } from '../../lib/button-styles';
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+} from '../../lib/button-styles'
 
 const actionGridClass =
-  'grid grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))] gap-4';
-const primaryActionButtonClass =
-  `${adminPrimaryButtonClass} min-h-[46px] justify-center rounded-full font-semibold`;
-const secondaryActionButtonClass =
-  `${adminSecondaryButtonClass} min-h-[46px] justify-center rounded-full font-semibold`;
+  'grid grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))] gap-4'
+const primaryActionButtonClass = `${adminPrimaryButtonClass} min-h-[46px] justify-center rounded-full font-semibold`
+const secondaryActionButtonClass = `${adminSecondaryButtonClass} min-h-[46px] justify-center rounded-full font-semibold`
 
 interface RoleActionPanelProps {
-  currentUser: AuthUserView;
-  pendingAction: 'publish' | 'ai-analysis' | null;
-  feedbackMessage: string | null;
-  onPublish: () => Promise<void>;
-  onTriggerAi: () => Promise<void>;
+  currentUser: AuthUserView
+  pendingAction: 'publish' | 'ai-analysis' | null
+  feedbackMessage: string | null
+  onPublish: () => Promise<void>
+  onTriggerAi: () => Promise<void>
 }
 
 export function RoleActionPanel({
@@ -33,7 +29,7 @@ export function RoleActionPanel({
   onPublish,
   onTriggerAi,
 }: RoleActionPanelProps) {
-  const isViewer = currentUser.role === 'viewer';
+  const isViewer = currentUser.role === 'viewer'
 
   return (
     <Card className="border border-zinc-200/70 dark:border-zinc-800">
@@ -65,8 +61,7 @@ export function RoleActionPanel({
             onClick={() => void onPublish()}
             size="md"
             type="button"
-            variant="primary"
-          >
+            variant="primary">
             {pendingAction === 'publish' ? '发布中...' : '发布简历（管理员）'}
           </Button>
           <Button
@@ -76,11 +71,8 @@ export function RoleActionPanel({
             onClick={() => void onTriggerAi()}
             size="md"
             type="button"
-            variant="outline"
-          >
-            {pendingAction === 'ai-analysis'
-              ? '触发中...'
-              : '触发 AI 分析（管理员）'}
+            variant="outline">
+            {pendingAction === 'ai-analysis' ? '触发中...' : '触发 AI 分析（管理员）'}
           </Button>
         </div>
 
@@ -89,5 +81,5 @@ export function RoleActionPanel({
         ) : null}
       </CardContent>
     </Card>
-  );
+  )
 }

@@ -8,12 +8,7 @@
     :is-title="true"
     :text="t('aili.time')" />
 
-  <ListWrap
-    :title="t('responsibilities')"
-    :list="list"
-    inner
-    titleSize="base"
-    bold />
+  <ListWrap :title="t('responsibilities')" :list="list" inner titleSize="base" bold />
 
   <ProMain />
 </template>

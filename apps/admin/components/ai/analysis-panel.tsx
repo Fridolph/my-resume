@@ -1,13 +1,13 @@
-'use client';
+'use client'
 
-import type { ReactNode } from 'react';
-import { useState } from 'react';
+import type { ReactNode } from 'react'
+import { useState } from 'react'
 
 import {
   applyAiResumeOptimization,
   generateAiResumeOptimization,
   triggerAiWorkbenchAnalysis,
-} from '../../lib/ai-workbench-api';
+} from '../../lib/ai-workbench-api'
 import type {
   AiResumeOptimizationChangedModule,
   AiResumeOptimizationResult,
@@ -16,25 +16,25 @@ import type {
   AiWorkbenchReport,
   AiWorkbenchRuntimeSummary,
   AiWorkbenchScenario,
-} from '../../lib/ai-workbench-types';
-import { AnalysisForm } from './analysis-form';
-import { AnalysisReportDetails } from './analysis-report-details';
-import { AnalysisReportOverview } from './analysis-report-overview';
-import { AnalysisSuggestionPanel } from './analysis-suggestion-panel';
+} from '../../lib/ai-workbench-types'
+import { AnalysisForm } from './analysis-form'
+import { AnalysisReportDetails } from './analysis-report-details'
+import { AnalysisReportOverview } from './analysis-report-overview'
+import { AnalysisSuggestionPanel } from './analysis-suggestion-panel'
 
 interface AiAnalysisPanelProps {
-  accessToken: string;
-  apiBaseUrl: string;
-  applyResumeOptimization?: typeof applyAiResumeOptimization;
-  canAnalyze: boolean;
-  content: string;
-  generateResumeOptimization?: typeof generateAiResumeOptimization;
-  helperMessage?: string | null;
-  inputAccessory?: ReactNode;
-  onDraftApplied?: (snapshot: ApplyAiResumeOptimizationResult) => void;
-  onContentChange: (value: string) => void;
-  runtimeSummary: AiWorkbenchRuntimeSummary;
-  triggerAnalysis?: typeof triggerAiWorkbenchAnalysis;
+  accessToken: string
+  apiBaseUrl: string
+  applyResumeOptimization?: typeof applyAiResumeOptimization
+  canAnalyze: boolean
+  content: string
+  generateResumeOptimization?: typeof generateAiResumeOptimization
+  helperMessage?: string | null
+  inputAccessory?: ReactNode
+  onDraftApplied?: (snapshot: ApplyAiResumeOptimizationResult) => void
+  onContentChange: (value: string) => void
+  runtimeSummary: AiWorkbenchRuntimeSummary
+  triggerAnalysis?: typeof triggerAiWorkbenchAnalysis
 }
 
 function renderReadOnlyState(inputAccessory?: ReactNode) {
@@ -50,7 +50,7 @@ function renderReadOnlyState(inputAccessory?: ReactNode) {
         viewer 当前只保留缓存报告体验，真实分析触发入口会在管理员链路中继续开放。
       </div>
     </section>
-  );
+  )
 }
 
 export function AiAnalysisPanel({
@@ -67,47 +67,43 @@ export function AiAnalysisPanel({
   runtimeSummary,
   triggerAnalysis = triggerAiWorkbenchAnalysis,
 }: AiAnalysisPanelProps) {
-  const [scenario, setScenario] = useState<AiWorkbenchScenario>('resume-review');
-  const [locale, setLocale] = useState<AiWorkbenchLocale>('zh');
-  const [pending, setPending] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [report, setReport] = useState<AiWorkbenchReport | null>(null);
-  const [suggestionPending, setSuggestionPending] = useState(false);
+  const [scenario, setScenario] = useState<AiWorkbenchScenario>('resume-review')
+  const [locale, setLocale] = useState<AiWorkbenchLocale>('zh')
+  const [pending, setPending] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [report, setReport] = useState<AiWorkbenchReport | null>(null)
+  const [suggestionPending, setSuggestionPending] = useState(false)
   const [suggestionErrorMessage, setSuggestionErrorMessage] = useState<string | null>(
     null,
-  );
-  const [suggestion, setSuggestion] = useState<AiResumeOptimizationResult | null>(
-    null,
-  );
+  )
+  const [suggestion, setSuggestion] = useState<AiResumeOptimizationResult | null>(null)
   const [selectedModules, setSelectedModules] = useState<
     AiResumeOptimizationChangedModule[]
-  >([]);
+  >([])
   const [linkedModule, setLinkedModule] =
-    useState<AiResumeOptimizationChangedModule | null>(null);
-  const [moduleLinkMessage, setModuleLinkMessage] = useState<string | null>(null);
-  const [applyPending, setApplyPending] = useState(false);
-  const [applyFeedbackMessage, setApplyFeedbackMessage] = useState<string | null>(
-    null,
-  );
+    useState<AiResumeOptimizationChangedModule | null>(null)
+  const [moduleLinkMessage, setModuleLinkMessage] = useState<string | null>(null)
+  const [applyPending, setApplyPending] = useState(false)
+  const [applyFeedbackMessage, setApplyFeedbackMessage] = useState<string | null>(null)
 
   if (!canAnalyze) {
-    return renderReadOnlyState(inputAccessory);
+    return renderReadOnlyState(inputAccessory)
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+    event.preventDefault()
 
-    const normalizedContent = content.trim();
+    const normalizedContent = content.trim()
 
     if (!normalizedContent) {
-      setErrorMessage('请先输入分析内容，或先通过文件提取生成输入文本。');
-      setReport(null);
-      return;
+      setErrorMessage('请先输入分析内容，或先通过文件提取生成输入文本。')
+      setReport(null)
+      return
     }
 
-    setPending(true);
-    setErrorMessage(null);
-    setApplyFeedbackMessage(null);
+    setPending(true)
+    setErrorMessage(null)
+    setApplyFeedbackMessage(null)
 
     try {
       const result = await triggerAnalysis({
@@ -116,38 +112,38 @@ export function AiAnalysisPanel({
         scenario,
         locale,
         content: normalizedContent,
-      });
+      })
 
-      setReport(result.report);
+      setReport(result.report)
     } catch (error) {
-      setReport(null);
+      setReport(null)
       setErrorMessage(
         error instanceof Error ? error.message : '真实分析触发失败，请稍后重试',
-      );
+      )
     } finally {
-      setPending(false);
+      setPending(false)
     }
   }
 
   async function handleGenerateSuggestion() {
-    const normalizedContent = content.trim();
+    const normalizedContent = content.trim()
 
     if (!normalizedContent) {
-      setSuggestionErrorMessage('请先输入 JD 或优化方向，再生成结构化建议。');
-      setSuggestion(null);
-      return;
+      setSuggestionErrorMessage('请先输入 JD 或优化方向，再生成结构化建议。')
+      setSuggestion(null)
+      return
     }
 
     if (scenario !== 'resume-review') {
-      setSuggestionErrorMessage('结构化简历建议当前只支持“简历优化建议”场景。');
-      setSuggestion(null);
-      return;
+      setSuggestionErrorMessage('结构化简历建议当前只支持“简历优化建议”场景。')
+      setSuggestion(null)
+      return
     }
 
-    setSuggestionPending(true);
-    setSuggestionErrorMessage(null);
-    setApplyFeedbackMessage(null);
-    setModuleLinkMessage(null);
+    setSuggestionPending(true)
+    setSuggestionErrorMessage(null)
+    setApplyFeedbackMessage(null)
+    setModuleLinkMessage(null)
 
     try {
       const result = await generateResumeOptimization({
@@ -155,20 +151,20 @@ export function AiAnalysisPanel({
         accessToken,
         instruction: normalizedContent,
         locale,
-      });
+      })
 
-      setSuggestion(result);
-      setSelectedModules(result.changedModules);
-      setLinkedModule(null);
+      setSuggestion(result)
+      setSelectedModules(result.changedModules)
+      setLinkedModule(null)
     } catch (error) {
-      setSuggestion(null);
-      setSelectedModules([]);
-      setLinkedModule(null);
+      setSuggestion(null)
+      setSelectedModules([])
+      setLinkedModule(null)
       setSuggestionErrorMessage(
         error instanceof Error ? error.message : '结构化简历建议生成失败，请稍后重试',
-      );
+      )
     } finally {
-      setSuggestionPending(false);
+      setSuggestionPending(false)
     }
   }
 
@@ -177,53 +173,53 @@ export function AiAnalysisPanel({
       currentModules.includes(module)
         ? currentModules.filter((item) => item !== module)
         : [...currentModules, module],
-    );
+    )
   }
 
   function handleLinkSuggestionModule(module: AiResumeOptimizationChangedModule) {
     if (!suggestion) {
-      setModuleLinkMessage('请先生成结构化简历建议，再定位到具体改写模块。');
-      return;
+      setModuleLinkMessage('请先生成结构化简历建议，再定位到具体改写模块。')
+      return
     }
 
-    const hasModuleDiff = suggestion.moduleDiffs.some((item) => item.module === module);
+    const hasModuleDiff = suggestion.moduleDiffs.some((item) => item.module === module)
 
     if (!hasModuleDiff) {
-      setModuleLinkMessage(`当前建议稿中还没有 ${module} 模块的可应用改写。`);
-      return;
+      setModuleLinkMessage(`当前建议稿中还没有 ${module} 模块的可应用改写。`)
+      return
     }
 
     setSelectedModules((currentModules) =>
       currentModules.includes(module) ? currentModules : [...currentModules, module],
-    );
-    setLinkedModule(module);
-    setModuleLinkMessage(`已定位到 ${module} 改写模块，可继续确认并应用。`);
+    )
+    setLinkedModule(module)
+    setModuleLinkMessage(`已定位到 ${module} 改写模块，可继续确认并应用。`)
 
     if (typeof document !== 'undefined') {
-      const target = document.getElementById(`module-diff-${module}`);
+      const target = document.getElementById(`module-diff-${module}`)
       if (typeof target?.scrollIntoView === 'function') {
         target.scrollIntoView({
           behavior: 'smooth',
           block: 'center',
-        });
+        })
       }
     }
   }
 
   async function handleApplySuggestion() {
     if (!suggestion) {
-      return;
+      return
     }
 
     if (selectedModules.length === 0) {
-      setSuggestionErrorMessage('请至少勾选一个要应用到草稿的模块。');
-      return;
+      setSuggestionErrorMessage('请至少勾选一个要应用到草稿的模块。')
+      return
     }
 
-    setApplyPending(true);
-    setSuggestionErrorMessage(null);
-    setApplyFeedbackMessage(null);
-    setModuleLinkMessage(null);
+    setApplyPending(true)
+    setSuggestionErrorMessage(null)
+    setApplyFeedbackMessage(null)
+    setModuleLinkMessage(null)
 
     try {
       const nextSnapshot = await applyResumeOptimization({
@@ -232,19 +228,19 @@ export function AiAnalysisPanel({
         draftUpdatedAt: suggestion.applyPayload.draftUpdatedAt,
         modules: selectedModules,
         patch: suggestion.applyPayload.patch,
-      });
+      })
 
-      onDraftApplied?.(nextSnapshot);
+      onDraftApplied?.(nextSnapshot)
 
       setApplyFeedbackMessage(
         `已将 ${selectedModules.length} 个模块应用到当前草稿。公开站内容不会自动变化，仍需手动发布。`,
-      );
+      )
     } catch (error) {
       setSuggestionErrorMessage(
         error instanceof Error ? error.message : 'AI 建议稿应用失败，请稍后重试',
-      );
+      )
     } finally {
-      setApplyPending(false);
+      setApplyPending(false)
     }
   }
 
@@ -280,10 +276,7 @@ export function AiAnalysisPanel({
         />
 
         <div className="stack self-start">
-          <AnalysisReportOverview
-            report={report}
-            runtimeSummary={runtimeSummary}
-          />
+          <AnalysisReportOverview report={report} runtimeSummary={runtimeSummary} />
 
           {report ? (
             <AnalysisReportDetails
@@ -305,5 +298,5 @@ export function AiAnalysisPanel({
         </div>
       </div>
     </section>
-  );
+  )
 }

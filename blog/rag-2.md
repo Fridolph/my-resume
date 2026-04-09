@@ -6,14 +6,14 @@ date: 2026-03-24
 
 > 🗺️ **「全栈 AI Agent 学习」系列**
 >
-> | 篇 | 主题 | 状态 |
-> |----|------|------|
-> | 第一篇 | 提示链 · 路由 · 并行化 | ✅ |
-> | 第二篇 | 反思 · 工具使用 · 规划 | ✅ |
-> | 第三篇 | 多智能体 · 记忆管理 · 学习适应 | ✅ |
-> | RAG篇① | RAG 是什么？核心概念与完整流程 | ✅ |
-> | **RAG篇②（本篇）** | **RAG 怎么做？从切片到向量检索** | ✅ |
-> | RAG篇③ | RAG 怎么做好？意图、重排序与答案质量 | 🔜 |
+> | 篇                 | 主题                                 | 状态 |
+> | ------------------ | ------------------------------------ | ---- |
+> | 第一篇             | 提示链 · 路由 · 并行化               | ✅   |
+> | 第二篇             | 反思 · 工具使用 · 规划               | ✅   |
+> | 第三篇             | 多智能体 · 记忆管理 · 学习适应       | ✅   |
+> | RAG篇①             | RAG 是什么？核心概念与完整流程       | ✅   |
+> | **RAG篇②（本篇）** | **RAG 怎么做？从切片到向量检索**     | ✅   |
+> | RAG篇③             | RAG 怎么做好？意图、重排序与答案质量 | 🔜   |
 
 ---
 
@@ -46,31 +46,32 @@ date: 2026-03-24
 
 ```yaml
 profile:
-  name: "张三"
-  title: "高级前端工程师"
+  name: '张三'
+  title: '高级前端工程师'
   years: 8
 
 skills:
-  - "Vue2/Vue3"
-  - "TypeScript"
-  - "前端工程化"
+  - 'Vue2/Vue3'
+  - 'TypeScript'
+  - '前端工程化'
 
 experiences:
-  - company: "某科技公司"
-    company_id: "company_a"
-    period: "2019-2023"
+  - company: '某科技公司'
+    company_id: 'company_a'
+    period: '2019-2023'
     projects:
-      - id: "edr"
-        name: "EDR 终端威胁侦测平台"
-        description: "面向政企安全场景，负责前端架构与核心模块开发"
-        tech_stack: ["Vue", "iView", "WebSocket"]
-      - id: "lc"
-        name: "LC 安全分析大屏"
-        description: "结合 EDR 数据进行安全态势感知与可视化"
-        tech_stack: ["Vue", "ECharts", "WebSocket"]
+      - id: 'edr'
+        name: 'EDR 终端威胁侦测平台'
+        description: '面向政企安全场景，负责前端架构与核心模块开发'
+        tech_stack: ['Vue', 'iView', 'WebSocket']
+      - id: 'lc'
+        name: 'LC 安全分析大屏'
+        description: '结合 EDR 数据进行安全态势感知与可视化'
+        tech_stack: ['Vue', 'ECharts', 'WebSocket']
 ```
 
 用户可能会问：
+
 - "他会什么技术？"
 - "他在某科技公司做过什么项目？"
 - "他有安全相关的项目经验吗？"
@@ -140,7 +141,7 @@ function chunkByStructure(resumeYaml) {
     id: 'chunk_profile',
     section: 'profile',
     content: formatProfile(resumeYaml.profile),
-    metadata: { type: 'profile' }
+    metadata: { type: 'profile' },
   })
 
   // chunk 2：技能
@@ -148,12 +149,12 @@ function chunkByStructure(resumeYaml) {
     id: 'chunk_skills',
     section: 'skills',
     content: formatSkills(resumeYaml.skills),
-    metadata: { type: 'skills' }
+    metadata: { type: 'skills' },
   })
 
   // chunk 3～N：每个项目一个 chunk
-  resumeYaml.experiences.forEach(exp => {
-    exp.projects.forEach(project => {
+  resumeYaml.experiences.forEach((exp) => {
+    exp.projects.forEach((project) => {
       chunks.push({
         id: `chunk_project_${project.id}`,
         section: 'project',
@@ -164,8 +165,8 @@ function chunkByStructure(resumeYaml) {
           company: exp.company_id,
           company_name: exp.company,
           tech_stack: project.tech_stack,
-          period: exp.period
-        }
+          period: exp.period,
+        },
       })
     })
   })
@@ -177,31 +178,31 @@ function chunkByStructure(resumeYaml) {
 切出来的结果长这样：
 
 ```javascript
-[
+;[
   {
-    id: "chunk_profile",
-    section: "profile",
-    content: "张三，高级前端工程师，8年经验...",
-    metadata: { type: "profile" }
+    id: 'chunk_profile',
+    section: 'profile',
+    content: '张三，高级前端工程师，8年经验...',
+    metadata: { type: 'profile' },
   },
   {
-    id: "chunk_skills",
-    section: "skills",
-    content: "掌握 Vue2/Vue3、TypeScript、前端工程化...",
-    metadata: { type: "skills" }
+    id: 'chunk_skills',
+    section: 'skills',
+    content: '掌握 Vue2/Vue3、TypeScript、前端工程化...',
+    metadata: { type: 'skills' },
   },
   {
-    id: "chunk_project_edr",
-    section: "project",
-    title: "EDR 终端威胁侦测平台",
-    content: "面向政企安全场景，负责前端架构与核心模块开发...",
+    id: 'chunk_project_edr',
+    section: 'project',
+    title: 'EDR 终端威胁侦测平台',
+    content: '面向政企安全场景，负责前端架构与核心模块开发...',
     metadata: {
-      type: "project",
-      company: "company_a",
-      company_name: "某科技公司",
-      tech_stack: ["Vue", "iView", "WebSocket"]
-    }
-  }
+      type: 'project',
+      company: 'company_a',
+      company_name: '某科技公司',
+      tech_stack: ['Vue', 'iView', 'WebSocket'],
+    },
+  },
   // ...更多项目
 ]
 ```
@@ -236,17 +237,17 @@ async function embedText(text) {
   const response = await fetch('https://api.openai.com/v1/embeddings', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${OPENAI_API_KEY}`,
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       model: 'text-embedding-3-small',
-      input: text
-    })
+      input: text,
+    }),
   })
 
   const data = await response.json()
-  return data.data[0].embedding  // 返回 1536 维向量
+  return data.data[0].embedding // 返回 1536 维向量
 }
 
 // 批量向量化所有 chunks
@@ -400,6 +401,7 @@ function cosineSimilarity(vecA, vecB) {
 ```
 
 结果在 -1 到 1 之间：
+
 - **1**：完全相同
 - **0**：完全不相关
 - **-1**：完全相反（语义上）
@@ -414,15 +416,13 @@ async function vectorSearch(query, vectorStore, topK = 3) {
   const queryVector = await embedText(query)
 
   // 2. 遍历所有 chunks，计算相似度
-  const results = vectorStore.chunks.map(chunk => ({
+  const results = vectorStore.chunks.map((chunk) => ({
     ...chunk,
-    score: cosineSimilarity(queryVector, chunk.vector)
+    score: cosineSimilarity(queryVector, chunk.vector),
   }))
 
   // 3. 按相似度排序，返回 Top K
-  return results
-    .sort((a, b) => b.score - a.score)
-    .slice(0, topK)
+  return results.sort((a, b) => b.score - a.score).slice(0, topK)
 }
 ```
 
@@ -489,7 +489,10 @@ async function ask(userQuery, vectorStore) {
 
   // 第四步：检索
   const topChunks = await vectorSearch(userQuery, vectorStore, 3)
-  console.log(`🔍 检索到 Top 3：`, topChunks.map(c => c.id))
+  console.log(
+    `🔍 检索到 Top 3：`,
+    topChunks.map((c) => c.id),
+  )
 
   // 生成回答
   const answer = await generateAnswer(userQuery, topChunks)
@@ -500,10 +503,10 @@ async function ask(userQuery, vectorStore) {
 
 // 使用
 const store = new VectorStore()
-await store.load('./vectors.json')   // 加载已构建好的向量库
+await store.load('./vectors.json') // 加载已构建好的向量库
 
-await ask("他会什么技术？", store)
-await ask("他做过什么安全相关的项目？", store)
+await ask('他会什么技术？', store)
+await ask('他做过什么安全相关的项目？', store)
 ```
 
 运行起来，输出大概长这样：
@@ -566,12 +569,12 @@ await ask("他做过什么安全相关的项目？", store)
 
 这一篇，我们把 RAG 基础四步用代码跑了一遍：
 
-| 步骤 | 做了什么 | 关键点 |
-|------|---------|--------|
-| 切片 | 把简历按结构切成小块 | 语义切片 > 固定长度切片 |
-| 向量化 | 每块文字变成数字坐标 | 只做一次，结果复用 |
-| 向量存储 | 原文 + 向量 + 元数据一起存 | metadata 要提前设计好 |
-| 相似度检索 | 余弦相似度，找 Top K | 语义检索，不是关键词匹配 |
+| 步骤       | 做了什么                   | 关键点                   |
+| ---------- | -------------------------- | ------------------------ |
+| 切片       | 把简历按结构切成小块       | 语义切片 > 固定长度切片  |
+| 向量化     | 每块文字变成数字坐标       | 只做一次，结果复用       |
+| 向量存储   | 原文 + 向量 + 元数据一起存 | metadata 要提前设计好    |
+| 相似度检索 | 余弦相似度，找 Top K       | 语义检索，不是关键词匹配 |
 
 到这里，一个能跑的基础 RAG 已经有了。
 

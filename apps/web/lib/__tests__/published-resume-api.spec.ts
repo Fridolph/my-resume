@@ -1,11 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { fetchPublishedResume } from '../published-resume-api';
+import { fetchPublishedResume } from '../published-resume-api'
 
 describe('published resume api', () => {
   beforeEach(() => {
-    vi.restoreAllMocks();
-  });
+    vi.restoreAllMocks()
+  })
 
   it('should return published snapshot when server responds successfully', async () => {
     vi.stubGlobal(
@@ -39,28 +39,28 @@ describe('published resume api', () => {
               location: {
                 zh: '上海',
                 en: 'Shanghai',
+              },
+              email: 'demo@example.com',
+              phone: '+86 13800000000',
+              website: 'https://example.com',
+              hero: {
+                frontImageUrl: '/img/avatar.jpg',
+                backImageUrl: '/img/avatar2.jpg',
+                linkUrl: 'https://github.com/Fridolph/my-resume',
+                slogans: [
+                  {
+                    zh: '热爱Coding，生命不息，折腾不止',
+                    en: 'Driven by coding, always building, always iterating',
+                  },
+                  {
+                    zh: '羽毛球爱好者，快乐挥拍，球场飞翔',
+                    en: 'Badminton lover, happy swings, full-court energy',
+                  },
+                ],
+              },
+              links: [],
+              interests: [],
             },
-            email: 'demo@example.com',
-            phone: '+86 13800000000',
-            website: 'https://example.com',
-            hero: {
-              frontImageUrl: '/img/avatar.jpg',
-              backImageUrl: '/img/avatar2.jpg',
-              linkUrl: 'https://github.com/Fridolph/my-resume',
-              slogans: [
-                {
-                  zh: '热爱Coding，生命不息，折腾不止',
-                  en: 'Driven by coding, always building, always iterating',
-                },
-                {
-                  zh: '羽毛球爱好者，快乐挥拍，球场飞翔',
-                  en: 'Badminton lover, happy swings, full-court energy',
-                },
-              ],
-            },
-            links: [],
-            interests: [],
-          },
             education: [],
             experiences: [],
             projects: [],
@@ -69,21 +69,21 @@ describe('published resume api', () => {
           },
         }),
       }),
-    );
+    )
 
     const result = await fetchPublishedResume({
       apiBaseUrl: 'http://localhost:5577',
-    });
+    })
 
     expect(fetch).toHaveBeenCalledWith(
       'http://localhost:5577/resume/published',
       expect.objectContaining({
         cache: 'no-store',
       }),
-    );
-    expect(result?.status).toBe('published');
-    expect(result?.resume.profile.fullName.en).toBe('Yinsheng Fu');
-  });
+    )
+    expect(result?.status).toBe('published')
+    expect(result?.resume.profile.fullName.en).toBe('Yinsheng Fu')
+  })
 
   it('should return null when no published resume exists yet', async () => {
     vi.stubGlobal(
@@ -92,12 +92,12 @@ describe('published resume api', () => {
         ok: false,
         status: 404,
       }),
-    );
+    )
 
     const result = await fetchPublishedResume({
       apiBaseUrl: 'http://localhost:5577',
-    });
+    })
 
-    expect(result).toBeNull();
-  });
-});
+    expect(result).toBeNull()
+  })
+})

@@ -1,18 +1,18 @@
-'use client';
+'use client'
 
-import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core';
-import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
-import { Input } from '@heroui/react';
-import type { ComponentProps, ReactNode } from 'react';
+import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core'
+import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable'
+import { Input } from '@heroui/react'
+import type { ComponentProps, ReactNode } from 'react'
 
-import type { StandardResume } from '../../lib/resume-types';
+import type { StandardResume } from '../../lib/resume-types'
 import {
   buildDraftFieldKey,
   formatLocalizedLines,
   type DraftFieldValues,
   type EditorLocaleMode,
   type SortableCollectionState,
-} from './draft-editor-helpers';
+} from './draft-editor-helpers'
 import {
   buildEntryActions,
   EditorSection,
@@ -21,48 +21,45 @@ import {
   PlusIcon,
   SortableItemShell,
   TrashIcon,
-} from './editor-primitives';
+} from './editor-primitives'
 
 interface ProfileSectionProps {
-  draftFieldValues: DraftFieldValues;
-  editorLocaleMode: EditorLocaleMode;
-  isTranslationMode: boolean;
-  resumeDraft: StandardResume;
-  sensors: ComponentProps<typeof DndContext>['sensors'];
-  sortableCollections: SortableCollectionState;
-  translationAction?: ReactNode;
+  draftFieldValues: DraftFieldValues
+  editorLocaleMode: EditorLocaleMode
+  isTranslationMode: boolean
+  resumeDraft: StandardResume
+  sensors: ComponentProps<typeof DndContext>['sensors']
+  sortableCollections: SortableCollectionState
+  translationAction?: ReactNode
   updateProfileHeroField: (
     field: 'frontImageUrl' | 'backImageUrl' | 'linkUrl',
     value: string,
-  ) => void;
-  updateProfileHeroSlogans: (locale: 'zh' | 'en', value: string) => void;
+  ) => void
+  updateProfileHeroSlogans: (locale: 'zh' | 'en', value: string) => void
   updateProfileInterestField: (
     index: number,
     field: 'label' | 'icon',
     value: string,
     locale?: 'zh' | 'en',
-  ) => void;
+  ) => void
   updateProfileLinkField: (
     index: number,
     field: 'label' | 'url' | 'icon',
     value: string,
     locale?: 'zh' | 'en',
-  ) => void;
+  ) => void
   updateProfileLocalizedField: (
     field: 'fullName' | 'headline' | 'summary' | 'location',
     locale: 'zh' | 'en',
     value: string,
-  ) => void;
-  updateProfilePlainField: (
-    field: 'email' | 'phone' | 'website',
-    value: string,
-  ) => void;
-  addProfileInterest: () => void;
-  addProfileLink: () => void;
-  handleProfileInterestsDragEnd: (event: DragEndEvent) => void;
-  handleProfileLinksDragEnd: (event: DragEndEvent) => void;
-  removeProfileInterest: (index: number) => void;
-  removeProfileLink: (index: number) => void;
+  ) => void
+  updateProfilePlainField: (field: 'email' | 'phone' | 'website', value: string) => void
+  addProfileInterest: () => void
+  addProfileLink: () => void
+  handleProfileInterestsDragEnd: (event: DragEndEvent) => void
+  handleProfileLinksDragEnd: (event: DragEndEvent) => void
+  removeProfileInterest: (index: number) => void
+  removeProfileLink: (index: number) => void
 }
 
 export function ProfileSection({
@@ -100,8 +97,7 @@ export function ProfileSection({
           ? '英文翻译工作区只维护姓名、标题、简介、地点、主视觉 slogan、链接标签和兴趣方向的英文内容。'
           : '先保留原有 profile 编辑，继续作为标准简历的稳定基础层。'
       }
-      title="基础信息"
-    >
+      title="基础信息">
       <div className="grid gap-4 md:grid-cols-2">
         <LocalizedEditorField
           label="姓名"
@@ -262,12 +258,10 @@ export function ProfileSection({
         <DndContext
           collisionDetection={closestCenter}
           onDragEnd={handleProfileLinksDragEnd}
-          sensors={sensors}
-        >
+          sensors={sensors}>
           <SortableContext
             items={sortableCollections.profileLinks}
-            strategy={rectSortingStrategy}
-          >
+            strategy={rectSortingStrategy}>
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {resumeDraft.profile.links.map((link, index) => (
                 <SortableItemShell
@@ -275,8 +269,9 @@ export function ProfileSection({
                   disabled={isTranslationMode}
                   dragHandleLabel={`拖拽排序个人链接 ${index + 1}`}
                   id={sortableCollections.profileLinks[index] ?? `profile-link-${index}`}
-                  key={sortableCollections.profileLinks[index] ?? `profile-link-${index}`}
-                >
+                  key={
+                    sortableCollections.profileLinks[index] ?? `profile-link-${index}`
+                  }>
                   {({ dragHandle, isDragging }) => (
                     <div
                       className={[
@@ -284,14 +279,15 @@ export function ProfileSection({
                         isDragging
                           ? 'border-blue-300 shadow-[0_18px_38px_rgba(37,99,235,0.18)] dark:border-blue-400/40'
                           : '',
-                      ].join(' ')}
-                    >
+                      ].join(' ')}>
                       <div className="flex min-w-0 items-start justify-between gap-3">
                         <div className="min-w-0 space-y-1">
                           <h5 className="text-sm font-semibold text-zinc-950 dark:text-white">
                             个人链接 {index + 1}
                           </h5>
-                          <p className="muted truncate">{link.url || link.label.zh || '未命名链接'}</p>
+                          <p className="muted truncate">
+                            {link.url || link.label.zh || '未命名链接'}
+                          </p>
                         </div>
                         {buildEntryActions({
                           deleteAction: !isTranslationMode ? (
@@ -399,21 +395,24 @@ export function ProfileSection({
         <DndContext
           collisionDetection={closestCenter}
           onDragEnd={handleProfileInterestsDragEnd}
-          sensors={sensors}
-        >
+          sensors={sensors}>
           <SortableContext
             items={sortableCollections.profileInterests}
-            strategy={rectSortingStrategy}
-          >
+            strategy={rectSortingStrategy}>
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {resumeDraft.profile.interests.map((interest, index) => (
                 <SortableItemShell
                   className="min-w-0"
                   disabled={isTranslationMode}
                   dragHandleLabel={`拖拽排序兴趣方向 ${index + 1}`}
-                  id={sortableCollections.profileInterests[index] ?? `profile-interest-${index}`}
-                  key={sortableCollections.profileInterests[index] ?? `profile-interest-${index}`}
-                >
+                  id={
+                    sortableCollections.profileInterests[index] ??
+                    `profile-interest-${index}`
+                  }
+                  key={
+                    sortableCollections.profileInterests[index] ??
+                    `profile-interest-${index}`
+                  }>
                   {({ dragHandle, isDragging }) => (
                     <div
                       className={[
@@ -421,15 +420,17 @@ export function ProfileSection({
                         isDragging
                           ? 'border-blue-300 shadow-[0_18px_38px_rgba(37,99,235,0.18)] dark:border-blue-400/40'
                           : '',
-                      ].join(' ')}
-                    >
+                      ].join(' ')}>
                       <div className="flex min-w-0 items-start justify-between gap-3">
                         <div className="min-w-0 space-y-1">
                           <h5 className="text-sm font-semibold text-zinc-950 dark:text-white">
                             兴趣方向 {index + 1}
                           </h5>
                           <p className="muted truncate">
-                            {interest.label.zh || interest.label.en || interest.icon || '未命名兴趣'}
+                            {interest.label.zh ||
+                              interest.label.en ||
+                              interest.icon ||
+                              '未命名兴趣'}
                           </p>
                         </div>
                         {buildEntryActions({
@@ -451,7 +452,12 @@ export function ProfileSection({
                         label={`兴趣方向 ${index + 1} 名称`}
                         localeMode={editorLocaleMode}
                         onChange={(value) =>
-                          updateProfileInterestField(index, 'label', value, editorLocaleMode)
+                          updateProfileInterestField(
+                            index,
+                            'label',
+                            value,
+                            editorLocaleMode,
+                          )
                         }
                         sourceValue={interest.label.zh}
                         value={interest.label[editorLocaleMode]}
@@ -464,7 +470,11 @@ export function ProfileSection({
                             className="min-w-0"
                             fullWidth
                             onChange={(event) =>
-                              updateProfileInterestField(index, 'icon', event.target.value)
+                              updateProfileInterestField(
+                                index,
+                                'icon',
+                                event.target.value,
+                              )
                             }
                             placeholder="ri:rocket-line"
                             value={interest.icon ?? ''}
@@ -481,5 +491,5 @@ export function ProfileSection({
         </DndContext>
       </div>
     </EditorSection>
-  );
+  )
 }

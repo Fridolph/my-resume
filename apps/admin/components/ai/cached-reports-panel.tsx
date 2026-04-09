@@ -1,48 +1,49 @@
-'use client';
+'use client'
 
-import { Button } from '@heroui/react';
+import { Button } from '@heroui/react'
 import {
   DisplayPill,
   DisplaySectionIntro,
   DisplaySurfaceCard,
-} from '@my-resume/ui/display';
-import { useEffect, useState } from 'react';
+} from '@my-resume/ui/display'
+import { useEffect, useState } from 'react'
 
 import {
   ensureCachedAiWorkbenchReport,
   ensureCachedAiWorkbenchReports,
-} from '../../lib/admin-resource-store';
+} from '../../lib/admin-resource-store'
 import {
   AiWorkbenchCachedReportSummary,
   AiWorkbenchReport,
-} from '../../lib/ai-workbench-types';
+} from '../../lib/ai-workbench-types'
 
-const cachedReportListClass = 'flex flex-wrap gap-3';
-const analysisSummaryCardClass = 'grid gap-3.5';
-const analysisSectionGridClass = 'grid gap-4';
-const analysisSectionCardClass = 'grid gap-3.5';
-const analysisTextBlockClass = 'whitespace-pre-wrap leading-7 text-zinc-900 dark:text-zinc-100';
+const cachedReportListClass = 'flex flex-wrap gap-3'
+const analysisSummaryCardClass = 'grid gap-3.5'
+const analysisSectionGridClass = 'grid gap-4'
+const analysisSectionCardClass = 'grid gap-3.5'
+const analysisTextBlockClass =
+  'whitespace-pre-wrap leading-7 text-zinc-900 dark:text-zinc-100'
 
 interface AiCachedReportsPanelProps {
-  accessToken: string;
-  apiBaseUrl: string;
-  isViewerExperience: boolean;
-  fetchReportDetail?: typeof ensureCachedAiWorkbenchReport;
-  fetchReportList?: typeof ensureCachedAiWorkbenchReports;
+  accessToken: string
+  apiBaseUrl: string
+  isViewerExperience: boolean
+  fetchReportDetail?: typeof ensureCachedAiWorkbenchReport
+  fetchReportList?: typeof ensureCachedAiWorkbenchReports
 }
 
 const scenarioLabels = {
   'jd-match': 'JD 匹配分析',
   'resume-review': '简历优化建议',
   'offer-compare': 'Offer 对比建议',
-} as const;
+} as const
 
 function formatLocale(locale: AiWorkbenchReport['locale']): string {
-  return locale === 'zh' ? '中文' : 'English';
+  return locale === 'zh' ? '中文' : 'English'
 }
 
 function formatGenerator(generator: AiWorkbenchReport['generator']): string {
-  return generator === 'mock-cache' ? '缓存 / 预设' : '真实 Provider';
+  return generator === 'mock-cache' ? '缓存 / 预设' : '真实 Provider'
 }
 
 export function AiCachedReportsPanel({
@@ -52,100 +53,100 @@ export function AiCachedReportsPanel({
   fetchReportDetail = ensureCachedAiWorkbenchReport,
   fetchReportList = ensureCachedAiWorkbenchReports,
 }: AiCachedReportsPanelProps) {
-  const [reports, setReports] = useState<AiWorkbenchCachedReportSummary[]>([]);
-  const [activeReportId, setActiveReportId] = useState<string | null>(null);
-  const [activeReport, setActiveReport] = useState<AiWorkbenchReport | null>(null);
+  const [reports, setReports] = useState<AiWorkbenchCachedReportSummary[]>([])
+  const [activeReportId, setActiveReportId] = useState<string | null>(null)
+  const [activeReport, setActiveReport] = useState<AiWorkbenchReport | null>(null)
   const [loadingState, setLoadingState] = useState<'loading' | 'ready' | 'error'>(
     'loading',
-  );
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  )
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
-    let cancelled = false;
+    let cancelled = false
 
     async function loadReports() {
       try {
-        setLoadingState('loading');
-        setErrorMessage(null);
+        setLoadingState('loading')
+        setErrorMessage(null)
 
         const nextReports = await fetchReportList({
           apiBaseUrl,
           accessToken,
-        });
+        })
 
         if (cancelled) {
-          return;
+          return
         }
 
-        setReports(nextReports);
+        setReports(nextReports)
 
         if (nextReports.length === 0) {
-          setActiveReportId(null);
-          setActiveReport(null);
-          setLoadingState('ready');
-          return;
+          setActiveReportId(null)
+          setActiveReport(null)
+          setLoadingState('ready')
+          return
         }
 
-        const nextActiveReportId = nextReports[0].reportId;
-        setActiveReportId(nextActiveReportId);
+        const nextActiveReportId = nextReports[0].reportId
+        setActiveReportId(nextActiveReportId)
 
         const detail = await fetchReportDetail({
           apiBaseUrl,
           accessToken,
           reportId: nextActiveReportId,
-        });
+        })
 
         if (cancelled) {
-          return;
+          return
         }
 
-        setActiveReport(detail);
-        setLoadingState('ready');
+        setActiveReport(detail)
+        setLoadingState('ready')
       } catch (error) {
         if (cancelled) {
-          return;
+          return
         }
 
-        setLoadingState('error');
-        setActiveReport(null);
+        setLoadingState('error')
+        setActiveReport(null)
         setErrorMessage(
           error instanceof Error ? error.message : '缓存报告加载失败，请稍后重试',
-        );
+        )
       }
     }
 
-    void loadReports();
+    void loadReports()
 
     return () => {
-      cancelled = true;
-    };
-  }, [accessToken, apiBaseUrl, fetchReportDetail, fetchReportList]);
+      cancelled = true
+    }
+  }, [accessToken, apiBaseUrl, fetchReportDetail, fetchReportList])
 
   async function handleSelectReport(reportId: string) {
     if (reportId === activeReportId) {
-      return;
+      return
     }
 
-    setActiveReportId(reportId);
-    setDetailLoading(true);
-    setErrorMessage(null);
+    setActiveReportId(reportId)
+    setDetailLoading(true)
+    setErrorMessage(null)
 
     try {
       const detail = await fetchReportDetail({
         apiBaseUrl,
         accessToken,
         reportId,
-      });
+      })
 
-      setActiveReport(detail);
+      setActiveReport(detail)
     } catch (error) {
-      setActiveReport(null);
+      setActiveReport(null)
       setErrorMessage(
         error instanceof Error ? error.message : '缓存报告详情加载失败，请稍后重试',
-      );
+      )
     } finally {
-      setDetailLoading(false);
+      setDetailLoading(false)
     }
   }
 
@@ -169,9 +170,7 @@ export function AiCachedReportsPanel({
         </div>
       )}
 
-      {loadingState === 'loading' ? (
-        <p className="muted">正在加载缓存报告...</p>
-      ) : null}
+      {loadingState === 'loading' ? <p className="muted">正在加载缓存报告...</p> : null}
 
       {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
 
@@ -186,8 +185,7 @@ export function AiCachedReportsPanel({
               className={activeReportId === report.reportId ? 'secondary-button' : ''}
               key={report.reportId}
               onClick={() => void handleSelectReport(report.reportId)}
-              type="button"
-            >
+              type="button">
               {scenarioLabels[report.scenario]}
             </Button>
           ))}
@@ -199,9 +197,7 @@ export function AiCachedReportsPanel({
       {activeReport ? (
         <div className="preview-stack">
           <div className="dashboard-badge-row">
-            <DisplayPill>
-              场景：{scenarioLabels[activeReport.scenario]}
-            </DisplayPill>
+            <DisplayPill>场景：{scenarioLabels[activeReport.scenario]}</DisplayPill>
             <DisplayPill>语言：{formatLocale(activeReport.locale)}</DisplayPill>
             <DisplayPill>来源：{formatGenerator(activeReport.generator)}</DisplayPill>
           </div>
@@ -222,8 +218,7 @@ export function AiCachedReportsPanel({
               <DisplaySurfaceCard
                 as="article"
                 className={analysisSectionCardClass}
-                key={section.key}
-              >
+                key={section.key}>
                 <DisplaySectionIntro compact title={section.title} titleAs="h3" />
                 <ul className="muted-list">
                   {section.bullets.map((bullet) => (
@@ -236,5 +231,5 @@ export function AiCachedReportsPanel({
         </div>
       ) : null}
     </section>
-  );
+  )
 }

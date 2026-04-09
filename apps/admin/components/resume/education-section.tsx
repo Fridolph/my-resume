@@ -1,19 +1,19 @@
-'use client';
+'use client'
 
-import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core';
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { Input } from '@heroui/react';
-import type { ComponentProps, ReactNode } from 'react';
+import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core'
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { Input } from '@heroui/react'
+import type { ComponentProps, ReactNode } from 'react'
 
-import type { StandardResume } from '../../lib/resume-types';
+import type { StandardResume } from '../../lib/resume-types'
 import {
   buildDraftFieldKey,
   formatLocalizedLines,
   type DraftFieldValues,
   type EditorLocaleMode,
   type SortableCollectionState,
-} from './draft-editor-helpers';
+} from './draft-editor-helpers'
 import {
   buildEntryActions,
   EditorEntry,
@@ -23,31 +23,31 @@ import {
   PlusIcon,
   SortableItemShell,
   TrashIcon,
-} from './editor-primitives';
+} from './editor-primitives'
 
 interface EducationSectionProps {
-  draftFieldValues: DraftFieldValues;
-  editorLocaleMode: EditorLocaleMode;
-  isTranslationMode: boolean;
-  resumeDraft: StandardResume;
-  sensors: ComponentProps<typeof DndContext>['sensors'];
-  sortableCollections: SortableCollectionState;
-  translationAction?: ReactNode;
-  addEducation: () => void;
-  handleDragEnd: (event: DragEndEvent) => void;
-  removeEducation: (index: number) => void;
-  updateEducationHighlights: (index: number, locale: 'zh' | 'en', value: string) => void;
+  draftFieldValues: DraftFieldValues
+  editorLocaleMode: EditorLocaleMode
+  isTranslationMode: boolean
+  resumeDraft: StandardResume
+  sensors: ComponentProps<typeof DndContext>['sensors']
+  sortableCollections: SortableCollectionState
+  translationAction?: ReactNode
+  addEducation: () => void
+  handleDragEnd: (event: DragEndEvent) => void
+  removeEducation: (index: number) => void
+  updateEducationHighlights: (index: number, locale: 'zh' | 'en', value: string) => void
   updateEducationLocalizedField: (
     index: number,
     field: 'schoolName' | 'degree' | 'fieldOfStudy' | 'location',
     locale: 'zh' | 'en',
     value: string,
-  ) => void;
+  ) => void
   updateEducationPlainField: (
     index: number,
     field: 'startDate' | 'endDate',
     value: string,
-  ) => void;
+  ) => void
 }
 
 export function EducationSection({
@@ -68,15 +68,15 @@ export function EducationSection({
   return (
     <EditorSection
       action={
-        isTranslationMode
-          ? translationAction
-          : (
-            <IconActionButton
-              icon={<PlusIcon />}
-              label="添加教育经历"
-              onClick={addEducation}
-            />
-            )
+        isTranslationMode ? (
+          translationAction
+        ) : (
+          <IconActionButton
+            icon={<PlusIcon />}
+            label="添加教育经历"
+            onClick={addEducation}
+          />
+        )
       }
       count={resumeDraft.education.length}
       description={
@@ -84,8 +84,7 @@ export function EducationSection({
           ? '英文翻译工作区集中维护学校、学位、专业、地点和教育亮点的英文内容。'
           : '补齐学校、学历、专业、时间、地点与教育亮点的双语维护。'
       }
-      title="教育经历"
-    >
+      title="教育经历">
       {resumeDraft.education.length === 0 ? (
         <div className="status-box">
           <strong>当前还没有教育经历</strong>
@@ -97,20 +96,17 @@ export function EducationSection({
         collisionDetection={closestCenter}
         modifiers={[restrictToVerticalAxis]}
         onDragEnd={handleDragEnd}
-        sensors={sensors}
-      >
+        sensors={sensors}>
         <SortableContext
           items={sortableCollections.education}
-          strategy={verticalListSortingStrategy}
-        >
+          strategy={verticalListSortingStrategy}>
           <div className="grid gap-4">
             {resumeDraft.education.map((education, index) => (
               <SortableItemShell
                 disabled={isTranslationMode}
                 dragHandleLabel={`拖拽排序教育经历 ${index + 1}`}
                 id={sortableCollections.education[index] ?? `education-${index}`}
-                key={sortableCollections.education[index] ?? `education-${index}`}
-              >
+                key={sortableCollections.education[index] ?? `education-${index}`}>
                 {({ dragHandle, isDragging }) => (
                   <div className={isDragging ? 'rounded-[24px]' : undefined}>
                     <EditorEntry
@@ -126,12 +122,18 @@ export function EducationSection({
                         ) : null,
                         dragHandle,
                       })}
-                      defaultExpanded={resumeDraft.education.length === 1 || index === resumeDraft.education.length - 1}
-                      summary={education.schoolName.zh || education.schoolName.en || '未命名教育经历'}
+                      defaultExpanded={
+                        resumeDraft.education.length === 1 ||
+                        index === resumeDraft.education.length - 1
+                      }
+                      summary={
+                        education.schoolName.zh ||
+                        education.schoolName.en ||
+                        '未命名教育经历'
+                      }
                       title={`教育经历 ${index + 1}`}
                       toggleLabel={`教育经历 ${index + 1} 条目开关`}
-                      variant="embedded"
-                    >
+                      variant="embedded">
                       <div className="grid gap-4 md:grid-cols-2">
                         <LocalizedEditorField
                           label={`教育经历 ${index + 1} 学校`}
@@ -182,7 +184,11 @@ export function EducationSection({
                               <Input
                                 fullWidth
                                 onChange={(event) =>
-                                  updateEducationPlainField(index, 'startDate', event.target.value)
+                                  updateEducationPlainField(
+                                    index,
+                                    'startDate',
+                                    event.target.value,
+                                  )
                                 }
                                 value={education.startDate}
                                 variant="secondary"
@@ -193,7 +199,11 @@ export function EducationSection({
                               <Input
                                 fullWidth
                                 onChange={(event) =>
-                                  updateEducationPlainField(index, 'endDate', event.target.value)
+                                  updateEducationPlainField(
+                                    index,
+                                    'endDate',
+                                    event.target.value,
+                                  )
                                 }
                                 value={education.endDate}
                                 variant="secondary"
@@ -233,7 +243,8 @@ export function EducationSection({
                               'highlights',
                               editorLocaleMode,
                             )
-                          ] ?? formatLocalizedLines(education.highlights, editorLocaleMode)
+                          ] ??
+                          formatLocalizedLines(education.highlights, editorLocaleMode)
                         }
                         variant="textarea"
                       />
@@ -246,5 +257,5 @@ export function EducationSection({
         </SortableContext>
       </DndContext>
     </EditorSection>
-  );
+  )
 }

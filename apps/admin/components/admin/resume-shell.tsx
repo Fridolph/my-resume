@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import {
   Card,
@@ -7,11 +7,11 @@ import {
   CardHeader,
   CardTitle,
   Chip,
-} from '@heroui/react';
+} from '@heroui/react'
 
-import { ResumeDraftEditorPanel } from '../resume/draft-editor-panel';
-import { DEFAULT_API_BASE_URL } from '../../lib/env';
-import { useAdminSession } from '../../lib/admin-session';
+import { ResumeDraftEditorPanel } from '../resume/draft-editor-panel'
+import { DEFAULT_API_BASE_URL } from '../../lib/env'
+import { useAdminSession } from '../../lib/admin-session'
 
 const moduleRoadmap = [
   {
@@ -44,13 +44,13 @@ const moduleRoadmap = [
     description: '技能组与亮点条目已接通，保持与公开展示和导出模型一致。',
     status: '已实现',
   },
-] as const;
+] as const
 
 export function AdminResumeShell() {
-  const { accessToken, currentUser, status } = useAdminSession();
+  const { accessToken, currentUser, status } = useAdminSession()
 
   if (status !== 'ready' || !currentUser || !accessToken) {
-    return null;
+    return null
   }
 
   return (
@@ -58,9 +58,7 @@ export function AdminResumeShell() {
       <Card className="border border-zinc-200/70 dark:border-zinc-800">
         <CardHeader className="flex flex-col items-start gap-2.5 px-4 py-4 sm:px-5 md:gap-3">
           <div className="flex flex-wrap gap-2">
-            <Chip size="sm">
-              当前账号：{currentUser.username}
-            </Chip>
+            <Chip size="sm">当前账号：{currentUser.username}</Chip>
             <Chip size="sm">
               编辑模式：{currentUser.capabilities.canEditResume ? '可写' : '只读'}
             </Chip>
@@ -77,7 +75,8 @@ export function AdminResumeShell() {
         <CardContent className="grid gap-3 px-4 pb-4 sm:px-5 md:gap-4">
           {currentUser.capabilities.canEditResume ? (
             <div className="dashboard-inline-note">
-              当前已接通标准简历主模块编辑，并切到“中文主编辑 + 英文翻译工作区”的维护方式。模块继续按基础信息、教育、工作、项目、技能与亮点分组，便于逐段维护与后续继续扩展翻译能力。
+              当前已接通标准简历主模块编辑，并切到“中文主编辑 +
+              英文翻译工作区”的维护方式。模块继续按基础信息、教育、工作、项目、技能与亮点分组，便于逐段维护与后续继续扩展翻译能力。
             </div>
           ) : (
             <div className="readonly-box">
@@ -89,9 +88,7 @@ export function AdminResumeShell() {
             {moduleRoadmap.map((module) => (
               <div className="display-pill" key={module.key}>
                 <strong>{module.title}</strong>
-                <Chip size="sm">
-                  {module.status}
-                </Chip>
+                <Chip size="sm">{module.status}</Chip>
               </div>
             ))}
           </div>
@@ -104,5 +101,5 @@ export function AdminResumeShell() {
         canEdit={Boolean(currentUser.capabilities.canEditResume)}
       />
     </div>
-  );
+  )
 }

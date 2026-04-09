@@ -1,50 +1,50 @@
 <template>
   <nav
-    class="z-10 invisible md:visible group overflow-hidden absolute right-[112px] -top-10 min-w-8 rounded w-auto h-8 bg-white dark:bg-[var(--dark-bg-hover)] -translate-x-1/2 dark-transition"
+    class="dark-transition group invisible absolute -top-10 right-[112px] z-10 h-8 w-auto min-w-8 -translate-x-1/2 overflow-hidden rounded bg-white dark:bg-[var(--dark-bg-hover)] md:visible"
     :class="{ 'is-checked': checked }">
     <input
       type="checkbox"
-      class="nav__cb peer z-0 absolute left-0 top-0 opacity-0 pointer-events-none"
+      class="nav__cb peer pointer-events-none absolute left-0 top-0 z-0 opacity-0"
       id="menuCb"
       v-model="checked"
       @change="onChange" />
     <div
       :class="{ 'peer-checked:w-[380px]': isZw, 'peer-checked:w-[420px]': !isZw }"
-      class="nav__content relative flex flex-row w-8 h-full transition-width duration-700 peer-checked:w-[380px]">
+      class="nav__content transition-width relative flex h-full w-8 flex-row duration-700 peer-checked:w-[380px]">
       <ul
-        class="nav__list relative w-[510px] h-full px-5 text-[0px] flex flex-row translate-x-5 *:align-top *:px-2 *:text-center *:text-sm *:leading-8 *:font-bold *:cursor-pointer">
+        class="nav__list relative flex h-full w-[510px] translate-x-5 flex-row px-5 text-[0px] *:cursor-pointer *:px-2 *:text-center *:align-top *:text-sm *:font-bold *:leading-8">
         <li class="nav__item">
           <a
             href="#Education"
-            class="nav__item-text block h-full w-max leading-8 -rotate-[20deg] opacity-100 transition-all duration-700 ease-[cubic-bezier(0.48, 0.43, 0.7, 2.5)]"
+            class="nav__item-text ease-[cubic-bezier(0.48, 0.43, 0.7, 2.5)] block h-full w-max -rotate-[20deg] leading-8 opacity-100 transition-all duration-700"
             >{{ t('anchor.a1') }}</a
           >
         </li>
         <li class="nav__item">
           <a
             href="#Skill"
-            class="nav__item-text block h-full w-max leading-8 -rotate-[20deg] opacity-100 transition-all duration-700 ease-[cubic-bezier(0.48, 0.43, 0.7, 2.5)]"
+            class="nav__item-text ease-[cubic-bezier(0.48, 0.43, 0.7, 2.5)] block h-full w-max -rotate-[20deg] leading-8 opacity-100 transition-all duration-700"
             >{{ t('anchor.a2') }}</a
           >
         </li>
         <li class="nav__item">
           <a
             href="#Experience"
-            class="nav__item-text block h-full w-max leading-8 -rotate-[20deg] opacity-100 transition-all duration-700 ease-[cubic-bezier(0.48, 0.43, 0.7, 2.5)]"
+            class="nav__item-text ease-[cubic-bezier(0.48, 0.43, 0.7, 2.5)] block h-full w-max -rotate-[20deg] leading-8 opacity-100 transition-all duration-700"
             >{{ t('anchor.a3') }}</a
           >
         </li>
         <li class="nav__item">
           <a
             href="#Personal"
-            class="nav__item-text block h-full w-max leading-8 -rotate-[20deg] opacity-100 transition-all duration-700 ease-[cubic-bezier(0.48, 0.43, 0.7, 2.5)]"
+            class="nav__item-text ease-[cubic-bezier(0.48, 0.43, 0.7, 2.5)] block h-full w-max -rotate-[20deg] leading-8 opacity-100 transition-all duration-700"
             >{{ t('anchor.a4') }}</a
           >
         </li>
       </ul>
     </div>
     <label
-      class="nav__btn z-50 absolute right-0 top-0 w-8 height-8 p-4 cursor-pointer -translate-x-2 -translate-y-1"
+      class="nav__btn height-8 absolute right-0 top-0 z-50 w-8 -translate-x-2 -translate-y-1 cursor-pointer p-4"
       for="menuCb"></label>
   </nav>
 </template>
@@ -70,7 +70,9 @@ const onChange = () => {
 .nav__cb:checked ~ .nav__content .nav__item-text {
   transform: rotate(0);
   opacity: 1;
-  transition: transform 0.7s cubic-bezier(0.48, 0.43, 0.7, 2.5), opacity 0.2s;
+  transition:
+    transform 0.7s cubic-bezier(0.48, 0.43, 0.7, 2.5),
+    opacity 0.2s;
 }
 
 .nav__item:nth-child(1) .nav__item-text {
@@ -107,7 +109,9 @@ const onChange = () => {
   border-radius: 2px;
   background: var(--text);
   transform-origin: 50% 50%;
-  transition: transform 1s cubic-bezier(0.48, 0.43, 0.29, 1.3), background-color 0.3s;
+  transition:
+    transform 1s cubic-bezier(0.48, 0.43, 0.29, 1.3),
+    background-color 0.3s;
 }
 
 .nav__btn:before {
