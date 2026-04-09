@@ -1,10 +1,11 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common'
 
-import { AI_PROVIDER_INSTANCE } from './ai.tokens';
+import { AI_PROVIDER_INSTANCE } from './ai.tokens'
 import type {
   AiProvider,
+  EmbedTextsInput,
   GenerateTextInput,
-} from './interfaces/ai-provider.interface';
+} from './interfaces/ai-provider.interface'
 
 @Injectable()
 export class AiService {
@@ -14,10 +15,14 @@ export class AiService {
   ) {}
 
   getProviderSummary() {
-    return this.aiProvider.getSummary();
+    return this.aiProvider.getSummary()
   }
 
   generateText(input: GenerateTextInput) {
-    return this.aiProvider.generateText(input);
+    return this.aiProvider.generateText(input)
+  }
+
+  embedTexts(input: EmbedTextsInput) {
+    return this.aiProvider.embedTexts(input)
   }
 }

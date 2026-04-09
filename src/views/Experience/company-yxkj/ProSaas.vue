@@ -3,20 +3,14 @@
     class="pl-4"
     :title="t('proSaas.name')"
     :btn-label="t('stack')"
-    :description="t('proSaas.description')"
-  >
+    :description="t('proSaas.description')">
     <template #lib>
       <button class="my-btn info">Vue3</button>
       <button class="my-btn info">TypeScript</button>
       <button class="my-btn info">antdVue</button>
       <button class="my-btn info">Echarts</button>
     </template>
-    <ListWrap
-      :title="t('contributions')"
-      :list="saasList"
-      inner
-      bold
-    />
+    <ListWrap :title="t('contributions')" :list="saasList" inner bold />
 
     <!-- <ListWrap
       :title="t('hard')"

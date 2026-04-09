@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   esbuild: {
@@ -9,4 +9,4 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
   },
-});
+})

@@ -6,24 +6,11 @@
     :label-width="220"
     :is-wrap="true"
     :is-title="true"
-    :text="t('yxkj.time')"
-  />
+    :text="t('yxkj.time')" />
 
-  <ListWrap
-    :title="t('responsibilities')"
-    :list="lists"
-    inner
-    title-size="base"
-    bold
-  />
+  <ListWrap :title="t('responsibilities')" :list="lists" inner title-size="base" bold />
 
-  <ListWrap
-    :title="t('yxkj.results')"
-    :list="results"
-    inner
-    title-size="base"
-    bold
-  />
+  <ListWrap :title="t('yxkj.results')" :list="results" inner title-size="base" bold />
 
   <ProSaas />
   <ProXhyx />
@@ -39,7 +26,13 @@ import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 
-const lists = computed(() => [t('yxkj.d1'), t('yxkj.d2'), t('yxkj.d3'), t('yxkj.d4'), t('yxkj.d5')])
+const lists = computed(() => [
+  t('yxkj.d1'),
+  t('yxkj.d2'),
+  t('yxkj.d3'),
+  t('yxkj.d4'),
+  t('yxkj.d5'),
+])
 const results = computed(() => [
   t('yxkj.l1'),
   t('yxkj.l2'),

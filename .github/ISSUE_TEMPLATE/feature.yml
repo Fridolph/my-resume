@@ -1,6 +1,6 @@
 name: Feature Task
 description: Create a milestone-scoped feature issue
-title: "[Feature] "
+title: '[Feature] '
 labels:
   - feature
 body:

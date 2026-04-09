@@ -1,7 +1,7 @@
-import type { NextConfig } from 'next';
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   transpilePackages: ['@my-resume/api-client', '@my-resume/ui'],
-};
+}
 
-export default nextConfig;
+export default nextConfig

@@ -1,1 +1,1 @@
-export { fetchPublishedResume } from '@my-resume/api-client';
+export { fetchPublishedResume } from '@my-resume/api-client'

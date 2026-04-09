@@ -7,13 +7,13 @@ import {
   Inject,
   Post,
   UseGuards,
-} from '@nestjs/common';
+} from '@nestjs/common'
 
-import { CurrentAuthUser } from './decorators/current-auth-user.decorator';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { LoginDto } from './dto/login.dto';
-import { AuthService } from './auth.service';
-import type { AuthUser } from './domain/auth-user';
+import { CurrentAuthUser } from './decorators/current-auth-user.decorator'
+import { JwtAuthGuard } from './guards/jwt-auth.guard'
+import { LoginDto } from './dto/login.dto'
+import { AuthService } from './auth.service'
+import type { AuthUser } from './domain/auth-user'
 
 @Controller('auth')
 export class AuthController {
@@ -22,7 +22,7 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+    return this.authService.login(loginDto)
   }
 
   @Get('me')
@@ -30,6 +30,6 @@ export class AuthController {
   getCurrentUser(@CurrentAuthUser() authUser: AuthUser) {
     return {
       user: this.authService.serializeUser(authUser),
-    };
+    }
   }
 }

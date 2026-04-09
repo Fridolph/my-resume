@@ -12,17 +12,9 @@
       <button class="my-btn info">ECharts</button>
       <button class="my-btn info">D3.js</button>
     </template>
-    <ListWrap
-      :title="t('contributions')"
-      :list="edrList"
-      inner
-      bold />
+    <ListWrap :title="t('contributions')" :list="edrList" inner bold />
 
-    <ListWrap
-      :title="t('hard')"
-      :list="hardList"
-      inner
-      bold />
+    <ListWrap :title="t('hard')" :list="hardList" inner bold />
   </ProjectWrap>
 </template>
 
@@ -43,9 +35,5 @@ const edrList = computed(() => [
   t('proEdr.c7'),
 ])
 
-const hardList = computed(() => [
-  t('proEdr.h1'),
-  t('proEdr.h2'),
-  t('proEdr.h3'),
-])
+const hardList = computed(() => [t('proEdr.h1'), t('proEdr.h2'), t('proEdr.h3')])
 </script>

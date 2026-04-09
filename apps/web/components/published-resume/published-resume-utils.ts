@@ -4,40 +4,46 @@ import {
   ResumeExperienceItem,
   ResumeLocale,
   ResumeProjectItem,
-} from '../../lib/published-resume-types';
+} from '../../lib/published-resume-types'
 
-export function readLocalizedText(
-  value: LocalizedText,
-  locale: ResumeLocale,
-): string {
-  return value[locale];
+export function readLocalizedText(value: LocalizedText, locale: ResumeLocale): string {
+  return value[locale]
 }
 
 export function formatPeriod(
   item: ResumeProjectItem | ResumeExperienceItem | ResumeEducationItem,
 ): string {
-  return `${item.startDate} - ${item.endDate}`;
+  return `${item.startDate} - ${item.endDate}`
 }
 
-export function formatPublishedAt(
-  publishedAt: string,
-  locale: ResumeLocale,
-): string {
-  return new Date(publishedAt).toLocaleString(
-    locale === 'zh' ? 'zh-CN' : 'en-US',
-    {
-      hour12: false,
-    },
-  );
+export function formatPublishedAt(publishedAt: string, locale: ResumeLocale): string {
+  return new Date(publishedAt).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US', {
+    hour12: false,
+  })
 }
 
 export const resumeLabels = {
   zh: {
+    resumeNav: '简历',
+    profileNav: '概览',
+    aiTalkNav: 'AI Talk',
+    githubAriaLabel: '打开项目 GitHub 仓库',
+    downloadAriaLabel: '打开下载菜单',
+    downloadMenuLabel: '下载',
+    exportMarkdownMenu: '导出 Markdown',
+    exportPdfMenu: '导出 PDF',
+    themeLight: 'Light',
+    themeDark: 'Dark',
     pageEyebrow: '公开简历',
+    pageTitle: '给招聘方直接阅读的公开简历',
+    pageDescription:
+      '保留最核心的履历内容、导出入口与双语切换，让阅读路径直接、清晰、可验证。',
     standardEditionEyebrow: '当前版本',
     standardEditionTitle: '标准双语公开版',
     standardEditionDescription:
       '当前只维护一份可公开展示的标准简历，草稿保存与公开发布继续分离。',
+    heroPrimaryAction: '进入履历概览',
+    heroSecondaryAction: '查看 AI Talk',
     resumeSignalsEyebrow: '履历信号',
     resumeSignalsTitle: '公开简历速览',
     experienceCountLabel: '职业经历',
@@ -53,6 +59,9 @@ export const resumeLabels = {
     emptyDescription:
       '请先通过后台更新草稿并执行发布动作，公开站才会读取到最新已发布版本。',
     publishedAt: '已发布于',
+    profileCardLabel: '基本信息',
+    contactTitle: '联系信息',
+    profileLinksTitle: '公开链接',
     exportMarkdown: '导出 Markdown',
     exportPdf: '导出 PDF',
     experienceEyebrow: '工作经历',
@@ -72,13 +81,52 @@ export const resumeLabels = {
     highlightsDescription: '沉淀个人项目、开源参与与团队建设等补充信息。',
     interestsEyebrow: '兴趣方向',
     interestsTitle: '个人兴趣',
+    profileEyebrow: 'about / profile',
+    profileTitle: '公开履历概览',
+    profileDescription:
+      '这里放统计、公开链接、补充背景和后续面试时更适合被追问的上下文，不打断简历主阅读流。',
+    profileStoryEyebrow: '候选人快照',
+    aiTalkEyebrow: 'ai talk',
+    aiTalkCardTitle: '个人知识库问答入口',
+    aiTalkCardDescription:
+      '后续这里会接入 RAG，对招聘方常见问题做更结构化、更可解释的回答。',
+    aiTalkEnter: '进入 AI Talk',
+    aiTalkTitle: 'AI Talk 占位入口',
+    aiTalkDescription:
+      '后续将基于已发布简历、博客与知识库素材，回答招聘方关于项目、经历、技术取舍与成长路径的问题。',
+    aiTalkStatus: '即将接入 RAG',
+    aiTalkReadyEyebrow: '当前阶段',
+    aiTalkReadyTitle: '本轮先把入口与语义立住',
+    aiTalkReadyLineOne:
+      '当前页面先不接真实问答接口，只把公开站的信息架构和后续能力边界明确下来。',
+    aiTalkReadyLineTwo:
+      '未来会把已发布简历、公开博客与知识库素材作为检索上下文，保证回答来源可追溯。',
+    aiTalkReadyLineThree:
+      '等 RAG 能力接入后，这里会补充提问输入区、回答卡片、来源片段与反馈动作。',
+    aiTalkPromptsEyebrow: '示例问题',
+    aiTalkPromptsTitle: '未来可回答的问题方向',
   },
   en: {
+    resumeNav: 'Resume',
+    profileNav: 'Profile',
+    aiTalkNav: 'AI Talk',
+    githubAriaLabel: 'Open project GitHub repository',
+    downloadAriaLabel: 'Open download menu',
+    downloadMenuLabel: 'Download',
+    exportMarkdownMenu: 'Export Markdown',
+    exportPdfMenu: 'Export PDF',
+    themeLight: 'Light',
+    themeDark: 'Dark',
     pageEyebrow: 'Published Resume',
+    pageTitle: 'A public resume page built for direct recruiter reading',
+    pageDescription:
+      'Keeps the most important resume content, bilingual switching, and export actions in one direct reading flow.',
     standardEditionEyebrow: 'Edition',
     standardEditionTitle: 'Standard Bilingual Edition',
     standardEditionDescription:
       'The project currently maintains one public standard resume while draft editing and publication stay separated.',
+    heroPrimaryAction: 'Open Profile Overview',
+    heroSecondaryAction: 'Visit AI Talk',
     resumeSignalsEyebrow: 'Reading Signals',
     resumeSignalsTitle: 'Public Resume Overview',
     experienceCountLabel: 'Experience',
@@ -95,6 +143,9 @@ export const resumeLabels = {
     emptyDescription:
       'Please update the draft and publish it from the admin dashboard before the public site can read the latest version.',
     publishedAt: 'Published at',
+    profileCardLabel: 'Profile',
+    contactTitle: 'Contact',
+    profileLinksTitle: 'Public Links',
     exportMarkdown: 'Export Markdown',
     exportPdf: 'Export PDF',
     experienceEyebrow: 'Experience',
@@ -119,5 +170,29 @@ export const resumeLabels = {
       'Captures personal projects, open-source work, and team-building achievements.',
     interestsEyebrow: 'Interests',
     interestsTitle: 'Personal Interests',
+    profileEyebrow: 'about / profile',
+    profileTitle: 'Public Profile Overview',
+    profileDescription:
+      'This page carries signal cards, public links, and supporting context that should not interrupt the main resume reading flow.',
+    profileStoryEyebrow: 'Candidate Snapshot',
+    aiTalkEyebrow: 'ai talk',
+    aiTalkCardTitle: 'Personal Knowledge Base Entry',
+    aiTalkCardDescription:
+      'This will later host a RAG-powered Q&A surface for recruiter-facing questions.',
+    aiTalkEnter: 'Open AI Talk',
+    aiTalkTitle: 'AI Talk Placeholder',
+    aiTalkDescription:
+      'Later this page will answer recruiter questions from the published resume, public blogs, and curated knowledge materials.',
+    aiTalkStatus: 'RAG coming soon',
+    aiTalkReadyEyebrow: 'Current Stage',
+    aiTalkReadyTitle: 'The entry and product meaning come first',
+    aiTalkReadyLineOne:
+      'This round does not wire up the real Q&A backend yet. It only establishes the public-site entry and future capability boundary.',
+    aiTalkReadyLineTwo:
+      'The next step will use the published resume, public blogs, and knowledge materials as retrieval context.',
+    aiTalkReadyLineThree:
+      'Once the RAG flow is ready, this page will grow an input area, answer cards, cited source snippets, and feedback actions.',
+    aiTalkPromptsEyebrow: 'Prompt Direction',
+    aiTalkPromptsTitle: 'Questions it should answer later',
   },
-} as const;
+} as const

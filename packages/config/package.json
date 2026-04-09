@@ -1,0 +1,10 @@
+{
+  "name": "@my-resume/config",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "lint": "oxlint --config ../../.oxlintrc.json --ignore-path ../../.eslintignore .",
+    "format:check": "oxfmt --config ../../.oxfmtrc.json --ignore-path ../../.prettierignore --check ."
+  }
+}

@@ -1,8 +1,8 @@
-import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
-import type { StandardResume } from '../modules/resume/domain/standard-resume';
+import type { StandardResume } from '../modules/resume/domain/standard-resume'
 
-import { STANDARD_RESUME_KEY } from './resume-records';
+import { STANDARD_RESUME_KEY } from './resume-records'
 
 export const systemMeta = sqliteTable('system_meta', {
   key: text('key').primaryKey(),
@@ -10,7 +10,7 @@ export const systemMeta = sqliteTable('system_meta', {
   updatedAt: integer('updated_at', {
     mode: 'timestamp_ms',
   }).notNull(),
-});
+})
 
 export const resumeDrafts = sqliteTable('resume_drafts', {
   resumeKey: text('resume_key')
@@ -25,7 +25,7 @@ export const resumeDrafts = sqliteTable('resume_drafts', {
   updatedAt: integer('updated_at', {
     mode: 'timestamp_ms',
   }).notNull(),
-});
+})
 
 export const resumePublicationSnapshots = sqliteTable(
   'resume_publication_snapshots',
@@ -47,4 +47,4 @@ export const resumePublicationSnapshots = sqliteTable(
       'resume_publication_snapshots_resume_key_published_at_idx',
     ).on(table.resumeKey, table.publishedAt),
   }),
-);
+)

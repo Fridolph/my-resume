@@ -1,34 +1,22 @@
 <template>
-  <dl
-    v-if="type === 'dl'"
-    class="mb-3"
-    :class="{ 'pl-3': inner }">
-    <dt
-      v-if="title"
-      class="mb-2"
-      :class="titleClass">
+  <dl v-if="type === 'dl'" class="mb-3" :class="{ 'pl-3': inner }">
+    <dt v-if="title" class="mb-2" :class="titleClass">
       {{ title }}
     </dt>
     <dd
-      class="pl-3 before:content-[attr(data-index)] before:mr-2 before:text-sm  before:mb-2"
+      class="pl-3 before:mb-2 before:mr-2 before:text-sm before:content-[attr(data-index)]"
       :data-index="`${idx + 1}.`"
       v-html="item"
       v-for="(item, idx) in list"
       :key="idx"></dd>
   </dl>
 
-  <ul
-    v-if="type === 'ul'"
-    class="mb-3"
-    :class="{ 'pl-3': inner }">
-    <li
-      v-if="title"
-      class="mb-2" 
-      :class="titleClass">
+  <ul v-if="type === 'ul'" class="mb-3" :class="{ 'pl-3': inner }">
+    <li v-if="title" class="mb-2" :class="titleClass">
       {{ title }}
     </li>
     <li
-      class="pl-3 before:content-['•'] before:mr-2 before:text-sm before:font-bold before:mb-2"
+      class="pl-3 before:mb-2 before:mr-2 before:text-sm before:font-bold before:content-['•']"
       v-html="item"
       v-for="(item, idx) in list"
       :key="idx"></li>

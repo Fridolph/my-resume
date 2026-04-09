@@ -1,0 +1,157 @@
+.avatarFlip {
+  perspective: 1200px;
+}
+
+.avatarFlipInner {
+  position: relative;
+  width: 100%;
+  padding-bottom: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.85s ease;
+}
+
+@media (hover: hover) {
+  .avatarFlip:hover .avatarFlipInner {
+    transform: rotateY(180deg);
+  }
+}
+
+.avatarFace {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  background:
+    radial-gradient(circle at top, rgba(59, 130, 246, 0.14), transparent 52%),
+    rgba(255, 255, 255, 0.94);
+  box-shadow:
+    0 24px 50px rgba(15, 23, 42, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  backface-visibility: hidden;
+}
+
+:global([data-theme='dark']) .avatarFace {
+  border-color: rgba(255, 255, 255, 0.1);
+  background:
+    radial-gradient(circle at top, rgba(96, 165, 250, 0.18), transparent 52%),
+    rgba(15, 23, 42, 0.9);
+  box-shadow:
+    0 24px 50px rgba(2, 6, 23, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.avatarFaceBack {
+  transform: rotateY(180deg);
+}
+
+.gradientCopy {
+  background-image: linear-gradient(
+    120deg,
+    #0f172a 0%,
+    #2563eb 34%,
+    #0891b2 58%,
+    #7c3aed 82%,
+    #0f172a 100%
+  );
+  background-position: 0% 50%;
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  transition:
+    background-position 0.4s ease,
+    color 0.4s ease;
+}
+
+@media (hover: hover) {
+  .gradientCopy:hover {
+    background-position: 100% 50%;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+:global([data-theme='dark']) .gradientCopy {
+  background-image: linear-gradient(
+    120deg,
+    #e2e8f0 0%,
+    #93c5fd 32%,
+    #67e8f9 56%,
+    #c4b5fd 80%,
+    #f8fafc 100%
+  );
+}
+
+.contactItem {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.88);
+  background: rgba(255, 255, 255, 0.82);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.contactItem::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(37, 99, 235, 0.16),
+    rgba(8, 145, 178, 0.1),
+    transparent 72%
+  );
+  opacity: 1;
+  transform: translateX(-108%);
+  transition: transform 0.34s ease;
+}
+
+.contactItem:hover {
+  transform: translateY(-1px);
+  border-color: rgba(96, 165, 250, 0.45);
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.08);
+}
+
+.contactItem:hover::before {
+  transform: translateX(0);
+}
+
+:global([data-theme='dark']) .contactItem {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.contactItem > * {
+  position: relative;
+  z-index: 1;
+}
+
+.interestCard {
+  position: relative;
+  overflow: hidden;
+}
+
+.interestCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(37, 99, 235, 0.09),
+    rgba(56, 189, 248, 0.07),
+    transparent 72%
+  );
+  opacity: 0;
+  transition: opacity 0.24s ease;
+}
+
+.interestCard:hover::before {
+  opacity: 1;
+}
+
+.interestCard > * {
+  position: relative;
+  z-index: 1;
+}

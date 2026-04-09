@@ -1,308 +1,55 @@
-@import '../../../packages/ui/src/display.css';
+@import 'tailwindcss';
+@import '@heroui/react/styles';
 
-.page-shell {
-  width: min(1160px, 100%);
-  margin: 0 auto;
-  padding: 2.25rem 1.25rem 3.5rem;
-  display: grid;
-  gap: 1.5rem;
-  position: relative;
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+:root {
+  --web-page-bg:
+    radial-gradient(circle at top, rgba(59, 130, 246, 0.14), transparent 24%),
+    linear-gradient(180deg, #f7f9fe 0%, #eef3fb 100%);
 }
 
-.page-shell::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--display-color-border) 35%, transparent) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      color-mix(in srgb, var(--display-color-border) 35%, transparent) 1px,
-      transparent 1px
-    );
-  background-size: 48px 48px;
-  mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.7), transparent 88%);
-  opacity: 0.2;
+[data-theme='dark'] {
+  --web-page-bg:
+    radial-gradient(circle at top, rgba(96, 165, 250, 0.14), transparent 24%),
+    linear-gradient(180deg, #020617 0%, #0f172a 100%);
 }
 
-.hero-card {
-  position: relative;
-  overflow: hidden;
-  padding: 1.75rem;
-  display: grid;
-  gap: 1.5rem;
+* {
+  box-sizing: border-box;
 }
 
-.hero-card::after {
-  content: '';
-  position: absolute;
-  inset: auto -6rem -6rem auto;
-  width: 18rem;
-  height: 18rem;
-  border-radius: 999px;
-  background: radial-gradient(
-    circle,
-    color-mix(in srgb, var(--display-color-accent) 28%, transparent),
-    transparent 72%
-  );
-  pointer-events: none;
-}
-
-.hero-header {
-  display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.9fr);
-  align-items: start;
-  gap: 1.5rem;
-}
-
-.hero-copy {
-  display: grid;
-  gap: 0.75rem;
-  position: relative;
-  z-index: 1;
-}
-
-.headline {
+html,
+body {
+  min-height: 100%;
   margin: 0;
-  font-size: clamp(2.4rem, 5vw, 4.6rem);
-  line-height: 1.05;
-  letter-spacing: -0.04em;
 }
 
-.subtitle,
-.meta-text {
-  color: var(--display-color-text-muted);
+body {
+  background: var(--web-page-bg);
+  color: #0f172a;
+  font-family:
+    'IBM Plex Sans', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
-.subtitle {
+[data-theme='dark'] body {
+  color: #e2e8f0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.web-page-shell {
+  min-height: 100vh;
+}
+
+.web-eyebrow {
   margin: 0;
-  line-height: 1.7;
-}
-
-.toolbar {
-  align-items: flex-start;
-  justify-content: flex-start;
-}
-
-.hero-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.85rem;
-  position: relative;
-  z-index: 1;
-}
-
-.hero-meta .display-pill {
-  font-size: 0.94rem;
-}
-
-.link-grid,
-.tag-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.hero-aside {
-  display: grid;
-  gap: 1rem;
-  position: relative;
-  z-index: 1;
-}
-
-.hero-edition-card {
-  display: grid;
-  gap: 0.8rem;
-  padding: 1rem;
-  border-radius: 22px;
-  border: 1px solid color-mix(in srgb, var(--display-color-accent) 28%, var(--display-color-border));
-  background: color-mix(
-    in srgb,
-    var(--display-color-accent-soft) 42%,
-    var(--display-color-surface)
-  );
-}
-
-.hero-edition-title {
-  margin: 0;
-  font-size: 1.1rem;
-}
-
-.content-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.28fr) minmax(300px, 0.82fr);
-  gap: 1.5rem;
-}
-
-.section-stack {
-  display: grid;
-  gap: 1.5rem;
-}
-
-.secondary-stack {
-  align-content: start;
-}
-
-.section-card {
-  padding: 1.45rem;
-  display: grid;
-  gap: 1.05rem;
-  position: relative;
-  overflow: hidden;
-}
-
-.section-card::before {
-  content: '';
-  position: absolute;
-  inset: 0 auto auto 0;
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--display-color-accent) 70%, transparent),
-    transparent 72%
-  );
-}
-
-.hero-block {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.signal-shell {
-  display: grid;
-  gap: 0.9rem;
-}
-
-.signal-header {
-  display: grid;
-  gap: 0.3rem;
-}
-
-.signal-title {
-  margin: 0;
-  font-size: 1.4rem;
-}
-
-.signal-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.signal-card {
-  padding: 1.1rem 1.15rem;
-  border-radius: 22px;
-  background: color-mix(
-    in srgb,
-    var(--display-color-surface) 80%,
-    var(--display-color-surface-muted)
-  );
-  box-shadow: var(--display-shadow-card);
-}
-
-.signal-card .display-stat-label {
-  color: var(--display-color-text-muted);
-  font-size: 0.88rem;
-  letter-spacing: 0.04em;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
-}
-
-.signal-card .display-stat-value {
-  font-size: clamp(1.5rem, 2vw, 2rem);
-  letter-spacing: -0.04em;
-}
-
-.signal-card .display-stat-description {
-  line-height: 1.6;
-  font-size: 0.95rem;
-}
-
-.timeline {
-  display: grid;
-  gap: 1rem;
-}
-
-.timeline-item {
-  display: grid;
-  gap: 0.65rem;
-  padding: 1.05rem 1.05rem 1.05rem 1.2rem;
-  border-radius: 20px;
-  background: var(--display-color-surface-muted);
-  border: 1px solid var(--display-color-border);
-  position: relative;
-}
-
-.timeline-item::before {
-  content: '';
-  position: absolute;
-  inset: 1rem auto 1rem 0.72rem;
-  width: 2px;
-  border-radius: 999px;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--display-color-accent) 75%, transparent),
-    transparent
-  );
-}
-
-.item-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  align-items: baseline;
-}
-
-.item-title,
-.item-subtitle {
-  margin: 0;
-}
-
-.item-title {
-  font-size: 1.06rem;
-}
-
-.item-subtitle {
-  color: var(--display-color-text-muted);
-  font-size: 0.94rem;
-}
-
-.item-summary {
-  margin: 0;
-  line-height: 1.7;
-}
-
-.bullet-list {
-  margin: 0;
-  padding-left: 1.15rem;
-  display: grid;
-  gap: 0.5rem;
-}
-
-.empty-card {
-  padding: 2rem;
-  display: grid;
-  gap: 0.8rem;
-  text-align: center;
-}
-
-@media (max-width: 900px) {
-  .hero-header,
-  .item-header {
-    grid-template-columns: 1fr;
-    flex-direction: column;
-  }
-
-  .toolbar {
-    justify-content: flex-start;
-  }
-
-  .signal-grid,
-  .content-grid {
-    grid-template-columns: 1fr;
-  }
+  color: #2563eb;
 }

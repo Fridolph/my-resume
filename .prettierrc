@@ -1,0 +1,31 @@
+{
+  "semi": false,
+  "singleQuote": true,
+  "trailingComma": "all",
+  "printWidth": 90,
+  "useTabs": false,
+  "tabWidth": 2,
+  "endOfLine": "lf",
+  "vueIndentScriptAndStyle": false,
+  "bracketSpacing": true,
+  "bracketSameLine": true,
+  "jsxSingleQuote": false,
+  "jsxBracketSameLine": false,
+  "proseWrap": "preserve",
+  "htmlWhitespaceSensitivity": "css",
+  "overrides": [
+    {
+      "files": [".*rc"],
+      "excludeFiles": [".nvmrc"],
+      "options": {
+        "parser": "json"
+      }
+    },
+    {
+      "files": [".changeset/**/*", "CHANGELOG.md"],
+      "options": {
+        "singleQuote": false
+      }
+    }
+  ]
+}

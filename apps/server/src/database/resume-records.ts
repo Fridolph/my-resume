@@ -1,17 +1,14 @@
-import type { StandardResume } from '../modules/resume/domain/standard-resume';
+import type { StandardResume } from '../modules/resume/domain/standard-resume'
 
-export const STANDARD_RESUME_KEY = 'standard-resume';
+export const STANDARD_RESUME_KEY = 'standard-resume'
 
-export function createResumeDraftRecord(
-  resume: StandardResume,
-  updatedAt = new Date(),
-) {
+export function createResumeDraftRecord(resume: StandardResume, updatedAt = new Date()) {
   return {
     resumeKey: STANDARD_RESUME_KEY,
     schemaVersion: resume.meta.version,
     resumeJson: resume,
     updatedAt,
-  };
+  }
 }
 
 export function createResumePublicationSnapshotRecord(
@@ -24,5 +21,5 @@ export function createResumePublicationSnapshotRecord(
     schemaVersion: resume.meta.version,
     resumeJson: resume,
     publishedAt,
-  };
+  }
 }

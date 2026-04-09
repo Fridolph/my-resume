@@ -35,6 +35,12 @@ pnpm --filter @my-resume/server start:dev
 pnpm --filter @my-resume/server db:check
 ```
 
+本地 SQLite 提醒：
+
+- 默认数据库文件位于仓库根目录 `.data/my-resume.db`
+- 如果服务运行期间用 DB Browser 等工具长时间占用该文件，草稿保存或发布可能触发 `SQLITE_BUSY: database is locked`
+- 当前服务端已补充更明确的错误提示，但本地排查时仍建议先关闭外部数据库 GUI 工具再重试
+
 默认端口：
 
 - `5577`

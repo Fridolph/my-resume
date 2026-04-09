@@ -6,16 +6,9 @@
     :label-width="220"
     :is-wrap="true"
     :is-title="true"
-    :text="t('wskp.time')"
-  />
+    :text="t('wskp.time')" />
 
-  <ListWrap
-    :title="t('responsibilities')"
-    :list="list"
-    inner
-    title-size="base"
-    bold
-  />
+  <ListWrap :title="t('responsibilities')" :list="list" inner title-size="base" bold />
 
   <ProEdr />
   <ProAdmin />

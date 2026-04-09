@@ -8,26 +8,26 @@ import {
   AiWorkbenchRuntimeSummary,
   AiWorkbenchScenario,
   TriggerAiWorkbenchAnalysisResult,
-} from './ai-workbench-types';
+} from './ai-workbench-types'
 
 interface FetchAiWorkbenchRuntimeInput {
-  apiBaseUrl: string;
-  accessToken: string;
+  apiBaseUrl: string
+  accessToken: string
 }
 
 interface TriggerAiWorkbenchAnalysisInput extends FetchAiWorkbenchRuntimeInput {
-  scenario: AiWorkbenchScenario;
-  content: string;
-  locale: AiWorkbenchLocale;
+  scenario: AiWorkbenchScenario
+  content: string
+  locale: AiWorkbenchLocale
 }
 
 interface GenerateAiResumeOptimizationInput extends FetchAiWorkbenchRuntimeInput {
-  instruction: string;
-  locale: AiWorkbenchLocale;
+  instruction: string
+  locale: AiWorkbenchLocale
 }
 
 function joinApiUrl(apiBaseUrl: string, pathname: string): string {
-  return `${apiBaseUrl.replace(/\/$/, '')}${pathname}`;
+  return `${apiBaseUrl.replace(/\/$/, '')}${pathname}`
 }
 
 export async function fetchAiWorkbenchRuntime(
@@ -37,13 +37,13 @@ export async function fetchAiWorkbenchRuntime(
     headers: {
       Authorization: `Bearer ${input.accessToken}`,
     },
-  });
+  })
 
   if (!response.ok) {
-    throw new Error('AI 工作台运行时信息加载失败');
+    throw new Error('AI 工作台运行时信息加载失败')
   }
 
-  return (await response.json()) as AiWorkbenchRuntimeSummary;
+  return (await response.json()) as AiWorkbenchRuntimeSummary
 }
 
 export async function triggerAiWorkbenchAnalysis(
@@ -60,21 +60,21 @@ export async function triggerAiWorkbenchAnalysis(
       content: input.content,
       locale: input.locale,
     }),
-  });
+  })
 
   if (!response.ok) {
-    const payload = (await response.json().catch(() => null)) as
-      | { message?: string | string[] }
-      | null;
+    const payload = (await response.json().catch(() => null)) as {
+      message?: string | string[]
+    } | null
 
     const message = Array.isArray(payload?.message)
       ? payload.message[0]
-      : payload?.message;
+      : payload?.message
 
-    throw new Error(message || '真实分析触发失败，请稍后重试');
+    throw new Error(message || '真实分析触发失败，请稍后重试')
   }
 
-  return (await response.json()) as TriggerAiWorkbenchAnalysisResult;
+  return (await response.json()) as TriggerAiWorkbenchAnalysisResult
 }
 
 export async function generateAiResumeOptimization(
@@ -93,21 +93,21 @@ export async function generateAiResumeOptimization(
         locale: input.locale,
       }),
     },
-  );
+  )
 
   if (!response.ok) {
-    const payload = (await response.json().catch(() => null)) as
-      | { message?: string | string[] }
-      | null;
+    const payload = (await response.json().catch(() => null)) as {
+      message?: string | string[]
+    } | null
 
     const message = Array.isArray(payload?.message)
       ? payload.message[0]
-      : payload?.message;
+      : payload?.message
 
-    throw new Error(message || '结构化简历建议生成失败，请稍后重试');
+    throw new Error(message || '结构化简历建议生成失败，请稍后重试')
   }
 
-  return (await response.json()) as AiResumeOptimizationResult;
+  return (await response.json()) as AiResumeOptimizationResult
 }
 
 export async function applyAiResumeOptimization(
@@ -127,21 +127,21 @@ export async function applyAiResumeOptimization(
         patch: input.patch,
       }),
     },
-  );
+  )
 
   if (!response.ok) {
-    const payload = (await response.json().catch(() => null)) as
-      | { message?: string | string[] }
-      | null;
+    const payload = (await response.json().catch(() => null)) as {
+      message?: string | string[]
+    } | null
 
     const message = Array.isArray(payload?.message)
       ? payload.message[0]
-      : payload?.message;
+      : payload?.message
 
-    throw new Error(message || 'AI 建议稿应用失败，请稍后重试');
+    throw new Error(message || 'AI 建议稿应用失败，请稍后重试')
   }
 
-  return (await response.json()) as ApplyAiResumeOptimizationResult;
+  return (await response.json()) as ApplyAiResumeOptimizationResult
 }
 
 export async function fetchCachedAiWorkbenchReports(
@@ -151,22 +151,22 @@ export async function fetchCachedAiWorkbenchReports(
     headers: {
       Authorization: `Bearer ${input.accessToken}`,
     },
-  });
+  })
 
   if (!response.ok) {
-    throw new Error('缓存报告列表加载失败');
+    throw new Error('缓存报告列表加载失败')
   }
 
   const payload = (await response.json()) as {
-    reports: AiWorkbenchCachedReportSummary[];
-  };
+    reports: AiWorkbenchCachedReportSummary[]
+  }
 
-  return payload.reports;
+  return payload.reports
 }
 
 export async function fetchCachedAiWorkbenchReport(
   input: FetchAiWorkbenchRuntimeInput & {
-    reportId: string;
+    reportId: string
   },
 ): Promise<AiWorkbenchReport> {
   const response = await fetch(
@@ -176,11 +176,11 @@ export async function fetchCachedAiWorkbenchReport(
         Authorization: `Bearer ${input.accessToken}`,
       },
     },
-  );
+  )
 
   if (!response.ok) {
-    throw new Error('缓存报告详情加载失败');
+    throw new Error('缓存报告详情加载失败')
   }
 
-  return (await response.json()) as AiWorkbenchReport;
+  return (await response.json()) as AiWorkbenchReport
 }

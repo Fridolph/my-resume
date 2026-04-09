@@ -1,1 +1,6 @@
-export { fetchDraftResume, updateDraftResume } from '@my-resume/api-client';
+export {
+  fetchDraftResume,
+  fetchDraftResumeSummary,
+  fetchPublishedResumeSummary,
+  updateDraftResume,
+} from '@my-resume/api-client'

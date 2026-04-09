@@ -1,27 +1,27 @@
-import { existsSync } from 'fs';
-import { dirname, resolve } from 'path';
+import { existsSync } from 'fs'
+import { dirname, resolve } from 'path'
 
 function isFilesystemRoot(pathname: string): boolean {
-  return dirname(pathname) === pathname;
+  return dirname(pathname) === pathname
 }
 
 export function resolveRepoRoot(fromPath = __dirname): string {
-  let currentPath = resolve(fromPath);
+  let currentPath = resolve(fromPath)
 
   while (true) {
     if (
       existsSync(resolve(currentPath, 'pnpm-workspace.yaml')) ||
       existsSync(resolve(currentPath, '.git'))
     ) {
-      return currentPath;
+      return currentPath
     }
 
     if (isFilesystemRoot(currentPath)) {
-      break;
+      break
     }
 
-    currentPath = dirname(currentPath);
+    currentPath = dirname(currentPath)
   }
 
-  return resolve(fromPath, '../../../../');
+  return resolve(fromPath, '../../../../')
 }

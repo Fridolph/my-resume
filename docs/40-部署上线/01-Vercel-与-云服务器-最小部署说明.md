@@ -272,7 +272,7 @@ sudo systemctl reload nginx
 ```ts
 app.enableCors({
   origin: true,
-});
+})
 ```
 
 也就是说，现阶段后端还没有把 `.env.example` 中的 `CORS_ORIGINS` 真正收敛到运行时配置里。  

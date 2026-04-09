@@ -13,6 +13,14 @@
       "dependsOn": ["^test"],
       "outputs": []
     },
+    "lint": {
+      "dependsOn": ["^lint"],
+      "outputs": []
+    },
+    "format:check": {
+      "dependsOn": ["^format:check"],
+      "outputs": []
+    },
     "typecheck": {
       "dependsOn": ["^typecheck"],
       "outputs": []

@@ -1,5 +1,5 @@
-import { AdminLoginShell } from '../components/admin-login-shell';
+import { AdminLoginShell } from '../components/admin/login-shell'
 
 export default function AdminLoginPage() {
-  return <AdminLoginShell />;
+  return <AdminLoginShell />
 }

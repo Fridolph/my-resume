@@ -1,6 +1,6 @@
 name: Chore or Docs Task
 description: Create a non-feature implementation task
-title: "[Task] "
+title: '[Task] '
 labels:
   - task
 body:

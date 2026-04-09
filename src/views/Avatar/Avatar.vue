@@ -1,7 +1,7 @@
 <template>
-  <div class="w-full flex justify-center items-center mx-auto my-5 flex-col">
+  <div class="mx-auto my-5 flex w-full flex-col items-center justify-center">
     <div
-      class="avatar-wrap overflow-hidden relative rounded-full w-[220px] pb-[220px] mb-5 ring-1 ring-zinc-400 *:absolute *:left-0 *:top-0 *:size-[220px]">
+      class="avatar-wrap relative mb-5 w-[220px] overflow-hidden rounded-full pb-[220px] ring-1 ring-zinc-400 *:absolute *:left-0 *:top-0 *:size-[220px]">
       <!-- <img
         class="tx absolute left-0 top-0 w-full h-full"
         src="/img/avatar2.jpg" /> -->
@@ -9,13 +9,13 @@
       <div class="">
         <img src="/img/avatar.jpg" />
       </div>
-      <div class="bg-me "></div>
+      <div class="bg-me"></div>
     </div>
 
-    <div class="group leading-none tracking-tight text-center mb-2">
+    <div class="group mb-2 text-center leading-none tracking-tight">
       <span class="my-text-clip cursor-help">{{ t('avatar.p1') }}</span>
     </div>
-    <div class="group leading-none tracking-tight text-center text-zinc-300">
+    <div class="group text-center leading-none tracking-tight text-zinc-300">
       <span class="my-text-clip cursor-progress from-sky-400 to-violet-800">{{
         t('avatar.p2')
       }}</span>

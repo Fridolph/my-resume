@@ -10,17 +10,11 @@
         'text-2xl': titleSize === '2xl',
       }">
       <template v-if="showIcon">
-        <Iconfont
-          class="relative -top-0.5"
-          :name="icon"
-          :size="16" />
+        <Iconfont class="relative -top-0.5" :name="icon" :size="16" />
       </template>
       <span class="ml-1 font-bold">{{ title }}</span>
     </h2>
-    <p
-      v-if="description"
-      class="pl-3"
-      v-html="description" />
+    <p v-if="description" class="pl-3" v-html="description" />
   </div>
 </template>
 
