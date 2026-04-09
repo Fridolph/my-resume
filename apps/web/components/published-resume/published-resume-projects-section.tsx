@@ -1,4 +1,5 @@
-import { Tag, TagGroup } from '@heroui/react'
+import { Tag } from '@heroui/react/tag'
+import { TagGroup } from '@heroui/react/tag-group'
 import { DisplayPill } from '@my-resume/ui/display'
 
 import { ResumeLocale, ResumeProjectItem } from '../../lib/published-resume-types'

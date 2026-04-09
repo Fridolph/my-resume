@@ -38,12 +38,14 @@ export class ResumeController {
   ) {}
 
   @Get('published')
-  async getPublishedResume() {
+  async getPublishedResume(@Res({ passthrough: true }) response: Response) {
     const published = await this.resumePublicationService.getPublished()
 
     if (!published) {
       throw new NotFoundException('Published resume is not available')
     }
+
+    this.applyPublicCacheHeaders(response)
 
     return published
   }
@@ -52,6 +54,7 @@ export class ResumeController {
   async getPublishedResumeSummary(
     @Query('locale') localeQuery: string | undefined,
     @Headers('cookie') cookieHeader: string | undefined,
+    @Res({ passthrough: true }) response: Response,
   ) {
     const publishedResume = await this.resumePublicationService.getPublished()
 
@@ -68,6 +71,8 @@ export class ResumeController {
     if (queryInvalid) {
       throw new BadRequestException(`Unsupported locale: ${localeQuery}`)
     }
+
+    this.applyPublicCacheHeaders(response, true)
 
     return {
       status: publishedResume.status,
@@ -98,6 +103,7 @@ export class ResumeController {
       'Content-Disposition',
       `attachment; filename="${published.resume.meta.slug}-${locale}.md"`,
     )
+    this.applyPublicCacheHeaders(response, true)
 
     response.status(HttpStatus.OK).send(markdown)
   }
@@ -124,6 +130,7 @@ export class ResumeController {
       'Content-Disposition',
       `attachment; filename="${published.resume.meta.slug}-${locale}.pdf"`,
     )
+    this.applyPublicCacheHeaders(response, true)
 
     response.status(HttpStatus.OK).send(pdfBuffer)
   }
@@ -131,7 +138,8 @@ export class ResumeController {
   @Get('draft')
   @UseGuards(JwtAuthGuard, RoleCapabilitiesGuard)
   @RequireCapability('canEditResume')
-  async getDraftResume() {
+  async getDraftResume(@Res({ passthrough: true }) response: Response) {
+    this.applyPrivateNoStoreHeaders(response)
     return this.resumePublicationService.getDraft()
   }
 
@@ -141,6 +149,7 @@ export class ResumeController {
   async getDraftResumeSummary(
     @Query('locale') localeQuery: string | undefined,
     @Headers('cookie') cookieHeader: string | undefined,
+    @Res({ passthrough: true }) response: Response,
   ) {
     const draft = await this.resumePublicationService.getDraft()
     const { locale, queryInvalid } = resolveResumeSummaryLocale({
@@ -152,6 +161,8 @@ export class ResumeController {
     if (queryInvalid) {
       throw new BadRequestException(`Unsupported locale: ${localeQuery}`)
     }
+
+    this.applyPrivateNoStoreHeaders(response)
 
     return {
       status: draft.status,
@@ -195,5 +206,22 @@ export class ResumeController {
     }
 
     return locale
+  }
+
+  private applyPublicCacheHeaders(response: Response, varyByCookie = false) {
+    response.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300')
+    response.setHeader(
+      'Vary',
+      varyByCookie ? 'Cookie, Accept-Encoding' : 'Accept-Encoding',
+    )
+  }
+
+  private applyPrivateNoStoreHeaders(response: Response) {
+    response.setHeader(
+      'Cache-Control',
+      'private, no-store, no-cache, max-age=0, must-revalidate',
+    )
+    response.setHeader('Pragma', 'no-cache')
+    response.setHeader('Vary', 'Authorization, Cookie')
   }
 }

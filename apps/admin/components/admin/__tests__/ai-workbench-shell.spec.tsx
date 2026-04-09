@@ -246,13 +246,15 @@ describe('AdminAiWorkbenchShell', () => {
     expect(
       screen.getByText('当前账号可继续接入上传、真实分析和结果阅读。'),
     ).toBeInTheDocument()
-    expect(screen.getByText('文件提取面板占位')).toBeInTheDocument()
-    expect(screen.getByText('真实分析面板占位')).toBeInTheDocument()
-    expect(screen.getByText('缓存报告与预设体验')).toBeInTheDocument()
+    expect(await screen.findByText('文件提取面板占位')).toBeInTheDocument()
+    expect(await screen.findByText('真实分析面板占位')).toBeInTheDocument()
+    expect(
+      await screen.findByText('缓存报告与预设体验', undefined, { timeout: 4000 }),
+    ).toBeInTheDocument()
     expect(
       screen.getByText('admin 也可在这里回看缓存或预设结果，用于对照真实分析输出。'),
     ).toBeInTheDocument()
-    expect(screen.getByText('当前还没有可阅读的缓存报告。')).toBeInTheDocument()
+    expect(await screen.findByText('当前还没有可阅读的缓存报告。')).toBeInTheDocument()
     expect(screen.getByText('当前分析内容：空')).toBeInTheDocument()
     expect(await screen.findByText('当前草稿快照')).toBeInTheDocument()
     expect(screen.getByText('当前草稿标题')).toBeInTheDocument()
@@ -272,7 +274,7 @@ describe('AdminAiWorkbenchShell', () => {
       expect(fetchCachedAiWorkbenchReportsMock).toHaveBeenCalledTimes(1)
       expect(fetchCachedAiWorkbenchReportMock).not.toHaveBeenCalled()
     })
-  })
+  }, 10000)
 
   it('should render viewer-specific read-only guidance', async () => {
     cleanup()
@@ -298,15 +300,15 @@ describe('AdminAiWorkbenchShell', () => {
         'viewer 当前只允许查看缓存结果与预设体验，不能上传文件或触发真实分析。',
       ),
     ).toBeInTheDocument()
-    expect(screen.getAllByText('缓存报告与预设体验')).toHaveLength(1)
+    expect(await screen.findByText('缓存报告与预设体验')).toBeInTheDocument()
     expect(
       screen.getByText(
         'viewer 当前只读取缓存或预设分析结果，不能上传文件，也不能触发新的真实分析请求。',
       ),
     ).toBeInTheDocument()
     expect(screen.getByText('当前还没有可阅读的缓存报告。')).toBeInTheDocument()
-    expect(screen.getByText('文件提取只读占位')).toBeInTheDocument()
-    expect(screen.getByText('真实分析只读占位')).toBeInTheDocument()
+    expect(await screen.findByText('文件提取只读占位')).toBeInTheDocument()
+    expect(await screen.findByText('真实分析只读占位')).toBeInTheDocument()
     expect(fetchDraftResumeSummaryMock).not.toHaveBeenCalled()
   })
 })

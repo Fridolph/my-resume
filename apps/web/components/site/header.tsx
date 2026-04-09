@@ -1,7 +1,9 @@
 'use client'
 
 import { buildPublishedResumeExportUrl } from '@my-resume/api-client'
-import { Button, Dropdown, Switch } from '@heroui/react'
+import { Button } from '@heroui/react/button'
+import { Dropdown } from '@heroui/react/dropdown'
+import { Switch } from '@heroui/react/switch'
 import { useThemeMode } from '@my-resume/ui/theme'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -18,15 +20,6 @@ interface PublicSiteHeaderProps {
 }
 
 const PROJECT_GITHUB_URL = 'https://github.com/Fridolph/my-resume'
-const localeSwitchWrapperClass =
-  'inline-flex h-[30px] items-center rounded-full border border-slate-200 bg-white/75 p-[2px] dark:border-white/10 dark:bg-white/5'
-const localeSwitchButtonClass =
-  'h-[26px] min-w-[26px] rounded-full px-2.5 text-[0.72rem] font-semibold'
-const primaryNavButtonClass =
-  'h-[30px] rounded-full px-3 text-[13px] font-semibold whitespace-nowrap sm:px-4 sm:text-[14px]'
-const primaryNavWrapperClass =
-  'inline-flex flex-nowrap items-center gap-1.5 whitespace-nowrap rounded-full border border-slate-200/80 bg-white/82 p-[3px] shadow-[0_8px_30px_rgba(15,23,42,0.05)] dark:border-white/10 dark:bg-white/5'
-
 const navItems = [
   {
     href: '/',
@@ -65,7 +58,7 @@ export function PublicSiteHeader({
     <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/88 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/82">
       <div className="mx-auto flex min-h-16 w-full max-w-7xl flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2 sm:px-6 md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-4">
         <div className="flex min-w-0 items-center gap-3 md:justify-self-start">
-          <Link className="inline-flex min-w-0 items-center gap-3" href="/">
+          <Link className="inline-flex min-w-0 items-center gap-3" href="/" prefetch={false}>
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-sm font-extrabold tracking-[-0.08em] text-white dark:bg-white dark:text-slate-950">
               FY
             </span>
@@ -97,9 +90,9 @@ export function PublicSiteHeader({
                     : labels.aiTalkNav
 
               return (
-                <Link href={item.href} key={item.href}>
+                <Link href={item.href} key={item.href} prefetch={false}>
                   <Button
-                    className={primaryNavButtonClass}
+                    className={styles.primaryNavButton}
                     size="sm"
                     variant={isActive ? 'primary' : 'ghost'}>
                     {label}
@@ -114,7 +107,7 @@ export function PublicSiteHeader({
           <Dropdown.Root>
             <Dropdown.Trigger
               aria-label={labels.downloadAriaLabel}
-              className="inline-flex h-[30px] min-w-[30px] items-center justify-center rounded-full border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-white/80 hover:text-slate-950 dark:text-slate-300 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-white">
+              className={styles.headerActionTrigger}>
               <DownloadIcon className="h-4 w-4" />
             </Dropdown.Trigger>
             <Dropdown.Popover placement="bottom end">
@@ -129,9 +122,9 @@ export function PublicSiteHeader({
             </Dropdown.Popover>
           </Dropdown.Root>
 
-          <div className={localeSwitchWrapperClass}>
+          <div className={styles.localeSwitchWrapper}>
             <Button
-              className={localeSwitchButtonClass}
+              className={styles.localeSwitchButton}
               onClick={() => onChangeLocale('zh')}
               size="sm"
               type="button"
@@ -139,7 +132,7 @@ export function PublicSiteHeader({
               中
             </Button>
             <Button
-              className={localeSwitchButtonClass}
+              className={styles.localeSwitchButton}
               onClick={() => onChangeLocale('en')}
               size="sm"
               type="button"
@@ -180,7 +173,7 @@ export function PublicSiteHeader({
           <a href={PROJECT_GITHUB_URL} rel="noreferrer" target="_blank">
             <Button
               aria-label={labels.githubAriaLabel}
-              className="h-[30px] min-w-[30px] rounded-full px-0"
+              className={styles.githubButton}
               isIconOnly
               size="sm"
               variant="ghost">
@@ -192,6 +185,11 @@ export function PublicSiteHeader({
     </header>
   )
 }
+
+const primaryNavWrapperClass = [
+  'inline-flex flex-nowrap items-center gap-1.5 whitespace-nowrap',
+  styles.primaryNavWrapper,
+].join(' ')
 
 function DownloadIcon({ className }: { className?: string }) {
   return (

@@ -1,14 +1,14 @@
 'use client'
 
+import { Button } from '@heroui/react/button'
 import {
-  Button,
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-  Chip,
-} from '@heroui/react'
+} from '@heroui/react/card'
+import { Chip } from '@heroui/react/chip'
 import Link from 'next/link'
 import { useState } from 'react'
 
@@ -144,7 +144,7 @@ export function ProfileOverviewShell({ publishedResume }: ProfileOverviewShellPr
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-start gap-4">
-              <Link className="inline-flex" href="/ai-talk">
+              <Link className="inline-flex" href="/ai-talk" prefetch={false}>
                 <Button className="rounded-full" variant="primary">
                   {labels.aiTalkEnter}
                 </Button>

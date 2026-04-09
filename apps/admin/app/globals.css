@@ -1,5 +1,5 @@
 @import 'tailwindcss';
-@import '@heroui/react/styles';
+@import './heroui.css';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -27,6 +27,29 @@
   --admin-radius-card: 24px;
   --admin-radius-control: 16px;
   --admin-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+  --display-font-family:
+    'IBM Plex Sans', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --display-color-page-bg: var(--admin-page-bg);
+  --display-page-glow: transparent;
+  --display-color-surface: var(--admin-surface);
+  --display-color-surface-muted: var(--admin-surface-muted);
+  --display-color-text: var(--admin-text);
+  --display-color-text-muted: var(--admin-text-muted);
+  --display-color-border: var(--admin-border);
+  --display-color-accent: var(--admin-primary);
+  --display-color-accent-soft: var(--admin-primary-soft);
+  --display-color-accent-contrast: var(--admin-button-primary-text);
+  --display-color-control-bg: var(--admin-surface-strong);
+  --display-color-strong-surface: var(--admin-button-primary-bg);
+  --display-color-strong-contrast: var(--admin-button-primary-text);
+  --display-color-warning-bg: var(--admin-warning-bg);
+  --display-color-warning-border: var(--admin-warning-border);
+  --display-color-warning-text: var(--admin-warning-text);
+  --display-color-danger: var(--admin-danger);
+  --display-shadow-card: var(--admin-shadow);
+  --display-radius-card: var(--admin-radius-card);
+  --display-radius-control: var(--admin-radius-control);
+  --display-radius-pill: 999px;
 }
 
 .dark {
@@ -115,169 +138,7 @@ button:disabled {
   opacity: 0.72;
 }
 
-.card,
-.display-surface-card {
-  border-radius: var(--admin-radius-card);
-  border: 1px solid var(--admin-border);
-  background: var(--admin-surface);
-  box-shadow: var(--admin-shadow);
-  backdrop-filter: blur(20px);
-  padding: 1.5rem;
-}
-
-.stack,
-.display-section-intro,
-.preview-stack {
-  display: grid;
-  gap: 1rem;
-}
-
-.field {
-  display: grid;
-  gap: 0.55rem;
-  font-size: 0.95rem;
-}
-
-.eyebrow {
-  margin: 0;
-  color: var(--admin-primary);
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-}
-
-.muted,
-.muted-list,
-.display-section-description,
-.display-stat-description,
-.display-stat-label {
-  color: var(--admin-text-muted);
-}
-
-.muted-list {
-  margin: 0;
-  display: grid;
-  gap: 0.5rem;
-  padding-left: 1.25rem;
-}
-
-.error-text {
-  margin: 0;
-  color: var(--admin-danger);
-}
-
-.status-box,
-.display-stat-card {
-  display: grid;
-  gap: 0.6rem;
-  border-radius: 20px;
-  border: 1px solid var(--admin-border);
-  background: color-mix(
-    in srgb,
-    var(--admin-primary-soft) 42%,
-    var(--admin-surface-strong)
-  );
-  padding: 1rem 1.1rem;
-}
-
-.readonly-box {
-  border-radius: 18px;
-  border: 1px solid var(--admin-warning-border);
-  background: var(--admin-warning-bg);
-  color: var(--admin-warning-text);
-  padding: 1rem 1.1rem;
-}
-
-.link-button,
-.secondary-link-button {
-  display: inline-flex;
-  min-height: 44px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  padding: 0.8rem 1rem;
-  font-weight: 600;
-}
-
-.link-button {
-  border: 1px solid var(--admin-button-primary-border);
-  background: var(--admin-button-primary-bg);
-  color: var(--admin-button-primary-text);
-}
-
-.link-button:hover {
-  background: var(--admin-button-primary-bg-hover);
-}
-
-.secondary-button,
-.secondary-link-button {
-  border: 1px solid var(--admin-border-strong);
-  background: var(--admin-surface-muted);
-  color: var(--admin-text);
-}
-
-.header-text-button {
-  border: 0;
-  background: transparent;
-  color: var(--admin-text-muted);
-  padding: 0.4rem 0.2rem;
-  font-size: 0.9rem;
-  line-height: 1.2;
-}
-
-.header-text-button:hover {
-  color: var(--admin-text);
-}
-
-.dashboard-inline-note {
-  border-radius: 16px;
-  border: 1px solid var(--admin-border);
-  background: var(--admin-surface-muted);
-  color: var(--admin-text-muted);
-  padding: 0.9rem 1rem;
-}
-
-.dashboard-entry-actions,
-.dashboard-badge-row,
-.toolbar-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.display-pill {
-  display: inline-flex;
-  min-height: 40px;
-  align-items: center;
-  border-radius: 999px;
-  border: 1px solid var(--admin-border);
-  background: var(--admin-surface-muted);
-  padding: 0.65rem 0.95rem;
-}
-
-.display-pill-link:hover {
-  border-color: color-mix(in srgb, var(--admin-primary) 42%, transparent);
-}
-
 @media (max-width: 767px) {
-  .card,
-  .display-surface-card {
-    border-radius: 20px;
-    padding: 1rem;
-  }
-
-  .stack,
-  .display-section-intro,
-  .preview-stack {
-    gap: 0.75rem;
-  }
-
-  .field {
-    gap: 0.45rem;
-    font-size: 0.9rem;
-  }
-
   input,
   select,
   textarea {
@@ -290,62 +151,4 @@ button:disabled {
   textarea {
     min-height: 120px;
   }
-
-  .muted,
-  .display-section-description,
-  .display-stat-description,
-  .display-stat-label,
-  .dashboard-inline-note,
-  .readonly-box,
-  .status-box {
-    font-size: 0.9rem;
-    line-height: 1.5;
-  }
-
-  .status-box,
-  .display-stat-card,
-  .readonly-box {
-    gap: 0.5rem;
-    border-radius: 16px;
-    padding: 0.85rem 0.95rem;
-  }
-
-  .dashboard-inline-note {
-    border-radius: 14px;
-    padding: 0.8rem 0.9rem;
-  }
-
-  .dashboard-entry-actions,
-  .dashboard-badge-row,
-  .toolbar-group {
-    gap: 0.55rem;
-  }
-
-  .display-pill {
-    min-height: 34px;
-    padding: 0.5rem 0.8rem;
-    font-size: 0.84rem;
-  }
-}
-
-@media (min-width: 768px) and (max-width: 1023px) {
-  .card,
-  .display-surface-card {
-    padding: 1.2rem;
-  }
-
-  .stack,
-  .display-section-intro,
-  .preview-stack {
-    gap: 0.9rem;
-  }
-}
-
-.display-section-title,
-.display-stat-value {
-  margin: 0;
-}
-
-.display-section-intro.is-compact {
-  gap: 0.35rem;
 }

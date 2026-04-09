@@ -6,12 +6,19 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  Chip,
-} from '@heroui/react'
+} from '@heroui/react/card'
+import { Chip } from '@heroui/react/chip'
+import dynamic from 'next/dynamic'
 
-import { ResumeDraftEditorPanel } from '../resume/draft-editor-panel'
 import { DEFAULT_API_BASE_URL } from '../../lib/env'
 import { useAdminSession } from '../../lib/admin-session'
+
+const ResumeDraftEditorPanel = dynamic(
+  () => import('../resume/draft-editor-panel').then((module) => module.ResumeDraftEditorPanel),
+  {
+    loading: () => <div className="status-box">正在加载简历编辑器...</div>,
+  },
+)
 
 const moduleRoadmap = [
   {

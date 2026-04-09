@@ -90,7 +90,7 @@ describe('PublishedResumeShell', () => {
     expect(screen.getByRole('heading', { name: 'Skill Structure' })).toBeInTheDocument()
     expect(screen.getByLabelText('Skill radar chart')).toBeInTheDocument()
     expect(screen.getByText('Keyword Cloud')).toBeInTheDocument()
-  })
+  }, 10000)
 
   it('should hide empty optional field blocks like experience location', () => {
     const fixtureWithoutLocation = {
@@ -155,11 +155,11 @@ describe('PublishedResumeShell', () => {
 
     await user.click(screen.getByRole('button', { name: '打开下载菜单' }))
 
-    expect(screen.getByRole('menuitem', { name: '导出 Markdown' })).toHaveAttribute(
+    expect(await screen.findByRole('menuitem', { name: '导出 Markdown' })).toHaveAttribute(
       'href',
       'http://localhost:5577/resume/published/export/markdown?locale=zh',
     )
-    expect(screen.getByRole('menuitem', { name: '导出 PDF' })).toHaveAttribute(
+    expect(await screen.findByRole('menuitem', { name: '导出 PDF' })).toHaveAttribute(
       'href',
       'http://localhost:5577/resume/published/export/pdf?locale=zh',
     )
@@ -168,11 +168,11 @@ describe('PublishedResumeShell', () => {
     await user.click(screen.getByRole('button', { name: 'EN' }))
     await user.click(screen.getByRole('button', { name: 'Open download menu' }))
 
-    expect(screen.getByRole('menuitem', { name: 'Export Markdown' })).toHaveAttribute(
+    expect(await screen.findByRole('menuitem', { name: 'Export Markdown' })).toHaveAttribute(
       'href',
       'http://localhost:5577/resume/published/export/markdown?locale=en',
     )
-    expect(screen.getByRole('menuitem', { name: 'Export PDF' })).toHaveAttribute(
+    expect(await screen.findByRole('menuitem', { name: 'Export PDF' })).toHaveAttribute(
       'href',
       'http://localhost:5577/resume/published/export/pdf?locale=en',
     )

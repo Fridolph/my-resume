@@ -11,7 +11,10 @@ import {
 } from 'react'
 
 import type { AuthUserView } from './auth-types'
-import { clearAdminResourceStore, ensureCurrentUserSession } from './admin-resource-store'
+import {
+  clearCurrentUserSessionCache,
+  ensureCurrentUserSession,
+} from './admin-session-store'
 import { DEFAULT_API_BASE_URL } from './env'
 import { clearAccessToken, readAccessToken } from './session-storage'
 
@@ -36,9 +39,15 @@ export function AdminSessionProvider({ children }: { children: ReactNode }) {
     const activeAccessToken = readAccessToken()
 
     clearAccessToken()
-    clearAdminResourceStore({
+    clearCurrentUserSessionCache({
       accessToken: activeAccessToken,
       apiBaseUrl: DEFAULT_API_BASE_URL,
+    })
+    void import('./admin-resource-store').then(({ clearAdminResourceStore }) => {
+      clearAdminResourceStore({
+        accessToken: activeAccessToken,
+        apiBaseUrl: DEFAULT_API_BASE_URL,
+      })
     })
     setAccessToken(null)
     setCurrentUser(null)

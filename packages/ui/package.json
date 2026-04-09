@@ -4,11 +4,26 @@
   "version": "0.0.1",
   "type": "module",
   "exports": {
-    ".": "./src/theme.tsx",
-    "./theme": "./src/theme.tsx",
-    "./display": "./src/display.tsx"
+    ".": {
+      "types": "./src/theme.tsx",
+      "import": "./dist/theme.js",
+      "default": "./dist/theme.js"
+    },
+    "./theme": {
+      "types": "./src/theme.tsx",
+      "import": "./dist/theme.js",
+      "default": "./dist/theme.js"
+    },
+    "./display": {
+      "types": "./src/display.tsx",
+      "import": "./dist/display.js",
+      "default": "./dist/display.js"
+    },
+    "./display.css": "./src/display.css"
   },
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
     "lint": "oxlint --config ../../.oxlintrc.json --ignore-path ../../.eslintignore .",
     "format:check": "oxfmt --config ../../.oxfmtrc.json --ignore-path ../../.prettierignore --check .",
     "test": "vitest run",

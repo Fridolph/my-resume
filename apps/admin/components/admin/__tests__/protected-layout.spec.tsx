@@ -15,67 +15,79 @@ const { pathnameState } = vi.hoisted(() => ({
   },
 }))
 
-vi.mock('@heroui/react', async () => {
-  const actual = await vi.importActual<typeof import('@heroui/react')>('@heroui/react')
-  const passthroughDiv = ({
+const { DrawerMock, DropdownMock, TooltipMock, passthroughDiv } = vi.hoisted(() => {
+  const localPassthroughDiv = ({
     children,
     ...props
   }: { children?: ReactNode } & Record<string, unknown>) => (
     <div {...props}>{children}</div>
   )
-  const DropdownMock = Object.assign(
-    ({ children }: { children: ReactNode }) => <div>{children}</div>,
-    {
-      Trigger: ({
-        children,
-        ...props
-      }: { children: ReactNode } & Record<string, unknown>) => (
-        <div {...props}>{children}</div>
-      ),
-      Popover: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-      Menu: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-      Item: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-    },
-  )
-  const TooltipMock = Object.assign(
-    ({ children }: { children: ReactNode }) => <div>{children}</div>,
-    {
-      Trigger: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-      Content: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-    },
-  )
-  const DrawerMock = ({
-    children,
-    isOpen,
-    onOpenChange: _onOpenChange,
-    ...props
-  }: {
-    children: ReactNode
-    isOpen?: boolean
-    onOpenChange?: (open: boolean) => void
-  } & Record<string, unknown>) => (
-    <div data-open={String(Boolean(isOpen))} {...props}>
-      {children}
-    </div>
-  )
 
   return {
-    ...actual,
-    Avatar: {
-      Root: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-      Fallback: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-    },
-    Dropdown: DropdownMock,
-    Drawer: DrawerMock,
-    DrawerBackdrop: () => null,
-    DrawerBody: passthroughDiv,
-    DrawerContent: passthroughDiv,
-    DrawerDialog: passthroughDiv,
-    DrawerHeader: passthroughDiv,
-    DrawerHeading: passthroughDiv,
-    Tooltip: TooltipMock,
+    passthroughDiv: localPassthroughDiv,
+    DropdownMock: Object.assign(
+      ({ children }: { children: ReactNode }) => <div>{children}</div>,
+      {
+        Trigger: ({
+          children,
+          ...props
+        }: { children: ReactNode } & Record<string, unknown>) => (
+          <div {...props}>{children}</div>
+        ),
+        Popover: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+        Menu: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+        Item: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+      },
+    ),
+    TooltipMock: Object.assign(
+      ({ children }: { children: ReactNode }) => <div>{children}</div>,
+      {
+        Trigger: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+        Content: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+      },
+    ),
+    DrawerMock: ({
+      children,
+      isOpen,
+      onOpenChange: _onOpenChange,
+      ...props
+    }: {
+      children: ReactNode
+      isOpen?: boolean
+      onOpenChange?: (open: boolean) => void
+    } & Record<string, unknown>) => (
+      <div data-open={String(Boolean(isOpen))} {...props}>
+        {children}
+      </div>
+    ),
   }
 })
+
+vi.mock('@heroui/react/avatar', () => ({
+  Avatar: {
+    Root: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+    Fallback: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  },
+}))
+
+vi.mock('@heroui/react/dropdown', () => ({
+  Dropdown: DropdownMock,
+}))
+
+vi.mock('@heroui/react/drawer', () => ({
+  Drawer: DrawerMock,
+  DrawerBackdrop: () => null,
+  DrawerBody: passthroughDiv,
+  DrawerCloseTrigger: passthroughDiv,
+  DrawerContent: passthroughDiv,
+  DrawerDialog: passthroughDiv,
+  DrawerHeader: passthroughDiv,
+  DrawerHeading: passthroughDiv,
+}))
+
+vi.mock('@heroui/react/tooltip', () => ({
+  Tooltip: TooltipMock,
+}))
 
 vi.mock('next/navigation', () => ({
   usePathname: () => pathnameState.value,

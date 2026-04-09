@@ -6,13 +6,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  Chip,
-} from '@heroui/react'
+} from '@heroui/react/card'
+import { Chip } from '@heroui/react/chip'
+import dynamic from 'next/dynamic'
 import { useEffect, useMemo, useState } from 'react'
 
-import { AiFileExtractionPanel } from '../ai/file-extraction-panel'
-import { AiAnalysisPanel } from '../ai/analysis-panel'
-import { AiCachedReportsPanel } from '../ai/cached-reports-panel'
 import type { AiWorkbenchRuntimeSummary } from '../../lib/ai-workbench-types'
 import {
   ensureAiRuntimeSummary,
@@ -28,6 +26,27 @@ import type {
 } from '../../lib/resume-types'
 import { useAdminSession } from '../../lib/admin-session'
 import type { FileExtractionResult } from '../../lib/ai-file-types'
+
+const AiFileExtractionPanel = dynamic(
+  () => import('../ai/file-extraction-panel').then((module) => module.AiFileExtractionPanel),
+  {
+    loading: () => <div className="status-box">正在加载文件提取面板...</div>,
+  },
+)
+
+const AiAnalysisPanel = dynamic(
+  () => import('../ai/analysis-panel').then((module) => module.AiAnalysisPanel),
+  {
+    loading: () => <div className="status-box">正在加载分析面板...</div>,
+  },
+)
+
+const AiCachedReportsPanel = dynamic(
+  () => import('../ai/cached-reports-panel').then((module) => module.AiCachedReportsPanel),
+  {
+    loading: () => <div className="status-box">正在加载缓存报告...</div>,
+  },
+)
 
 const scenarioCards = {
   'jd-match': {

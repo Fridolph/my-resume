@@ -1,7 +1,6 @@
 'use client'
 
-import type { AuthUserView } from './auth-types'
-import { fetchCurrentUser } from './auth-api'
+import { clearCurrentUserSessionCache } from './admin-session-store'
 import {
   fetchCachedAiWorkbenchReport,
   fetchCachedAiWorkbenchReports,
@@ -29,7 +28,6 @@ interface ResourceCacheEntry<T> {
   value?: T
 }
 
-const currentUserCache = new Map<string, ResourceCacheEntry<AuthUserView>>()
 const aiRuntimeCache = new Map<string, ResourceCacheEntry<AiWorkbenchRuntimeSummary>>()
 const draftResumeCache = new Map<string, ResourceCacheEntry<ResumeDraftSnapshot>>()
 const draftResumeSummaryCache = new Map<
@@ -102,25 +100,6 @@ function invalidateCacheByBaseKey<T>(
       cache.delete(key)
     }
   }
-}
-
-export function primeCurrentUserSession(input: {
-  accessToken: string
-  apiBaseUrl: string
-  user: AuthUserView
-}) {
-  currentUserCache.set(createBaseKey(input.apiBaseUrl, input.accessToken), {
-    value: input.user,
-  })
-}
-
-export async function ensureCurrentUserSession(input: {
-  accessToken: string
-  apiBaseUrl: string
-}) {
-  const cacheKey = createBaseKey(input.apiBaseUrl, input.accessToken)
-
-  return ensureCachedValue(currentUserCache, cacheKey, () => fetchCurrentUser(input))
 }
 
 export async function ensureAiRuntimeSummary(input: {
@@ -226,8 +205,9 @@ export function clearAdminResourceStore(input?: {
   accessToken?: string | null
   apiBaseUrl?: string
 }) {
+  clearCurrentUserSessionCache(input)
+
   if (!input?.accessToken || !input.apiBaseUrl) {
-    currentUserCache.clear()
     aiRuntimeCache.clear()
     draftResumeCache.clear()
     draftResumeSummaryCache.clear()
@@ -239,7 +219,6 @@ export function clearAdminResourceStore(input?: {
 
   const baseKey = createBaseKey(input.apiBaseUrl, input.accessToken)
 
-  currentUserCache.delete(baseKey)
   aiRuntimeCache.delete(baseKey)
   draftResumeCache.delete(baseKey)
   invalidateCacheByBaseKey(draftResumeSummaryCache, baseKey)

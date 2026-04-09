@@ -1,3 +1,10 @@
+.heroCard {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.08);
+}
+
 .avatarFlip {
   perspective: 1200px;
 }
@@ -39,6 +46,11 @@
   box-shadow:
     0 24px 50px rgba(2, 6, 23, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+:global([data-theme='dark']) .heroCard {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.84);
 }
 
 .avatarFaceBack {
@@ -128,9 +140,65 @@
   z-index: 1;
 }
 
+.iconLinkChip {
+  display: inline-flex;
+  width: 3rem;
+  height: 3rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.iconLinkChip:hover {
+  transform: translateY(-1px);
+  border-color: rgba(96, 165, 250, 0.5);
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.12);
+}
+
+.iconLinkInner {
+  display: inline-flex;
+  width: 2.15rem;
+  height: 2.15rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(14, 165, 233, 0.16));
+  color: #2563eb;
+  font-size: 1rem;
+}
+
+.linkFallbackChip {
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  background: rgba(255, 255, 255, 0.8);
+  color: #475569;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.linkFallbackChip:hover {
+  border-color: rgba(147, 197, 253, 0.9);
+  color: #2563eb;
+}
+
 .interestCard {
   position: relative;
   overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 1.1rem;
+  background: rgba(255, 255, 255, 0.85);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .interestCard::before {
@@ -151,7 +219,135 @@
   opacity: 1;
 }
 
+.interestCard:hover {
+  transform: translateY(-1px) scale(1.01);
+  border-color: rgba(96, 165, 250, 0.5);
+  box-shadow: 0 14px 24px rgba(37, 99, 235, 0.08);
+}
+
 .interestCard > * {
   position: relative;
   z-index: 1;
+}
+
+.interestCardIcon {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  width: 1.85rem;
+  height: 1.85rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  font-size: 1rem;
+  transition:
+    transform 0.2s ease,
+    color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.interestCard:hover .interestCardIcon {
+  transform: translateY(-1px) scale(1.08);
+}
+
+.interestCardLabel {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  white-space: nowrap;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.githubCard {
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 1.35rem;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.88),
+    rgba(239, 246, 255, 0.9)
+  );
+  padding: 0.875rem 1rem;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.highlightCard {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 1.2rem;
+  background: rgba(248, 250, 252, 0.9);
+  padding: 0.75rem 0.875rem;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.highlightCard:hover {
+  transform: translateY(-2px);
+}
+
+.publishedMetaCard {
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 1.2rem;
+  background: rgba(248, 250, 252, 0.75);
+  padding: 0.875rem 1rem;
+}
+
+:global([data-theme='dark']) .iconLinkChip {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:global([data-theme='dark']) .iconLinkInner {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(56, 189, 248, 0.18));
+  color: #bfdbfe;
+}
+
+:global([data-theme='dark']) .linkFallbackChip {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: #cbd5e1;
+}
+
+:global([data-theme='dark']) .linkFallbackChip:hover {
+  border-color: rgba(147, 197, 253, 0.8);
+  color: #bfdbfe;
+}
+
+:global([data-theme='dark']) .interestCard {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:global([data-theme='dark']) .interestCardIcon {
+  background: rgba(96, 165, 250, 0.15);
+  color: #bfdbfe;
+}
+
+:global([data-theme='dark']) .interestCardLabel {
+  color: #e2e8f0;
+}
+
+:global([data-theme='dark']) .githubCard {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.06),
+    rgba(59, 130, 246, 0.12)
+  );
+}
+
+:global([data-theme='dark']) .highlightCard,
+:global([data-theme='dark']) .publishedMetaCard {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
 }

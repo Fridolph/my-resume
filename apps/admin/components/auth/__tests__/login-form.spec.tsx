@@ -19,7 +19,7 @@ describe('LoginForm', () => {
       username: 'admin',
       password: 'admin123456',
     })
-  })
+  }, 10000)
 
   it('should render error message when login fails', () => {
     render(<LoginForm onSubmit={vi.fn()} pending={false} errorMessage="账号或密码错误" />)

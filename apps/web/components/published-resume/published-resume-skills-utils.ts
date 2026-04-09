@@ -1,7 +1,25 @@
-import type { EChartsOption } from 'echarts'
+import type { PieSeriesOption, RadarSeriesOption } from 'echarts/charts'
+import type {
+  AriaComponentOption,
+  GraphicComponentOption,
+  LegendComponentOption,
+  RadarComponentOption,
+  TooltipComponentOption,
+} from 'echarts/components'
+import type { ComposeOption } from 'echarts/core'
 
 import type { ResumeLocale, ResumeSkillGroup } from '../../lib/published-resume-types'
 import { readLocalizedText } from './published-resume-utils'
+
+export type SkillChartOption = ComposeOption<
+  | RadarSeriesOption
+  | PieSeriesOption
+  | TooltipComponentOption
+  | LegendComponentOption
+  | RadarComponentOption
+  | GraphicComponentOption
+  | AriaComponentOption
+>
 
 export interface ParsedSkillLine {
   label: string | null
@@ -121,7 +139,7 @@ export function buildRadarChartOption(
   groups: ReturnType<typeof rankSkillGroups>,
   locale: ResumeLocale,
   themeMode: 'light' | 'dark',
-): EChartsOption {
+): SkillChartOption {
   const maxItemCount = Math.max(...groups.map((group) => group.parsedKeywords.length), 1)
   const axisTextColor = themeMode === 'dark' ? '#cbd5e1' : '#64748b'
   const splitAreaColors =
@@ -214,7 +232,7 @@ export function buildPieChartOption(
   groups: ReturnType<typeof rankSkillGroups>,
   locale: ResumeLocale,
   themeMode: 'light' | 'dark',
-): EChartsOption {
+): SkillChartOption {
   const legendColor = themeMode === 'dark' ? '#cbd5e1' : '#64748b'
   const labelColor = themeMode === 'dark' ? '#e2e8f0' : '#334155'
   const centerText = themeMode === 'dark' ? '#f8fafc' : '#0f172a'
@@ -235,7 +253,7 @@ export function buildPieChartOption(
           : (params as { name?: string; value?: unknown })
 
         return `${payload?.name ?? ''}${locale === 'zh' ? '：' : ': '}${Number(payload?.value ?? 0)}`
-      }) as NonNullable<EChartsOption['tooltip']> extends infer T
+      }) as NonNullable<SkillChartOption['tooltip']> extends infer T
         ? T extends { formatter?: infer F }
           ? F
           : never

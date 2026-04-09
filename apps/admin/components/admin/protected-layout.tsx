@@ -1,14 +1,18 @@
 'use client'
 
 import {
-  Avatar,
-  Button,
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
+} from '@heroui/react/card'
+import { Avatar } from '@heroui/react/avatar'
+import { Button } from '@heroui/react/button'
+import {
   Dropdown,
+} from '@heroui/react/dropdown'
+import {
   Drawer,
   DrawerBackdrop,
   DrawerBody,
@@ -17,9 +21,9 @@ import {
   DrawerDialog,
   DrawerHeader,
   DrawerHeading,
-  Separator,
-  Tooltip,
-} from '@heroui/react'
+} from '@heroui/react/drawer'
+import { Separator } from '@heroui/react/separator'
+import { Tooltip } from '@heroui/react/tooltip'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
@@ -362,7 +366,7 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
               </p>
             </div>
             <div className="flex gap-3">
-              <Link className="link-button" href="/">
+              <Link className="link-button" href="/" prefetch={false}>
                 返回登录页
               </Link>
             </div>
@@ -459,7 +463,9 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
                         className="text-sm text-zinc-500 dark:text-zinc-400">
                         <ol className="flex items-center gap-2">
                           <li>
-                            <Link href="/dashboard">后台</Link>
+                            <Link href="/dashboard" prefetch={false}>
+                              后台
+                            </Link>
                           </li>
                           <li>/</li>
                           <li aria-current="page">{pageMeta.title}</li>

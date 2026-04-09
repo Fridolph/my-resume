@@ -1,3 +1,61 @@
+.primaryNavWrapper {
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  padding: 3px;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.05);
+}
+
+.primaryNavButton {
+  height: 30px;
+  border-radius: 999px;
+  padding-inline: 0.75rem;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.localeSwitchWrapper {
+  display: inline-flex;
+  height: 30px;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgb(226 232 240);
+  background: rgba(255, 255, 255, 0.75);
+  padding: 2px;
+}
+
+.localeSwitchButton {
+  height: 26px;
+  min-width: 26px;
+  border-radius: 999px;
+  padding-inline: 0.625rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.headerActionTrigger {
+  display: inline-flex;
+  min-width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  color: #64748b;
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.githubButton {
+  min-width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  padding-inline: 0;
+}
+
 .themeSwitch {
   display: inline-flex;
   min-width: 48px;
@@ -90,8 +148,41 @@
     0 12px 32px rgba(15, 23, 42, 0.12);
 }
 
+.headerActionTrigger:hover {
+  border-color: rgb(226 232 240);
+  background: rgba(255, 255, 255, 0.8);
+  color: #0f172a;
+}
+
 :global([data-theme='dark']) .themeSwitch {
   color: #cbd5e1;
+}
+
+:global([data-theme='dark']) .primaryNavWrapper {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:global([data-theme='dark']) .localeSwitchWrapper {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:global([data-theme='dark']) .headerActionTrigger {
+  color: #cbd5e1;
+}
+
+:global([data-theme='dark']) .headerActionTrigger:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+@media (min-width: 640px) {
+  .primaryNavButton {
+    padding-inline: 1rem;
+    font-size: 14px;
+  }
 }
 
 :global([data-theme='dark']) .themeSwitchControl {

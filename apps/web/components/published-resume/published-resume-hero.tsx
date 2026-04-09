@@ -1,5 +1,7 @@
-import { Card, CardContent, CardHeader, Chip, Tooltip } from '@heroui/react'
-import { Icon } from '@iconify/react'
+import { Card, CardContent, CardHeader } from '@heroui/react/card'
+import { Chip } from '@heroui/react/chip'
+import { Tooltip } from '@heroui/react/tooltip'
+import type { ReactNode } from 'react'
 
 import { ResumeLocale, ResumePublishedSnapshot } from '../../lib/published-resume-types'
 import {
@@ -9,22 +11,14 @@ import {
 } from './published-resume-utils'
 import styles from './hero.module.css'
 
-const heroCardClass =
-  'overflow-hidden border border-white/70 bg-white/82 shadow-[0_28px_80px_rgba(15,23,42,0.08)] dark:border-white/8 dark:bg-slate-900/[0.84]'
 const contactItemClass =
   'group grid grid-cols-[1.25rem_minmax(0,1fr)] items-start gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300'
-const iconLinkChipClass =
-  'group inline-flex h-12 w-12 items-center justify-center rounded-full border border-slate-200/90 bg-white/80 p-0 transition hover:-translate-y-px hover:border-blue-400/50 hover:shadow-[0_12px_24px_rgba(37,99,235,0.12)] dark:border-white/8 dark:bg-white/[0.05]'
-const iconLinkInnerClass =
-  'inline-flex h-[2.15rem] w-[2.15rem] items-center justify-center rounded-full bg-[linear-gradient(135deg,rgba(37,99,235,0.14),rgba(14,165,233,0.16))] text-base text-blue-600 dark:bg-[linear-gradient(135deg,rgba(59,130,246,0.18),rgba(56,189,248,0.18))] dark:text-blue-200'
 const interestCardClass =
-  'group relative inline-flex min-h-11 max-w-full w-fit items-center gap-2.5 overflow-hidden rounded-[1.1rem] border border-slate-200/90 bg-white/85 px-3 py-2 transition hover:-translate-y-px hover:scale-[1.01] hover:border-blue-400/50 hover:shadow-[0_14px_24px_rgba(37,99,235,0.08)] dark:border-white/8 dark:bg-white/[0.05]'
+  'group inline-flex min-h-11 max-w-full w-fit items-center gap-2.5 px-3 py-2'
 const interestCardPlainClass = 'justify-center px-3.5'
-const interestCardIconClass =
-  'relative z-[1] inline-flex h-[1.85rem] w-[1.85rem] shrink-0 items-center justify-center rounded-full bg-blue-600/10 text-base text-blue-600 transition group-hover:-translate-y-px group-hover:scale-[1.08] dark:bg-blue-400/15 dark:text-blue-200'
-const interestCardLabelClass =
-  'relative z-[1] min-w-0 whitespace-nowrap text-[0.84rem] font-bold text-slate-700 dark:text-slate-200'
 const interestCardLabelPlainClass = 'text-[0.78rem] leading-[1.35]'
+const linkFallbackClass =
+  'inline-flex min-h-11 items-center justify-center rounded-2xl px-3 text-center text-sm font-semibold'
 
 interface PublishedResumeHeroProps {
   locale: ResumeLocale
@@ -92,6 +86,31 @@ function PhoneIcon() {
   )
 }
 
+function ResumeProfileIcon({ name }: { name: string }) {
+  switch (name) {
+    case 'ri:github-fill':
+      return <GitHubMarkIcon />
+    case 'ri:article-line':
+      return <ArticleIcon />
+    case 'ri:code-s-slash-line':
+      return <CodeIcon />
+    case 'ri:dribbble-line':
+      return <DribbbleIcon />
+    case 'ri:sparkling-line':
+      return <SparklesIcon />
+    case 'ri:music-2-line':
+      return <MusicIcon />
+    case 'ri:robot-2-line':
+      return <RobotIcon />
+    case 'ri:link-m':
+    case 'ri:links-line':
+    case 'ri:external-link-line':
+      return <ExternalLinkIcon />
+    default:
+      return <ExternalLinkIcon />
+  }
+}
+
 export function PublishedResumeHero({
   locale,
   publishedResume,
@@ -129,7 +148,7 @@ export function PublishedResumeHero({
   const name = readLocalizedText(profile.fullName, locale)
 
   return (
-    <Card className={heroCardClass}>
+    <Card className={styles.heroCard}>
       <CardHeader className="grid gap-5 border-b border-slate-200/80 pb-5 dark:border-white/10">
         <div className="grid gap-4">
           <div className="mx-auto flex w-full max-w-[17rem] flex-col items-center gap-4 text-center">
@@ -218,12 +237,12 @@ export function PublishedResumeHero({
                     <Tooltip.Trigger>
                       <a
                         aria-label={readLocalizedText(link.label, locale)}
-                        className={iconLinkChipClass}
+                        className={styles.iconLinkChip}
                         href={link.url}
                         rel="noreferrer"
                         target="_blank">
-                        <span className={iconLinkInnerClass}>
-                          <Icon icon={link.icon} />
+                        <span className={styles.iconLinkInner}>
+                          <ResumeProfileIcon name={link.icon} />
                         </span>
                       </a>
                     </Tooltip.Trigger>
@@ -233,7 +252,7 @@ export function PublishedResumeHero({
                   </Tooltip>
                 ) : (
                   <a
-                    className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-slate-200/80 bg-white/80 px-3 text-center text-sm font-semibold text-slate-600 transition hover:border-blue-300 hover:text-blue-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300 dark:hover:border-blue-300 dark:hover:text-blue-200"
+                    className={`${styles.linkFallbackChip} ${linkFallbackClass}`}
                     href={link.url}
                     key={link.url}
                     rel="noreferrer"
@@ -249,7 +268,7 @@ export function PublishedResumeHero({
         ) : null}
 
         <a
-          className="group rounded-[1.35rem] border border-slate-200/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.88),rgba(239,246,255,0.9))] px-4 py-3.5 transition hover:border-blue-300 dark:border-white/10 dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.06),rgba(59,130,246,0.12))]"
+          className={styles.githubCard}
           href="https://github.com/Fridolph/my-resume"
           rel="noreferrer"
           target="_blank">
@@ -273,10 +292,10 @@ export function PublishedResumeHero({
                   <article
                     className={`${styles.interestCard} ${interestCardClass}`}
                     key={`${interest.localizedLabel}-${interest.icon}`}>
-                    <span className={interestCardIconClass}>
-                      <Icon icon={interest.icon} />
+                    <span className={styles.interestCardIcon}>
+                      <ResumeProfileIcon name={interest.icon} />
                     </span>
-                    <span className={interestCardLabelClass}>
+                    <span className={styles.interestCardLabel}>
                       {interest.localizedLabel}
                     </span>
                   </article>
@@ -285,7 +304,7 @@ export function PublishedResumeHero({
                     className={`${styles.interestCard} ${interestCardClass} ${interestCardPlainClass}`}
                     key={`${interest.localizedLabel}-plain`}>
                     <span
-                      className={`${interestCardLabelClass} ${interestCardLabelPlainClass}`}>
+                      className={`${styles.interestCardLabel} ${interestCardLabelPlainClass}`}>
                       {interest.localizedLabel}
                     </span>
                   </article>
@@ -308,7 +327,7 @@ export function PublishedResumeHero({
             <div className="grid gap-2.5">
               {highlights.map((item, index) => (
                 <article
-                  className="group relative overflow-hidden rounded-[1.2rem] border border-slate-200/80 bg-slate-50/90 px-3.5 py-3 shadow-[0_10px_28px_rgba(15,23,42,0.05)] transition duration-200 hover:-translate-y-0.5 dark:border-white/10 dark:bg-white/[0.04]"
+                  className={styles.highlightCard}
                   key={`${item.title.en}-${index}`}>
                   <div
                     className={`pointer-events-none absolute inset-0 bg-gradient-to-br opacity-0 transition duration-300 group-hover:opacity-100 ${highlightAccentClasses[index % highlightAccentClasses.length]}`}
@@ -332,7 +351,7 @@ export function PublishedResumeHero({
           </div>
         ) : null}
 
-        <div className="rounded-[1.2rem] border border-slate-200/80 bg-slate-50/75 px-4 py-3.5 dark:border-white/10 dark:bg-white/[0.04]">
+        <div className={styles.publishedMetaCard}>
           <p className="text-[0.7rem] font-semibold uppercase tracking-[0.24em] text-slate-400">
             {labels.publishedAt}
           </p>
@@ -342,5 +361,135 @@ export function PublishedResumeHero({
         </div>
       </CardContent>
     </Card>
+  )
+}
+
+function BaseIcon({
+  children,
+  viewBox = '0 0 24 24',
+}: {
+  children: ReactNode
+  viewBox?: string
+}) {
+  return (
+    <svg aria-hidden="true" fill="none" height="18" viewBox={viewBox} width="18">
+      {children}
+    </svg>
+  )
+}
+
+function GitHubMarkIcon() {
+  return (
+    <BaseIcon viewBox="0 0 24 24">
+      <path
+        d="M12 3C7.03 3 3 7.12 3 12.2c0 4.07 2.58 7.52 6.16 8.74.45.09.61-.2.61-.46 0-.22-.01-.97-.01-1.76-2.5.55-3.03-1.1-3.03-1.1-.41-1.06-1-1.34-1-1.34-.82-.57.06-.56.06-.56.9.06 1.38.95 1.38.95.81 1.4 2.11 1 2.63.77.08-.6.31-1 .57-1.22-2-.23-4.11-1.02-4.11-4.58 0-1.02.36-1.85.95-2.5-.1-.24-.42-1.19.09-2.49 0 0 .77-.25 2.53.95A8.62 8.62 0 0 1 12 7.3c.77 0 1.54.11 2.26.33 1.75-1.2 2.52-.95 2.52-.95.52 1.3.2 2.25.1 2.49.59.65.95 1.48.95 2.5 0 3.57-2.11 4.34-4.13 4.57.32.28.61.84.61 1.7 0 1.22-.01 2.2-.01 2.5 0 .25.16.55.62.45A9.22 9.22 0 0 0 21 12.2C21 7.12 16.97 3 12 3Z"
+        fill="currentColor"
+      />
+    </BaseIcon>
+  )
+}
+
+function ArticleIcon() {
+  return (
+    <BaseIcon>
+      <path
+        d="M7 5.5h10a1.5 1.5 0 0 1 1.5 1.5v10A1.5 1.5 0 0 1 17 18.5H7A1.5 1.5 0 0 1 5.5 17V7A1.5 1.5 0 0 1 7 5.5Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+      />
+      <path
+        d="M9 9.25h6M9 12h6M9 14.75h3.5"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.7"
+      />
+    </BaseIcon>
+  )
+}
+
+function CodeIcon() {
+  return (
+    <BaseIcon>
+      <path
+        d="m8.25 8.5-3 3.5 3 3.5M15.75 8.5l3 3.5-3 3.5M13.25 6l-2.5 12"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.7"
+      />
+    </BaseIcon>
+  )
+}
+
+function DribbbleIcon() {
+  return (
+    <BaseIcon>
+      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.7" />
+      <path
+        d="M7 8.5c3.5 0 7 .78 10 2.25M8 16.5c1.5-2.83 4.1-5.63 7.75-7.75M10.25 4.5c1.75 2.18 3.27 4.82 4.25 8.25M5.25 11.75h13.5"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.5"
+      />
+    </BaseIcon>
+  )
+}
+
+function SparklesIcon() {
+  return (
+    <BaseIcon>
+      <path
+        d="m12 4 1.55 4.45L18 10l-4.45 1.55L12 16l-1.55-4.45L6 10l4.45-1.55L12 4Z"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="1.7"
+      />
+      <path
+        d="m18.5 4.75.45 1.3 1.3.45-1.3.45-.45 1.3-.45-1.3-1.3-.45 1.3-.45.45-1.3ZM5.5 14.75l.45 1.3 1.3.45-1.3.45-.45 1.3-.45-1.3-1.3-.45 1.3-.45.45-1.3Z"
+        fill="currentColor"
+      />
+    </BaseIcon>
+  )
+}
+
+function MusicIcon() {
+  return (
+    <BaseIcon>
+      <path
+        d="M15.5 5.5v8.25a2.25 2.25 0 1 1-1.5-2.12V7.25l-5 1.4v6.1a2.25 2.25 0 1 1-1.5-2.12V7.5l8-2Z"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.7"
+      />
+    </BaseIcon>
+  )
+}
+
+function RobotIcon() {
+  return (
+    <BaseIcon>
+      <path
+        d="M9.5 4.5h5M12 4.5v2.25M8 9.25h8a2.5 2.5 0 0 1 2.5 2.5v3A2.75 2.75 0 0 1 15.75 17.5h-7.5A2.75 2.75 0 0 1 5.5 14.75v-3A2.5 2.5 0 0 1 8 9.25ZM8 9.25V8a1.75 1.75 0 0 1 1.75-1.75h4.5A1.75 1.75 0 0 1 16 8v1.25M8.5 17.5v2M15.5 17.5v2M8 13h.01M16 13h.01M10 15.25h4"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.6"
+      />
+    </BaseIcon>
+  )
+}
+
+function ExternalLinkIcon() {
+  return (
+    <BaseIcon>
+      <path
+        d="M10 6.5H7.5A1.5 1.5 0 0 0 6 8v8.5A1.5 1.5 0 0 0 7.5 18h8.5a1.5 1.5 0 0 0 1.5-1.5V14M13 6h5v5M11.5 12.5 18 6"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.7"
+      />
+    </BaseIcon>
   )
 }

@@ -29,4 +29,5 @@ dist-ssr
 .nuxt
 .local
 .data
+.tmp
 apps/server/storage/rag/*.json

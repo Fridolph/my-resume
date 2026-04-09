@@ -6,8 +6,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  Chip,
-} from '@heroui/react'
+} from '@heroui/react/card'
+import { Chip } from '@heroui/react/chip'
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 
@@ -340,7 +340,7 @@ export function AdminDashboardShell() {
                 <CardDescription>{item.description}</CardDescription>
               </CardHeader>
               <CardContent>
-                <Link className="link-button" href={item.href}>
+                <Link className="link-button" href={item.href} prefetch={false}>
                   {item.actionLabel}
                 </Link>
               </CardContent>

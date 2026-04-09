@@ -1,4 +1,5 @@
-import { Tag, TagGroup } from '@heroui/react'
+import { Tag } from '@heroui/react/tag'
+import { TagGroup } from '@heroui/react/tag-group'
 
 import { ResumeExperienceItem, ResumeLocale } from '../../lib/published-resume-types'
 import { formatPeriod, readLocalizedText, resumeLabels } from './published-resume-utils'

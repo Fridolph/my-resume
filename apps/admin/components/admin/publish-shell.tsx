@@ -6,8 +6,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  Chip,
-} from '@heroui/react'
+} from '@heroui/react/card'
+import { Chip } from '@heroui/react/chip'
 import { useState } from 'react'
 
 import { ExportEntryPanel } from '../publish/export-entry-panel'

@@ -1,0 +1,11 @@
+.sectionCard {
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.045);
+}
+
+:global([data-theme='dark']) .sectionCard {
+  border-color: rgba(255, 255, 255, 0.06);
+  background: rgba(15, 23, 42, 0.74);
+  box-shadow: 0 14px 36px rgba(2, 6, 23, 0.24);
+}

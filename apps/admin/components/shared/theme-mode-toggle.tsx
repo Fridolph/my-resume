@@ -1,6 +1,6 @@
 'use client'
 
-import { Switch } from '@heroui/react'
+import { Switch } from '@heroui/react/switch'
 import { useTheme } from 'next-themes'
 
 import styles from './theme-mode-toggle.module.css'

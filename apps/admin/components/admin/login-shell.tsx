@@ -1,11 +1,12 @@
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle, Chip } from '@heroui/react'
+import { Card, CardContent, CardHeader, CardTitle } from '@heroui/react/card'
+import { Chip } from '@heroui/react/chip'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 import { loginWithPassword } from '../../lib/auth-api'
-import { primeCurrentUserSession } from '../../lib/admin-resource-store'
+import { primeCurrentUserSession } from '../../lib/admin-session-store'
 import { DEFAULT_API_BASE_URL } from '../../lib/env'
 import { writeAccessToken } from '../../lib/session-storage'
 import { useAdminSession } from '../../lib/admin-session'
