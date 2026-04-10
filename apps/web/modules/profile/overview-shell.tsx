@@ -10,54 +10,127 @@ import {
 } from '@heroui/react/card'
 import { Chip } from '@heroui/react/chip'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
+import { DEFAULT_API_BASE_URL } from '../../core/env'
 import type {
   ResumeLocale,
   ResumePublishedSnapshot,
 } from '../published-resume/types/published-resume.types'
 import { PublishedResumeEmptyState } from '../published-resume/published-resume-empty-state'
+import { PublishedResumeLoadingState } from '../published-resume/published-resume-loading-state'
 import {
   formatPublishedAt,
   readLocalizedText,
   resumeLabels,
 } from '../published-resume/published-resume-utils'
-import { PublicSiteHeader } from '../site/header'
+import { fetchPublishedResume } from '../published-resume/services/published-resume-api'
+import { PublicSiteHeader } from '../site/site-header'
 
 interface ProfileOverviewShellProps {
+  apiBaseUrl?: string
+  enableClientSync?: boolean
   publishedResume: ResumePublishedSnapshot | null
+  syncPublishedResume?: typeof fetchPublishedResume
 }
 
-export function ProfileOverviewShell({ publishedResume }: ProfileOverviewShellProps) {
+export function ProfileOverviewShell({
+  apiBaseUrl = DEFAULT_API_BASE_URL,
+  enableClientSync = false,
+  publishedResume,
+  syncPublishedResume = fetchPublishedResume,
+}: ProfileOverviewShellProps) {
   const [locale, setLocale] = useState<ResumeLocale>('zh')
+  const [currentPublishedResume, setCurrentPublishedResume] = useState(publishedResume)
+  const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'error'>('idle')
+  const [syncMessage, setSyncMessage] = useState<string | null>(null)
 
-  if (!publishedResume) {
+  useEffect(() => {
+    setCurrentPublishedResume(publishedResume)
+  }, [publishedResume])
+
+  useEffect(() => {
+    if (!enableClientSync) {
+      return
+    }
+
+    let cancelled = false
+    setSyncState('syncing')
+    setSyncMessage(null)
+
+    syncPublishedResume({
+      apiBaseUrl,
+    })
+      .then((nextSnapshot) => {
+        if (cancelled) {
+          return
+        }
+
+        setCurrentPublishedResume((currentSnapshot) => {
+          if (!nextSnapshot) {
+            return currentSnapshot
+          }
+
+          if (!currentSnapshot) {
+            return nextSnapshot
+          }
+
+          const currentPublishedAt = Date.parse(currentSnapshot.publishedAt)
+          const nextPublishedAt = Date.parse(nextSnapshot.publishedAt)
+
+          if (Number.isNaN(currentPublishedAt) || Number.isNaN(nextPublishedAt)) {
+            return nextSnapshot
+          }
+
+          return nextPublishedAt > currentPublishedAt ? nextSnapshot : currentSnapshot
+        })
+        setSyncState('idle')
+      })
+      .catch((error) => {
+        if (cancelled) {
+          return
+        }
+
+        setSyncState('error')
+        setSyncMessage(error instanceof Error ? error.message : '公开简历同步失败')
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [apiBaseUrl, enableClientSync, syncPublishedResume])
+
+  if (!currentPublishedResume && syncState === 'syncing') {
+    return <PublishedResumeLoadingState />
+  }
+
+  if (!currentPublishedResume) {
     return <PublishedResumeEmptyState />
   }
 
   const labels = resumeLabels[locale]
-  const profile = publishedResume.resume.profile
+  const profile = currentPublishedResume.resume.profile
   const signalCards = [
     {
       label: labels.experienceCountLabel,
-      value: String(publishedResume.resume.experiences.length).padStart(2, '0'),
+      value: String(currentPublishedResume.resume.experiences.length).padStart(2, '0'),
       description: labels.experienceCountDescription,
     },
     {
       label: labels.projectsCountLabel,
-      value: String(publishedResume.resume.projects.length).padStart(2, '0'),
+      value: String(currentPublishedResume.resume.projects.length).padStart(2, '0'),
       description: labels.projectsCountDescription,
     },
     {
       label: labels.skillsCountLabel,
-      value: String(publishedResume.resume.skills.length).padStart(2, '0'),
+      value: String(currentPublishedResume.resume.skills.length).padStart(2, '0'),
       description: labels.skillsCountDescription,
     },
     {
       label: labels.publicationStateLabel,
       value: labels.publicationStateValue,
       description: `${labels.publicationStateDescription} ${formatPublishedAt(
-        publishedResume.publishedAt,
+        currentPublishedResume.publishedAt,
         locale,
       )}`,
     },
@@ -68,6 +141,16 @@ export function ProfileOverviewShell({ publishedResume }: ProfileOverviewShellPr
       <PublicSiteHeader locale={locale} onChangeLocale={setLocale} />
 
       <section className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 sm:px-6">
+        {syncState === 'syncing' ? (
+          <div className="rounded-[16px] border border-slate-200/70 bg-slate-50/80 px-4 py-3 text-sm text-slate-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
+            正在后台同步最新发布快照...
+          </div>
+        ) : null}
+        {syncState === 'error' && syncMessage ? (
+          <div className="rounded-[16px] border border-red-200/70 bg-red-50/80 px-4 py-3 text-sm text-red-600 dark:border-red-500/35 dark:bg-red-500/10 dark:text-red-300">
+            {syncMessage}
+          </div>
+        ) : null}
         <Card className="border-white/70 bg-white/82 shadow-[0_30px_80px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-slate-950/84">
           <CardHeader className="gap-3">
             <p className="web-eyebrow">{labels.profileEyebrow}</p>

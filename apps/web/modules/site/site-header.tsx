@@ -8,7 +8,7 @@ import { useEffect, useState, type ComponentType } from 'react'
 import { DEFAULT_API_BASE_URL } from '../../core/env'
 import type { ResumeLocale } from '../published-resume/types/published-resume.types'
 import { resumeLabels } from '../published-resume/published-resume-utils'
-import styles from './header.module.css'
+import styles from './site-header.module.css'
 
 interface PublicSiteHeaderProps {
   apiBaseUrl?: string

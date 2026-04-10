@@ -218,4 +218,37 @@ describe('PublishedResumeShell', () => {
 
     expect(screen.getByText('当前还没有已发布的公开简历内容。')).toBeInTheDocument()
   })
+
+  it('should sync to newer snapshot after mount when client sync is enabled', async () => {
+    const syncPublishedResume = vi.fn().mockResolvedValue({
+      ...publishedResumeFixture,
+      publishedAt: '2026-03-26T00:00:00.000Z',
+      resume: {
+        ...publishedResumeFixture.resume,
+        profile: {
+          ...publishedResumeFixture.resume.profile,
+          fullName: {
+            zh: '最新付寅生',
+            en: 'Latest Yinsheng Fu',
+          },
+        },
+      },
+    })
+
+    render(
+      <ThemeModeProvider>
+        <PublishedResumeShell
+          apiBaseUrl="http://localhost:5577"
+          enableClientSync
+          publishedResume={publishedResumeFixture}
+          syncPublishedResume={syncPublishedResume}
+        />
+      </ThemeModeProvider>,
+    )
+
+    expect(await screen.findByRole('heading', { name: '最新付寅生' })).toBeInTheDocument()
+    expect(syncPublishedResume).toHaveBeenCalledWith({
+      apiBaseUrl: 'http://localhost:5577',
+    })
+  })
 })

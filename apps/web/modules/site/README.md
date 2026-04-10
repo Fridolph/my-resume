@@ -4,8 +4,8 @@
 
 ## 职责
 
-- `header.tsx`：顶部导航、主题切换、语言切换与导出入口
-- `header.module.css`：站点头部样式
+- `site-header.tsx`：顶部导航、主题切换、语言切换与导出入口
+- `site-header.module.css`：站点头部样式
 - `__tests__/`：预留站点壳测试目录
 - `types/`：预留模块本地类型目录
 

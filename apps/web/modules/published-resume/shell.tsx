@@ -1,30 +1,48 @@
 'use client'
 
-import { useEffect, useRef, useState, type ComponentType } from 'react'
+import dynamic from 'next/dynamic'
+import { useEffect, useRef, useState } from 'react'
 
 import { DEFAULT_API_BASE_URL } from '../../core/env'
 import { ResumeLocale, ResumePublishedSnapshot } from './types/published-resume.types'
 import { PublishedResumeEducationSection } from './published-resume-education-section'
 import { PublishedResumeEmptyState } from './published-resume-empty-state'
 import { PublishedResumeHero } from './published-resume-hero'
+import { PublishedResumeLoadingState } from './published-resume-loading-state'
 import { PublishedResumeSectionCard } from './published-resume-section-card'
 import { resumeLabels } from './published-resume-utils'
-import { PublicSiteHeader } from '../site/header'
+import { fetchPublishedResume } from './services/published-resume-api'
+import { PublicSiteHeader } from '../site/site-header'
 
-type PublishedResumeExperienceSectionComponent = ComponentType<{
-  experiences: ResumePublishedSnapshot['resume']['experiences']
-  locale: ResumeLocale
-}>
+const DeferredPublishedResumeExperienceSection = dynamic(
+  () =>
+    import('./published-resume-experience-section').then(
+      (module) => module.PublishedResumeExperienceSection,
+    ),
+  {
+    loading: () => null,
+  },
+)
 
-type PublishedResumeProjectsSectionComponent = ComponentType<{
-  locale: ResumeLocale
-  projects: ResumePublishedSnapshot['resume']['projects']
-}>
+const DeferredPublishedResumeProjectsSection = dynamic(
+  () =>
+    import('./published-resume-projects-section').then(
+      (module) => module.PublishedResumeProjectsSection,
+    ),
+  {
+    loading: () => null,
+  },
+)
 
-type PublishedResumeSkillsSectionComponent = ComponentType<{
-  locale: ResumeLocale
-  skills: ResumePublishedSnapshot['resume']['skills']
-}>
+const DeferredPublishedResumeSkillsSection = dynamic(
+  () =>
+    import('./published-resume-skills-section').then(
+      (module) => module.PublishedResumeSkillsSection,
+    ),
+  {
+    loading: () => null,
+  },
+)
 
 function SkillsSectionPlaceholder({ locale }: { locale: ResumeLocale }) {
   const labels = resumeLabels[locale]
@@ -139,12 +157,19 @@ function useDeferredSection({
  */
 export function PublishedResumeShell({
   apiBaseUrl = DEFAULT_API_BASE_URL,
+  enableClientSync = false,
   publishedResume,
+  syncPublishedResume = fetchPublishedResume,
 }: {
   apiBaseUrl?: string
+  enableClientSync?: boolean
   publishedResume: ResumePublishedSnapshot | null
+  syncPublishedResume?: typeof fetchPublishedResume
 }) {
   const [locale, setLocale] = useState<ResumeLocale>('zh')
+  const [currentPublishedResume, setCurrentPublishedResume] = useState(publishedResume)
+  const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'error'>('idle')
+  const [syncMessage, setSyncMessage] = useState<string | null>(null)
   const isJsdom = typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent)
   const labels = resumeLabels[locale]
   const experienceSection = useDeferredSection({
@@ -159,82 +184,72 @@ export function PublishedResumeShell({
     isJsdom,
     rootMargin: '420px 0px',
   })
-  const [experienceSectionComponent, setExperienceSectionComponent] =
-    useState<PublishedResumeExperienceSectionComponent | null>(null)
-  const [projectsSectionComponent, setProjectsSectionComponent] =
-    useState<PublishedResumeProjectsSectionComponent | null>(null)
-  const [skillsSectionComponent, setSkillsSectionComponent] =
-    useState<PublishedResumeSkillsSectionComponent | null>(null)
 
   useEffect(() => {
-    if (!experienceSection.shouldRender || experienceSectionComponent) {
+    setCurrentPublishedResume(publishedResume)
+  }, [publishedResume])
+
+  useEffect(() => {
+    if (!enableClientSync) {
       return
     }
 
-    let active = true
+    let cancelled = false
+    setSyncState('syncing')
+    setSyncMessage(null)
 
-    void import('./published-resume-experience-section').then((module) => {
-      if (!active) {
-        return
-      }
-
-      setExperienceSectionComponent(() => module.PublishedResumeExperienceSection)
+    syncPublishedResume({
+      apiBaseUrl,
     })
+      .then((nextSnapshot) => {
+        if (cancelled) {
+          return
+        }
+
+        setCurrentPublishedResume((currentSnapshot) => {
+          if (!nextSnapshot) {
+            return currentSnapshot
+          }
+
+          if (!currentSnapshot) {
+            return nextSnapshot
+          }
+
+          const currentPublishedAt = Date.parse(currentSnapshot.publishedAt)
+          const nextPublishedAt = Date.parse(nextSnapshot.publishedAt)
+
+          if (Number.isNaN(currentPublishedAt) || Number.isNaN(nextPublishedAt)) {
+            return nextSnapshot
+          }
+
+          return nextPublishedAt > currentPublishedAt ? nextSnapshot : currentSnapshot
+        })
+        setSyncState('idle')
+      })
+      .catch((error) => {
+        if (cancelled) {
+          return
+        }
+
+        setSyncState('error')
+        setSyncMessage(error instanceof Error ? error.message : '公开简历同步失败')
+      })
 
     return () => {
-      active = false
+      cancelled = true
     }
-  }, [experienceSection.shouldRender, experienceSectionComponent])
+  }, [apiBaseUrl, enableClientSync, syncPublishedResume])
 
-  useEffect(() => {
-    if (!projectsSection.shouldRender || projectsSectionComponent) {
-      return
-    }
+  if (!currentPublishedResume && syncState === 'syncing') {
+    return <PublishedResumeLoadingState />
+  }
 
-    let active = true
-
-    void import('./published-resume-projects-section').then((module) => {
-      if (!active) {
-        return
-      }
-
-      setProjectsSectionComponent(() => module.PublishedResumeProjectsSection)
-    })
-
-    return () => {
-      active = false
-    }
-  }, [projectsSection.shouldRender, projectsSectionComponent])
-
-  useEffect(() => {
-    if (!skillsSection.shouldRender || skillsSectionComponent) {
-      return
-    }
-
-    let active = true
-
-    void import('./published-resume-skills-section').then((module) => {
-      if (!active) {
-        return
-      }
-
-      setSkillsSectionComponent(() => module.PublishedResumeSkillsSection)
-    })
-
-    return () => {
-      active = false
-    }
-  }, [skillsSection.shouldRender, skillsSectionComponent])
-
-  if (!publishedResume) {
+  if (!currentPublishedResume) {
     return <PublishedResumeEmptyState />
   }
 
-  const { education, experiences, projects, skills } = publishedResume.resume
+  const { education, experiences, projects, skills } = currentPublishedResume.resume
   const sidebarStickyClass = 'lg:sticky lg:top-[5.5rem] lg:self-start'
-  const ExperienceSectionComponent = experienceSectionComponent
-  const ProjectsSectionComponent = projectsSectionComponent
-  const SkillsSectionComponent = skillsSectionComponent
 
   return (
     <main className="web-page-shell" data-template="standard">
@@ -246,16 +261,32 @@ export function PublishedResumeShell({
       />
 
       <section className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 sm:px-6">
+        {syncState === 'syncing' ? (
+          <div className="rounded-[16px] border border-slate-200/70 bg-slate-50/80 px-4 py-3 text-sm text-slate-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
+            正在后台同步最新发布快照...
+          </div>
+        ) : null}
+        {syncState === 'error' && syncMessage ? (
+          <div className="rounded-[16px] border border-red-200/70 bg-red-50/80 px-4 py-3 text-sm text-red-600 dark:border-red-500/35 dark:bg-red-500/10 dark:text-red-300">
+            {syncMessage}
+          </div>
+        ) : null}
         <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[360px_minmax(0,1fr)]">
           <aside className={sidebarStickyClass}>
-            <PublishedResumeHero locale={locale} publishedResume={publishedResume} />
+            <PublishedResumeHero
+              locale={locale}
+              publishedResume={currentPublishedResume}
+            />
           </aside>
 
           <div className="grid gap-6">
             <PublishedResumeEducationSection education={education} locale={locale} />
             <div ref={experienceSection.viewportRef}>
-              {experienceSection.shouldRender && ExperienceSectionComponent ? (
-                <ExperienceSectionComponent experiences={experiences} locale={locale} />
+              {experienceSection.shouldRender ? (
+                <DeferredPublishedResumeExperienceSection
+                  experiences={experiences}
+                  locale={locale}
+                />
               ) : (
                 <DeferredSectionPlaceholder
                   description={labels.experienceDescription}
@@ -270,8 +301,11 @@ export function PublishedResumeShell({
               )}
             </div>
             <div ref={projectsSection.viewportRef}>
-              {projectsSection.shouldRender && ProjectsSectionComponent ? (
-                <ProjectsSectionComponent locale={locale} projects={projects} />
+              {projectsSection.shouldRender ? (
+                <DeferredPublishedResumeProjectsSection
+                  locale={locale}
+                  projects={projects}
+                />
               ) : (
                 <DeferredSectionPlaceholder
                   description={labels.projectsDescription}
@@ -286,8 +320,8 @@ export function PublishedResumeShell({
               )}
             </div>
             <div ref={skillsSection.viewportRef}>
-              {skillsSection.shouldRender && SkillsSectionComponent ? (
-                <SkillsSectionComponent locale={locale} skills={skills} />
+              {skillsSection.shouldRender ? (
+                <DeferredPublishedResumeSkillsSection locale={locale} skills={skills} />
               ) : (
                 <SkillsSectionPlaceholder locale={locale} />
               )}

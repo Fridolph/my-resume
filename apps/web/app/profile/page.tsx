@@ -7,5 +7,11 @@ export default async function ProfilePage() {
     apiBaseUrl: DEFAULT_API_BASE_URL,
   })
 
-  return <ProfileOverviewShell publishedResume={publishedResume} />
+  return (
+    <ProfileOverviewShell
+      apiBaseUrl={DEFAULT_API_BASE_URL}
+      enableClientSync
+      publishedResume={publishedResume}
+    />
+  )
 }

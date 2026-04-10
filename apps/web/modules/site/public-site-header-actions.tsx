@@ -8,7 +8,7 @@ import { useThemeMode } from '@my-resume/ui/theme'
 
 import type { ResumeLocale } from '../published-resume/types/published-resume.types'
 import { resumeLabels } from '../published-resume/published-resume-utils'
-import styles from './header.module.css'
+import styles from './site-header.module.css'
 
 const PROJECT_GITHUB_URL = 'https://github.com/Fridolph/my-resume'
 

@@ -10,6 +10,7 @@ export default async function AiTalkPage() {
   return (
     <AiTalkPlaceholderShell
       apiBaseUrl={DEFAULT_API_BASE_URL}
+      enableClientSync
       publishedResume={publishedResume}
     />
   )

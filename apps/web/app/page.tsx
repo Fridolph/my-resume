@@ -16,6 +16,7 @@ export default async function WebHomePage() {
   return (
     <PublishedResumeShell
       apiBaseUrl={DEFAULT_API_BASE_URL}
+      enableClientSync
       publishedResume={publishedResume}
     />
   )
