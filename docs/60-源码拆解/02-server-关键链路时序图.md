@@ -228,3 +228,69 @@ sequenceDiagram
 7. `apps/server/src/modules/ai/rag/rag.service.ts`
 
 这样更容易先建立“请求怎么进来、权限怎么卡住、数据怎么落库、AI 怎么接进来”的整体感，再去看具体实现细节。
+
+## 5. 发布后为什么 web 刷新就能看到新数据
+
+这一段只看 `resume` 主链路，不引入 AI 模块。
+
+### 5.1 发布到刷新时序（最小闭环）
+
+```mermaid
+sequenceDiagram
+    participant Admin as admin 发布页
+    participant ApiClient as @my-resume/api-client
+    participant ResumeController as server /resume
+    participant ResumeService as ResumePublicationService
+    participant ResumeRepo as ResumePublicationRepository
+    participant DB as SQLite
+    participant WebPage as web SSR 页面
+
+    Admin->>ApiClient: publishResume()
+    ApiClient->>ResumeController: POST /resume/publish
+    ResumeController->>ResumeService: publish()
+    ResumeService->>ResumeService: getDraft()
+    ResumeService->>ResumeRepo: createPublishedSnapshot(draft)
+    ResumeRepo->>DB: insert resume_publication_snapshots
+    DB-->>ResumeRepo: 新发布快照
+    ResumeRepo-->>ResumeService: snapshot
+    ResumeService-->>ResumeController: published snapshot
+    ResumeController-->>Admin: 发布成功
+
+    WebPage->>ApiClient: fetchPublishedResume()
+    ApiClient->>ResumeController: GET /resume/published (no-store)
+    ResumeController->>ResumeService: getPublished()
+    ResumeService->>ResumeRepo: findLatestPublishedSnapshot()
+    ResumeRepo->>DB: order by published_at desc limit 1
+    DB-->>WebPage: 返回最新发布快照
+```
+
+### 5.2 数据状态图（为什么不是“改一个状态位”）
+
+```mermaid
+stateDiagram-v2
+    [*] --> Draft: 初始化或编辑
+    Draft --> Draft: PUT /resume/draft
+    Draft --> PublishedSnapshot: POST /resume/publish
+    PublishedSnapshot --> PublishedSnapshot: 再次发布(新增一条快照)
+
+    note right of Draft
+      存储位置: resume_drafts
+      只有一条标准简历草稿位
+    end note
+
+    note right of PublishedSnapshot
+      存储位置: resume_publication_snapshots
+      每次发布追加新记录
+      web 读取最后一条
+    end note
+```
+
+### 5.3 关键结论（你排查同步问题时先看这里）
+
+- 没有使用 WebSocket 推送；是“发布成功 + 页面刷新触发重新请求”。
+- `web` 读取公开简历走 `fetch(..., { cache: 'no-store' })`，刷新会重新拉接口。
+- `server` 发布语义是“从 draft 生成新 snapshot”，`web` 永远读取最新 snapshot。
+- 如果你看到“发布后没变”，优先排查：
+  - `web` 实际请求的 `API_BASE_URL` 是否指向同一 `server`
+  - 是否真的走了 `/resume/publish` 并成功返回
+  - DB 中 `resume_publication_snapshots` 是否新增了记录

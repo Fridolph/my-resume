@@ -122,7 +122,7 @@
 
 - `apps/admin/lib/ai-workbench-api.ts`
 - `apps/admin/lib/ai-workbench-api.spec.ts`
-- `apps/admin/lib/ai-workbench-types.ts`
+- `apps/admin/lib/ai-workbench.types.ts`
 
 这是本轮 review 后当场收住的一点：
 

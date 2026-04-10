@@ -49,7 +49,7 @@
   - `apps/web/app/globals.css`
 - 新建公开简历读取能力：
   - `apps/web/lib/published-resume-api.ts`
-  - `apps/web/lib/published-resume-types.ts`
+  - `apps/web/lib/published-resume.types.ts`
   - `apps/web/lib/env.ts`
 - 新建展示壳组件：
   - `apps/web/components/published-resume-shell.tsx`

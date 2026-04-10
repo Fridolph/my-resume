@@ -82,7 +82,7 @@
 
 新增：
 
-- `apps/admin/lib/ai-file-types.ts`
+- `apps/admin/lib/ai-file.types.ts`
 - `apps/admin/lib/ai-file-api.ts`
 - `apps/admin/lib/ai-file-api.spec.ts`
 
