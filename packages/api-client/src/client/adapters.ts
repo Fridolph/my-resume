@@ -1,12 +1,20 @@
+import type { AlovaRequestAdapter } from 'alova'
+import adapterFetch, { type AdapterCreateOptions } from 'alova/fetch'
+import { createRequire } from 'node:module'
+
 import type {
+  ApiClientRequestAdapter,
   AxiosLikeInstance,
-  AxiosLikeResponse,
   HttpAdapter,
   HttpAdapterResponse,
 } from '../types/client.types'
-import { ApiClientTimeoutError } from './errors'
 
 const EMPTY_HEADERS = new Headers()
+
+interface ApiMethodConfigLike {
+  [key: string]: unknown
+  timeout?: number
+}
 
 function normalizeHeaders(headers: Record<string, unknown> | undefined): Headers {
   if (!headers) {
@@ -26,6 +34,33 @@ function normalizeHeaders(headers: Record<string, unknown> | undefined): Headers
   return normalized
 }
 
+function isFetchResponse(response: unknown): response is Response {
+  return (
+    typeof response === 'object' &&
+    response !== null &&
+    'status' in response &&
+    'ok' in response &&
+    'headers' in response &&
+    'json' in response &&
+    'text' in response
+  )
+}
+
+function isAxiosResponseLike(
+  response: unknown,
+): response is {
+  data: unknown
+  headers?: Record<string, unknown>
+  status: number
+} {
+  return (
+    typeof response === 'object' &&
+    response !== null &&
+    'status' in response &&
+    'data' in response
+  )
+}
+
 function createResponseFromFetch(response: Response): HttpAdapterResponse {
   return {
     status: response.status,
@@ -37,8 +72,12 @@ function createResponseFromFetch(response: Response): HttpAdapterResponse {
   }
 }
 
-function createResponseFromAxios(response: AxiosLikeResponse): HttpAdapterResponse {
-  const responseHeaders = normalizeHeaders(response.headers as Record<string, unknown>)
+function createResponseFromAxios(response: {
+  data: unknown
+  headers?: Record<string, unknown>
+  status: number
+}): HttpAdapterResponse {
+  const responseHeaders = normalizeHeaders(response.headers)
   const responseData = response.data
 
   return {
@@ -64,80 +103,55 @@ function createResponseFromAxios(response: AxiosLikeResponse): HttpAdapterRespon
 }
 
 /**
- * 创建基于 Fetch 的 HTTP 适配器
+ * 统一把不同 adapter 的原始响应转换为 api-client 可消费的响应结构
  *
- * @param options 适配器选项
- * @returns 可注入到 createApiClient 的 HttpAdapter
+ * @param response adapter 返回的响应
+ * @returns 统一响应对象
  */
-export function createFetchAdapter(options?: {
-  customFetch?: typeof fetch
-}): HttpAdapter {
-  return {
-    async request(config) {
-      const requestWithFetch = options?.customFetch ?? globalThis.fetch
-      const abortController = new AbortController()
-      let timeoutHandle: ReturnType<typeof setTimeout> | null = null
-      let timedOut = false
-      const externalSignal = config.signal
-
-      const handleExternalAbort = () => {
-        abortController.abort(externalSignal?.reason)
-      }
-
-      if (externalSignal) {
-        if (externalSignal.aborted) {
-          abortController.abort(externalSignal.reason)
-        } else {
-          externalSignal.addEventListener('abort', handleExternalAbort, { once: true })
-        }
-      }
-
-      // 统一超时通过 AbortController 中断请求
-      if (config.timeoutMs > 0) {
-        timeoutHandle = setTimeout(() => {
-          timedOut = true
-          abortController.abort()
-        }, config.timeoutMs)
-      }
-
-      try {
-        const response = await requestWithFetch(config.url, {
-          ...config.requestInit,
-          method: config.method,
-          headers: config.headers,
-          body: config.body,
-          signal: abortController.signal,
-        })
-
-        return createResponseFromFetch(response)
-      } catch (error) {
-        if (timedOut) {
-          throw new ApiClientTimeoutError(config.timeoutMs)
-        }
-
-        throw error
-      } finally {
-        if (timeoutHandle) {
-          clearTimeout(timeoutHandle)
-        }
-
-        if (externalSignal) {
-          externalSignal.removeEventListener('abort', handleExternalAbort)
-        }
-      }
-    },
+export function normalizeAdapterResponse(response: unknown): HttpAdapterResponse {
+  if (isFetchResponse(response)) {
+    return createResponseFromFetch(response)
   }
+
+  if (isAxiosResponseLike(response)) {
+    return createResponseFromAxios(response)
+  }
+
+  if (
+    typeof response === 'object' &&
+    response !== null &&
+    'status' in response &&
+    'ok' in response &&
+    'headers' in response &&
+    'json' in response &&
+    'text' in response &&
+    'raw' in response
+  ) {
+    return response as HttpAdapterResponse
+  }
+
+  throw new Error('无法识别请求响应结构，请检查 requestAdapter 配置')
 }
 
 /**
- * 创建 Axios 风格 HTTP 适配器
+ * 创建官方 Fetch requestAdapter
  *
  * @param options 适配器选项
- * @returns 可注入到 createApiClient 的 HttpAdapter
+ * @returns alova requestAdapter
+ */
+export function createFetchAdapter(options?: AdapterCreateOptions): ApiClientRequestAdapter {
+  return adapterFetch(options) as ApiClientRequestAdapter
+}
+
+/**
+ * 创建官方 Axios requestAdapter
+ *
+ * @param options 适配器选项
+ * @returns alova requestAdapter
  */
 export function createAxiosAdapter(options?: {
   instance?: AxiosLikeInstance
-}): HttpAdapter {
+}): ApiClientRequestAdapter {
   const axiosInstance = options?.instance
 
   if (!axiosInstance) {
@@ -146,60 +160,99 @@ export function createAxiosAdapter(options?: {
     )
   }
 
-  return {
-    async request(config) {
-      const abortController = new AbortController()
-      let timeoutHandle: ReturnType<typeof setTimeout> | null = null
-      let timedOut = false
-      const externalSignal = config.signal
+  const require = createRequire(import.meta.url)
 
-      const handleExternalAbort = () => {
-        abortController.abort(externalSignal?.reason)
-      }
-
-      if (externalSignal) {
-        if (externalSignal.aborted) {
-          abortController.abort(externalSignal.reason)
-        } else {
-          externalSignal.addEventListener('abort', handleExternalAbort, { once: true })
-        }
-      }
-
-      // 统一超时通过 AbortController 中断请求
-      if (config.timeoutMs > 0) {
-        timeoutHandle = setTimeout(() => {
-          timedOut = true
-          abortController.abort()
-        }, config.timeoutMs)
-      }
-
-      try {
-        const response = await axiosInstance.request({
-          url: config.url,
-          method: config.method,
-          data: config.body,
-          headers: config.headers,
-          signal: abortController.signal,
-          validateStatus: () => true,
-        })
-
-        return createResponseFromAxios(response)
-      } catch (error) {
-        if (timedOut) {
-          throw new ApiClientTimeoutError(config.timeoutMs)
-        }
-
-        throw error
-      } finally {
-        if (timeoutHandle) {
-          clearTimeout(timeoutHandle)
-        }
-
-        if (externalSignal) {
-          externalSignal.removeEventListener('abort', handleExternalAbort)
-        }
-      }
-    },
+  let adapterAxiosFactory: undefined | ((options: { axios: AxiosLikeInstance }) => unknown)
+  try {
+    const adapterAxiosModule = require('@alova/adapter-axios') as {
+      default?: (options: { axios: AxiosLikeInstance }) => unknown
+    }
+    adapterAxiosFactory = adapterAxiosModule.default
+  } catch {
+    throw new Error(
+      '未找到 @alova/adapter-axios。请在工作区安装该依赖后再使用 createAxiosAdapter',
+    )
   }
+
+  if (typeof adapterAxiosFactory !== 'function') {
+    throw new Error('@alova/adapter-axios 导出异常，无法创建 axios requestAdapter')
+  }
+
+  return adapterAxiosFactory({
+    axios: axiosInstance,
+  }) as ApiClientRequestAdapter
 }
 
+/**
+ * 把旧版 HttpAdapter 包装为 alova requestAdapter
+ *
+ * @param adapter 旧版 HttpAdapter
+ * @param fallbackTimeoutMs 默认超时时间
+ * @returns 兼容 requestAdapter
+ */
+export function createLegacyHttpAdapterRequestAdapter(
+  adapter: HttpAdapter,
+  fallbackTimeoutMs: number,
+): ApiClientRequestAdapter {
+  const requestAdapter: AlovaRequestAdapter<ApiMethodConfigLike, unknown, Headers> = (
+    elements,
+    method,
+  ) => {
+    const methodConfig = method.config as ApiMethodConfigLike
+    const requestAbortController = new AbortController()
+    let responsePromise: Promise<HttpAdapterResponse> | null = null
+
+    const sendRequest = () => {
+      if (!responsePromise) {
+        const configRecord = methodConfig as Record<string, unknown>
+        const {
+          headers: _headers,
+          params: _params,
+          timeout: _timeout,
+          cacheFor: _cacheFor,
+          shareRequest: _shareRequest,
+          transform: _transform,
+          hitSource: _hitSource,
+          name: _name,
+          meta: _meta,
+          ...requestInit
+        } = configRecord
+
+        responsePromise = adapter.request({
+          url: elements.url,
+          method: String(elements.type).toUpperCase(),
+          headers: Object.fromEntries(Object.entries(elements.headers ?? {})),
+          body: (elements.data ?? null) as BodyInit | null,
+          timeoutMs: methodConfig.timeout ?? fallbackTimeoutMs,
+          signal: requestAbortController.signal,
+          requestInit: requestInit as RequestInit,
+        })
+      }
+
+      return responsePromise
+    }
+
+    return {
+      response: sendRequest,
+      headers: async () => (await sendRequest()).headers,
+      abort: () => requestAbortController.abort(),
+    }
+  }
+
+  return requestAdapter as ApiClientRequestAdapter
+}
+
+/**
+ * 判断是否是旧版 HttpAdapter
+ *
+ * @param adapter 待判断对象
+ * @returns 是否为 HttpAdapter
+ */
+export function isHttpAdapter(adapter: unknown): adapter is HttpAdapter {
+  return (
+    typeof adapter === 'object' &&
+    adapter !== null &&
+    'request' in adapter &&
+    typeof (adapter as HttpAdapter).request === 'function'
+  )
+}

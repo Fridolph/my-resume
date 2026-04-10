@@ -1,4 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 
 import {
   createApiClient,
@@ -181,5 +184,16 @@ describe('api client core', () => {
     expect(() => createAxiosAdapter()).toThrow(
       'createAxiosAdapter 需要传入 axios 实例',
     )
+  })
+
+  it('does not use direct Alova.request calls in domain facades', () => {
+    const currentDir = fileURLToPath(new URL('.', import.meta.url))
+    const domainFiles = ['auth.ts', 'resume.ts', 'ai.ts']
+    const directCallPattern = /\bAlova\.request\s*\(/
+
+    for (const fileName of domainFiles) {
+      const fileContent = readFileSync(join(currentDir, fileName), 'utf-8')
+      expect(directCallPattern.test(fileContent)).toBe(false)
+    }
   })
 })

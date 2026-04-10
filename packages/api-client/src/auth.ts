@@ -20,15 +20,13 @@ export type {
 } from './types/auth.types'
 
 /**
- * 用户名密码登录
+ * 构造用户名密码登录 Method
  *
  * @param input 登录参数
- * @returns 登录结果
+ * @returns 登录请求 Method
  */
-export async function loginWithPassword(
-  input: LoginWithPasswordInput,
-): Promise<LoginResult> {
-  return Alova.request<LoginResult>({
+export function createLoginWithPasswordMethod(input: LoginWithPasswordInput) {
+  return Alova.createMethod<LoginResult>({
     apiBaseUrl: input.apiBaseUrl,
     pathname: '/auth/login',
     method: 'POST',
@@ -45,15 +43,29 @@ export async function loginWithPassword(
 }
 
 /**
- * 读取当前登录用户
+ * 用户名密码登录
+ *
+ * @param input 登录参数
+ * @returns 登录结果
+ */
+export async function loginWithPassword(
+  input: LoginWithPasswordInput,
+): Promise<LoginResult> {
+  return Alova.send(createLoginWithPasswordMethod(input), {
+    method: 'POST',
+    fallbackErrorMessage: '账号或密码错误',
+    requestPolicy: input.requestPolicy,
+  })
+}
+
+/**
+ * 构造读取当前用户 Method
  *
  * @param input 请求参数
- * @returns 用户信息
+ * @returns 当前用户请求 Method
  */
-export async function fetchCurrentUser(
-  input: FetchCurrentUserInput,
-): Promise<AuthUserView> {
-  const payload = await Alova.request<{
+export function createFetchCurrentUserMethod(input: FetchCurrentUserInput) {
+  return Alova.createMethod<{
     user: AuthUserView
   }>({
     apiBaseUrl: input.apiBaseUrl,
@@ -62,8 +74,41 @@ export async function fetchCurrentUser(
     fallbackErrorMessage: '登录状态已失效',
     requestPolicy: input.requestPolicy,
   })
+}
+
+/**
+ * 读取当前登录用户
+ *
+ * @param input 请求参数
+ * @returns 用户信息
+ */
+export async function fetchCurrentUser(
+  input: FetchCurrentUserInput,
+): Promise<AuthUserView> {
+  const payload = await Alova.send(createFetchCurrentUserMethod(input), {
+    fallbackErrorMessage: '登录状态已失效',
+    method: 'GET',
+    requestPolicy: input.requestPolicy,
+  })
 
   return payload.user
+}
+
+/**
+ * 构造受保护动作 Method
+ *
+ * @param input 请求参数
+ * @returns 动作请求 Method
+ */
+export function createPostProtectedActionMethod(input: PostProtectedActionInput) {
+  return Alova.createMethod<ProtectedActionResponse>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: input.pathname,
+    method: 'POST',
+    accessToken: input.accessToken,
+    fallbackErrorMessage: '当前角色无权执行该操作',
+    requestPolicy: input.requestPolicy,
+  })
 }
 
 /**
@@ -75,11 +120,8 @@ export async function fetchCurrentUser(
 export async function postProtectedAction(
   input: PostProtectedActionInput,
 ): Promise<ProtectedActionResponse> {
-  return Alova.request<ProtectedActionResponse>({
-    apiBaseUrl: input.apiBaseUrl,
-    pathname: input.pathname,
+  return Alova.send(createPostProtectedActionMethod(input), {
     method: 'POST',
-    accessToken: input.accessToken,
     fallbackErrorMessage: '当前角色无权执行该操作',
     requestPolicy: input.requestPolicy,
   })

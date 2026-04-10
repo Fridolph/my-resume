@@ -1,3 +1,4 @@
+import type { AlovaGenerics, AlovaRequestAdapter, Method } from 'alova'
 import type { FetchRequestInit } from 'alova/fetch'
 
 /**
@@ -12,6 +13,16 @@ export type HttpMethod =
   | 'HEAD'
   | 'OPTIONS'
   | (string & {})
+
+/**
+ * alova 请求适配器
+ */
+export type ApiClientRequestAdapter = AlovaRequestAdapter<any, unknown, unknown>
+
+/**
+ * alova Method 实例
+ */
+export type ApiClientMethod<T = unknown> = Method<AlovaGenerics<T>>
 
 /**
  * GET 重试策略
@@ -33,6 +44,8 @@ export interface RequestPolicy {
 
 /**
  * 适配器请求配置
+ *
+ * @deprecated 仅用于兼容旧版 HttpAdapter，请优先使用官方 alova requestAdapter
  */
 export interface HttpAdapterRequestConfig {
   body?: BodyInit | null
@@ -46,6 +59,8 @@ export interface HttpAdapterRequestConfig {
 
 /**
  * 适配器响应结构
+ *
+ * @deprecated 仅用于兼容旧版 HttpAdapter，请优先使用官方 alova requestAdapter
  */
 export interface HttpAdapterResponse {
   headers: Headers
@@ -58,6 +73,8 @@ export interface HttpAdapterResponse {
 
 /**
  * HTTP 适配器抽象
+ *
+ * @deprecated 仅用于兼容旧版 HttpAdapter，请优先使用官方 alova requestAdapter
  */
 export interface HttpAdapter {
   request: (config: HttpAdapterRequestConfig) => Promise<HttpAdapterResponse>
@@ -108,9 +125,16 @@ export interface ApiRequestInput {
  * API client 初始化参数
  */
 export interface ApiClientOptions {
+  /**
+   * alova requestAdapter
+   */
+  requestAdapter?: ApiClientRequestAdapter
+
+  /**
+   * @deprecated 兼容旧版 HttpAdapter，后续将逐步移除
+   */
   adapter?: HttpAdapter
   getRetryPolicy?: Partial<RetryPolicy>
   readTimeoutMs?: number
   writeTimeoutMs?: number
 }
-
