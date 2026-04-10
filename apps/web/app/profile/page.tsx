@@ -1,6 +1,6 @@
-import { ProfileOverviewShell } from '../../components/profile/overview-shell'
-import { DEFAULT_API_BASE_URL } from '../../lib/env'
-import { fetchPublishedResume } from '../../lib/published-resume-api'
+import { ProfileOverviewShell } from '../../modules/profile/overview-shell'
+import { DEFAULT_API_BASE_URL } from '../../core/env'
+import { fetchPublishedResume } from '../../modules/published-resume/services/published-resume-api'
 
 export default async function ProfilePage() {
   const publishedResume = await fetchPublishedResume({

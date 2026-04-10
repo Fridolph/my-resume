@@ -1,4 +1,4 @@
-import { ResumeHighlightItem, ResumeLocale } from '../../lib/published-resume-types'
+import { ResumeHighlightItem, ResumeLocale } from './types/published-resume.types'
 import { readLocalizedText, resumeLabels } from './published-resume-utils'
 
 interface PublishedResumeHighlightsSectionProps {

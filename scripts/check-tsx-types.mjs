@@ -41,9 +41,9 @@ function countLocalTypeDeclarations(source) {
   return (source.match(/^\s*(?:export\s+)?(?:interface|type)\s+\w+/gm) ?? []).length
 }
 
-function findAdminModuleTypesCandidate(file) {
+function findModuleTypesCandidate(file) {
   const normalizedFile = file.replace(/\\/g, '/')
-  const match = normalizedFile.match(/^(apps\/admin\/modules\/[^/]+)\//)
+  const match = normalizedFile.match(/^(apps\/(?:admin|web)\/modules\/[^/]+)\//)
 
   if (!match) {
     return []
@@ -92,8 +92,9 @@ function main() {
       continue
     }
 
-    const candidates = file.startsWith('apps/admin/modules/')
-      ? [...findAdminModuleTypesCandidate(file), ...findLegacyAdjacentCandidate(file)]
+    const candidates =
+      file.startsWith('apps/admin/modules/') || file.startsWith('apps/web/modules/')
+        ? [...findModuleTypesCandidate(file), ...findLegacyAdjacentCandidate(file)]
       : findLegacyAdjacentCandidate(file)
 
     const hasAdjacentTypesFile = candidates.some((candidate) => existsSync(candidate))

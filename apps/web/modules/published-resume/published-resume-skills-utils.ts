@@ -8,7 +8,7 @@ import type {
 } from 'echarts/components'
 import type { ComposeOption } from 'echarts/core'
 
-import type { ResumeLocale, ResumeSkillGroup } from '../../lib/published-resume-types'
+import type { ResumeLocale, ResumeSkillGroup } from './types/published-resume.types'
 import { readLocalizedText } from './published-resume-utils'
 
 export type SkillChartOption = ComposeOption<

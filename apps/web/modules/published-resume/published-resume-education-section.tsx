@@ -1,4 +1,4 @@
-import { ResumeEducationItem, ResumeLocale } from '../../lib/published-resume-types'
+import { ResumeEducationItem, ResumeLocale } from './types/published-resume.types'
 import { formatPeriod, readLocalizedText, resumeLabels } from './published-resume-utils'
 import { PublishedResumeSectionCard } from './published-resume-section-card'
 

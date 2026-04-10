@@ -3,7 +3,7 @@ import { Chip } from '@heroui/react/chip'
 import { Tooltip } from '@heroui/react/tooltip'
 import type { ReactNode } from 'react'
 
-import { ResumeLocale, ResumePublishedSnapshot } from '../../lib/published-resume-types'
+import { ResumeLocale, ResumePublishedSnapshot } from './types/published-resume.types'
 import {
   formatPublishedAt,
   readLocalizedText,

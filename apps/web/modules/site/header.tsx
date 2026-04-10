@@ -8,8 +8,8 @@ import { useThemeMode } from '@my-resume/ui/theme'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-import { DEFAULT_API_BASE_URL } from '../../lib/env'
-import type { ResumeLocale } from '../../lib/published-resume-types'
+import { DEFAULT_API_BASE_URL } from '../../core/env'
+import type { ResumeLocale } from '../published-resume/types/published-resume.types'
 import { resumeLabels } from '../published-resume/published-resume-utils'
 import styles from './header.module.css'
 

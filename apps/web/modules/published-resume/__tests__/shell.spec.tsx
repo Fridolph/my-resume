@@ -58,11 +58,11 @@ describe('PublishedResumeShell', () => {
     expect(screen.getByText('项目核心功能')).toBeInTheDocument()
     expect(screen.getByText('亮点、难点与解决方案')).toBeInTheDocument()
     expect(screen.getByText('覆盖公开展示、后台编辑与内容发布链路。')).toBeInTheDocument()
-    expect(screen.getByText('技能结构')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '图表' })).toBeInTheDocument()
+    expect(await screen.findByText('技能结构')).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: '图表' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '结构' })).toBeInTheDocument()
-    expect(screen.getByLabelText('技能雷达图')).toBeInTheDocument()
-    expect(screen.getByText('关键词云')).toBeInTheDocument()
+    expect(await screen.findByLabelText('技能雷达图')).toBeInTheDocument()
+    expect(await screen.findByText('关键词云')).toBeInTheDocument()
     expect(screen.getAllByText('Node.js').length).toBeGreaterThan(0)
     expect(document.querySelector('aside')?.className).toContain('lg:top-[5.5rem]')
     expect(
@@ -87,9 +87,9 @@ describe('PublishedResumeShell', () => {
     ).toBeInTheDocument()
     expect(screen.getByText('Core Functions')).toBeInTheDocument()
     expect(screen.getByText('Highlights, Challenges & Solutions')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Skill Structure' })).toBeInTheDocument()
-    expect(screen.getByLabelText('Skill radar chart')).toBeInTheDocument()
-    expect(screen.getByText('Keyword Cloud')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Skill Structure' })).toBeInTheDocument()
+    expect(await screen.findByLabelText('Skill radar chart')).toBeInTheDocument()
+    expect(await screen.findByText('Keyword Cloud')).toBeInTheDocument()
   }, 10000)
 
   it('should hide empty optional field blocks like experience location', () => {

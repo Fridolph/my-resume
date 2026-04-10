@@ -2,7 +2,7 @@ import { Tag } from '@heroui/react/tag'
 import { TagGroup } from '@heroui/react/tag-group'
 import { DisplayPill } from '@my-resume/ui/display'
 
-import { ResumeLocale, ResumeProjectItem } from '../../lib/published-resume-types'
+import { ResumeLocale, ResumeProjectItem } from './types/published-resume.types'
 import { formatPeriod, readLocalizedText, resumeLabels } from './published-resume-utils'
 import { PublishedResumeSectionCard } from './published-resume-section-card'
 

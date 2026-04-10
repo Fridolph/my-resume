@@ -4,7 +4,7 @@ import {
   ResumeExperienceItem,
   ResumeLocale,
   ResumeProjectItem,
-} from '../../lib/published-resume-types'
+} from './types/published-resume.types'
 
 export function readLocalizedText(value: LocalizedText, locale: ResumeLocale): string {
   return value[locale]

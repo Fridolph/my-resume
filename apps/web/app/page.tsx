@@ -1,6 +1,6 @@
-import { PublishedResumeShell } from '../components/published-resume/shell'
-import { DEFAULT_API_BASE_URL } from '../lib/env'
-import { fetchPublishedResume } from '../lib/published-resume-api'
+import { PublishedResumeShell } from '../modules/published-resume/shell'
+import { DEFAULT_API_BASE_URL } from '../core/env'
+import { fetchPublishedResume } from '../modules/published-resume/services/published-resume-api'
 
 export default async function WebHomePage() {
   const publishedResume = await fetchPublishedResume({

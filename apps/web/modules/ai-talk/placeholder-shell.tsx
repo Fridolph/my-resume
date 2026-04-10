@@ -13,7 +13,7 @@ import { useState } from 'react'
 import type {
   ResumeLocale,
   ResumePublishedSnapshot,
-} from '../../lib/published-resume-types'
+} from '../published-resume/types/published-resume.types'
 import { PublishedResumeEmptyState } from '../published-resume/published-resume-empty-state'
 import {
   readLocalizedText,

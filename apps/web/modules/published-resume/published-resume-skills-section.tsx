@@ -4,9 +4,7 @@ import { Button } from '@heroui/react/button'
 import { Tooltip } from '@heroui/react/tooltip'
 import { useThemeMode } from '@my-resume/ui/theme'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { ComponentType } from 'react'
 
-import { ResumeLocale, ResumeSkillGroup } from '../../lib/published-resume-types'
 import { readLocalizedText, resumeLabels } from './published-resume-utils'
 import { PublishedResumeSectionCard } from './published-resume-section-card'
 import {
@@ -16,8 +14,14 @@ import {
   getSkillChartPalette,
   normalizeSkillGroups,
   rankSkillGroups,
-  type SkillChartOption,
 } from './published-resume-skills-utils'
+import type {
+  IdleAwareWindow,
+  PublishedResumeSkillsSectionProps,
+  SkillChartMode,
+  SkillChartRenderer,
+  SkillViewMode,
+} from './types/published-resume-skills-section.types'
 import styles from './published-resume-skills-section.module.css'
 
 const cloudTokenToneClasses = [
@@ -28,23 +32,6 @@ const cloudTokenToneClasses = [
   'hover:border-rose-500/45 hover:text-rose-600 hover:shadow-[0_14px_30px_rgba(244,63,94,0.15)] dark:hover:text-rose-300',
   'hover:border-emerald-500/45 hover:text-emerald-600 hover:shadow-[0_14px_30px_rgba(16,185,129,0.15)] dark:hover:text-emerald-300',
 ] as const
-
-interface PublishedResumeSkillsSectionProps {
-  locale: ResumeLocale
-  skills: ResumeSkillGroup[]
-}
-
-type SkillViewMode = 'structure' | 'chart'
-type SkillChartMode = 'radar' | 'pie'
-type SkillChartRenderer = ComponentType<{
-  ariaLabel: string
-  option: SkillChartOption
-}>
-type IdleAwareWindow = Window &
-  typeof globalThis & {
-    requestIdleCallback?: (callback: IdleRequestCallback) => number
-    cancelIdleCallback?: (handle: number) => void
-  }
 
 const skillViewLabels = {
   zh: {
@@ -75,14 +62,14 @@ const skillViewLabels = {
 
 async function loadSkillChartRenderer(mode: SkillChartMode): Promise<SkillChartRenderer> {
   if (mode === 'radar') {
-    const module = await import('./published-resume-skills-radar-chart')
+    const radarChartModule = await import('./published-resume-skills-radar-chart')
 
-    return module.PublishedResumeSkillsRadarChart
+    return radarChartModule.PublishedResumeSkillsRadarChart
   }
 
-  const module = await import('./published-resume-skills-pie-chart')
+  const pieChartModule = await import('./published-resume-skills-pie-chart')
 
-  return module.PublishedResumeSkillsPieChart
+  return pieChartModule.PublishedResumeSkillsPieChart
 }
 
 export function PublishedResumeSkillsSection({
