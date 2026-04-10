@@ -9,7 +9,9 @@ import {
 } from '@heroui/react/card'
 import { Button } from '@heroui/react/button'
 import { Chip } from '@heroui/react/chip'
+import { Skeleton } from '@heroui/react/skeleton'
 import dynamic from 'next/dynamic'
+import { useTranslations } from 'next-intl'
 import { useEffect, useMemo, useState } from 'react'
 
 import type { AiWorkbenchRuntimeSummary } from './types/ai-workbench.types'
@@ -26,26 +28,51 @@ import type {
   ResumeDraftSummarySnapshot,
 } from '../resume/types/resume.types'
 import { useAdminSession } from '../../core/admin-session'
+import type { AppLocale } from '../../i18n/types'
 import type { FileExtractionResult } from './types/ai-file.types'
 
 const AiFileExtractionPanel = dynamic(
   () => import('./components/file-extraction-panel').then((module) => module.AiFileExtractionPanel),
   {
-    loading: () => <div className="status-box">正在加载文件提取面板...</div>,
+    loading: () => (
+      <div className="status-box" data-testid="ai-file-extraction-loading">
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">正在加载文件提取面板...</p>
+        <div className="mt-2 grid gap-2">
+          <Skeleton className="h-4 w-4/5 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
+          <Skeleton className="h-4 w-2/3 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
+        </div>
+      </div>
+    ),
   },
 )
 
 const AiAnalysisPanel = dynamic(
   () => import('./components/analysis-panel').then((module) => module.AiAnalysisPanel),
   {
-    loading: () => <div className="status-box">正在加载分析面板...</div>,
+    loading: () => (
+      <div className="status-box" data-testid="ai-analysis-panel-loading">
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">正在加载分析面板...</p>
+        <div className="mt-2 grid gap-2">
+          <Skeleton className="h-4 w-3/4 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
+          <Skeleton className="h-4 w-4/5 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
+        </div>
+      </div>
+    ),
   },
 )
 
 const AiCachedReportsPanel = dynamic(
   () => import('./components/cached-reports-panel').then((module) => module.AiCachedReportsPanel),
   {
-    loading: () => <div className="status-box">正在加载缓存报告...</div>,
+    loading: () => (
+      <div className="status-box" data-testid="ai-cached-reports-loading">
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">正在加载缓存报告...</p>
+        <div className="mt-2 grid gap-2">
+          <Skeleton className="h-4 w-3/5 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
+          <Skeleton className="h-4 w-2/3 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
+        </div>
+      </div>
+    ),
   },
 )
 
@@ -66,10 +93,10 @@ const scenarioCards = {
 
 function WorkbenchSkeleton({ lines = 3 }: { lines?: number }) {
   return (
-    <div className="grid gap-2">
+    <div className="grid gap-2" data-testid="workbench-skeleton">
       {Array.from({ length: lines }).map((_, index) => (
-        <div
-          className="h-4 animate-pulse rounded-md bg-zinc-200/80 dark:bg-zinc-800/80"
+        <Skeleton
+          className="h-4 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80"
           key={`workbench-skeleton-${index}`}
         />
       ))}
@@ -77,8 +104,9 @@ function WorkbenchSkeleton({ lines = 3 }: { lines?: number }) {
   )
 }
 
-export function AdminAiWorkbenchShell() {
+export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
   const { accessToken, currentUser, status } = useAdminSession()
+  const t = useTranslations('ai')
   const summaryLocale = readResumeLocaleCookie()
   const [runtimeSummary, setRuntimeSummary] = useState<AiWorkbenchRuntimeSummary | null>(
     null,
@@ -250,12 +278,10 @@ export function AdminAiWorkbenchShell() {
           </div>
           <div className="space-y-2">
             <CardTitle className="text-3xl font-semibold tracking-tight">
-              AI 工作台
+              {t('pageTitle')}
             </CardTitle>
             <CardDescription className="max-w-3xl leading-7">
-              这一页先把上传、分析、缓存报告、草稿回写与运行时状态整理为稳定工作台。现在布局按“整页分行
-              + 中间双栏工作区”收拢，后续再加 RAG、检索链路或更复杂的 prompt
-              策略时，也不会破坏后台主线。
+              {t('pageDescription')}
             </CardDescription>
           </div>
         </CardHeader>

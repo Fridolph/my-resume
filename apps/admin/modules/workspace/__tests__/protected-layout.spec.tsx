@@ -89,12 +89,30 @@ vi.mock('@heroui/react/tooltip', () => ({
   Tooltip: TooltipMock,
 }))
 
-vi.mock('next/navigation', () => ({
+vi.mock('../../../i18n/navigation', () => ({
+  Link: ({ children, href, ...props }: { children: ReactNode; href: string } & Record<string, unknown>) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
   usePathname: () => pathnameState.value,
   useRouter: () => ({
     push: vi.fn(),
     replace: vi.fn(),
   }),
+}))
+
+vi.mock('next-intl', () => ({
+  useTranslations:
+    () =>
+    (key: string): string => {
+      const map: Record<string, string> = {
+        dashboardBreadcrumb: '后台',
+        menuButton: '菜单',
+      }
+
+      return map[key] ?? key
+    },
 }))
 
 vi.mock('../../../core/admin-session', () => ({

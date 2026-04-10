@@ -5,9 +5,9 @@ import { Button } from '@heroui/react/button'
 import { Dropdown } from '@heroui/react/dropdown'
 import { Switch } from '@heroui/react/switch'
 import { useThemeMode } from '@my-resume/ui/theme'
+import { useTranslations } from 'next-intl'
 
 import type { ResumeLocale } from '../published-resume/types/published-resume.types'
-import { resumeLabels } from '../published-resume/published-resume-utils'
 import styles from './site-header.module.css'
 
 const PROJECT_GITHUB_URL = 'https://github.com/Fridolph/my-resume'
@@ -21,7 +21,7 @@ export function PublicSiteHeaderActions({
   apiBaseUrl,
   locale,
 }: PublicSiteHeaderActionsProps) {
-  const labels = resumeLabels[locale]
+  const t = useTranslations('site')
   const { theme, setTheme } = useThemeMode()
   const markdownExportUrl = buildPublishedResumeExportUrl({
     apiBaseUrl,
@@ -38,24 +38,24 @@ export function PublicSiteHeaderActions({
     <>
       <Dropdown.Root>
         <Dropdown.Trigger
-          aria-label={labels.downloadAriaLabel}
+          aria-label={t('downloadAriaLabel')}
           className={styles.headerActionTrigger}>
           <DownloadIcon className="h-4 w-4" />
         </Dropdown.Trigger>
         <Dropdown.Popover placement="bottom end">
-          <Dropdown.Menu aria-label={labels.downloadMenuLabel}>
+          <Dropdown.Menu aria-label={t('downloadMenuLabel')}>
             <Dropdown.Item href={markdownExportUrl} id="download-markdown">
-              {labels.exportMarkdownMenu}
+              {t('exportMarkdownMenu')}
             </Dropdown.Item>
             <Dropdown.Item href={pdfExportUrl} id="download-pdf">
-              {labels.exportPdfMenu}
+              {t('exportPdfMenu')}
             </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown.Popover>
       </Dropdown.Root>
 
       <Switch.Root
-        aria-label="切换明暗主题"
+        aria-label={t('themeSwitchAriaLabel')}
         className={styles.themeSwitch}
         isSelected={theme === 'dark'}
         onChange={(isSelected) => setTheme(isSelected ? 'dark' : 'light')}>
@@ -81,7 +81,7 @@ export function PublicSiteHeaderActions({
 
       <a href={PROJECT_GITHUB_URL} rel="noreferrer" target="_blank">
         <Button
-          aria-label={labels.githubAriaLabel}
+          aria-label={t('githubAriaLabel')}
           className={styles.githubButton}
           isIconOnly
           size="sm"

@@ -1,31 +1,19 @@
 'use client'
 
 import { Button } from '@heroui/react/button'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { Skeleton } from '@heroui/react/skeleton'
+import { useTranslations } from 'next-intl'
 import { useEffect, useState, type ComponentType } from 'react'
 
 import { DEFAULT_API_BASE_URL } from '../../core/env'
+import { Link, usePathname, useRouter } from '../../i18n/navigation'
 import type { ResumeLocale } from '../published-resume/types/published-resume.types'
-import { resumeLabels } from '../published-resume/published-resume-utils'
+import type {
+  IdleWindowCallbacks,
+  PublicSiteHeaderActionsProps,
+  PublicSiteHeaderProps,
+} from './site-header.types'
 import styles from './site-header.module.css'
-
-interface PublicSiteHeaderProps {
-  apiBaseUrl?: string
-  deferActionsUntilIdle?: boolean
-  locale: ResumeLocale
-  onChangeLocale: (locale: ResumeLocale) => void
-}
-
-interface PublicSiteHeaderActionsProps {
-  apiBaseUrl: string
-  locale: ResumeLocale
-}
-
-interface IdleWindowCallbacks {
-  cancelIdleCallback?: (handle: number) => void
-  requestIdleCallback?: (callback: () => void) => number
-}
 
 const navItems = [
   {
@@ -47,14 +35,12 @@ const navItems = [
  *
  * @param apiBaseUrl 当前公开站访问的 API 基地址
  * @param locale 当前展示语言
- * @param onChangeLocale 切换展示语言的方法
  * @returns 公开站头部节点
  */
 export function PublicSiteHeader({
   apiBaseUrl = DEFAULT_API_BASE_URL,
   deferActionsUntilIdle = false,
   locale,
-  onChangeLocale,
 }: PublicSiteHeaderProps) {
   const isJsdom = typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent)
   const [shouldLoadActions, setShouldLoadActions] = useState(
@@ -63,8 +49,9 @@ export function PublicSiteHeader({
   const [actionsComponent, setActionsComponent] = useState<ComponentType<
     PublicSiteHeaderActionsProps
   > | null>(null)
+  const t = useTranslations('site')
   const pathname = usePathname()
-  const labels = resumeLabels[locale]
+  const router = useRouter()
 
   useEffect(() => {
     if (!deferActionsUntilIdle || shouldLoadActions || isJsdom || typeof window === 'undefined') {
@@ -130,7 +117,7 @@ export function PublicSiteHeader({
               className="hidden min-w-0 flex-col md:flex"
               data-testid="public-site-brand-text">
               <span className="truncate text-lg font-semibold text-slate-950 dark:text-white">
-                Fridolph Resume
+                {t('brandName')}
               </span>
             </span>
           </Link>
@@ -148,10 +135,10 @@ export function PublicSiteHeader({
                   : pathname.startsWith(item.href)
               const label =
                 item.key === 'resume'
-                  ? labels.resumeNav
+                  ? t('resumeNav')
                   : item.key === 'profile'
-                    ? labels.profileNav
-                    : labels.aiTalkNav
+                    ? t('profileNav')
+                    : t('aiTalkNav')
 
               return (
                 <Link href={item.href} key={item.href} prefetch={false}>
@@ -171,19 +158,19 @@ export function PublicSiteHeader({
           <div className={styles.localeSwitchWrapper}>
             <Button
               className={styles.localeSwitchButton}
-              onClick={() => onChangeLocale('zh')}
+              onClick={() => router.replace(pathname, { locale: 'zh' })}
               size="sm"
               type="button"
               variant={locale === 'zh' ? 'primary' : 'ghost'}>
-              中
+              {t('langZh')}
             </Button>
             <Button
               className={styles.localeSwitchButton}
-              onClick={() => onChangeLocale('en')}
+              onClick={() => router.replace(pathname, { locale: 'en' })}
               size="sm"
               type="button"
               variant={locale === 'en' ? 'primary' : 'ghost'}>
-              EN
+              {t('langEn')}
             </Button>
           </div>
 
@@ -209,9 +196,18 @@ function HeaderActionsFallback() {
       aria-hidden="true"
       className="flex items-center gap-2"
       data-testid="public-site-header-actions-fallback">
-      <span className={styles.headerActionSkeleton} />
-      <span className={styles.themeSwitchSkeleton} />
-      <span className={styles.headerActionSkeleton} />
+      <Skeleton
+        className="h-[30px] w-[30px] rounded-full border border-slate-200/80 bg-white/60 dark:border-white/10 dark:bg-white/5"
+        data-testid="public-site-header-action-skeleton"
+      />
+      <Skeleton
+        className="h-[30px] w-12 rounded-full border border-slate-200/80 bg-white/72 dark:border-white/10 dark:bg-white/5"
+        data-testid="public-site-theme-switch-skeleton"
+      />
+      <Skeleton
+        className="h-[30px] w-[30px] rounded-full border border-slate-200/80 bg-white/60 dark:border-white/10 dark:bg-white/5"
+        data-testid="public-site-header-action-skeleton"
+      />
     </div>
   )
 }

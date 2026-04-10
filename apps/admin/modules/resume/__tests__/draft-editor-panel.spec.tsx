@@ -82,7 +82,7 @@ describe('ResumeDraftEditorPanel', () => {
       />,
     )
 
-    expect(document.querySelector('.animate-pulse')).toBeInTheDocument()
+    expect(screen.getByTestId('resume-draft-loading-skeleton')).toBeInTheDocument()
 
     expect(await screen.findByDisplayValue('付寅生')).toBeInTheDocument()
     expect(screen.queryByDisplayValue('Full-Stack Engineer')).not.toBeInTheDocument()

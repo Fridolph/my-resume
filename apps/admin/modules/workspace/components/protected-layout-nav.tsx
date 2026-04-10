@@ -1,9 +1,10 @@
 'use client'
 
 import { Button } from '@heroui/react/button'
-import { useRouter } from 'next/navigation'
 
-import { adminNavigationItems } from '../utils/admin-navigation'
+import { useRouter } from '../../../i18n/navigation'
+import type { AppLocale } from '../../../i18n/types'
+import { getAdminNavigationItems } from '../utils/admin-navigation'
 import {
   navBadgeBaseClass,
   navBadgeCollapsedClass,
@@ -16,13 +17,16 @@ import { AdminNavIcon } from './protected-layout-icons'
 export function AdminNavItems({
   collapsed = false,
   currentPathname,
+  locale,
   onNavigate,
 }: {
   collapsed?: boolean
   currentPathname: string
+  locale: AppLocale
   onNavigate?: () => void
 }) {
   const router = useRouter()
+  const adminNavigationItems = getAdminNavigationItems(locale)
 
   return (
     <div className="flex flex-col gap-2">

@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from '@heroui/react/card'
 import { Chip } from '@heroui/react/chip'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 
 import { ExportEntryPanel } from './components/export-entry-panel'
@@ -15,9 +16,11 @@ import { RoleActionPanel } from '../shared/components/role-action-panel'
 import { DEFAULT_API_BASE_URL } from '../../core/env'
 import { postProtectedAction, publishResume } from '../auth/services/auth-api'
 import { useAdminSession } from '../../core/admin-session'
+import type { AppLocale } from '../../i18n/types'
 
-export function AdminPublishShell() {
+export function AdminPublishShell({ locale }: { locale: AppLocale }) {
   const { accessToken, currentUser, status } = useAdminSession()
+  const t = useTranslations('publish')
   const [pendingAction, setPendingAction] = useState<'publish' | 'ai-analysis' | null>(
     null,
   )
@@ -81,11 +84,10 @@ export function AdminPublishShell() {
             </div>
             <div className="space-y-2">
               <CardTitle className="text-3xl font-semibold tracking-tight">
-                发布与导出
+                {t('pageTitle')}
               </CardTitle>
               <CardDescription className="max-w-2xl leading-7">
-                这一页集中处理角色动作、手动发布和导出下载。这样内容编辑页可以保持更纯粹，AI
-                工作台也不会混入发布职责。
+                {t('pageDescription')}
               </CardDescription>
             </div>
           </CardHeader>
@@ -105,10 +107,8 @@ export function AdminPublishShell() {
         <Card className="border border-zinc-200/70 dark:border-zinc-800">
           <CardHeader className="flex flex-col items-start gap-2">
             <p className="eyebrow">工作流</p>
-            <CardTitle>发布链路说明</CardTitle>
-            <CardDescription>
-              当前仍坚持最简单、最可解释的链路：先维护草稿，再人工发布，公开站始终只读发布态。
-            </CardDescription>
+            <CardTitle>{t('workflowTitle')}</CardTitle>
+            <CardDescription>{t('workflowDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="stack">
             <div className="status-box">
@@ -138,12 +138,12 @@ export function AdminPublishShell() {
         <div className="stack">
           <ExportEntryPanel
             apiBaseUrl={DEFAULT_API_BASE_URL}
-            locale="zh"
+            locale={locale}
             role={currentUser.role}
           />
           <ExportEntryPanel
             apiBaseUrl={DEFAULT_API_BASE_URL}
-            locale="en"
+            locale={locale === 'zh' ? 'en' : 'zh'}
             role={currentUser.role}
           />
         </div>

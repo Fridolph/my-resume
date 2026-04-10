@@ -2,6 +2,7 @@
 
 import { Button } from '@heroui/react/button'
 
+import type { AppLocale } from '../../../i18n/types'
 import {
   sidebarBrandClass,
   sidebarBrandCollapsedClass,
@@ -17,10 +18,12 @@ import { AdminNavItems } from './protected-layout-nav'
 
 export function AdminSidebar({
   currentPathname,
-  sidebarCollapsed,
+  locale,
   onToggle,
+  sidebarCollapsed,
 }: {
   currentPathname: string
+  locale: AppLocale
   sidebarCollapsed: boolean
   onToggle: () => void
 }) {
@@ -62,7 +65,11 @@ export function AdminSidebar({
           className={[sidebarContentClass, sidebarCollapsed ? sidebarContentCollapsedClass : '']
             .join(' ')
             .trim()}>
-          <AdminNavItems collapsed={sidebarCollapsed} currentPathname={currentPathname} />
+          <AdminNavItems
+            collapsed={sidebarCollapsed}
+            currentPathname={currentPathname}
+            locale={locale}
+          />
           <div
             aria-hidden="true"
             className="my-[0.2rem] mt-[0.3rem] h-px w-full bg-zinc-200/70 dark:bg-white/8"

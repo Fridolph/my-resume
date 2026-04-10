@@ -2,8 +2,43 @@ import { render, screen } from '@testing-library/react'
 import { ThemeModeProvider } from '@my-resume/ui/theme'
 import { describe, expect, it, vi } from 'vitest'
 
-vi.mock('next/navigation', () => ({
+vi.mock('../../../i18n/navigation', () => ({
+  Link: ({ children, href, ...props }: any) => (
+    <a
+      href={
+        typeof href === 'string'
+          ? href === '/'
+            ? '/zh'
+            : href.startsWith('/')
+              ? `/zh${href}`
+              : href
+          : '/zh'
+      }
+      {...props}>
+      {children}
+    </a>
+  ),
   usePathname: () => '/profile',
+  useRouter: () => ({
+    replace: vi.fn(),
+  }),
+}))
+
+vi.mock('next-intl', () => ({
+  useTranslations:
+    () =>
+    (key: string): string => {
+      const map: Record<string, string> = {
+        aiTalkNav: 'AI Talk',
+        brandName: 'Fridolph Resume',
+        langEn: 'EN',
+        langZh: '中',
+        profileNav: '概览',
+        resumeNav: '简历',
+      }
+
+      return map[key] ?? key
+    },
 }))
 
 import { ProfileOverviewShell } from '../overview-shell'
@@ -13,7 +48,7 @@ describe('ProfileOverviewShell', () => {
   it('should render profile overview cards and ai-talk entry', () => {
     render(
       <ThemeModeProvider>
-        <ProfileOverviewShell publishedResume={publishedResumeFixture} />
+        <ProfileOverviewShell locale="zh" publishedResume={publishedResumeFixture} />
       </ThemeModeProvider>,
     )
 
@@ -22,7 +57,7 @@ describe('ProfileOverviewShell', () => {
     expect(screen.getByRole('button', { name: '进入 AI Talk' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'AI Talk' })).toHaveAttribute(
       'href',
-      '/ai-talk',
+      '/zh/ai-talk',
     )
   })
 })

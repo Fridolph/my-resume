@@ -17,11 +17,34 @@ const { fetchCurrentUserMock, loginWithPasswordMock, pushMock, replaceMock } = v
   }),
 )
 
-vi.mock('next/navigation', () => ({
+vi.mock('../../../i18n/navigation', () => ({
   useRouter: () => ({
     push: pushMock,
     replace: replaceMock,
   }),
+}))
+
+vi.mock('next-intl', () => ({
+  useTranslations:
+    () =>
+    (key: string): string => {
+      const map: Record<string, string> = {
+        boundaryLabel: '当前边界',
+        boundaryValue: '继续沿用前端 token 校验，不在这轮升级 cookie / middleware。',
+        goalLabel: '当前目标',
+        goalValue: '建立概览、简历编辑、AI 工作台、发布导出四个主工作区。',
+        heroDescription:
+          '这轮只升级后台信息架构与视觉壳层，不改后端 API，不把业务逻辑挪进 Next Route Handlers，也不扩到展示端样式体系。',
+        heroTitle: '面向内容维护与 AI 操作的标准后台壳',
+        loginChecking: '正在检查登录状态...',
+        workflowOne: '业务逻辑继续只走 apps/server，admin 只做后台会话壳和操作入口。',
+        workflowThree:
+          '登录成功后进入 /dashboard，viewer 保持只读体验，admin 可继续写与发布。',
+        workflowTwo: '当前 demo 账号：admin / admin123456、viewer / viewer123456。',
+      }
+
+      return map[key] ?? key
+    },
 }))
 
 vi.mock('../services/auth-api', () => ({
@@ -90,14 +113,14 @@ describe('AdminLoginShell', () => {
     render(
       <StrictMode>
         <Providers>
-          <AdminLoginShell />
+          <AdminLoginShell locale="zh" />
         </Providers>
       </StrictMode>,
     )
 
     await waitFor(() => {
       expect(fetchCurrentUserMock).toHaveBeenCalledTimes(1)
-      expect(replaceMock).toHaveBeenCalledWith('/dashboard')
+      expect(replaceMock).toHaveBeenCalledWith('/dashboard', { locale: 'zh' })
     })
   })
 
@@ -123,7 +146,7 @@ describe('AdminLoginShell', () => {
 
     render(
       <Providers>
-        <AdminLoginShell />
+        <AdminLoginShell locale="zh" />
       </Providers>,
     )
 
@@ -132,7 +155,7 @@ describe('AdminLoginShell', () => {
     await waitFor(() => {
       expect(loginWithPasswordMock).toHaveBeenCalledTimes(1)
       expect(fetchCurrentUserMock).not.toHaveBeenCalled()
-      expect(replaceMock).toHaveBeenCalledWith('/dashboard')
+      expect(replaceMock).toHaveBeenCalledWith('/dashboard', { locale: 'zh' })
     })
     expect(window.localStorage.getItem('my-resume.admin.access-token')).toBe(
       'new-admin-token',

@@ -2,12 +2,14 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@heroui/react/card'
 import { Chip } from '@heroui/react/chip'
-import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 
 import { loginWithPassword } from './services/auth-api'
 import { primeCurrentUserSession } from '../../core/admin-session-store'
 import { DEFAULT_API_BASE_URL } from '../../core/env'
+import { useRouter } from '../../i18n/navigation'
+import type { AppLocale } from '../../i18n/types'
 import { writeAccessToken } from '../../core/session-storage'
 import { useAdminSession } from '../../core/admin-session'
 import { LoginForm } from './components/login-form'
@@ -18,8 +20,9 @@ import { ThemeModeToggle } from '../shared/components/theme-mode-toggle'
  *
  * @returns 后台登录壳节点
  */
-export function AdminLoginShell() {
+export function AdminLoginShell({ locale }: { locale: AppLocale }) {
   const router = useRouter()
+  const t = useTranslations('auth')
   const { currentUser, refreshSession, status } = useAdminSession()
   const [pending, setPending] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -27,9 +30,9 @@ export function AdminLoginShell() {
   useEffect(() => {
     // 已有合法会话时直接跳工作区，避免重复停留在登录页
     if (status === 'ready' && currentUser) {
-      router.replace('/dashboard')
+      router.replace('/dashboard', { locale })
     }
-  }, [currentUser, router, status])
+  }, [currentUser, locale, router, status])
 
   const checkingSession = status === 'loading'
 
@@ -70,7 +73,7 @@ export function AdminLoginShell() {
       <main className="mx-auto grid min-h-screen w-full max-w-3xl grid-cols-1 px-4 py-6 md:px-6">
         <Card className="border border-zinc-200/70 bg-white/90 shadow-xl dark:border-zinc-800 dark:bg-zinc-950/85">
           <CardContent className="py-12 text-center text-sm text-zinc-500 dark:text-zinc-400">
-            正在检查登录状态...
+            {t('loginChecking')}
           </CardContent>
         </Card>
       </main>
@@ -88,31 +91,28 @@ export function AdminLoginShell() {
           <div className="space-y-3">
             <p className="eyebrow">Admin Console</p>
             <CardTitle className="text-4xl font-semibold tracking-tight text-zinc-950 dark:text-white">
-              面向内容维护与 AI 操作的标准后台壳
+              {t('heroTitle')}
             </CardTitle>
             <p className="max-w-xl text-sm leading-7 text-zinc-500 dark:text-zinc-400">
-              这轮只升级后台信息架构与视觉壳层，不改后端 API，不把业务逻辑挪进 Next Route
-              Handlers，也不扩到展示端样式体系。
+              {t('heroDescription')}
             </p>
           </div>
         </CardHeader>
         <CardContent className="stack">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="status-box">
-              <strong>当前目标</strong>
-              <span>建立概览、简历编辑、AI 工作台、发布导出四个主工作区。</span>
+              <strong>{t('goalLabel')}</strong>
+              <span>{t('goalValue')}</span>
             </div>
             <div className="status-box">
-              <strong>当前边界</strong>
-              <span>继续沿用前端 token 校验，不在这轮升级 cookie / middleware。</span>
+              <strong>{t('boundaryLabel')}</strong>
+              <span>{t('boundaryValue')}</span>
             </div>
           </div>
           <ul className="muted-list">
-            <li>业务逻辑继续只走 `apps/server`，admin 只做后台会话壳和操作入口。</li>
-            <li>当前 demo 账号：`admin / admin123456`、`viewer / viewer123456`。</li>
-            <li>
-              登录成功后进入 `/dashboard`，viewer 保持只读体验，admin 可继续写与发布。
-            </li>
+            <li>{t('workflowOne')}</li>
+            <li>{t('workflowTwo')}</li>
+            <li>{t('workflowThree')}</li>
           </ul>
           <div className="flex flex-wrap items-center gap-3">
             <ThemeModeToggle />

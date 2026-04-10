@@ -12,6 +12,7 @@ import { PublishedResumeLoadingState } from './published-resume-loading-state'
 import { PublishedResumeSectionCard } from './published-resume-section-card'
 import { resumeLabels } from './published-resume-utils'
 import { fetchPublishedResume } from './services/published-resume-api'
+import { usePublishedResumeSync } from './hooks/use-published-resume-sync'
 import { PublicSiteHeader } from '../site/site-header'
 
 const DeferredPublishedResumeExperienceSection = dynamic(
@@ -158,18 +159,22 @@ function useDeferredSection({
 export function PublishedResumeShell({
   apiBaseUrl = DEFAULT_API_BASE_URL,
   enableClientSync = false,
+  locale = 'zh',
   publishedResume,
   syncPublishedResume = fetchPublishedResume,
 }: {
   apiBaseUrl?: string
   enableClientSync?: boolean
+  locale?: ResumeLocale
   publishedResume: ResumePublishedSnapshot | null
   syncPublishedResume?: typeof fetchPublishedResume
 }) {
-  const [locale, setLocale] = useState<ResumeLocale>('zh')
-  const [currentPublishedResume, setCurrentPublishedResume] = useState(publishedResume)
-  const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'error'>('idle')
-  const [syncMessage, setSyncMessage] = useState<string | null>(null)
+  const { currentPublishedResume, syncState, syncMessage } = usePublishedResumeSync({
+    apiBaseUrl,
+    enableClientSync,
+    publishedResume,
+    syncPublishedResume,
+  })
   const isJsdom = typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent)
   const labels = resumeLabels[locale]
   const experienceSection = useDeferredSection({
@@ -184,61 +189,6 @@ export function PublishedResumeShell({
     isJsdom,
     rootMargin: '420px 0px',
   })
-
-  useEffect(() => {
-    setCurrentPublishedResume(publishedResume)
-  }, [publishedResume])
-
-  useEffect(() => {
-    if (!enableClientSync) {
-      return
-    }
-
-    let cancelled = false
-    setSyncState('syncing')
-    setSyncMessage(null)
-
-    syncPublishedResume({
-      apiBaseUrl,
-    })
-      .then((nextSnapshot) => {
-        if (cancelled) {
-          return
-        }
-
-        setCurrentPublishedResume((currentSnapshot) => {
-          if (!nextSnapshot) {
-            return currentSnapshot
-          }
-
-          if (!currentSnapshot) {
-            return nextSnapshot
-          }
-
-          const currentPublishedAt = Date.parse(currentSnapshot.publishedAt)
-          const nextPublishedAt = Date.parse(nextSnapshot.publishedAt)
-
-          if (Number.isNaN(currentPublishedAt) || Number.isNaN(nextPublishedAt)) {
-            return nextSnapshot
-          }
-
-          return nextPublishedAt > currentPublishedAt ? nextSnapshot : currentSnapshot
-        })
-        setSyncState('idle')
-      })
-      .catch((error) => {
-        if (cancelled) {
-          return
-        }
-
-        setSyncState('error')
-        setSyncMessage(error instanceof Error ? error.message : '公开简历同步失败')
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [apiBaseUrl, enableClientSync, syncPublishedResume])
 
   if (!currentPublishedResume && syncState === 'syncing') {
     return <PublishedResumeLoadingState />
@@ -257,7 +207,6 @@ export function PublishedResumeShell({
         apiBaseUrl={apiBaseUrl}
         deferActionsUntilIdle
         locale={locale}
-        onChangeLocale={setLocale}
       />
 
       <section className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 sm:px-6">

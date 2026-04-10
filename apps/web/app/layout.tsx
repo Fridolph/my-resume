@@ -1,8 +1,12 @@
 import './globals.css'
 
-import { ThemeModeProvider } from '@my-resume/ui/theme'
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
+import { NextIntlClientProvider } from 'next-intl'
+import { getLocale, getMessages } from 'next-intl/server'
+
+import { WebLocaleProviders } from './web-locale-providers'
+import { isAppLocale, toHeroUiLocale, toHtmlLang, type AppLocale } from '../i18n/types'
 
 export const metadata: Metadata = {
   title: 'my-resume web',
@@ -39,17 +43,30 @@ export default function RootLayout({
 }: Readonly<{
   children: ReactNode
 }>) {
+  return <RootLayoutInner>{children}</RootLayoutInner>
+}
+
+async function RootLayoutInner({ children }: { children: ReactNode }) {
+  const resolvedLocale = await getLocale()
+  const locale: AppLocale = isAppLocale(resolvedLocale) ? resolvedLocale : 'zh'
+  const htmlLang = toHtmlLang(locale)
+  const messages = await getMessages()
+
   return (
     <html
       data-template="default"
       data-theme="light"
-      lang="zh-CN"
+      lang={htmlLang}
       suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body>
-        <ThemeModeProvider>{children}</ThemeModeProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <WebLocaleProviders heroLocale={toHeroUiLocale(locale)} locale={locale}>
+            {children}
+          </WebLocaleProviders>
+        </NextIntlClientProvider>
       </body>
     </html>
   )

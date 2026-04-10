@@ -9,7 +9,7 @@ import {
 } from '@heroui/react/card'
 import { Button } from '@heroui/react/button'
 import { Chip } from '@heroui/react/chip'
-import Link from 'next/link'
+import { Skeleton } from '@heroui/react/skeleton'
 import { useEffect, useMemo, useState } from 'react'
 
 import type { AiWorkbenchRuntimeSummary } from '../ai/types/ai-workbench.types'
@@ -18,6 +18,8 @@ import {
   ensureDraftResumeSummary,
 } from '../../core/admin-resource-store'
 import { DEFAULT_API_BASE_URL } from '../../core/env'
+import { Link } from '../../i18n/navigation'
+import type { AppLocale } from '../../i18n/types'
 import { readResumeLocaleCookie } from '../resume/utils/resume-locale'
 import type { ResumeDraftSummarySnapshot } from '../resume/types/resume.types'
 import { useAdminSession } from '../../core/admin-session'
@@ -30,10 +32,10 @@ type AsyncState = 'idle' | 'loading' | 'ready' | 'error'
 
 function DashboardStatusSkeleton({ lines = 3 }: { lines?: number }) {
   return (
-    <div className="grid gap-2">
+    <div className="grid gap-2" data-testid="dashboard-status-skeleton">
       {Array.from({ length: lines }).map((_, index) => (
-        <div
-          className="h-4 animate-pulse rounded-md bg-zinc-200/80 dark:bg-zinc-800/80"
+        <Skeleton
+          className="h-4 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80"
           key={`dashboard-skeleton-${index}`}
         />
       ))}
@@ -45,7 +47,7 @@ const quickEntryCards = [
   {
     href: '/dashboard/resume',
     title: '简历编辑',
-    description: '继续维护标准双语简历草稿，保留“先草稿，后发布”的节奏。',
+    description: '维护标准双语草稿，保留“先草稿，后发布”的节奏。',
     actionLabel: '进入简历编辑',
   },
   {
@@ -62,9 +64,9 @@ const quickEntryCards = [
   },
 ] as const
 
-export function AdminDashboardShell() {
+export function AdminDashboardShell({ locale }: { locale: AppLocale }) {
   const { accessToken, currentUser, status } = useAdminSession()
-  const summaryLocale = readResumeLocaleCookie()
+  const summaryLocale = readResumeLocaleCookie() ?? locale
   const [runtimeState, setRuntimeState] = useState<AsyncState>('idle')
   const [runtimeSummary, setRuntimeSummary] = useState<AiWorkbenchRuntimeSummary | null>(
     null,

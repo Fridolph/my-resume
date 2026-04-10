@@ -8,15 +8,25 @@ import {
   CardTitle,
 } from '@heroui/react/card'
 import { Chip } from '@heroui/react/chip'
+import { Skeleton } from '@heroui/react/skeleton'
 import dynamic from 'next/dynamic'
 
 import { DEFAULT_API_BASE_URL } from '../../core/env'
 import { useAdminSession } from '../../core/admin-session'
+import type { AppLocale } from '../../i18n/types'
 
 const ResumeDraftEditorPanel = dynamic(
   () => import('./draft-editor-panel').then((module) => module.ResumeDraftEditorPanel),
   {
-    loading: () => <div className="status-box">正在加载简历编辑器...</div>,
+    loading: () => (
+      <div className="status-box" data-testid="resume-editor-loading">
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">正在加载简历编辑器...</p>
+        <div className="mt-2 grid gap-2">
+          <Skeleton className="h-4 w-4/5 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
+          <Skeleton className="h-4 w-3/5 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
+        </div>
+      </div>
+    ),
   },
 )
 
@@ -58,7 +68,7 @@ const moduleRoadmap = [
  *
  * @returns 简历编辑页壳节点
  */
-export function AdminResumeShell() {
+export function AdminResumeShell({ locale: _locale }: { locale: AppLocale }) {
   const { accessToken, currentUser, status } = useAdminSession()
 
   if (status !== 'ready' || !currentUser || !accessToken) {

@@ -11,6 +11,14 @@ const { useAdminSessionMock, fetchAiWorkbenchRuntimeMock, fetchDraftResumeSummar
     fetchDraftResumeSummaryMock: vi.fn(),
   }))
 
+vi.mock('../../../i18n/navigation', () => ({
+  Link: ({ children, href, ...props }: any) => (
+    <a href={typeof href === 'string' ? href : '/'} {...props}>
+      {children}
+    </a>
+  ),
+}))
+
 vi.mock('../../../core/admin-session', () => ({
   useAdminSession: useAdminSessionMock,
 }))
@@ -101,7 +109,7 @@ describe('AdminDashboardShell', () => {
 
     render(
       <StrictMode>
-        <AdminDashboardShell />
+        <AdminDashboardShell locale="zh" />
       </StrictMode>,
     )
 
@@ -143,7 +151,7 @@ describe('AdminDashboardShell', () => {
 
     render(
       <StrictMode>
-        <AdminDashboardShell />
+        <AdminDashboardShell locale="zh" />
       </StrictMode>,
     )
 

@@ -1,9 +1,10 @@
 'use client'
 
 import { Button } from '@heroui/react/button'
-import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import type { ReactNode } from 'react'
 
+import { Link } from '../../../i18n/navigation'
 import type { AdminNavigationItem } from '../types/admin-navigation.types'
 import {
   headerBodyClass,
@@ -26,6 +27,8 @@ export function AdminHeader({
   onOpenMenu: () => void
   pageMeta: AdminNavigationItem
 }) {
+  const t = useTranslations('workspace')
+
   return (
     <header className={headerShellClass} data-testid="admin-mobile-header">
       <div className={headerBodyClass}>
@@ -36,7 +39,7 @@ export function AdminHeader({
             size="sm"
             type="button"
             variant="outline">
-            菜单
+            {t('menuButton')}
           </Button>
           <div className={headerTextStackClass}>
             <div className={headerPageMetaRowClass}>
@@ -49,7 +52,7 @@ export function AdminHeader({
                 <ol className="flex items-center gap-2">
                   <li>
                     <Link href="/dashboard" prefetch={false}>
-                      后台
+                      {t('dashboardBreadcrumb')}
                     </Link>
                   </li>
                   <li>/</li>

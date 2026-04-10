@@ -36,6 +36,20 @@ vi.mock('../../resume/services/resume-draft-api', () => ({
   fetchDraftResumeSummary: fetchDraftResumeSummaryMock,
 }))
 
+vi.mock('next-intl', () => ({
+  useTranslations:
+    () =>
+    (key: string): string => {
+      const map: Record<string, string> = {
+        pageDescription:
+          '这一页先把上传、分析、缓存报告、草稿回写与运行时状态整理为稳定工作台。',
+        pageTitle: 'AI 工作台',
+      }
+
+      return map[key] ?? key
+    },
+}))
+
 vi.mock('../components/file-extraction-panel', () => ({
   AiFileExtractionPanel: ({
     canUpload,
@@ -232,7 +246,7 @@ describe('AdminAiWorkbenchShell', () => {
 
     render(
       <StrictMode>
-        <AdminAiWorkbenchShell />
+        <AdminAiWorkbenchShell locale="zh" />
       </StrictMode>,
     )
 
@@ -290,7 +304,7 @@ describe('AdminAiWorkbenchShell', () => {
 
     render(
       <StrictMode>
-        <AdminAiWorkbenchShell />
+        <AdminAiWorkbenchShell locale="zh" />
       </StrictMode>,
     )
 

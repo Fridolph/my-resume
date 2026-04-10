@@ -1,6 +1,7 @@
 'use client'
 
 import { Button } from '@heroui/react'
+import { Skeleton } from '@heroui/react/skeleton'
 import {
   DisplayPill,
   DisplaySectionIntro,
@@ -170,7 +171,13 @@ export function AiCachedReportsPanel({
         </div>
       )}
 
-      {loadingState === 'loading' ? <p className="muted">正在加载缓存报告...</p> : null}
+      {loadingState === 'loading' ? (
+        <div className="grid gap-2" data-testid="cached-reports-loading-skeleton">
+          <p className="muted">正在加载缓存报告...</p>
+          <Skeleton className="h-4 w-1/2 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
+          <Skeleton className="h-4 w-2/3 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
+        </div>
+      ) : null}
 
       {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
 
@@ -192,7 +199,13 @@ export function AiCachedReportsPanel({
         </div>
       ) : null}
 
-      {detailLoading ? <p className="muted">正在切换缓存报告...</p> : null}
+      {detailLoading ? (
+        <div className="grid gap-2" data-testid="cached-reports-detail-loading-skeleton">
+          <p className="muted">正在切换缓存报告...</p>
+          <Skeleton className="h-4 w-3/5 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
+          <Skeleton className="h-4 w-4/5 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
+        </div>
+      ) : null}
 
       {activeReport ? (
         <div className="preview-stack">

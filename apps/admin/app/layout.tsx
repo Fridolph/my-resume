@@ -1,9 +1,12 @@
 import './globals.css'
 
 import type { Metadata } from 'next'
+import { NextIntlClientProvider } from 'next-intl'
+import { getLocale, getMessages } from 'next-intl/server'
 import type { ReactNode } from 'react'
 
-import { Providers } from './providers'
+import { isAppLocale, toHtmlLang, type AppLocale } from '../i18n/types'
+import { ProvidersWithLocale } from './providers'
 
 export const metadata: Metadata = {
   title: 'my-resume admin',
@@ -15,10 +18,21 @@ export default function RootLayout({
 }: Readonly<{
   children: ReactNode
 }>) {
+  return <RootLayoutInner>{children}</RootLayoutInner>
+}
+
+async function RootLayoutInner({ children }: { children: ReactNode }) {
+  const resolvedLocale = await getLocale()
+  const locale: AppLocale = isAppLocale(resolvedLocale) ? resolvedLocale : 'zh'
+  const htmlLang = toHtmlLang(locale)
+  const messages = await getMessages()
+
   return (
-    <html lang="zh-CN" suppressHydrationWarning>
+    <html lang={htmlLang} suppressHydrationWarning>
       <body>
-        <Providers>{children}</Providers>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <ProvidersWithLocale locale={locale}>{children}</ProvidersWithLocale>
+        </NextIntlClientProvider>
       </body>
     </html>
   )

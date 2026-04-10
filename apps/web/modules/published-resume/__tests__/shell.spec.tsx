@@ -3,8 +3,55 @@ import userEvent from '@testing-library/user-event'
 import { ThemeModeProvider } from '@my-resume/ui/theme'
 import { describe, expect, it, vi } from 'vitest'
 
-vi.mock('next/navigation', () => ({
+const replaceMock = vi.fn()
+
+vi.mock('../../../i18n/navigation', () => ({
+  Link: ({ children, href, ...props }: any) => (
+    <a
+      href={
+        typeof href === 'string'
+          ? href === '/'
+            ? '/zh'
+            : href.startsWith('/')
+              ? `/zh${href}`
+              : href
+          : '/zh'
+      }
+      {...props}>
+      {children}
+    </a>
+  ),
   usePathname: () => '/',
+  useRouter: () => ({
+    replace: replaceMock,
+  }),
+}))
+
+vi.mock('next-intl', () => ({
+  useTranslations:
+    (namespace: string) =>
+    (key: string): string => {
+      if (namespace !== 'site') {
+        return key
+      }
+
+      const map: Record<string, string> = {
+        aiTalkNav: 'AI Talk',
+        brandName: 'Fridolph Resume',
+        downloadAriaLabel: '打开下载菜单',
+        downloadMenuLabel: '下载',
+        exportMarkdownMenu: '导出 Markdown',
+        exportPdfMenu: '导出 PDF',
+        githubAriaLabel: '打开项目 GitHub 仓库',
+        langEn: 'EN',
+        langZh: '中',
+        profileNav: '概览',
+        resumeNav: '简历',
+        themeSwitchAriaLabel: '切换明暗主题',
+      }
+
+      return map[key] ?? key
+    },
 }))
 
 import { PublishedResumeShell } from '../shell'
@@ -14,7 +61,7 @@ describe('PublishedResumeShell', () => {
   function renderShell() {
     return render(
       <ThemeModeProvider>
-        <PublishedResumeShell publishedResume={publishedResumeFixture} />
+        <PublishedResumeShell locale="zh" publishedResume={publishedResumeFixture} />
       </ThemeModeProvider>,
     )
   }
@@ -25,10 +72,10 @@ describe('PublishedResumeShell', () => {
     renderShell()
 
     expect(screen.getByRole('link', { name: '简历' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: '概览' })).toHaveAttribute('href', '/profile')
+    expect(screen.getByRole('link', { name: '概览' })).toHaveAttribute('href', '/zh/profile')
     expect(screen.getByRole('link', { name: 'AI Talk' })).toHaveAttribute(
       'href',
-      '/ai-talk',
+      '/zh/ai-talk',
     )
     expect(screen.getByTestId('public-site-brand-text')).toHaveClass('hidden', 'md:flex')
     expect(screen.getByTestId('public-site-nav')).toHaveClass(
@@ -80,23 +127,7 @@ describe('PublishedResumeShell', () => {
     expect(await screen.findByText('GitHub')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'EN' }))
-
-    expect(screen.getByRole('heading', { name: 'Yinsheng Fu' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Profile' })).toBeInTheDocument()
-    expect(
-      await screen.findByRole('button', { name: 'Open project GitHub repository' }),
-    ).toBeInTheDocument()
-    expect(
-      await screen.findByRole('heading', { name: 'Work Experience' }, { timeout: 4000 }),
-    ).toBeInTheDocument()
-    expect(
-      await screen.findByRole('heading', { name: 'AI Engineering Practice' }),
-    ).toBeInTheDocument()
-    expect(screen.getByText('Core Functions')).toBeInTheDocument()
-    expect(screen.getByText('Highlights, Challenges & Solutions')).toBeInTheDocument()
-    expect(await screen.findByRole('heading', { name: 'Skill Structure' })).toBeInTheDocument()
-    expect(await screen.findByLabelText('Skill radar chart')).toBeInTheDocument()
-    expect(await screen.findByText('Keyword Cloud')).toBeInTheDocument()
+    expect(replaceMock).toHaveBeenCalledWith('/', { locale: 'en' })
   }, 10000)
 
   it('should hide empty optional field blocks like experience location', () => {
@@ -120,7 +151,7 @@ describe('PublishedResumeShell', () => {
 
     render(
       <ThemeModeProvider>
-        <PublishedResumeShell publishedResume={fixtureWithoutLocation} />
+        <PublishedResumeShell locale="zh" publishedResume={fixtureWithoutLocation} />
       </ThemeModeProvider>,
     )
 
@@ -151,10 +182,11 @@ describe('PublishedResumeShell', () => {
   it('should render export entries in download menu and switch locale in urls', async () => {
     const user = userEvent.setup()
 
-    render(
+    const view = render(
       <ThemeModeProvider>
         <PublishedResumeShell
           apiBaseUrl="http://localhost:5577"
+          locale="zh"
           publishedResume={publishedResumeFixture}
         />
       </ThemeModeProvider>,
@@ -172,14 +204,22 @@ describe('PublishedResumeShell', () => {
     )
 
     await user.keyboard('{Escape}')
-    await user.click(screen.getByRole('button', { name: 'EN' }))
-    await user.click(await screen.findByRole('button', { name: 'Open download menu' }))
+    view.rerender(
+      <ThemeModeProvider>
+        <PublishedResumeShell
+          apiBaseUrl="http://localhost:5577"
+          locale="en"
+          publishedResume={publishedResumeFixture}
+        />
+      </ThemeModeProvider>,
+    )
+    await user.click(await screen.findByRole('button', { name: '打开下载菜单' }))
 
-    expect(await screen.findByRole('menuitem', { name: 'Export Markdown' })).toHaveAttribute(
+    expect(await screen.findByRole('menuitem', { name: '导出 Markdown' })).toHaveAttribute(
       'href',
       'http://localhost:5577/resume/published/export/markdown?locale=en',
     )
-    expect(await screen.findByRole('menuitem', { name: 'Export PDF' })).toHaveAttribute(
+    expect(await screen.findByRole('menuitem', { name: '导出 PDF' })).toHaveAttribute(
       'href',
       'http://localhost:5577/resume/published/export/pdf?locale=en',
     )
@@ -212,7 +252,7 @@ describe('PublishedResumeShell', () => {
   it('should render empty state when no published content is available', () => {
     render(
       <ThemeModeProvider>
-        <PublishedResumeShell publishedResume={null} />
+        <PublishedResumeShell locale="zh" publishedResume={null} />
       </ThemeModeProvider>,
     )
 
@@ -240,6 +280,7 @@ describe('PublishedResumeShell', () => {
         <PublishedResumeShell
           apiBaseUrl="http://localhost:5577"
           enableClientSync
+          locale="zh"
           publishedResume={publishedResumeFixture}
           syncPublishedResume={syncPublishedResume}
         />

@@ -2,8 +2,43 @@ import { render, screen } from '@testing-library/react'
 import { ThemeModeProvider } from '@my-resume/ui/theme'
 import { describe, expect, it, vi } from 'vitest'
 
-vi.mock('next/navigation', () => ({
+vi.mock('../../../i18n/navigation', () => ({
+  Link: ({ children, href, ...props }: any) => (
+    <a
+      href={
+        typeof href === 'string'
+          ? href === '/'
+            ? '/zh'
+            : href.startsWith('/')
+              ? `/zh${href}`
+              : href
+          : '/zh'
+      }
+      {...props}>
+      {children}
+    </a>
+  ),
   usePathname: () => '/ai-talk',
+  useRouter: () => ({
+    replace: vi.fn(),
+  }),
+}))
+
+vi.mock('next-intl', () => ({
+  useTranslations:
+    () =>
+    (key: string): string => {
+      const map: Record<string, string> = {
+        aiTalkNav: 'AI Talk',
+        brandName: 'Fridolph Resume',
+        langEn: 'EN',
+        langZh: '中',
+        profileNav: '概览',
+        resumeNav: '简历',
+      }
+
+      return map[key] ?? key
+    },
 }))
 
 import { AiTalkPlaceholderShell } from '../placeholder-shell'
@@ -15,6 +50,7 @@ describe('AiTalkPlaceholderShell', () => {
       <ThemeModeProvider>
         <AiTalkPlaceholderShell
           apiBaseUrl="http://localhost:5577"
+          locale="zh"
           publishedResume={publishedResumeFixture}
         />
       </ThemeModeProvider>,

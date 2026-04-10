@@ -1,12 +1,13 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { Skeleton } from '@heroui/react/skeleton'
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 
+import { Link, usePathname, useRouter } from '../../i18n/navigation'
 import { getAdminPageMeta } from './utils/admin-navigation'
 import { useAdminSession } from '../../core/admin-session'
+import type { AppLocale } from '../../i18n/types'
 import { AdminHeader } from './components/protected-layout-header'
 import { AdminSidebar } from './components/protected-layout-sidebar'
 
@@ -15,10 +16,12 @@ const AdminHeaderActions = dynamic(
     import('./components/protected-layout-header-actions').then((module) => module.AdminHeaderActions),
   {
     loading: () => (
-      <div className="flex shrink-0 items-center justify-end gap-2 sm:gap-2.5">
-        <div className="h-[30px] w-[30px] rounded-full border border-zinc-200/80 bg-zinc-100/85 dark:border-white/8 dark:bg-white/[0.06]" />
-        <div className="h-7 w-12 rounded-full border border-zinc-200/80 bg-zinc-100/85 dark:border-white/8 dark:bg-white/[0.06]" />
-        <div className="h-[30px] w-[30px] rounded-full border border-zinc-200/80 bg-zinc-100/85 dark:border-white/8 dark:bg-white/[0.06]" />
+      <div
+        className="flex shrink-0 items-center justify-end gap-2 sm:gap-2.5"
+        data-testid="admin-header-actions-loading">
+        <Skeleton className="h-[30px] w-[30px] rounded-full border border-zinc-200/80 bg-zinc-100/85 dark:border-white/8 dark:bg-white/[0.06]" />
+        <Skeleton className="h-7 w-12 rounded-full border border-zinc-200/80 bg-zinc-100/85 dark:border-white/8 dark:bg-white/[0.06]" />
+        <Skeleton className="h-[30px] w-[30px] rounded-full border border-zinc-200/80 bg-zinc-100/85 dark:border-white/8 dark:bg-white/[0.06]" />
       </div>
     ),
   },
@@ -35,10 +38,20 @@ const AdminMobileDrawer = dynamic(
  * @returns 后台受保护工作区布局
  */
 export function AdminProtectedLayout({ children }: { children: ReactNode }) {
+  return <AdminProtectedLayoutWithLocale locale="zh">{children}</AdminProtectedLayoutWithLocale>
+}
+
+export function AdminProtectedLayoutWithLocale({
+  children,
+  locale,
+}: {
+  children: ReactNode
+  locale: AppLocale
+}) {
   const pathname = usePathname()
   const router = useRouter()
   const { currentUser, logout, status } = useAdminSession()
-  const pageMeta = getAdminPageMeta(pathname)
+  const pageMeta = getAdminPageMeta(pathname, locale)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false)
   const hasHydratedRouteRef = useRef(false)
@@ -86,6 +99,10 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
               请稍候，当前会继续向 `apps/server` 校验 `/auth/me`。
             </p>
+            <div className="mt-2 grid gap-2" data-testid="admin-session-loading-skeleton">
+              <Skeleton className="h-4 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
+              <Skeleton className="h-4 w-4/5 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
+            </div>
           </div>
         </section>
       </main>
@@ -140,6 +157,7 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
           }>
           <AdminSidebar
             currentPathname={pathname}
+            locale={locale}
             onToggle={toggleSidebarCollapsed}
             sidebarCollapsed={sidebarCollapsed}
           />
@@ -151,7 +169,7 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
                   currentUser={currentUser}
                   onLogout={() => {
                     logout()
-                    router.replace('/')
+                    router.replace('/', { locale })
                   }}
                 />
               }
@@ -170,6 +188,7 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
         currentPathname={pathname}
         currentUser={currentUser}
         isOpen={isMobileDrawerOpen}
+        locale={locale}
         onNavigate={() => setIsMobileDrawerOpen(false)}
         onOpenChange={setIsMobileDrawerOpen}
       />

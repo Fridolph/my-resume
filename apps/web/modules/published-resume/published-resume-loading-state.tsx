@@ -5,6 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@heroui/react/card'
+import { Skeleton } from '@heroui/react/skeleton'
 
 import { resumeLabels } from './published-resume-utils'
 
@@ -24,10 +25,10 @@ export function PublishedResumeLoadingState() {
               正在从服务端读取最新发布快照，请稍候。
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-3">
-            <div className="h-5 w-2/3 animate-pulse rounded-md bg-slate-200/80 dark:bg-slate-700/70" />
-            <div className="h-5 animate-pulse rounded-md bg-slate-200/80 dark:bg-slate-700/70" />
-            <div className="h-5 w-4/5 animate-pulse rounded-md bg-slate-200/80 dark:bg-slate-700/70" />
+          <CardContent className="grid gap-3" data-testid="published-resume-loading-skeleton">
+            <Skeleton className="h-5 w-2/3 rounded-md bg-slate-200/80 dark:bg-slate-700/70" />
+            <Skeleton className="h-5 rounded-md bg-slate-200/80 dark:bg-slate-700/70" />
+            <Skeleton className="h-5 w-4/5 rounded-md bg-slate-200/80 dark:bg-slate-700/70" />
           </CardContent>
         </Card>
       </section>

@@ -1,0 +1,6 @@
+{
+  "pageTitle": "Publish & Export",
+  "pageDescription": "This page centralizes role actions, manual publish and export downloads so resume editing and AI workbench can stay focused.",
+  "workflowTitle": "Publish flow",
+  "workflowDescription": "The current flow stays intentionally simple and explainable: edit draft first, publish manually, and keep the public site read-only against published snapshots."
+}

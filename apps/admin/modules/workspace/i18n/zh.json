@@ -1,0 +1,20 @@
+{
+  "overviewTitle": "概览",
+  "overviewDescription": "查看当前账号、能力边界、运行时状态和快捷入口。",
+  "overviewShortLabel": "概览",
+  "overviewEyebrow": "控制台",
+  "resumeTitle": "简历编辑",
+  "resumeDescription": "维护草稿内容，继续遵守“先保存草稿，再手动发布”的主线。",
+  "resumeShortLabel": "简历",
+  "resumeEyebrow": "内容工作区",
+  "aiTitle": "AI 工作台",
+  "aiDescription": "组织上传、分析、缓存结果、运行时摘要与草稿反馈。",
+  "aiShortLabel": "AI",
+  "aiEyebrow": "智能分析",
+  "publishTitle": "发布与导出",
+  "publishDescription": "集中处理角色动作、发布链路和导出下载入口。",
+  "publishShortLabel": "发布",
+  "publishEyebrow": "交付动作",
+  "menuButton": "菜单",
+  "dashboardBreadcrumb": "后台"
+}

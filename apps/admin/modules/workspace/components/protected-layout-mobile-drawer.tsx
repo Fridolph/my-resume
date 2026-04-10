@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 
+import type { AppLocale } from '../../../i18n/types'
 import {
   mobileDrawerContentClass,
   mobileDrawerBackdropClass,
@@ -14,6 +15,7 @@ export function AdminMobileDrawer({
   currentPathname,
   currentUser,
   isOpen,
+  locale,
   onNavigate,
   onOpenChange,
 }: {
@@ -23,6 +25,7 @@ export function AdminMobileDrawer({
     role: string
   }
   isOpen: boolean
+  locale: AppLocale
   onNavigate: () => void
   onOpenChange: (open: boolean) => void
 }) {
@@ -95,6 +98,7 @@ export function AdminMobileDrawer({
             </div>
             <AdminNavItems
               currentPathname={currentPathname}
+              locale={locale}
               onNavigate={() => {
                 onNavigate()
                 onOpenChange(false)

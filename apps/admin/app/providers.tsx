@@ -1,9 +1,11 @@
 'use client'
 
+import { I18nProvider } from '@heroui/react'
 import { ThemeProvider, useTheme } from 'next-themes'
 import { useEffect, type ReactNode } from 'react'
 
 import { AdminSessionProvider } from '../core/admin-session'
+import { toHeroUiLocale, type AppLocale } from '../i18n/types'
 
 function ThemeDatasetBridge() {
   const { resolvedTheme } = useTheme()
@@ -25,6 +27,16 @@ function ThemeDatasetBridge() {
  * @returns 后台全局 Provider 结构
  */
 export function Providers({ children }: { children: ReactNode }) {
+  return <ProvidersWithLocale locale="zh">{children}</ProvidersWithLocale>
+}
+
+export function ProvidersWithLocale({
+  children,
+  locale,
+}: {
+  children: ReactNode
+  locale: AppLocale
+}) {
   return (
     <ThemeProvider
       attribute="class"
@@ -32,10 +44,12 @@ export function Providers({ children }: { children: ReactNode }) {
       disableTransitionOnChange
       enableSystem={false}
       storageKey="my-resume-theme-mode">
-      <AdminSessionProvider>
-        <ThemeDatasetBridge />
-        {children}
-      </AdminSessionProvider>
+      <I18nProvider locale={toHeroUiLocale(locale)}>
+        <AdminSessionProvider>
+          <ThemeDatasetBridge />
+          {children}
+        </AdminSessionProvider>
+      </I18nProvider>
     </ThemeProvider>
   )
 }

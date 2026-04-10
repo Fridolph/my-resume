@@ -9,6 +9,7 @@ import {
   CardTitle,
   Chip,
 } from '@heroui/react'
+import { Skeleton } from '@heroui/react/skeleton'
 import type { FormEvent } from 'react'
 
 import { adminPrimaryButtonClass } from '../../core/button-styles'
@@ -204,10 +205,10 @@ export function ResumeDraftEditorPanel({
       </CardHeader>
       <CardContent className="grid gap-3 px-4 pb-4 sm:px-5 md:gap-4">
         {status === 'loading' ? (
-          <div className="grid gap-2">
-            <div className="h-4 animate-pulse rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
-            <div className="h-4 animate-pulse rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
-            <div className="h-4 w-2/3 animate-pulse rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
+          <div className="grid gap-2" data-testid="resume-draft-loading-skeleton">
+            <Skeleton className="h-4 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
+            <Skeleton className="h-4 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
+            <Skeleton className="h-4 w-2/3 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
           </div>
         ) : null}
 
