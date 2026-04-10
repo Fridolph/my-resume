@@ -69,7 +69,7 @@ describe('PublishedResumeShell', () => {
       screen.queryByRole('heading', { name: '公开简历速览' }),
     ).not.toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: '打开项目 GitHub 仓库' }).closest('a'),
+      (await screen.findByRole('button', { name: '打开项目 GitHub 仓库' })).closest('a'),
     ).toHaveAttribute('href', 'https://github.com/Fridolph/my-resume')
     await user.hover(screen.getByRole('link', { name: 'GitHub' }))
     expect(await screen.findByText('GitHub')).toBeInTheDocument()
@@ -79,7 +79,7 @@ describe('PublishedResumeShell', () => {
     expect(screen.getByRole('heading', { name: 'Yinsheng Fu' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Profile' })).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: 'Open project GitHub repository' }),
+      await screen.findByRole('button', { name: 'Open project GitHub repository' }),
     ).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Work Experience' })).toBeInTheDocument()
     expect(
@@ -126,16 +126,16 @@ describe('PublishedResumeShell', () => {
 
     const { container } = renderShell()
 
-    expect(screen.getByRole('switch', { name: '切换明暗主题' })).toBeInTheDocument()
+    expect(await screen.findByRole('switch', { name: '切换明暗主题' })).toBeInTheDocument()
     expect(container.querySelector('[data-slot="switch-control"]')).toBeInTheDocument()
     expect(document.documentElement.dataset.theme).toBe('light')
 
-    await user.click(screen.getByRole('switch', { name: '切换明暗主题' }))
+    await user.click(await screen.findByRole('switch', { name: '切换明暗主题' }))
     expect(document.documentElement.dataset.theme).toBe('dark')
     expect(document.documentElement.classList.contains('dark')).toBe(true)
     expect(window.localStorage.getItem('my-resume-theme-mode')).toBe('dark')
 
-    await user.click(screen.getByRole('switch', { name: '切换明暗主题' }))
+    await user.click(await screen.findByRole('switch', { name: '切换明暗主题' }))
     expect(document.documentElement.dataset.theme).toBe('light')
     expect(document.documentElement.classList.contains('dark')).toBe(false)
     expect(window.localStorage.getItem('my-resume-theme-mode')).toBe('light')
@@ -153,7 +153,7 @@ describe('PublishedResumeShell', () => {
       </ThemeModeProvider>,
     )
 
-    await user.click(screen.getByRole('button', { name: '打开下载菜单' }))
+    await user.click(await screen.findByRole('button', { name: '打开下载菜单' }))
 
     expect(await screen.findByRole('menuitem', { name: '导出 Markdown' })).toHaveAttribute(
       'href',
@@ -166,7 +166,7 @@ describe('PublishedResumeShell', () => {
 
     await user.keyboard('{Escape}')
     await user.click(screen.getByRole('button', { name: 'EN' }))
-    await user.click(screen.getByRole('button', { name: 'Open download menu' }))
+    await user.click(await screen.findByRole('button', { name: 'Open download menu' }))
 
     expect(await screen.findByRole('menuitem', { name: 'Export Markdown' })).toHaveAttribute(
       'href',

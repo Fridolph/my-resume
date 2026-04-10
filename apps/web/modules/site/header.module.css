@@ -49,6 +49,15 @@
     border-color 150ms ease;
 }
 
+.headerActionSkeleton {
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  background: rgba(255, 255, 255, 0.6);
+}
+
 .githubButton {
   min-width: 30px;
   height: 30px;
@@ -66,6 +75,15 @@
   border: 0;
   background: transparent;
   color: #475569;
+}
+
+.themeSwitchSkeleton {
+  display: inline-flex;
+  width: 48px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  background: rgba(255, 255, 255, 0.72);
 }
 
 .themeSwitchControl {
@@ -172,6 +190,11 @@
   color: #cbd5e1;
 }
 
+:global([data-theme='dark']) .headerActionSkeleton {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+}
+
 :global([data-theme='dark']) .headerActionTrigger:hover {
   border-color: rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.05);
@@ -191,6 +214,11 @@
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
     0 10px 28px rgba(0, 0, 0, 0.24);
+}
+
+:global([data-theme='dark']) .themeSwitchSkeleton {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 :global([data-theme='dark']) .themeSwitchControlLight {
