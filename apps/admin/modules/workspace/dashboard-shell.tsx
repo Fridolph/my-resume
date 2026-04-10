@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@heroui/react/card'
+import { Button } from '@heroui/react/button'
 import { Chip } from '@heroui/react/chip'
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
@@ -26,6 +27,19 @@ const workflowItemClass =
   'grid gap-1.5 rounded-[18px] border border-[color:var(--admin-border)] bg-[var(--admin-surface-muted)] p-4'
 
 type AsyncState = 'idle' | 'loading' | 'ready' | 'error'
+
+function DashboardStatusSkeleton({ lines = 3 }: { lines?: number }) {
+  return (
+    <div className="grid gap-2">
+      {Array.from({ length: lines }).map((_, index) => (
+        <div
+          className="h-4 animate-pulse rounded-md bg-zinc-200/80 dark:bg-zinc-800/80"
+          key={`dashboard-skeleton-${index}`}
+        />
+      ))}
+    </div>
+  )
+}
 
 const quickEntryCards = [
   {
@@ -56,11 +70,13 @@ export function AdminDashboardShell() {
     null,
   )
   const [runtimeMessage, setRuntimeMessage] = useState<string | null>(null)
+  const [runtimeRetryToken, setRuntimeRetryToken] = useState(0)
   const [draftState, setDraftState] = useState<AsyncState>('idle')
   const [draftSnapshot, setDraftSnapshot] = useState<ResumeDraftSummarySnapshot | null>(
     null,
   )
   const [draftMessage, setDraftMessage] = useState<string | null>(null)
+  const [draftRetryToken, setDraftRetryToken] = useState(0)
 
   useEffect(() => {
     if (status !== 'ready' || !accessToken) {
@@ -98,7 +114,7 @@ export function AdminDashboardShell() {
     return () => {
       cancelled = true
     }
-  }, [accessToken, status])
+  }, [accessToken, runtimeRetryToken, status])
 
   useEffect(() => {
     if (status !== 'ready' || !accessToken || !currentUser?.capabilities.canEditResume) {
@@ -135,7 +151,13 @@ export function AdminDashboardShell() {
     return () => {
       cancelled = true
     }
-  }, [accessToken, currentUser?.capabilities.canEditResume, status, summaryLocale])
+  }, [
+    accessToken,
+    currentUser?.capabilities.canEditResume,
+    draftRetryToken,
+    status,
+    summaryLocale,
+  ])
 
   const capabilityCards = useMemo(() => {
     if (!currentUser) {
@@ -265,11 +287,18 @@ export function AdminDashboardShell() {
             </CardDescription>
           </CardHeader>
           <CardContent className="stack">
-            {runtimeState === 'loading' ? (
-              <p className="muted">正在加载 AI 工作台运行时摘要...</p>
-            ) : null}
+            {runtimeState === 'loading' ? <DashboardStatusSkeleton /> : null}
             {runtimeState === 'error' && runtimeMessage ? (
-              <p className="error-text">{runtimeMessage}</p>
+              <div className="grid gap-3">
+                <p className="error-text">{runtimeMessage}</p>
+                <Button
+                  className="w-fit"
+                  onPress={() => setRuntimeRetryToken((current) => current + 1)}
+                  size="sm"
+                  variant="secondary">
+                  重试运行时读取
+                </Button>
+              </div>
             ) : null}
             {runtimeSummary ? (
               <div className="grid gap-4 md:grid-cols-2">
@@ -307,10 +336,19 @@ export function AdminDashboardShell() {
               <div className="readonly-box">当前角色没有草稿读取与编辑权限。</div>
             ) : null}
             {draftState === 'loading' ? (
-              <p className="muted">正在加载草稿摘要...</p>
+              <DashboardStatusSkeleton lines={4} />
             ) : null}
             {draftState === 'error' && draftMessage ? (
-              <p className="error-text">{draftMessage}</p>
+              <div className="grid gap-3">
+                <p className="error-text">{draftMessage}</p>
+                <Button
+                  className="w-fit"
+                  onPress={() => setDraftRetryToken((current) => current + 1)}
+                  size="sm"
+                  variant="secondary">
+                  重试草稿摘要读取
+                </Button>
+              </div>
             ) : null}
             {draftSnapshot ? (
               <div className="status-box">

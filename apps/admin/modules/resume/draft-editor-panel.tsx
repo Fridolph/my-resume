@@ -63,6 +63,7 @@ export function ResumeDraftEditorPanel({
     setPendingSave,
     sortableCollections,
     status,
+    retryLoadDraft,
     updateResumeDraft,
     updateSortableCollection,
   } = useResumeDraftEditorState({
@@ -202,10 +203,25 @@ export function ResumeDraftEditorPanel({
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3 px-4 pb-4 sm:px-5 md:gap-4">
-        {status === 'loading' ? <p className="muted">正在加载草稿...</p> : null}
+        {status === 'loading' ? (
+          <div className="grid gap-2">
+            <div className="h-4 animate-pulse rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
+            <div className="h-4 animate-pulse rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
+            <div className="h-4 w-2/3 animate-pulse rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
+          </div>
+        ) : null}
 
         {status === 'error' && errorMessage ? (
-          <p className="error-text">{errorMessage}</p>
+          <div className="grid gap-3">
+            <p className="error-text">{errorMessage}</p>
+            <Button
+              className="w-fit"
+              onPress={retryLoadDraft}
+              size="sm"
+              variant="secondary">
+              重试草稿加载
+            </Button>
+          </div>
         ) : null}
 
         {status === 'ready' && resumeDraft && draftSnapshot ? (

@@ -61,6 +61,7 @@ export function useResumeDraftEditorState({
   const [pendingSave, setPendingSave] = useState(false)
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [draftReloadToken, setDraftReloadToken] = useState(0)
   const sortableIdCounterRef = useRef(0)
 
   const sensors = useSensors(
@@ -239,7 +240,7 @@ const handleCollectionDragEnd = useCallback(
         )
         setStatus('error')
       })
-  }, [accessToken, apiBaseUrl, canEdit, hydrateDraft, loadDraft])
+  }, [accessToken, apiBaseUrl, canEdit, draftReloadToken, hydrateDraft, loadDraft])
 
   const lastUpdatedLabel = useMemo(() => {
     if (!draftSnapshot) {
@@ -273,6 +274,9 @@ const handleCollectionDragEnd = useCallback(
     setPendingSave,
     sortableCollections,
     status,
+    retryLoadDraft: () => {
+      setDraftReloadToken((current) => current + 1)
+    },
     updateResumeDraft,
     updateSortableCollection,
   }

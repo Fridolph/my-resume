@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@heroui/react/card'
+import { Button } from '@heroui/react/button'
 import { Chip } from '@heroui/react/chip'
 import dynamic from 'next/dynamic'
 import { useEffect, useMemo, useState } from 'react'
@@ -63,6 +64,19 @@ const scenarioCards = {
   },
 } as const
 
+function WorkbenchSkeleton({ lines = 3 }: { lines?: number }) {
+  return (
+    <div className="grid gap-2">
+      {Array.from({ length: lines }).map((_, index) => (
+        <div
+          className="h-4 animate-pulse rounded-md bg-zinc-200/80 dark:bg-zinc-800/80"
+          key={`workbench-skeleton-${index}`}
+        />
+      ))}
+    </div>
+  )
+}
+
 export function AdminAiWorkbenchShell() {
   const { accessToken, currentUser, status } = useAdminSession()
   const summaryLocale = readResumeLocaleCookie()
@@ -73,6 +87,7 @@ export function AdminAiWorkbenchShell() {
     'idle' | 'loading' | 'ready' | 'error'
   >('idle')
   const [runtimeMessage, setRuntimeMessage] = useState<string | null>(null)
+  const [runtimeRetryToken, setRuntimeRetryToken] = useState(0)
   const [analysisContent, setAnalysisContent] = useState('')
   const [analysisHelperMessage, setAnalysisHelperMessage] = useState<string | null>(null)
   const [draftSnapshot, setDraftSnapshot] = useState<ResumeDraftSummarySnapshot | null>(
@@ -82,6 +97,7 @@ export function AdminAiWorkbenchShell() {
     'idle' | 'loading' | 'ready' | 'error'
   >('idle')
   const [draftSnapshotMessage, setDraftSnapshotMessage] = useState<string | null>(null)
+  const [draftRetryToken, setDraftRetryToken] = useState(0)
 
   useEffect(() => {
     if (status !== 'ready' || !accessToken) {
@@ -119,7 +135,7 @@ export function AdminAiWorkbenchShell() {
     return () => {
       cancelled = true
     }
-  }, [accessToken, status])
+  }, [accessToken, runtimeRetryToken, status])
 
   useEffect(() => {
     if (status !== 'ready' || !accessToken || !currentUser?.capabilities.canEditResume) {
@@ -158,7 +174,13 @@ export function AdminAiWorkbenchShell() {
     return () => {
       cancelled = true
     }
-  }, [accessToken, currentUser?.capabilities.canEditResume, status, summaryLocale])
+  }, [
+    accessToken,
+    currentUser?.capabilities.canEditResume,
+    draftRetryToken,
+    status,
+    summaryLocale,
+  ])
 
   const isAdmin = Boolean(currentUser?.capabilities.canTriggerAiAnalysis)
   const roleMessage = isAdmin
@@ -250,11 +272,18 @@ export function AdminAiWorkbenchShell() {
             <div className="readonly-box">{roleMessage}</div>
           )}
 
-          {runtimeState === 'loading' ? (
-            <p className="muted">正在加载 AI 工作台运行时信息...</p>
-          ) : null}
+          {runtimeState === 'loading' ? <WorkbenchSkeleton /> : null}
           {runtimeState === 'error' && runtimeMessage ? (
-            <p className="error-text">{runtimeMessage}</p>
+            <div className="grid gap-3">
+              <p className="error-text">{runtimeMessage}</p>
+              <Button
+                className="w-fit"
+                onPress={() => setRuntimeRetryToken((current) => current + 1)}
+                size="sm"
+                variant="secondary">
+                重试运行时读取
+              </Button>
+            </div>
           ) : null}
         </CardContent>
       </Card>
@@ -317,10 +346,19 @@ export function AdminAiWorkbenchShell() {
           </CardHeader>
           <CardContent className="stack">
             {draftSnapshotStatus === 'loading' ? (
-              <p className="muted">正在加载当前草稿快照...</p>
+              <WorkbenchSkeleton lines={4} />
             ) : null}
             {draftSnapshotStatus === 'error' && draftSnapshotMessage ? (
-              <p className="error-text">{draftSnapshotMessage}</p>
+              <div className="grid gap-3">
+                <p className="error-text">{draftSnapshotMessage}</p>
+                <Button
+                  className="w-fit"
+                  onPress={() => setDraftRetryToken((current) => current + 1)}
+                  size="sm"
+                  variant="secondary">
+                  重试草稿快照读取
+                </Button>
+              </div>
             ) : null}
             {draftSnapshotMessage && draftSnapshotStatus === 'ready' ? (
               <div className="dashboard-inline-note">{draftSnapshotMessage}</div>
