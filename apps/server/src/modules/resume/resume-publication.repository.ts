@@ -18,6 +18,10 @@ export class ResumePublicationRepository {
     private readonly database: DatabaseInstance,
   ) {}
 
+  /**
+   * 读取当前标准简历草稿
+   * @returns 草稿记录或 null
+   */
   async findDraft() {
     const [record] = await this.database
       .select()
@@ -28,11 +32,14 @@ export class ResumePublicationRepository {
     return record ?? null
   }
 
+  /**
+   * 写入草稿位并在已存在时覆盖
+   * @param resume 草稿内容
+   * @param updatedAt 更新时间
+   * @returns 保存后的草稿记录或 null
+   */
   async saveDraft(resume: StandardResume, updatedAt = new Date()) {
-    /**
-     * draft 表天然只有一条标准简历记录，
-     * 所以这里用 onConflictDoUpdate 来覆盖当前草稿位。
-     */
+    // draft 表只有一个标准键位，通过 upsert 覆盖当前草稿。
     const draftRecord = createResumeDraftRecord(resume, updatedAt)
 
     await this.database
@@ -50,6 +57,10 @@ export class ResumePublicationRepository {
     return await this.findDraft()
   }
 
+  /**
+   * 读取最近一次发布快照
+   * @returns 发布快照记录或 null
+   */
   async findLatestPublishedSnapshot() {
     const [record] = await this.database
       .select()
@@ -61,11 +72,14 @@ export class ResumePublicationRepository {
     return record ?? null
   }
 
+  /**
+   * 追加写入一条新的发布快照
+   * @param resume 发布内容
+   * @param publishedAt 发布时间
+   * @returns 新发布快照记录
+   */
   async createPublishedSnapshot(resume: StandardResume, publishedAt = new Date()) {
-    /**
-     * published snapshot 不覆盖，只追加。
-     * 这就是“草稿态”和“发布态”在存储层的核心差异。
-     */
+    // published snapshot 只追加不覆盖，这是草稿态与发布态的核心差异。
     const snapshotRecord = createResumePublicationSnapshotRecord(resume, publishedAt)
 
     await this.database.insert(resumePublicationSnapshots).values(snapshotRecord)

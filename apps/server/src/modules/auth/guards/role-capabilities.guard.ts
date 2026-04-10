@@ -15,13 +15,13 @@ import { REQUIRED_ROLE_CAPABILITY } from '../decorators/require-capability.decor
 export class RoleCapabilitiesGuard implements CanActivate {
   constructor(@Inject(Reflector) private readonly reflector: Reflector) {}
 
+  /**
+   * 根据声明的能力键做角色能力校验
+   * @param context Nest 执行上下文
+   * @returns 是否允许继续执行
+   */
   canActivate(context: ExecutionContext): boolean {
-    /**
-     * 第二层守卫：只做“能力确认”
-     * - 先读取 @RequireCapability 声明的能力键
-     * - 再根据 authUser.role 展开 capabilities
-     * - 如果当前能力不满足，则直接拒绝
-     */
+    // 第二层守卫只做能力确认，按 @RequireCapability 决定是否放行。
     const capability = this.reflector.getAllAndOverride<RoleCapabilityKey>(
       REQUIRED_ROLE_CAPABILITY,
       [context.getHandler(), context.getClass()],

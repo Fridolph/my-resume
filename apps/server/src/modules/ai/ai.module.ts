@@ -21,10 +21,7 @@ import { RagService } from './rag/rag.service'
   controllers: [AiFileController, AiReportController, RagController],
   providers: [
     {
-      /**
-       * AI 配置先统一收口，再决定 provider 实例。
-       * 这样 mock / deepseek / openai-compatible 的切换不会影响上层业务。
-       */
+      // 先解析统一 AI 运行时配置，再根据配置创建 provider。
       provide: AI_RUNTIME_CONFIG,
       useFactory: () => resolveAiRuntimeConfig(process.env),
     },
@@ -33,10 +30,7 @@ import { RagService } from './rag/rag.service'
       useValue: fetch,
     },
     {
-      /**
-       * 真正对上层暴露的是统一 AiProvider 接口，
-       * controller / service 不直接感知底层厂商差异。
-       */
+      // 对上层只暴露统一 AiProvider 接口，屏蔽厂商差异。
       provide: AI_PROVIDER_INSTANCE,
       inject: [AI_RUNTIME_CONFIG, AI_FETCH],
       useFactory: createAiProvider,

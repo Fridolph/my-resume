@@ -61,12 +61,13 @@ export class AiReportController {
     }
   }
 
+  /**
+   * 返回 AI provider 与可用分析场景摘要
+   * @returns 运行时摘要
+   */
   @Get('runtime')
   getRuntimeSummary() {
-    /**
-     * 让前端先知道“当前到底接的是哪个 provider / model”，
-     * 便于教学演示和问题排查。
-     */
+    // 先暴露 provider/model 摘要，便于教学演示和运行态排查。
     return {
       ...this.aiService.getProviderSummary(),
       supportedScenarios: SUPPORTED_SCENARIOS,
@@ -85,16 +86,16 @@ export class AiReportController {
     return this.analysisReportCacheService.getReportById(reportId)
   }
 
+  /**
+   * 执行结构化分析并写入报告缓存
+   * @param body 分析请求体
+   * @returns 结构化分析结果
+   */
   @Post('analyze')
   @UseGuards(RoleCapabilitiesGuard)
   @RequireCapability('canTriggerAiAnalysis')
   async analyzeReport(@Body() body: CacheReportBody) {
-    /**
-     * 分析链路：
-     * 1. controller 构造结构化 prompt
-     * 2. AiService 调 provider 生成文本
-     * 3. 再交给缓存服务收成当前前端可消费的 report 结构
-     */
+    // 分析流程：构造 prompt -> 调 provider -> 结构化缓存并返回。
     const result = await this.aiService.generateText({
       systemPrompt: this.buildAnalysisSystemPrompt(body.locale ?? 'zh'),
       prompt: this.buildAnalysisPrompt(body),
@@ -110,17 +111,24 @@ export class AiReportController {
     }
   }
 
+  /**
+   * 生成简历优化建议与 diff，不直接写库
+   * @param body 优化请求体
+   * @returns 优化建议与差异信息
+   */
   @Post('resume-optimize')
   @UseGuards(RoleCapabilitiesGuard)
   @RequireCapability('canTriggerAiAnalysis')
   async optimizeResume(@Body() body: ResumeOptimizationBody) {
-    /**
-     * 这里不直接写库，只生成 suggestion / diff / apply payload，
-     * 真正落草稿在下一步 /resume-optimize/apply 中完成。
-     */
+    // 仅生成 suggestion/diff/apply payload，落库由 apply 接口执行。
     return this.aiResumeOptimizationService.generateSuggestion(body)
   }
 
+  /**
+   * 应用简历优化建议并回写草稿
+   * @param body 应用请求体
+   * @returns 应用结果
+   */
   @Post('resume-optimize/apply')
   @HttpCode(HttpStatus.OK)
   @UseGuards(RoleCapabilitiesGuard)
@@ -129,6 +137,11 @@ export class AiReportController {
     return this.aiResumeOptimizationService.applySuggestion(body)
   }
 
+  /**
+   * 构建分析提示词
+   * @param body 分析请求体
+   * @returns 提示词文本
+   */
   private buildAnalysisPrompt(body: CacheReportBody): string {
     if (body.locale === 'en') {
       return [
@@ -199,11 +212,13 @@ export class AiReportController {
     ].join('\n')
   }
 
+  /**
+   * 构建分析系统提示词
+   * @param locale 输出语言
+   * @returns 系统提示词
+   */
   private buildAnalysisSystemPrompt(locale: AnalysisLocale): string {
-    /**
-     * analyze 接口后续会成为“分析 -> 建议稿 -> diff -> apply”的上游输入，
-     * 所以这里强制要求结构化 JSON，而不是让前端从自由文本里猜字段。
-     */
+    // analyze 会成为“分析 -> 建议稿 -> diff -> apply”的上游，所以强制返回结构化 JSON。
     return locale === 'en'
       ? 'You are a resume analysis assistant. Output valid JSON only.'
       : '你是一个简历分析助手。只输出合法 JSON。'

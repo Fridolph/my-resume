@@ -19,25 +19,27 @@ import type { AuthUser } from './domain/auth-user'
 export class AuthController {
   constructor(@Inject(AuthService) private readonly authService: AuthService) {}
 
+  /**
+   * 校验账号并返回访问令牌与角色能力摘要
+   * @param loginDto 登录参数
+   * @returns 登录结果
+   */
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() loginDto: LoginDto) {
-    /**
-     * 登录链路：
-     * 1. controller 接收用户名密码
-     * 2. 交给 AuthService 校验 demo 账号
-     * 3. 返回 accessToken + 当前用户能力摘要
-     */
+    // 登录流程：接收凭证 -> 交给服务层校验 -> 返回 token 与能力信息。
     return this.authService.login(loginDto)
   }
 
+  /**
+   * 返回当前 token 对应的用户上下文
+   * @param authUser 当前鉴权用户
+   * @returns 用户上下文响应
+   */
   @Get('me')
   @UseGuards(JwtAuthGuard)
   getCurrentUser(@CurrentAuthUser() authUser: AuthUser) {
-    /**
-     * /auth/me 不重新查库，而是直接复用 JwtAuthGuard
-     * 已经挂到 request.authUser 上的鉴权结果。
-     */
+    // /auth/me 直接复用守卫挂载的鉴权结果，不重复解析 token。
     return {
       user: this.authService.serializeUser(authUser),
     }

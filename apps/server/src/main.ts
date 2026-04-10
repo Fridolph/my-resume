@@ -2,13 +2,12 @@ import { NestFactory } from '@nestjs/core'
 import type { Express } from 'express'
 import { AppModule } from './app.module'
 
+/**
+ * 启动 Nest server 并挂载基础运行时能力
+ * @returns Promise<void>
+ */
 async function bootstrap() {
-  /**
-   * server 的启动入口保持尽量薄：
-   * - 只负责把 AppModule 启起来
-   * - 挂基础运行时能力（CORS / ETag / 端口）
-   * - 不在这里写业务初始化逻辑
-   */
+  // 启动入口保持薄层：只做容器启动与基础能力挂载，不承载业务初始化逻辑。
   const app = await NestFactory.create(AppModule)
   app.enableCors({
     origin: true,

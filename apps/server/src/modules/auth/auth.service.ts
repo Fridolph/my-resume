@@ -45,13 +45,13 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
 export class AuthService {
   constructor(@Inject(JwtService) private readonly jwtService: JwtService) {}
 
+  /**
+   * 完成登录鉴权并签发访问令牌
+   * @param loginDto 登录参数
+   * @returns 登录结果
+   */
   async login(loginDto: LoginDto): Promise<LoginResult> {
-    /**
-     * 当前仓库仍是教程型最小鉴权：
-     * - 先校验本地 demo 账号
-     * - 再签发 JWT
-     * - 最后把 role capabilities 一起返回给前端
-     */
+    // 教程型最小鉴权：先校验 demo 账号，再签发 JWT，并返回能力映射。
     const authUser = this.validateCredentials(loginDto)
 
     if (!authUser) {
@@ -72,11 +72,13 @@ export class AuthService {
     }
   }
 
+  /**
+   * 验证访问令牌并恢复当前用户
+   * @param accessToken 访问令牌
+   * @returns 鉴权用户
+   */
   async verifyAccessToken(accessToken: string): Promise<AuthUser> {
-    /**
-     * 守卫只负责“拿 token 并转交”；
-     * 真正的 token 校验和用户恢复在 service 里完成。
-     */
+    // 守卫只负责转交 token；真正校验和用户恢复在 service 完成。
     try {
       const payload = await this.jwtService.verifyAsync<AuthTokenPayload>(accessToken)
 
@@ -102,11 +104,13 @@ export class AuthService {
     }
   }
 
+  /**
+   * 将用户角色展开为前端可直接消费的能力集合
+   * @param authUser 鉴权用户
+   * @returns 带能力映射的用户视图
+   */
   serializeUser(authUser: AuthUser): AuthUserView {
-    /**
-     * 前端消费的不是原始 role 字段，而是 role -> capabilities
-     * 的展开结果，这样 UI 层更容易直接按能力决定按钮显隐。
-     */
+    // 前端使用 capabilities 直接驱动权限 UI，避免散落的 role 判断。
     return {
       ...authUser,
       capabilities: buildRoleCapabilities(authUser.role),

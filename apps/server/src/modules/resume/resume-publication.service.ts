@@ -49,12 +49,13 @@ export class ResumePublicationService {
     private readonly resumePublicationRepository: ResumePublicationRepository,
   ) {}
 
+  /**
+   * 读取草稿并在首次访问时自动初始化示例草稿
+   * @returns 草稿快照
+   */
   async getDraft(): Promise<ResumeDraftSnapshot> {
     return this.runWithDatabaseLockHint(async () => {
-      /**
-       * 教程型体验里，如果还没有任何草稿，
-       * 会自动 seed 一份 example resume，保证后台首次进入可见。
-       */
+      // 首次进入时自动 seed 示例草稿，确保后台可直接编辑。
       const existingDraft = await this.resumePublicationRepository.findDraft()
 
       if (!existingDraft) {
@@ -77,6 +78,11 @@ export class ResumePublicationService {
     })
   }
 
+  /**
+   * 读取草稿摘要
+   * @param locale 摘要语言
+   * @returns 草稿摘要快照
+   */
   async getDraftSummary(locale: ResumeLocale): Promise<ResumeDraftSummarySnapshot> {
     const draft = await this.getDraft()
 
@@ -87,6 +93,10 @@ export class ResumePublicationService {
     }
   }
 
+  /**
+   * 读取最新发布快照
+   * @returns 发布态快照或 null
+   */
   async getPublished(): Promise<ResumePublishedSnapshot | null> {
     const publishedSnapshot =
       await this.resumePublicationRepository.findLatestPublishedSnapshot()
@@ -102,6 +112,11 @@ export class ResumePublicationService {
     }
   }
 
+  /**
+   * 读取发布态摘要
+   * @param locale 摘要语言
+   * @returns 发布态摘要快照或 null
+   */
   async getPublishedSummary(
     locale: ResumeLocale,
   ): Promise<ResumePublishedSummarySnapshot | null> {
@@ -118,12 +133,14 @@ export class ResumePublicationService {
     }
   }
 
+  /**
+   * 覆盖保存草稿位
+   * @param resume 草稿内容
+   * @returns 保存后的草稿快照
+   */
   async updateDraft(resume: StandardResume): Promise<ResumeDraftSnapshot> {
     return this.runWithDatabaseLockHint(async () => {
-      /**
-       * updateDraft 只写当前唯一草稿位，
-       * 不会生成历史版本。
-       */
+      // updateDraft 只更新草稿位，不生成历史版本。
       const savedDraft = await this.resumePublicationRepository.saveDraft(
         normalizeStandardResume(cloneStandardResume(resume)),
       )
@@ -136,14 +153,13 @@ export class ResumePublicationService {
     })
   }
 
+  /**
+   * 从当前草稿创建并返回新的发布快照
+   * @returns 发布态快照
+   */
   async publish(): Promise<ResumePublishedSnapshot> {
     return this.runWithDatabaseLockHint(async () => {
-      /**
-       * publish 的核心语义：
-       * - 先读取当前 draft
-       * - 再写入 published snapshot 历史表
-       * 这样 public 读取总是面向“最后一次发布结果”。
-       */
+      // publish 语义：读取 draft 后写入发布快照表，公开站读取最后一条。
       const draft = await this.getDraft()
       const publishedSnapshot =
         await this.resumePublicationRepository.createPublishedSnapshot(

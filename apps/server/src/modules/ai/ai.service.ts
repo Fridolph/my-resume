@@ -14,19 +14,29 @@ export class AiService {
     private readonly aiProvider: AiProvider,
   ) {}
 
+  /**
+   * 返回当前 AI provider 的运行时摘要
+   * @returns provider 摘要
+   */
   getProviderSummary() {
-    /**
-     * AiService 保持很薄，只做统一门面。
-     * 这样业务层永远面对的是 generateText / embedTexts，
-     * 而不是具体厂商 SDK。
-     */
+    // AiService 作为统一门面，让业务层不直接依赖具体厂商 SDK。
     return this.aiProvider.getSummary()
   }
 
+  /**
+   * 执行文本生成
+   * @param input 文本生成输入
+   * @returns 生成结果
+   */
   generateText(input: GenerateTextInput) {
     return this.aiProvider.generateText(input)
   }
 
+  /**
+   * 执行批量向量化
+   * @param input 向量化输入
+   * @returns 向量化结果
+   */
   embedTexts(input: EmbedTextsInput) {
     return this.aiProvider.embedTexts(input)
   }
