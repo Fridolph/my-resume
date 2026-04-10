@@ -104,6 +104,12 @@ export class RagService {
   ) {}
 
   getStatus() {
+    /**
+     * status 用来回答三类问题：
+     * - 当前是否已有索引
+     * - 当前索引是否 stale
+     * - 当前索引是用哪个 provider / 模型构建的
+     */
     const { sourcePath, blogDirectoryPath, indexPath } =
       this.ragIndexRepository.getPaths()
     const index = this.ragIndexRepository.readIndex()
@@ -137,6 +143,13 @@ export class RagService {
   }
 
   async rebuildIndex() {
+    /**
+     * RAG rebuild 主链路：
+     * 1. 读取简历 YAML / blog markdown
+     * 2. 切成语义块
+     * 3. 统一做 embedding
+     * 4. 写入本地 JSON 索引
+     */
     const { sourcePath, blogDirectoryPath } = this.ragIndexRepository.getPaths()
     const source = readFileSync(sourcePath, 'utf8')
     const sourceHash = computeContentHash(source)
@@ -173,6 +186,10 @@ export class RagService {
   }
 
   async search(query: string, limit = 5): Promise<RagSearchMatch[]> {
+    /**
+     * 当前检索分数是“向量相似度 + 关键词命中”的混合分值，
+     * 目的是在教程型项目里保持“够用且好解释”。
+     */
     const index = await this.ensureIndex()
     const queryEmbedding = await this.aiService.embedTexts({
       texts: [query],
@@ -199,6 +216,10 @@ export class RagService {
   }
 
   async ask(question: string, limit = 4, locale: 'zh' | 'en' = 'zh') {
+    /**
+     * ask = search + context assembly + generateText
+     * 这也是当前项目里最容易理解的一版最小 RAG 闭环。
+     */
     const matches = await this.search(question, limit)
     const context = matches
       .map(

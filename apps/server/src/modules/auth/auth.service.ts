@@ -46,6 +46,12 @@ export class AuthService {
   constructor(@Inject(JwtService) private readonly jwtService: JwtService) {}
 
   async login(loginDto: LoginDto): Promise<LoginResult> {
+    /**
+     * 当前仓库仍是教程型最小鉴权：
+     * - 先校验本地 demo 账号
+     * - 再签发 JWT
+     * - 最后把 role capabilities 一起返回给前端
+     */
     const authUser = this.validateCredentials(loginDto)
 
     if (!authUser) {
@@ -67,6 +73,10 @@ export class AuthService {
   }
 
   async verifyAccessToken(accessToken: string): Promise<AuthUser> {
+    /**
+     * 守卫只负责“拿 token 并转交”；
+     * 真正的 token 校验和用户恢复在 service 里完成。
+     */
     try {
       const payload = await this.jwtService.verifyAsync<AuthTokenPayload>(accessToken)
 
@@ -93,6 +103,10 @@ export class AuthService {
   }
 
   serializeUser(authUser: AuthUser): AuthUserView {
+    /**
+     * 前端消费的不是原始 role 字段，而是 role -> capabilities
+     * 的展开结果，这样 UI 层更容易直接按能力决定按钮显隐。
+     */
     return {
       ...authUser,
       capabilities: buildRoleCapabilities(authUser.role),

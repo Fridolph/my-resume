@@ -15,6 +15,11 @@ export class AiService {
   ) {}
 
   getProviderSummary() {
+    /**
+     * AiService 保持很薄，只做统一门面。
+     * 这样业务层永远面对的是 generateText / embedTexts，
+     * 而不是具体厂商 SDK。
+     */
     return this.aiProvider.getSummary()
   }
 

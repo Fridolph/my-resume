@@ -63,6 +63,10 @@ export class AiReportController {
 
   @Get('runtime')
   getRuntimeSummary() {
+    /**
+     * 让前端先知道“当前到底接的是哪个 provider / model”，
+     * 便于教学演示和问题排查。
+     */
     return {
       ...this.aiService.getProviderSummary(),
       supportedScenarios: SUPPORTED_SCENARIOS,
@@ -85,6 +89,12 @@ export class AiReportController {
   @UseGuards(RoleCapabilitiesGuard)
   @RequireCapability('canTriggerAiAnalysis')
   async analyzeReport(@Body() body: CacheReportBody) {
+    /**
+     * 分析链路：
+     * 1. controller 构造结构化 prompt
+     * 2. AiService 调 provider 生成文本
+     * 3. 再交给缓存服务收成当前前端可消费的 report 结构
+     */
     const result = await this.aiService.generateText({
       systemPrompt: this.buildAnalysisSystemPrompt(body.locale ?? 'zh'),
       prompt: this.buildAnalysisPrompt(body),
@@ -104,6 +114,10 @@ export class AiReportController {
   @UseGuards(RoleCapabilitiesGuard)
   @RequireCapability('canTriggerAiAnalysis')
   async optimizeResume(@Body() body: ResumeOptimizationBody) {
+    /**
+     * 这里不直接写库，只生成 suggestion / diff / apply payload，
+     * 真正落草稿在下一步 /resume-optimize/apply 中完成。
+     */
     return this.aiResumeOptimizationService.generateSuggestion(body)
   }
 

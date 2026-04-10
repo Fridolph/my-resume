@@ -14,6 +14,14 @@ export class JwtAuthGuard implements CanActivate {
   constructor(@Inject(AuthService) private readonly authService: AuthService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    /**
+     * 第一层守卫：只做“身份确认”
+     * - 从 Authorization 头中取 Bearer token
+     * - 调 AuthService.verifyAccessToken 校验
+     * - 把结果挂到 request.authUser
+     *
+     * 后续 controller / capability guard 都依赖这一步的产物。
+     */
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>()
     const bearerToken = request.headers.authorization
 

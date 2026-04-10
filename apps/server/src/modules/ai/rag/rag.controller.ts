@@ -33,6 +33,10 @@ export class RagController {
   @UseGuards(RoleCapabilitiesGuard)
   @RequireCapability('canTriggerAiAnalysis')
   rebuildIndex() {
+    /**
+     * rebuild 是 RAG 的“建索引入口”：
+     * 把结构化简历源和博客源重新切块、向量化并写回本地索引文件。
+     */
     return this.ragService.rebuildIndex()
   }
 
@@ -47,6 +51,10 @@ export class RagController {
   @UseGuards(RoleCapabilitiesGuard)
   @RequireCapability('canTriggerAiAnalysis')
   ask(@Body() body: RagAskBody) {
+    /**
+     * ask 不是直接问大模型，
+     * 而是先 search，再把 top-N chunk 拼成上下文后调用生成接口。
+     */
     return this.ragService.ask(body.question, body.limit, body.locale)
   }
 }

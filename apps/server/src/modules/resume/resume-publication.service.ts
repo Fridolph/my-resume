@@ -51,6 +51,10 @@ export class ResumePublicationService {
 
   async getDraft(): Promise<ResumeDraftSnapshot> {
     return this.runWithDatabaseLockHint(async () => {
+      /**
+       * 教程型体验里，如果还没有任何草稿，
+       * 会自动 seed 一份 example resume，保证后台首次进入可见。
+       */
       const existingDraft = await this.resumePublicationRepository.findDraft()
 
       if (!existingDraft) {
@@ -116,6 +120,10 @@ export class ResumePublicationService {
 
   async updateDraft(resume: StandardResume): Promise<ResumeDraftSnapshot> {
     return this.runWithDatabaseLockHint(async () => {
+      /**
+       * updateDraft 只写当前唯一草稿位，
+       * 不会生成历史版本。
+       */
       const savedDraft = await this.resumePublicationRepository.saveDraft(
         normalizeStandardResume(cloneStandardResume(resume)),
       )
@@ -130,6 +138,12 @@ export class ResumePublicationService {
 
   async publish(): Promise<ResumePublishedSnapshot> {
     return this.runWithDatabaseLockHint(async () => {
+      /**
+       * publish 的核心语义：
+       * - 先读取当前 draft
+       * - 再写入 published snapshot 历史表
+       * 这样 public 读取总是面向“最后一次发布结果”。
+       */
       const draft = await this.getDraft()
       const publishedSnapshot =
         await this.resumePublicationRepository.createPublishedSnapshot(

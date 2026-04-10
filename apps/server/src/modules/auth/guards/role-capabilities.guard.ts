@@ -16,6 +16,12 @@ export class RoleCapabilitiesGuard implements CanActivate {
   constructor(@Inject(Reflector) private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
+    /**
+     * 第二层守卫：只做“能力确认”
+     * - 先读取 @RequireCapability 声明的能力键
+     * - 再根据 authUser.role 展开 capabilities
+     * - 如果当前能力不满足，则直接拒绝
+     */
     const capability = this.reflector.getAllAndOverride<RoleCapabilityKey>(
       REQUIRED_ROLE_CAPABILITY,
       [context.getHandler(), context.getClass()],

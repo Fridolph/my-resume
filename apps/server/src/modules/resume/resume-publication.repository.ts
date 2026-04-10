@@ -29,6 +29,10 @@ export class ResumePublicationRepository {
   }
 
   async saveDraft(resume: StandardResume, updatedAt = new Date()) {
+    /**
+     * draft 表天然只有一条标准简历记录，
+     * 所以这里用 onConflictDoUpdate 来覆盖当前草稿位。
+     */
     const draftRecord = createResumeDraftRecord(resume, updatedAt)
 
     await this.database
@@ -58,6 +62,10 @@ export class ResumePublicationRepository {
   }
 
   async createPublishedSnapshot(resume: StandardResume, publishedAt = new Date()) {
+    /**
+     * published snapshot 不覆盖，只追加。
+     * 这就是“草稿态”和“发布态”在存储层的核心差异。
+     */
     const snapshotRecord = createResumePublicationSnapshotRecord(resume, publishedAt)
 
     await this.database.insert(resumePublicationSnapshots).values(snapshotRecord)

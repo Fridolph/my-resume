@@ -39,6 +39,10 @@ export class ResumeController {
 
   @Get('published')
   async getPublishedResume(@Res({ passthrough: true }) response: Response) {
+    /**
+     * 公开站主读取链路：
+     * web 只读 published，不碰 draft。
+     */
     const published = await this.resumePublicationService.getPublished()
 
     if (!published) {
@@ -139,6 +143,10 @@ export class ResumeController {
   @UseGuards(JwtAuthGuard, RoleCapabilitiesGuard)
   @RequireCapability('canEditResume')
   async getDraftResume(@Res({ passthrough: true }) response: Response) {
+    /**
+     * 后台编辑链路从 draft 开始：
+     * admin 拿到的是可编辑草稿，不是公开快照。
+     */
     this.applyPrivateNoStoreHeaders(response)
     return this.resumePublicationService.getDraft()
   }
@@ -176,6 +184,9 @@ export class ResumeController {
   @UseGuards(JwtAuthGuard, RoleCapabilitiesGuard)
   @RequireCapability('canEditResume')
   async updateDraftResume(@Body() resume: StandardResume) {
+    /**
+     * 保存草稿前先做结构校验，避免非法 JSON 直接落库。
+     */
     const validationResult = validateStandardResume(resume)
 
     if (!validationResult.valid) {
@@ -190,6 +201,10 @@ export class ResumeController {
   @UseGuards(JwtAuthGuard, RoleCapabilitiesGuard)
   @RequireCapability('canPublishResume')
   async publishResume() {
+    /**
+     * publish 并不是“把 draft 改状态”，
+     * 而是基于当前 draft 生成一份新的 published snapshot。
+     */
     return this.resumePublicationService.publish()
   }
 
