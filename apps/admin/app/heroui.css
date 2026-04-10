@@ -120,14 +120,11 @@
 @import '@heroui/styles/base' layer(base);
 @import '@heroui/styles/themes/default' layer(theme);
 
-@import '@heroui/styles/components/avatar.css' layer(components);
 @import '@heroui/styles/components/button.css' layer(components);
 @import '@heroui/styles/components/card.css' layer(components);
 @import '@heroui/styles/components/checkbox.css' layer(components);
 @import '@heroui/styles/components/chip.css' layer(components);
 @import '@heroui/styles/components/disclosure.css' layer(components);
-@import '@heroui/styles/components/drawer.css' layer(components);
-@import '@heroui/styles/components/dropdown.css' layer(components);
 @import '@heroui/styles/components/input.css' layer(components);
 @import '@heroui/styles/components/list-box.css' layer(components);
 @import '@heroui/styles/components/list-box-item.css' layer(components);
@@ -138,9 +135,7 @@
 @import '@heroui/styles/components/popover.css' layer(components);
 @import '@heroui/styles/components/select.css' layer(components);
 @import '@heroui/styles/components/separator.css' layer(components);
-@import '@heroui/styles/components/switch.css' layer(components);
 @import '@heroui/styles/components/textarea.css' layer(components);
-@import '@heroui/styles/components/tooltip.css' layer(components);
 
 @import '@heroui/styles/utilities';
 @import '@heroui/styles/variants';

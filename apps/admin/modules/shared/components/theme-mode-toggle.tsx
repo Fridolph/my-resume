@@ -1,6 +1,5 @@
 'use client'
 
-import { Switch } from '@heroui/react/switch'
 import { useTheme } from 'next-themes'
 
 import styles from './theme-mode-toggle.module.css'
@@ -33,32 +32,28 @@ function MoonIcon() {
 
 export function ThemeModeToggle() {
   const { resolvedTheme, setTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
 
   return (
-    <Switch.Root
+    <button
       aria-label="切换明暗主题"
+      aria-checked={isDark}
       className={styles.switchRoot}
-      isSelected={resolvedTheme === 'dark'}
-      onChange={(nextSelected) => setTheme(nextSelected ? 'dark' : 'light')}
-      size="sm">
-      {({ isSelected }) => (
-        <Switch.Control
-          className={[
-            styles.switchControl,
-            isSelected ? styles.switchControlDark : styles.switchControlLight,
-          ].join(' ')}>
-          <Switch.Thumb
-            className={[
-              styles.switchThumb,
-              isSelected ? styles.switchThumbDark : styles.switchThumbLight,
-            ].join(' ')}
-            style={{ marginInlineStart: isSelected ? '18px' : '0px' }}>
-            <Switch.Icon className={styles.switchIcon}>
-              {isSelected ? <MoonIcon /> : <SunIcon />}
-            </Switch.Icon>
-          </Switch.Thumb>
-        </Switch.Control>
-      )}
-    </Switch.Root>
+      onClick={() => setTheme(isDark ? 'light' : 'dark')}
+      role="switch"
+      type="button">
+      <span
+        className={[
+          styles.switchControl,
+          isDark ? styles.switchControlDark : styles.switchControlLight,
+        ].join(' ')}>
+        <span
+          className={[styles.switchThumb, isDark ? styles.switchThumbDark : styles.switchThumbLight]
+            .join(' ')
+            .trim()}>
+          <span className={styles.switchIcon}>{isDark ? <MoonIcon /> : <SunIcon />}</span>
+        </span>
+      </span>
+    </button>
   )
 }

@@ -46,9 +46,10 @@ export const sessionDropdownMenuClass = 'p-[0.35rem]'
 export const sessionDropdownItemContentClass = 'grid gap-0.5'
 export const sessionDropdownItemLabelClass = 'text-[0.72rem] text-zinc-500 dark:text-zinc-400'
 export const sessionDropdownItemValueClass = 'text-[0.88rem] font-semibold'
-export const mobileDrawerBackdropClass = 'z-40 pointer-events-none'
-export const mobileDrawerContentClass = 'z-50'
+export const mobileDrawerBackdropClass =
+  'fixed inset-0 z-40 bg-zinc-950/35 backdrop-blur-[1px] transition-opacity duration-200'
+export const mobileDrawerContentClass = 'fixed inset-y-0 left-0 z-50 w-[min(88vw,22rem)] md:hidden'
 export const mobileDrawerDialogClass =
-  'border-r border-zinc-200/70 bg-white/95 shadow-2xl dark:border-zinc-800 dark:bg-zinc-950/95'
+  'flex h-full w-full flex-col gap-4 border-r border-zinc-200/70 bg-white/95 px-4 py-4 shadow-2xl transition-transform duration-200 dark:border-zinc-800 dark:bg-zinc-950/95'
 export const mobileDrawerCloseButtonClass =
   'inline-flex h-9 w-9 items-center justify-center rounded-full border border-zinc-200/80 bg-zinc-100/90 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900 dark:border-white/8 dark:bg-white/[0.06] dark:text-zinc-300 dark:hover:bg-white/[0.08] dark:hover:text-white'

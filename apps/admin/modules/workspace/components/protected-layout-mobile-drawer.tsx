@@ -1,20 +1,11 @@
 'use client'
 
-import {
-  Drawer,
-  DrawerBackdrop,
-  DrawerBody,
-  DrawerCloseTrigger,
-  DrawerContent,
-  DrawerDialog,
-  DrawerHeader,
-  DrawerHeading,
-} from '@heroui/react/drawer'
+import { useEffect } from 'react'
 
 import {
+  mobileDrawerContentClass,
   mobileDrawerBackdropClass,
   mobileDrawerCloseButtonClass,
-  mobileDrawerContentClass,
   mobileDrawerDialogClass,
 } from './protected-layout.constants'
 import { AdminNavItems } from './protected-layout-nav'
@@ -35,41 +26,83 @@ export function AdminMobileDrawer({
   onNavigate: () => void
   onOpenChange: (open: boolean) => void
 }) {
+  useEffect(() => {
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape' && isOpen) {
+        onOpenChange(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleEscape)
+
+    return () => {
+      window.removeEventListener('keydown', handleEscape)
+    }
+  }, [isOpen, onOpenChange])
+
+  useEffect(() => {
+    if (!isOpen) {
+      return
+    }
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [isOpen])
+
   return (
-    <Drawer
-      data-testid="admin-mobile-drawer-root"
-      isOpen={isOpen}
-      key={currentPathname}
-      onOpenChange={onOpenChange}>
-      <DrawerBackdrop
-        className={mobileDrawerBackdropClass}
-        isDismissable={false}
-        variant="transparent"
+    <div data-open={String(isOpen)} data-testid="admin-mobile-drawer-root">
+      <button
+        aria-label="关闭导航菜单遮罩"
+        className={[
+          mobileDrawerBackdropClass,
+          isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
+        ]
+          .join(' ')
+          .trim()}
+        onClick={() => onOpenChange(false)}
+        type="button"
       />
-      <DrawerContent
-        className={mobileDrawerContentClass}
-        data-testid="admin-mobile-drawer-content"
-        placement="left">
-        <DrawerDialog
-          className={mobileDrawerDialogClass}
-          data-testid="admin-mobile-drawer-dialog">
-          <DrawerHeader className="flex items-center justify-between gap-3">
-            <DrawerHeading>后台导航</DrawerHeading>
-            <DrawerCloseTrigger aria-label="关闭导航菜单" className={mobileDrawerCloseButtonClass}>
+      <div className={mobileDrawerContentClass} data-testid="admin-mobile-drawer-content">
+        <div
+          className={[
+            mobileDrawerDialogClass,
+            isOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none',
+          ]
+            .join(' ')
+            .trim()}
+          data-testid="admin-mobile-drawer-dialog"
+          role="dialog">
+          <header className="flex items-center justify-between gap-3">
+            <h2 className="text-base font-semibold text-zinc-950 dark:text-zinc-50">后台导航</h2>
+            <button
+              aria-label="关闭导航菜单"
+              className={mobileDrawerCloseButtonClass}
+              onClick={() => onOpenChange(false)}
+              type="button">
               <span aria-hidden="true">×</span>
-            </DrawerCloseTrigger>
-          </DrawerHeader>
-          <DrawerBody className="space-y-5">
+            </button>
+          </header>
+          <div className="space-y-5">
             <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/70">
               <p className="text-sm font-semibold">{currentUser.username}</p>
               <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
                 {currentUser.role} · 快捷切换后台工作区
               </p>
             </div>
-            <AdminNavItems currentPathname={currentPathname} onNavigate={onNavigate} />
-          </DrawerBody>
-        </DrawerDialog>
-      </DrawerContent>
-    </Drawer>
+            <AdminNavItems
+              currentPathname={currentPathname}
+              onNavigate={() => {
+                onNavigate()
+                onOpenChange(false)
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }

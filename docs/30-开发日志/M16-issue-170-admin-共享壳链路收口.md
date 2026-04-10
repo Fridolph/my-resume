@@ -34,6 +34,11 @@
   - 登录页、`/dashboard`、`/dashboard/publish` 这些轻页面去掉过度的 `next/dynamic` 壳层，改回直接导入
   - `protected-layout-nav.tsx` 去掉 HeroUI `Tooltip`，折叠导航退化为原生 `title`
   - `protected-layout-sidebar.tsx` 与 `protected-layout.tsx` 去掉 HeroUI `Card` / `Separator`，改为原生语义容器与轻量 utility class
+- 第三轮继续压缩共享壳依赖：
+  - `ThemeModeToggle` 从 HeroUI `Switch` 改为原生 `button[role=switch]` + 现有 CSS Module，移除 `@heroui/react/switch` 运行时链路
+  - `protected-layout-header-actions.tsx` 去掉 HeroUI `Avatar` / `Dropdown` / `Tooltip`，改为原生按钮 + 轻量会话弹层
+  - `protected-layout-mobile-drawer.tsx` 去掉 HeroUI `Drawer`，改为原生 drawer overlay + panel 实现
+  - `apps/admin/app/heroui.css` 移除 `avatar.css`、`dropdown.css`、`switch.css`、`tooltip.css`、`drawer.css`
 
 ## Review 记录
 
@@ -69,6 +74,18 @@
   - `Route (app) /dashboard/publish` `First Load JS` 维持在 `133 kB`
   - `apps/admin/.next/app-build-manifest.json` 中 `/dashboard/layout` 关联文件数从此前的 `13` 下降到 `9`
   - 最新分析报告位于 `.tmp/perf/build-admin-after-shell-native.json`
+- 第三轮追加验证：
+  - `pnpm --filter @my-resume/admin exec vitest run modules/shared/__tests__/theme-mode-toggle.spec.tsx modules/workspace/__tests__/protected-layout.spec.tsx` ✅
+  - `pnpm --filter @my-resume/admin build` ✅
+  - `pnpm --filter @my-resume/admin typecheck` ✅
+  - `node scripts/perf-build-analyze.mjs --apps admin --output .tmp/perf/build-admin-after-native-header-and-drawer.json` ✅
+  - 对比 `build-admin-after-shell-native.json`：
+    - admin 总静态体积 `1468.34 KiB` → `1395.81 KiB`（`-72.53 KiB`）
+    - admin 主 CSS `146.21 KiB` → `118.77 KiB`（`-27.44 KiB`）
+  - `next build` 结果：
+    - `/` `First Load JS` `137 kB` → `135 kB`
+    - `/dashboard/publish` `133 kB` → `132 kB`
+    - `/dashboard/resume` `121 kB` → `120 kB`
 
 ## 后续可写成教程/博客的切入点
 
