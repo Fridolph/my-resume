@@ -1,4 +1,4 @@
-import { defaultApiClient as api } from './client'
+import { defaultApiClient as Alova } from './client'
 import type {
   AuthenticatedResumeRequestInput,
   AuthenticatedResumeSummaryRequestInput,
@@ -72,7 +72,7 @@ export function buildPublishedResumeExportUrl(input: {
 export async function fetchPublishedResume(
   input: ResumeRequestInput,
 ): Promise<ResumePublishedSnapshot | null> {
-  return api.request<ResumePublishedSnapshot | null>({
+  return Alova.request<ResumePublishedSnapshot | null>({
     apiBaseUrl: input.apiBaseUrl,
     pathname: '/resume/published',
     requestInit: {
@@ -93,7 +93,7 @@ export async function fetchPublishedResume(
 export async function fetchDraftResume(
   input: AuthenticatedResumeRequestInput,
 ): Promise<ResumeDraftSnapshot> {
-  return api.request<ResumeDraftSnapshot>({
+  return Alova.request<ResumeDraftSnapshot>({
     apiBaseUrl: input.apiBaseUrl,
     pathname: '/resume/draft',
     accessToken: input.accessToken,
@@ -111,7 +111,7 @@ export async function fetchDraftResume(
 export async function fetchDraftResumeSummary(
   input: AuthenticatedResumeSummaryRequestInput,
 ): Promise<ResumeDraftSummarySnapshot> {
-  return api.request<ResumeDraftSummarySnapshot>({
+  return Alova.request<ResumeDraftSummarySnapshot>({
     apiBaseUrl: input.apiBaseUrl,
     pathname: '/resume/draft/summary',
     query: input.locale
@@ -134,7 +134,7 @@ export async function fetchDraftResumeSummary(
 export async function updateDraftResume(
   input: UpdateResumeDraftInput,
 ): Promise<ResumeDraftSnapshot> {
-  return api.request<ResumeDraftSnapshot>({
+  return Alova.request<ResumeDraftSnapshot>({
     apiBaseUrl: input.apiBaseUrl,
     pathname: '/resume/draft',
     method: 'PUT',
@@ -157,7 +157,7 @@ export async function updateDraftResume(
 export async function publishResume(
   input: AuthenticatedResumeRequestInput,
 ): Promise<ResumePublishedSnapshot> {
-  return api.request<ResumePublishedSnapshot>({
+  return Alova.request<ResumePublishedSnapshot>({
     apiBaseUrl: input.apiBaseUrl,
     pathname: '/resume/publish',
     method: 'POST',
@@ -176,7 +176,7 @@ export async function publishResume(
 export async function fetchPublishedResumeSummary(
   input: ResumeSummaryRequestInput,
 ): Promise<ResumePublishedSummarySnapshot | null> {
-  return api.request<ResumePublishedSummarySnapshot | null>({
+  return Alova.request<ResumePublishedSummarySnapshot | null>({
     apiBaseUrl: input.apiBaseUrl,
     pathname: '/resume/published/summary',
     query: input.locale

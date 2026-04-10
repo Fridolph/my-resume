@@ -1,4 +1,4 @@
-import { defaultApiClient as api } from './client'
+import { defaultApiClient as Alova } from './client'
 import type {
   AuthUserView,
   FetchCurrentUserInput,
@@ -28,7 +28,7 @@ export type {
 export async function loginWithPassword(
   input: LoginWithPasswordInput,
 ): Promise<LoginResult> {
-  return api.request<LoginResult>({
+  return Alova.request<LoginResult>({
     apiBaseUrl: input.apiBaseUrl,
     pathname: '/auth/login',
     method: 'POST',
@@ -53,7 +53,7 @@ export async function loginWithPassword(
 export async function fetchCurrentUser(
   input: FetchCurrentUserInput,
 ): Promise<AuthUserView> {
-  const payload = await api.request<{
+  const payload = await Alova.request<{
     user: AuthUserView
   }>({
     apiBaseUrl: input.apiBaseUrl,
@@ -75,7 +75,7 @@ export async function fetchCurrentUser(
 export async function postProtectedAction(
   input: PostProtectedActionInput,
 ): Promise<ProtectedActionResponse> {
-  return api.request<ProtectedActionResponse>({
+  return Alova.request<ProtectedActionResponse>({
     apiBaseUrl: input.apiBaseUrl,
     pathname: input.pathname,
     method: 'POST',

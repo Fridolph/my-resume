@@ -1,4 +1,4 @@
-import { defaultApiClient as api } from './client'
+import { defaultApiClient as Alova } from './client'
 import type {
   AiResumeOptimizationResult,
   AiWorkbenchCachedReportSummary,
@@ -53,7 +53,7 @@ export type {
 export async function fetchAiWorkbenchRuntime(
   input: RuntimeInput,
 ): Promise<AiWorkbenchRuntimeSummary> {
-  return api.request<AiWorkbenchRuntimeSummary>({
+  return Alova.request<AiWorkbenchRuntimeSummary>({
     apiBaseUrl: input.apiBaseUrl,
     pathname: '/ai/reports/runtime',
     accessToken: input.accessToken,
@@ -71,7 +71,7 @@ export async function fetchAiWorkbenchRuntime(
 export async function triggerAiWorkbenchAnalysis(
   input: AnalysisInput,
 ): Promise<TriggerAiWorkbenchAnalysisResult> {
-  return api.request<TriggerAiWorkbenchAnalysisResult>({
+  return Alova.request<TriggerAiWorkbenchAnalysisResult>({
     apiBaseUrl: input.apiBaseUrl,
     pathname: '/ai/reports/analyze',
     method: 'POST',
@@ -98,7 +98,7 @@ export async function triggerAiWorkbenchAnalysis(
 export async function generateAiResumeOptimization(
   input: ResumeOptimizationInput,
 ): Promise<AiResumeOptimizationResult> {
-  return api.request<AiResumeOptimizationResult>({
+  return Alova.request<AiResumeOptimizationResult>({
     apiBaseUrl: input.apiBaseUrl,
     pathname: '/ai/reports/resume-optimize',
     method: 'POST',
@@ -124,7 +124,7 @@ export async function generateAiResumeOptimization(
 export async function applyAiResumeOptimization(
   input: ApplyAiResumeOptimizationInput,
 ): Promise<ApplyAiResumeOptimizationResult> {
-  return api.request<ApplyAiResumeOptimizationResult>({
+  return Alova.request<ApplyAiResumeOptimizationResult>({
     apiBaseUrl: input.apiBaseUrl,
     pathname: '/ai/reports/resume-optimize/apply',
     method: 'POST',
@@ -151,7 +151,7 @@ export async function applyAiResumeOptimization(
 export async function fetchCachedAiWorkbenchReports(
   input: RuntimeInput,
 ): Promise<AiWorkbenchCachedReportSummary[]> {
-  const payload = await api.request<{
+  const payload = await Alova.request<{
     reports: AiWorkbenchCachedReportSummary[]
   }>({
     apiBaseUrl: input.apiBaseUrl,
@@ -175,7 +175,7 @@ export async function fetchCachedAiWorkbenchReport(
     reportId: string
   },
 ): Promise<AiWorkbenchReport> {
-  return api.request<AiWorkbenchReport>({
+  return Alova.request<AiWorkbenchReport>({
     apiBaseUrl: input.apiBaseUrl,
     pathname: `/ai/reports/cache/${input.reportId}`,
     accessToken: input.accessToken,
@@ -196,7 +196,7 @@ export async function extractTextFromFile(
   const formData = new FormData()
   formData.append('file', input.file)
 
-  return api.request<FileExtractionResult>({
+  return Alova.request<FileExtractionResult>({
     apiBaseUrl: input.apiBaseUrl,
     pathname: '/ai/extract-text',
     method: 'POST',
