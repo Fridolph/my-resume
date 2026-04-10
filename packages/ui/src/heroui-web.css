@@ -1,0 +1,17 @@
+@import './heroui-base.css';
+
+@import '@heroui/styles/components/button.css' layer(components);
+@import '@heroui/styles/components/card.css' layer(components);
+@import '@heroui/styles/components/chip.css' layer(components);
+@import '@heroui/styles/components/dropdown.css' layer(components);
+@import '@heroui/styles/components/menu.css' layer(components);
+@import '@heroui/styles/components/menu-item.css' layer(components);
+@import '@heroui/styles/components/menu-section.css' layer(components);
+@import '@heroui/styles/components/popover.css' layer(components);
+@import '@heroui/styles/components/switch.css' layer(components);
+@import '@heroui/styles/components/tag.css' layer(components);
+@import '@heroui/styles/components/tag-group.css' layer(components);
+@import '@heroui/styles/components/tooltip.css' layer(components);
+
+@import '@heroui/styles/utilities';
+@import '@heroui/styles/variants';

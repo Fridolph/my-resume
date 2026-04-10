@@ -19,7 +19,10 @@
       "import": "./dist/display.js",
       "default": "./dist/display.js"
     },
-    "./display.css": "./src/display.css"
+    "./display.css": "./src/display.css",
+    "./heroui-base.css": "./src/heroui-base.css",
+    "./heroui-web.css": "./src/heroui-web.css",
+    "./heroui-admin.css": "./src/heroui-admin.css"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
