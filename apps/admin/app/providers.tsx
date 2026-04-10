@@ -3,7 +3,7 @@
 import { ThemeProvider, useTheme } from 'next-themes'
 import { useEffect, type ReactNode } from 'react'
 
-import { AdminSessionProvider } from '../lib/admin-session'
+import { AdminSessionProvider } from '../core/admin-session'
 
 function ThemeDatasetBridge() {
   const { resolvedTheme } = useTheme()

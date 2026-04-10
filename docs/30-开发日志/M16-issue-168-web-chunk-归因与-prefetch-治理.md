@@ -42,7 +42,7 @@
 ## 遇到的问题
 
 - `Next build` 输出的 `First Load JS` 与 `.tmp/perf/build-report.json` 中的“最大静态资源文件”不是一个维度，阅读时容易混淆。
-- 当前仓库里仍有根级 `.eslintrc.json` 的 `@nx/eslint-plugin` 缺失噪音，但不属于本 issue 范围。
+- 当前仓库里仍有根级 `.eslintrc.json` 的 `@nx/eslint-plugin` 缺失噪音，已在后续工程清理中单独收口，不再继续保留为已知噪音。
 
 ## 测试与验证
 

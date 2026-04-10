@@ -2,11 +2,11 @@ import '../admin-shell.css'
 import dynamic from 'next/dynamic'
 import type { ReactNode } from 'react'
 
-import { AdminRouteLoadingCard } from '../../components/admin/route-loading-card'
+import { AdminRouteLoadingCard } from '../../modules/workspace/route-loading-card'
 
 const AdminProtectedLayout = dynamic(
   () =>
-    import('../../components/admin/protected-layout').then(
+    import('../../modules/workspace/protected-layout').then(
       (module) => module.AdminProtectedLayout,
     ),
   {

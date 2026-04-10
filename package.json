@@ -37,7 +37,8 @@
     "test:ci": "pnpm test:unit && pnpm test:e2e",
     "typecheck:all": "turbo run typecheck",
     "build:all": "turbo run build",
-    "test:workspace": "node scripts/check-workspace.mjs",
+    "check:tsx-types": "node scripts/check-tsx-types.mjs",
+    "test:workspace": "node scripts/check-workspace.mjs && pnpm check:tsx-types",
     "perf:dev:web": "node scripts/perf-dev-route.mjs --target web --base-url http://127.0.0.1:5555 --routes /,/profile --output .tmp/perf/dev-web.json",
     "perf:dev:admin": "node scripts/perf-dev-route.mjs --target admin --base-url http://127.0.0.1:5566 --routes /dashboard,/dashboard/resume,/dashboard/ai,/dashboard/publish --output .tmp/perf/dev-admin.json",
     "perf:build:analyze": "pnpm build:shared && pnpm --filter @my-resume/web build && pnpm --filter @my-resume/admin build && node scripts/perf-build-analyze.mjs --apps web,admin --output .tmp/perf/build-report.json"

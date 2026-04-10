@@ -1,10 +1,10 @@
 import dynamic from 'next/dynamic'
 
-import { AdminRouteLoadingCard } from '../../components/admin/route-loading-card'
+import { AdminRouteLoadingCard } from '../../modules/workspace/route-loading-card'
 
 const AdminDashboardShell = dynamic(
   () =>
-    import('../../components/admin/dashboard-shell').then(
+    import('../../modules/workspace/dashboard-shell').then(
       (module) => module.AdminDashboardShell,
     ),
   {

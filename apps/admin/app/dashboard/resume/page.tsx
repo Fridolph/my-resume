@@ -1,10 +1,10 @@
 import dynamic from 'next/dynamic'
 
-import { AdminRouteLoadingCard } from '../../../components/admin/route-loading-card'
+import { AdminRouteLoadingCard } from '../../../modules/workspace/route-loading-card'
 
 const AdminResumeShell = dynamic(
   () =>
-    import('../../../components/admin/resume-shell').then(
+    import('../../../modules/resume/resume-shell').then(
       (module) => module.AdminResumeShell,
     ),
   {
