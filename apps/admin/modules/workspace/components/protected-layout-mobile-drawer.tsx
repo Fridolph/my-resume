@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 
-import type { AppLocale } from '../../../i18n/types'
+import type { AppLocale } from '@/i18n/types'
 import {
   mobileDrawerContentClass,
   mobileDrawerBackdropClass,

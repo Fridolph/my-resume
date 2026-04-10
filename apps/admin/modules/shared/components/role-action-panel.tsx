@@ -7,7 +7,7 @@ import { AuthUserView } from '../../auth/types/auth.types'
 import {
   adminPrimaryButtonClass,
   adminSecondaryButtonClass,
-} from '../../../core/button-styles'
+} from '@/core/button-styles'
 
 const actionGridClass =
   'grid grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))] gap-4'

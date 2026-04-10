@@ -1,4 +1,4 @@
-import { ensureDraftResume } from '../../../core/admin-resource-store'
+import { ensureDraftResume } from '@/core/admin-resource-store'
 import { updateDraftResume } from '../services/resume-draft-api'
 
 export interface ResumeDraftEditorPanelProps {

@@ -4,7 +4,7 @@ import { Button } from '@heroui/react/button'
 import { useTranslations } from 'next-intl'
 import type { ReactNode } from 'react'
 
-import { Link } from '../../../i18n/navigation'
+import { Link } from '@/i18n/navigation'
 import type { AdminNavigationItem } from '../types/admin-navigation.types'
 import {
   headerBodyClass,

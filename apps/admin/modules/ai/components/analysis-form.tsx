@@ -2,7 +2,7 @@
 
 import { Button, ListBox, Select, TextArea } from '@heroui/react'
 
-import { adminPrimaryButtonClass } from '../../../core/button-styles'
+import { adminPrimaryButtonClass } from '@/core/button-styles'
 import type { ReactNode } from 'react'
 
 import type { AiWorkbenchLocale, AiWorkbenchScenario } from '../types/ai-workbench.types'

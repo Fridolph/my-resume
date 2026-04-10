@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react'
 import {
   ensureCachedAiWorkbenchReport,
   ensureCachedAiWorkbenchReports,
-} from '../../../core/admin-resource-store'
+} from '@/core/admin-resource-store'
 import {
   AiWorkbenchCachedReportSummary,
   AiWorkbenchReport,

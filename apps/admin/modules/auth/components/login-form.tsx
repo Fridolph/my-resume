@@ -11,7 +11,7 @@ import { Chip } from '@heroui/react/chip'
 import { Input } from '@heroui/react/input'
 import { Button } from '@heroui/react/button'
 
-import { adminPrimaryButtonClass } from '../../../core/button-styles'
+import { adminPrimaryButtonClass } from '@/core/button-styles'
 import { FormEvent, useState } from 'react'
 
 interface LoginFormProps {

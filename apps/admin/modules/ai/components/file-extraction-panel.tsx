@@ -2,7 +2,7 @@
 
 import { Button, Input, TextArea } from '@heroui/react'
 
-import { adminPrimaryButtonClass } from '../../../core/button-styles'
+import { adminPrimaryButtonClass } from '@/core/button-styles'
 import { useState } from 'react'
 
 import { extractTextFromFile } from '../services/ai-file-api'

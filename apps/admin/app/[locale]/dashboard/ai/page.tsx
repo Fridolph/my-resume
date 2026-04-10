@@ -1,11 +1,11 @@
 import dynamic from 'next/dynamic'
 
-import { AdminRouteLoadingCard } from '../../../../modules/workspace/route-loading-card'
-import { isAppLocale } from '../../../../i18n/types'
+import { AdminRouteLoadingCard } from '@/modules/workspace/route-loading-card'
+import { isAppLocale } from '@/i18n/types'
 
 const AdminAiWorkbenchShell = dynamic(
   () =>
-    import('../../../../modules/ai/ai-workbench-shell').then(
+    import('@/modules/ai/ai-workbench-shell').then(
       (module) => module.AdminAiWorkbenchShell,
     ),
   {

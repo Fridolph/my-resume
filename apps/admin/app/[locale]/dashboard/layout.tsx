@@ -1,8 +1,8 @@
 import '../../admin-shell.css'
 import type { ReactNode } from 'react'
 
-import { AdminProtectedLayoutWithLocale } from '../../../modules/workspace/protected-layout'
-import { isAppLocale } from '../../../i18n/types'
+import { AdminProtectedLayoutWithLocale } from '@/modules/workspace/protected-layout'
+import { isAppLocale } from '@/i18n/types'
 
 export default async function DashboardLayout({
   children,

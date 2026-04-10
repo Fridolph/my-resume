@@ -1,4 +1,4 @@
-import { invalidateDraftResumeResources } from '../../../core/admin-resource-store'
+import { invalidateDraftResumeResources } from '@/core/admin-resource-store'
 import type { ResumeDraftSnapshot, StandardResume } from '../types/resume.types'
 import type { ResumeDraftEditorPanelProps } from '../types/draft-editor-panel.types'
 import { cloneResume } from './draft-editor-helpers'

@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 const replaceMock = vi.fn()
 
-vi.mock('../../../i18n/navigation', () => ({
+vi.mock('@/i18n/navigation', () => ({
   Link: ({ children, href, ...props }: any) => (
     <a
       href={

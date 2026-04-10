@@ -1,6 +1,6 @@
 import enMessages from '../i18n/en.json'
 import zhMessages from '../i18n/zh.json'
-import type { AppLocale } from '../../../i18n/types'
+import type { AppLocale } from '@/i18n/types'
 import type { AdminNavigationItem } from '../types/admin-navigation.types'
 
 const navigationMessages = {

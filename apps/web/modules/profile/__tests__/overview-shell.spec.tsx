@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { ThemeModeProvider } from '@my-resume/ui/theme'
 import { describe, expect, it, vi } from 'vitest'
 
-vi.mock('../../../i18n/navigation', () => ({
+vi.mock('@/i18n/navigation', () => ({
   Link: ({ children, href, ...props }: any) => (
     <a
       href={

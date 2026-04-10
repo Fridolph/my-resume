@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { Providers } from '../../../app/providers'
+import { Providers } from '@/app/providers'
 import { ThemeModeToggle } from '../components/theme-mode-toggle'
 
 describe('ThemeModeToggle', () => {

@@ -2,7 +2,7 @@
 
 import { Button, Checkbox } from '@heroui/react'
 
-import { adminPrimaryButtonClass } from '../../../core/button-styles'
+import { adminPrimaryButtonClass } from '@/core/button-styles'
 import {
   DisplayPill,
   DisplaySectionIntro,

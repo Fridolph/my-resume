@@ -11,7 +11,7 @@ const { useAdminSessionMock, fetchAiWorkbenchRuntimeMock, fetchDraftResumeSummar
     fetchDraftResumeSummaryMock: vi.fn(),
   }))
 
-vi.mock('../../../i18n/navigation', () => ({
+vi.mock('@/i18n/navigation', () => ({
   Link: ({ children, href, ...props }: any) => (
     <a href={typeof href === 'string' ? href : '/'} {...props}>
       {children}
@@ -19,7 +19,7 @@ vi.mock('../../../i18n/navigation', () => ({
   ),
 }))
 
-vi.mock('../../../core/admin-session', () => ({
+vi.mock('@/core/admin-session', () => ({
   useAdminSession: useAdminSessionMock,
 }))
 
@@ -31,7 +31,7 @@ vi.mock('../../resume/services/resume-draft-api', () => ({
   fetchDraftResumeSummary: fetchDraftResumeSummaryMock,
 }))
 
-import { resetAdminResourceStore } from '../../../core/admin-resource-store'
+import { resetAdminResourceStore } from '@/core/admin-resource-store'
 import { AdminDashboardShell } from '../dashboard-shell'
 
 const adminUser = {

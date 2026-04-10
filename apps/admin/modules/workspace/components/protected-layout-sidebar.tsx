@@ -2,7 +2,7 @@
 
 import { Button } from '@heroui/react/button'
 
-import type { AppLocale } from '../../../i18n/types'
+import type { AppLocale } from '@/i18n/types'
 import {
   sidebarBrandClass,
   sidebarBrandCollapsedClass,

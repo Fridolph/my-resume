@@ -22,7 +22,7 @@ const {
   fetchCachedAiWorkbenchReportsMock: vi.fn(),
 }))
 
-vi.mock('../../../core/admin-session', () => ({
+vi.mock('@/core/admin-session', () => ({
   useAdminSession: useAdminSessionMock,
 }))
 
@@ -161,7 +161,7 @@ vi.mock('../components/analysis-panel', () => ({
 }))
 
 import { AdminAiWorkbenchShell } from '../ai-workbench-shell'
-import { resetAdminResourceStore } from '../../../core/admin-resource-store'
+import { resetAdminResourceStore } from '@/core/admin-resource-store'
 
 const runtimeSummary = {
   provider: 'qiniu',

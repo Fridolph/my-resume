@@ -2,8 +2,8 @@
 
 import { Button } from '@heroui/react/button'
 
-import { useRouter } from '../../../i18n/navigation'
-import type { AppLocale } from '../../../i18n/types'
+import { useRouter } from '@/i18n/navigation'
+import type { AppLocale } from '@/i18n/types'
 import { getAdminNavigationItems } from '../utils/admin-navigation'
 import {
   navBadgeBaseClass,

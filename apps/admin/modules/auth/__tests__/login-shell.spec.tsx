@@ -5,8 +5,8 @@ import userEvent from '@testing-library/user-event'
 import { StrictMode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { Providers } from '../../../app/providers'
-import { resetAdminResourceStore } from '../../../core/admin-resource-store'
+import { Providers } from '@/app/providers'
+import { resetAdminResourceStore } from '@/core/admin-resource-store'
 
 const { fetchCurrentUserMock, loginWithPasswordMock, pushMock, replaceMock } = vi.hoisted(
   () => ({
@@ -17,7 +17,7 @@ const { fetchCurrentUserMock, loginWithPasswordMock, pushMock, replaceMock } = v
   }),
 )
 
-vi.mock('../../../i18n/navigation', () => ({
+vi.mock('@/i18n/navigation', () => ({
   useRouter: () => ({
     push: pushMock,
     replace: replaceMock,
