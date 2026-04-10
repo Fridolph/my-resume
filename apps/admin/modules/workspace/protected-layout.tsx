@@ -1,12 +1,5 @@
 'use client'
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@heroui/react/card'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -14,7 +7,6 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 
 import { getAdminPageMeta } from './utils/admin-navigation'
 import { useAdminSession } from '../../core/admin-session'
-import { ThemeModeToggle } from '../shared/components/theme-mode-toggle'
 import { AdminHeader } from './components/protected-layout-header'
 import { AdminSidebar } from './components/protected-layout-sidebar'
 
@@ -73,8 +65,8 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
   if (status === 'loading') {
     return (
       <main className="flex min-h-screen items-center justify-center px-4 py-8">
-        <Card className="w-full max-w-md">
-          <CardContent className="flex flex-col gap-3 py-10 text-center">
+        <section className="w-full max-w-md rounded-[28px] border border-zinc-200/70 bg-white/92 px-6 py-10 text-center shadow-sm dark:border-zinc-800 dark:bg-zinc-950/80">
+          <div className="flex flex-col gap-3">
             <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
               正在校验后台登录态
             </p>
@@ -84,8 +76,8 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
               请稍候，当前会继续向 `apps/server` 校验 `/auth/me`。
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       </main>
     )
   }
@@ -93,20 +85,22 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
   if (status === 'unauthorized' || !currentUser) {
     return (
       <main className="flex min-h-screen items-center justify-center px-4 py-8">
-        <Card className="w-full max-w-xl">
-          <CardHeader className="pb-0">
+        <section className="w-full max-w-xl rounded-[32px] border border-zinc-200/70 bg-white/92 px-6 py-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/80">
+          <div className="pb-0">
             <div className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-zinc-500 dark:text-zinc-400">
                 未登录
               </p>
-              <CardTitle className="text-2xl">请先登录后台</CardTitle>
-              <CardDescription>
+              <h1 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-white">
+                请先登录后台
+              </h1>
+              <p className="text-sm leading-6 text-zinc-500 dark:text-zinc-400">
                 当前路由属于受保护后台，需要先读取本地 token 并向 `/auth/me`
                 校验当前登录态。
-              </CardDescription>
+              </p>
             </div>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4 pt-6">
+          </div>
+          <div className="flex flex-col gap-4 pt-6">
             <div className="readonly-box">
               <p className="font-medium">当前后台继续保持前端壳鉴权模式</p>
               <p className="text-sm">
@@ -118,8 +112,8 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
                 返回登录页
               </Link>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       </main>
     )
   }
@@ -144,7 +138,6 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
             <AdminHeader
               actions={
                 <AdminHeaderActions
-                  ThemeModeToggle={ThemeModeToggle}
                   currentUser={currentUser}
                   onLogout={() => {
                     logout()

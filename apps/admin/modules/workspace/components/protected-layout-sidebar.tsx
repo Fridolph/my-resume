@@ -1,14 +1,6 @@
 'use client'
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@heroui/react/card'
 import { Button } from '@heroui/react/button'
-import { Separator } from '@heroui/react/separator'
 
 import {
   sidebarBrandClass,
@@ -34,8 +26,8 @@ export function AdminSidebar({
 }) {
   return (
     <aside className={sidebarShellClass}>
-      <Card className="h-screen rounded-none border-none bg-transparent p-1! shadow-none">
-        <CardHeader
+      <div className="flex h-screen flex-col rounded-none border-none bg-transparent p-1 shadow-none">
+        <div
           className={[sidebarHeaderClass, sidebarCollapsed ? sidebarHeaderCollapsedClass : '']
             .join(' ')
             .trim()}>
@@ -57,22 +49,27 @@ export function AdminSidebar({
           </div>
           {!sidebarCollapsed ? (
             <div className="space-y-1">
-              <CardTitle className="text-lg">resume admin</CardTitle>
-              <CardDescription>
+              <h2 className="text-lg font-semibold text-zinc-950 dark:text-white">
+                resume admin
+              </h2>
+              <p className="text-sm leading-6 text-zinc-500 dark:text-zinc-400">
                 标准后台壳，继续只消费 NestJS 提供的业务能力。
-              </CardDescription>
+              </p>
             </div>
           ) : null}
-        </CardHeader>
-        <CardContent
+        </div>
+        <div
           className={[sidebarContentClass, sidebarCollapsed ? sidebarContentCollapsedClass : '']
             .join(' ')
             .trim()}>
           <AdminNavItems collapsed={sidebarCollapsed} currentPathname={currentPathname} />
-          <Separator className="my-[0.2rem] mt-[0.3rem]" />
+          <div
+            aria-hidden="true"
+            className="my-[0.2rem] mt-[0.3rem] h-px w-full bg-zinc-200/70 dark:bg-white/8"
+          />
           <div className="mt-auto hidden md:block" />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </aside>
   )
 }

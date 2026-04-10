@@ -1,7 +1,6 @@
 'use client'
 
 import { Button } from '@heroui/react/button'
-import { Tooltip } from '@heroui/react/tooltip'
 import { useRouter } from 'next/navigation'
 
 import { adminNavigationItems } from '../utils/admin-navigation'
@@ -69,12 +68,9 @@ export function AdminNavItems({
         }
 
         return (
-          <Tooltip key={item.href}>
-            <Tooltip.Trigger>{navButton}</Tooltip.Trigger>
-            <Tooltip.Content offset={12} placement="right">
-              {item.title}
-            </Tooltip.Content>
-          </Tooltip>
+          <div key={item.href} title={item.title}>
+            {navButton}
+          </div>
         )
       })}
     </div>

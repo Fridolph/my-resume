@@ -4,9 +4,9 @@ import { Avatar } from '@heroui/react/avatar'
 import { Button } from '@heroui/react/button'
 import { Dropdown } from '@heroui/react/dropdown'
 import { Tooltip } from '@heroui/react/tooltip'
-import type { ComponentType } from 'react'
 
 import type { AuthUserView } from '../../auth/types/auth.types'
+import { ThemeModeToggle } from '../../shared/components/theme-mode-toggle'
 import {
   headerActionsClass,
   headerAvatarButtonClass,
@@ -23,14 +23,9 @@ import { GithubIcon } from './protected-layout-icons'
 interface AdminHeaderActionsProps {
   currentUser: AuthUserView
   onLogout: () => void
-  ThemeModeToggle: ComponentType
 }
 
-export function AdminHeaderActions({
-  currentUser,
-  onLogout,
-  ThemeModeToggle,
-}: AdminHeaderActionsProps) {
+export function AdminHeaderActions({ currentUser, onLogout }: AdminHeaderActionsProps) {
   return (
     <div className={headerActionsClass}>
       <Tooltip>
