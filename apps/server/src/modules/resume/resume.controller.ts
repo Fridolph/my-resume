@@ -25,6 +25,12 @@ import { ResumeMarkdownExportService } from './resume-markdown-export.service'
 import { ResumePdfExportService } from './resume-pdf-export.service'
 import { ResumePublicationService } from './resume-publication.service'
 import { buildResumeSummary, resolveResumeSummaryLocale } from './resume-summary'
+import type {
+  ResumeDraftSnapshotResponse,
+  ResumeDraftSummarySnapshotResponse,
+  ResumePublishedSnapshotResponse,
+  ResumePublishedSummarySnapshotResponse,
+} from './transport/types/resume-response.types'
 
 @Controller('resume')
 export class ResumeController {
@@ -43,7 +49,9 @@ export class ResumeController {
    * @returns 发布态快照
    */
   @Get('published')
-  async getPublishedResume(@Res({ passthrough: true }) response: Response) {
+  async getPublishedResume(
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<ResumePublishedSnapshotResponse> {
     // 公开站只读取发布态快照，不直接读取草稿。
     const published = await this.resumePublicationService.getPublished()
 
@@ -68,7 +76,7 @@ export class ResumeController {
     @Query('locale') localeQuery: string | undefined,
     @Headers('cookie') cookieHeader: string | undefined,
     @Res({ passthrough: true }) response: Response,
-  ) {
+  ): Promise<ResumePublishedSummarySnapshotResponse> {
     const publishedResume = await this.resumePublicationService.getPublished()
 
     if (!publishedResume) {
@@ -168,7 +176,9 @@ export class ResumeController {
   @Get('draft')
   @UseGuards(JwtAuthGuard, RoleCapabilitiesGuard)
   @RequireCapability('canEditResume')
-  async getDraftResume(@Res({ passthrough: true }) response: Response) {
+  async getDraftResume(
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<ResumeDraftSnapshotResponse> {
     // 后台编辑链路从 draft 开始，避免直接改动公开站内容。
     this.applyPrivateNoStoreHeaders(response)
     return this.resumePublicationService.getDraft()
@@ -188,7 +198,7 @@ export class ResumeController {
     @Query('locale') localeQuery: string | undefined,
     @Headers('cookie') cookieHeader: string | undefined,
     @Res({ passthrough: true }) response: Response,
-  ) {
+  ): Promise<ResumeDraftSummarySnapshotResponse> {
     const draft = await this.resumePublicationService.getDraft()
     const { locale, queryInvalid } = resolveResumeSummaryLocale({
       localeQuery,
@@ -218,7 +228,9 @@ export class ResumeController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard, RoleCapabilitiesGuard)
   @RequireCapability('canEditResume')
-  async updateDraftResume(@Body() resume: StandardResume) {
+  async updateDraftResume(
+    @Body() resume: StandardResume,
+  ): Promise<ResumeDraftSnapshotResponse> {
     // 保存草稿前先做结构校验，避免非法 JSON 直接落库。
     const validationResult = validateStandardResume(resume)
 
@@ -237,7 +249,7 @@ export class ResumeController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard, RoleCapabilitiesGuard)
   @RequireCapability('canPublishResume')
-  async publishResume() {
+  async publishResume(): Promise<ResumePublishedSnapshotResponse> {
     // publish 不是改状态位，而是从 draft 追加一条新的发布快照。
     return this.resumePublicationService.publish()
   }

@@ -112,6 +112,14 @@ Review 阶段必须回答两个问题：
 
 - 仅在阶段性可展示、可部署时进入 `main`
 
+### 12. Server 模块类型分层规范（M16 补充）
+
+- `apps/server` 新增功能默认按 `domain / application / transport` 三层管理类型。
+- `domain` 只放领域实体与纯业务规则，不放 HTTP 响应包装类型。
+- `application` 放用例层输入输出类型（service 编排使用），避免在 service 内重复声明 interface。
+- `transport` 放 controller 对外响应 DTO 类型，controller 统一引用 `transport/types`，不在 controller 内临时定义重复响应结构。
+- 新模块至少提供模块级 `README`，明确目录职责、类型边界与示例引用路径。
+
 ## Merge 策略建议
 
 - 功能分支 → `development`：使用 `squash merge`
