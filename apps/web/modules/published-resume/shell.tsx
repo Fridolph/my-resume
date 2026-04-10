@@ -43,6 +43,13 @@ function SkillsSectionPlaceholder({ locale }: { locale: ResumeLocale }) {
   )
 }
 
+/**
+ * 公开站主展示壳负责承接 published snapshot，并组织语言切换与模块渲染顺序
+ *
+ * @param apiBaseUrl 当前公开站访问的 API 基地址
+ * @param publishedResume 已发布简历快照
+ * @returns 公开站主展示区域
+ */
 export function PublishedResumeShell({
   apiBaseUrl = DEFAULT_API_BASE_URL,
   publishedResume,
@@ -64,6 +71,7 @@ export function PublishedResumeShell({
   const sidebarStickyClass = 'lg:sticky lg:top-[5.5rem] lg:self-start'
 
   useEffect(() => {
+    // 技能区图表属于低优先级内容，接近视口时再挂载，减轻首页主链路
     if (shouldRenderSkills || typeof window === 'undefined') {
       return
     }

@@ -28,6 +28,12 @@ const AdminMobileDrawer = dynamic(
   () => import('./components/protected-layout-mobile-drawer').then((module) => module.AdminMobileDrawer),
 )
 
+/**
+ * 后台受保护布局负责会话校验后的工作区壳、导航和主区域编排
+ *
+ * @param children 当前路由对应的后台页面内容
+ * @returns 后台受保护工作区布局
+ */
 export function AdminProtectedLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
@@ -38,6 +44,7 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
   const hasHydratedRouteRef = useRef(false)
 
   useEffect(() => {
+    // 侧栏折叠态属于纯前端体验状态，只持久化在 localStorage
     const storedValue = window.localStorage.getItem('my-resume-admin-sidebar-collapsed')
 
     setSidebarCollapsed(storedValue === 'true')
@@ -52,6 +59,9 @@ export function AdminProtectedLayout({ children }: { children: ReactNode }) {
     setIsMobileDrawerOpen(false)
   }, [pathname])
 
+  /**
+   * 切换后台侧栏折叠态，并把布局偏好保存在本地
+   */
   function toggleSidebarCollapsed() {
     setSidebarCollapsed((current) => {
       const nextValue = !current

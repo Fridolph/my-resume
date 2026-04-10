@@ -30,11 +30,20 @@ interface AdminSessionContextValue {
 
 const AdminSessionContext = createContext<AdminSessionContextValue | null>(null)
 
+/**
+ * 后台会话 Provider 负责把 token 校验结果提升为全局上下文，供整个 dashboard 复用
+ *
+ * @param children 后台页面内容
+ * @returns 后台会话上下文 Provider
+ */
 export function AdminSessionProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AdminSessionStatus>('loading')
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [currentUser, setCurrentUser] = useState<AuthUserView | null>(null)
 
+  /**
+   * 清理本地 token 与前端缓存，让后台壳回到未登录状态
+   */
   const logout = useCallback(() => {
     const activeAccessToken = readAccessToken()
 
@@ -54,6 +63,11 @@ export function AdminSessionProvider({ children }: { children: ReactNode }) {
     setStatus('unauthorized')
   }, [])
 
+  /**
+   * 读取本地 token 并向 server 校验当前用户，构建后台运行时会话
+   *
+   * @returns 当前刷新流程完成后的 Promise
+   */
   const refreshSession = useCallback(async () => {
     const nextAccessToken = readAccessToken()
 
@@ -64,6 +78,7 @@ export function AdminSessionProvider({ children }: { children: ReactNode }) {
       return
     }
 
+    // 进入 dashboard 前统一走一次 /auth/me，避免各页面各自重复校验
     setStatus('loading')
 
     try {

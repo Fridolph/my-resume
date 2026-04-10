@@ -53,6 +53,11 @@ const moduleRoadmap = [
   },
 ] as const
 
+/**
+ * 简历编辑页壳负责权限判断、页面说明和编辑器入口，不直接处理字段级状态
+ *
+ * @returns 简历编辑页壳节点
+ */
 export function AdminResumeShell() {
   const { accessToken, currentUser, status } = useAdminSession()
 

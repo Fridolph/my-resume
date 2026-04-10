@@ -25,6 +25,16 @@ import { useResumeDraftEditorState } from './hooks/use-resume-draft-editor-state
 import { useResumeDraftSectionActions } from './hooks/use-resume-draft-section-actions'
 import { useResumeDraftTranslationActions } from './hooks/use-resume-draft-translation-actions'
 
+/**
+ * 草稿编辑器主容器负责串起加载、编辑、翻译工作区、排序与保存提交流程
+ *
+ * @param apiBaseUrl 当前后台访问的 API 基地址
+ * @param accessToken 当前登录会话的访问令牌
+ * @param canEdit 当前角色是否具备草稿编辑权限
+ * @param loadDraft 草稿加载函数
+ * @param saveDraft 草稿保存函数
+ * @returns 草稿编辑器节点
+ */
 export function ResumeDraftEditorPanel({
   apiBaseUrl,
   accessToken,
@@ -128,6 +138,12 @@ export function ResumeDraftEditorPanel({
     updateResumeDraft,
   })
 
+  /**
+   * 提交当前工作副本：把本地编辑态转换回服务端草稿快照，并刷新页面基线状态
+   *
+   * @param event 表单提交事件
+   * @returns 保存链路完成后的 Promise
+   */
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
@@ -140,6 +156,7 @@ export function ResumeDraftEditorPanel({
     setFeedbackMessage(null)
 
     try {
+      // 保存成功后用服务端新快照回填，让前端工作副本与远端基线重新对齐
       const nextSnapshot = await submitDraftResume({
         apiBaseUrl,
         accessToken,

@@ -13,6 +13,11 @@ import { useAdminSession } from '../../core/admin-session'
 import { LoginForm } from './components/login-form'
 import { ThemeModeToggle } from '../shared/components/theme-mode-toggle'
 
+/**
+ * 后台登录壳负责登录态检查、登录表单承接与跳转工作区
+ *
+ * @returns 后台登录壳节点
+ */
 export function AdminLoginShell() {
   const router = useRouter()
   const { currentUser, refreshSession, status } = useAdminSession()
@@ -20,6 +25,7 @@ export function AdminLoginShell() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
+    // 已有合法会话时直接跳工作区，避免重复停留在登录页
     if (status === 'ready' && currentUser) {
       router.replace('/dashboard')
     }
@@ -27,6 +33,12 @@ export function AdminLoginShell() {
 
   const checkingSession = status === 'loading'
 
+  /**
+   * 处理后台登录主链路：鉴权成功后写入 token、预热用户缓存，再刷新全局会话
+   *
+   * @param values 登录表单提交的用户名和密码
+   * @returns 登录链路完成后的 Promise
+   */
   async function handleLogin(values: { username: string; password: string }) {
     setPending(true)
     setErrorMessage(null)
@@ -38,6 +50,7 @@ export function AdminLoginShell() {
         password: values.password,
       })
 
+      // 先把 token 和 user 放进前端壳，后续 dashboard 校验会复用这份上下文
       writeAccessToken(loginResult.accessToken)
       primeCurrentUserSession({
         accessToken: loginResult.accessToken,

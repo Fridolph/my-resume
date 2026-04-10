@@ -40,6 +40,14 @@ const PublicSiteHeaderActions = dynamic(
   },
 )
 
+/**
+ * 公开站头部统一处理导航、语言切换与头部动作入口
+ *
+ * @param apiBaseUrl 当前公开站访问的 API 基地址
+ * @param locale 当前展示语言
+ * @param onChangeLocale 切换展示语言的方法
+ * @returns 公开站头部节点
+ */
 export function PublicSiteHeader({
   apiBaseUrl = DEFAULT_API_BASE_URL,
   locale,
