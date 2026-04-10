@@ -1,9 +1,10 @@
-import { render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ThemeModeProvider } from '@my-resume/ui/theme'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const replaceMock = vi.fn()
+const pathnameMock = vi.fn(() => '/')
 
 vi.mock('@/i18n/navigation', () => ({
   Link: ({ children, href, ...props }: any) => (
@@ -21,7 +22,7 @@ vi.mock('@/i18n/navigation', () => ({
       {children}
     </a>
   ),
-  usePathname: () => '/',
+  usePathname: () => pathnameMock(),
   useRouter: () => ({
     replace: replaceMock,
   }),
@@ -58,6 +59,13 @@ import { PublishedResumeShell } from '../shell'
 import { publishedResumeFixture } from './fixture'
 
 describe('PublishedResumeShell', () => {
+  beforeEach(() => {
+    replaceMock.mockReset()
+    pathnameMock.mockReset()
+    pathnameMock.mockReturnValue('/')
+    cleanup()
+  })
+
   function renderShell() {
     return render(
       <ThemeModeProvider>
@@ -129,6 +137,38 @@ describe('PublishedResumeShell', () => {
     await user.click(screen.getByRole('button', { name: 'EN' }))
     expect(replaceMock).toHaveBeenCalledWith('/', { locale: 'en' })
   }, 10000)
+
+  it('should strip locale prefix before switching from en back to zh on home', async () => {
+    const user = userEvent.setup()
+
+    pathnameMock.mockReturnValue('/en')
+
+    render(
+      <ThemeModeProvider>
+        <PublishedResumeShell locale="en" publishedResume={publishedResumeFixture} />
+      </ThemeModeProvider>,
+    )
+
+    await user.click(screen.getByRole('button', { name: '中' }))
+
+    expect(replaceMock).toHaveBeenCalledWith('/', { locale: 'zh' })
+  })
+
+  it('should strip locale prefix before switching from en back to zh on nested routes', async () => {
+    const user = userEvent.setup()
+
+    pathnameMock.mockReturnValue('/en/profile')
+
+    render(
+      <ThemeModeProvider>
+        <PublishedResumeShell locale="en" publishedResume={publishedResumeFixture} />
+      </ThemeModeProvider>,
+    )
+
+    await user.click(screen.getByRole('button', { name: '中' }))
+
+    expect(replaceMock).toHaveBeenCalledWith('/profile', { locale: 'zh' })
+  })
 
   it('should hide empty optional field blocks like experience location', () => {
     const fixtureWithoutLocation = {

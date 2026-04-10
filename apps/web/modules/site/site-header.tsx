@@ -7,7 +7,8 @@ import { useEffect, useState, type ComponentType } from 'react'
 
 import { DEFAULT_API_BASE_URL } from '../../core/env'
 import { Link, usePathname, useRouter } from '../../i18n/navigation'
-import type { ResumeLocale } from '../published-resume/types/published-resume.types'
+import { normalizeLocalePathname } from '../../i18n/types'
+// import type { ResumeLocale } from '../published-resume/types/published-resume.types'
 import type {
   IdleWindowCallbacks,
   PublicSiteHeaderActionsProps,
@@ -52,6 +53,7 @@ export function PublicSiteHeader({
   const t = useTranslations('site')
   const pathname = usePathname()
   const router = useRouter()
+  const normalizedPathname = normalizeLocalePathname(pathname)
 
   useEffect(() => {
     if (!deferActionsUntilIdle || shouldLoadActions || isJsdom || typeof window === 'undefined') {
@@ -158,7 +160,7 @@ export function PublicSiteHeader({
           <div className={styles.localeSwitchWrapper}>
             <Button
               className={styles.localeSwitchButton}
-              onClick={() => router.replace(pathname, { locale: 'zh' })}
+              onClick={() => router.replace(normalizedPathname, { locale: 'zh' })}
               size="sm"
               type="button"
               variant={locale === 'zh' ? 'primary' : 'ghost'}>
@@ -166,7 +168,7 @@ export function PublicSiteHeader({
             </Button>
             <Button
               className={styles.localeSwitchButton}
-              onClick={() => router.replace(pathname, { locale: 'en' })}
+              onClick={() => router.replace(normalizedPathname, { locale: 'en' })}
               size="sm"
               type="button"
               variant={locale === 'en' ? 'primary' : 'ghost'}>
