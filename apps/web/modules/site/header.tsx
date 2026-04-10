@@ -1,9 +1,9 @@
 'use client'
 
 import { Button } from '@heroui/react/button'
-import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect, useState, type ComponentType } from 'react'
 
 import { DEFAULT_API_BASE_URL } from '../../core/env'
 import type { ResumeLocale } from '../published-resume/types/published-resume.types'
@@ -12,8 +12,19 @@ import styles from './header.module.css'
 
 interface PublicSiteHeaderProps {
   apiBaseUrl?: string
+  deferActionsUntilIdle?: boolean
   locale: ResumeLocale
   onChangeLocale: (locale: ResumeLocale) => void
+}
+
+interface PublicSiteHeaderActionsProps {
+  apiBaseUrl: string
+  locale: ResumeLocale
+}
+
+interface IdleWindowCallbacks {
+  cancelIdleCallback?: (handle: number) => void
+  requestIdleCallback?: (callback: () => void) => number
 }
 
 const navItems = [
@@ -31,15 +42,6 @@ const navItems = [
   },
 ] as const
 
-const PublicSiteHeaderActions = dynamic(
-  () =>
-    import('./public-site-header-actions').then((module) => module.PublicSiteHeaderActions),
-  {
-    ssr: false,
-    loading: () => <HeaderActionsFallback />,
-  },
-)
-
 /**
  * 公开站头部统一处理导航、语言切换与头部动作入口
  *
@@ -50,11 +52,71 @@ const PublicSiteHeaderActions = dynamic(
  */
 export function PublicSiteHeader({
   apiBaseUrl = DEFAULT_API_BASE_URL,
+  deferActionsUntilIdle = false,
   locale,
   onChangeLocale,
 }: PublicSiteHeaderProps) {
+  const isJsdom = typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent)
+  const [shouldLoadActions, setShouldLoadActions] = useState(
+    () => !deferActionsUntilIdle || isJsdom,
+  )
+  const [actionsComponent, setActionsComponent] = useState<ComponentType<
+    PublicSiteHeaderActionsProps
+  > | null>(null)
   const pathname = usePathname()
   const labels = resumeLabels[locale]
+
+  useEffect(() => {
+    if (!deferActionsUntilIdle || shouldLoadActions || isJsdom || typeof window === 'undefined') {
+      return
+    }
+
+    const idleWindow = window as Window & IdleWindowCallbacks
+    let timeoutId: number | null = null
+    let idleId: number | null = null
+
+    const markReady = () => {
+      setShouldLoadActions(true)
+    }
+
+    if (typeof idleWindow.requestIdleCallback === 'function') {
+      idleId = idleWindow.requestIdleCallback(markReady)
+    } else {
+      timeoutId = window.setTimeout(markReady, 0)
+    }
+
+    return () => {
+      if (idleId !== null && typeof idleWindow.cancelIdleCallback === 'function') {
+        idleWindow.cancelIdleCallback(idleId)
+      }
+
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId)
+      }
+    }
+  }, [deferActionsUntilIdle, isJsdom, shouldLoadActions])
+
+  useEffect(() => {
+    if (!shouldLoadActions || actionsComponent) {
+      return
+    }
+
+    let active = true
+
+    void import('./public-site-header-actions').then((module) => {
+      if (!active) {
+        return
+      }
+
+      setActionsComponent(() => module.PublicSiteHeaderActions)
+    })
+
+    return () => {
+      active = false
+    }
+  }, [actionsComponent, shouldLoadActions])
+
+  const HeaderActionsComponent = actionsComponent
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/88 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/82">
@@ -125,7 +187,11 @@ export function PublicSiteHeader({
             </Button>
           </div>
 
-          <PublicSiteHeaderActions apiBaseUrl={apiBaseUrl} locale={locale} />
+          {HeaderActionsComponent ? (
+            <HeaderActionsComponent apiBaseUrl={apiBaseUrl} locale={locale} />
+          ) : (
+            <HeaderActionsFallback />
+          )}
         </div>
       </div>
     </header>

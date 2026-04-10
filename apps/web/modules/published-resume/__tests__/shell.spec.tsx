@@ -37,8 +37,12 @@ describe('PublishedResumeShell', () => {
       'whitespace-nowrap',
     )
     expect(screen.getByRole('heading', { name: '付寅生' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: '职业经历' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: '代表项目' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: '职业经历' }, { timeout: 4000 }),
+    ).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: '代表项目' }, { timeout: 4000 }),
+    ).toBeInTheDocument()
     expect(screen.getByAltText('付寅生头像正面')).toBeInTheDocument()
     expect(screen.getByAltText('付寅生头像背面')).toBeInTheDocument()
     expect(screen.getByText('热爱Coding，生命不息，折腾不止')).toBeInTheDocument()
@@ -53,11 +57,11 @@ describe('PublishedResumeShell', () => {
       'href',
       'https://example.com/blog',
     )
-    expect(screen.getByRole('heading', { name: '前端架构落地' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'AI 工程化实践' })).toBeInTheDocument()
-    expect(screen.getByText('项目核心功能')).toBeInTheDocument()
-    expect(screen.getByText('亮点、难点与解决方案')).toBeInTheDocument()
-    expect(screen.getByText('覆盖公开展示、后台编辑与内容发布链路。')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: '前端架构落地' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'AI 工程化实践' })).toBeInTheDocument()
+    expect(await screen.findByText('项目核心功能')).toBeInTheDocument()
+    expect(await screen.findByText('亮点、难点与解决方案')).toBeInTheDocument()
+    expect(await screen.findByText('覆盖公开展示、后台编辑与内容发布链路。')).toBeInTheDocument()
     expect(await screen.findByText('技能结构')).toBeInTheDocument()
     expect(await screen.findByRole('button', { name: '图表' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '结构' })).toBeInTheDocument()
@@ -71,6 +75,7 @@ describe('PublishedResumeShell', () => {
     expect(
       (await screen.findByRole('button', { name: '打开项目 GitHub 仓库' })).closest('a'),
     ).toHaveAttribute('href', 'https://github.com/Fridolph/my-resume')
+    await screen.findByTestId('hero-tooltip-ready')
     await user.hover(screen.getByRole('link', { name: 'GitHub' }))
     expect(await screen.findByText('GitHub')).toBeInTheDocument()
 
@@ -81,9 +86,11 @@ describe('PublishedResumeShell', () => {
     expect(
       await screen.findByRole('button', { name: 'Open project GitHub repository' }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Work Experience' })).toBeInTheDocument()
     expect(
-      screen.getByRole('heading', { name: 'AI Engineering Practice' }),
+      await screen.findByRole('heading', { name: 'Work Experience' }, { timeout: 4000 }),
+    ).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: 'AI Engineering Practice' }),
     ).toBeInTheDocument()
     expect(screen.getByText('Core Functions')).toBeInTheDocument()
     expect(screen.getByText('Highlights, Challenges & Solutions')).toBeInTheDocument()
@@ -183,11 +190,11 @@ describe('PublishedResumeShell', () => {
 
     renderShell()
 
-    expect(screen.getByLabelText('技能雷达图')).toBeInTheDocument()
-    expect(screen.getByText('关键词云')).toBeInTheDocument()
-    expect(screen.getAllByText('Node.js').length).toBeGreaterThan(0)
-    expect(screen.getByRole('button', { name: '雷达图' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '饼图' })).toBeInTheDocument()
+    expect(await screen.findByLabelText('技能雷达图')).toBeInTheDocument()
+    expect(await screen.findByText('关键词云')).toBeInTheDocument()
+    expect((await screen.findAllByText('Node.js')).length).toBeGreaterThan(0)
+    expect(await screen.findByRole('button', { name: '雷达图' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: '饼图' })).toBeInTheDocument()
     expect(screen.queryByText(/占比/)).not.toBeInTheDocument()
     expect(screen.queryByText(/%/)).not.toBeInTheDocument()
 

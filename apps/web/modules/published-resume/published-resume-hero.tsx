@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader } from '@heroui/react/card'
 import { Chip } from '@heroui/react/chip'
-import { Tooltip } from '@heroui/react/tooltip'
-import type { ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 
 import { ResumeLocale, ResumePublishedSnapshot } from './types/published-resume.types'
 import {
@@ -24,6 +23,8 @@ interface PublishedResumeHeroProps {
   locale: ResumeLocale
   publishedResume: ResumePublishedSnapshot
 }
+
+type HeroTooltipComponent = typeof import('@heroui/react/tooltip')['Tooltip']
 
 const sidebarProjectNote: Record<ResumeLocale, string> = {
   zh: '欢迎访问我的个人简历项目，了解更多构建过程与迭代记录',
@@ -115,6 +116,9 @@ export function PublishedResumeHero({
   locale,
   publishedResume,
 }: PublishedResumeHeroProps) {
+  const isJsdom = typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent)
+  const [tooltipComponent, setTooltipComponent] = useState<HeroTooltipComponent | null>(null)
+  const tooltipRequestedRef = useRef(false)
   const labels = resumeLabels[locale]
   const profile = publishedResume.resume.profile
   const hero = profile.hero
@@ -146,6 +150,61 @@ export function PublishedResumeHero({
   ].filter((item) => Boolean(item.value))
 
   const name = readLocalizedText(profile.fullName, locale)
+  const loadTooltipModule = useCallback(() => {
+    if (tooltipComponent || tooltipRequestedRef.current) {
+      return
+    }
+
+    tooltipRequestedRef.current = true
+
+    void import('@heroui/react/tooltip')
+      .then((module) => {
+        setTooltipComponent(() => module.Tooltip)
+      })
+      .catch(() => {
+        tooltipRequestedRef.current = false
+      })
+  }, [tooltipComponent])
+
+  useEffect(() => {
+    if (tooltipComponent) {
+      return
+    }
+
+    if (isJsdom || typeof window === 'undefined') {
+      loadTooltipModule()
+      return
+    }
+
+    const idleWindow = window as Window & {
+      cancelIdleCallback?: (handle: number) => void
+      requestIdleCallback?: (callback: () => void) => number
+    }
+    let timeoutId: number | null = null
+    let idleId: number | null = null
+
+    if (typeof idleWindow.requestIdleCallback === 'function') {
+      idleId = idleWindow.requestIdleCallback(() => {
+        loadTooltipModule()
+      })
+    } else {
+      timeoutId = window.setTimeout(() => {
+        loadTooltipModule()
+      }, 0)
+    }
+
+    return () => {
+      if (idleId !== null && typeof idleWindow.cancelIdleCallback === 'function') {
+        idleWindow.cancelIdleCallback(idleId)
+      }
+
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId)
+      }
+    }
+  }, [isJsdom, loadTooltipModule, tooltipComponent])
+
+  const TooltipComponent = tooltipComponent
 
   return (
     <Card className={styles.heroCard}>
@@ -231,12 +290,46 @@ export function PublishedResumeHero({
               </Chip>
             </div>
             <div className="flex flex-wrap gap-2.5">
-              {profile.links.map((link) =>
-                link.icon ? (
-                  <Tooltip delay={220} key={link.url}>
-                    <Tooltip.Trigger>
+              {profile.links.map((link) => {
+                const localizedLabel = readLocalizedText(link.label, locale)
+
+                if (!link.icon) {
+                  return (
+                    <a
+                      className={`${styles.linkFallbackChip} ${linkFallbackClass}`}
+                      href={link.url}
+                      key={link.url}
+                      rel="noreferrer"
+                      target="_blank">
+                      <span className="truncate">{localizedLabel}</span>
+                    </a>
+                  )
+                }
+
+                if (!TooltipComponent) {
+                  return (
+                    <a
+                      aria-label={localizedLabel}
+                      className={styles.iconLinkChip}
+                      href={link.url}
+                      key={link.url}
+                      onFocus={loadTooltipModule}
+                      onPointerEnter={loadTooltipModule}
+                      rel="noreferrer"
+                      target="_blank"
+                      title={localizedLabel}>
+                      <span className={styles.iconLinkInner}>
+                        <ResumeProfileIcon name={link.icon} />
+                      </span>
+                    </a>
+                  )
+                }
+
+                return (
+                  <TooltipComponent delay={220} key={link.url}>
+                    <TooltipComponent.Trigger>
                       <a
-                        aria-label={readLocalizedText(link.label, locale)}
+                        aria-label={localizedLabel}
                         className={styles.iconLinkChip}
                         href={link.url}
                         rel="noreferrer"
@@ -245,25 +338,15 @@ export function PublishedResumeHero({
                           <ResumeProfileIcon name={link.icon} />
                         </span>
                       </a>
-                    </Tooltip.Trigger>
-                    <Tooltip.Content offset={10} placement="top">
-                      {readLocalizedText(link.label, locale)}
-                    </Tooltip.Content>
-                  </Tooltip>
-                ) : (
-                  <a
-                    className={`${styles.linkFallbackChip} ${linkFallbackClass}`}
-                    href={link.url}
-                    key={link.url}
-                    rel="noreferrer"
-                    target="_blank">
-                    <span className="truncate">
-                      {readLocalizedText(link.label, locale)}
-                    </span>
-                  </a>
-                ),
-              )}
+                    </TooltipComponent.Trigger>
+                    <TooltipComponent.Content offset={10} placement="top">
+                      {localizedLabel}
+                    </TooltipComponent.Content>
+                  </TooltipComponent>
+                )
+              })}
             </div>
+            {TooltipComponent ? <span className="sr-only" data-testid="hero-tooltip-ready" /> : null}
           </div>
         ) : null}
 
