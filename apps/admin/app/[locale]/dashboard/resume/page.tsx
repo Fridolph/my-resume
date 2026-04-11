@@ -1,13 +1,11 @@
 import dynamic from 'next/dynamic'
 
-import { AdminRouteLoadingCard } from '@/modules/workspace/route-loading-card'
-import { isAppLocale } from '@/i18n/types'
+import { isAppLocale } from '@core/i18n/types'
+
+import { AdminRouteLoadingCard } from '../_shared/route-loading-card'
 
 const AdminResumeShell = dynamic(
-  () =>
-    import('@/modules/resume/resume-shell').then(
-      (module) => module.AdminResumeShell,
-    ),
+  () => import('./_resume/resume-shell').then((module) => module.AdminResumeShell),
   {
     loading: () => <AdminRouteLoadingCard message="正在加载简历编辑页..." />,
   },

@@ -9,7 +9,7 @@
     "start": "next start --port 5566",
     "lint": "oxlint --config ../../.oxlintrc.json --ignore-path ../../.eslintignore .",
     "format:check": "oxfmt --config ../../.oxfmtrc.json --ignore-path ../../.prettierignore --check .",
-    "typecheck": "next typegen && tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit --incremental false",
     "test": "vitest run"
   },
   "dependencies": {
@@ -21,6 +21,7 @@
     "@my-resume/api-client": "workspace:*",
     "@my-resume/ui": "workspace:*",
     "@tailwindcss/postcss": "^4.2.2",
+    "alova": "^3.5.1",
     "framer-motion": "^12.38.0",
     "next": "^15.5.2",
     "next-intl": "^4.4.0",

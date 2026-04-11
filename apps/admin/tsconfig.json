@@ -16,7 +16,9 @@
     "isolatedModules": true,
     "incremental": true,
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@core/*": ["./app/_core/*"],
+      "@shared/*": ["./app/_shared/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

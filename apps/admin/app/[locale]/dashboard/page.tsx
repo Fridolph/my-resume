@@ -1,5 +1,6 @@
-import { AdminDashboardShell } from '@/modules/workspace/dashboard-shell'
-import { isAppLocale } from '@/i18n/types'
+import { isAppLocale } from '@core/i18n/types'
+
+import { AdminDashboardShell } from './_shared/dashboard-shell'
 
 export default async function AdminDashboardPage({
   params,

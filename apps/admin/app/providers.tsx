@@ -4,8 +4,8 @@ import { I18nProvider } from '@heroui/react'
 import { ThemeProvider, useTheme } from 'next-themes'
 import { useEffect, type ReactNode } from 'react'
 
-import { AdminSessionProvider } from '../core/admin-session'
-import { toHeroUiLocale, type AppLocale } from '../i18n/types'
+import { AdminSessionProvider } from '@core/admin-session'
+import { toHeroUiLocale, type AppLocale } from '@core/i18n/types'
 
 function ThemeDatasetBridge() {
   const { resolvedTheme } = useTheme()

@@ -55,7 +55,12 @@
 @import '@heroui/styles/components/popover.css' layer(components);
 @import '@heroui/styles/components/select.css' layer(components);
 @import '@heroui/styles/components/separator.css' layer(components);
+@import '@heroui/styles/components/skeleton.css' layer(components);
+@import '@heroui/styles/components/tag-group.css' layer(components);
+@import '@heroui/styles/components/tag.css' layer(components);
+@import '@heroui/styles/components/tabs.css' layer(components);
 @import '@heroui/styles/components/textarea.css' layer(components);
+@import '@heroui/styles/components/tooltip.css' layer(components);
 
 @import '@heroui/styles/utilities';
 @import '@heroui/styles/variants';

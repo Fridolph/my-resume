@@ -1,7 +1,8 @@
 import '../admin-shell.css'
 
-import { AdminLoginShell } from '../../modules/auth/login-shell'
-import { isAppLocale } from '../../i18n/types'
+import { isAppLocale } from '@core/i18n/types'
+
+import { AdminLoginShell } from './_auth/login-shell'
 
 /**
  * 后台首页保持极薄，只负责挂载登录壳

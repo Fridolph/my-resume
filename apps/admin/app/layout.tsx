@@ -5,7 +5,7 @@ import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
 import type { ReactNode } from 'react'
 
-import { isAppLocale, toHtmlLang, type AppLocale } from '../i18n/types'
+import { isAppLocale, toHtmlLang, type AppLocale } from '@core/i18n/types'
 import { ProvidersWithLocale } from './providers'
 
 export const metadata: Metadata = {

@@ -1,13 +1,11 @@
 import dynamic from 'next/dynamic'
 
-import { AdminRouteLoadingCard } from '@/modules/workspace/route-loading-card'
-import { isAppLocale } from '@/i18n/types'
+import { isAppLocale } from '@core/i18n/types'
+
+import { AdminRouteLoadingCard } from '../_shared/route-loading-card'
 
 const AdminPublishShell = dynamic(
-  () =>
-    import('@/modules/publish/publish-shell').then(
-      (module) => module.AdminPublishShell,
-    ),
+  () => import('./_publish/publish-shell').then((module) => module.AdminPublishShell),
   {
     loading: () => <AdminRouteLoadingCard message="正在加载发布与导出页..." />,
   },
