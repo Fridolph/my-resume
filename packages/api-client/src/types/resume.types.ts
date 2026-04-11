@@ -1,5 +1,3 @@
-import type { RequestPolicy } from './client.types'
-
 /**
  * 简历语言
  */
@@ -231,7 +229,6 @@ export type ResumePublishedSummarySnapshot = ResumePublishedSnapshot<ResumeSumma
  */
 export interface ResumeRequestInput {
   apiBaseUrl: string
-  requestPolicy?: RequestPolicy
 }
 
 /**
@@ -262,4 +259,3 @@ export interface AuthenticatedResumeSummaryRequestInput
 export interface UpdateResumeDraftInput extends AuthenticatedResumeRequestInput {
   resume: StandardResume
 }
-

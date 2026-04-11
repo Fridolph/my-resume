@@ -78,7 +78,6 @@ export function createFetchPublishedResumeMethod(input: ResumeRequestInput) {
     },
     fallbackErrorMessage: '公开简历读取失败',
     returnNullOnNotFound: true,
-    requestPolicy: input.requestPolicy,
   })
 }
 
@@ -91,11 +90,7 @@ export function createFetchPublishedResumeMethod(input: ResumeRequestInput) {
 export async function fetchPublishedResume(
   input: ResumeRequestInput,
 ): Promise<ResumePublishedSnapshot | null> {
-  return Alova.send(createFetchPublishedResumeMethod(input), {
-    method: 'GET',
-    fallbackErrorMessage: '公开简历读取失败',
-    requestPolicy: input.requestPolicy,
-  })
+  return createFetchPublishedResumeMethod(input).send()
 }
 
 /**
@@ -110,7 +105,6 @@ export function createFetchDraftResumeMethod(input: AuthenticatedResumeRequestIn
     pathname: '/resume/draft',
     accessToken: input.accessToken,
     fallbackErrorMessage: '草稿读取失败，请确认当前账号拥有编辑权限',
-    requestPolicy: input.requestPolicy,
   })
 }
 
@@ -123,11 +117,7 @@ export function createFetchDraftResumeMethod(input: AuthenticatedResumeRequestIn
 export async function fetchDraftResume(
   input: AuthenticatedResumeRequestInput,
 ): Promise<ResumeDraftSnapshot> {
-  return Alova.send(createFetchDraftResumeMethod(input), {
-    method: 'GET',
-    fallbackErrorMessage: '草稿读取失败，请确认当前账号拥有编辑权限',
-    requestPolicy: input.requestPolicy,
-  })
+  return createFetchDraftResumeMethod(input).send()
 }
 
 /**
@@ -149,7 +139,6 @@ export function createFetchDraftResumeSummaryMethod(
       : undefined,
     accessToken: input.accessToken,
     fallbackErrorMessage: '草稿摘要读取失败，请确认当前账号拥有编辑权限',
-    requestPolicy: input.requestPolicy,
   })
 }
 
@@ -162,11 +151,7 @@ export function createFetchDraftResumeSummaryMethod(
 export async function fetchDraftResumeSummary(
   input: AuthenticatedResumeSummaryRequestInput,
 ): Promise<ResumeDraftSummarySnapshot> {
-  return Alova.send(createFetchDraftResumeSummaryMethod(input), {
-    method: 'GET',
-    fallbackErrorMessage: '草稿摘要读取失败，请确认当前账号拥有编辑权限',
-    requestPolicy: input.requestPolicy,
-  })
+  return createFetchDraftResumeSummaryMethod(input).send()
 }
 
 /**
@@ -186,7 +171,6 @@ export function createUpdateDraftResumeMethod(input: UpdateResumeDraftInput) {
     },
     body: JSON.stringify(input.resume),
     fallbackErrorMessage: '草稿保存失败，请检查内容是否符合当前模型',
-    requestPolicy: input.requestPolicy,
   })
 }
 
@@ -199,11 +183,7 @@ export function createUpdateDraftResumeMethod(input: UpdateResumeDraftInput) {
 export async function updateDraftResume(
   input: UpdateResumeDraftInput,
 ): Promise<ResumeDraftSnapshot> {
-  return Alova.send(createUpdateDraftResumeMethod(input), {
-    method: 'PUT',
-    fallbackErrorMessage: '草稿保存失败，请检查内容是否符合当前模型',
-    requestPolicy: input.requestPolicy,
-  })
+  return createUpdateDraftResumeMethod(input).send()
 }
 
 /**
@@ -219,7 +199,6 @@ export function createPublishResumeMethod(input: AuthenticatedResumeRequestInput
     method: 'POST',
     accessToken: input.accessToken,
     fallbackErrorMessage: '发布失败，请确认当前账号拥有发布权限',
-    requestPolicy: input.requestPolicy,
   })
 }
 
@@ -232,11 +211,7 @@ export function createPublishResumeMethod(input: AuthenticatedResumeRequestInput
 export async function publishResume(
   input: AuthenticatedResumeRequestInput,
 ): Promise<ResumePublishedSnapshot> {
-  return Alova.send(createPublishResumeMethod(input), {
-    method: 'POST',
-    fallbackErrorMessage: '发布失败，请确认当前账号拥有发布权限',
-    requestPolicy: input.requestPolicy,
-  })
+  return createPublishResumeMethod(input).send()
 }
 
 /**
@@ -259,7 +234,6 @@ export function createFetchPublishedResumeSummaryMethod(input: ResumeSummaryRequ
     },
     fallbackErrorMessage: '公开简历摘要读取失败',
     returnNullOnNotFound: true,
-    requestPolicy: input.requestPolicy,
   })
 }
 
@@ -272,9 +246,5 @@ export function createFetchPublishedResumeSummaryMethod(input: ResumeSummaryRequ
 export async function fetchPublishedResumeSummary(
   input: ResumeSummaryRequestInput,
 ): Promise<ResumePublishedSummarySnapshot | null> {
-  return Alova.send(createFetchPublishedResumeSummaryMethod(input), {
-    method: 'GET',
-    fallbackErrorMessage: '公开简历摘要读取失败',
-    requestPolicy: input.requestPolicy,
-  })
+  return createFetchPublishedResumeSummaryMethod(input).send()
 }

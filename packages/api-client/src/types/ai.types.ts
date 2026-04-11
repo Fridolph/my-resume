@@ -1,4 +1,3 @@
-import type { RequestPolicy } from './client.types'
 import type {
   LocalizedText,
   ResumeDraftSnapshot,
@@ -184,7 +183,6 @@ export interface ApplyAiResumeOptimizationInput {
   draftUpdatedAt: string
   modules: AiResumeOptimizationChangedModule[]
   patch: AiResumeOptimizationPatch
-  requestPolicy?: RequestPolicy
 }
 
 /**
@@ -234,7 +232,6 @@ export interface FileExtractionResult {
 export interface RuntimeInput {
   apiBaseUrl: string
   accessToken: string
-  requestPolicy?: RequestPolicy
 }
 
 /**
@@ -261,6 +258,4 @@ export interface ExtractTextFromFileInput {
   apiBaseUrl: string
   accessToken: string
   file: File
-  requestPolicy?: RequestPolicy
 }
-

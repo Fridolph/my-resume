@@ -1,189 +1,121 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 
-import {
-  createApiClient,
-  createAxiosAdapter,
-  type HttpAdapterResponse,
-} from './client'
+import { defaultApiClient } from './client'
 
-function createMockResponse(status: number, payload: unknown): HttpAdapterResponse {
-  return {
+function createJsonResponse(status: number, payload: unknown): Response {
+  return new Response(JSON.stringify(payload), {
     status,
-    ok: status >= 200 && status < 300,
-    headers: new Headers(),
-    json: async () => {
-      if (typeof payload === 'string') {
-        throw new Error('Invalid JSON payload')
-      }
-
-      return payload
+    headers: {
+      'Content-Type': 'application/json',
     },
-    text: async () => {
-      if (typeof payload === 'string') {
-        return payload
-      }
-
-      return JSON.stringify(payload)
-    },
-    raw: {
-      status,
-      payload,
-    },
-  }
+  })
 }
 
 describe('api client core', () => {
-  it('retries GET request on retryable http status', async () => {
-    const request = vi
-      .fn()
-      .mockResolvedValueOnce(createMockResponse(503, { message: 'Service unavailable' }))
-      .mockResolvedValueOnce(createMockResponse(200, { ok: true }))
-    const client = createApiClient({
-      adapter: {
-        request,
-      },
-      getRetryPolicy: {
-        maxRetries: 1,
-        baseDelayMs: 0,
-        maxDelayMs: 0,
-      },
-    })
-
-    const result = await client.request<{
-      ok: boolean
-    }>({
-      apiBaseUrl: 'http://localhost:5577',
-      pathname: '/health',
-      fallbackErrorMessage: '请求失败',
-    })
-
-    expect(request).toHaveBeenCalledTimes(2)
-    expect(result.ok).toBe(true)
+  beforeEach(() => {
+    vi.restoreAllMocks()
   })
 
-  it('does not retry non-GET request by default', async () => {
-    const request = vi
-      .fn()
-      .mockResolvedValue(createMockResponse(500, { message: '写入失败' }))
-    const client = createApiClient({
-      adapter: {
-        request,
-      },
-    })
+  it('injects bearer token via beforeRequest hook', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(createJsonResponse(200, { ok: true })),
+    )
 
-    await expect(
-      client.request({
+    await defaultApiClient
+      .createMethod<{ ok: boolean }>({
         apiBaseUrl: 'http://localhost:5577',
-        pathname: '/demo',
-        method: 'POST',
-        body: JSON.stringify({
-          foo: 'bar',
+        pathname: '/auth/me',
+        accessToken: 'demo-token',
+        fallbackErrorMessage: '读取失败',
+      })
+      .send()
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5577/auth/me',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer demo-token',
         }),
-        fallbackErrorMessage: '写入失败',
       }),
-    ).rejects.toThrow('写入失败')
-
-    expect(request).toHaveBeenCalledTimes(1)
+    )
   })
 
-  it('retries GET request on transport errors', async () => {
-    const request = vi
-      .fn()
-      .mockRejectedValueOnce(new TypeError('Network failed'))
-      .mockResolvedValueOnce(createMockResponse(200, { ok: true }))
-    const client = createApiClient({
-      adapter: {
-        request,
-      },
-      getRetryPolicy: {
-        maxRetries: 1,
-        baseDelayMs: 0,
-        maxDelayMs: 0,
-      },
-    })
+  it('returns null when 404 is allowed', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(createJsonResponse(404, { message: 'Not Found' })),
+    )
 
-    const result = await client.request<{
-      ok: boolean
-    }>({
-      apiBaseUrl: 'http://localhost:5577',
-      pathname: '/health',
-      fallbackErrorMessage: '请求失败',
-    })
-
-    expect(request).toHaveBeenCalledTimes(2)
-    expect(result.ok).toBe(true)
-  })
-
-  it('returns null when configured to allow not-found', async () => {
-    const request = vi
-      .fn()
-      .mockResolvedValue(createMockResponse(404, { message: 'Not Found' }))
-    const client = createApiClient({
-      adapter: {
-        request,
-      },
-    })
-
-    const result = await client.request<{
-      status: string
-    } | null>({
-      apiBaseUrl: 'http://localhost:5577',
-      pathname: '/missing',
-      fallbackErrorMessage: '读取失败',
-      returnNullOnNotFound: true,
-    })
+    const result = await defaultApiClient
+      .createMethod<{ status: string } | null>({
+        apiBaseUrl: 'http://localhost:5577',
+        pathname: '/missing',
+        fallbackErrorMessage: '读取失败',
+        returnNullOnNotFound: true,
+      })
+      .send()
 
     expect(result).toBeNull()
   })
 
-  it('applies default and per-request timeout policies', async () => {
-    const request = vi.fn().mockResolvedValue(createMockResponse(200, { ok: true }))
-    const client = createApiClient({
-      adapter: {
-        request,
-      },
-    })
-
-    await client.request({
-      apiBaseUrl: 'http://localhost:5577',
-      pathname: '/read',
-      fallbackErrorMessage: '读取失败',
-    })
-
-    await client.request({
-      apiBaseUrl: 'http://localhost:5577',
-      pathname: '/write',
-      method: 'POST',
-      body: JSON.stringify({
-        hello: 'world',
-      }),
-      fallbackErrorMessage: '写入失败',
-      requestPolicy: {
-        timeoutMs: 3_000,
-      },
-    })
-
-    expect(request).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({
-        timeoutMs: 10_000,
-      }),
+  it('parses text responses when requested', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response('plain text body', {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/plain',
+          },
+        }),
+      ),
     )
-    expect(request).toHaveBeenNthCalledWith(
-      2,
-      expect.objectContaining({
-        timeoutMs: 3_000,
-      }),
-    )
+
+    const result = await defaultApiClient
+      .createMethod<string>({
+        apiBaseUrl: 'http://localhost:5577',
+        pathname: '/text',
+        fallbackErrorMessage: '读取失败',
+        responseType: 'text',
+      })
+      .send()
+
+    expect(result).toBe('plain text body')
   })
 
-  it('requires an injected axios instance for axios adapter', () => {
-    expect(() => createAxiosAdapter()).toThrow(
-      'createAxiosAdapter 需要传入 axios 实例',
+  it('extracts error messages from json payloads', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(createJsonResponse(500, { message: '服务繁忙' })),
     )
+
+    await expect(
+      defaultApiClient
+        .createMethod({
+          apiBaseUrl: 'http://localhost:5577',
+          pathname: '/broken',
+          fallbackErrorMessage: '读取失败',
+        })
+        .send(),
+    ).rejects.toThrow('服务繁忙')
+  })
+
+  it('preserves transport errors from fetch', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('network down')))
+
+    await expect(
+      defaultApiClient
+        .createMethod({
+          apiBaseUrl: 'http://localhost:5577',
+          pathname: '/broken',
+          fallbackErrorMessage: '网络异常，请稍后重试',
+        })
+        .send(),
+    ).rejects.toThrow('network down')
   })
 
   it('does not use direct Alova.request calls in domain facades', () => {

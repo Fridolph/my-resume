@@ -1,5 +1,3 @@
-import type { RequestPolicy } from './client.types'
-
 /**
  * 角色能力声明
  */
@@ -40,7 +38,6 @@ export interface LoginWithPasswordInput {
   apiBaseUrl: string
   username: string
   password: string
-  requestPolicy?: RequestPolicy
 }
 
 /**
@@ -49,7 +46,6 @@ export interface LoginWithPasswordInput {
 export interface FetchCurrentUserInput {
   apiBaseUrl: string
   accessToken: string
-  requestPolicy?: RequestPolicy
 }
 
 /**
@@ -65,4 +61,3 @@ export interface PostProtectedActionInput extends FetchCurrentUserInput {
 export interface ProtectedActionResponse {
   message: string
 }
-

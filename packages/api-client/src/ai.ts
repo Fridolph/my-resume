@@ -56,7 +56,6 @@ export function createFetchAiWorkbenchRuntimeMethod(input: RuntimeInput) {
     pathname: '/ai/reports/runtime',
     accessToken: input.accessToken,
     fallbackErrorMessage: 'AI 工作台运行时信息加载失败',
-    requestPolicy: input.requestPolicy,
   })
 }
 
@@ -69,11 +68,7 @@ export function createFetchAiWorkbenchRuntimeMethod(input: RuntimeInput) {
 export async function fetchAiWorkbenchRuntime(
   input: RuntimeInput,
 ): Promise<AiWorkbenchRuntimeSummary> {
-  return Alova.send(createFetchAiWorkbenchRuntimeMethod(input), {
-    method: 'GET',
-    fallbackErrorMessage: 'AI 工作台运行时信息加载失败',
-    requestPolicy: input.requestPolicy,
-  })
+  return createFetchAiWorkbenchRuntimeMethod(input).send()
 }
 
 /**
@@ -97,7 +92,6 @@ export function createTriggerAiWorkbenchAnalysisMethod(input: AnalysisInput) {
       locale: input.locale,
     }),
     fallbackErrorMessage: '真实分析触发失败，请稍后重试',
-    requestPolicy: input.requestPolicy,
   })
 }
 
@@ -110,11 +104,7 @@ export function createTriggerAiWorkbenchAnalysisMethod(input: AnalysisInput) {
 export async function triggerAiWorkbenchAnalysis(
   input: AnalysisInput,
 ): Promise<TriggerAiWorkbenchAnalysisResult> {
-  return Alova.send(createTriggerAiWorkbenchAnalysisMethod(input), {
-    method: 'POST',
-    fallbackErrorMessage: '真实分析触发失败，请稍后重试',
-    requestPolicy: input.requestPolicy,
-  })
+  return createTriggerAiWorkbenchAnalysisMethod(input).send()
 }
 
 /**
@@ -137,7 +127,6 @@ export function createGenerateAiResumeOptimizationMethod(input: ResumeOptimizati
       locale: input.locale,
     }),
     fallbackErrorMessage: '结构化简历建议生成失败，请稍后重试',
-    requestPolicy: input.requestPolicy,
   })
 }
 
@@ -150,11 +139,7 @@ export function createGenerateAiResumeOptimizationMethod(input: ResumeOptimizati
 export async function generateAiResumeOptimization(
   input: ResumeOptimizationInput,
 ): Promise<AiResumeOptimizationResult> {
-  return Alova.send(createGenerateAiResumeOptimizationMethod(input), {
-    method: 'POST',
-    fallbackErrorMessage: '结构化简历建议生成失败，请稍后重试',
-    requestPolicy: input.requestPolicy,
-  })
+  return createGenerateAiResumeOptimizationMethod(input).send()
 }
 
 /**
@@ -178,7 +163,6 @@ export function createApplyAiResumeOptimizationMethod(input: ApplyAiResumeOptimi
       patch: input.patch,
     }),
     fallbackErrorMessage: 'AI 建议稿应用失败，请稍后重试',
-    requestPolicy: input.requestPolicy,
   })
 }
 
@@ -191,11 +175,7 @@ export function createApplyAiResumeOptimizationMethod(input: ApplyAiResumeOptimi
 export async function applyAiResumeOptimization(
   input: ApplyAiResumeOptimizationInput,
 ): Promise<ApplyAiResumeOptimizationResult> {
-  return Alova.send(createApplyAiResumeOptimizationMethod(input), {
-    method: 'POST',
-    fallbackErrorMessage: 'AI 建议稿应用失败，请稍后重试',
-    requestPolicy: input.requestPolicy,
-  })
+  return createApplyAiResumeOptimizationMethod(input).send()
 }
 
 /**
@@ -205,14 +185,14 @@ export async function applyAiResumeOptimization(
  * @returns 缓存列表请求 Method
  */
 export function createFetchCachedAiWorkbenchReportsMethod(input: RuntimeInput) {
-  return Alova.createMethod<{
-    reports: AiWorkbenchCachedReportSummary[]
-  }>({
+  return Alova.createMethod<AiWorkbenchCachedReportSummary[]>({
     apiBaseUrl: input.apiBaseUrl,
     pathname: '/ai/reports/cache',
     accessToken: input.accessToken,
     fallbackErrorMessage: '缓存报告列表加载失败',
-    requestPolicy: input.requestPolicy,
+    transform: (payload) =>
+      ((payload as { reports?: AiWorkbenchCachedReportSummary[] }).reports ?? []) as
+        AiWorkbenchCachedReportSummary[],
   })
 }
 
@@ -225,13 +205,7 @@ export function createFetchCachedAiWorkbenchReportsMethod(input: RuntimeInput) {
 export async function fetchCachedAiWorkbenchReports(
   input: RuntimeInput,
 ): Promise<AiWorkbenchCachedReportSummary[]> {
-  const payload = await Alova.send(createFetchCachedAiWorkbenchReportsMethod(input), {
-    method: 'GET',
-    fallbackErrorMessage: '缓存报告列表加载失败',
-    requestPolicy: input.requestPolicy,
-  })
-
-  return payload.reports
+  return createFetchCachedAiWorkbenchReportsMethod(input).send()
 }
 
 /**
@@ -250,7 +224,6 @@ export function createFetchCachedAiWorkbenchReportMethod(
     pathname: `/ai/reports/cache/${input.reportId}`,
     accessToken: input.accessToken,
     fallbackErrorMessage: '缓存报告详情加载失败',
-    requestPolicy: input.requestPolicy,
   })
 }
 
@@ -265,11 +238,7 @@ export async function fetchCachedAiWorkbenchReport(
     reportId: string
   },
 ): Promise<AiWorkbenchReport> {
-  return Alova.send(createFetchCachedAiWorkbenchReportMethod(input), {
-    method: 'GET',
-    fallbackErrorMessage: '缓存报告详情加载失败',
-    requestPolicy: input.requestPolicy,
-  })
+  return createFetchCachedAiWorkbenchReportMethod(input).send()
 }
 
 /**
@@ -289,7 +258,6 @@ export function createExtractTextFromFileMethod(input: ExtractTextFromFileInput)
     accessToken: input.accessToken,
     body: formData,
     fallbackErrorMessage: '文件提取失败，请稍后重试',
-    requestPolicy: input.requestPolicy,
   })
 }
 
@@ -302,9 +270,5 @@ export function createExtractTextFromFileMethod(input: ExtractTextFromFileInput)
 export async function extractTextFromFile(
   input: ExtractTextFromFileInput,
 ): Promise<FileExtractionResult> {
-  return Alova.send(createExtractTextFromFileMethod(input), {
-    method: 'POST',
-    fallbackErrorMessage: '文件提取失败，请稍后重试',
-    requestPolicy: input.requestPolicy,
-  })
+  return createExtractTextFromFileMethod(input).send()
 }

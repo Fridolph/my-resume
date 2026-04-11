@@ -38,7 +38,6 @@ export function createLoginWithPasswordMethod(input: LoginWithPasswordInput) {
       password: input.password,
     }),
     fallbackErrorMessage: '账号或密码错误',
-    requestPolicy: input.requestPolicy,
   })
 }
 
@@ -51,11 +50,7 @@ export function createLoginWithPasswordMethod(input: LoginWithPasswordInput) {
 export async function loginWithPassword(
   input: LoginWithPasswordInput,
 ): Promise<LoginResult> {
-  return Alova.send(createLoginWithPasswordMethod(input), {
-    method: 'POST',
-    fallbackErrorMessage: '账号或密码错误',
-    requestPolicy: input.requestPolicy,
-  })
+  return createLoginWithPasswordMethod(input).send()
 }
 
 /**
@@ -72,7 +67,6 @@ export function createFetchCurrentUserMethod(input: FetchCurrentUserInput) {
     pathname: '/auth/me',
     accessToken: input.accessToken,
     fallbackErrorMessage: '登录状态已失效',
-    requestPolicy: input.requestPolicy,
   })
 }
 
@@ -85,11 +79,7 @@ export function createFetchCurrentUserMethod(input: FetchCurrentUserInput) {
 export async function fetchCurrentUser(
   input: FetchCurrentUserInput,
 ): Promise<AuthUserView> {
-  const payload = await Alova.send(createFetchCurrentUserMethod(input), {
-    fallbackErrorMessage: '登录状态已失效',
-    method: 'GET',
-    requestPolicy: input.requestPolicy,
-  })
+  const payload = await createFetchCurrentUserMethod(input).send()
 
   return payload.user
 }
@@ -107,7 +97,6 @@ export function createPostProtectedActionMethod(input: PostProtectedActionInput)
     method: 'POST',
     accessToken: input.accessToken,
     fallbackErrorMessage: '当前角色无权执行该操作',
-    requestPolicy: input.requestPolicy,
   })
 }
 
@@ -120,9 +109,5 @@ export function createPostProtectedActionMethod(input: PostProtectedActionInput)
 export async function postProtectedAction(
   input: PostProtectedActionInput,
 ): Promise<ProtectedActionResponse> {
-  return Alova.send(createPostProtectedActionMethod(input), {
-    method: 'POST',
-    fallbackErrorMessage: '当前角色无权执行该操作',
-    requestPolicy: input.requestPolicy,
-  })
+  return createPostProtectedActionMethod(input).send()
 }
