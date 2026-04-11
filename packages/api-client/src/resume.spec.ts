@@ -12,6 +12,15 @@ import {
   updateDraftResume,
 } from './resume'
 
+function createJsonResponse(status: number, payload: unknown): Response {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
 const draftSnapshot: ResumeDraftSnapshot = {
   status: 'draft',
   updatedAt: '2026-03-26T04:00:00.000Z',
@@ -101,19 +110,14 @@ describe('api-client resume contract', () => {
       'fetch',
       vi
         .fn()
-        .mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-          json: async () => ({
+        .mockResolvedValueOnce(
+          createJsonResponse(200, {
             status: 'published',
             publishedAt: '2026-03-26T04:10:00.000Z',
             resume: draftSnapshot.resume,
           }),
-        })
-        .mockResolvedValueOnce({
-          ok: false,
-          status: 404,
-        }),
+        )
+        .mockResolvedValueOnce(createJsonResponse(404, { message: 'Not Found' })),
     )
 
     const published = await fetchPublishedResume({
@@ -139,19 +143,14 @@ describe('api-client resume contract', () => {
       'fetch',
       vi
         .fn()
-        .mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-          json: async () => ({
+        .mockResolvedValueOnce(
+          createJsonResponse(200, {
             status: 'published',
             publishedAt: '2026-03-26T04:10:00.000Z',
             resume: draftSummarySnapshot.resume,
           }),
-        })
-        .mockResolvedValueOnce({
-          ok: false,
-          status: 404,
-        }),
+        )
+        .mockResolvedValueOnce(createJsonResponse(404, { message: 'Not Found' })),
     )
 
     const published = await fetchPublishedResumeSummary({
@@ -178,18 +177,9 @@ describe('api-client resume contract', () => {
       'fetch',
       vi
         .fn()
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => draftSnapshot,
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => draftSummarySnapshot,
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => draftSnapshot,
-        }),
+        .mockResolvedValueOnce(createJsonResponse(200, draftSnapshot))
+        .mockResolvedValueOnce(createJsonResponse(200, draftSummarySnapshot))
+        .mockResolvedValueOnce(createJsonResponse(200, draftSnapshot)),
     )
 
     await fetchDraftResume({
@@ -213,18 +203,18 @@ describe('api-client resume contract', () => {
       1,
       'http://localhost:5577/resume/draft',
       expect.objectContaining({
-        headers: {
+        headers: expect.objectContaining({
           Authorization: 'Bearer demo-token',
-        },
+        }),
       }),
     )
     expect(fetch).toHaveBeenNthCalledWith(
       2,
       'http://localhost:5577/resume/draft/summary?locale=zh',
       expect.objectContaining({
-        headers: {
+        headers: expect.objectContaining({
           Authorization: 'Bearer demo-token',
-        },
+        }),
       }),
     )
     expect(fetch).toHaveBeenNthCalledWith(
@@ -232,10 +222,10 @@ describe('api-client resume contract', () => {
       'http://localhost:5577/resume/draft',
       expect.objectContaining({
         method: 'PUT',
-        headers: {
+        headers: expect.objectContaining({
           Authorization: 'Bearer demo-token',
           'Content-Type': 'application/json',
-        },
+        }),
         body: JSON.stringify(draftSnapshot.resume),
       }),
     )
@@ -244,14 +234,13 @@ describe('api-client resume contract', () => {
   it('should publish resume and build stable export url', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({
+      vi.fn().mockResolvedValue(
+        createJsonResponse(200, {
           status: 'published',
           publishedAt: '2026-03-26T04:20:00.000Z',
           resume: draftSnapshot.resume,
         }),
-      }),
+      ),
     )
 
     const result = await publishResume({
@@ -263,9 +252,9 @@ describe('api-client resume contract', () => {
       'http://localhost:5577/resume/publish',
       expect.objectContaining({
         method: 'POST',
-        headers: {
+        headers: expect.objectContaining({
           Authorization: 'Bearer demo-token',
-        },
+        }),
       }),
     )
     expect(result.status).toBe('published')
@@ -283,21 +272,19 @@ describe('api-client resume contract', () => {
       'fetch',
       vi
         .fn()
-        .mockResolvedValueOnce({
-          ok: false,
-          json: async () => ({
+        .mockResolvedValueOnce(
+          createJsonResponse(503, {
             statusCode: 503,
             message:
               '当前本地 SQLite 数据库正被其他进程占用，请关闭 DB Browser 等工具后重试。',
           }),
-        })
-        .mockResolvedValueOnce({
-          ok: false,
-          json: async () => ({
+        )
+        .mockResolvedValueOnce(
+          createJsonResponse(503, {
             statusCode: 503,
             message: ['发布失败，请稍后重试', '请关闭外部数据库工具后重试'],
           }),
-        }),
+        ),
     )
 
     await expect(

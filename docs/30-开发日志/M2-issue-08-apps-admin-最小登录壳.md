@@ -63,7 +63,7 @@
   - `LoginForm`
 - 新建最小前端认证能力：
   - `auth-api`
-  - `auth-types`
+  - `auth.types`
   - `session-storage`
   - `env`
 - 新建 `vitest` 测试配置

@@ -24,18 +24,32 @@ export class RagController {
     private readonly ragService: RagService,
   ) {}
 
+  /**
+   * 返回 RAG 索引状态与运行时摘要
+   * @returns RAG 状态
+   */
   @Get('status')
   getStatus() {
     return this.ragService.getStatus()
   }
 
+  /**
+   * 重建简历与知识库的向量索引
+   * @returns 重建后的状态摘要
+   */
   @Post('index/rebuild')
   @UseGuards(RoleCapabilitiesGuard)
   @RequireCapability('canTriggerAiAnalysis')
   rebuildIndex() {
+    // 建索引入口：重切块、重向量化，并写回本地索引文件。
     return this.ragService.rebuildIndex()
   }
 
+  /**
+   * 在当前索引上执行语义检索
+   * @param body 检索请求体
+   * @returns 检索结果列表
+   */
   @Post('search')
   @UseGuards(RoleCapabilitiesGuard)
   @RequireCapability('canTriggerAiAnalysis')
@@ -43,10 +57,16 @@ export class RagController {
     return this.ragService.search(body.query, body.limit)
   }
 
+  /**
+   * 基于检索上下文生成问答结果
+   * @param body 问答请求体
+   * @returns 问答结果
+   */
   @Post('ask')
   @UseGuards(RoleCapabilitiesGuard)
   @RequireCapability('canTriggerAiAnalysis')
   ask(@Body() body: RagAskBody) {
+    // ask 先 search，再拼接上下文调用生成接口，不是直接裸问模型。
     return this.ragService.ask(body.question, body.limit, body.locale)
   }
 }

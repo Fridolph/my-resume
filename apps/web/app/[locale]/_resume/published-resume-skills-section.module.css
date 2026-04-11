@@ -1,0 +1,165 @@
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.controlGroup {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.controlSurface {
+  display: inline-flex;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 999px;
+  background: rgba(248, 250, 252, 0.9);
+  padding: 0.25rem;
+}
+
+.controlButton {
+  border-radius: 999px;
+  padding-inline: 1rem;
+}
+
+.structureCard {
+  border: 1px solid rgba(226, 232, 240, 0.7);
+  border-radius: 1.625rem;
+  background: rgba(248, 250, 252, 0.82);
+  padding: 1.25rem;
+}
+
+.structureCountBadge {
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.25rem 0.75rem;
+}
+
+.structureItem {
+  border: 1px solid rgba(226, 232, 240, 0.7);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.84);
+  padding: 0.875rem 1rem;
+}
+
+.chartLayout {
+  display: grid;
+  gap: 1rem;
+}
+
+.chartStack {
+  display: grid;
+  gap: 1rem;
+}
+
+.chartSurface {
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 1.75rem;
+  background: rgba(248, 250, 252, 0.8);
+  padding: 1.25rem;
+}
+
+.chartFallback {
+  min-height: 340px;
+  width: 100%;
+  border-radius: 1.5rem;
+  background: rgba(241, 245, 249, 0.7);
+}
+
+.cloudSurface {
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 1.75rem;
+  background:
+    radial-gradient(circle at top, rgba(59, 130, 246, 0.09), transparent 32%),
+    rgba(248, 250, 252, 0.8);
+  padding: 1.25rem;
+}
+
+.cloudToken {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: help;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: #334155;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease;
+}
+
+.legendCard {
+  border: 1px solid rgba(226, 232, 240, 0.7);
+  border-radius: 1.5rem;
+  background: rgba(248, 250, 252, 0.8);
+  padding: 1rem;
+}
+
+.legendToken {
+  border: 1px solid rgba(226, 232, 240, 0.7);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.84);
+  padding: 0.375rem 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .toolbar {
+    min-width: 0;
+    align-items: flex-end;
+  }
+
+  .chartLayout {
+    grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+    align-items: start;
+  }
+}
+
+:global([data-theme='dark']) .controlSurface {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+:global([data-theme='dark']) .structureCard,
+:global([data-theme='dark']) .legendCard {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+:global([data-theme='dark']) .structureCountBadge,
+:global([data-theme='dark']) .structureItem,
+:global([data-theme='dark']) .legendToken {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:global([data-theme='dark']) .chartSurface {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+:global([data-theme='dark']) .chartFallback {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+:global([data-theme='dark']) .cloudSurface {
+  border-color: rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(circle at top, rgba(96, 165, 250, 0.14), transparent 30%),
+    rgba(255, 255, 255, 0.035);
+}
+
+:global([data-theme='dark']) .cloudToken {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+}

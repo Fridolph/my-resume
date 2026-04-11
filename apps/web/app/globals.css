@@ -1,5 +1,5 @@
 @import 'tailwindcss';
-@import '@heroui/react/styles';
+@import '@my-resume/ui/heroui-web.css';
 
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 

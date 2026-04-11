@@ -95,8 +95,8 @@
 
 更新：
 
-- `apps/admin/lib/resume-types.ts`
-- `apps/web/lib/published-resume-types.ts`
+- `apps/admin/lib/resume.types.ts`
+- `apps/web/lib/published-resume.types.ts`
 - `apps/admin/lib/resume-draft-api.ts`
 - `apps/web/lib/published-resume-api.ts`
 - `apps/admin/lib/auth-api.ts`

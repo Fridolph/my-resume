@@ -121,7 +121,7 @@
 
 更新：
 
-- `apps/admin/lib/ai-workbench-types.ts`
+- `apps/admin/lib/ai-workbench.types.ts`
 - `apps/admin/components/ai-analysis-panel.tsx`
 
 页面上现在明确分成三层：

@@ -11,6 +11,7 @@ import { ResumeModule } from './modules/resume/resume.module'
 
 @Module({
   imports: [
+    // AppModule 作为 server 总装配点：统一注册配置、数据库和核心业务模块。
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: buildServerEnvFilePaths(process.env.NODE_ENV),

@@ -4,12 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev --port 5555",
+    "dev": "next dev --turbopack --port 5555",
     "build": "next build",
     "start": "next start --port 5555",
     "lint": "oxlint --config ../../.oxlintrc.json --ignore-path ../../.eslintignore .",
     "format:check": "oxfmt --config ../../.oxfmtrc.json --ignore-path ../../.prettierignore --check .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit --incremental false",
     "test": "vitest run"
   },
   "dependencies": {
@@ -19,9 +19,11 @@
     "@my-resume/api-client": "workspace:*",
     "@my-resume/ui": "workspace:*",
     "@tailwindcss/postcss": "^4.2.2",
+    "alova": "^3.5.1",
     "echarts": "^5.6.0",
     "framer-motion": "^12.38.0",
     "next": "^15.5.2",
+    "next-intl": "^4.4.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "tailwindcss": "^4.2.2"

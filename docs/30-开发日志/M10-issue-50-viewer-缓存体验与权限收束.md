@@ -87,7 +87,7 @@
 
 更新：
 
-- `apps/admin/lib/ai-workbench-types.ts`
+- `apps/admin/lib/ai-workbench.types.ts`
 - `apps/admin/lib/ai-workbench-api.ts`
 - `apps/admin/lib/ai-workbench-api.spec.ts`
 

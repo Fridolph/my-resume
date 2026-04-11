@@ -65,7 +65,7 @@
 
 新增：
 
-- `apps/admin/lib/resume-types.ts`
+- `apps/admin/lib/resume.types.ts`
 - `apps/admin/lib/resume-draft-api.ts`
 
 这里先在 `admin` 本地定义最小类型，目的不是长期重复维护，而是让当前 issue 先形成可讲清楚、可运行的闭环。后续如果 `web/admin/server` 的契约继续增多，再在单独 issue 中抽到共享包。
@@ -132,7 +132,7 @@
 已做的最小抽离：
 
 - 草稿请求收敛为 `resume-draft-api.ts`
-- 简历契约收敛为 `resume-types.ts`
+- 简历契约收敛为 `resume.types.ts`
 - 草稿编辑面板独立为 `ResumeDraftEditorPanel`
 
 当前没有继续把表单字段再抽成更小组件，因为只有一个最小 profile 面板，过早拆分会增加教程理解成本。

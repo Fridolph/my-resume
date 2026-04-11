@@ -1,0 +1,124 @@
+{
+  "pageEyebrow": "Published Resume",
+  "emptyTitle": "There is no published resume content yet.",
+  "emptyDescription": "Please update the draft and publish it from the admin dashboard before the public site can read the latest version.",
+  "loadingTitle": "Syncing published resume",
+  "loadingDescription": "Reading the latest published snapshot from the server. Please wait.",
+  "syncingSnapshot": "Syncing the latest published snapshot in the background...",
+  "contactTitle": "Contact",
+  "profileLinksTitle": "Public Links",
+  "interestsTitle": "Personal Interests",
+  "publishedAt": "Published at",
+  "sidebarProjectNote": "Visit the my-resume project to explore build notes and iteration details",
+  "hero": {
+    "avatarFrontAlt": "{name} portrait front",
+    "avatarBackAlt": "{name} portrait back"
+  },
+  "education": {
+    "eyebrow": "Education",
+    "title": "Education",
+    "description": "Keeps stable academic information separated from project-focused content."
+  },
+  "experience": {
+    "eyebrow": "Experience",
+    "title": "Work Experience",
+    "description": "Highlights company scope, responsibilities, delivery context, and key outcomes.",
+    "summaryLabel": "Summary",
+    "locationLabel": "Location",
+    "highlightsLabel": "Highlights",
+    "techStackLabel": "Tech Stack",
+    "techStackAriaLabel": "{name} tech stack",
+    "pending": "Preparing experience section..."
+  },
+  "projects": {
+    "eyebrow": "Projects",
+    "title": "Selected Projects",
+    "description": "Shows project background, role, highlights, and technology stack from the standard model.",
+    "summaryLabel": "Summary",
+    "coreFunctionsLabel": "Core Functions",
+    "highlightsLabel": "Highlights, Challenges & Solutions",
+    "techStackLabel": "Tech Stack",
+    "techStackAriaLabel": "{name} tech stack",
+    "linksLabel": "Links",
+    "pending": "Preparing projects section..."
+  },
+  "skills": {
+    "eyebrow": "Skills",
+    "title": "Skill Structure",
+    "description": "Groups technical keywords by category for future theme and template expansion.",
+    "deferDescription": "The skills section loads its charting and interaction bundle only when it nears the viewport.",
+    "pending": "Preparing skills section...",
+    "viewStructure": "Structure",
+    "viewChart": "Chart",
+    "chartRadar": "Radar",
+    "chartPie": "Pie",
+    "chartRadarCaption": "Coverage contour based on item counts per group",
+    "chartPieCaption": "Distribution based on item counts per group",
+    "chartRadarAriaLabel": "Skill radar chart",
+    "chartPieAriaLabel": "Skill pie chart",
+    "cloudTitle": "Keyword Cloud",
+    "cloudCaption": "A unified high-density cloud composed of all skill keywords.",
+    "points": "capability points",
+    "radarTooltipValue": "{name}: {value}",
+    "radarSeriesName": "Skill coverage",
+    "pieTooltipValue": "{name}: {value}",
+    "pieCenterTitle": "Skill Map"
+  },
+  "highlights": {
+    "eyebrow": "Highlights",
+    "title": "Additional Highlights",
+    "description": "Captures personal projects, open-source work, and team-building achievements.",
+    "signalLensTitle": "Signal Lens",
+    "signalLensDescription": "This section no longer repeats chronology. Instead, it surfaces recruiter-facing signals around frontend craft, full-stack delivery, AI engineering, quality, collaboration, and technical writing.",
+    "presets": {
+      "frontend": {
+        "badge": "Frontend",
+        "tags": {
+          "one": "Design Systems",
+          "two": "UI Delivery",
+          "three": "Component Architecture"
+        }
+      },
+      "fullStack": {
+        "badge": "Full-Stack",
+        "tags": {
+          "one": "End-to-End",
+          "two": "API Collaboration",
+          "three": "Release Flow"
+        }
+      },
+      "aiOps": {
+        "badge": "AI Ops",
+        "tags": {
+          "one": "Structured Analysis",
+          "two": "Automation",
+          "three": "Explainable Output"
+        }
+      },
+      "quality": {
+        "badge": "Quality",
+        "tags": {
+          "one": "Testing",
+          "two": "Code Review",
+          "three": "Stable Delivery"
+        }
+      },
+      "teamwork": {
+        "badge": "Teamwork",
+        "tags": {
+          "one": "Cross-Team",
+          "two": "Team Building",
+          "three": "Execution Rhythm"
+        }
+      },
+      "writing": {
+        "badge": "Writing",
+        "tags": {
+          "one": "Tutorials",
+          "two": "Public Writing",
+          "three": "Open Source"
+        }
+      }
+    }
+  }
+}

@@ -13,7 +13,13 @@ import { AuthenticatedRequest } from '../interfaces/authenticated-request.interf
 export class JwtAuthGuard implements CanActivate {
   constructor(@Inject(AuthService) private readonly authService: AuthService) {}
 
+  /**
+   * 校验 Bearer token 并把 authUser 注入到 request 上下文
+   * @param context Nest 执行上下文
+   * @returns 是否允许继续执行
+   */
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    // 第一层守卫只做身份确认，为后续能力守卫提供 authUser 上下文。
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>()
     const bearerToken = request.headers.authorization
 

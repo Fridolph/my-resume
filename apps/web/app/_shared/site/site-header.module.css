@@ -1,0 +1,214 @@
+.primaryNavWrapper {
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  padding: 3px;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.05);
+}
+
+.primaryNavButton {
+  height: 30px;
+  border-radius: 999px;
+  padding-inline: 0.75rem;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.localeSwitchWrapper {
+  display: inline-flex;
+  height: 30px;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgb(226 232 240);
+  background: rgba(255, 255, 255, 0.75);
+  padding: 2px;
+}
+
+.localeSwitchButton {
+  height: 26px;
+  min-width: 26px;
+  border-radius: 999px;
+  padding-inline: 0.625rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.headerActionTrigger {
+  display: inline-flex;
+  min-width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  color: #64748b;
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.githubButton {
+  min-width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  padding-inline: 0;
+}
+
+.themeSwitch {
+  display: inline-flex;
+  min-width: 48px;
+  min-height: 30px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #475569;
+}
+
+.themeSwitchControl {
+  display: inline-flex;
+  width: 48px;
+  height: 30px;
+  align-items: center;
+  padding: 3px;
+  border-radius: 999px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 10px 28px rgba(15, 23, 42, 0.08);
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.themeSwitchControlDark {
+  border-color: rgba(37, 99, 235, 0.24);
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.themeSwitchControlLight {
+}
+
+.themeSwitchThumb {
+  display: inline-flex;
+  margin-inline-start: 0;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #f59e0b;
+  box-shadow: 0 1px 5px rgba(15, 23, 42, 0.18);
+  transition:
+    margin-inline-start 180ms ease,
+    color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.themeSwitchThumbLight {
+  margin-inline-start: 0;
+  transform: none;
+  background: #ffffff;
+  color: #f59e0b;
+}
+
+.themeSwitchThumbDark {
+  margin-inline-start: 18px;
+  transform: none;
+  background: rgba(248, 250, 252, 0.98);
+  color: #2563eb;
+}
+
+.themeSwitchIcon {
+  display: inline-flex;
+  width: 12px;
+  height: 12px;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.themeSwitchIcon svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+.themeSwitch:hover .themeSwitchControl {
+  border-color: rgba(148, 163, 184, 0.8);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 12px 32px rgba(15, 23, 42, 0.12);
+}
+
+.headerActionTrigger:hover {
+  border-color: rgb(226 232 240);
+  background: rgba(255, 255, 255, 0.8);
+  color: #0f172a;
+}
+
+:global([data-theme='dark']) .themeSwitch {
+  color: #cbd5e1;
+}
+
+:global([data-theme='dark']) .primaryNavWrapper {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:global([data-theme='dark']) .localeSwitchWrapper {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:global([data-theme='dark']) .headerActionTrigger {
+  color: #cbd5e1;
+}
+
+:global([data-theme='dark']) .headerActionTrigger:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+@media (min-width: 640px) {
+  .primaryNavButton {
+    padding-inline: 1rem;
+    font-size: 14px;
+  }
+}
+
+:global([data-theme='dark']) .themeSwitchControl {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 10px 28px rgba(0, 0, 0, 0.24);
+}
+
+:global([data-theme='dark']) .themeSwitchControlLight {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:global([data-theme='dark']) .themeSwitchThumbLight {
+  background: #e2e8f0;
+  color: #f59e0b;
+}
+
+:global([data-theme='dark']) .themeSwitchControlDark {
+  border-color: rgba(96, 165, 250, 0.28);
+  background: rgba(96, 165, 250, 0.14);
+}
+
+:global([data-theme='dark']) .themeSwitchThumbDark {
+  background: #eff6ff;
+  color: #2563eb;
+  box-shadow: 0 1px 6px rgba(8, 47, 73, 0.26);
+}

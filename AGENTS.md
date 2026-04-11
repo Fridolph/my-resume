@@ -131,12 +131,24 @@
 
 - 新增测试文件时，优先放在对应目录下的 `__tests__/` 子目录中。
 - 页面 / 组件测试示例：
-  - `apps/admin/components/__tests__/xxx.spec.tsx`
-  - `apps/web/components/__tests__/xxx.spec.tsx`
+  - `apps/admin/modules/<feature>/__tests__/xxx.spec.tsx`
+  - `apps/web/modules/<feature>/__tests__/xxx.spec.tsx`
 - 公共模块、客户端请求层、领域函数等测试示例：
-  - `apps/admin/lib/__tests__/xxx.spec.ts`
+  - `apps/admin/modules/<feature>/__tests__/xxx.spec.ts`
+  - `apps/admin/core/**/__tests__/xxx.spec.ts`
   - `apps/server/src/**/__tests__/xxx.spec.ts`
 - 避免再把 `.spec.ts` / `.spec.tsx` 直接散落在实现文件同级目录，除非当前目录结构确实无法自然承载 `__tests__/`。
+
+## TSX 类型拆分约定
+
+- `apps/admin` 继续按模块自治推进，优先落在 `apps/admin/modules/<feature>/` 下，每个模块至少维护自己的 `README.md`、`__tests__/` 与 `types/`。
+- `apps/web` 的新 feature 也优先落在 `apps/web/modules/<feature>/` 下，按模块维护自己的 `README.md`、`__tests__/` 与 `types/`。
+- 当一个 `tsx` 文件**超过 200 行**，且文件内显式声明的 `interface` / `type` **超过 2 个**时，必须把这些类型抽到对应模块的 `types/` 目录中。
+- `import type { ... }` 不计入这个阈值，只统计文件内真实声明的类型。
+- `types` 文件命名统一使用 `.types.ts` / `.types.tsx`，不再新增 `-types.ts` / `-types.tsx`。
+- 若本轮任务会显著修改该 `tsx` 文件，应顺手完成类型拆分，而不是继续把类型堆回组件文件中。
+- `apps/admin/modules/**` 与 `apps/web/modules/**` 下的实现文件不再把业务专属类型放回全局收纳箱，优先从当前模块的 `types/` 引用。
+- 根目录 `pnpm check:tsx-types` 会对当前改动中的 `tsx` 文件执行这条规则检查；对 `apps/admin/modules/**` 与 `apps/web/modules/**` 会优先校验模块内 `types/` 文件。
 
 ## 后续实现方向约束
 

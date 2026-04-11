@@ -1,0 +1,32 @@
+{
+  "profileEyebrow": "about / profile",
+  "profileTitle": "公开履历概览",
+  "profileDescription": "这里放统计、公开链接、补充背景和后续面试时更适合被追问的上下文，不打断简历主阅读流。",
+  "profileStoryEyebrow": "候选人快照",
+  "syncingSnapshot": "正在后台同步最新发布快照...",
+  "signalCards": {
+    "experience": {
+      "label": "职业经历",
+      "description": "段可追踪的核心职业经历。"
+    },
+    "projects": {
+      "label": "代表项目",
+      "description": "个沉淀到公开版里的代表项目。"
+    },
+    "skills": {
+      "label": "技能分组",
+      "description": "组便于阅读与导出的技能结构。"
+    },
+    "publicationState": {
+      "label": "发布状态",
+      "value": "已发布",
+      "description": "公开站当前正在读取最近一次手动发布版本。 {publishedAt}"
+    }
+  },
+  "aiTalkCard": {
+    "eyebrow": "ai talk",
+    "title": "个人知识库问答入口",
+    "description": "后续这里会接入 RAG，对招聘方常见问题做更结构化、更可解释的回答。",
+    "enter": "进入 AI Talk"
+  }
+}

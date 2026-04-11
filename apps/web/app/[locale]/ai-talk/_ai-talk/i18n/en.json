@@ -1,0 +1,21 @@
+{
+  "eyebrow": "ai talk",
+  "title": "AI Talk Placeholder",
+  "description": "Later this page will answer recruiter questions from the published resume, public blogs, and curated knowledge materials.",
+  "status": "RAG coming soon",
+  "syncingSnapshot": "Syncing the latest published snapshot in the background...",
+  "ready": {
+    "eyebrow": "Current Stage",
+    "title": "The entry and product meaning come first",
+    "lineOne": "This round does not wire up the real Q&A backend yet. It only establishes the public-site entry and future capability boundary.",
+    "lineTwo": "The next step will use the published resume, public blogs, and knowledge materials as retrieval context.",
+    "lineThree": "Once the RAG flow is ready, this page will grow an input area, answer cards, cited source snippets, and feedback actions."
+  },
+  "prompts": {
+    "eyebrow": "Prompt Direction",
+    "title": "Questions it should answer later",
+    "one": "What projects has he focused on in recent years?",
+    "two": "Is he more frontend-oriented or full-stack?",
+    "three": "What should an interviewer ask about next?"
+  }
+}

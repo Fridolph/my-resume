@@ -21,6 +21,7 @@ import { RagService } from './rag/rag.service'
   controllers: [AiFileController, AiReportController, RagController],
   providers: [
     {
+      // 先解析统一 AI 运行时配置，再根据配置创建 provider。
       provide: AI_RUNTIME_CONFIG,
       useFactory: () => resolveAiRuntimeConfig(process.env),
     },
@@ -29,6 +30,7 @@ import { RagService } from './rag/rag.service'
       useValue: fetch,
     },
     {
+      // 对上层只暴露统一 AiProvider 接口，屏蔽厂商差异。
       provide: AI_PROVIDER_INSTANCE,
       inject: [AI_RUNTIME_CONFIG, AI_FETCH],
       useFactory: createAiProvider,

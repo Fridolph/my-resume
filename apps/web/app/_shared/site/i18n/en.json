@@ -1,0 +1,14 @@
+{
+  "brandName": "Fridolph Resume",
+  "resumeNav": "Resume",
+  "profileNav": "Profile",
+  "aiTalkNav": "AI Talk",
+  "githubAriaLabel": "Open project GitHub repository",
+  "downloadAriaLabel": "Open download menu",
+  "downloadMenuLabel": "Download",
+  "exportMarkdownMenu": "Export Markdown",
+  "exportPdfMenu": "Export PDF",
+  "themeSwitchAriaLabel": "Switch light/dark theme",
+  "langZh": "中",
+  "langEn": "EN"
+}
