@@ -1,7 +1,8 @@
-import { AiTalkPlaceholderShell } from '@/modules/ai-talk/placeholder-shell'
-import { DEFAULT_API_BASE_URL } from '@/core/env'
-import { fetchPublishedResume } from '@/modules/published-resume/services/published-resume-api'
-import { isAppLocale } from '@/i18n/types'
+import { DEFAULT_API_BASE_URL } from '@core/env'
+import { isAppLocale } from '@core/i18n/types'
+import { fetchPublishedResume } from '@shared/published-resume/services/published-resume-api'
+
+import { AiTalkPlaceholderShell } from './_ai-talk/placeholder-shell'
 
 export default async function AiTalkPage({
   params,

@@ -1,0 +1,32 @@
+{
+  "profileEyebrow": "about / profile",
+  "profileTitle": "Public Profile Overview",
+  "profileDescription": "This page carries signal cards, public links, and supporting context that should not interrupt the main resume reading flow.",
+  "profileStoryEyebrow": "Candidate Snapshot",
+  "syncingSnapshot": "Syncing the latest published snapshot in the background...",
+  "signalCards": {
+    "experience": {
+      "label": "Experience",
+      "description": "core work chapters currently on the public page."
+    },
+    "projects": {
+      "label": "Projects",
+      "description": "selected builds carried into the standard edition."
+    },
+    "skills": {
+      "label": "Skill Groups",
+      "description": "structured groups ready for reading and export."
+    },
+    "publicationState": {
+      "label": "Release State",
+      "value": "Published",
+      "description": "The public site is reading the most recent manually published snapshot. {publishedAt}"
+    }
+  },
+  "aiTalkCard": {
+    "eyebrow": "ai talk",
+    "title": "Personal Knowledge Base Entry",
+    "description": "This will later host a RAG-powered Q&A surface for recruiter-facing questions.",
+    "enter": "Open AI Talk"
+  }
+}

@@ -1,7 +1,8 @@
-import { ProfileOverviewShell } from '@/modules/profile/overview-shell'
-import { DEFAULT_API_BASE_URL } from '@/core/env'
-import { fetchPublishedResume } from '@/modules/published-resume/services/published-resume-api'
-import { isAppLocale } from '@/i18n/types'
+import { DEFAULT_API_BASE_URL } from '@core/env'
+import { isAppLocale } from '@core/i18n/types'
+import { fetchPublishedResume } from '@shared/published-resume/services/published-resume-api'
+
+import { ProfileOverviewShell } from './_profile/overview-shell'
 
 export default async function ProfilePage({
   params,

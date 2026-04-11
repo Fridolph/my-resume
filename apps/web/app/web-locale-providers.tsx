@@ -4,7 +4,7 @@ import { I18nProvider } from '@heroui/react'
 import { ThemeModeProvider } from '@my-resume/ui/theme'
 import type { ReactNode } from 'react'
 
-import type { AppLocale } from '../i18n/types'
+import type { AppLocale } from '@core/i18n/types'
 
 export function WebLocaleProviders({
   children,

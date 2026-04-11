@@ -11,12 +11,13 @@
 
 ## 当前结构
 
-- `app/`：Next App Router 入口
-- `core/`：跨模块基础设施
-- `modules/published-resume/`：公开简历主阅读链路
-- `modules/profile/`：公开概览页
-- `modules/ai-talk/`：AI Talk 入口
-- `modules/site/`：公开站共享头部与导航
+- `app/[locale]/`：route-first 主树
+- `app/[locale]/_resume/`：首页私有展示组合
+- `app/[locale]/profile/_profile/`：概览页私有实现
+- `app/[locale]/ai-talk/_ai-talk/`：AI Talk 私有实现
+- `app/_shared/site/`：公开路由共享头部与导航
+- `app/_shared/published-resume/`：多路由复用的已发布简历数据链路
+- `app/_core/`：站点级基础设施与 i18n 适配
 
 ## 模块约定
 
