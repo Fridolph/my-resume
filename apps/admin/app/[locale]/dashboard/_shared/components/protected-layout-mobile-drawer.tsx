@@ -1,5 +1,6 @@
 'use client'
 
+import { Button } from '@heroui/react/button'
 import { useEffect } from 'react'
 
 import type { AppLocale } from '@i18n/types'
@@ -58,7 +59,7 @@ export function AdminMobileDrawer({
 
   return (
     <div data-open={String(isOpen)} data-testid="admin-mobile-drawer-root">
-      <button
+      <Button
         aria-label="关闭导航菜单遮罩"
         className={[
           mobileDrawerBackdropClass,
@@ -68,6 +69,7 @@ export function AdminMobileDrawer({
           .trim()}
         onClick={() => onOpenChange(false)}
         type="button"
+        variant="ghost"
       />
       <div className={mobileDrawerContentClass} data-testid="admin-mobile-drawer-content">
         <div
@@ -81,13 +83,15 @@ export function AdminMobileDrawer({
           role="dialog">
           <header className="flex items-center justify-between gap-3">
             <h2 className="text-base font-semibold text-zinc-950 dark:text-zinc-50">后台导航</h2>
-            <button
+            <Button
               aria-label="关闭导航菜单"
               className={mobileDrawerCloseButtonClass}
+              isIconOnly
               onClick={() => onOpenChange(false)}
-              type="button">
+              type="button"
+              variant="ghost">
               <span aria-hidden="true">×</span>
-            </button>
+            </Button>
           </header>
           <div className="space-y-5">
             <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/70">

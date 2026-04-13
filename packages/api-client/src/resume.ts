@@ -1,4 +1,4 @@
-import { defaultApiClient as Alova } from './client'
+import { defaultApiClient as Alova, joinApiUrl } from './client'
 import type {
   AuthenticatedResumeRequestInput,
   AuthenticatedResumeSummaryRequestInput,
@@ -44,10 +44,6 @@ export type {
   StandardResume,
   UpdateResumeDraftInput,
 } from './types/resume.types'
-
-function joinApiUrl(apiBaseUrl: string, pathname: string): string {
-  return `${apiBaseUrl.replace(/\/$/, '')}${pathname}`
-}
 
 /**
  * 构造公开简历导出地址

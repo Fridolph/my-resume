@@ -97,7 +97,7 @@ export function AdminProtectedLayoutWithLocale({
               后台壳加载中
             </h1>
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              请稍候，当前会继续向 `apps/server` 校验 `/auth/me`。
+              请稍候，当前会继续向 `apps/server` 校验 `/api/auth/me`。
             </p>
             <div className="mt-2 grid gap-2" data-testid="admin-session-loading-skeleton">
               <Skeleton className="h-4 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
@@ -122,7 +122,7 @@ export function AdminProtectedLayoutWithLocale({
                 请先登录后台
               </h1>
               <p className="text-sm leading-6 text-zinc-500 dark:text-zinc-400">
-                当前路由属于受保护后台，需要先读取本地 token 并向 `/auth/me`
+                当前路由属于受保护后台，需要先读取本地 token 并向 `/api/auth/me`
                 校验当前登录态。
               </p>
             </div>
@@ -135,7 +135,7 @@ export function AdminProtectedLayoutWithLocale({
               </p>
             </div>
             <div className="flex gap-3">
-              <Link className="link-button" href="/" prefetch={false}>
+              <Link className="link-button" href="/login">
                 返回登录页
               </Link>
             </div>
@@ -169,7 +169,7 @@ export function AdminProtectedLayoutWithLocale({
                   currentUser={currentUser}
                   onLogout={() => {
                     logout()
-                    router.replace('/', { locale })
+                    router.replace('/login')
                   }}
                 />
               }

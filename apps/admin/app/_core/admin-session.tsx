@@ -73,7 +73,7 @@ export function AdminSessionProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    // 进入 dashboard 前统一走一次 /auth/me，避免各页面各自重复校验
+    // 进入 dashboard 前统一走一次 /api/auth/me，避免各页面各自重复校验
     setStatus('loading')
 
     try {

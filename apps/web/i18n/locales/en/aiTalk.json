@@ -1,21 +1,260 @@
 {
-  "eyebrow": "ai talk",
-  "title": "AI Talk Placeholder",
-  "description": "Later this page will answer recruiter questions from the published resume, public blogs, and curated knowledge materials.",
-  "status": "RAG coming soon",
-  "syncingSnapshot": "Syncing the latest published snapshot in the background...",
-  "ready": {
-    "eyebrow": "Current Stage",
-    "title": "The entry and product meaning come first",
-    "lineOne": "This round does not wire up the real Q&A backend yet. It only establishes the public-site entry and future capability boundary.",
-    "lineTwo": "The next step will use the published resume, public blogs, and knowledge materials as retrieval context.",
-    "lineThree": "Once the RAG flow is ready, this page will grow an input area, answer cards, cited source snippets, and feedback actions."
+  "status": {
+    "comingSoon": "Coming soon",
+    "rag": "RAG chat",
+    "streaming": "Streaming first",
+    "trialCode": "Trial code"
   },
-  "prompts": {
-    "eyebrow": "Prompt Direction",
-    "title": "Questions it should answer later",
-    "one": "What projects has he focused on in recent years?",
-    "two": "Is he more frontend-oriented or full-stack?",
-    "three": "What should an interviewer ask about next?"
+  "hubRow": {
+    "eyebrow": "ai talk",
+    "title": "AI Talk Entry Hub",
+    "description": "This page is the public entry for the AI capabilities: establish RAG knowledge chat, resume guidance, and avatar presentation first, then grow into real trial-code access, streaming answers, and admin-side governance.",
+    "plan": {
+      "1": {
+        "title": "RAG knowledge / persona Q&A",
+        "description": "Use the published resume, project history, and future knowledge sources as the basis for recruiter-facing Q&A."
+      },
+      "2": {
+        "title": "Resume guidance",
+        "description": "Generate improvement ideas and analysis on top of the current resume structure and future AI workflows."
+      },
+      "3": {
+        "title": "Avatar introduction",
+        "description": "Reserve a dedicated media route and contract first, then add real audio/video and avatar interaction later."
+      }
+    },
+    "profile": {
+      "eyebrow": "Profile Snapshot",
+      "nextTitle": "What lands next?",
+      "nextDescription": "The next milestone focuses on trial-code chat, the admin governance loop, and then grows the advisory and avatar capabilities into dedicated workspaces."
+    }
+  },
+  "featureCards": {
+    "rag": {
+      "front": {
+        "eyebrow": "Entry One",
+        "title": "RAG knowledge / persona Q&A",
+        "description": "Turn the published resume and future knowledge sources into a traceable public Q&A entry.",
+        "badge": "Chat entry",
+        "status": "Available now"
+      },
+      "back": {
+        "eyebrow": "Knowledge chat",
+        "title": "RAG chat workspace",
+        "description": "Redeem a trial code here, then move into a 10-turn conversation and the streaming workspace.",
+        "tags": {
+          "one": "Trial code",
+          "two": "10 turns"
+        },
+        "details": {
+          "one": "Resume data, project history, and future knowledge sources become one retrieval context.",
+          "two": "Answers surface source snippets and remaining quota so the rationale is easy to inspect."
+        },
+        "cta": "Open RAG chat"
+      }
+    },
+    "resumeAdvisor": {
+      "front": {
+        "eyebrow": "Entry Two",
+        "title": "Resume guidance",
+        "description": "Use the current resume structure and AI analysis to produce more actionable improvement suggestions.",
+        "badge": "Admin feature",
+        "status": "Public info only"
+      },
+      "back": {
+        "eyebrow": "AI guidance",
+        "title": "Resume guidance",
+        "description": "This capability builds on the current resume structure, while the real workflow still lives in the admin workbench.",
+        "tags": {
+          "one": "AI + RAG",
+          "two": "Structured guidance"
+        },
+        "details": {
+          "one": "Inputs stay grounded in `StandardResume`, published snapshots, and analysis outputs.",
+          "two": "Later it can grow into markdown / PDF output, diff previews, and apply flows."
+        },
+        "cta": "View public overview"
+      }
+    },
+    "avatar": {
+      "front": {
+        "eyebrow": "Entry Three",
+        "title": "Avatar / self-introduction",
+        "description": "A dedicated route for media presentation, self-introduction, and future avatar interaction.",
+        "badge": "Dedicated route",
+        "status": "coming soon"
+      },
+      "back": {
+        "eyebrow": "Media route",
+        "title": "Avatar introduction",
+        "description": "The avatar grows in its own route. This round keeps the entry, copy, and media boundary in place.",
+        "tags": {
+          "one": "Dedicated media route",
+          "two": "coming soon"
+        },
+        "details": {
+          "one": "Later this route can own video, TTS, posters, and media playback state.",
+          "two": "The page will keep expanding around persona data, assets, and control zones."
+        },
+        "cta": "Open avatar entry"
+      }
+    }
+  },
+  "resumeAdvisorPage": {
+    "eyebrow": "resume advisor",
+    "title": "Resume guidance",
+    "description": "This is the public explainer route: clarify the capability boundary, input baseline, and advanced direction first, while the real generation workflow stays in admin.",
+    "badges": {
+      "one": "Structured baseline",
+      "two": "Admin workbench"
+    },
+    "blocks": {
+      "overview": {
+        "eyebrow": "Capability",
+        "title": "What does it do now?",
+        "description": "It works from the current resume structure, published snapshots, and AI analysis instead of starting over from an unstructured block of text."
+      },
+      "workflow": {
+        "eyebrow": "Phase one",
+        "title": "How does the first version land?",
+        "description": "The base version focuses on suggestion summaries, rewrite directions, and export references. One-click apply and field-level diff flows stay in the advanced phase."
+      },
+      "boundary": {
+        "eyebrow": "Boundary",
+        "title": "Why is this page only an explainer?",
+        "description": "Because the real governance and review loop belongs in admin. The public site currently keeps a lightweight overview so visitors understand the upcoming capability."
+      }
+    },
+    "primaryCta": "Back to AI Talk hub",
+    "secondaryCta": "Open RAG chat"
+  },
+  "entry": {
+    "eyebrow": "ai talk",
+    "title": "AI Talk Hub",
+    "description": "This becomes the public AI entry for the site: establish RAG chat, avatar intro, and session history first, then plug in real trial-code access, streaming Q&A, and knowledge-base governance.",
+    "path": {
+      "eyebrow": "Current Stage",
+      "title": "Establish the entry and sub-route semantics first",
+      "lineOne": "The hub explains what the product can and cannot do before the real conversation backend lands.",
+      "lineTwo": "The real Q&A flow will live in dedicated chat and session workspaces so future interaction complexity does not force a structural rewrite.",
+      "lineThree": "The avatar entry keeps its own page, media contract, and control-zone boundary from day one."
+    },
+    "prompts": {
+      "eyebrow": "Prompt Direction",
+      "title": "Questions it should answer later",
+      "one": "What projects has he focused on in recent years?",
+      "two": "Is he more frontend-oriented or full-stack?",
+      "three": "What should an interviewer ask about next?"
+    }
+  },
+  "cards": {
+    "chat": {
+      "eyebrow": "Entry One",
+      "title": "RAG Chat",
+      "description": "Later this is where visitors redeem a trial code, start a 10-turn conversation, and enter the real chat workspace.",
+      "badge": "SSR entry + sub-route workspace",
+      "cta": "Open chat entry"
+    },
+    "avatar": {
+      "eyebrow": "Entry Two",
+      "title": "Avatar Introduction",
+      "description": "A dedicated page for video, TTS, and future media interaction. This round only establishes the page boundary and contract.",
+      "badge": "Dedicated media page",
+      "cta": "Open avatar entry"
+    },
+    "sessions": {
+      "eyebrow": "Entry Three",
+      "title": "Session History",
+      "description": "Later every real conversation will get a dedicated session page with remaining turns, source snippets, and history playback.",
+      "badge": "Coming soon",
+      "helper": "This round only keeps the information architecture. The revisit entry arrives once the real chat flow exists."
+    }
+  },
+  "chat": {
+    "eyebrow": "rag chat",
+    "title": "RAG Chat Entry",
+    "description": "This becomes the true start page for public AI Talk: redeem a trial code first, then begin streaming Q&A and a multi-turn session.",
+    "badgeQuota": "10-turn quota",
+    "badgeStreaming": "Streaming response",
+    "steps": {
+      "code": {
+        "eyebrow": "Step One",
+        "title": "Trial code redemption",
+        "description": "Later this section accepts a trial code and lets a public visitor start chatting without an admin login."
+      },
+      "session": {
+        "eyebrow": "Step Two",
+        "title": "Session start",
+        "description": "Once the quota is confirmed, a dedicated session is created and the user moves into the real conversation workspace."
+      },
+      "citations": {
+        "eyebrow": "Step Three",
+        "title": "Source snippets",
+        "description": "Answers should expose source snippets, supporting context, and the remaining-turn status as early as possible."
+      }
+    },
+    "workspacePreview": {
+      "eyebrow": "Next Step",
+      "title": "Preview the future session workspace",
+      "description": "The real chat pipeline is not wired yet, but the route structure already reserves a dedicated session workspace.",
+      "primaryCta": "Preview session workspace",
+      "secondaryCta": "Back to AI Talk hub"
+    }
+  },
+  "session": {
+    "eyebrow": "session workspace",
+    "title": "Session Workspace · {sessionId}",
+    "description": "The real message timeline, cited sources, and remaining-turn status will all live here. For now this page only establishes its responsibility boundary.",
+    "badgeTimeline": "Message timeline",
+    "badgeSources": "Source snippets",
+    "blocks": {
+      "messages": {
+        "eyebrow": "Conversation",
+        "title": "Message timeline",
+        "description": "This area later renders user prompts, streaming answers, and feedback actions."
+      },
+      "sources": {
+        "eyebrow": "Retrieval",
+        "title": "Source snippets",
+        "description": "RAG citations, matched documents, and explanation notes will be grouped here."
+      },
+      "quota": {
+        "eyebrow": "Status",
+        "title": "Quota and state",
+        "description": "Remaining turns, linked trial-code metadata, and error states will live here for demos and future auditing."
+      }
+    },
+    "backToChat": "Back to RAG chat",
+    "backToHub": "Back to AI Talk hub"
+  },
+  "avatar": {
+    "eyebrow": "avatar intro",
+    "title": "Avatar Introduction",
+    "description": "The avatar route will own self-introduction, media playback, and future interaction controls. This round keeps it as a contract-first placeholder.",
+    "intro": {
+      "eyebrow": "Self-introduction",
+      "lineOne": "Phase one starts with a short self-introduction and capability framing so visitors know this is not just a static video page.",
+      "lineTwo": "Later this page can grow into voice, video, or avatar-driven playback without mixing those concerns into the chat workspace.",
+      "lineThree": "The route is intentionally reserved for persona data, media assets, playback state, and future control panels."
+    },
+    "contract": {
+      "eyebrow": "Route Contract",
+      "title": "Reserve clear boundaries for future media features",
+      "items": {
+        "role": {
+          "title": "Role metadata",
+          "description": "Reserve structured persona data, intro scripts, and presentation tone for the avatar route."
+        },
+        "media": {
+          "title": "Media assets",
+          "description": "Reserve poster, audio, video, and cover slots so real media capabilities can be added later."
+        },
+        "controls": {
+          "title": "Control panel",
+          "description": "Reserve playback, mute, replay, and future action controls instead of pushing them into generic content cards."
+        }
+      }
+    },
+    "backToHub": "Back to AI Talk hub"
   }
 }

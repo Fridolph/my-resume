@@ -83,7 +83,7 @@ describe('published resume api', () => {
     })
 
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:5577/resume/published',
+      'http://localhost:5577/api/resume/published',
       expect.objectContaining({
         cache: 'no-store',
       }),

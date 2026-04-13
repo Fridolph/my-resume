@@ -15,11 +15,11 @@ describe('ExportEntryPanel', () => {
 
     expect(screen.getByRole('link', { name: '下载 Markdown' })).toHaveAttribute(
       'href',
-      'http://localhost:5577/resume/published/export/markdown?locale=zh',
+      'http://localhost:5577/api/resume/published/export/markdown?locale=zh',
     )
     expect(screen.getByRole('link', { name: '下载 PDF' })).toHaveAttribute(
       'href',
-      'http://localhost:5577/resume/published/export/pdf?locale=zh',
+      'http://localhost:5577/api/resume/published/export/pdf?locale=zh',
     )
     expect(screen.getByTestId('export-actions-zh')).toHaveClass('gap-3')
     expect(screen.getByRole('link', { name: '下载 Markdown' })).toHaveClass(

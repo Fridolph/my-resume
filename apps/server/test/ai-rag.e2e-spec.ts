@@ -95,7 +95,7 @@ describe('AI RAG (e2e)', () => {
 
   it('should rebuild, search, and answer over the local resume rag source', async () => {
     const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/api/auth/login')
       .send({
         username: 'admin',
         password: 'admin123456',
@@ -105,7 +105,7 @@ describe('AI RAG (e2e)', () => {
     const accessToken = loginResponse.body.accessToken as string
 
     const rebuildResponse = await request(app.getHttpServer())
-      .post('/ai/rag/index/rebuild')
+      .post('/api/ai/rag/index/rebuild')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(201)
 
@@ -119,7 +119,7 @@ describe('AI RAG (e2e)', () => {
     )
 
     const searchResponse = await request(app.getHttpServer())
-      .post('/ai/rag/search')
+      .post('/api/ai/rag/search')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         query: '他做过 EDR 相关项目吗',
@@ -130,7 +130,7 @@ describe('AI RAG (e2e)', () => {
     expect(searchResponse.body[0].title).toContain('EDR')
 
     const askResponse = await request(app.getHttpServer())
-      .post('/ai/rag/ask')
+      .post('/api/ai/rag/ask')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         question: '他有没有前端组长经验？',
@@ -142,7 +142,7 @@ describe('AI RAG (e2e)', () => {
     expect(askResponse.body.matches.length).toBeGreaterThan(0)
 
     const knowledgeSearchResponse = await request(app.getHttpServer())
-      .post('/ai/rag/search')
+      .post('/api/ai/rag/search')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         query: 'RAG 是什么',
@@ -154,7 +154,7 @@ describe('AI RAG (e2e)', () => {
     expect(knowledgeSearchResponse.body[0].title).toContain('RAG篇①')
 
     const strengthsSearchResponse = await request(app.getHttpServer())
-      .post('/ai/rag/search')
+      .post('/api/ai/rag/search')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         query: '他有 OpenClaw 多 Agent 工作流实践吗',
@@ -175,7 +175,7 @@ describe('AI RAG (e2e)', () => {
     )
 
     const statusResponse = await request(app.getHttpServer())
-      .get('/ai/rag/status')
+      .get('/api/ai/rag/status')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
 

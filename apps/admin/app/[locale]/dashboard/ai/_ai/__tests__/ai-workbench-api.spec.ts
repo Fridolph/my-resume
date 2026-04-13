@@ -42,7 +42,7 @@ describe('ai workbench api client', () => {
     })
 
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:5577/ai/reports/runtime',
+      'http://localhost:5577/api/ai/reports/runtime',
       expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: 'Bearer demo-token',
@@ -91,7 +91,7 @@ describe('ai workbench api client', () => {
     })
 
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:5577/ai/reports/analyze',
+      'http://localhost:5577/api/ai/reports/analyze',
       expect.objectContaining({
         method: 'POST',
         headers: {
@@ -155,7 +155,7 @@ describe('ai workbench api client', () => {
     })
 
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:5577/ai/reports/cache',
+      'http://localhost:5577/api/ai/reports/cache',
       expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: 'Bearer viewer-token',
@@ -197,7 +197,7 @@ describe('ai workbench api client', () => {
     })
 
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:5577/ai/reports/cache/jd-match-demo',
+      'http://localhost:5577/api/ai/reports/cache/jd-match-demo',
       expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: 'Bearer viewer-token',
@@ -309,7 +309,7 @@ describe('ai workbench api client', () => {
     })
 
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:5577/ai/reports/resume-optimize',
+      'http://localhost:5577/api/ai/reports/resume-optimize',
       expect.objectContaining({
         method: 'POST',
         headers: {
@@ -406,7 +406,7 @@ describe('ai workbench api client', () => {
     })
 
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:5577/ai/reports/resume-optimize/apply',
+      'http://localhost:5577/api/ai/reports/resume-optimize/apply',
       expect.objectContaining({
         method: 'POST',
         headers: {

@@ -1,8 +1,4 @@
-import '../admin-shell.css'
-
-import { isAppLocale } from '@i18n/types'
-
-import { AdminLoginShell } from './_auth/login-shell'
+import { redirect } from 'next/navigation'
 
 /**
  * 后台首页保持极薄，只负责挂载登录壳
@@ -14,8 +10,6 @@ export default async function AdminLoginPage({
 }: {
   params: Promise<{ locale: string }>
 }) {
-  const { locale } = await params
-  const routeLocale = isAppLocale(locale) ? locale : 'zh'
-
-  return <AdminLoginShell locale={routeLocale} />
+  await params
+  redirect('/login')
 }

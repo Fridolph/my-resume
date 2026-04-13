@@ -202,7 +202,7 @@ export function AdminDashboardShell({ locale }: { locale: AppLocale }) {
           </CardHeader>
           <CardContent className="stack">
             <div className="dashboard-badge-row">
-              <Chip>鉴权模式：localStorage token + /auth/me</Chip>
+              <Chip>鉴权模式：localStorage token + /api/auth/me</Chip>
               <Chip>单后端：apps/server</Chip>
               <Chip>公开站只读取发布态</Chip>
             </div>
@@ -361,7 +361,7 @@ export function AdminDashboardShell({ locale }: { locale: AppLocale }) {
                 <CardDescription>{item.description}</CardDescription>
               </CardHeader>
               <CardContent>
-                <Link className="link-button" href={item.href} prefetch={false}>
+                <Link className="link-button" href={item.href}>
                   {item.actionLabel}
                 </Link>
               </CardContent>

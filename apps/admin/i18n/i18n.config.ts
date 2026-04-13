@@ -2,7 +2,7 @@ import { appLocales } from '@my-resume/utils'
 
 export const i18nConfig = {
   defaultLocale: 'zh',
-  localePrefix: 'always' as const,
+  localePrefix: 'never' as const,
   locales: [...appLocales],
   localePath: './locales',
   sourceLocale: 'en' as const,

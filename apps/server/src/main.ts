@@ -9,6 +9,7 @@ import { AppModule } from './app.module'
 async function bootstrap() {
   // 启动入口保持薄层：只做容器启动与基础能力挂载，不承载业务初始化逻辑。
   const app = await NestFactory.create(AppModule)
+  app.setGlobalPrefix('api')
   app.enableCors({
     origin: true,
   })

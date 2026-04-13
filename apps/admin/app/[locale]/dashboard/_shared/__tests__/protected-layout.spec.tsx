@@ -65,8 +65,15 @@ const { DrawerMock, DropdownMock, TooltipMock, passthroughDiv } = vi.hoisted(() 
 
 vi.mock('@heroui/react/avatar', () => ({
   Avatar: {
-    Root: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-    Fallback: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+    Root: ({
+      children,
+      ...props
+    }: { children: ReactNode } & Record<string, unknown>) => <div {...props}>{children}</div>,
+    Image: (props: Record<string, unknown>) => <img alt="" {...props} />,
+    Fallback: ({
+      children,
+      ...props
+    }: { children: ReactNode } & Record<string, unknown>) => <div {...props}>{children}</div>,
   },
 }))
 
@@ -90,7 +97,12 @@ vi.mock('@heroui/react/tooltip', () => ({
 }))
 
 vi.mock('@i18n/navigation', () => ({
-  Link: ({ children, href, ...props }: { children: ReactNode; href: string } & Record<string, unknown>) => (
+  Link: ({
+    children,
+    href,
+    prefetch: _prefetch,
+    ...props
+  }: { children: ReactNode; href: string; prefetch?: boolean } & Record<string, unknown>) => (
     <a href={href} {...props}>
       {children}
     </a>
@@ -192,7 +204,7 @@ describe('AdminProtectedLayout', () => {
       'bg-rose-50/90',
       'text-rose-700',
     )
-    expect(screen.getAllByRole('button', { name: '概览' })[0]).toHaveClass(
+    expect(screen.getAllByRole('link', { name: '概览' })[0]).toHaveClass(
       'bg-blue-50',
       'text-blue-700',
     )

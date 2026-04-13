@@ -23,7 +23,7 @@ describe('AI report cache (e2e)', () => {
 
   it('should reuse the same cached mock report for the same input', async () => {
     const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/api/auth/login')
       .send({
         username: 'admin',
         password: 'admin123456',
@@ -38,13 +38,13 @@ describe('AI report cache (e2e)', () => {
     }
 
     const first = await request(app.getHttpServer())
-      .post('/ai/reports/cache')
+      .post('/api/ai/reports/cache')
       .set('Authorization', `Bearer ${accessToken}`)
       .send(payload)
       .expect(201)
 
     const second = await request(app.getHttpServer())
-      .post('/ai/reports/cache')
+      .post('/api/ai/reports/cache')
       .set('Authorization', `Bearer ${accessToken}`)
       .send(payload)
       .expect(201)
@@ -54,7 +54,7 @@ describe('AI report cache (e2e)', () => {
     expect(second.body.report.reportId).toBe(first.body.report.reportId)
 
     const detail = await request(app.getHttpServer())
-      .get(`/ai/reports/cache/${first.body.report.reportId}`)
+      .get(`/api/ai/reports/cache/${first.body.report.reportId}`)
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
 
@@ -69,7 +69,7 @@ describe('AI report cache (e2e)', () => {
 
   it('should reject unsupported analysis scenarios', async () => {
     const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/api/auth/login')
       .send({
         username: 'admin',
         password: 'admin123456',
@@ -79,7 +79,7 @@ describe('AI report cache (e2e)', () => {
     const accessToken = loginResponse.body.accessToken as string
 
     await request(app.getHttpServer())
-      .post('/ai/reports/cache')
+      .post('/api/ai/reports/cache')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         scenario: 'invalid-scenario',

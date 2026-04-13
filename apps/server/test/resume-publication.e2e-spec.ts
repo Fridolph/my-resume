@@ -75,18 +75,18 @@ describe('Resume publication flow (e2e)', () => {
   })
 
   it('should hide unpublished resume from the public endpoint', () => {
-    return request(app.getHttpServer()).get('/resume/published').expect(404)
+    return request(app.getHttpServer()).get('/api/resume/published').expect(404)
   })
 
   it('should hide unpublished markdown export from the public endpoint', () => {
     return request(app.getHttpServer())
-      .get('/resume/published/export/markdown')
+      .get('/api/resume/published/export/markdown')
       .expect(404)
   })
 
   it('should allow admin to update draft and publish it', async () => {
     const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/api/auth/login')
       .send({
         username: 'admin',
         password: 'admin123456',
@@ -96,7 +96,7 @@ describe('Resume publication flow (e2e)', () => {
     const accessToken = loginResponse.body.accessToken as string
 
     const draftResponse = await request(app.getHttpServer())
-      .put('/resume/draft')
+      .put('/api/resume/draft')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         meta: {
@@ -154,7 +154,7 @@ describe('Resume publication flow (e2e)', () => {
     expect(draftResponse.body.status).toBe('draft')
 
     const publishResponse = await request(app.getHttpServer())
-      .post('/resume/publish')
+      .post('/api/resume/publish')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
 
@@ -165,7 +165,7 @@ describe('Resume publication flow (e2e)', () => {
     })
 
     const publicResponse = await request(app.getHttpServer())
-      .get('/resume/published')
+      .get('/api/resume/published')
       .expect(200)
 
     expect(publicResponse.body.resume.profile.headline).toEqual({
@@ -174,7 +174,7 @@ describe('Resume publication flow (e2e)', () => {
     })
 
     const markdownResponse = await request(app.getHttpServer())
-      .get('/resume/published/export/markdown?locale=en')
+      .get('/api/resume/published/export/markdown?locale=en')
       .expect(200)
 
     expect(markdownResponse.headers['content-type']).toContain('text/markdown')
@@ -186,7 +186,7 @@ describe('Resume publication flow (e2e)', () => {
     expect(markdownResponse.text).toContain('Publish Candidate')
 
     const pdfResponse = await request(app.getHttpServer())
-      .get('/resume/published/export/pdf?locale=zh')
+      .get('/api/resume/published/export/pdf?locale=zh')
       .expect(200)
 
     expect(pdfResponse.headers['content-type']).toContain('application/pdf')
@@ -195,7 +195,7 @@ describe('Resume publication flow (e2e)', () => {
 
   it('should keep viewer read-only for draft and publish actions', async () => {
     const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/api/auth/login')
       .send({
         username: 'viewer',
         password: 'viewer123456',
@@ -205,20 +205,20 @@ describe('Resume publication flow (e2e)', () => {
     const accessToken = loginResponse.body.accessToken as string
 
     await request(app.getHttpServer())
-      .put('/resume/draft')
+      .put('/api/resume/draft')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({})
       .expect(403)
 
     await request(app.getHttpServer())
-      .post('/resume/publish')
+      .post('/api/resume/publish')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(403)
   })
 
   it('should reject unsupported markdown export locale', async () => {
     const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/api/auth/login')
       .send({
         username: 'admin',
         password: 'admin123456',
@@ -228,18 +228,18 @@ describe('Resume publication flow (e2e)', () => {
     const accessToken = loginResponse.body.accessToken as string
 
     await request(app.getHttpServer())
-      .post('/resume/publish')
+      .post('/api/resume/publish')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
 
     await request(app.getHttpServer())
-      .get('/resume/published/export/markdown?locale=ja')
+      .get('/api/resume/published/export/markdown?locale=ja')
       .expect(400)
   })
 
   it('should reject unsupported pdf export locale', async () => {
     const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/api/auth/login')
       .send({
         username: 'admin',
         password: 'admin123456',
@@ -249,12 +249,12 @@ describe('Resume publication flow (e2e)', () => {
     const accessToken = loginResponse.body.accessToken as string
 
     await request(app.getHttpServer())
-      .post('/resume/publish')
+      .post('/api/resume/publish')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
 
     await request(app.getHttpServer())
-      .get('/resume/published/export/pdf?locale=ja')
+      .get('/api/resume/published/export/pdf?locale=ja')
       .expect(400)
   })
 })

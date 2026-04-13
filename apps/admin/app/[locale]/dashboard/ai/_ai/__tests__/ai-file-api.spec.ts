@@ -41,7 +41,7 @@ describe('ai file api client', () => {
     })
 
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:5577/ai/extract-text',
+      'http://localhost:5577/api/ai/extract-text',
       expect.objectContaining({
         method: 'POST',
         headers: {

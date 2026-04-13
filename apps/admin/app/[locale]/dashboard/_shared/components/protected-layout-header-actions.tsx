@@ -1,5 +1,6 @@
 'use client'
 
+import { Avatar } from '@heroui/react/avatar'
 import { Button } from '@heroui/react/button'
 import { useEffect, useRef, useState } from 'react'
 
@@ -10,6 +11,7 @@ import {
   headerIconButtonClass,
   headerAvatarButtonClass,
   headerAvatarClass,
+  headerAvatarFallbackClass,
   sessionDropdownLogoutButtonClass,
   sessionDropdownMenuClass,
   sessionDropdownItemContentClass,
@@ -70,16 +72,25 @@ export function AdminHeaderActions({ currentUser, onLogout }: AdminHeaderActions
       </Button>
       <ThemeModeToggle />
       <div className="relative" ref={menuRef}>
-        <button
+        <Button
           aria-expanded={menuOpen}
           aria-label="打开当前会话菜单"
           className={headerAvatarButtonClass}
+          isIconOnly
           onClick={() => setMenuOpen((current) => !current)}
-          type="button">
-          <span aria-hidden="true" className={headerAvatarClass}>
-            {currentUser.username.slice(0, 1).toUpperCase()}
-          </span>
-        </button>
+          type="button"
+          variant="ghost">
+          <Avatar.Root aria-hidden="true" className={headerAvatarClass}>
+            <Avatar.Image
+              alt={`${currentUser.username} avatar`}
+              className="h-full w-full object-cover"
+              src="/img/avatar.jpg"
+            />
+            <Avatar.Fallback className={headerAvatarFallbackClass}>
+              {currentUser.username.slice(0, 1).toUpperCase()}
+            </Avatar.Fallback>
+          </Avatar.Root>
+        </Button>
         <div
           aria-label="当前会话菜单"
           className={[
@@ -97,15 +108,16 @@ export function AdminHeaderActions({ currentUser, onLogout }: AdminHeaderActions
               <span className={sessionDropdownItemLabelClass}>角色</span>
               <span className={sessionDropdownItemValueClass}>{currentUser.role}</span>
             </div>
-            <button
+            <Button
               className={sessionDropdownLogoutButtonClass}
               onClick={() => {
                 setMenuOpen(false)
                 onLogout()
               }}
-              type="button">
+              type="button"
+              variant="ghost">
               退出登录
-            </button>
+            </Button>
           </div>
         </div>
       </div>

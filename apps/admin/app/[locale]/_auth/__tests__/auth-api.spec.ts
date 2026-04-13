@@ -49,7 +49,7 @@ describe('auth api client', () => {
     })
 
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:5577/auth/login',
+      'http://localhost:5577/api/auth/login',
       expect.objectContaining({
         method: 'POST',
       }),
@@ -82,7 +82,7 @@ describe('auth api client', () => {
     })
 
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:5577/auth/me',
+      'http://localhost:5577/api/auth/me',
       expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: 'Bearer demo-token',
@@ -109,7 +109,7 @@ describe('auth api client', () => {
     })
 
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:5577/auth/demo/publish',
+      'http://localhost:5577/api/auth/demo/publish',
       expect.objectContaining({
         method: 'POST',
         headers: expect.objectContaining({
@@ -142,7 +142,7 @@ describe('auth api client', () => {
     })
 
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:5577/resume/publish',
+      'http://localhost:5577/api/resume/publish',
       expect.objectContaining({
         method: 'POST',
         headers: expect.objectContaining({

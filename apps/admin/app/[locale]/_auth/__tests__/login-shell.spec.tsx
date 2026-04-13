@@ -125,7 +125,7 @@ describe('AdminLoginShell', () => {
 
     await waitFor(() => {
       expect(createFetchCurrentUserMethodMock.mock.calls.length).toBeGreaterThan(0)
-      expect(replaceMock).toHaveBeenCalledWith('/dashboard', { locale: 'zh' })
+      expect(replaceMock).toHaveBeenCalledWith('/dashboard')
     })
   })
 
@@ -172,14 +172,14 @@ describe('AdminLoginShell', () => {
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:5577/auth/login',
+        'http://localhost:5577/api/auth/login',
         expect.objectContaining({
           body: '{"username":"admin","password":"admin123456"}',
           method: 'POST',
         }),
       )
       expect(createFetchCurrentUserMethodMock).not.toHaveBeenCalled()
-      expect(replaceMock).toHaveBeenCalledWith('/dashboard', { locale: 'zh' })
+      expect(replaceMock).toHaveBeenCalledWith('/dashboard')
     })
     expect(window.localStorage.getItem('my-resume.admin.access-token')).toBe(
       'new-admin-token',

@@ -21,7 +21,7 @@ import { LoginForm } from './components/login-form'
  *
  * @returns 后台登录壳节点
  */
-export function AdminLoginShell({ locale }: { locale: AppLocale }) {
+export function AdminLoginShell({ locale: _locale }: { locale: AppLocale }) {
   const router = useRouter()
   const t = useTranslations('auth')
   const { currentUser, establishSession, status } = useAdminSession()
@@ -42,9 +42,9 @@ export function AdminLoginShell({ locale }: { locale: AppLocale }) {
   useEffect(() => {
     // 已有合法会话时直接跳工作区，避免重复停留在登录页
     if (status === 'ready' && currentUser) {
-      router.replace('/dashboard', { locale })
+      router.replace('/dashboard')
     }
-  }, [currentUser, locale, router, status])
+  }, [currentUser, router, status])
 
   const checkingSession = status === 'loading'
 

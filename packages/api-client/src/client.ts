@@ -41,8 +41,20 @@ function isBodyAllowed(method: HttpMethod): boolean {
   return normalizedMethod !== 'GET' && normalizedMethod !== 'HEAD'
 }
 
-function joinApiUrl(apiBaseUrl: string, pathname: string): string {
-  return `${apiBaseUrl.replace(/\/$/, '')}${pathname}`
+function normalizeApiPath(pathname: string): string {
+  const normalizedPathname = pathname.startsWith('/') ? pathname : `/${pathname}`
+
+  if (normalizedPathname === '/api' || normalizedPathname.startsWith('/api/')) {
+    return normalizedPathname
+  }
+
+  return `/api${normalizedPathname}`
+}
+
+export function joinApiUrl(apiBaseUrl: string, pathname: string): string {
+  const normalizedBaseUrl = apiBaseUrl.replace(/\/$/, '').replace(/\/api$/, '')
+
+  return `${normalizedBaseUrl}${normalizeApiPath(pathname)}`
 }
 
 function buildUrlWithQuery(

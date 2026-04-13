@@ -2,15 +2,13 @@ import './globals.css'
 
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
-import { NextIntlClientProvider } from 'next-intl'
-import { getLocale, getMessages } from 'next-intl/server'
-
-import { isAppLocale, toHeroUiLocale, toHtmlLang, type AppLocale } from '@i18n/types'
-import { WebLocaleProviders } from './web-locale-providers'
 
 export const metadata: Metadata = {
   title: 'my-resume web',
   description: 'Public resume web shell',
+  icons: {
+    icon: '/favicon.ico',
+  },
 }
 
 // 在 hydration 前同步主题，避免 light / dark 首屏闪烁
@@ -43,31 +41,16 @@ export default function RootLayout({
 }: Readonly<{
   children: ReactNode
 }>) {
-  return <RootLayoutInner>{children}</RootLayoutInner>
-}
-
-async function RootLayoutInner({ children }: { children: ReactNode }) {
-  const resolvedLocale = await getLocale()
-  const locale: AppLocale = isAppLocale(resolvedLocale) ? resolvedLocale : 'zh'
-  const htmlLang = toHtmlLang(locale)
-  const messages = await getMessages()
-
   return (
     <html
       data-template="default"
       data-theme="light"
-      lang={htmlLang}
+      lang="zh-CN"
       suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body>
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <WebLocaleProviders heroLocale={toHeroUiLocale(locale)} locale={locale}>
-            {children}
-          </WebLocaleProviders>
-        </NextIntlClientProvider>
-      </body>
+      <body>{children}</body>
     </html>
   )
 }

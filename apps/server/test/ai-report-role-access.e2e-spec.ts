@@ -76,7 +76,7 @@ describe('AI report role access (e2e)', () => {
 
   it('should allow viewer to read cached reports but forbid new trigger actions', async () => {
     const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/api/auth/login')
       .send({
         username: 'viewer',
         password: 'viewer123456',
@@ -86,7 +86,7 @@ describe('AI report role access (e2e)', () => {
     const accessToken = loginResponse.body.accessToken as string
 
     const runtimeResponse = await request(app.getHttpServer())
-      .get('/ai/reports/runtime')
+      .get('/api/ai/reports/runtime')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
 
@@ -94,7 +94,7 @@ describe('AI report role access (e2e)', () => {
     expect(runtimeResponse.body.provider).toBeDefined()
 
     const listResponse = await request(app.getHttpServer())
-      .get('/ai/reports/cache')
+      .get('/api/ai/reports/cache')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
 
@@ -103,12 +103,12 @@ describe('AI report role access (e2e)', () => {
     const reportId = listResponse.body.reports[0].reportId as string
 
     await request(app.getHttpServer())
-      .get(`/ai/reports/cache/${reportId}`)
+      .get(`/api/ai/reports/cache/${reportId}`)
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
 
     await request(app.getHttpServer())
-      .post('/ai/reports/cache')
+      .post('/api/ai/reports/cache')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         scenario: 'jd-match',
@@ -118,7 +118,7 @@ describe('AI report role access (e2e)', () => {
       .expect(403)
 
     await request(app.getHttpServer())
-      .post('/ai/reports/analyze')
+      .post('/api/ai/reports/analyze')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         scenario: 'jd-match',
@@ -128,7 +128,7 @@ describe('AI report role access (e2e)', () => {
       .expect(403)
 
     await request(app.getHttpServer())
-      .post('/ai/reports/resume-optimize')
+      .post('/api/ai/reports/resume-optimize')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         instruction: '请帮我优化简历，重点突出 React 与 Next.js 能力',
@@ -137,7 +137,7 @@ describe('AI report role access (e2e)', () => {
       .expect(403)
 
     await request(app.getHttpServer())
-      .post('/ai/reports/resume-optimize/apply')
+      .post('/api/ai/reports/resume-optimize/apply')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         draftUpdatedAt: '2026-03-31T00:00:00.000Z',
@@ -156,7 +156,7 @@ describe('AI report role access (e2e)', () => {
 
   it('should allow admin to trigger analysis and write cached ai results', async () => {
     const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/api/auth/login')
       .send({
         username: 'admin',
         password: 'admin123456',
@@ -166,7 +166,7 @@ describe('AI report role access (e2e)', () => {
     const accessToken = loginResponse.body.accessToken as string
 
     const runtimeResponse = await request(app.getHttpServer())
-      .get('/ai/reports/runtime')
+      .get('/api/ai/reports/runtime')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
 
@@ -177,7 +177,7 @@ describe('AI report role access (e2e)', () => {
     ])
 
     const response = await request(app.getHttpServer())
-      .post('/ai/reports/analyze')
+      .post('/api/ai/reports/analyze')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         scenario: 'resume-review',
@@ -195,7 +195,7 @@ describe('AI report role access (e2e)', () => {
     expect(response.body.report.suggestions.length).toBeGreaterThan(0)
 
     const optimizeResponse = await request(app.getHttpServer())
-      .post('/ai/reports/resume-optimize')
+      .post('/api/ai/reports/resume-optimize')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         instruction: '请根据 React 与 Next.js 相关岗位方向优化当前简历',
@@ -210,7 +210,7 @@ describe('AI report role access (e2e)', () => {
     expect(optimizeResponse.body.suggestedResume.meta.slug).toBe('standard-resume')
 
     const applyResponse = await request(app.getHttpServer())
-      .post('/ai/reports/resume-optimize/apply')
+      .post('/api/ai/reports/resume-optimize/apply')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         draftUpdatedAt: optimizeResponse.body.applyPayload.draftUpdatedAt,

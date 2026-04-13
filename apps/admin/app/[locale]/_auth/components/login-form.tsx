@@ -45,7 +45,7 @@ export function LoginForm({ pending, errorMessage, onSubmit }: LoginFormProps) {
           </CardTitle>
           <CardDescription className="max-w-md text-sm leading-6">
             {
-              '当前只保留用户名与密码登录，继续通过 localStorage token -> /auth/me 校验进入后台，不引入注册与多余入口。'
+              '当前只保留用户名与密码登录，继续通过 localStorage token -> /api/auth/me 校验进入后台，不引入注册与多余入口。'
             }
           </CardDescription>
         </div>

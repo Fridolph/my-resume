@@ -7,7 +7,7 @@ import { ThemeModeToggle } from '../components/theme-mode-toggle'
 
 describe('ThemeModeToggle', () => {
   beforeEach(() => {
-    window.localStorage.removeItem('my-resume.admin.access-token')
+    window.localStorage.removeItem('my-resume-theme-mode')
   })
 
   it('should switch theme mode and persist the latest selection', async () => {
@@ -19,20 +19,22 @@ describe('ThemeModeToggle', () => {
       </Providers>,
     )
 
-    expect(screen.getByRole('switch', { name: '切换明暗主题' })).toBeInTheDocument()
+    const toggleButton = screen.getByRole('button', { name: '切换明暗主题' })
+
+    expect(toggleButton).toBeInTheDocument()
 
     await waitFor(() => {
       expect(document.documentElement.dataset.theme).toBe('light')
     })
 
-    await user.click(screen.getByRole('switch', { name: '切换明暗主题' }))
+    await user.click(toggleButton)
 
     await waitFor(() => {
       expect(document.documentElement.dataset.theme).toBe('dark')
     })
     expect(window.localStorage.getItem('my-resume-theme-mode')).toBe('dark')
 
-    await user.click(screen.getByRole('switch', { name: '切换明暗主题' }))
+    await user.click(toggleButton)
 
     await waitFor(() => {
       expect(document.documentElement.dataset.theme).toBe('light')

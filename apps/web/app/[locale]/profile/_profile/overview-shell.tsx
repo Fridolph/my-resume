@@ -1,6 +1,5 @@
 'use client'
 
-import { Button } from '@heroui/react/button'
 import {
   Card,
   CardContent,
@@ -25,6 +24,7 @@ import {
 } from '@shared/published-resume/published-resume-utils'
 import { createFetchPublishedResumeMethod } from '@shared/published-resume/services/published-resume-api'
 import { usePublishedResumeSync } from '@shared/published-resume/hooks/use-published-resume-sync'
+import { publicSitePrimaryCtaLinkClass } from '@shared/site/cta-link-classes'
 import { PublicSiteHeader } from '@shared/site/site-header'
 
 interface ProfileOverviewShellProps {
@@ -166,10 +166,8 @@ export function ProfileOverviewShell({
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-start gap-4">
-              <Link className="inline-flex" href="/ai-talk" prefetch={false}>
-                <Button className="rounded-full" variant="primary">
-                  {t('aiTalkCard.enter')}
-                </Button>
+              <Link className={publicSitePrimaryCtaLinkClass} href="/ai-talk">
+                {t('aiTalkCard.enter')}
               </Link>
             </CardContent>
           </Card>

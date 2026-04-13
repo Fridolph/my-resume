@@ -35,7 +35,7 @@ describe('api client core', () => {
       .send()
 
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:5577/auth/me',
+      'http://localhost:5577/api/auth/me',
       expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: 'Bearer demo-token',
@@ -60,6 +60,26 @@ describe('api client core', () => {
       .send()
 
     expect(result).toBeNull()
+  })
+
+  it('does not duplicate api prefix when base url already ends with /api', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(createJsonResponse(200, { ok: true })),
+    )
+
+    await defaultApiClient
+      .createMethod<{ ok: boolean }>({
+        apiBaseUrl: 'http://localhost:5577/api',
+        pathname: '/auth/me',
+        fallbackErrorMessage: '读取失败',
+      })
+      .send()
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5577/api/auth/me',
+      expect.any(Object),
+    )
   })
 
   it('parses text responses when requested', async () => {

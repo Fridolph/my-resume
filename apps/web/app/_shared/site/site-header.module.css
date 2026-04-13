@@ -6,13 +6,32 @@
   box-shadow: 0 8px 30px rgba(15, 23, 42, 0.05);
 }
 
-.primaryNavButton {
-  height: 30px;
+.primaryNavLink {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  justify-content: center;
   border-radius: 999px;
   padding-inline: 0.75rem;
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
+  color: #475569;
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.primaryNavLink:hover {
+  background: rgba(248, 250, 252, 0.92);
+  color: #0f172a;
+}
+
+.primaryNavLinkActive {
+  background: #0f172a;
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
 }
 
 .localeSwitchWrapper {
@@ -163,6 +182,21 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
+:global([data-theme='dark']) .primaryNavLink {
+  color: #cbd5e1;
+}
+
+:global([data-theme='dark']) .primaryNavLink:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+:global([data-theme='dark']) .primaryNavLinkActive {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  box-shadow: none;
+}
+
 :global([data-theme='dark']) .localeSwitchWrapper {
   border-color: rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.05);
@@ -179,7 +213,7 @@
 }
 
 @media (min-width: 640px) {
-  .primaryNavButton {
+  .primaryNavLink {
     padding-inline: 1rem;
     font-size: 14px;
   }

@@ -23,7 +23,7 @@ describe('AI file extraction (e2e)', () => {
 
   it('should extract text from uploaded txt file', async () => {
     const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/api/auth/login')
       .send({
         username: 'admin',
         password: 'admin123456',
@@ -33,7 +33,7 @@ describe('AI file extraction (e2e)', () => {
     const accessToken = loginResponse.body.accessToken as string
 
     const response = await request(app.getHttpServer())
-      .post('/ai/extract-text')
+      .post('/api/ai/extract-text')
       .set('Authorization', `Bearer ${accessToken}`)
       .attach('file', Buffer.from('resume text content', 'utf8'), 'resume.txt')
       .expect(201)
@@ -44,7 +44,7 @@ describe('AI file extraction (e2e)', () => {
 
   it('should reject unsupported uploaded files', async () => {
     const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/api/auth/login')
       .send({
         username: 'admin',
         password: 'admin123456',
@@ -54,7 +54,7 @@ describe('AI file extraction (e2e)', () => {
     const accessToken = loginResponse.body.accessToken as string
 
     await request(app.getHttpServer())
-      .post('/ai/extract-text')
+      .post('/api/ai/extract-text')
       .set('Authorization', `Bearer ${accessToken}`)
       .attach('file', Buffer.from('a,b,c', 'utf8'), 'resume.csv')
       .expect(400)

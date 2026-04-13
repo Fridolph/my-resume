@@ -294,11 +294,11 @@ describe('PublishedResumeShell', () => {
 
     expect(await screen.findByRole('menuitem', { name: '导出 Markdown' })).toHaveAttribute(
       'href',
-      'http://localhost:5577/resume/published/export/markdown?locale=zh',
+      'http://localhost:5577/api/resume/published/export/markdown?locale=zh',
     )
     expect(await screen.findByRole('menuitem', { name: '导出 PDF' })).toHaveAttribute(
       'href',
-      'http://localhost:5577/resume/published/export/pdf?locale=zh',
+      'http://localhost:5577/api/resume/published/export/pdf?locale=zh',
     )
 
     await user.keyboard('{Escape}')
@@ -315,11 +315,11 @@ describe('PublishedResumeShell', () => {
 
     expect(await screen.findByRole('menuitem', { name: '导出 Markdown' })).toHaveAttribute(
       'href',
-      'http://localhost:5577/resume/published/export/markdown?locale=en',
+      'http://localhost:5577/api/resume/published/export/markdown?locale=en',
     )
     expect(await screen.findByRole('menuitem', { name: '导出 PDF' })).toHaveAttribute(
       'href',
-      'http://localhost:5577/resume/published/export/pdf?locale=en',
+      'http://localhost:5577/api/resume/published/export/pdf?locale=en',
     )
   })
 

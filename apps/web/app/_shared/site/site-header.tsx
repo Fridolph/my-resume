@@ -96,7 +96,7 @@ export function PublicSiteHeader({
     <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/88 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/82">
       <div className="mx-auto flex min-h-16 w-full max-w-7xl flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2 sm:px-6 md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-4">
         <div className="flex min-w-0 items-center gap-3 md:justify-self-start">
-          <Link className="inline-flex min-w-0 items-center gap-3" href="/" prefetch={false}>
+          <Link className="inline-flex min-w-0 items-center gap-3" href="/">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-sm font-extrabold tracking-[-0.08em] text-white dark:bg-white dark:text-slate-950">
               FY
             </span>
@@ -118,8 +118,8 @@ export function PublicSiteHeader({
             {navItems.map((item) => {
               const isActive =
                 item.href === '/'
-                  ? pathname === item.href
-                  : pathname.startsWith(item.href)
+                  ? normalizedPathname === item.href
+                  : normalizedPathname.startsWith(item.href)
               const label =
                 item.key === 'resume'
                   ? t('resumeNav')
@@ -128,13 +128,17 @@ export function PublicSiteHeader({
                     : t('aiTalkNav')
 
               return (
-                <Link href={item.href} key={item.href} prefetch={false}>
-                  <Button
-                    className={styles.primaryNavButton}
-                    size="sm"
-                    variant={isActive ? 'primary' : 'ghost'}>
-                    {label}
-                  </Button>
+                <Link
+                  aria-current={isActive ? 'page' : undefined}
+                  className={[
+                    styles.primaryNavLink,
+                    isActive ? styles.primaryNavLinkActive : '',
+                  ]
+                    .join(' ')
+                    .trim()}
+                  href={item.href}
+                  key={item.href}>
+                  {label}
                 </Link>
               )
             })}

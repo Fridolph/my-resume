@@ -129,7 +129,7 @@ describe('api-client resume contract', () => {
 
     expect(fetch).toHaveBeenNthCalledWith(
       1,
-      'http://localhost:5577/resume/published',
+      'http://localhost:5577/api/resume/published',
       expect.objectContaining({
         cache: 'no-store',
       }),
@@ -163,7 +163,7 @@ describe('api-client resume contract', () => {
 
     expect(fetch).toHaveBeenNthCalledWith(
       1,
-      'http://localhost:5577/resume/published/summary?locale=en',
+      'http://localhost:5577/api/resume/published/summary?locale=en',
       expect.objectContaining({
         cache: 'no-store',
       }),
@@ -201,7 +201,7 @@ describe('api-client resume contract', () => {
 
     expect(fetch).toHaveBeenNthCalledWith(
       1,
-      'http://localhost:5577/resume/draft',
+      'http://localhost:5577/api/resume/draft',
       expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: 'Bearer demo-token',
@@ -210,7 +210,7 @@ describe('api-client resume contract', () => {
     )
     expect(fetch).toHaveBeenNthCalledWith(
       2,
-      'http://localhost:5577/resume/draft/summary?locale=zh',
+      'http://localhost:5577/api/resume/draft/summary?locale=zh',
       expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: 'Bearer demo-token',
@@ -219,7 +219,7 @@ describe('api-client resume contract', () => {
     )
     expect(fetch).toHaveBeenNthCalledWith(
       3,
-      'http://localhost:5577/resume/draft',
+      'http://localhost:5577/api/resume/draft',
       expect.objectContaining({
         method: 'PUT',
         headers: expect.objectContaining({
@@ -249,7 +249,7 @@ describe('api-client resume contract', () => {
     })
 
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:5577/resume/publish',
+      'http://localhost:5577/api/resume/publish',
       expect.objectContaining({
         method: 'POST',
         headers: expect.objectContaining({
@@ -264,7 +264,7 @@ describe('api-client resume contract', () => {
         format: 'markdown',
         locale: 'en',
       }),
-    ).toBe('http://localhost:5577/resume/published/export/markdown?locale=en')
+    ).toBe('http://localhost:5577/api/resume/published/export/markdown?locale=en')
   })
 
   it('should surface server-side error messages for draft and publish failures', async () => {

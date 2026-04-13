@@ -112,7 +112,7 @@ describe('resume draft api client', () => {
     })
 
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:5577/resume/draft',
+      'http://localhost:5577/api/resume/draft',
       expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: 'Bearer demo-token',
@@ -135,7 +135,7 @@ describe('resume draft api client', () => {
     })
 
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:5577/resume/draft/summary?locale=zh',
+      'http://localhost:5577/api/resume/draft/summary?locale=zh',
       expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: 'Bearer demo-token',
@@ -158,7 +158,7 @@ describe('resume draft api client', () => {
     })
 
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:5577/resume/draft',
+      'http://localhost:5577/api/resume/draft',
       expect.objectContaining({
         method: 'PUT',
         headers: expect.objectContaining({

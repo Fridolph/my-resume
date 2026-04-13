@@ -51,7 +51,7 @@ export function AdminHeader({
               <nav aria-label="Breadcrumbs" className="text-sm text-zinc-500 dark:text-zinc-400">
                 <ol className="flex items-center gap-2">
                   <li>
-                    <Link href="/dashboard" prefetch={false}>
+                    <Link href="/dashboard">
                       {t('dashboardBreadcrumb')}
                     </Link>
                   </li>

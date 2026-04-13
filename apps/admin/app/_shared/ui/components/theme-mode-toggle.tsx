@@ -1,5 +1,6 @@
 'use client'
 
+import { Button } from '@heroui/react/button'
 import { useTheme } from 'next-themes'
 
 import styles from './theme-mode-toggle.module.css'
@@ -33,15 +34,19 @@ function MoonIcon() {
 export function ThemeModeToggle() {
   const { resolvedTheme, setTheme } = useTheme()
   const isDark = resolvedTheme === 'dark'
+  const switchA11yProps = {
+    role: 'switch',
+    'aria-checked': isDark,
+  } as const
 
   return (
-    <button
+    <Button
+      {...(switchA11yProps as Record<string, unknown>)}
       aria-label="切换明暗主题"
-      aria-checked={isDark}
       className={styles.switchRoot}
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
-      role="switch"
-      type="button">
+      type="button"
+      variant="ghost">
       <span
         className={[
           styles.switchControl,
@@ -54,6 +59,6 @@ export function ThemeModeToggle() {
           <span className={styles.switchIcon}>{isDark ? <MoonIcon /> : <SunIcon />}</span>
         </span>
       </span>
-    </button>
+    </Button>
   )
 }

@@ -23,7 +23,7 @@ describe('AuthModule (e2e)', () => {
 
   it('should login with the demo admin account', async () => {
     const response = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/api/auth/login')
       .send({
         username: 'admin',
         password: 'admin123456',
@@ -43,7 +43,7 @@ describe('AuthModule (e2e)', () => {
 
   it('should reject invalid credentials', () => {
     return request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/api/auth/login')
       .send({
         username: 'admin',
         password: 'wrong-password',
@@ -53,7 +53,7 @@ describe('AuthModule (e2e)', () => {
 
   it('should read current user from bearer token', async () => {
     const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/api/auth/login')
       .send({
         username: 'viewer',
         password: 'viewer123456',
@@ -63,7 +63,7 @@ describe('AuthModule (e2e)', () => {
     const accessToken = loginResponse.body.accessToken as string
 
     const meResponse = await request(app.getHttpServer())
-      .get('/auth/me')
+      .get('/api/auth/me')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
 
@@ -82,6 +82,6 @@ describe('AuthModule (e2e)', () => {
   })
 
   it('should reject protected access without bearer token', () => {
-    return request(app.getHttpServer()).get('/auth/me').expect(401)
+    return request(app.getHttpServer()).get('/api/auth/me').expect(401)
   })
 })

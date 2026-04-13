@@ -18,7 +18,7 @@ vi.mock('@i18n/navigation', () => ({
       {children}
     </a>
   ),
-  usePathname: () => '/ai-talk',
+  usePathname: () => '/ai-talk/avatar',
   useRouter: () => ({
     replace: vi.fn(),
   }),
@@ -47,38 +47,28 @@ vi.mock('next-intl', async () => {
     return typeof value === 'string' ? value : key
   }
 
-  const interpolate = (message: string, values?: Record<string, unknown>) =>
-    Object.entries(values ?? {}).reduce(
-      (currentMessage, [name, value]) =>
-        currentMessage.replaceAll(`{${name}}`, String(value)),
-      message,
-    )
-
   return {
     useTranslations:
       (namespace: string) =>
-      (key: string, values?: Record<string, unknown>): string =>
-        interpolate(getMessage(namespace, key), values),
+      (key: string): string =>
+        getMessage(namespace, key),
   }
 })
 
-import { AiTalkPlaceholderShell } from '../placeholder-shell'
 import { publishedResumeFixture } from '@shared/published-resume/__tests__/fixture'
 
-describe('AiTalkPlaceholderShell', () => {
-  it('should render placeholder copy for the future rag entry', () => {
+import { AiTalkAvatarShell } from '../avatar-shell'
+
+describe('AiTalkAvatarShell', () => {
+  it('should render the avatar introduction placeholder and contract cards', () => {
     render(
       <ThemeModeProvider>
-        <AiTalkPlaceholderShell
-          apiBaseUrl="http://localhost:5577"
-          locale="zh"
-          publishedResume={publishedResumeFixture}
-        />
+        <AiTalkAvatarShell locale="zh" publishedResume={publishedResumeFixture} />
       </ThemeModeProvider>,
     )
 
-    expect(screen.getByRole('heading', { name: 'AI Talk 占位入口' })).toBeInTheDocument()
-    expect(screen.getByText('即将接入 RAG')).toBeInTheDocument()
-    expect(screen.getByText('他最近几年主要做过哪些项目？')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '数字人自我介绍' })).toBeInTheDocument()
+    expect(screen.getByText('媒体资源')).toBeInTheDocument()
+    expect(screen.getByText('返回 AI Talk 中枢')).toBeInTheDocument()
   })
 })

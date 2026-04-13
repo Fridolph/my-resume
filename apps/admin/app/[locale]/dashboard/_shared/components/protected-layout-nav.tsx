@@ -1,9 +1,9 @@
 'use client'
 
-import { Button } from '@heroui/react/button'
 import { Tooltip } from '@heroui/react/tooltip'
+import { useEffect, useMemo } from 'react'
 
-import { useRouter } from '@i18n/navigation'
+import { Link, useRouter } from '@i18n/navigation'
 import type { AppLocale } from '@i18n/types'
 import { getAdminNavigationItems } from '../utils/admin-navigation'
 import {
@@ -27,7 +27,13 @@ export function AdminNavItems({
   onNavigate?: () => void
 }) {
   const router = useRouter()
-  const adminNavigationItems = getAdminNavigationItems(locale)
+  const adminNavigationItems = useMemo(() => getAdminNavigationItems(locale), [locale])
+
+  useEffect(() => {
+    adminNavigationItems.forEach((item) => {
+      router.prefetch?.(item.href)
+    })
+  }, [adminNavigationItems, router])
 
   return (
     <div className={collapsed ? 'flex w-full flex-col items-center gap-2' : 'flex flex-col gap-2'}>
@@ -38,7 +44,7 @@ export function AdminNavItems({
             : currentPathname.startsWith(item.href)
 
         const navButton = (
-          <Button
+          <Link
             aria-current={isActive ? 'page' : undefined}
             aria-label={item.title}
             className={[
@@ -48,14 +54,8 @@ export function AdminNavItems({
             ]
               .join(' ')
               .trim()}
-            fullWidth={!collapsed}
-            onClick={() => {
-              onNavigate?.()
-              router.push(item.href)
-            }}
-            size="sm"
-            type="button"
-            variant="ghost">
+            href={item.href}
+            onClick={() => onNavigate?.()}>
             <span
               className={[
                 navBadgeBaseClass,
@@ -71,7 +71,7 @@ export function AdminNavItems({
             {!collapsed ? (
               <span className="min-w-0 flex-1 whitespace-nowrap text-left">{item.title}</span>
             ) : null}
-          </Button>
+          </Link>
         )
 
         if (!collapsed) {

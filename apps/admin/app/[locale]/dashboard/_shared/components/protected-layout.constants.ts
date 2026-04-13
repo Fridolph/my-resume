@@ -43,17 +43,19 @@ export const headerIconButtonClass =
 export const headerAvatarButtonClass =
   'inline-flex h-[30px] w-[30px] min-w-[30px] items-center justify-center rounded-full border border-zinc-200/80 bg-zinc-100/85 p-0 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/15 dark:border-white/8 dark:bg-white/[0.06] dark:text-zinc-300 dark:hover:bg-white/[0.08] dark:hover:text-white'
 export const headerAvatarClass =
-  'h-[22px] w-[22px] rounded-full bg-zinc-900 text-[0.66rem] font-bold text-white dark:bg-white dark:text-zinc-950'
+  'h-[22px] w-[22px] overflow-hidden rounded-full bg-zinc-900 text-[0.66rem] font-bold text-white dark:bg-white dark:text-zinc-950'
+export const headerAvatarFallbackClass =
+  'flex h-full w-full items-center justify-center rounded-full bg-zinc-900 text-[0.66rem] font-bold text-white dark:bg-white dark:text-zinc-950'
 export const sessionDropdownPopoverClass =
-  'absolute right-0 top-[calc(100%+0.45rem)] z-30 min-w-[196px] rounded-[24px] border border-zinc-200/80 bg-white/96 p-3 shadow-[0_22px_48px_rgba(15,23,42,0.14)] transition duration-150 dark:border-zinc-800 dark:bg-zinc-950/95 dark:shadow-[0_22px_48px_rgba(2,6,23,0.42)]'
-export const sessionDropdownMenuClass = 'space-y-3'
+  'absolute right-0 top-[calc(100%+0.45rem)] z-30 min-w-[188px] rounded-[22px] border border-zinc-200/80 bg-white/96 p-2.5 shadow-[0_22px_48px_rgba(15,23,42,0.14)] transition duration-150 dark:border-zinc-800 dark:bg-zinc-950/95 dark:shadow-[0_22px_48px_rgba(2,6,23,0.42)]'
+export const sessionDropdownMenuClass = 'space-y-2.5'
 export const sessionDropdownItemContentClass =
-  'grid gap-0.5 rounded-[18px] border border-zinc-200/70 bg-zinc-50/90 px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-900/80'
+  'grid gap-0.5 rounded-[16px] border border-zinc-200/70 bg-zinc-50/90 px-2.5 py-2 dark:border-zinc-800 dark:bg-zinc-900/80'
 export const sessionDropdownItemLabelClass =
   'text-[0.68rem] font-medium tracking-[0.04em] text-zinc-500 dark:text-zinc-400'
 export const sessionDropdownItemValueClass = 'text-[0.98rem] font-semibold text-zinc-950 dark:text-white'
 export const sessionDropdownLogoutButtonClass =
-  'inline-flex h-9 w-full items-center justify-center rounded-full border border-rose-200/80 bg-rose-50/90 px-3 text-[0.82rem] font-semibold text-rose-700 transition hover:bg-rose-100 hover:text-rose-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-500/15 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/16 dark:hover:text-rose-100'
+  'inline-flex h-8 w-full items-center justify-center rounded-full border border-rose-200/80 bg-rose-50/90 px-3 !text-[12px] leading-none font-semibold text-rose-700 transition hover:bg-rose-100 hover:text-rose-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-500/15 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/16 dark:hover:text-rose-100'
 export const mobileDrawerBackdropClass =
   'fixed inset-0 z-40 bg-zinc-950/35 backdrop-blur-[1px] transition-opacity duration-200'
 export const mobileDrawerContentClass = 'fixed inset-y-0 left-0 z-50 w-[min(88vw,22rem)] md:hidden'

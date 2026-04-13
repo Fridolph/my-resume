@@ -41,6 +41,7 @@
 }
 
 @import '@heroui/styles/components/button.css' layer(components);
+@import '@heroui/styles/components/avatar.css' layer(components);
 @import '@heroui/styles/components/card.css' layer(components);
 @import '@heroui/styles/components/checkbox.css' layer(components);
 @import '@heroui/styles/components/chip.css' layer(components);
