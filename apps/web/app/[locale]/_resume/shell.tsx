@@ -259,7 +259,7 @@ export function PublishedResumeShell({
 
       <section className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 sm:px-6">
         {syncState === 'error' && syncMessage ? (
-          <div className="rounded-[16px] border border-red-200/70 bg-red-50/80 px-4 py-3 text-sm text-red-600 dark:border-red-500/35 dark:bg-red-500/10 dark:text-red-300">
+          <div className="rounded-4xl border border-red-200/70 bg-red-50/80 px-4 py-3 text-sm text-red-600 dark:border-red-500/35 dark:bg-red-500/10 dark:text-red-300">
             {syncMessage}
           </div>
         ) : null}

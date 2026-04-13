@@ -1,12 +1,13 @@
 'use client'
 
+import { formatDateRange } from '@my-resume/utils'
 import { useTranslations } from 'next-intl'
 
 import type {
   ResumeEducationItem,
   ResumeLocale,
 } from '@shared/published-resume/types/published-resume.types'
-import { formatPeriod, readLocalizedText } from '@shared/published-resume/published-resume-utils'
+import { readLocalizedText } from '@shared/published-resume/published-resume-utils'
 import { createIndexedRenderKey } from './published-resume-render-key'
 import { PublishedResumeSectionCard } from './published-resume-section-card'
 
@@ -55,7 +56,7 @@ export function PublishedResumeEducationSection({
                     </p>
                   </div>
                   <span className="text-base font-medium text-slate-500 dark:text-slate-400">
-                    {formatPeriod(item)}
+                    {formatDateRange(item)}
                   </span>
                 </div>
 

@@ -85,6 +85,71 @@ export function DisplaySectionIntro<T extends ElementType = 'h2'>({
   )
 }
 
+type DisplaySectionCardProps<T extends ElementType = 'section'> = {
+  action?: ReactNode
+  as?: T
+  children: ReactNode
+  className?: string
+  compact?: boolean
+  description?: ReactNode
+  descriptionClassName?: string
+  eyebrow?: ReactNode
+  eyebrowClassName?: string
+  headerClassName?: string
+  introClassName?: string
+  title: ReactNode
+  titleAs?: ElementType
+  titleClassName?: string
+} & Omit<ComponentPropsWithoutRef<T>, 'as' | 'children' | 'className'>
+
+export function DisplaySectionCard<T extends ElementType = 'section'>({
+  action,
+  as,
+  children,
+  className,
+  compact = false,
+  description,
+  descriptionClassName,
+  eyebrow,
+  eyebrowClassName,
+  headerClassName,
+  introClassName,
+  title,
+  titleAs,
+  titleClassName,
+  ...restProps
+}: DisplaySectionCardProps<T>) {
+  const surfaceProps = restProps as Omit<
+    ComponentPropsWithoutRef<T>,
+    'as' | 'children' | 'className'
+  >
+
+  return (
+    <DisplaySurfaceCard as={as} className={className} {...surfaceProps}>
+      <div
+        className={joinClassNames(
+          'display-section-card-header',
+          action ? 'has-action' : undefined,
+          headerClassName,
+        )}>
+        <DisplaySectionIntro
+          className={introClassName}
+          compact={compact}
+          description={description}
+          descriptionClassName={descriptionClassName}
+          eyebrow={eyebrow}
+          eyebrowClassName={eyebrowClassName}
+          title={title}
+          titleAs={titleAs}
+          titleClassName={titleClassName}
+        />
+        {action ? <div className="display-section-card-action">{action}</div> : null}
+      </div>
+      {children}
+    </DisplaySurfaceCard>
+  )
+}
+
 type DisplayStatCardProps<T extends ElementType = 'article'> = {
   as?: T
   className?: string

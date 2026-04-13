@@ -4,6 +4,7 @@ import {
   appLocales,
   createIndexedRenderKey,
   createRenderKey,
+  formatDateRange,
   formatDateTimeByLocale,
   isAppLocale,
   normalizeLocalePathname,
@@ -61,5 +62,14 @@ describe('@my-resume/utils', () => {
         hour12: false,
       }),
     )
+  })
+
+  it('should format date ranges from shared business items', () => {
+    expect(
+      formatDateRange({
+        endDate: '2026-04',
+        startDate: '2024-01',
+      }),
+    ).toBe('2024-01 - 2026-04')
   })
 })

@@ -5,3 +5,12 @@ export function formatDateTimeByLocale(dateTime: string, locale: AppLocale): str
     hour12: false,
   })
 }
+
+interface DateRangeLike {
+  endDate: string
+  startDate: string
+}
+
+export function formatDateRange(dateRange: DateRangeLike): string {
+  return `${dateRange.startDate} - ${dateRange.endDate}`
+}

@@ -1,5 +1,6 @@
 'use client'
 
+import { formatDateRange } from '@my-resume/utils'
 import { Tag } from '@heroui/react/tag'
 import { TagGroup } from '@heroui/react/tag-group'
 import { DisplayPill } from '@my-resume/ui/display'
@@ -9,7 +10,7 @@ import type {
   ResumeLocale,
   ResumeProjectItem,
 } from '@shared/published-resume/types/published-resume.types'
-import { formatPeriod, readLocalizedText } from '@shared/published-resume/published-resume-utils'
+import { readLocalizedText } from '@shared/published-resume/published-resume-utils'
 import { createIndexedRenderKey } from './published-resume-render-key'
 import { PublishedResumeSectionCard } from './published-resume-section-card'
 
@@ -76,7 +77,7 @@ export function PublishedResumeProjectsSection({
                     {role ? <p className={itemMetaTextClass}>{role}</p> : null}
                   </div>
                 </div>
-                <span className={itemMetaTextClass}>{formatPeriod(project)}</span>
+                <span className={itemMetaTextClass}>{formatDateRange(project)}</span>
               </div>
 
               {summary ? (

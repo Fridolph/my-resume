@@ -5,6 +5,7 @@ import { Button, Checkbox } from '@heroui/react'
 import { adminPrimaryButtonClass } from '@core/button-styles'
 import {
   DisplayPill,
+  DisplaySectionCard,
   DisplaySectionIntro,
   DisplaySurfaceCard,
 } from '@my-resume/ui/display'
@@ -44,13 +45,12 @@ export function AnalysisSuggestionPanel({
 }: AnalysisSuggestionPanelProps) {
   return (
     <>
-      <DisplaySurfaceCard className="grid gap-4">
-        <DisplaySectionIntro
-          compact
-          description="服务端已把 AI 返回的结构化 patch 合并回当前 StandardResume，并完成校验。"
-          eyebrow="结构化建议"
-          title="可一键应用的草稿建议"
-        />
+      <DisplaySectionCard
+        className="grid gap-4"
+        compact
+        description="服务端已把 AI 返回的结构化 patch 合并回当前 StandardResume，并完成校验。"
+        eyebrow="结构化建议"
+        title="可一键应用的草稿建议">
         <div className="dashboard-badge-row">
           {suggestion.changedModules.map((module) => (
             <DisplayPill key={module}>模块：{module}</DisplayPill>
@@ -68,7 +68,7 @@ export function AnalysisSuggestionPanel({
             ))}
           </ul>
         ) : null}
-      </DisplaySurfaceCard>
+      </DisplaySectionCard>
 
       <div className="grid gap-4">
         {suggestion.moduleDiffs.map((moduleDiff) => {
@@ -122,14 +122,13 @@ export function AnalysisSuggestionPanel({
         })}
       </div>
 
-      <DisplaySurfaceCard className="card stack">
-        <DisplaySectionIntro
-          compact
-          description="只有勾选的模块会被服务端写回当前草稿，避免前端整份覆盖。"
-          eyebrow="草稿应用"
-          title="将已选模块写回当前草稿"
-          titleAs="h3"
-        />
+      <DisplaySectionCard
+        className="card stack"
+        compact
+        description="只有勾选的模块会被服务端写回当前草稿，避免前端整份覆盖。"
+        eyebrow="草稿应用"
+        title="将已选模块写回当前草稿"
+        titleAs="h3">
         <div className="dashboard-inline-note">
           当前已选择 {selectedModules.length} / {suggestion.changedModules.length}{' '}
           个模块。
@@ -145,7 +144,7 @@ export function AnalysisSuggestionPanel({
             {applyPending ? '正在应用到草稿...' : '应用已选模块到当前草稿'}
           </Button>
         </div>
-      </DisplaySurfaceCard>
+      </DisplaySectionCard>
     </>
   )
 }

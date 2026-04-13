@@ -1,5 +1,6 @@
 'use client'
 
+import { formatDateRange } from '@my-resume/utils'
 import { Tag } from '@heroui/react/tag'
 import { TagGroup } from '@heroui/react/tag-group'
 import { useTranslations } from 'next-intl'
@@ -8,7 +9,7 @@ import type {
   ResumeExperienceItem,
   ResumeLocale,
 } from '@shared/published-resume/types/published-resume.types'
-import { formatPeriod, readLocalizedText } from '@shared/published-resume/published-resume-utils'
+import { readLocalizedText } from '@shared/published-resume/published-resume-utils'
 import { createIndexedRenderKey } from './published-resume-render-key'
 import { PublishedResumeSectionCard } from './published-resume-section-card'
 
@@ -75,7 +76,7 @@ export function PublishedResumeExperienceSection({
                     {roleLine ? <p className={itemMetaTextClass}>{roleLine}</p> : null}
                   </div>
                 </div>
-                <span className={itemMetaTextClass}>{formatPeriod(experience)}</span>
+                <span className={itemMetaTextClass}>{formatDateRange(experience)}</span>
               </div>
 
               <div className="grid gap-4">

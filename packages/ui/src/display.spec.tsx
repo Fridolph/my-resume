@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   DisplayPill,
+  DisplaySectionCard,
   DisplaySectionIntro,
   DisplayStatCard,
   DisplaySurfaceCard,
@@ -67,6 +68,23 @@ describe('display primitives', () => {
     expect(screen.getByText('当前状态')).toBeInTheDocument()
     expect(screen.getByText('READY')).toBeInTheDocument()
     expect(screen.getByText('当前统计项说明')).toBeInTheDocument()
+  })
+
+  it('should render section card header and optional action together', () => {
+    render(
+      <DisplaySectionCard
+        action={<button type="button">操作按钮</button>}
+        compact
+        description="说明文案"
+        eyebrow="共享卡片"
+        title="统一标题">
+        <p>卡片正文</p>
+      </DisplaySectionCard>,
+    )
+
+    expect(screen.getByRole('heading', { name: '统一标题', level: 2 })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '操作按钮' })).toBeInTheDocument()
+    expect(screen.getByText('卡片正文')).toBeInTheDocument()
   })
 
   it('should render pill as text or link based on props', () => {

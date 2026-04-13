@@ -128,6 +128,29 @@ select {
   line-height: 1.7;
 }
 
+.display-section-card-header {
+  display: grid;
+  gap: 1rem;
+}
+
+.display-section-card-header.has-action {
+  align-items: start;
+}
+
+.display-section-card-action {
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .display-section-card-header.has-action {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .display-section-card-action {
+    justify-self: end;
+  }
+}
+
 .display-pill {
   display: inline-flex;
   align-items: center;

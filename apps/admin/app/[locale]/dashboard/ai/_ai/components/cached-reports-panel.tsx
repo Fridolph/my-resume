@@ -5,7 +5,7 @@ import { Skeleton } from '@heroui/react/skeleton'
 import { Tag } from '@heroui/react/tag'
 import { TagGroup } from '@heroui/react/tag-group'
 import { Tabs } from '@heroui/react/tabs'
-import { DisplaySectionIntro, DisplaySurfaceCard } from '@my-resume/ui/display'
+import { DisplaySectionCard, DisplaySectionIntro, DisplaySurfaceCard } from '@my-resume/ui/display'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import {
@@ -260,16 +260,15 @@ export function AiCachedReportsPanel({
             </TagGroup.List>
           </TagGroup>
 
-          <DisplaySurfaceCard className={analysisSummaryCardClass}>
-            <DisplaySectionIntro
-              compact
-              description={resolvedActiveReport.inputPreview}
-              eyebrow="缓存摘要"
-              title="当前报告概览"
-              titleAs="h3"
-            />
+          <DisplaySectionCard
+            className={analysisSummaryCardClass}
+            compact
+            description={resolvedActiveReport.inputPreview}
+            eyebrow="缓存摘要"
+            title="当前报告概览"
+            titleAs="h3">
             <div className={analysisTextBlockClass}>{resolvedActiveReport.summary}</div>
-          </DisplaySurfaceCard>
+          </DisplaySectionCard>
 
           <div className={analysisSectionGridClass}>
             {resolvedActiveReport.sections.map((section: AiWorkbenchReport['sections'][number]) => (
