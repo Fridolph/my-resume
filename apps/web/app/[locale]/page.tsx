@@ -1,5 +1,5 @@
 import { DEFAULT_API_BASE_URL } from '@core/env'
-import { isAppLocale } from '@core/i18n/types'
+import { isAppLocale } from '@i18n/types'
 import { createFetchPublishedResumeMethod } from '@shared/published-resume/services/published-resume-api'
 
 import { PublishedResumeShell } from './_resume/shell'

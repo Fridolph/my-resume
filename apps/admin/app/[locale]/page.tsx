@@ -1,6 +1,6 @@
 import '../admin-shell.css'
 
-import { isAppLocale } from '@core/i18n/types'
+import { isAppLocale } from '@i18n/types'
 
 import { AdminLoginShell } from './_auth/login-shell'
 

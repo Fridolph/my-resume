@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const replaceMock = vi.fn()
 const pathnameMock = vi.fn(() => '/')
 
-vi.mock('@core/i18n/navigation', () => ({
+vi.mock('@i18n/navigation', () => ({
   Link: ({ children, href, prefetch: _prefetch, ...props }: any) => (
     <a
       href={
@@ -76,8 +76,8 @@ vi.mock('alova/client', async () => {
 })
 
 vi.mock('next-intl', async () => {
-  const zhSite = (await import('@shared/site/i18n/zh.json')).default
-  const zhPublishedResume = (await import('@shared/published-resume/i18n/zh.json')).default
+  const zhPublishedResume = (await import('@i18n/locales/zh/publishedResume.json')).default
+  const zhSite = (await import('@i18n/locales/zh/site.json')).default
 
   const bundles: Record<string, Record<string, unknown>> = {
     publishedResume: zhPublishedResume as Record<string, unknown>,

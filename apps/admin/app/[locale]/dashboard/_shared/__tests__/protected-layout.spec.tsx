@@ -89,7 +89,7 @@ vi.mock('@heroui/react/tooltip', () => ({
   Tooltip: TooltipMock,
 }))
 
-vi.mock('@core/i18n/navigation', () => ({
+vi.mock('@i18n/navigation', () => ({
   Link: ({ children, href, ...props }: { children: ReactNode; href: string } & Record<string, unknown>) => (
     <a href={href} {...props}>
       {children}

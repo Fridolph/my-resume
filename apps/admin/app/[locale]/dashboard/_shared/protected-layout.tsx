@@ -4,10 +4,10 @@ import dynamic from 'next/dynamic'
 import { Skeleton } from '@heroui/react/skeleton'
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 
-import { Link, usePathname, useRouter } from '@core/i18n/navigation'
+import { Link, usePathname, useRouter } from '@i18n/navigation'
 import { getAdminPageMeta } from './utils/admin-navigation'
 import { useAdminSession } from '@core/admin-session'
-import type { AppLocale } from '@core/i18n/types'
+import type { AppLocale } from '@i18n/types'
 import { AdminHeader } from './components/protected-layout-header'
 import { AdminSidebar } from './components/protected-layout-sidebar'
 

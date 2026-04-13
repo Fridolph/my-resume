@@ -3,8 +3,8 @@
 import { Button } from '@heroui/react/button'
 import { Tooltip } from '@heroui/react/tooltip'
 
-import { useRouter } from '@core/i18n/navigation'
-import type { AppLocale } from '@core/i18n/types'
+import { useRouter } from '@i18n/navigation'
+import type { AppLocale } from '@i18n/types'
 import { getAdminNavigationItems } from '../utils/admin-navigation'
 import {
   navBadgeBaseClass,

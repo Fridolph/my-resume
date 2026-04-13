@@ -15,8 +15,8 @@ import { useEffect, useMemo, useRef } from 'react'
 
 import { useAdminSession } from '@core/admin-session'
 import { DEFAULT_API_BASE_URL } from '@core/env'
-import { Link } from '@core/i18n/navigation'
-import type { AppLocale } from '@core/i18n/types'
+import { Link } from '@i18n/navigation'
+import type { AppLocale } from '@i18n/types'
 
 import { createFetchAiWorkbenchRuntimeMethod } from '../ai/_ai/services/ai-workbench-api'
 import { readResumeLocaleCookie } from '../resume/_resume/utils/resume-locale'

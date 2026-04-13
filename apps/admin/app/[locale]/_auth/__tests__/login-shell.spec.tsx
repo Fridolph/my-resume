@@ -15,7 +15,7 @@ const { createFetchCurrentUserMethodMock, pushMock, replaceMock } = vi.hoisted(
   }),
 )
 
-vi.mock('@core/i18n/navigation', () => ({
+vi.mock('@i18n/navigation', () => ({
   useRouter: () => ({
     push: pushMock,
     replace: replaceMock,

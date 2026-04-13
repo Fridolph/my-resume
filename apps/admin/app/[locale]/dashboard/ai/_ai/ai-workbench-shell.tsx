@@ -17,7 +17,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { useAdminSession } from '@core/admin-session'
 import { DEFAULT_API_BASE_URL } from '@core/env'
-import type { AppLocale } from '@core/i18n/types'
+import type { AppLocale } from '@i18n/types'
 
 import { readResumeLocaleCookie } from '../../resume/_resume/utils/resume-locale'
 import { buildDraftSummarySnapshot } from '../../resume/_resume/utils/resume-summary'

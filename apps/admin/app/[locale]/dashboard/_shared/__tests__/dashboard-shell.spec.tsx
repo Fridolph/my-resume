@@ -11,7 +11,7 @@ const { useAdminSessionMock, fetchAiWorkbenchRuntimeMock, fetchDraftResumeSummar
     fetchDraftResumeSummaryMock: vi.fn(),
   }))
 
-vi.mock('@core/i18n/navigation', () => ({
+vi.mock('@i18n/navigation', () => ({
   Link: ({ children, href, ...props }: any) => (
     <a href={typeof href === 'string' ? href : '/'} {...props}>
       {children}

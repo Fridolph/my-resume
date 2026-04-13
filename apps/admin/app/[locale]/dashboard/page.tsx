@@ -1,4 +1,4 @@
-import { isAppLocale } from '@core/i18n/types'
+import { isAppLocale } from '@i18n/types'
 
 import { AdminDashboardShell } from './_shared/dashboard-shell'
 

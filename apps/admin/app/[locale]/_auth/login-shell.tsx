@@ -8,8 +8,8 @@ import { useEffect, useState } from 'react'
 
 import { useAdminSession } from '@core/admin-session'
 import { DEFAULT_API_BASE_URL } from '@core/env'
-import { useRouter } from '@core/i18n/navigation'
-import type { AppLocale } from '@core/i18n/types'
+import { useRouter } from '@i18n/navigation'
+import type { AppLocale } from '@i18n/types'
 import { writeAccessToken } from '@core/session-storage'
 import { ThemeModeToggle } from '@shared/ui/components/theme-mode-toggle'
 

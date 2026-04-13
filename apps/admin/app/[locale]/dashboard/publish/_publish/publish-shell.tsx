@@ -14,7 +14,7 @@ import { useState } from 'react'
 
 import { useAdminSession } from '@core/admin-session'
 import { DEFAULT_API_BASE_URL } from '@core/env'
-import type { AppLocale } from '@core/i18n/types'
+import type { AppLocale } from '@i18n/types'
 import { RoleActionPanel } from '@shared/ui/components/role-action-panel'
 
 import { ExportEntryPanel } from './components/export-entry-panel'

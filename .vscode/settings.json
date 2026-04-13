@@ -1,0 +1,11 @@
+{
+  "i18n-ally.enabledFrameworks": ["next-intl"],
+  "i18n-ally.keystyle": "nested",
+  "i18n-ally.localesPaths": [
+    "apps/web/i18n/locales",
+    "apps/admin/i18n/locales",
+    "src/locales"
+  ],
+  "i18n-ally.namespace": true,
+  "i18n-ally.sourceLanguage": "en"
+}

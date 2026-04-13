@@ -1,6 +1,6 @@
 import dynamic from 'next/dynamic'
 
-import { isAppLocale } from '@core/i18n/types'
+import { isAppLocale } from '@i18n/types'
 
 import { AdminRouteLoadingCard } from '../_shared/route-loading-card'
 

@@ -12,7 +12,7 @@ import { Chip } from '@heroui/react/chip'
 import { useTranslations } from 'next-intl'
 
 import { DEFAULT_API_BASE_URL } from '@core/env'
-import { Link } from '@core/i18n/navigation'
+import { Link } from '@i18n/navigation'
 import type {
   ResumeLocale,
   ResumePublishedSnapshot,

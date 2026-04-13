@@ -1,7 +1,7 @@
 import '../../admin-shell.css'
 import type { ReactNode } from 'react'
 
-import { isAppLocale } from '@core/i18n/types'
+import { isAppLocale } from '@i18n/types'
 
 import { AdminProtectedLayoutWithLocale } from './_shared/protected-layout'
 
