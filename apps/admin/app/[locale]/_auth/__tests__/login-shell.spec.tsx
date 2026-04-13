@@ -7,10 +7,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { Providers } from '@/app/providers'
 
-const { fetchCurrentUserMock, loginWithPasswordMock, pushMock, replaceMock } = vi.hoisted(
+const { createFetchCurrentUserMethodMock, pushMock, replaceMock } = vi.hoisted(
   () => ({
-    fetchCurrentUserMock: vi.fn(),
-    loginWithPasswordMock: vi.fn(),
+    createFetchCurrentUserMethodMock: vi.fn(),
     pushMock: vi.fn(),
     replaceMock: vi.fn(),
   }),
@@ -46,10 +45,16 @@ vi.mock('next-intl', () => ({
     },
 }))
 
-vi.mock('../services/auth-api', () => ({
-  fetchCurrentUser: fetchCurrentUserMock,
-  loginWithPassword: loginWithPasswordMock,
-}))
+vi.mock('../services/auth-api', async () => {
+  const actual = await vi.importActual<typeof import('../services/auth-api')>(
+    '../services/auth-api',
+  )
+
+  return {
+    ...actual,
+    createFetchCurrentUserMethod: createFetchCurrentUserMethodMock,
+  }
+})
 
 vi.mock('@shared/ui/components/theme-mode-toggle', () => ({
   ThemeModeToggle: () => <div>主题切换占位</div>,
@@ -84,8 +89,8 @@ import { AdminLoginShell } from '../login-shell'
 describe('AdminLoginShell', () => {
   beforeEach(() => {
     window.localStorage.clear()
-    fetchCurrentUserMock.mockReset()
-    loginWithPasswordMock.mockReset()
+    vi.restoreAllMocks()
+    createFetchCurrentUserMethodMock.mockReset()
     pushMock.mockReset()
     replaceMock.mockReset()
   })
@@ -96,39 +101,7 @@ describe('AdminLoginShell', () => {
 
   it('should validate existing token and redirect under StrictMode', async () => {
     window.localStorage.setItem('my-resume.admin.access-token', 'admin-token')
-    fetchCurrentUserMock.mockResolvedValue({
-      id: 'admin-demo-user',
-      username: 'admin',
-      role: 'admin',
-      isActive: true,
-      capabilities: {
-        canEditResume: true,
-        canPublishResume: true,
-        canTriggerAiAnalysis: true,
-      },
-    })
-
-    render(
-      <StrictMode>
-        <Providers>
-          <AdminLoginShell locale="zh" />
-        </Providers>
-      </StrictMode>,
-    )
-
-    await waitFor(() => {
-      expect(fetchCurrentUserMock.mock.calls.length).toBeGreaterThan(0)
-      expect(replaceMock).toHaveBeenCalledWith('/dashboard', { locale: 'zh' })
-    })
-  })
-
-  it('should reuse login payload and avoid extra current-user request after sign-in', async () => {
-    const user = userEvent.setup()
-
-    loginWithPasswordMock.mockResolvedValue({
-      accessToken: 'new-admin-token',
-      tokenType: 'Bearer',
-      expiresIn: 3600,
+    createFetchCurrentUserMethodMock.mockResolvedValue({
       user: {
         id: 'admin-demo-user',
         username: 'admin',
@@ -143,6 +116,53 @@ describe('AdminLoginShell', () => {
     })
 
     render(
+      <StrictMode>
+        <Providers>
+          <AdminLoginShell locale="zh" />
+        </Providers>
+      </StrictMode>,
+    )
+
+    await waitFor(() => {
+      expect(createFetchCurrentUserMethodMock.mock.calls.length).toBeGreaterThan(0)
+      expect(replaceMock).toHaveBeenCalledWith('/dashboard', { locale: 'zh' })
+    })
+  })
+
+  it('should reuse login payload and avoid extra current-user request after sign-in', async () => {
+    const user = userEvent.setup()
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            accessToken: 'new-admin-token',
+            tokenType: 'Bearer',
+            expiresIn: 3600,
+            user: {
+              id: 'admin-demo-user',
+              username: 'admin',
+              role: 'admin',
+              isActive: true,
+              capabilities: {
+                canEditResume: true,
+                canPublishResume: true,
+                canTriggerAiAnalysis: true,
+              },
+            },
+          }),
+          {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          },
+        ),
+      ),
+    )
+
+    render(
       <Providers>
         <AdminLoginShell locale="zh" />
       </Providers>,
@@ -151,8 +171,14 @@ describe('AdminLoginShell', () => {
     await user.click(screen.getByRole('button', { name: '模拟登录' }))
 
     await waitFor(() => {
-      expect(loginWithPasswordMock).toHaveBeenCalledTimes(1)
-      expect(fetchCurrentUserMock).not.toHaveBeenCalled()
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:5577/auth/login',
+        expect.objectContaining({
+          body: '{"username":"admin","password":"admin123456"}',
+          method: 'POST',
+        }),
+      )
+      expect(createFetchCurrentUserMethodMock).not.toHaveBeenCalled()
       expect(replaceMock).toHaveBeenCalledWith('/dashboard', { locale: 'zh' })
     })
     expect(window.localStorage.getItem('my-resume.admin.access-token')).toBe(

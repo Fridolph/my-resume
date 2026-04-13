@@ -6,6 +6,30 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { AiFileExtractionPanel } from '../components/file-extraction-panel'
 
+vi.mock('alova/client', async () => {
+  const React = await import('react')
+
+  return {
+    useRequest: (methodHandler: any) => {
+      const [loading, setLoading] = React.useState(false)
+
+      const send = React.useCallback(async (...args: unknown[]) => {
+        setLoading(true)
+
+        try {
+          const method =
+            typeof methodHandler === 'function' ? methodHandler(...args) : methodHandler
+          return await method.send()
+        } finally {
+          setLoading(false)
+        }
+      }, [methodHandler])
+
+      return { loading, send }
+    },
+  }
+})
+
 afterEach(() => {
   cleanup()
 })
@@ -38,13 +62,16 @@ describe('AiFileExtractionPanel', () => {
       text: 'resume text content',
       charCount: 19,
     })
+    const createExtractFileTextMethod = vi.fn((input) => ({
+      send: () => extractFileText(input),
+    }))
 
     render(
       <AiFileExtractionPanel
         accessToken="demo-token"
         apiBaseUrl="http://localhost:5577"
         canUpload
-        extractFileText={extractFileText}
+        createExtractFileTextMethod={createExtractFileTextMethod as any}
         onExtractedText={onExtractedText}
       />,
     )
@@ -81,13 +108,16 @@ describe('AiFileExtractionPanel', () => {
     const extractFileText = vi
       .fn()
       .mockRejectedValue(new Error('PDF 解析失败，请稍后重试'))
+    const createExtractFileTextMethod = vi.fn((input) => ({
+      send: () => extractFileText(input),
+    }))
 
     render(
       <AiFileExtractionPanel
         accessToken="demo-token"
         apiBaseUrl="http://localhost:5577"
         canUpload
-        extractFileText={extractFileText}
+        createExtractFileTextMethod={createExtractFileTextMethod as any}
       />,
     )
 

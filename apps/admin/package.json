@@ -20,6 +20,7 @@
     "@heroui/styles": "^3.0.1",
     "@my-resume/api-client": "workspace:*",
     "@my-resume/ui": "workspace:*",
+    "@my-resume/utils": "workspace:*",
     "@tailwindcss/postcss": "^4.2.2",
     "alova": "^3.5.1",
     "framer-motion": "^12.38.0",

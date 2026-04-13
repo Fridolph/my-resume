@@ -18,6 +18,7 @@
     "@iconify/react": "^5.2.1",
     "@my-resume/api-client": "workspace:*",
     "@my-resume/ui": "workspace:*",
+    "@my-resume/utils": "workspace:*",
     "@tailwindcss/postcss": "^4.2.2",
     "alova": "^3.5.1",
     "echarts": "^5.6.0",

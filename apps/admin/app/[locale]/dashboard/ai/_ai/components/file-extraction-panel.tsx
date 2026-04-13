@@ -1,18 +1,19 @@
 'use client'
 
+import { useRequest } from 'alova/client'
 import { Button, Input, TextArea } from '@heroui/react'
 
 import { adminPrimaryButtonClass } from '@core/button-styles'
 import { useState } from 'react'
 
-import { extractTextFromFile } from '../services/ai-file-api'
+import { createExtractTextFromFileMethod } from '../services/ai-file-api'
 import { FileExtractionResult } from '../types/ai-file.types'
 
 interface AiFileExtractionPanelProps {
   apiBaseUrl: string
   accessToken: string
   canUpload: boolean
-  extractFileText?: typeof extractTextFromFile
+  createExtractFileTextMethod?: typeof createExtractTextFromFileMethod
   onExtractedText?: (result: FileExtractionResult) => void
 }
 
@@ -28,13 +29,25 @@ export function AiFileExtractionPanel({
   apiBaseUrl,
   accessToken,
   canUpload,
-  extractFileText = extractTextFromFile,
+  createExtractFileTextMethod = createExtractTextFromFileMethod,
   onExtractedText,
 }: AiFileExtractionPanelProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [result, setResult] = useState<FileExtractionResult | null>(null)
-  const [pending, setPending] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const { loading: extracting, send: triggerExtract } = useRequest(
+    (file: File) =>
+      createExtractFileTextMethod({
+        apiBaseUrl,
+        accessToken,
+        file,
+      }),
+    {
+      force: true,
+      immediate: false,
+    },
+  )
+  const pending = extracting
 
   if (!canUpload) {
     return (
@@ -58,23 +71,16 @@ export function AiFileExtractionPanel({
       return
     }
 
-    setPending(true)
     setErrorMessage(null)
 
     try {
-      const nextResult = await extractFileText({
-        apiBaseUrl,
-        accessToken,
-        file: selectedFile,
-      })
+      const nextResult = await triggerExtract(selectedFile)
 
       setResult(nextResult)
       onExtractedText?.(nextResult)
     } catch (error) {
       setResult(null)
       setErrorMessage(error instanceof Error ? error.message : '文件提取失败，请稍后重试')
-    } finally {
-      setPending(false)
     }
   }
 

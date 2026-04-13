@@ -128,4 +128,39 @@ describe('api client core', () => {
       expect(directCallPattern.test(fileContent)).toBe(false)
     }
   })
+
+  it('exposes method factories only and removes promise facades', () => {
+    const currentDir = fileURLToPath(new URL('.', import.meta.url))
+    const domainFiles = ['auth.ts', 'resume.ts', 'ai.ts']
+    const legacyFacadeNames = [
+      'loginWithPassword',
+      'fetchCurrentUser',
+      'postProtectedAction',
+      'fetchPublishedResume',
+      'fetchDraftResume',
+      'fetchDraftResumeSummary',
+      'updateDraftResume',
+      'publishResume',
+      'fetchPublishedResumeSummary',
+      'fetchAiWorkbenchRuntime',
+      'triggerAiWorkbenchAnalysis',
+      'generateAiResumeOptimization',
+      'applyAiResumeOptimization',
+      'fetchCachedAiWorkbenchReports',
+      'fetchCachedAiWorkbenchReport',
+      'extractTextFromFile',
+    ]
+
+    for (const fileName of domainFiles) {
+      const fileContent = readFileSync(join(currentDir, fileName), 'utf-8')
+      expect(/\bexport\s+async\s+function\b/.test(fileContent)).toBe(false)
+
+      for (const legacyFacadeName of legacyFacadeNames) {
+        const legacyExportPattern = new RegExp(
+          `\\bexport\\s+(?:async\\s+)?function\\s+${legacyFacadeName}\\b`,
+        )
+        expect(legacyExportPattern.test(fileContent)).toBe(false)
+      }
+    }
+  })
 })

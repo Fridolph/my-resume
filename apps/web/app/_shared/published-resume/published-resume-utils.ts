@@ -1,14 +1,12 @@
+import { formatDateTimeByLocale, readLocalizedText } from '@my-resume/utils'
+
 import {
-  LocalizedText,
   ResumeEducationItem,
   ResumeExperienceItem,
-  ResumeLocale,
   ResumeProjectItem,
 } from './types/published-resume.types'
 
-export function readLocalizedText(value: LocalizedText, locale: ResumeLocale): string {
-  return value[locale]
-}
+export { readLocalizedText }
 
 export function formatPeriod(
   item: ResumeProjectItem | ResumeExperienceItem | ResumeEducationItem,
@@ -16,8 +14,6 @@ export function formatPeriod(
   return `${item.startDate} - ${item.endDate}`
 }
 
-export function formatPublishedAt(publishedAt: string, locale: ResumeLocale): string {
-  return new Date(publishedAt).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US', {
-    hour12: false,
-  })
+export function formatPublishedAt(publishedAt: string, locale: 'zh' | 'en'): string {
+  return formatDateTimeByLocale(publishedAt, locale)
 }

@@ -1,9 +1,6 @@
 export {
   createFetchCurrentUserMethod,
   createLoginWithPasswordMethod,
+  createPublishResumeMethod,
   createPostProtectedActionMethod,
-  fetchCurrentUser,
-  loginWithPassword,
-  postProtectedAction,
-  publishResume,
 } from '@my-resume/api-client'

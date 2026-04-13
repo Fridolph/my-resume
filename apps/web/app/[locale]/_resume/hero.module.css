@@ -144,6 +144,7 @@
   display: inline-flex;
   width: 3rem;
   height: 3rem;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
@@ -154,6 +155,14 @@
     transform 0.2s ease,
     border-color 0.2s ease,
     box-shadow 0.2s ease;
+}
+
+.tooltipTriggerInline {
+  display: inline-flex;
+  width: fit-content;
+  height: fit-content;
+  flex-shrink: 0;
+  border-radius: 999px;
 }
 
 .iconLinkChip:hover {

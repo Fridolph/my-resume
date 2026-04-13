@@ -42,18 +42,6 @@ export function createLoginWithPasswordMethod(input: LoginWithPasswordInput) {
 }
 
 /**
- * 用户名密码登录
- *
- * @param input 登录参数
- * @returns 登录结果
- */
-export async function loginWithPassword(
-  input: LoginWithPasswordInput,
-): Promise<LoginResult> {
-  return createLoginWithPasswordMethod(input).send()
-}
-
-/**
  * 构造读取当前用户 Method
  *
  * @param input 请求参数
@@ -71,20 +59,6 @@ export function createFetchCurrentUserMethod(input: FetchCurrentUserInput) {
 }
 
 /**
- * 读取当前登录用户
- *
- * @param input 请求参数
- * @returns 用户信息
- */
-export async function fetchCurrentUser(
-  input: FetchCurrentUserInput,
-): Promise<AuthUserView> {
-  const payload = await createFetchCurrentUserMethod(input).send()
-
-  return payload.user
-}
-
-/**
  * 构造受保护动作 Method
  *
  * @param input 请求参数
@@ -98,16 +72,4 @@ export function createPostProtectedActionMethod(input: PostProtectedActionInput)
     accessToken: input.accessToken,
     fallbackErrorMessage: '当前角色无权执行该操作',
   })
-}
-
-/**
- * 触发受保护动作
- *
- * @param input 请求参数
- * @returns 动作执行结果
- */
-export async function postProtectedAction(
-  input: PostProtectedActionInput,
-): Promise<ProtectedActionResponse> {
-  return createPostProtectedActionMethod(input).send()
 }

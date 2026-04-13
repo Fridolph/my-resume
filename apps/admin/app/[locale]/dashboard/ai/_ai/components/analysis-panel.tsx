@@ -1,16 +1,18 @@
 'use client'
 
+import { useRequest } from 'alova/client'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 
 import {
-  applyAiResumeOptimization,
-  generateAiResumeOptimization,
-  triggerAiWorkbenchAnalysis,
+  createApplyAiResumeOptimizationMethod,
+  createGenerateAiResumeOptimizationMethod,
+  createTriggerAiWorkbenchAnalysisMethod,
 } from '../services/ai-workbench-api'
 import type {
   AiResumeOptimizationChangedModule,
   AiResumeOptimizationResult,
+  ApplyAiResumeOptimizationInput,
   ApplyAiResumeOptimizationResult,
   AiWorkbenchLocale,
   AiWorkbenchReport,
@@ -25,16 +27,16 @@ import { AnalysisSuggestionPanel } from './analysis-suggestion-panel'
 interface AiAnalysisPanelProps {
   accessToken: string
   apiBaseUrl: string
-  applyResumeOptimization?: typeof applyAiResumeOptimization
+  createApplyResumeOptimizationMethod?: typeof createApplyAiResumeOptimizationMethod
   canAnalyze: boolean
   content: string
-  generateResumeOptimization?: typeof generateAiResumeOptimization
+  createGenerateResumeOptimizationMethod?: typeof createGenerateAiResumeOptimizationMethod
+  createTriggerAnalysisMethod?: typeof createTriggerAiWorkbenchAnalysisMethod
   helperMessage?: string | null
   inputAccessory?: ReactNode
   onDraftApplied?: (snapshot: ApplyAiResumeOptimizationResult) => void
   onContentChange: (value: string) => void
   runtimeSummary: AiWorkbenchRuntimeSummary
-  triggerAnalysis?: typeof triggerAiWorkbenchAnalysis
 }
 
 function renderReadOnlyState(inputAccessory?: ReactNode) {
@@ -56,23 +58,21 @@ function renderReadOnlyState(inputAccessory?: ReactNode) {
 export function AiAnalysisPanel({
   accessToken,
   apiBaseUrl,
-  applyResumeOptimization = applyAiResumeOptimization,
+  createApplyResumeOptimizationMethod = createApplyAiResumeOptimizationMethod,
   canAnalyze,
   content,
-  generateResumeOptimization = generateAiResumeOptimization,
+  createGenerateResumeOptimizationMethod = createGenerateAiResumeOptimizationMethod,
+  createTriggerAnalysisMethod = createTriggerAiWorkbenchAnalysisMethod,
   helperMessage,
   inputAccessory,
   onDraftApplied,
   onContentChange,
   runtimeSummary,
-  triggerAnalysis = triggerAiWorkbenchAnalysis,
 }: AiAnalysisPanelProps) {
   const [scenario, setScenario] = useState<AiWorkbenchScenario>('resume-review')
   const [locale, setLocale] = useState<AiWorkbenchLocale>('zh')
-  const [pending, setPending] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [report, setReport] = useState<AiWorkbenchReport | null>(null)
-  const [suggestionPending, setSuggestionPending] = useState(false)
   const [suggestionErrorMessage, setSuggestionErrorMessage] = useState<string | null>(
     null,
   )
@@ -83,8 +83,68 @@ export function AiAnalysisPanel({
   const [linkedModule, setLinkedModule] =
     useState<AiResumeOptimizationChangedModule | null>(null)
   const [moduleLinkMessage, setModuleLinkMessage] = useState<string | null>(null)
-  const [applyPending, setApplyPending] = useState(false)
   const [applyFeedbackMessage, setApplyFeedbackMessage] = useState<string | null>(null)
+  const {
+    loading: triggerPending,
+    send: triggerAnalysisRequest,
+  } = useRequest(
+    (payload: {
+      content: string
+      locale: AiWorkbenchLocale
+      scenario: AiWorkbenchScenario
+    }) =>
+      createTriggerAnalysisMethod({
+        apiBaseUrl,
+        accessToken,
+        scenario: payload.scenario,
+        locale: payload.locale,
+        content: payload.content,
+      }),
+    {
+      force: true,
+      immediate: false,
+    },
+  )
+  const {
+    loading: generatePending,
+    send: generateSuggestionRequest,
+  } = useRequest(
+    (payload: { instruction: string; locale: AiWorkbenchLocale }) =>
+      createGenerateResumeOptimizationMethod({
+        apiBaseUrl,
+        accessToken,
+        instruction: payload.instruction,
+        locale: payload.locale,
+      }),
+    {
+      force: true,
+      immediate: false,
+    },
+  )
+  const {
+    loading: applyRequestPending,
+    send: applySuggestionRequest,
+  } = useRequest(
+    (payload: {
+      draftUpdatedAt: string
+      modules: AiResumeOptimizationChangedModule[]
+      patch: ApplyAiResumeOptimizationInput['patch']
+    }) =>
+      createApplyResumeOptimizationMethod({
+        apiBaseUrl,
+        accessToken,
+        draftUpdatedAt: payload.draftUpdatedAt,
+        modules: payload.modules,
+        patch: payload.patch,
+      }),
+    {
+      force: true,
+      immediate: false,
+    },
+  )
+  const pending = triggerPending
+  const suggestionPending = generatePending
+  const applyPending = applyRequestPending
 
   if (!canAnalyze) {
     return renderReadOnlyState(inputAccessory)
@@ -101,17 +161,14 @@ export function AiAnalysisPanel({
       return
     }
 
-    setPending(true)
     setErrorMessage(null)
     setApplyFeedbackMessage(null)
 
     try {
-      const result = await triggerAnalysis({
-        apiBaseUrl,
-        accessToken,
-        scenario,
-        locale,
+      const result = await triggerAnalysisRequest({
         content: normalizedContent,
+        locale,
+        scenario,
       })
 
       setReport(result.report)
@@ -120,8 +177,6 @@ export function AiAnalysisPanel({
       setErrorMessage(
         error instanceof Error ? error.message : '真实分析触发失败，请稍后重试',
       )
-    } finally {
-      setPending(false)
     }
   }
 
@@ -140,15 +195,12 @@ export function AiAnalysisPanel({
       return
     }
 
-    setSuggestionPending(true)
     setSuggestionErrorMessage(null)
     setApplyFeedbackMessage(null)
     setModuleLinkMessage(null)
 
     try {
-      const result = await generateResumeOptimization({
-        apiBaseUrl,
-        accessToken,
+      const result = await generateSuggestionRequest({
         instruction: normalizedContent,
         locale,
       })
@@ -163,8 +215,6 @@ export function AiAnalysisPanel({
       setSuggestionErrorMessage(
         error instanceof Error ? error.message : '结构化简历建议生成失败，请稍后重试',
       )
-    } finally {
-      setSuggestionPending(false)
     }
   }
 
@@ -216,15 +266,12 @@ export function AiAnalysisPanel({
       return
     }
 
-    setApplyPending(true)
     setSuggestionErrorMessage(null)
     setApplyFeedbackMessage(null)
     setModuleLinkMessage(null)
 
     try {
-      const nextSnapshot = await applyResumeOptimization({
-        apiBaseUrl,
-        accessToken,
+      const nextSnapshot = await applySuggestionRequest({
         draftUpdatedAt: suggestion.applyPayload.draftUpdatedAt,
         modules: selectedModules,
         patch: suggestion.applyPayload.patch,
@@ -239,8 +286,6 @@ export function AiAnalysisPanel({
       setSuggestionErrorMessage(
         error instanceof Error ? error.message : 'AI 建议稿应用失败，请稍后重试',
       )
-    } finally {
-      setApplyPending(false)
     }
   }
 

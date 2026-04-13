@@ -13,8 +13,8 @@ import { Skeleton } from '@heroui/react/skeleton'
 import type { FormEvent } from 'react'
 
 import {
-  fetchDraftResume,
-  updateDraftResume,
+  createFetchDraftResumeMethod,
+  createUpdateDraftResumeMethod,
 } from './services/resume-draft-api'
 import { EducationSection } from './sections/education-section'
 import { ExperiencesSection } from './sections/experiences-section'
@@ -52,8 +52,8 @@ export function ResumeDraftEditorPanel({
   apiBaseUrl,
   accessToken,
   canEdit,
-  loadDraft = fetchDraftResume,
-  saveDraft = updateDraftResume,
+  loadDraft = createFetchDraftResumeMethod,
+  saveDraft = createUpdateDraftResumeMethod,
 }: ResumeDraftEditorPanelProps) {
   const {
     draftFieldValues,

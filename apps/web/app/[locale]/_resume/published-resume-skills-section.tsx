@@ -367,7 +367,7 @@ export function PublishedResumeSkillsSection({
               <div className="flex flex-wrap items-center justify-start gap-3">
                 {cloudTokens.map((token) => (
                   <Tooltip key={token.id}>
-                    <Tooltip.Trigger>
+                    <Tooltip.Trigger className={styles.tooltipTokenTrigger}>
                       <span
                         className={[
                           styles.cloudToken,

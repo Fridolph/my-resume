@@ -55,7 +55,7 @@ export function PublishedResumeHeroTooltipLink({
 
   return (
     <Tooltip delay={220}>
-      <Tooltip.Trigger>
+      <Tooltip.Trigger className={styles.tooltipTriggerInline}>
         <a
           aria-label={label}
           className={styles.iconLinkChip}

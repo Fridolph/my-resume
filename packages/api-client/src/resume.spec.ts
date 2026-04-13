@@ -2,14 +2,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   buildPublishedResumeExportUrl,
-  fetchDraftResume,
-  fetchDraftResumeSummary,
-  fetchPublishedResume,
-  fetchPublishedResumeSummary,
-  publishResume,
+  createFetchDraftResumeMethod,
+  createFetchDraftResumeSummaryMethod,
+  createFetchPublishedResumeMethod,
+  createFetchPublishedResumeSummaryMethod,
+  createPublishResumeMethod,
+  createUpdateDraftResumeMethod,
   type ResumeDraftSummarySnapshot,
   type ResumeDraftSnapshot,
-  updateDraftResume,
 } from './resume'
 
 function createJsonResponse(status: number, payload: unknown): Response {
@@ -120,10 +120,10 @@ describe('api-client resume contract', () => {
         .mockResolvedValueOnce(createJsonResponse(404, { message: 'Not Found' })),
     )
 
-    const published = await fetchPublishedResume({
+    const published = await createFetchPublishedResumeMethod({
       apiBaseUrl: 'http://localhost:5577/',
     })
-    const missing = await fetchPublishedResume({
+    const missing = await createFetchPublishedResumeMethod({
       apiBaseUrl: 'http://localhost:5577',
     })
 
@@ -153,11 +153,11 @@ describe('api-client resume contract', () => {
         .mockResolvedValueOnce(createJsonResponse(404, { message: 'Not Found' })),
     )
 
-    const published = await fetchPublishedResumeSummary({
+    const published = await createFetchPublishedResumeSummaryMethod({
       apiBaseUrl: 'http://localhost:5577/',
       locale: 'en',
     })
-    const missing = await fetchPublishedResumeSummary({
+    const missing = await createFetchPublishedResumeSummaryMethod({
       apiBaseUrl: 'http://localhost:5577',
     })
 
@@ -182,18 +182,18 @@ describe('api-client resume contract', () => {
         .mockResolvedValueOnce(createJsonResponse(200, draftSnapshot)),
     )
 
-    await fetchDraftResume({
+    await createFetchDraftResumeMethod({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
     })
 
-    await fetchDraftResumeSummary({
+    await createFetchDraftResumeSummaryMethod({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
       locale: 'zh',
     })
 
-    await updateDraftResume({
+    await createUpdateDraftResumeMethod({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
       resume: draftSnapshot.resume,
@@ -243,7 +243,7 @@ describe('api-client resume contract', () => {
       ),
     )
 
-    const result = await publishResume({
+    const result = await createPublishResumeMethod({
       apiBaseUrl: 'http://localhost:5577/',
       accessToken: 'demo-token',
     })
@@ -288,7 +288,7 @@ describe('api-client resume contract', () => {
     )
 
     await expect(
-      updateDraftResume({
+      createUpdateDraftResumeMethod({
         apiBaseUrl: 'http://localhost:5577',
         accessToken: 'demo-token',
         resume: draftSnapshot.resume,
@@ -298,7 +298,7 @@ describe('api-client resume contract', () => {
     )
 
     await expect(
-      publishResume({
+      createPublishResumeMethod({
         apiBaseUrl: 'http://localhost:5577',
         accessToken: 'demo-token',
       }),

@@ -38,6 +38,12 @@
     - 点 1：三层缓存职责和对照矩阵
     - 点 2：发布后刷新生效时序
     - 点 3：面向当前项目的 Next 实战建议
+- `05-alova-Method-first-SSR-CSR-实践与避坑.md`
+  - 主题：`api-client` 的 Method-first 设计、hooks 拆分与 SSR/CSR 协作策略
+  - 当前包含：
+    - 点 1：为什么去掉 Promise facade，只保留 `createXxxMethod`
+    - 点 2：水合、数据变化、重复请求的项目级处理方式
+    - 点 3：当前已落地优化与后续可渐进演进方向
 
 ## 后续计划
 

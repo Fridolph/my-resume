@@ -8,27 +8,11 @@
   - `StandardResume`
   - `ResumeDraftSnapshot`
   - `ResumePublishedSnapshot`
-- 简历相关请求方法：
-  - `fetchPublishedResume`
-  - `fetchDraftResume`
-  - `updateDraftResume`
-  - `publishResume`
-- 鉴权请求方法：
-  - `loginWithPassword`
-  - `fetchCurrentUser`
-  - `postProtectedAction`
-- AI 工作台请求方法：
-  - `fetchAiWorkbenchRuntime`
-  - `triggerAiWorkbenchAnalysis`
-  - `generateAiResumeOptimization`
-  - `applyAiResumeOptimization`
-  - `fetchCachedAiWorkbenchReports`
-  - `fetchCachedAiWorkbenchReport`
-  - `extractTextFromFile`
+- 按领域导出的 Method 工厂：
+  - `createXxxMethod`
 - 已发布导出链接构造：
   - `buildPublishedResumeExportUrl`
 - 请求内核能力：
-  - `createXxxMethod`（按领域导出的 Method 工厂）
   - `defaultApiClient.createMethod`
 - 类型分层：
   - `src/types/client.types.ts`
@@ -45,11 +29,15 @@
 
 - Method-first（推荐）：
   - 在页面/Hook 中优先使用 `createXxxMethod(...)`
-  - SSR 中可直接 `await method.send()`
+  - SSR 中可直接 `await createXxxMethod(...)` 或 `await method.send()`
   - CSR 中优先配合 `useRequest/useWatcher`
-- Promise 兼容层（过渡）：
-  - 继续可用 `fetchXxx/publishXxx/loginXxx` 等函数
-  - 内部已改为 `createMethod(...).send()`，便于页面逐步切到官方 hooks
+
+## 迁移示例
+
+- SSR（推荐）：
+  - `const published = await createFetchPublishedResumeMethod({ apiBaseUrl })`
+- CSR（推荐）：
+  - `const { data, loading, error, send } = useRequest(() => createFetchPublishedResumeMethod({ apiBaseUrl }), { immediate: false })`
 
 ## 设计取舍
 

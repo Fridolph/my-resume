@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
-  fetchCurrentUser,
-  loginWithPassword,
-  postProtectedAction,
-  publishResume,
+  createFetchCurrentUserMethod,
+  createLoginWithPasswordMethod,
+  createPostProtectedActionMethod,
+  createPublishResumeMethod,
 } from '../services/auth-api'
 
 function createJsonResponse(status: number, payload: unknown): Response {
@@ -42,7 +42,7 @@ describe('auth api client', () => {
       ),
     )
 
-    const loginResult = await loginWithPassword({
+    const loginResult = await createLoginWithPasswordMethod({
       apiBaseUrl: 'http://localhost:5577',
       username: 'admin',
       password: 'admin123456',
@@ -76,7 +76,7 @@ describe('auth api client', () => {
       ),
     )
 
-    const currentUser = await fetchCurrentUser({
+    const currentUser = await createFetchCurrentUserMethod({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
     })
@@ -89,7 +89,7 @@ describe('auth api client', () => {
         }),
       }),
     )
-    expect(currentUser.username).toBe('viewer')
+    expect(currentUser.user.username).toBe('viewer')
   })
 
   it('should post protected action with bearer token', async () => {
@@ -102,7 +102,7 @@ describe('auth api client', () => {
       ),
     )
 
-    const response = await postProtectedAction({
+    const response = await createPostProtectedActionMethod({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
       pathname: '/auth/demo/publish',
@@ -136,7 +136,7 @@ describe('auth api client', () => {
       ),
     )
 
-    const response = await publishResume({
+    const response = await createPublishResumeMethod({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
     })

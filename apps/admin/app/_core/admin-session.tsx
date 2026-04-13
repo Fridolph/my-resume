@@ -11,7 +11,7 @@ import {
 } from 'react'
 
 import type { AuthUserView } from '../[locale]/_auth/types/auth.types'
-import { fetchCurrentUser } from '../[locale]/_auth/services/auth-api'
+import { createFetchCurrentUserMethod } from '../[locale]/_auth/services/auth-api'
 import { DEFAULT_API_BASE_URL } from './env'
 import { clearAccessToken, readAccessToken } from './session-storage'
 
@@ -77,10 +77,11 @@ export function AdminSessionProvider({ children }: { children: ReactNode }) {
     setStatus('loading')
 
     try {
-      const nextUser = await fetchCurrentUser({
+      const payload = await createFetchCurrentUserMethod({
         apiBaseUrl: DEFAULT_API_BASE_URL,
         accessToken: nextAccessToken,
       })
+      const nextUser = payload.user
 
       setAccessToken(nextAccessToken)
       setCurrentUser(nextUser)

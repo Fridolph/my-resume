@@ -9,6 +9,7 @@
 - `ui`：共享 React UI 组件
 - `api-client`：共享 API 调用层与类型
 - `config`：共享工程配置
+- `utils`：共享纯函数与基础工具
 
 ## 当前边界
 

@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
-  applyAiResumeOptimization,
-  fetchCachedAiWorkbenchReport,
-  fetchCachedAiWorkbenchReports,
-  fetchAiWorkbenchRuntime,
-  generateAiResumeOptimization,
-  triggerAiWorkbenchAnalysis,
+  createApplyAiResumeOptimizationMethod,
+  createFetchAiWorkbenchRuntimeMethod,
+  createFetchCachedAiWorkbenchReportMethod,
+  createFetchCachedAiWorkbenchReportsMethod,
+  createGenerateAiResumeOptimizationMethod,
+  createTriggerAiWorkbenchAnalysisMethod,
 } from '../services/ai-workbench-api'
 
 function createJsonResponse(status: number, payload: unknown): Response {
@@ -36,7 +36,7 @@ describe('ai workbench api client', () => {
       ),
     )
 
-    const response = await fetchAiWorkbenchRuntime({
+    const response = await createFetchAiWorkbenchRuntimeMethod({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
     })
@@ -82,7 +82,7 @@ describe('ai workbench api client', () => {
       ),
     )
 
-    const response = await triggerAiWorkbenchAnalysis({
+    const response = await createTriggerAiWorkbenchAnalysisMethod({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
       scenario: 'resume-review',
@@ -120,7 +120,7 @@ describe('ai workbench api client', () => {
     )
 
     await expect(
-      triggerAiWorkbenchAnalysis({
+      createTriggerAiWorkbenchAnalysisMethod({
         apiBaseUrl: 'http://localhost:5577',
         accessToken: 'demo-token',
         scenario: 'jd-match',
@@ -149,7 +149,7 @@ describe('ai workbench api client', () => {
       ),
     )
 
-    const response = await fetchCachedAiWorkbenchReports({
+    const response = await createFetchCachedAiWorkbenchReportsMethod({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'viewer-token',
     })
@@ -190,7 +190,7 @@ describe('ai workbench api client', () => {
       ),
     )
 
-    const response = await fetchCachedAiWorkbenchReport({
+    const response = await createFetchCachedAiWorkbenchReportMethod({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'viewer-token',
       reportId: 'jd-match-demo',
@@ -301,7 +301,7 @@ describe('ai workbench api client', () => {
       ),
     )
 
-    const response = await generateAiResumeOptimization({
+    const response = await createGenerateAiResumeOptimizationMethod({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
       instruction: '请根据 React 和 Next.js 岗位优化当前简历',
@@ -390,7 +390,7 @@ describe('ai workbench api client', () => {
       ),
     )
 
-    const response = await applyAiResumeOptimization({
+    const response = await createApplyAiResumeOptimizationMethod({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
       draftUpdatedAt: '2026-03-30T00:00:00.000Z',

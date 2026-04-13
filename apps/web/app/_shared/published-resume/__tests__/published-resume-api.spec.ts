@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { fetchPublishedResume } from '../services/published-resume-api'
+import { createFetchPublishedResumeMethod } from '../services/published-resume-api'
 
 function createJsonResponse(status: number, payload: unknown): Response {
   return new Response(JSON.stringify(payload), {
@@ -78,7 +78,7 @@ describe('published resume api', () => {
       ),
     )
 
-    const result = await fetchPublishedResume({
+    const result = await createFetchPublishedResumeMethod({
       apiBaseUrl: 'http://localhost:5577',
     })
 
@@ -98,7 +98,7 @@ describe('published resume api', () => {
       vi.fn().mockResolvedValue(new Response(null, { status: 404 })),
     )
 
-    const result = await fetchPublishedResume({
+    const result = await createFetchPublishedResumeMethod({
       apiBaseUrl: 'http://localhost:5577',
     })
 

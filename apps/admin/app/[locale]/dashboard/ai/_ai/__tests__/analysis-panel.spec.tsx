@@ -8,6 +8,30 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AiAnalysisPanel } from '../components/analysis-panel'
 import type { StandardResume } from '../../../resume/_resume/types/resume.types'
 
+vi.mock('alova/client', async () => {
+  const React = await import('react')
+
+  return {
+    useRequest: (methodHandler: any) => {
+      const [loading, setLoading] = React.useState(false)
+
+      const send = React.useCallback(async (...args: unknown[]) => {
+        setLoading(true)
+
+        try {
+          const method =
+            typeof methodHandler === 'function' ? methodHandler(...args) : methodHandler
+          return await method.send()
+        } finally {
+          setLoading(false)
+        }
+      }, [methodHandler])
+
+      return { loading, send }
+    },
+  }
+})
+
 afterEach(() => {
   cleanup()
 })
@@ -74,16 +98,16 @@ const runtimeSummary = {
 }
 
 function ControlledAnalysisPanel(props: {
-  applyResumeOptimization?: typeof import('../services/ai-workbench-api').applyAiResumeOptimization
+  createApplyResumeOptimizationMethod?: typeof import('../services/ai-workbench-api').createApplyAiResumeOptimizationMethod
   canAnalyze: boolean
-  generateResumeOptimization?: typeof import('../services/ai-workbench-api').generateAiResumeOptimization
+  createGenerateResumeOptimizationMethod?: typeof import('../services/ai-workbench-api').createGenerateAiResumeOptimizationMethod
   helperMessage?: string | null
   onDraftApplied?: (snapshot: {
     status: 'draft'
     updatedAt: string
     resume: StandardResume
   }) => void
-  triggerAnalysis?: typeof import('../services/ai-workbench-api').triggerAiWorkbenchAnalysis
+  createTriggerAnalysisMethod?: typeof import('../services/ai-workbench-api').createTriggerAiWorkbenchAnalysisMethod
   initialContent?: string
 }) {
   const [content, setContent] = useState(props.initialContent ?? '')
@@ -98,9 +122,11 @@ function ControlledAnalysisPanel(props: {
       onContentChange={setContent}
       onDraftApplied={props.onDraftApplied}
       runtimeSummary={runtimeSummary}
-      applyResumeOptimization={props.applyResumeOptimization}
-      generateResumeOptimization={props.generateResumeOptimization}
-      triggerAnalysis={props.triggerAnalysis}
+      createApplyResumeOptimizationMethod={props.createApplyResumeOptimizationMethod}
+      createGenerateResumeOptimizationMethod={
+        props.createGenerateResumeOptimizationMethod
+      }
+      createTriggerAnalysisMethod={props.createTriggerAnalysisMethod}
     />
   )
 }
@@ -162,13 +188,16 @@ describe('AiAnalysisPanel', () => {
         createdAt: '2026-03-27T00:00:00.000Z',
       },
     })
+    const createTriggerAnalysisMethod = vi.fn((input) => ({
+      send: () => triggerAnalysis(input),
+    }))
 
     render(
       <ControlledAnalysisPanel
         canAnalyze
         helperMessage="已将 resume.pdf 的提取结果同步到分析输入区。"
         initialContent="NestJS React TypeScript"
-        triggerAnalysis={triggerAnalysis}
+        createTriggerAnalysisMethod={createTriggerAnalysisMethod as any}
       />,
     )
 
@@ -218,12 +247,15 @@ describe('AiAnalysisPanel', () => {
     const triggerAnalysis = vi
       .fn()
       .mockRejectedValue(new Error('Provider request failed'))
+    const createTriggerAnalysisMethod = vi.fn((input) => ({
+      send: () => triggerAnalysis(input),
+    }))
 
     render(
       <ControlledAnalysisPanel
         canAnalyze
         initialContent="NestJS React TypeScript"
-        triggerAnalysis={triggerAnalysis}
+        createTriggerAnalysisMethod={createTriggerAnalysisMethod as any}
       />,
     )
 
@@ -236,7 +268,14 @@ describe('AiAnalysisPanel', () => {
     const user = userEvent.setup()
     const triggerAnalysis = vi.fn()
 
-    render(<ControlledAnalysisPanel canAnalyze triggerAnalysis={triggerAnalysis} />)
+    render(
+      <ControlledAnalysisPanel
+        canAnalyze
+        createTriggerAnalysisMethod={vi.fn((input) => ({
+          send: () => triggerAnalysis(input),
+        })) as any}
+      />,
+    )
 
     await user.click(screen.getByRole('button', { name: '开始真实分析' }))
 
@@ -280,12 +319,15 @@ describe('AiAnalysisPanel', () => {
         createdAt: '2026-03-27T00:00:00.000Z',
       },
     })
+    const createTriggerAnalysisMethod = vi.fn((input) => ({
+      send: () => triggerAnalysis(input),
+    }))
 
     render(
       <ControlledAnalysisPanel
         canAnalyze
         initialContent="NestJS React TypeScript"
-        triggerAnalysis={triggerAnalysis}
+        createTriggerAnalysisMethod={createTriggerAnalysisMethod as any}
       />,
     )
 
@@ -340,6 +382,9 @@ describe('AiAnalysisPanel', () => {
         createdAt: '2026-03-27T00:00:00.000Z',
       },
     })
+    const createTriggerAnalysisMethod = vi.fn((input) => ({
+      send: () => triggerAnalysis(input),
+    }))
     const generateResumeOptimization = vi.fn().mockResolvedValue({
       summary: '已生成结构化建议稿',
       focusAreas: ['强化摘要', '补强项目亮点'],
@@ -413,16 +458,24 @@ describe('AiAnalysisPanel', () => {
       resume: createTestResume(),
       updatedAt: '2026-03-30T00:00:00.000Z',
     })
+    const createGenerateResumeOptimizationMethod = vi.fn((input) => ({
+      send: () => generateResumeOptimization(input),
+    }))
+    const createApplyResumeOptimizationMethod = vi.fn((input) => ({
+      send: () => applyResumeOptimization(input),
+    }))
     const onDraftApplied = vi.fn()
 
     render(
       <ControlledAnalysisPanel
-        applyResumeOptimization={applyResumeOptimization}
+        createApplyResumeOptimizationMethod={createApplyResumeOptimizationMethod as any}
         canAnalyze
-        generateResumeOptimization={generateResumeOptimization}
+        createGenerateResumeOptimizationMethod={
+          createGenerateResumeOptimizationMethod as any
+        }
         initialContent="请根据 React 和 Next.js 岗位优化当前简历"
         onDraftApplied={onDraftApplied}
-        triggerAnalysis={triggerAnalysis}
+        createTriggerAnalysisMethod={createTriggerAnalysisMethod as any}
       />,
     )
 
@@ -488,11 +541,16 @@ describe('AiAnalysisPanel', () => {
   it('should restrict structured suggestion to resume-review scenario', async () => {
     const user = userEvent.setup()
     const generateResumeOptimization = vi.fn()
+    const createGenerateResumeOptimizationMethod = vi.fn((input) => ({
+      send: () => generateResumeOptimization(input),
+    }))
 
     render(
       <ControlledAnalysisPanel
         canAnalyze
-        generateResumeOptimization={generateResumeOptimization}
+        createGenerateResumeOptimizationMethod={
+          createGenerateResumeOptimizationMethod as any
+        }
         initialContent="请根据 offer 内容给出建议"
       />,
     )

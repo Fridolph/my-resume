@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { extractTextFromFile } from '../services/ai-file-api'
+import { createExtractTextFromFileMethod } from '../services/ai-file-api'
 
 function createJsonResponse(status: number, payload: unknown): Response {
   return new Response(JSON.stringify(payload), {
@@ -34,7 +34,7 @@ describe('ai file api client', () => {
       type: 'text/markdown',
     })
 
-    const result = await extractTextFromFile({
+    const result = await createExtractTextFromFileMethod({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
       file,
@@ -69,7 +69,7 @@ describe('ai file api client', () => {
     })
 
     await expect(
-      extractTextFromFile({
+      createExtractTextFromFileMethod({
         apiBaseUrl: 'http://localhost:5577',
         accessToken: 'demo-token',
         file,

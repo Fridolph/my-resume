@@ -1,1 +1,1 @@
-export { createExtractTextFromFileMethod, extractTextFromFile } from '@my-resume/api-client'
+export { createExtractTextFromFileMethod } from '@my-resume/api-client'

@@ -10,6 +10,6 @@ const nextConfig: NextConfig = {
   },
 }
 
-const withNextIntl = createNextIntlPlugin('./app/_core/i18n/request.ts')
+const withNextIntl = createNextIntlPlugin()
 
 export default withNextIntl(nextConfig)

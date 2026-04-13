@@ -82,18 +82,6 @@ export function createFetchPublishedResumeMethod(input: ResumeRequestInput) {
 }
 
 /**
- * 读取已发布简历快照
- *
- * @param input 请求参数
- * @returns 已发布快照或 null
- */
-export async function fetchPublishedResume(
-  input: ResumeRequestInput,
-): Promise<ResumePublishedSnapshot | null> {
-  return createFetchPublishedResumeMethod(input).send()
-}
-
-/**
  * 构造读取草稿快照 Method
  *
  * @param input 请求参数
@@ -106,18 +94,6 @@ export function createFetchDraftResumeMethod(input: AuthenticatedResumeRequestIn
     accessToken: input.accessToken,
     fallbackErrorMessage: '草稿读取失败，请确认当前账号拥有编辑权限',
   })
-}
-
-/**
- * 读取草稿快照
- *
- * @param input 请求参数
- * @returns 草稿快照
- */
-export async function fetchDraftResume(
-  input: AuthenticatedResumeRequestInput,
-): Promise<ResumeDraftSnapshot> {
-  return createFetchDraftResumeMethod(input).send()
 }
 
 /**
@@ -143,18 +119,6 @@ export function createFetchDraftResumeSummaryMethod(
 }
 
 /**
- * 读取草稿摘要
- *
- * @param input 请求参数
- * @returns 草稿摘要快照
- */
-export async function fetchDraftResumeSummary(
-  input: AuthenticatedResumeSummaryRequestInput,
-): Promise<ResumeDraftSummarySnapshot> {
-  return createFetchDraftResumeSummaryMethod(input).send()
-}
-
-/**
  * 构造更新草稿 Method
  *
  * @param input 请求参数
@@ -175,18 +139,6 @@ export function createUpdateDraftResumeMethod(input: UpdateResumeDraftInput) {
 }
 
 /**
- * 更新草稿
- *
- * @param input 请求参数
- * @returns 更新后的草稿快照
- */
-export async function updateDraftResume(
-  input: UpdateResumeDraftInput,
-): Promise<ResumeDraftSnapshot> {
-  return createUpdateDraftResumeMethod(input).send()
-}
-
-/**
  * 构造发布当前草稿 Method
  *
  * @param input 请求参数
@@ -200,18 +152,6 @@ export function createPublishResumeMethod(input: AuthenticatedResumeRequestInput
     accessToken: input.accessToken,
     fallbackErrorMessage: '发布失败，请确认当前账号拥有发布权限',
   })
-}
-
-/**
- * 发布当前草稿
- *
- * @param input 请求参数
- * @returns 已发布快照
- */
-export async function publishResume(
-  input: AuthenticatedResumeRequestInput,
-): Promise<ResumePublishedSnapshot> {
-  return createPublishResumeMethod(input).send()
 }
 
 /**
@@ -235,16 +175,4 @@ export function createFetchPublishedResumeSummaryMethod(input: ResumeSummaryRequ
     fallbackErrorMessage: '公开简历摘要读取失败',
     returnNullOnNotFound: true,
   })
-}
-
-/**
- * 读取已发布摘要
- *
- * @param input 请求参数
- * @returns 发布摘要快照或 null
- */
-export async function fetchPublishedResumeSummary(
-  input: ResumeSummaryRequestInput,
-): Promise<ResumePublishedSummarySnapshot | null> {
-  return createFetchPublishedResumeSummaryMethod(input).send()
 }

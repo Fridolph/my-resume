@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
-  fetchDraftResume,
-  fetchDraftResumeSummary,
-  updateDraftResume,
+  createFetchDraftResumeMethod,
+  createFetchDraftResumeSummaryMethod,
+  createUpdateDraftResumeMethod,
 } from '../services/resume-draft-api'
 import type { ResumeDraftSnapshot, ResumeDraftSummarySnapshot } from '../types/resume.types'
 
@@ -106,7 +106,7 @@ describe('resume draft api client', () => {
       vi.fn().mockResolvedValue(createJsonResponse(200, draftSnapshot)),
     )
 
-    const response = await fetchDraftResume({
+    const response = await createFetchDraftResumeMethod({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
     })
@@ -128,7 +128,7 @@ describe('resume draft api client', () => {
       vi.fn().mockResolvedValue(createJsonResponse(200, draftSummarySnapshot)),
     )
 
-    const response = await fetchDraftResumeSummary({
+    const response = await createFetchDraftResumeSummaryMethod({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
       locale: 'zh',
@@ -151,7 +151,7 @@ describe('resume draft api client', () => {
       vi.fn().mockResolvedValue(createJsonResponse(200, draftSnapshot)),
     )
 
-    const response = await updateDraftResume({
+    const response = await createUpdateDraftResumeMethod({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
       resume: draftSnapshot.resume,

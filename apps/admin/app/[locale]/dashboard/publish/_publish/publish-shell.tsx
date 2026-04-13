@@ -1,5 +1,6 @@
 'use client'
 
+import { useRequest } from 'alova/client'
 import {
   Card,
   CardContent,
@@ -17,13 +18,42 @@ import type { AppLocale } from '@core/i18n/types'
 import { RoleActionPanel } from '@shared/ui/components/role-action-panel'
 
 import { ExportEntryPanel } from './components/export-entry-panel'
-import { postProtectedAction, publishResume } from '../../../_auth/services/auth-api'
+import {
+  createPostProtectedActionMethod,
+  createPublishResumeMethod,
+} from '../../../_auth/services/auth-api'
 
 export function AdminPublishShell({ locale }: { locale: AppLocale }) {
   const { accessToken, currentUser, status } = useAdminSession()
   const t = useTranslations('publish')
-  const [pendingAction, setPendingAction] = useState<'publish' | 'ai-analysis' | null>(
-    null,
+  const {
+    loading: publishPending,
+    send: triggerPublish,
+  } = useRequest(
+    () =>
+      createPublishResumeMethod({
+        apiBaseUrl: DEFAULT_API_BASE_URL,
+        accessToken: accessToken ?? '',
+      }),
+    {
+      force: true,
+      immediate: false,
+    },
+  )
+  const {
+    loading: aiActionPending,
+    send: triggerAiAction,
+  } = useRequest(
+    () =>
+      createPostProtectedActionMethod({
+        apiBaseUrl: DEFAULT_API_BASE_URL,
+        accessToken: accessToken ?? '',
+        pathname: '/auth/demo/ai-analysis',
+      }),
+    {
+      force: true,
+      immediate: false,
+    },
   )
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null)
 
@@ -31,46 +61,47 @@ export function AdminPublishShell({ locale }: { locale: AppLocale }) {
     return null
   }
 
-  const sessionToken = accessToken
+  const pendingAction: 'ai-analysis' | 'publish' | null = publishPending
+    ? 'publish'
+    : aiActionPending
+      ? 'ai-analysis'
+      : null
 
+  /**
+   * 触发发布动作，并在成功后反馈最新发布快照信息
+   *
+   * @returns 发布流程完成后的 Promise
+   */
   async function handlePublish() {
-    setPendingAction('publish')
     setFeedbackMessage(null)
 
     try {
-      const result = await publishResume({
-        apiBaseUrl: DEFAULT_API_BASE_URL,
-        accessToken: sessionToken,
-      })
+      const result = await triggerPublish()
 
       setFeedbackMessage(
         `简历已发布：${result.resume.meta.slug}，请刷新公开站查看最新内容。`,
       )
     } catch (error) {
       setFeedbackMessage(error instanceof Error ? error.message : '发布失败，请稍后重试')
-    } finally {
-      setPendingAction(null)
     }
   }
 
+  /**
+   * 触发受保护的 AI 角色动作，并返回 server 权限校验结果
+   *
+   * @returns 动作流程完成后的 Promise
+   */
   async function handleAiAction() {
-    setPendingAction('ai-analysis')
     setFeedbackMessage(null)
 
     try {
-      const result = await postProtectedAction({
-        apiBaseUrl: DEFAULT_API_BASE_URL,
-        accessToken: sessionToken,
-        pathname: '/auth/demo/ai-analysis',
-      })
+      const result = await triggerAiAction()
 
       setFeedbackMessage(result.message)
     } catch (error) {
       setFeedbackMessage(
         error instanceof Error ? error.message : '当前角色无权执行该操作',
       )
-    } finally {
-      setPendingAction(null)
     }
   }
 

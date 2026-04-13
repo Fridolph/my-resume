@@ -1,5 +1,6 @@
 'use client'
 
+import { useRequest } from 'alova/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@heroui/react/card'
 import { Chip } from '@heroui/react/chip'
 import { useTranslations } from 'next-intl'
@@ -12,7 +13,7 @@ import type { AppLocale } from '@core/i18n/types'
 import { writeAccessToken } from '@core/session-storage'
 import { ThemeModeToggle } from '@shared/ui/components/theme-mode-toggle'
 
-import { loginWithPassword } from './services/auth-api'
+import { createLoginWithPasswordMethod } from './services/auth-api'
 import { LoginForm } from './components/login-form'
 
 /**
@@ -24,8 +25,19 @@ export function AdminLoginShell({ locale }: { locale: AppLocale }) {
   const router = useRouter()
   const t = useTranslations('auth')
   const { currentUser, establishSession, status } = useAdminSession()
-  const [pending, setPending] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const { loading: pending, send: triggerLogin } = useRequest(
+    (values: { password: string; username: string }) =>
+      createLoginWithPasswordMethod({
+        apiBaseUrl: DEFAULT_API_BASE_URL,
+        username: values.username,
+        password: values.password,
+      }),
+    {
+      force: true,
+      immediate: false,
+    },
+  )
 
   useEffect(() => {
     // 已有合法会话时直接跳工作区，避免重复停留在登录页
@@ -43,15 +55,10 @@ export function AdminLoginShell({ locale }: { locale: AppLocale }) {
    * @returns 登录链路完成后的 Promise
    */
   async function handleLogin(values: { username: string; password: string }) {
-    setPending(true)
     setErrorMessage(null)
 
     try {
-      const loginResult = await loginWithPassword({
-        apiBaseUrl: DEFAULT_API_BASE_URL,
-        username: values.username,
-        password: values.password,
-      })
+      const loginResult = await triggerLogin(values)
 
       writeAccessToken(loginResult.accessToken)
       establishSession({
@@ -60,8 +67,6 @@ export function AdminLoginShell({ locale }: { locale: AppLocale }) {
       })
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : '登录失败，请稍后重试')
-    } finally {
-      setPending(false)
     }
   }
 

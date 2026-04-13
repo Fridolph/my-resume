@@ -1,6 +1,6 @@
 import { DEFAULT_API_BASE_URL } from '@core/env'
 import { isAppLocale } from '@core/i18n/types'
-import { fetchPublishedResume } from '@shared/published-resume/services/published-resume-api'
+import { createFetchPublishedResumeMethod } from '@shared/published-resume/services/published-resume-api'
 
 import { AiTalkPlaceholderShell } from './_ai-talk/placeholder-shell'
 
@@ -11,7 +11,7 @@ export default async function AiTalkPage({
 }) {
   const { locale } = await params
   const routeLocale = isAppLocale(locale) ? locale : 'zh'
-  const publishedResume = await fetchPublishedResume({
+  const publishedResume = await createFetchPublishedResumeMethod({
     apiBaseUrl: DEFAULT_API_BASE_URL,
   })
 

@@ -98,6 +98,13 @@
     color 0.2s ease;
 }
 
+.tooltipTokenTrigger {
+  display: inline-flex;
+  width: fit-content;
+  height: fit-content;
+  border-radius: 999px;
+}
+
 .legendCard {
   border: 1px solid rgba(226, 232, 240, 0.7);
   border-radius: 1.5rem;
