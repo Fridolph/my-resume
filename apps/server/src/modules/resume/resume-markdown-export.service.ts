@@ -10,58 +10,103 @@ type MarkdownSection = {
 const SECTION_TITLES: Record<
   ResumeLocale,
   {
-    summary: string
+    profile: string
     highlights: string
     experience: string
     projects: string
     education: string
     skills: string
-    interests: string
-    links: string
   }
 > = {
   zh: {
-    summary: '个人简介',
-    highlights: '亮点',
+    profile: '基本信息',
+    highlights: '核心竞争力',
     experience: '工作经历',
-    projects: '项目经历',
+    projects: '核心项目经历',
     education: '教育经历',
-    skills: '技能清单',
-    interests: '兴趣方向',
-    links: '相关链接',
+    skills: '专业技能',
   },
   en: {
-    summary: 'Summary',
-    highlights: 'Highlights',
-    experience: 'Experience',
-    projects: 'Projects',
+    profile: 'Basic Information',
+    highlights: 'Core Strengths',
+    experience: 'Work Experience',
+    projects: 'Key Projects',
     education: 'Education',
-    skills: 'Skills',
-    interests: 'Interests',
-    links: 'Links',
+    skills: 'Professional Skills',
+  },
+}
+
+const PROFILE_TABLE_HEADERS: Record<ResumeLocale, string[]> = {
+  zh: ['姓名', '学历', '工作年限', '方向', '地点'],
+  en: ['Name', 'Education', 'Years', 'Focus', 'Location'],
+}
+
+const PROFILE_FIELD_LABELS: Record<
+  ResumeLocale,
+  {
+    email: string
+    phone: string
+  }
+> = {
+  zh: {
+    email: 'Email',
+    phone: 'Phone',
+  },
+  en: {
+    email: 'Email',
+    phone: 'Phone',
   },
 }
 
 const PROJECT_FIELD_LABELS: Record<
   ResumeLocale,
   {
+    role: string
     summary: string
     coreFunctions: string
+    highlights: string
+    tech: string
+    links: string
+  }
+> = {
+  zh: {
+    role: '角色',
+    summary: '项目概览',
+    coreFunctions: '项目核心功能',
+    highlights: '亮点、难点与解决方案',
+    tech: '技术栈',
+    links: '相关链接',
+  },
+  en: {
+    role: 'Role',
+    summary: 'Summary',
+    coreFunctions: 'Core Functions',
+    highlights: 'Highlights, Challenges & Solutions',
+    tech: 'Tech Stack',
+    links: 'Links',
+  },
+}
+
+const EXPERIENCE_FIELD_LABELS: Record<
+  ResumeLocale,
+  {
+    role: string
+    summary: string
     highlights: string
     tech: string
   }
 > = {
   zh: {
-    summary: '项目概览',
-    coreFunctions: '项目核心功能',
-    highlights: '亮点、难点与解决方案',
+    role: '职位与类型',
+    summary: '工作概述',
+    highlights: '主要成果',
     tech: '技术栈',
   },
   en: {
-    summary: 'Summary',
-    coreFunctions: 'Core Functions',
-    highlights: 'Highlights, Challenges & Solutions',
-    tech: 'Tech',
+    role: 'Role & Type',
+    summary: 'Overview',
+    highlights: 'Key Achievements',
+    tech: 'Tech Stack',
   },
 }
 
@@ -80,12 +125,132 @@ function renderBulletList(items: string[]): string[] {
   return items.filter(Boolean).map((item) => `- ${item}`)
 }
 
-function formatSkillGroupLabel(name: string, proficiency: number | undefined) {
-  if (typeof proficiency !== 'number') {
-    return name
+function indentLine(value: string, level = 1) {
+  if (!value.trim()) {
+    return ''
   }
 
-  return `${name} (${proficiency}/100)`
+  return `${'  '.repeat(level)}${value}`
+}
+
+function renderIndentedBulletList(items: string[], level = 1) {
+  return renderBulletList(items).map((item) => indentLine(item, level))
+}
+
+function renderLabeledLine(label: string, value: string, locale: ResumeLocale) {
+  if (!value.trim()) {
+    return ''
+  }
+
+  return locale === 'zh' ? `**${label}：** ${value}` : `**${label}:** ${value}`
+}
+
+function renderMarkdownTable(headers: string[], values: string[]) {
+  const divider = headers.map(() => '---')
+  return [
+    `| ${headers.join(' | ')} |`,
+    `| ${divider.join(' | ')} |`,
+    `| ${values.map((value) => value || '-').join(' | ')} |`,
+  ]
+}
+
+function normalizeDateLabel(value: string, locale: ResumeLocale) {
+  if (locale === 'en' && value === '至今') {
+    return 'Present'
+  }
+
+  return value
+}
+
+function formatTimeline(
+  startDate: string,
+  endDate: string,
+  locale: ResumeLocale,
+  wrap = true,
+) {
+  const label = `${startDate} - ${normalizeDateLabel(endDate, locale)}`
+
+  if (!wrap) {
+    return label
+  }
+
+  return locale === 'zh' ? `（${label}）` : `(${label})`
+}
+
+function deriveWorkYears(resume: StandardResume, locale: ResumeLocale) {
+  const firstStartDate = [...resume.experiences]
+    .map((item) => item.startDate)
+    .filter(Boolean)
+    .sort()[0]
+
+  if (!firstStartDate) {
+    return ''
+  }
+
+  const [year, month = '01'] = firstStartDate.split('-')
+  const start = new Date(Date.UTC(Number(year), Number(month) - 1, 1))
+  const now = new Date()
+  let years = now.getUTCFullYear() - start.getUTCFullYear()
+  const monthDiff = now.getUTCMonth() - start.getUTCMonth()
+
+  if (monthDiff < 0) {
+    years -= 1
+  }
+
+  if (years > 0) {
+    return locale === 'zh' ? `${years}年` : `${years}+ years`
+  }
+
+  return locale === 'zh' ? '1年以内' : 'Less than 1 year'
+}
+
+function pickPrimaryEducation(resume: StandardResume, locale: ResumeLocale) {
+  const education = resume.education[0]
+
+  if (!education) {
+    return ''
+  }
+
+  return joinNonEmpty(
+    [
+      readLocalizedText(education.degree, locale),
+      readLocalizedText(education.fieldOfStudy, locale),
+    ],
+    '·',
+  )
+}
+
+function expandEducationDegree(value: string, locale: ResumeLocale) {
+  const normalized = value.trim()
+
+  if (locale !== 'zh') {
+    return [normalized]
+  }
+
+  switch (normalized) {
+    case '本科':
+      return ['全日制本科', '学士']
+    case '硕士':
+      return ['全日制硕士', '硕士']
+    case '博士':
+      return ['全日制博士', '博士']
+    default:
+      return [normalized]
+  }
+}
+
+function formatEducationSummary(
+  degree: string,
+  fieldOfStudy: string,
+  timeline: string,
+  locale: ResumeLocale,
+) {
+  const summary = joinNonEmpty(
+    [...expandEducationDegree(degree, locale), fieldOfStudy],
+    ' / ',
+  )
+
+  return joinNonEmpty([timeline, summary], '  ')
 }
 
 @Injectable()
@@ -94,10 +259,10 @@ export class ResumeMarkdownExportService {
     const sections = [
       this.renderProfileSection(resume, locale),
       this.renderHighlightsSection(resume, locale),
-      this.renderExperienceSection(resume, locale),
-      this.renderProjectsSection(resume, locale),
       this.renderEducationSection(resume, locale),
       this.renderSkillsSection(resume, locale),
+      this.renderExperienceSection(resume, locale),
+      this.renderProjectsSection(resume, locale),
     ].filter((section): section is MarkdownSection => section !== null)
 
     return sections
@@ -110,45 +275,35 @@ export class ResumeMarkdownExportService {
     resume: StandardResume,
     locale: ResumeLocale,
   ): MarkdownSection {
-    const titles = SECTION_TITLES[locale]
     const profile = resume.profile
+    const labels = PROFILE_FIELD_LABELS[locale]
+    const tableHeaders = PROFILE_TABLE_HEADERS[locale]
+    const contactLine = joinNonEmpty(
+      [
+        `${labels.email}: ${profile.email}`,
+        `${labels.phone}: ${profile.phone}`,
+      ],
+      '  |  ',
+    )
 
     const lines = [
       `# ${readLocalizedText(profile.fullName, locale)}`,
-      readLocalizedText(profile.headline, locale),
-      joinNonEmpty([
+      '',
+      ...renderMarkdownTable(tableHeaders, [
+        readLocalizedText(profile.fullName, locale),
+        pickPrimaryEducation(resume, locale),
+        deriveWorkYears(resume, locale),
+        readLocalizedText(profile.headline, locale),
         readLocalizedText(profile.location, locale),
-        profile.email,
-        profile.phone,
-        profile.website,
       ]),
+      '',
+      contactLine,
       '',
       readLocalizedText(profile.summary, locale),
     ].filter(Boolean)
 
-    if (profile.links.length > 0) {
-      lines.push('', `### ${titles.links}`)
-      lines.push(
-        ...renderBulletList(
-          profile.links.map((link) => {
-            const label = readLocalizedText(link.label, locale)
-            return `[${label}](${link.url})`
-          }),
-        ),
-      )
-    }
-
-    if (profile.interests.length > 0) {
-      lines.push('', `### ${titles.interests}`)
-      lines.push(
-        ...renderBulletList(
-          profile.interests.map((interest) => readLocalizedText(interest.label, locale)),
-        ),
-      )
-    }
-
     return {
-      title: titles.summary,
+      title: SECTION_TITLES[locale].profile,
       lines,
     }
   }
@@ -163,11 +318,12 @@ export class ResumeMarkdownExportService {
 
     return {
       title: SECTION_TITLES[locale].highlights,
-      lines: resume.highlights.flatMap((item) => [
-        `### ${readLocalizedText(item.title, locale)}`,
-        readLocalizedText(item.description, locale),
-        '',
-      ]),
+      lines: renderBulletList(
+        resume.highlights.map((item) => {
+          const separator = locale === 'zh' ? '：' : ': '
+          return `**${readLocalizedText(item.title, locale)}**${separator}${readLocalizedText(item.description, locale)}`
+        }),
+      ),
     }
   }
 
@@ -179,20 +335,51 @@ export class ResumeMarkdownExportService {
       return null
     }
 
+    const labels = EXPERIENCE_FIELD_LABELS[locale]
     const lines = resume.experiences.flatMap((item) => [
-      `### ${readLocalizedText(item.companyName, locale)}`,
-      joinNonEmpty([
-        readLocalizedText(item.role, locale),
-        readLocalizedText(item.employmentType, locale),
-        `${item.startDate} - ${item.endDate}`,
-        readLocalizedText(item.location, locale),
-      ]),
-      '',
-      readLocalizedText(item.summary, locale),
-      ...renderBulletList(
-        item.highlights.map((highlight) => readLocalizedText(highlight, locale)),
+      indentLine(
+        `### **${readLocalizedText(item.companyName, locale)}** ${formatTimeline(
+          item.startDate,
+          item.endDate,
+          locale,
+        )}`,
       ),
-      `**Tech:** ${item.technologies.join(' / ')}`,
+      '',
+      indentLine(
+        renderLabeledLine(
+          labels.role,
+          joinNonEmpty(
+            [
+              readLocalizedText(item.role, locale),
+              readLocalizedText(item.employmentType, locale),
+              readLocalizedText(item.location, locale),
+            ],
+            ' · ',
+          ),
+          locale,
+        ),
+        2,
+      ),
+      indentLine(
+        renderLabeledLine(labels.summary, readLocalizedText(item.summary, locale), locale),
+        2,
+      ),
+      item.highlights.length > 0
+        ? indentLine(
+            locale === 'zh'
+              ? `**${labels.highlights}：**`
+              : `**${labels.highlights}:**`,
+            2,
+          )
+        : '',
+      ...renderIndentedBulletList(
+        item.highlights.map((highlight) => readLocalizedText(highlight, locale)),
+        2,
+      ),
+      indentLine(
+        renderLabeledLine(labels.tech, item.technologies.join(' / '), locale),
+        2,
+      ),
       '',
     ])
 
@@ -212,31 +399,71 @@ export class ResumeMarkdownExportService {
 
     const fieldLabels = PROJECT_FIELD_LABELS[locale]
     const lines = resume.projects.flatMap((item) => [
-      `### ${readLocalizedText(item.name, locale)}`,
-      joinNonEmpty([
-        readLocalizedText(item.role, locale),
-        `${item.startDate} - ${item.endDate}`,
-      ]),
+      indentLine(
+        `### **${readLocalizedText(item.name, locale)}** ${formatTimeline(
+          item.startDate,
+          item.endDate,
+          locale,
+        )}`,
+      ),
       '',
+      indentLine(
+        renderLabeledLine(fieldLabels.role, readLocalizedText(item.role, locale), locale),
+        2,
+      ),
       readLocalizedText(item.summary, locale)
-        ? `**${fieldLabels.summary}:** ${readLocalizedText(item.summary, locale)}`
+        ? indentLine(
+            renderLabeledLine(
+              fieldLabels.summary,
+              readLocalizedText(item.summary, locale),
+              locale,
+            ),
+            2,
+          )
         : '',
       readLocalizedText(item.coreFunctions, locale)
-        ? `**${fieldLabels.coreFunctions}:** ${readLocalizedText(item.coreFunctions, locale)}`
+        ? indentLine(
+            renderLabeledLine(
+              fieldLabels.coreFunctions,
+              readLocalizedText(item.coreFunctions, locale),
+              locale,
+            ),
+            2,
+          )
         : '',
-      item.highlights.length > 0 ? `**${fieldLabels.highlights}:**` : '',
-      ...renderBulletList(
+      item.highlights.length > 0
+        ? indentLine(
+            locale === 'zh'
+              ? `**${fieldLabels.highlights}：**`
+              : `**${fieldLabels.highlights}:**`,
+            2,
+          )
+        : '',
+      ...renderIndentedBulletList(
         item.highlights.map((highlight) => readLocalizedText(highlight, locale)),
+        2,
       ),
       item.technologies.length > 0
-        ? `**${fieldLabels.tech}:** ${item.technologies.join(' / ')}`
+        ? indentLine(
+            renderLabeledLine(fieldLabels.tech, item.technologies.join(' / '), locale),
+            2,
+          )
         : '',
-      ...renderBulletList(
-        item.links.map((link) => {
-          const label = readLocalizedText(link.label, locale)
-          return `[${label}](${link.url})`
-        }),
-      ),
+      item.links.length > 0
+        ? indentLine(
+            renderLabeledLine(
+              fieldLabels.links,
+              item.links
+                .map((link) => {
+                  const label = readLocalizedText(link.label, locale)
+                  return `[${label}](${link.url})`
+                })
+                .join(' / '),
+              locale,
+            ),
+            2,
+          )
+        : '',
       '',
     ])
 
@@ -255,15 +482,16 @@ export class ResumeMarkdownExportService {
     }
 
     const lines = resume.education.flatMap((item) => [
-      `### ${readLocalizedText(item.schoolName, locale)}`,
-      joinNonEmpty([
-        readLocalizedText(item.degree, locale),
-        readLocalizedText(item.fieldOfStudy, locale),
-        `${item.startDate} - ${item.endDate}`,
-        readLocalizedText(item.location, locale),
-      ]),
-      ...renderBulletList(
-        item.highlights.map((highlight) => readLocalizedText(highlight, locale)),
+      indentLine(`### **${readLocalizedText(item.schoolName, locale)}**`),
+      '',
+      indentLine(
+        formatEducationSummary(
+          readLocalizedText(item.degree, locale),
+          readLocalizedText(item.fieldOfStudy, locale),
+          formatTimeline(item.startDate, item.endDate, locale, false),
+          locale,
+        ),
+        2,
       ),
       '',
     ])
@@ -284,10 +512,11 @@ export class ResumeMarkdownExportService {
 
     return {
       title: SECTION_TITLES[locale].skills,
-      lines: resume.skills.map(
-        (group) =>
-          `- **${formatSkillGroupLabel(readLocalizedText(group.name, locale), group.proficiency)}**: ${group.keywords.join(' / ')}`,
-      ),
+      lines: resume.skills.flatMap((group) => [
+        indentLine(`### ${readLocalizedText(group.name, locale)}`),
+        ...renderIndentedBulletList(group.keywords, 2),
+        '',
+      ]),
     }
   }
 }

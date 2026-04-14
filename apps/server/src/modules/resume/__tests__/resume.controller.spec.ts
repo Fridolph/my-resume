@@ -72,4 +72,18 @@ describe('ResumeController cache headers', () => {
     expect(response.setHeader).toHaveBeenCalledWith('Pragma', 'no-cache')
     expect(response.setHeader).toHaveBeenCalledWith('Vary', 'Authorization, Cookie')
   })
+
+  it('should mark export downloads as no-store to avoid stale files after publish', async () => {
+    const response = createResponseMock()
+
+    await controller.exportPublishedResumeMarkdown(undefined, response)
+
+    expect(response.setHeader).toHaveBeenCalledWith(
+      'Cache-Control',
+      'no-store, no-cache, max-age=0, must-revalidate',
+    )
+    expect(response.setHeader).toHaveBeenCalledWith('Pragma', 'no-cache')
+    expect(response.setHeader).toHaveBeenCalledWith('Expires', '0')
+    expect(response.setHeader).toHaveBeenCalledWith('Vary', 'Accept-Encoding')
+  })
 })
