@@ -3,6 +3,7 @@ import { INestApplication } from '@nestjs/common'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { Test, TestingModule } from '@nestjs/testing'
+import { PDFParse } from 'pdf-parse'
 import request from 'supertest'
 import { App } from 'supertest/types'
 
@@ -191,6 +192,21 @@ describe('Resume publication flow (e2e)', () => {
 
     expect(pdfResponse.headers['content-type']).toContain('application/pdf')
     expect(pdfResponse.headers['content-disposition']).toContain('standard-resume-zh.pdf')
+
+    const parser = new PDFParse({
+      data: Buffer.isBuffer(pdfResponse.body)
+        ? pdfResponse.body
+        : Buffer.from(pdfResponse.body as Uint8Array),
+    })
+
+    try {
+      const result = await parser.getText()
+
+      expect(result.text).toContain('已发布候选稿')
+      expect(result.text).toContain('个人简介')
+    } finally {
+      await parser.destroy()
+    }
   })
 
   it('should keep viewer read-only for draft and publish actions', async () => {
