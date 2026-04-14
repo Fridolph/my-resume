@@ -152,7 +152,7 @@ export function AnalysisForm({
           </Button>
           <Button
             isDisabled={suggestionPending || applyPending}
-            onClick={onGenerateSuggestion}
+            onPress={onGenerateSuggestion}
             size="md"
             type="button"
             variant="outline">

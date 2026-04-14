@@ -9,13 +9,13 @@ import {
   formatLocalizedLines,
 } from '../editor/draft-editor-helpers'
 import {
+  CloseActionButton,
   EditorEntry,
   EditorSection,
   IconActionButton,
   LocalizedEditorField,
   PlusIcon,
   SortableItemShell,
-  TrashIcon,
 } from '../editor/editor-primitives'
 import type { EducationSectionProps } from '../types/education-section.types'
 
@@ -81,12 +81,9 @@ export function EducationSection({
                     <EditorEntry
                       action={
                         !isTranslationMode ? (
-                          <IconActionButton
-                            icon={<TrashIcon />}
+                          <CloseActionButton
                             label={`删除教育经历 ${index + 1}`}
                             onClick={() => removeEducation(index)}
-                            tone="danger"
-                            variant="ghost"
                           />
                         ) : null
                       }

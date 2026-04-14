@@ -67,7 +67,7 @@ export function AdminMobileDrawer({
         ]
           .join(' ')
           .trim()}
-        onClick={() => onOpenChange(false)}
+        onPress={() => onOpenChange(false)}
         type="button"
         variant="ghost"
       />
@@ -87,7 +87,7 @@ export function AdminMobileDrawer({
               aria-label="关闭导航菜单"
               className={mobileDrawerCloseButtonClass}
               isIconOnly
-              onClick={() => onOpenChange(false)}
+              onPress={() => onOpenChange(false)}
               type="button"
               variant="ghost">
               <span aria-hidden="true">×</span>

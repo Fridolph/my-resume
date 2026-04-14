@@ -3,19 +3,19 @@
 import { DndContext, closestCenter } from '@dnd-kit/core'
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { TextArea } from '@heroui/react'
+import { Input, TextArea } from '@heroui/react'
 import {
   buildDraftFieldKey,
   formatLineSeparatedValues,
 } from '../editor/draft-editor-helpers'
 import {
+  CloseActionButton,
   EditorEntry,
   EditorSection,
   IconActionButton,
   LocalizedEditorField,
   PlusIcon,
   SortableItemShell,
-  TrashIcon,
 } from '../editor/editor-primitives'
 import type {
   HighlightsSectionProps,
@@ -35,6 +35,7 @@ export function SkillsSection({
   removeSkillGroup,
   updateSkillKeywords,
   updateSkillLocalizedField,
+  updateSkillProficiency,
 }: SkillsSectionProps) {
   return (
     <EditorSection
@@ -82,12 +83,9 @@ export function SkillsSection({
                   <EditorEntry
                     action={
                       !isTranslationMode ? (
-                        <IconActionButton
-                          icon={<TrashIcon />}
+                        <CloseActionButton
                           label={`删除技能组 ${index + 1}`}
                           onClick={() => removeSkillGroup(index)}
-                          tone="danger"
-                          variant="ghost"
                         />
                       ) : null
                     }
@@ -111,22 +109,38 @@ export function SkillsSection({
                     />
 
                     {!isTranslationMode ? (
-                      <label className="field">
-                        <span>{`技能组 ${index + 1} 关键词（每行一条）`}</span>
-                        <TextArea
-                          fullWidth
-                          onChange={(event) =>
-                            updateSkillKeywords(index, event.target.value)
-                          }
-                          rows={5}
-                          value={
-                            draftFieldValues[
-                              buildDraftFieldKey('skill', index, 'keywords')
-                            ] ?? formatLineSeparatedValues(skill.keywords)
-                          }
-                          variant="secondary"
-                        />
-                      </label>
+                      <>
+                        <label className="field">
+                          <span>{`技能组 ${index + 1} 雷达图分数（0-100）`}</span>
+                          <Input
+                            fullWidth
+                            max={100}
+                            min={0}
+                            onChange={(event) =>
+                              updateSkillProficiency(index, event.target.value)
+                            }
+                            type="number"
+                            value={String(skill.proficiency ?? '')}
+                            variant="secondary"
+                          />
+                        </label>
+                        <label className="field">
+                          <span>{`技能组 ${index + 1} 关键词（每行一条）`}</span>
+                          <TextArea
+                            fullWidth
+                            onChange={(event) =>
+                              updateSkillKeywords(index, event.target.value)
+                            }
+                            rows={5}
+                            value={
+                              draftFieldValues[
+                                buildDraftFieldKey('skill', index, 'keywords')
+                              ] ?? formatLineSeparatedValues(skill.keywords)
+                            }
+                            variant="secondary"
+                          />
+                        </label>
+                      </>
                     ) : null}
                   </EditorEntry>
                 )}
@@ -193,12 +207,9 @@ export function HighlightsSection({
                   <EditorEntry
                     action={
                       !isTranslationMode ? (
-                        <IconActionButton
-                          icon={<TrashIcon />}
+                        <CloseActionButton
                           label={`删除亮点 ${index + 1}`}
                           onClick={() => removeHighlight(index)}
-                          tone="danger"
-                          variant="ghost"
                         />
                       ) : null
                     }

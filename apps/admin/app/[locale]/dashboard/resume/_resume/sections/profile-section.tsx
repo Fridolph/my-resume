@@ -8,12 +8,12 @@ import {
   formatLocalizedLines,
 } from '../editor/draft-editor-helpers'
 import {
+  CloseActionButton,
   EditorSection,
   IconActionButton,
   LocalizedEditorField,
   PlusIcon,
   SortableItemShell,
-  TrashIcon,
 } from '../editor/editor-primitives'
 import type { ProfileSectionProps } from '../types/profile-section.types'
 
@@ -248,13 +248,10 @@ export function ProfileSection({
                           </div>
                         </div>
                         {!isTranslationMode ? (
-                          <IconActionButton
+                          <CloseActionButton
                             className="mt-0.5"
-                            icon={<TrashIcon />}
                             label={`删除个人链接 ${index + 1}`}
                             onClick={() => removeProfileLink(index)}
-                            tone="danger"
-                            variant="ghost"
                           />
                         ) : null}
                       </div>
@@ -392,13 +389,10 @@ export function ProfileSection({
                           </div>
                         </div>
                         {!isTranslationMode ? (
-                          <IconActionButton
+                          <CloseActionButton
                             className="mt-0.5"
-                            icon={<TrashIcon />}
                             label={`删除兴趣方向 ${index + 1}`}
                             onClick={() => removeProfileInterest(index)}
-                            tone="danger"
-                            variant="ghost"
                           />
                         ) : null}
                       </div>

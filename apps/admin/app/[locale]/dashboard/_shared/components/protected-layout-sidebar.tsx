@@ -43,7 +43,7 @@ export function AdminSidebar({
               aria-label={sidebarCollapsed ? '展开侧边栏' : '折叠侧边栏'}
               className={sidebarToggleButtonClass}
               isIconOnly
-              onClick={onToggle}
+              onPress={onToggle}
               size="sm"
               type="button"
               variant="outline">

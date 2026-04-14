@@ -58,6 +58,15 @@ describe('standard resume domain', () => {
     expect(resume.profile.hero.linkUrl).toBe('https://github.com/Fridolph/my-resume')
     expect(resume.experiences[0]?.companyName.zh).toBe('成都澳昇能源科技有限责任公司')
     expect(resume.projects.some((item) => item.name.zh === 'GreenSketch')).toBe(true)
+    expect(resume.skills.map((item) => item.name.zh)).toEqual([
+      '前端核心能力',
+      '工程化与性能优化',
+      'AI Agent 开发',
+      '架构设计与技术方案',
+      '全栈开发能力',
+      '业务理解与产品化落地',
+    ])
+    expect(resume.skills.map((item) => item.proficiency)).toEqual([95, 88, 73, 90, 77, 86])
   })
 
   it('should reject invalid bilingual content shapes', () => {

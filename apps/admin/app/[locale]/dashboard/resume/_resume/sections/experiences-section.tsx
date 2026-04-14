@@ -10,13 +10,13 @@ import {
   formatLocalizedLines,
 } from '../editor/draft-editor-helpers'
 import {
+  CloseActionButton,
   EditorEntry,
   EditorSection,
   IconActionButton,
   LocalizedEditorField,
   PlusIcon,
   SortableItemShell,
-  TrashIcon,
 } from '../editor/editor-primitives'
 import type { ExperiencesSectionProps } from '../types/experiences-section.types'
 
@@ -82,12 +82,9 @@ export function ExperiencesSection({
                   <EditorEntry
                     action={
                       !isTranslationMode ? (
-                        <IconActionButton
-                          icon={<TrashIcon />}
+                        <CloseActionButton
                           label={`删除工作经历 ${index + 1}`}
                           onClick={() => removeExperience(index)}
-                          tone="danger"
-                          variant="ghost"
                         />
                       ) : null
                     }

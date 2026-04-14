@@ -117,7 +117,7 @@ export function AnalysisReportDetails({
                 {suggestionModule ? (
                   <div className="dashboard-entry-actions">
                     <Button
-                      onClick={() => onLinkSuggestionModule(suggestionModule)}
+                      onPress={() => onLinkSuggestionModule(suggestionModule)}
                       size="sm"
                       type="button"
                       variant="outline">

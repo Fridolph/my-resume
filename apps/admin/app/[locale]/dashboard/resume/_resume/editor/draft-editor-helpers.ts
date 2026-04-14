@@ -102,6 +102,7 @@ export function createEmptySkillGroup(): ResumeSkillGroup {
   return {
     name: createEmptyLocalizedText(),
     keywords: [],
+    proficiency: 75,
   }
 }
 

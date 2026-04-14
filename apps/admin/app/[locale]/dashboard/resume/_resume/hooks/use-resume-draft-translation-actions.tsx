@@ -239,7 +239,7 @@ export function useResumeDraftTranslationActions({
         <div className="flex flex-wrap justify-end gap-2">
           <Button
             aria-label={`${scopeTitle} 复制中文到英文`}
-            onClick={handlers.onCopy}
+            onPress={handlers.onCopy}
             size="sm"
             type="button"
             variant="outline">
@@ -247,7 +247,7 @@ export function useResumeDraftTranslationActions({
           </Button>
           <Button
             aria-label={`${scopeTitle} 清空英文`}
-            onClick={handlers.onClear}
+            onPress={handlers.onClear}
             size="sm"
             type="button"
             variant="ghost">
@@ -255,7 +255,7 @@ export function useResumeDraftTranslationActions({
           </Button>
           <Button
             aria-label={`${scopeTitle} AI 翻译入口预留`}
-            onClick={() => showTranslationPlaceholder(scopeTitle)}
+            onPress={() => showTranslationPlaceholder(scopeTitle)}
             size="sm"
             type="button"
             variant="ghost">

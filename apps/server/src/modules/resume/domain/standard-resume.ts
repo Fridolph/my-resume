@@ -80,6 +80,7 @@ export interface ResumeProjectItem {
 export interface ResumeSkillGroup {
   name: LocalizedText
   keywords: string[]
+  proficiency?: number
 }
 
 export interface ResumeHighlightItem {
@@ -634,58 +635,65 @@ export function createExampleStandardResume(): StandardResume {
     skills: [
       {
         name: createLocalizedText('前端核心能力', 'Frontend Core'),
+        proficiency: 95,
         keywords: [
-          'HTML',
-          'CSS',
-          'JavaScript',
-          'TypeScript',
-          'Vue',
-          'Vue 3',
-          'React',
-          'Next.js',
-          'Nuxt',
-          'Tailwind CSS',
+          'Vue / React / Next.js / Nuxt 组件化与页面架构',
+          'TypeScript 类型建模与 Composition API / Hooks 实践',
+          '复杂交互、响应式布局与可访问性体验打磨',
+          '前端状态管理、数据请求与设计系统协作',
         ],
       },
       {
-        name: createLocalizedText('全栈开发与工程化', 'Full-Stack & Engineering'),
+        name: createLocalizedText('工程化与性能优化', 'Engineering & Performance'),
+        proficiency: 88,
         keywords: [
-          'Node.js',
-          'NestJS',
-          'Vite',
-          'Webpack',
-          'pnpm',
-          'Monorepo',
-          'CI/CD',
-          'Drizzle ORM',
-          'SQLite',
-          'MongoDB',
+          'Vite / Webpack / Turborepo / pnpm workspace 工程治理',
+          '构建产物分析、懒加载与首屏性能优化',
+          'CI/CD、Lint、Typecheck 与可回滚交付流程',
+          'Monorepo 渐进式重构与模块边界拆分',
         ],
       },
       {
         name: createLocalizedText('AI Agent 开发', 'AI Agent Development'),
+        proficiency: 73,
         keywords: [
-          'AI Provider Adapter',
-          'Prompt Engineering',
-          'RAG',
-          'Claude Code',
-          'Cursor',
-          'Codex',
-          'Coze',
-          'OpenClaw',
+          'Prompt Engineering、RAG 与知识库问答基础链路',
+          'Claude Code / Cursor / Codex 辅助开发工作流',
+          'AI Provider Adapter 与流式响应接入实践',
+          'OpenClaw / Coze / Agent 工作流学习与验证',
         ],
       },
       {
-        name: createLocalizedText('质量、性能与安全', 'Quality, Performance & Security'),
+        name: createLocalizedText('架构设计与技术方案', 'Architecture & Technical Design'),
+        proficiency: 90,
         keywords: [
-          'Unit Testing',
-          'Vitest',
-          'Performance Optimization',
-          'Web Worker',
-          'WebSocket',
-          'Responsive Design',
-          'Web Security',
-          'Linux',
+          '模块边界、路由结构与领域模型拆分',
+          '前后端接口契约、权限边界与发布链路设计',
+          '教学型渐进重构方案、Issue 拆解与 Review 节奏',
+          '复杂页面信息架构与可维护组件组织',
+        ],
+      },
+      {
+        name: createLocalizedText('全栈开发能力', 'Full-Stack Development'),
+        proficiency: 77,
+        keywords: [
+          'Node.js / NestJS / RESTful API 服务端开发',
+          'JWT 认证、角色能力模型与接口权限控制',
+          'SQLite / Drizzle ORM / MongoDB 数据层实践',
+          'WebSocket / SSE / 文件处理等应用能力接入',
+        ],
+      },
+      {
+        name: createLocalizedText(
+          '业务理解与产品化落地',
+          'Business Understanding & Product Delivery',
+        ),
+        proficiency: 86,
+        keywords: [
+          '安全、SaaS、能源与内容社区等业务场景交付经验',
+          '需求拆解、优先级判断与跨角色沟通推进',
+          '从后台治理到公开展示的完整产品链路理解',
+          '技术方案文档、教程沉淀与可复用知识资产建设',
         ],
       },
     ],
@@ -1030,6 +1038,16 @@ export function validateStandardResume(resume: StandardResume): ResumeValidation
 
       if (!isStringArray(item.keywords)) {
         errors.push(`skills[${index}].keywords must be a string array`)
+      }
+
+      if (
+        item.proficiency !== undefined &&
+        (typeof item.proficiency !== 'number' ||
+          !Number.isFinite(item.proficiency) ||
+          item.proficiency < 0 ||
+          item.proficiency > 100)
+      ) {
+        errors.push(`skills[${index}].proficiency must be a number between 0 and 100`)
       }
     })
   }

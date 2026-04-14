@@ -227,7 +227,7 @@ export function PublishedResumeSkillsSection({
             <Button
               className={styles.controlButton}
               key={mode}
-              onClick={() => setViewMode(mode)}
+              onPress={() => setViewMode(mode)}
               size="sm"
               type="button"
               variant={viewMode === mode ? 'primary' : 'ghost'}>
@@ -249,7 +249,7 @@ export function PublishedResumeSkillsSection({
               <Button
                 className={styles.controlButton}
                 key={mode}
-                onClick={() => setChartMode(mode)}
+                onPress={() => setChartMode(mode)}
                 size="sm"
                 type="button"
                 variant={chartMode === mode ? 'primary' : 'ghost'}>

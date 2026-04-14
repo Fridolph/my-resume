@@ -11,10 +11,11 @@ import type {
 } from '@shared/published-resume/types/published-resume.types'
 import { readLocalizedText } from '@shared/published-resume/published-resume-utils'
 import { createIndexedRenderKey } from './published-resume-render-key'
+import surfaceStyles from './published-resume-card-surface.module.css'
 import { PublishedResumeSectionCard } from './published-resume-section-card'
 
 const timelineItemClass =
-  'grid gap-2 rounded-3xl border border-slate-400/25 bg-slate-50/82 p-5 dark:border-white/8 dark:bg-white/[0.04]'
+  `grid gap-2 rounded-3xl p-5 ${surfaceStyles.timelineCardSurface}`
 const itemHeaderClass =
   'mb-2 flex flex-col items-start gap-3 md:flex-row md:justify-between'
 const itemHeaderMainClass = 'flex w-full items-stretch gap-3.5 md:w-auto'

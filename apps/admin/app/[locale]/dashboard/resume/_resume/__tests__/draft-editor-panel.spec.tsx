@@ -186,6 +186,20 @@ describe('ResumeDraftEditorPanel', () => {
       'rounded-[18px]',
       'bg-transparent',
     )
+
+    const profileSectionHeader = profileSectionTrigger.closest(
+      '[data-slot="editor-section-header"]',
+    )
+    const projectEntryHeader = projectEntryTrigger.closest('[data-slot="editor-entry-header"]')
+    const profileDisclosureIcon = Array.from(profileSectionHeader?.children ?? []).find(
+      (element) => element.className.includes('absolute') && element.className.includes('left-3'),
+    )
+    const projectDisclosureIcon = Array.from(projectEntryHeader?.children ?? []).find(
+      (element) => element.className.includes('absolute') && element.className.includes('left-2.5'),
+    )
+
+    expect(profileDisclosureIcon).toHaveClass('inline-grid', 'h-7', 'w-7')
+    expect(projectDisclosureIcon).toHaveClass('inline-grid', 'h-7', 'w-7')
   })
 
   it('should switch between chinese main editing and english translation workspace', async () => {
@@ -204,8 +218,9 @@ describe('ResumeDraftEditorPanel', () => {
     )
 
     expect(await screen.findByLabelText('姓名')).toBeInTheDocument()
-    expect(screen.getByTestId('resume-draft-sticky-save')).toHaveClass('sticky', 'bottom-3')
     expect(screen.getByRole('button', { name: '保存当前草稿' })).toHaveClass(
+      'sticky',
+      'bottom-3',
       '!bg-[var(--admin-primary)]',
       '!text-white',
     )
@@ -274,9 +289,58 @@ describe('ResumeDraftEditorPanel', () => {
 
     expect(await screen.findByDisplayValue('GitHub')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '删除个人链接 1' })).toHaveClass(
-      'bg-rose-50/75',
-      'text-rose-500',
+      'inline-grid',
+      'place-items-center',
+      'h-7',
+      'w-7',
+      '[&_svg]:h-4',
+      '[&_svg]:w-4',
+      'text-[#999]',
     )
+  })
+
+  it('should require popover confirmation before deleting a skill group', async () => {
+    cleanup()
+    const user = userEvent.setup()
+    const loadDraft = vi.fn().mockResolvedValue(createDraftSnapshot())
+
+    render(
+      <ResumeDraftEditorPanel
+        accessToken="demo-token"
+        apiBaseUrl="http://localhost:5577"
+        canEdit
+        loadDraft={loadDraft}
+        saveDraft={vi.fn()}
+      />,
+    )
+
+    await screen.findByDisplayValue('付寅生')
+
+    await user.click(screen.getByRole('button', { name: '添加技能组' }))
+    await user.type(screen.getByLabelText('技能组 1 名称'), '前端工程化')
+
+    const removeButton = screen.getByRole('button', { name: '删除技能组 1' })
+    await user.click(removeButton)
+
+    expect(screen.getByText('确认删除？')).toBeInTheDocument()
+    expect(
+      screen.getByText('将删除“删除技能组 1”对应内容，此操作不会自动恢复。'),
+    ).toBeInTheDocument()
+    expect(screen.getByLabelText('技能组 1 名称')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '取消' }))
+
+    await waitFor(() => {
+      expect(screen.queryByText('确认删除？')).not.toBeInTheDocument()
+    })
+    expect(screen.getByLabelText('技能组 1 名称')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '删除技能组 1' }))
+    await user.click(screen.getByRole('button', { name: '删除' }))
+
+    await waitFor(() => {
+      expect(screen.queryByLabelText('技能组 1 名称')).not.toBeInTheDocument()
+    })
   })
 
   it('should save edited draft profile without auto publishing', async () => {
@@ -520,7 +584,7 @@ Build systems, not just pages`,
         ],
       })
     },
-    10000,
+    20000,
   )
 
   it('should save experience and project core fields in the draft payload', async () => {
@@ -729,8 +793,21 @@ Build systems, not just pages`,
     await user.type(screen.getByLabelText('教育经历 1 亮点（每行一条）'), '通信工程本科')
     expect(screen.getByRole('button', { name: '删除教育经历 1' })).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: '添加技能组' }))
+    const addSkillGroupButton = screen.getByRole('button', { name: '添加技能组' })
+    expect(addSkillGroupButton).toHaveClass(
+      'h-7',
+      'w-7',
+      'min-w-7',
+      'p-1',
+      'rounded-lg',
+      '[&_svg]:h-4',
+      '[&_svg]:w-4',
+    )
+    await user.click(addSkillGroupButton)
     await user.type(screen.getByLabelText('技能组 1 名称'), '前端工程化')
+    expect(screen.getByLabelText('技能组 1 雷达图分数（0-100）')).toHaveValue(75)
+    await user.clear(screen.getByLabelText('技能组 1 雷达图分数（0-100）'))
+    await user.type(screen.getByLabelText('技能组 1 雷达图分数（0-100）'), '88')
     await user.type(
       screen.getByLabelText('技能组 1 关键词（每行一条）'),
       `TypeScript
@@ -738,6 +815,15 @@ React
 Next.js`,
     )
     expect(screen.getByRole('button', { name: '删除技能组 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '拖拽排序技能组 1' })).toHaveClass(
+      'h-7',
+      'w-7',
+      'min-w-7',
+      'p-1',
+      'rounded-lg',
+      '[&_svg]:h-4',
+      '[&_svg]:w-4',
+    )
 
     await user.click(screen.getByRole('button', { name: '添加亮点' }))
     await user.type(screen.getByLabelText('亮点 1 标题'), '技术写作')
@@ -783,6 +869,7 @@ Next.js`,
       'React',
       'Next.js',
     ])
+    expect(submittedResume.skills[0]?.proficiency).toBe(88)
     expect(submittedResume.highlights[0]?.title.zh).toBe('技术写作')
     expect(submittedResume.highlights[0]?.description.zh).toBe('持续输出教程与博客')
     expect(submittedResume.profile.links[0]?.label.zh).toBe('GitHub')

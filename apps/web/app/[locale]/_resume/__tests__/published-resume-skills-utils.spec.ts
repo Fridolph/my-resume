@@ -40,9 +40,18 @@ describe('published resume skills utils', () => {
     expect(tokens.some((token) => token.label === 'Node.js')).toBe(true)
   })
 
-  it('should build radar and pie options from real skill item counts', () => {
+  it('should build radar from proficiency scores and pie from real skill item counts', () => {
     const groups = rankSkillGroups(
-      normalizeSkillGroups(publishedResumeFixture.resume.skills),
+      normalizeSkillGroups([
+        {
+          ...publishedResumeFixture.resume.skills[0],
+          proficiency: 95,
+        },
+        {
+          ...publishedResumeFixture.resume.skills[1],
+          proficiency: 77,
+        },
+      ]),
       'zh',
     )
     const copy = {
@@ -57,7 +66,8 @@ describe('published resume skills utils', () => {
 
     expect(Array.isArray(radar.series)).toBe(true)
     expect(Array.isArray(pie.series)).toBe(true)
-    expect(JSON.stringify(radar)).toContain('"value":[4,3]')
+    expect(JSON.stringify(radar)).toContain('"value":[95,77]')
+    expect(JSON.stringify(radar)).toContain('"max":100')
     expect(JSON.stringify(pie)).not.toContain('总条目数')
   })
 })

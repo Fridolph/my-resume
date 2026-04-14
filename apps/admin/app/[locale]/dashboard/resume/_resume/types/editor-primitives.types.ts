@@ -8,6 +8,7 @@ export interface IconActionButtonProps {
   icon: ReactNode
   label: string
   onClick: () => void
+  size?: 'compact' | 'default'
   tone?: 'default' | 'danger'
   variant?: 'ghost' | 'outline'
 }

@@ -507,6 +507,20 @@ export function useResumeDraftSectionActions({
     [setDraftFieldValues, updateResumeDraft],
   )
 
+  const updateSkillProficiency = useCallback(
+    (index: number, value: string) => {
+      const trimmedValue = value.trim()
+      const proficiency = Number(trimmedValue)
+
+      updateResumeDraft((draft) => {
+        draft.skills[index].proficiency = trimmedValue !== '' && Number.isFinite(proficiency)
+          ? Math.min(100, Math.max(0, Math.round(proficiency)))
+          : undefined
+      })
+    },
+    [updateResumeDraft],
+  )
+
   const addSkillGroup = useCallback(() => {
     updateResumeDraft(
       (draft) => {
@@ -609,5 +623,6 @@ export function useResumeDraftSectionActions({
     updateProjectTechnologies,
     updateSkillKeywords,
     updateSkillLocalizedField,
+    updateSkillProficiency,
   }
 }

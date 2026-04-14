@@ -44,7 +44,7 @@ export function ThemeModeToggle() {
       {...(switchA11yProps as Record<string, unknown>)}
       aria-label="切换明暗主题"
       className={styles.switchRoot}
-      onClick={() => setTheme(isDark ? 'light' : 'dark')}
+      onPress={() => setTheme(isDark ? 'light' : 'dark')}
       type="button"
       variant="ghost">
       <span

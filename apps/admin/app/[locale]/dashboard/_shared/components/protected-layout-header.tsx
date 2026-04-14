@@ -1,10 +1,10 @@
 'use client'
 
+import { Breadcrumbs } from '@heroui/react'
 import { Button } from '@heroui/react/button'
 import { useTranslations } from 'next-intl'
 import type { ReactNode } from 'react'
 
-import { Link } from '@i18n/navigation'
 import type { AdminNavigationItem } from '../types/admin-navigation.types'
 import {
   headerBodyClass,
@@ -35,7 +35,7 @@ export function AdminHeader({
         <div className={headerPrimaryContentClass}>
           <Button
             className="secondary-button h-9 min-w-0 px-3 text-sm sm:h-10 md:hidden"
-            onClick={onOpenMenu}
+            onPress={onOpenMenu}
             size="sm"
             type="button"
             variant="outline">
@@ -48,17 +48,14 @@ export function AdminHeader({
             </div>
             <div className={headerSecondaryMetaClass} data-testid="admin-mobile-header-secondary">
               <p className={headerPageDescriptionClass}>{pageMeta.description}</p>
-              <nav aria-label="Breadcrumbs" className="text-sm text-zinc-500 dark:text-zinc-400">
-                <ol className="flex items-center gap-2">
-                  <li>
-                    <Link href="/dashboard">
-                      {t('dashboardBreadcrumb')}
-                    </Link>
-                  </li>
-                  <li>/</li>
-                  <li aria-current="page">{pageMeta.title}</li>
-                </ol>
-              </nav>
+              <Breadcrumbs
+                className="text-sm text-zinc-500 dark:text-zinc-400"
+                separator="/">
+                <Breadcrumbs.Item href="/dashboard">
+                  {t('dashboardBreadcrumb')}
+                </Breadcrumbs.Item>
+                <Breadcrumbs.Item>{pageMeta.title}</Breadcrumbs.Item>
+              </Breadcrumbs>
             </div>
           </div>
         </div>

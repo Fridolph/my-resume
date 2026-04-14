@@ -106,8 +106,8 @@ export function PublishedResumeHighlightsSection({
   ).slice(0, 4)
 
   return (
-    <section className="relative overflow-hidden rounded-[32px] border border-white/65 bg-white/88 px-5 py-6 shadow-[0_28px_80px_rgba(15,23,42,0.08)] dark:border-white/8 dark:bg-slate-950/82 sm:px-6 lg:px-7">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_52%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.16),transparent_46%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.18),transparent_52%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.18),transparent_48%)]" />
+    <section className="relative overflow-hidden rounded-[32px] border border-white/65 bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.1),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(186,230,253,0.07),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.86),rgba(248,250,252,0.8))] px-5 py-6 shadow-[0_28px_80px_rgba(15,23,42,0.08)] dark:border-white/8 dark:bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.12),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(34,211,238,0.08),transparent_32%),linear-gradient(180deg,rgba(15,23,42,0.88),rgba(15,23,42,0.8))] sm:px-6 lg:px-7">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.1),transparent_52%),radial-gradient(circle_at_top_right,rgba(186,230,253,0.08),transparent_46%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.12),transparent_52%),radial-gradient(circle_at_top_right,rgba(34,211,238,0.08),transparent_48%)]" />
 
       <div className="relative grid gap-6 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)]">
         <div className="space-y-4">
@@ -133,7 +133,7 @@ export function PublishedResumeHighlightsSection({
             ))}
           </div>
 
-          <div className="rounded-[24px] border border-slate-200/75 bg-slate-50/90 px-4 py-4 dark:border-white/8 dark:bg-white/5">
+          <div className="rounded-[24px] border border-slate-200/75 bg-[radial-gradient(circle_at_top_left,rgba(191,219,254,0.24),transparent_40%),linear-gradient(180deg,rgba(255,255,255,0.88),rgba(248,250,252,0.8))] px-4 py-4 dark:border-white/8 dark:bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.12),transparent_40%),linear-gradient(180deg,rgba(30,41,59,0.68),rgba(15,23,42,0.54))]">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">
               {t('highlights.signalLensTitle')}
             </p>
@@ -149,7 +149,7 @@ export function PublishedResumeHighlightsSection({
 
             return (
               <article
-                className="group relative overflow-hidden rounded-[28px] border border-slate-200/70 bg-slate-50/92 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] transition-transform duration-200 hover:-translate-y-1 dark:border-white/8 dark:bg-white/[0.03]"
+                className="group relative overflow-hidden rounded-[28px] border border-slate-200/70 bg-[radial-gradient(circle_at_top_left,rgba(191,219,254,0.24),transparent_42%),linear-gradient(180deg,rgba(255,255,255,0.9),rgba(248,250,252,0.82))] p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:border-white/8 dark:bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.12),transparent_42%),linear-gradient(180deg,rgba(30,41,59,0.66),rgba(15,23,42,0.52))]"
                 key={`${item.title.en}-${item.description.en}-${index}`}>
                 <div
                   className={`pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-br ${signal.accentClassName}`}

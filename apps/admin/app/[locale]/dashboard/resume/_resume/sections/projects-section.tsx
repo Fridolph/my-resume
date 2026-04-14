@@ -10,13 +10,13 @@ import {
   formatLocalizedLines,
 } from '../editor/draft-editor-helpers'
 import {
+  CloseActionButton,
   EditorEntry,
   EditorSection,
   IconActionButton,
   LocalizedEditorField,
   PlusIcon,
   SortableItemShell,
-  TrashIcon,
 } from '../editor/editor-primitives'
 import type { ProjectsSectionProps } from '../types/projects-section.types'
 
@@ -85,12 +85,9 @@ export function ProjectsSection({
                   <EditorEntry
                     action={
                       !isTranslationMode ? (
-                        <IconActionButton
-                          icon={<TrashIcon />}
+                        <CloseActionButton
                           label={`删除项目经历 ${index + 1}`}
                           onClick={() => removeProject(index)}
-                          tone="danger"
-                          variant="ghost"
                         />
                       ) : null
                     }
@@ -283,13 +280,10 @@ export function ProjectsSection({
                               </p>
                             </div>
                             {!isTranslationMode ? (
-                              <IconActionButton
+                              <CloseActionButton
                                 className="mt-0.5"
-                                icon={<TrashIcon />}
                                 label={`删除项目经历 ${index + 1} 的链接 ${linkIndex + 1}`}
                                 onClick={() => removeProjectLink(index, linkIndex)}
-                                tone="danger"
-                                variant="ghost"
                               />
                             ) : null}
                           </div>

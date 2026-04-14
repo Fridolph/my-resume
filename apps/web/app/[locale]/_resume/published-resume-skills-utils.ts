@@ -104,13 +104,7 @@ export function rankSkillGroups(groups: NormalizedSkillGroup[], locale: ResumeLo
       displayName: readLocalizedText(group.name, locale),
       originalIndex: index,
     }))
-    .sort((left, right) => {
-      if (right.parsedKeywords.length !== left.parsedKeywords.length) {
-        return right.parsedKeywords.length - left.parsedKeywords.length
-      }
-
-      return left.originalIndex - right.originalIndex
-    })
+    .sort((left, right) => left.originalIndex - right.originalIndex)
 }
 
 export function buildSkillCloudTokens(
@@ -152,7 +146,12 @@ export function buildRadarChartOption(
   themeMode: 'light' | 'dark',
   copy: SkillChartCopy,
 ): SkillChartOption {
-  const maxItemCount = Math.max(...groups.map((group) => group.parsedKeywords.length), 1)
+  const values = groups.map((group) =>
+    typeof group.proficiency === 'number' ? group.proficiency : group.parsedKeywords.length,
+  )
+  const maxValue = groups.some((group) => typeof group.proficiency === 'number')
+    ? 100
+    : Math.max(...values, 1)
   const axisTextColor = themeMode === 'dark' ? '#cbd5e1' : '#64748b'
   const splitAreaColors =
     themeMode === 'dark'
@@ -194,7 +193,7 @@ export function buildRadarChartOption(
       },
       indicator: groups.map((group) => ({
         name: wrapAxisLabel(group.displayName),
-        max: maxItemCount,
+        max: maxValue,
       })),
     },
     tooltip: {
@@ -206,7 +205,7 @@ export function buildRadarChartOption(
       },
       formatter: () =>
         groups
-          .map((group) => copy.radarTooltipValue(group.displayName, group.parsedKeywords.length))
+          .map((group, index) => copy.radarTooltipValue(group.displayName, values[index] ?? 0))
           .join('<br/>'),
     },
     series: [
@@ -214,7 +213,7 @@ export function buildRadarChartOption(
         type: 'radar',
         data: [
           {
-            value: groups.map((group) => group.parsedKeywords.length),
+            value: values,
             name: copy.radarSeriesName,
             areaStyle: {
               color: 'rgba(37,99,235,0.18)',

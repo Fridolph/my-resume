@@ -21,6 +21,7 @@ export interface SkillsSectionProps {
   translationAction?: ReactNode
   updateSkillKeywords: (index: number, value: string) => void
   updateSkillLocalizedField: (index: number, locale: 'zh' | 'en', value: string) => void
+  updateSkillProficiency: (index: number, value: string) => void
 }
 
 export interface HighlightsSectionProps {

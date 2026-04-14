@@ -9,6 +9,7 @@ import type {
 } from '@shared/published-resume/types/published-resume.types'
 import { readLocalizedText } from '@shared/published-resume/published-resume-utils'
 import { createIndexedRenderKey } from './published-resume-render-key'
+import surfaceStyles from './published-resume-card-surface.module.css'
 import { PublishedResumeSectionCard } from './published-resume-section-card'
 
 interface PublishedResumeEducationSectionProps {
@@ -42,7 +43,7 @@ export function PublishedResumeEducationSection({
 
           return (
             <article
-              className="rounded-[28px] border border-slate-200/80 bg-slate-50/80 p-5 shadow-[0_12px_28px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-white/[0.04] sm:p-6"
+              className={`${surfaceStyles.timelineCardSurface} rounded-[28px] p-5 sm:p-6`}
               key={educationKey}>
               <div className="grid gap-4">
                 <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">

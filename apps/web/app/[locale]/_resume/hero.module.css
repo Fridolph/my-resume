@@ -1,7 +1,10 @@
 .heroCard {
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.7);
-  background: rgba(255, 255, 255, 0.82);
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.1), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(186, 230, 253, 0.07), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(248, 250, 252, 0.8));
   box-shadow: 0 28px 80px rgba(15, 23, 42, 0.08);
 }
 
@@ -50,7 +53,10 @@
 
 :global([data-theme='dark']) .heroCard {
   border-color: rgba(255, 255, 255, 0.08);
-  background: rgba(15, 23, 42, 0.84);
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.12), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(34, 211, 238, 0.08), transparent 28%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.88), rgba(15, 23, 42, 0.8));
 }
 
 .avatarFaceBack {

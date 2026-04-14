@@ -137,7 +137,7 @@ export function AnalysisSuggestionPanel({
           <Button
             className={adminPrimaryButtonClass}
             isDisabled={applyPending || selectedModules.length === 0}
-            onClick={onApplySuggestion}
+            onPress={onApplySuggestion}
             size="md"
             type="button"
             variant="primary">

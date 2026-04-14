@@ -62,7 +62,7 @@ export function AdminHeaderActions({ currentUser, onLogout }: AdminHeaderActions
         aria-label="打开项目 GitHub 仓库"
         className={headerIconButtonClass}
         isIconOnly
-        onClick={() => {
+        onPress={() => {
           window.open('https://github.com/Fridolph/my-resume', '_blank', 'noopener,noreferrer')
         }}
         size="sm"
@@ -77,7 +77,7 @@ export function AdminHeaderActions({ currentUser, onLogout }: AdminHeaderActions
           aria-label="打开当前会话菜单"
           className={headerAvatarButtonClass}
           isIconOnly
-          onClick={() => setMenuOpen((current) => !current)}
+          onPress={() => setMenuOpen((current) => !current)}
           type="button"
           variant="ghost">
           <Avatar.Root aria-hidden="true" className={headerAvatarClass}>
@@ -110,7 +110,7 @@ export function AdminHeaderActions({ currentUser, onLogout }: AdminHeaderActions
             </div>
             <Button
               className={sessionDropdownLogoutButtonClass}
-              onClick={() => {
+              onPress={() => {
                 setMenuOpen(false)
                 onLogout()
               }}

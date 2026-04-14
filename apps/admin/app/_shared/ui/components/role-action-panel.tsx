@@ -58,7 +58,7 @@ export function RoleActionPanel({
             className={primaryActionButtonClass}
             fullWidth
             isDisabled={isViewer || pendingAction !== null}
-            onClick={() => void onPublish()}
+            onPress={() => void onPublish()}
             size="md"
             type="button"
             variant="primary">
@@ -68,7 +68,7 @@ export function RoleActionPanel({
             className={secondaryActionButtonClass}
             fullWidth
             isDisabled={isViewer || pendingAction !== null}
-            onClick={() => void onTriggerAi()}
+            onPress={() => void onTriggerAi()}
             size="md"
             type="button"
             variant="outline">

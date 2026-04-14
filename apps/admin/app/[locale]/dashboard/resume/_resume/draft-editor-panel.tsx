@@ -33,10 +33,8 @@ const editorModeTabActiveClass =
   '!border-[color:var(--admin-primary)] !bg-[var(--admin-primary)] !text-white hover:!bg-[var(--admin-button-primary-bg-hover)]'
 const editorModeTabIdleClass =
   'border-transparent bg-transparent text-zinc-700 hover:bg-white hover:text-zinc-950 dark:text-zinc-200 dark:hover:bg-zinc-800/80 dark:hover:text-white'
-const stickySaveBarClass =
-  'sticky bottom-3 z-10 mt-2 rounded-[22px] border border-zinc-200/80 bg-white/94 p-3 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/88 dark:shadow-none md:p-4'
 const stickySaveButtonClass =
-  '!border-[color:var(--admin-primary)] !bg-[var(--admin-primary)] !text-white hover:!bg-[color:color-mix(in_srgb,var(--admin-primary)_88%,black)]'
+  'sticky bottom-3 z-10 mt-2 !border-[color:var(--admin-primary)] !bg-[var(--admin-primary)] !text-white hover:!bg-[color:color-mix(in_srgb,var(--admin-primary)_88%,black)]'
 
 /**
  * 草稿编辑器主容器负责串起加载、编辑、翻译工作区、排序与保存提交流程
@@ -124,6 +122,7 @@ export function ResumeDraftEditorPanel({
     updateProjectTechnologies,
     updateSkillKeywords,
     updateSkillLocalizedField,
+    updateSkillProficiency,
   } = useResumeDraftSectionActions({
     nextSortableId,
     setDraftFieldValues,
@@ -283,7 +282,7 @@ export function ResumeDraftEditorPanel({
                   ]
                     .join(' ')
                     .trim()}
-                  onClick={() => setEditorLocaleMode('zh')}
+                  onPress={() => setEditorLocaleMode('zh')}
                   size="sm"
                   type="button"
                   variant="ghost">
@@ -299,7 +298,7 @@ export function ResumeDraftEditorPanel({
                   ]
                     .join(' ')
                     .trim()}
-                  onClick={() => setEditorLocaleMode('en')}
+                  onPress={() => setEditorLocaleMode('en')}
                   size="sm"
                   type="button"
                   variant="ghost">
@@ -415,6 +414,7 @@ export function ResumeDraftEditorPanel({
               })}
               updateSkillKeywords={updateSkillKeywords}
               updateSkillLocalizedField={updateSkillLocalizedField}
+              updateSkillProficiency={updateSkillProficiency}
             />
 
             <HighlightsSection
@@ -433,23 +433,20 @@ export function ResumeDraftEditorPanel({
               updateHighlightLocalizedField={updateHighlightLocalizedField}
             />
 
-            <div className={stickySaveBarClass} data-testid="resume-draft-sticky-save">
-              <div className="grid gap-3">
-                {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
-                {feedbackMessage ? (
-                  <div className="dashboard-inline-note">{feedbackMessage}</div>
-                ) : null}
-                <Button
-                  className={stickySaveButtonClass}
-                  fullWidth
-                  isDisabled={pendingSave}
-                  size="md"
-                  type="submit"
-                  variant="primary">
-                  {pendingSave ? '保存中...' : '保存当前草稿'}
-                </Button>
-              </div>
-            </div>
+            {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
+            {feedbackMessage ? (
+              <div className="dashboard-inline-note">{feedbackMessage}</div>
+            ) : null}
+            <Button
+              className={stickySaveButtonClass}
+              data-testid="resume-draft-sticky-save"
+              fullWidth
+              isDisabled={pendingSave}
+              size="md"
+              type="submit"
+              variant="primary">
+              {pendingSave ? '保存中...' : '保存当前草稿'}
+            </Button>
           </form>
         ) : null}
       </CardContent>
