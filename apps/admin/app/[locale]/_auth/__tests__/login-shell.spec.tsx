@@ -129,6 +129,25 @@ describe('AdminLoginShell', () => {
     })
   })
 
+  it('should render the redesigned login story and theme entry', () => {
+    render(
+      <Providers>
+        <AdminLoginShell locale="zh" />
+      </Providers>,
+    )
+
+    expect(
+      screen.getByRole('heading', {
+        name: '把简历维护，做成一间安静的工作室',
+      }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Personal Ops Console')).toBeInTheDocument()
+    expect(screen.getByText('简历草稿')).toBeInTheDocument()
+    expect(screen.getByText('AI 工作台')).toBeInTheDocument()
+    expect(screen.getByText('发布导出')).toBeInTheDocument()
+    expect(screen.getByText('主题切换占位')).toBeInTheDocument()
+  })
+
   it('should reuse login payload and avoid extra current-user request after sign-in', async () => {
     const user = userEvent.setup()
 

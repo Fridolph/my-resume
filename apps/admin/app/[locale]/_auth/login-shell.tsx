@@ -1,8 +1,6 @@
 'use client'
 
 import { useRequest } from 'alova/client'
-import { Card, CardContent, CardHeader, CardTitle } from '@heroui/react/card'
-import { Chip } from '@heroui/react/chip'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 
@@ -15,6 +13,25 @@ import { ThemeModeToggle } from '@shared/ui/components/theme-mode-toggle'
 
 import { createLoginWithPasswordMethod } from './services/auth-api'
 import { LoginForm } from './components/login-form'
+import styles from './login-shell.module.css'
+
+const capabilityCards = [
+  {
+    index: '01',
+    title: '简历草稿',
+    description: '维护标准简历结构，保存草稿与公开发布严格分离。',
+  },
+  {
+    index: '02',
+    title: 'AI 工作台',
+    description: '承接 RAG、JD 匹配与简历优化建议的后台操作入口。',
+  },
+  {
+    index: '03',
+    title: '发布导出',
+    description: '让公开站、Markdown、PDF 输出保持同一份可信内容源。',
+  },
+] as const
 
 /**
  * 后台登录壳负责登录态检查、登录表单承接与跳转工作区
@@ -72,69 +89,59 @@ export function AdminLoginShell({ locale: _locale }: { locale: AppLocale }) {
 
   if (checkingSession) {
     return (
-      <main className="mx-auto grid min-h-screen w-full max-w-3xl grid-cols-1 px-4 py-6 md:px-6">
-        <Card className="border border-zinc-200/70 bg-white/90 shadow-xl dark:border-zinc-800 dark:bg-zinc-950/85">
-          <CardContent className="py-12 text-center text-sm text-zinc-500 dark:text-zinc-400">
-            {t('loginChecking')}
-          </CardContent>
-        </Card>
+      <main className={styles.loginPage}>
+        <section aria-live="polite" className={styles.loadingCard}>
+          {t('loginChecking')}
+        </section>
       </main>
     )
   }
 
   return (
-    <main className="mx-auto grid min-h-screen w-full max-w-7xl grid-cols-1 gap-6 px-4 py-6 md:px-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(20rem,28rem)] lg:items-center xl:px-10">
-      <Card className="border border-zinc-200/70 bg-white/78 shadow-2xl backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/78">
-        <CardHeader className="flex flex-col items-start gap-5">
-          <div className="flex items-center gap-2">
-            <Chip size="sm">管理后台</Chip>
-            <Chip size="sm">HeroUI Upgrade</Chip>
+    <main className={styles.loginPage}>
+      <div className={styles.loginFrame}>
+        <section className={styles.storyPanel} aria-labelledby="admin-login-story-title">
+          <div className={styles.brandRow}>
+            <span className={styles.brandMark}>MR</span>
+            <ThemeModeToggle />
           </div>
-          <div className="space-y-3">
-            <p className="eyebrow">Admin Console</p>
-            <CardTitle className="text-4xl font-semibold tracking-tight text-zinc-950 dark:text-white">
-              {t('heroTitle')}
-            </CardTitle>
-            <p className="max-w-xl text-sm leading-7 text-zinc-500 dark:text-zinc-400">
-              {t('heroDescription')}
+
+          <div className={styles.heroCopy}>
+            <p className={styles.kicker}>Personal Ops Console</p>
+            <h1 className={styles.heroTitle} id="admin-login-story-title">
+              把简历维护，做成一间安静的工作室
+            </h1>
+            <p className={styles.heroDescription}>
+              这里不是庞杂的后台，而是一套为个人品牌长期维护准备的内容工作台：
+              写草稿、做 AI 辅助、确认发布，每一步都尽量少打扰、多确定。
             </p>
           </div>
-        </CardHeader>
-        <CardContent className="stack">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="status-box">
-              <strong>{t('goalLabel')}</strong>
-              <span>{t('goalValue')}</span>
-            </div>
-            <div className="status-box">
-              <strong>{t('boundaryLabel')}</strong>
-              <span>{t('boundaryValue')}</span>
-            </div>
+
+          <div className={styles.capabilityGrid} aria-label="后台核心能力">
+            {capabilityCards.map((item) => (
+              <article className={styles.capabilityCard} key={item.index}>
+                <span className={styles.capabilityIndex}>{item.index}</span>
+                <h2 className={styles.capabilityTitle}>{item.title}</h2>
+                <p className={styles.capabilityDescription}>{item.description}</p>
+              </article>
+            ))}
           </div>
-          <ul className="muted-list">
-            <li>{t('workflowOne')}</li>
-            <li>{t('workflowTwo')}</li>
-            <li>{t('workflowThree')}</li>
-          </ul>
-          <div className="flex flex-wrap items-center gap-3">
-            <ThemeModeToggle />
-            <a
-              className="secondary-link-button"
-              href="https://github.com/heroui-inc/heroui"
-              target="_blank">
-              HeroUI 参考
-            </a>
-          </div>
+
+          <p className={styles.quietNote}>
+            viewer 保持只读边界，admin 承担编辑、AI 操作与发布职责；登录成功后统一进入
+            /dashboard。
+          </p>
+
           {currentUser ? (
-            <div className="status-box">
+            <p className={styles.quietNote}>
               已检测到登录状态：<strong>{currentUser.username}</strong>（
               {currentUser.role}）
-            </div>
+            </p>
           ) : null}
-        </CardContent>
-      </Card>
+        </section>
 
-      <LoginForm errorMessage={errorMessage} onSubmit={handleLogin} pending={pending} />
+        <LoginForm errorMessage={errorMessage} onSubmit={handleLogin} pending={pending} />
+      </div>
     </main>
   )
 }
