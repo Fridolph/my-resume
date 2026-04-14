@@ -49,12 +49,14 @@ export function AdminHeader({
             <div className={headerSecondaryMetaClass} data-testid="admin-mobile-header-secondary">
               <p className={headerPageDescriptionClass}>{pageMeta.description}</p>
               <Breadcrumbs
-                className="text-sm text-zinc-500 dark:text-zinc-400"
+                className="inline-flex max-w-full flex-nowrap items-center overflow-x-auto whitespace-nowrap text-sm text-zinc-500 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden dark:text-zinc-400"
                 separator="/">
-                <Breadcrumbs.Item href="/dashboard">
+                <Breadcrumbs.Item className="inline-flex items-center whitespace-nowrap" href="/dashboard">
                   {t('dashboardBreadcrumb')}
                 </Breadcrumbs.Item>
-                <Breadcrumbs.Item>{pageMeta.title}</Breadcrumbs.Item>
+                <Breadcrumbs.Item className="inline-flex items-center whitespace-nowrap">
+                  {pageMeta.title}
+                </Breadcrumbs.Item>
               </Breadcrumbs>
             </div>
           </div>

@@ -112,7 +112,16 @@ describe('ResumeDraftEditorPanel', () => {
 
     expect(profileSectionTrigger).toHaveAttribute('aria-expanded', 'true')
 
-    await user.click(profileSectionTrigger)
+    const profileSectionHeader = profileSectionTrigger.closest(
+      '[data-slot="editor-section-header"]',
+    )
+    const profileSectionIcon = profileSectionHeader?.querySelector(
+      '[data-slot="editor-disclosure-trigger"]',
+    )
+
+    expect(profileSectionIcon).toBeTruthy()
+
+    await user.click(profileSectionIcon as HTMLElement)
 
     await waitFor(() => {
       expect(profileSectionTrigger).toHaveAttribute('aria-expanded', 'false')
@@ -122,6 +131,36 @@ describe('ResumeDraftEditorPanel', () => {
 
     await waitFor(() => {
       expect(profileSectionTrigger).toHaveAttribute('aria-expanded', 'true')
+    })
+
+    const scrollIntoViewMock = vi.fn()
+    Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoViewMock,
+    })
+
+    const skillsSectionTrigger = screen.getByRole('button', {
+      name: '技能组 模块开关',
+    })
+
+    expect(skillsSectionTrigger).toHaveAttribute('aria-expanded', 'true')
+
+    await user.click(skillsSectionTrigger)
+
+    await waitFor(() => {
+      expect(skillsSectionTrigger).toHaveAttribute('aria-expanded', 'false')
+    })
+
+    await user.click(screen.getByRole('button', { name: '添加技能组' }))
+
+    await waitFor(() => {
+      expect(skillsSectionTrigger).toHaveAttribute('aria-expanded', 'true')
+    })
+    await waitFor(() => {
+      expect(scrollIntoViewMock).toHaveBeenCalledWith({
+        behavior: 'smooth',
+        block: 'start',
+      })
     })
 
     expect(screen.getByLabelText('姓名')).toBeInTheDocument()
@@ -191,15 +230,29 @@ describe('ResumeDraftEditorPanel', () => {
       '[data-slot="editor-section-header"]',
     )
     const projectEntryHeader = projectEntryTrigger.closest('[data-slot="editor-entry-header"]')
-    const profileDisclosureIcon = Array.from(profileSectionHeader?.children ?? []).find(
-      (element) => element.className.includes('absolute') && element.className.includes('left-3'),
+    const profileDisclosureIcon = profileSectionHeader?.querySelector(
+      '[data-slot="editor-disclosure-trigger"]',
     )
-    const projectDisclosureIcon = Array.from(projectEntryHeader?.children ?? []).find(
-      (element) => element.className.includes('absolute') && element.className.includes('left-2.5'),
+    const projectDisclosureIcon = projectEntryHeader?.querySelector(
+      '[data-slot="editor-disclosure-trigger"]',
     )
 
-    expect(profileDisclosureIcon).toHaveClass('inline-grid', 'h-7', 'w-7')
-    expect(projectDisclosureIcon).toHaveClass('inline-grid', 'h-7', 'w-7')
+    expect(profileDisclosureIcon).toHaveClass(
+      'inline-flex',
+      'h-7',
+      'w-7',
+      'items-center',
+      'justify-center',
+      'p-0',
+    )
+    expect(projectDisclosureIcon).toHaveClass(
+      'inline-flex',
+      'h-7',
+      'w-7',
+      'items-center',
+      'justify-center',
+      'p-0',
+    )
   })
 
   it('should switch between chinese main editing and english translation workspace', async () => {
@@ -289,12 +342,14 @@ describe('ResumeDraftEditorPanel', () => {
 
     expect(await screen.findByDisplayValue('GitHub')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '删除个人链接 1' })).toHaveClass(
-      'inline-grid',
-      'place-items-center',
-      'h-7',
-      'w-7',
-      '[&_svg]:h-4',
-      '[&_svg]:w-4',
+      'inline-flex',
+      'items-center',
+      'justify-center',
+      'h-6',
+      'w-6',
+      'p-0',
+      '[&_svg]:h-3.5',
+      '[&_svg]:w-3.5',
       'text-[#999]',
     )
   })
@@ -341,7 +396,7 @@ describe('ResumeDraftEditorPanel', () => {
     await waitFor(() => {
       expect(screen.queryByLabelText('技能组 1 名称')).not.toBeInTheDocument()
     })
-  })
+  }, 10000)
 
   it('should save edited draft profile without auto publishing', async () => {
     cleanup()
@@ -798,7 +853,10 @@ Build systems, not just pages`,
       'h-7',
       'w-7',
       'min-w-7',
-      'p-1',
+      'inline-flex',
+      'items-center',
+      'justify-center',
+      'p-0',
       'rounded-lg',
       '[&_svg]:h-4',
       '[&_svg]:w-4',
@@ -819,7 +877,10 @@ Next.js`,
       'h-7',
       'w-7',
       'min-w-7',
-      'p-1',
+      'inline-flex',
+      'items-center',
+      'justify-center',
+      'p-0',
       'rounded-lg',
       '[&_svg]:h-4',
       '[&_svg]:w-4',

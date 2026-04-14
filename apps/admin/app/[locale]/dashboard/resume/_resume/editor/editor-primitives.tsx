@@ -11,7 +11,7 @@ import {
   TextArea,
   Tooltip,
 } from '@heroui/react'
-import type { ComponentProps, ReactNode } from 'react'
+import { useEffect, useRef, useState, type ComponentProps, type ReactNode } from 'react'
 
 import { buildSortableTransformStyle } from './draft-editor-helpers'
 import type {
@@ -83,11 +83,16 @@ export function CloseActionButton({
         </p>
       </div>
       <div className="flex justify-end gap-2">
-        <Button onPress={close} size="sm" type="button" variant="ghost">
+        <Button
+          className="rounded-full bg-zinc-100 px-4 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+          onPress={close}
+          size="sm"
+          type="button"
+          variant="ghost">
           取消
         </Button>
         <Button
-          className="bg-rose-500 text-white hover:bg-rose-600"
+          className="rounded-full bg-rose-500 px-4 !text-white hover:bg-rose-600 dark:bg-rose-500 dark:!text-white dark:hover:bg-rose-600"
           onPress={() => {
             onClick()
             close()
@@ -106,7 +111,7 @@ export function CloseActionButton({
       <CloseButton
         aria-label={label}
         className={[
-          'inline-grid h-7 w-7 min-w-7 place-items-center rounded-full border border-rose-200/90 bg-rose-50/85 p-1 text-[#999] transition-colors hover:border-rose-300 hover:bg-rose-100 hover:text-[#666] focus-visible:ring-2 focus-visible:ring-rose-500/25 [&_svg]:h-4 [&_svg]:w-4 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-zinc-400 dark:hover:border-rose-500/35 dark:hover:bg-rose-500/16 dark:hover:text-zinc-200',
+          'inline-flex h-6 w-6 min-w-6 items-center justify-center rounded-full border border-rose-200/90 bg-rose-50/85 p-0 text-[#999] transition-colors hover:border-rose-300 hover:bg-rose-100 hover:text-[#666] focus-visible:ring-2 focus-visible:ring-rose-500/25 [&_svg]:h-3.5 [&_svg]:w-3.5 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-zinc-400 dark:hover:border-rose-500/35 dark:hover:bg-rose-500/16 dark:hover:text-zinc-200',
           className,
         ]
           .filter(Boolean)
@@ -152,7 +157,7 @@ export function IconActionButton({
   const forwardedButtonProps = (buttonProps ?? {}) as ComponentProps<typeof Button>
   const sizeClassName =
     size === 'compact'
-      ? 'inline-grid h-7 w-7 min-w-7 place-items-center rounded-lg p-1 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0'
+      ? 'inline-flex h-7 w-7 min-w-7 items-center justify-center rounded-lg p-0 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0'
       : 'inline-flex h-10 w-10 min-w-10 items-center justify-center rounded-full px-0 md:h-11 md:w-11 md:min-w-11 [&_svg]:h-5 [&_svg]:w-5 [&_svg]:shrink-0 md:[&_svg]:h-5 md:[&_svg]:w-5'
 
   return (
@@ -290,6 +295,29 @@ export function LocalizedEditorField({
   )
 }
 
+function scrollToLatestEditorEntry(container: HTMLElement | null) {
+  if (!container) {
+    return
+  }
+
+  const entries = Array.from(
+    container.querySelectorAll<HTMLElement>('[data-slot="editor-entry"]'),
+  )
+  const target =
+    entries.at(-1) ??
+    container.querySelector<HTMLElement>('[data-slot="editor-section-body"]') ??
+    container
+
+  if (typeof target.scrollIntoView !== 'function') {
+    return
+  }
+
+  target.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start',
+  })
+}
+
 export function EditorSection({
   title,
   description,
@@ -298,47 +326,95 @@ export function EditorSection({
   action,
   children,
 }: EditorSectionProps) {
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const didMountRef = useRef(false)
+  const previousCountRef = useRef(count)
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded)
+
+  useEffect(() => {
+    if (typeof count !== 'number') {
+      return
+    }
+
+    if (!didMountRef.current) {
+      didMountRef.current = true
+      previousCountRef.current = count
+      return
+    }
+
+    const previousCount = previousCountRef.current
+    previousCountRef.current = count
+
+    if (typeof previousCount !== 'number' || count <= previousCount) {
+      return
+    }
+
+    setIsExpanded(true)
+
+    const scroll = () => scrollToLatestEditorEntry(sectionRef.current)
+
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const firstFrame = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(scroll)
+    })
+
+    return () => window.cancelAnimationFrame(firstFrame)
+  }, [count])
+
   return (
     <Disclosure.Root
       className="overflow-hidden rounded-[22px] border border-zinc-200/70 bg-white/85 dark:border-zinc-800 dark:bg-zinc-950/70 md:rounded-[28px]"
-      defaultExpanded={defaultExpanded}
+      isExpanded={isExpanded}
+      onExpandedChange={setIsExpanded}
       data-slot="editor-section">
-      <div
-        className="group relative flex flex-col gap-2.5 border-b border-zinc-200/70 px-4 py-4 dark:border-zinc-800 md:flex-row md:items-center md:justify-between md:gap-3 md:px-6 md:py-5"
-        data-slot="editor-section-header">
-        <span className="pointer-events-none absolute left-3 top-1/2 inline-grid h-7 w-7 -translate-y-1/2 place-items-center rounded-md text-zinc-400 transition-colors group-hover:bg-zinc-100/80 group-hover:text-zinc-600 dark:text-zinc-500 dark:group-hover:bg-zinc-900/70 dark:group-hover:text-zinc-300 md:left-4">
-          <Disclosure.Indicator>
-            <span
-              className="transition-transform duration-200 ease-out data-[expanded=false]:-rotate-180"
-              data-slot="editor-disclosure-icon">
-              <DisclosureChevron />
-            </span>
-          </Disclosure.Indicator>
-        </span>
-        <Disclosure.Heading className="min-w-0 flex-1 pl-10 md:pl-11">
-          <Disclosure.Trigger
-            aria-label={`${title} 模块开关`}
-            className="group flex w-full items-start text-left">
-            <div className="space-y-0.5 md:space-y-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-[0.95rem] font-semibold text-zinc-950 dark:text-white md:text-base">
-                  {title}
-                </h3>
-                {typeof count === 'number' ? <Chip size="sm">{count} 条</Chip> : null}
-              </div>
-              <p className="muted text-sm leading-5 md:leading-6">{description}</p>
-            </div>
-          </Disclosure.Trigger>
-        </Disclosure.Heading>
-        {action ? <div className="shrink-0 self-center">{action}</div> : null}
+      <div ref={sectionRef}>
+        <div
+          className="relative flex flex-col gap-2.5 border-b border-zinc-200/70 px-4 py-4 dark:border-zinc-800 md:flex-row md:items-center md:justify-between md:gap-3 md:px-6 md:py-5"
+          data-slot="editor-section-header">
+          <div className="flex min-w-0 flex-1 items-start gap-3 md:items-center">
+            <button
+              aria-expanded={isExpanded}
+              aria-label={`${title} 折叠切换`}
+              className="group inline-flex h-7 w-7 shrink-0 items-center justify-center self-start rounded-md p-0 text-zinc-400 transition-colors hover:bg-zinc-100/80 hover:text-zinc-600 dark:text-zinc-500 dark:hover:bg-zinc-900/70 dark:hover:text-zinc-300 md:self-center"
+              data-slot="editor-disclosure-trigger"
+              onClick={() => setIsExpanded((currentValue) => !currentValue)}
+              type="button">
+              <span
+                className="inline-flex h-full w-full items-center justify-center transition-transform duration-200 ease-out data-[expanded=false]:-rotate-180"
+                data-expanded={isExpanded ? 'true' : 'false'}
+                data-slot="editor-disclosure-icon">
+                <DisclosureChevron />
+              </span>
+            </button>
+            <Disclosure.Heading className="min-w-0 flex-1">
+              <Disclosure.Trigger
+                aria-label={`${title} 模块开关`}
+                className="flex w-full items-start text-left">
+                <div className="space-y-0.5 md:space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-[0.95rem] font-semibold text-zinc-950 dark:text-white md:text-base">
+                      {title}
+                    </h3>
+                    {typeof count === 'number' ? <Chip size="sm">{count} 条</Chip> : null}
+                  </div>
+                  <p className="muted text-sm leading-5 md:leading-6">{description}</p>
+                </div>
+              </Disclosure.Trigger>
+            </Disclosure.Heading>
+          </div>
+          {action ? <div className="shrink-0 self-center">{action}</div> : null}
+        </div>
+        <Disclosure.Content>
+          <Disclosure.Body
+            className="stack px-4 py-4 md:px-6 md:py-5"
+            data-slot="editor-section-body">
+            {children}
+          </Disclosure.Body>
+        </Disclosure.Content>
       </div>
-      <Disclosure.Content>
-        <Disclosure.Body
-          className="stack px-4 py-4 md:px-6 md:py-5"
-          data-slot="editor-section-body">
-          {children}
-        </Disclosure.Body>
-      </Disclosure.Content>
     </Disclosure.Root>
   )
 }
@@ -353,6 +429,7 @@ export function EditorEntry({
   children,
   variant = 'default',
 }: EditorEntryProps) {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded)
   const entryShellClassName =
     variant === 'embedded'
       ? 'overflow-hidden rounded-[18px] border border-zinc-200/40 bg-transparent shadow-none dark:border-zinc-800/70 dark:bg-transparent md:rounded-[24px] md:border-zinc-200/60 md:bg-zinc-50/55 md:dark:bg-zinc-950/60'
@@ -367,10 +444,25 @@ export function EditorEntry({
   return (
     <Disclosure.Root
       className={entryShellClassName}
-      defaultExpanded={defaultExpanded}
+      isExpanded={isExpanded}
+      onExpandedChange={setIsExpanded}
       data-slot="editor-entry">
       <div className={entryHeaderClassName} data-slot="editor-entry-header">
-        <div className="flex min-w-0 flex-1 items-start gap-3 pl-10 md:pl-11">
+        <div className="flex min-w-0 flex-1 items-start gap-3 md:items-center">
+          <button
+            aria-expanded={isExpanded}
+            aria-label={`${toggleLabel} 折叠切换`}
+            className="group inline-flex h-7 w-7 shrink-0 items-center justify-center self-start rounded-md p-0 text-zinc-400 transition-colors hover:bg-zinc-100/80 hover:text-zinc-600 dark:text-zinc-500 dark:hover:bg-zinc-900/70 dark:hover:text-zinc-300 md:self-center"
+            data-slot="editor-disclosure-trigger"
+            onClick={() => setIsExpanded((currentValue) => !currentValue)}
+            type="button">
+            <span
+              className="inline-flex h-full w-full items-center justify-center transition-transform duration-200 ease-out data-[expanded=false]:-rotate-180"
+              data-expanded={isExpanded ? 'true' : 'false'}
+              data-slot="editor-disclosure-icon">
+              <DisclosureChevron />
+            </span>
+          </button>
           {leadingAction ? (
             <div className="shrink-0 self-start md:self-center">{leadingAction}</div>
           ) : null}
@@ -387,15 +479,6 @@ export function EditorEntry({
             </Disclosure.Trigger>
           </Disclosure.Heading>
         </div>
-        <span className="pointer-events-none absolute left-2.5 top-1/2 inline-grid h-7 w-7 -translate-y-1/2 place-items-center rounded-md text-zinc-400 transition-colors group-hover:bg-zinc-100/80 group-hover:text-zinc-600 dark:text-zinc-500 dark:group-hover:bg-zinc-900/70 dark:group-hover:text-zinc-300 md:left-3">
-          <Disclosure.Indicator>
-            <span
-              className="transition-transform duration-200 ease-out data-[expanded=false]:-rotate-180"
-              data-slot="editor-disclosure-icon">
-              <DisclosureChevron />
-            </span>
-          </Disclosure.Indicator>
-        </span>
         {action ? <div className="shrink-0 self-center">{action}</div> : null}
       </div>
       <Disclosure.Content>

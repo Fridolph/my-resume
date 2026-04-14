@@ -210,6 +210,11 @@ describe('AdminProtectedLayout', () => {
     )
     expect(screen.getByTestId('admin-mobile-header')).toHaveClass('px-3', 'py-2.5')
     expect(screen.getByTestId('admin-mobile-header-secondary')).toBeInTheDocument()
+    expect(screen.getByTestId('admin-mobile-header-secondary').querySelector('[data-slot=\"breadcrumbs\"]')).toHaveClass(
+      'inline-flex',
+      'flex-nowrap',
+      'whitespace-nowrap',
+    )
     expect(screen.getByRole('button', { name: '菜单' })).toHaveClass('h-9')
     expect(await screen.findByLabelText('关闭导航菜单')).toBeInTheDocument()
     expect(await screen.findByTestId('admin-mobile-drawer-content')).toHaveClass('z-50')

@@ -1,5 +1,5 @@
 export const navButtonBaseClass =
-  'group inline-flex min-h-[52px] w-full items-center justify-start gap-2.5 rounded-[16px] border border-transparent px-[0.55rem] py-1.5 text-[0.82rem] leading-none font-semibold text-zinc-500 transition-[background-color,color] duration-150 hover:bg-blue-50/85 hover:text-blue-700 dark:text-zinc-400 dark:hover:bg-blue-400/10 dark:hover:text-blue-100'
+  'group inline-flex min-h-[52px] w-full items-center justify-start gap-2.5 rounded-[16px] border border-transparent px-[0.55rem] py-1.5 text-[16px] leading-none font-semibold text-zinc-500 transition-[background-color,color] duration-150 hover:bg-blue-50/85 hover:text-blue-700 dark:text-zinc-400 dark:hover:bg-blue-400/10 dark:hover:text-blue-100'
 export const navButtonActiveClass =
   'bg-blue-50 text-blue-700 dark:bg-blue-400/12 dark:text-blue-100'
 export const navButtonCollapsedClass =
