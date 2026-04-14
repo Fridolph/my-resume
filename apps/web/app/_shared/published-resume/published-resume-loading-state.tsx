@@ -10,13 +10,15 @@ import {
 import { Skeleton } from '@heroui/react/skeleton'
 import { useTranslations } from 'next-intl'
 
+import { displayCardSurfaceClass } from '@shared/site/card-surface'
+
 export function PublishedResumeLoadingState() {
   const t = useTranslations('publishedResume')
 
   return (
     <main className="web-page-shell">
       <section className="mx-auto grid w-full max-w-5xl gap-6 px-4 py-6 sm:px-6">
-        <Card className="border-white/70 bg-white/84 shadow-[0_24px_70px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-slate-950/84">
+        <Card className={displayCardSurfaceClass}>
           <CardHeader className="gap-3">
             <p className="web-eyebrow">{t('pageEyebrow')}</p>
             <CardTitle className="text-3xl text-slate-950 dark:text-white">

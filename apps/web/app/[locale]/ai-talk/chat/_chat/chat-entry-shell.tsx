@@ -10,15 +10,12 @@ import {
 import { Chip } from '@heroui/react/chip'
 import { useTranslations } from 'next-intl'
 
-import { Link } from '@i18n/navigation'
 import type {
   ResumeLocale,
   ResumePublishedSnapshot,
 } from '@shared/published-resume/types/published-resume.types'
-import {
-  aiTalkGhostCtaLinkClass,
-  aiTalkPrimaryCtaLinkClass,
-} from '../../_ai-talk/cta-link-classes'
+import { interactiveCardSurfaceClass } from '@shared/site/card-surface'
+import { RouteCtaButton } from '@shared/site/route-cta-button'
 import { AiTalkPageFrame } from '../../_ai-talk/page-frame'
 
 interface AiTalkChatEntryShellProps {
@@ -44,7 +41,7 @@ export function AiTalkChatEntryShell({
       publishedResume={publishedResume}>
       {() => (
         <>
-          <Card className="border-white/70 bg-white/82 shadow-[0_30px_80px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-slate-950/84">
+          <Card className={interactiveCardSurfaceClass}>
             <CardHeader className="gap-3">
               <p className="web-eyebrow">{t('chat.eyebrow')}</p>
               <CardTitle className="text-3xl text-slate-950 dark:text-white">
@@ -54,20 +51,26 @@ export function AiTalkChatEntryShell({
                 {t('chat.description')}
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-wrap gap-3">
-              <Chip color="accent" variant="primary">
-                {t('status.trialCode')}
-              </Chip>
-              <Chip variant="soft">{t('chat.badgeQuota')}</Chip>
-              <Chip variant="soft">{t('chat.badgeStreaming')}</Chip>
+            <CardContent>
+              <div
+                className="flex max-w-full flex-nowrap items-center gap-3 overflow-x-auto"
+                data-testid="ai-talk-chat-chip-row">
+                <Chip color="accent" size="sm" variant="primary">
+                  {t('status.trialCode')}
+                </Chip>
+                <Chip size="sm" variant="soft">
+                  {t('chat.badgeQuota')}
+                </Chip>
+                <Chip size="sm" variant="soft">
+                  {t('chat.badgeStreaming')}
+                </Chip>
+              </div>
             </CardContent>
           </Card>
 
           <div className="grid gap-6 lg:grid-cols-3">
             {['code', 'session', 'citations'].map((item) => (
-              <Card
-                className="border-white/70 bg-white/82 dark:border-white/10 dark:bg-slate-950/84"
-                key={item}>
+              <Card className={interactiveCardSurfaceClass} key={item}>
                 <CardHeader className="gap-3">
                   <p className="web-eyebrow">{t(`chat.steps.${item}.eyebrow`)}</p>
                   <CardTitle className="text-2xl text-slate-950 dark:text-white">
@@ -81,7 +84,7 @@ export function AiTalkChatEntryShell({
             ))}
           </div>
 
-          <Card className="border-white/70 bg-white/82 dark:border-white/10 dark:bg-slate-950/84">
+          <Card className={interactiveCardSurfaceClass}>
             <CardHeader className="gap-3">
               <p className="web-eyebrow">{t('chat.workspacePreview.eyebrow')}</p>
               <CardTitle className="text-2xl text-slate-950 dark:text-white">
@@ -91,13 +94,17 @@ export function AiTalkChatEntryShell({
                 {t('chat.workspacePreview.description')}
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-wrap items-center gap-3">
-              <Link className={aiTalkPrimaryCtaLinkClass} href="/ai-talk/sessions/demo-session">
-                {t('chat.workspacePreview.primaryCta')}
-              </Link>
-              <Link className={aiTalkGhostCtaLinkClass} href="/ai-talk">
-                {t('chat.workspacePreview.secondaryCta')}
-              </Link>
+            <CardContent>
+              <div
+                className="flex w-full flex-wrap items-center justify-end gap-3"
+                data-testid="ai-talk-chat-cta-row">
+                <RouteCtaButton href="/ai-talk/sessions/demo-session" tone="primary">
+                  {t('chat.workspacePreview.primaryCta')}
+                </RouteCtaButton>
+                <RouteCtaButton href="/ai-talk">
+                  {t('chat.workspacePreview.secondaryCta')}
+                </RouteCtaButton>
+              </div>
             </CardContent>
           </Card>
         </>

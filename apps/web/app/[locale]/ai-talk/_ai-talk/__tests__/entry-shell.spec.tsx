@@ -1,9 +1,11 @@
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { ThemeModeProvider } from '@my-resume/ui/theme'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 let activeLocale: 'zh' | 'en' = 'zh'
 let pathnameState = '/zh/ai-talk'
+const pushMock = vi.fn()
+const prefetchMock = vi.fn()
 
 vi.mock('@i18n/navigation', () => ({
   Link: ({ children, href, prefetch: _prefetch, ...props }: any) => (
@@ -23,6 +25,8 @@ vi.mock('@i18n/navigation', () => ({
   ),
   usePathname: () => pathnameState,
   useRouter: () => ({
+    push: pushMock,
+    prefetch: prefetchMock,
     replace: vi.fn(),
   }),
 }))
@@ -80,6 +84,8 @@ describe('AiTalkEntryShell', () => {
   beforeEach(() => {
     activeLocale = 'zh'
     pathnameState = '/zh/ai-talk'
+    pushMock.mockReset()
+    prefetchMock.mockReset()
     cleanup()
   })
 
@@ -104,23 +110,22 @@ describe('AiTalkEntryShell', () => {
     const avatarCard = screen.getByTestId('ai-talk-card-avatar')
 
     expect(within(ragCard).getAllByText('RAG 知识库 / 分身问答')).not.toHaveLength(0)
-    const ragLink = within(ragCard).getByRole('link', { name: '进入 RAG 对话' })
-    expect(ragLink).toHaveAttribute('href', '/zh/ai-talk/chat')
-    expect(ragLink.className).toContain('bg-[var(--display-color-accent)]')
-    expect(ragLink.className).toContain('text-white')
+    const ragButton = within(ragCard).getByRole('button', { name: '进入 RAG 对话' })
+    expect(ragButton.className).toContain('button--primary')
+    fireEvent.click(ragButton)
+    expect(pushMock).toHaveBeenCalledWith('/ai-talk/chat')
 
     expect(within(resumeAdvisorCard).getAllByText('简历优化与建议')).not.toHaveLength(0)
-    expect(within(resumeAdvisorCard).getByRole('link', { name: '查看优化说明' })).toHaveAttribute(
-      'href',
-      '/zh/ai-talk/resume-advisor',
-    )
+    fireEvent.click(within(resumeAdvisorCard).getByRole('button', { name: '查看优化说明' }))
+    expect(pushMock).toHaveBeenCalledWith('/ai-talk/resume-advisor')
 
     expect(within(avatarCard).getAllByText('数字人 / 自我介绍')).not.toHaveLength(0)
     expect(within(avatarCard).getAllByText(/coming soon/i)).not.toHaveLength(0)
-    expect(within(avatarCard).getByRole('link', { name: '查看数字人入口' })).toHaveAttribute(
-      'href',
-      '/zh/ai-talk/avatar',
-    )
+    fireEvent.click(within(avatarCard).getByRole('button', { name: '查看数字人入口' }))
+    expect(pushMock).toHaveBeenCalledWith('/ai-talk/avatar')
+    expect(prefetchMock).toHaveBeenCalledWith('/ai-talk/chat')
+    expect(prefetchMock).toHaveBeenCalledWith('/ai-talk/resume-advisor')
+    expect(prefetchMock).toHaveBeenCalledWith('/ai-talk/avatar')
     expect(screen.getByRole('link', { name: 'AI Talk' })).toHaveAttribute('aria-current', 'page')
   })
 
@@ -142,9 +147,9 @@ describe('AiTalkEntryShell', () => {
     expect(screen.getByRole('link', { name: 'Resume' })).toHaveAttribute('href', '/en')
     expect(screen.getByRole('link', { name: 'Profile' })).toHaveAttribute('href', '/en/profile')
     expect(screen.getByRole('link', { name: 'AI Talk' })).toHaveAttribute('aria-current', 'page')
-    expect(screen.getByRole('link', { name: 'Open RAG chat' })).toHaveAttribute(
-      'href',
-      '/en/ai-talk/chat',
-    )
+    const ragButton = screen.getByRole('button', { name: 'Open RAG chat' })
+    expect(ragButton).toBeInTheDocument()
+    fireEvent.click(ragButton)
+    expect(pushMock).toHaveBeenCalledWith('/ai-talk/chat')
   })
 })

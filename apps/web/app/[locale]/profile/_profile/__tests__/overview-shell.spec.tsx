@@ -1,9 +1,11 @@
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { ThemeModeProvider } from '@my-resume/ui/theme'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 let activeLocale: 'zh' | 'en' = 'zh'
 let pathnameState = '/zh/profile'
+const pushMock = vi.fn()
+const prefetchMock = vi.fn()
 
 vi.mock('@i18n/navigation', () => ({
   Link: ({ children, href, prefetch: _prefetch, ...props }: any) => (
@@ -23,6 +25,8 @@ vi.mock('@i18n/navigation', () => ({
   ),
   usePathname: () => pathnameState,
   useRouter: () => ({
+    push: pushMock,
+    prefetch: prefetchMock,
     replace: vi.fn(),
   }),
 }))
@@ -80,6 +84,8 @@ describe('ProfileOverviewShell', () => {
   beforeEach(() => {
     activeLocale = 'zh'
     pathnameState = '/zh/profile'
+    pushMock.mockReset()
+    prefetchMock.mockReset()
     cleanup()
   })
 
@@ -92,10 +98,12 @@ describe('ProfileOverviewShell', () => {
 
     expect(screen.getByRole('heading', { name: '公开履历概览' })).toBeInTheDocument()
     expect(screen.getByText('职业经历')).toBeInTheDocument()
-    const aiTalkLink = screen.getByRole('link', { name: '进入 AI Talk' })
-    expect(aiTalkLink).toBeInTheDocument()
-    expect(aiTalkLink.className).toContain('bg-[var(--display-color-accent)]')
-    expect(aiTalkLink.className).toContain('text-white')
+    const aiTalkButton = screen.getByRole('button', { name: '进入 AI Talk' })
+    expect(aiTalkButton).toBeInTheDocument()
+    expect(aiTalkButton.className).toContain('button--primary')
+    fireEvent.click(aiTalkButton)
+    expect(prefetchMock).toHaveBeenCalledWith('/ai-talk')
+    expect(pushMock).toHaveBeenCalledWith('/ai-talk')
     expect(screen.getByRole('link', { name: 'AI Talk' })).toHaveAttribute(
       'href',
       '/zh/ai-talk',
@@ -115,10 +123,10 @@ describe('ProfileOverviewShell', () => {
 
     expect(screen.getByRole('heading', { name: 'Public Profile Overview' })).toBeInTheDocument()
     expect(screen.getByText('Experience')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Open AI Talk' })).toHaveAttribute(
-      'href',
-      '/en/ai-talk',
-    )
+    const aiTalkButton = screen.getByRole('button', { name: 'Open AI Talk' })
+    expect(aiTalkButton).toBeInTheDocument()
+    fireEvent.click(aiTalkButton)
+    expect(pushMock).toHaveBeenCalledWith('/ai-talk')
     expect(screen.getByRole('link', { name: 'Profile' })).toHaveAttribute('aria-current', 'page')
   })
 })

@@ -1,6 +1,9 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { ThemeModeProvider } from '@my-resume/ui/theme'
 import { describe, expect, it, vi } from 'vitest'
+
+const pushMock = vi.fn()
+const prefetchMock = vi.fn()
 
 vi.mock('@i18n/navigation', () => ({
   Link: ({ children, href, prefetch: _prefetch, ...props }: any) => (
@@ -20,6 +23,8 @@ vi.mock('@i18n/navigation', () => ({
   ),
   usePathname: () => '/ai-talk/avatar',
   useRouter: () => ({
+    push: pushMock,
+    prefetch: prefetchMock,
     replace: vi.fn(),
   }),
 }))
@@ -61,6 +66,9 @@ import { AiTalkAvatarShell } from '../avatar-shell'
 
 describe('AiTalkAvatarShell', () => {
   it('should render the avatar introduction placeholder and contract cards', () => {
+    pushMock.mockReset()
+    prefetchMock.mockReset()
+
     render(
       <ThemeModeProvider>
         <AiTalkAvatarShell locale="zh" publishedResume={publishedResumeFixture} />
@@ -69,6 +77,10 @@ describe('AiTalkAvatarShell', () => {
 
     expect(screen.getByRole('heading', { name: '数字人自我介绍' })).toBeInTheDocument()
     expect(screen.getByText('媒体资源')).toBeInTheDocument()
-    expect(screen.getByText('返回 AI Talk 中枢')).toBeInTheDocument()
+    const backButton = screen.getByRole('button', { name: '返回 AI Talk 中枢' })
+    expect(backButton).toBeInTheDocument()
+    fireEvent.click(backButton)
+    expect(prefetchMock).toHaveBeenCalledWith('/ai-talk')
+    expect(pushMock).toHaveBeenCalledWith('/ai-talk')
   })
 })

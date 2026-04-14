@@ -1,0 +1,17 @@
+.timelineCardSurface {
+  border: 1px solid rgba(226, 232, 240, 0.82);
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.1), transparent 42%),
+    radial-gradient(circle at bottom right, rgba(186, 230, 253, 0.07), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.82));
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.04);
+}
+
+:global([data-theme='dark']) .timelineCardSurface {
+  border-color: rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.12), transparent 42%),
+    radial-gradient(circle at bottom right, rgba(34, 211, 238, 0.08), transparent 34%),
+    linear-gradient(180deg, rgba(30, 41, 59, 0.68), rgba(15, 23, 42, 0.56));
+  box-shadow: 0 16px 34px rgba(2, 6, 23, 0.18);
+}

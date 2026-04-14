@@ -9,15 +9,12 @@ import {
 } from '@heroui/react/card'
 import { useTranslations } from 'next-intl'
 
-import { Link } from '@i18n/navigation'
 import type {
   ResumeLocale,
   ResumePublishedSnapshot,
 } from '@shared/published-resume/types/published-resume.types'
-import {
-  aiTalkGhostCtaLinkClass,
-  aiTalkPrimaryCtaLinkClass,
-} from '../../_ai-talk/cta-link-classes'
+import { interactiveCardSurfaceClass } from '@shared/site/card-surface'
+import { RouteCtaButton } from '@shared/site/route-cta-button'
 import { AiTalkPageFrame } from '../../_ai-talk/page-frame'
 
 interface AiTalkResumeAdvisorShellProps {
@@ -47,7 +44,7 @@ export function AiTalkResumeAdvisorShell({
       publishedResume={publishedResume}>
       {() => (
         <>
-          <Card className="border-white/70 bg-white/82 shadow-[0_30px_80px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-slate-950/84">
+          <Card className={interactiveCardSurfaceClass}>
             <CardHeader className="gap-3">
               <p className="web-eyebrow">{t('resumeAdvisorPage.eyebrow')}</p>
               <CardTitle className="text-3xl text-slate-950 dark:text-white">
@@ -65,9 +62,7 @@ export function AiTalkResumeAdvisorShell({
 
           <div className="grid gap-6 lg:grid-cols-3">
             {['overview', 'workflow', 'boundary'].map((item) => (
-              <Card
-                className="border-white/70 bg-white/82 dark:border-white/10 dark:bg-slate-950/84"
-                key={item}>
+              <Card className={interactiveCardSurfaceClass} key={item}>
                 <CardHeader className="gap-3">
                   <p className="web-eyebrow">{t(`resumeAdvisorPage.blocks.${item}.eyebrow`)}</p>
                   <CardTitle className="text-2xl text-slate-950 dark:text-white">
@@ -82,12 +77,12 @@ export function AiTalkResumeAdvisorShell({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <Link className={aiTalkPrimaryCtaLinkClass} href="/ai-talk">
+            <RouteCtaButton href="/ai-talk" tone="primary">
               {t('resumeAdvisorPage.primaryCta')}
-            </Link>
-            <Link className={aiTalkGhostCtaLinkClass} href="/ai-talk/chat">
+            </RouteCtaButton>
+            <RouteCtaButton href="/ai-talk/chat">
               {t('resumeAdvisorPage.secondaryCta')}
-            </Link>
+            </RouteCtaButton>
           </div>
         </>
       )}

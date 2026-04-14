@@ -10,12 +10,16 @@ import {
 import { Chip } from '@heroui/react/chip'
 import { useTranslations } from 'next-intl'
 
-import { Link } from '@i18n/navigation'
 import type {
   ResumeLocale,
   ResumePublishedSnapshot,
 } from '@shared/published-resume/types/published-resume.types'
 import { readLocalizedText } from '@shared/published-resume/published-resume-utils'
+import {
+  interactiveCardSurfaceClass,
+  interactiveInsetSurfaceClass,
+} from '@shared/site/card-surface'
+import { RouteCtaButton } from '@shared/site/route-cta-button'
 import { AiTalkPageFrame } from '../../_ai-talk/page-frame'
 
 interface AiTalkAvatarShellProps {
@@ -24,9 +28,6 @@ interface AiTalkAvatarShellProps {
   locale?: ResumeLocale
   publishedResume: ResumePublishedSnapshot | null
 }
-
-const ghostCtaLinkClass =
-  'inline-flex min-h-10 items-center justify-center rounded-full border border-slate-200 bg-white/75 px-4 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10 dark:hover:text-white'
 
 export function AiTalkAvatarShell({
   apiBaseUrl,
@@ -47,7 +48,7 @@ export function AiTalkAvatarShell({
 
         return (
           <>
-            <Card className="border-white/70 bg-white/82 shadow-[0_30px_80px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-slate-950/84">
+            <Card className={interactiveCardSurfaceClass}>
               <CardHeader className="gap-3">
                 <p className="web-eyebrow">{t('avatar.eyebrow')}</p>
                 <CardTitle className="text-3xl text-slate-950 dark:text-white">
@@ -67,7 +68,7 @@ export function AiTalkAvatarShell({
             </Card>
 
             <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-              <Card className="border-white/70 bg-white/82 dark:border-white/10 dark:bg-slate-950/84">
+              <Card className={interactiveCardSurfaceClass}>
                 <CardHeader className="gap-3">
                   <p className="web-eyebrow">{t('avatar.intro.eyebrow')}</p>
                   <CardTitle className="text-2xl text-slate-950 dark:text-white">
@@ -84,7 +85,7 @@ export function AiTalkAvatarShell({
                 </CardContent>
               </Card>
 
-              <Card className="border-white/70 bg-white/82 dark:border-white/10 dark:bg-slate-950/84">
+              <Card className={interactiveCardSurfaceClass}>
                 <CardHeader className="gap-3">
                   <p className="web-eyebrow">{t('avatar.contract.eyebrow')}</p>
                   <CardTitle className="text-2xl text-slate-950 dark:text-white">
@@ -94,7 +95,7 @@ export function AiTalkAvatarShell({
                 <CardContent className="grid gap-3">
                   {['role', 'media', 'controls'].map((item) => (
                     <div
-                      className="rounded-[1.5rem] border border-slate-200 bg-slate-50/80 px-4 py-4 text-sm leading-6 text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300"
+                      className={`${interactiveInsetSurfaceClass} rounded-[1.5rem] px-4 py-4 text-sm leading-6 text-slate-600 dark:text-slate-300`}
                       key={item}>
                       <p className="font-semibold">{t(`avatar.contract.items.${item}.title`)}</p>
                       <p className="mt-2">{t(`avatar.contract.items.${item}.description`)}</p>
@@ -105,9 +106,9 @@ export function AiTalkAvatarShell({
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              <Link className={ghostCtaLinkClass} href="/ai-talk">
+              <RouteCtaButton href="/ai-talk">
                 {t('avatar.backToHub')}
-              </Link>
+              </RouteCtaButton>
             </div>
           </>
         )

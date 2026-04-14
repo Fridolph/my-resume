@@ -1,6 +1,9 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { ThemeModeProvider } from '@my-resume/ui/theme'
 import { describe, expect, it, vi } from 'vitest'
+
+const pushMock = vi.fn()
+const prefetchMock = vi.fn()
 
 vi.mock('@i18n/navigation', () => ({
   Link: ({ children, href, prefetch: _prefetch, ...props }: any) => (
@@ -20,6 +23,8 @@ vi.mock('@i18n/navigation', () => ({
   ),
   usePathname: () => '/ai-talk/sessions/demo-session',
   useRouter: () => ({
+    push: pushMock,
+    prefetch: prefetchMock,
     replace: vi.fn(),
   }),
 }))
@@ -67,6 +72,9 @@ import { AiTalkSessionShell } from '../session-shell'
 
 describe('AiTalkSessionShell', () => {
   it('should render the future session workspace placeholder', () => {
+    pushMock.mockReset()
+    prefetchMock.mockReset()
+
     render(
       <ThemeModeProvider>
         <AiTalkSessionShell
@@ -79,6 +87,11 @@ describe('AiTalkSessionShell', () => {
 
     expect(screen.getByRole('heading', { name: '会话工作区 · demo-session' })).toBeInTheDocument()
     expect(screen.getAllByText('来源片段')).not.toHaveLength(0)
-    expect(screen.getByText('返回 RAG 对话')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '返回 RAG 对话' }))
+    expect(pushMock).toHaveBeenCalledWith('/ai-talk/chat')
+    fireEvent.click(screen.getByRole('button', { name: '返回 AI Talk 中枢' }))
+    expect(pushMock).toHaveBeenCalledWith('/ai-talk')
+    expect(prefetchMock).toHaveBeenCalledWith('/ai-talk/chat')
+    expect(prefetchMock).toHaveBeenCalledWith('/ai-talk')
   })
 })

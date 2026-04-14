@@ -149,7 +149,7 @@ export function PublicSiteHeader({
           <div className={styles.localeSwitchWrapper}>
             <Button
               className={styles.localeSwitchButton}
-              onClick={() => router.replace(normalizedPathname, { locale: 'zh' })}
+              onPress={() => router.replace(normalizedPathname, { locale: 'zh' })}
               size="sm"
               type="button"
               variant={locale === 'zh' ? 'primary' : 'ghost'}>
@@ -157,7 +157,7 @@ export function PublicSiteHeader({
             </Button>
             <Button
               className={styles.localeSwitchButton}
-              onClick={() => router.replace(normalizedPathname, { locale: 'en' })}
+              onPress={() => router.replace(normalizedPathname, { locale: 'en' })}
               size="sm"
               type="button"
               variant={locale === 'en' ? 'primary' : 'ghost'}>

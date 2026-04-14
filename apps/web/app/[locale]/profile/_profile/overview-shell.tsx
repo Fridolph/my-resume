@@ -11,7 +11,6 @@ import { Chip } from '@heroui/react/chip'
 import { useTranslations } from 'next-intl'
 
 import { DEFAULT_API_BASE_URL } from '@core/env'
-import { Link } from '@i18n/navigation'
 import type {
   ResumeLocale,
   ResumePublishedSnapshot,
@@ -24,7 +23,11 @@ import {
 } from '@shared/published-resume/published-resume-utils'
 import { createFetchPublishedResumeMethod } from '@shared/published-resume/services/published-resume-api'
 import { usePublishedResumeSync } from '@shared/published-resume/hooks/use-published-resume-sync'
-import { publicSitePrimaryCtaLinkClass } from '@shared/site/cta-link-classes'
+import {
+  interactiveCardSurfaceClass,
+  interactiveInsetSurfaceClass,
+} from '@shared/site/card-surface'
+import { RouteCtaButton } from '@shared/site/route-cta-button'
 import { PublicSiteHeader } from '@shared/site/site-header'
 
 interface ProfileOverviewShellProps {
@@ -94,7 +97,7 @@ export function ProfileOverviewShell({
             {syncMessage}
           </div>
         ) : null}
-        <Card className="border-white/70 bg-white/82 shadow-[0_30px_80px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-slate-950/84">
+        <Card className={interactiveCardSurfaceClass}>
           <CardHeader className="gap-3">
             <p className="web-eyebrow">{t('profileEyebrow')}</p>
             <CardTitle className="text-3xl text-slate-950 dark:text-white">{t('profileTitle')}</CardTitle>
@@ -105,7 +108,7 @@ export function ProfileOverviewShell({
           <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {signalCards.map((card) => (
               <div
-                className="rounded-[1.75rem] border border-slate-200 bg-slate-50/80 p-5 dark:border-white/10 dark:bg-white/5"
+                className={`${interactiveInsetSurfaceClass} rounded-[1.75rem] p-5`}
                 key={card.label}>
                 <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
                   {card.label}
@@ -122,7 +125,7 @@ export function ProfileOverviewShell({
         </Card>
 
         <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-          <Card className="border-white/70 bg-white/82 dark:border-white/10 dark:bg-slate-950/84">
+          <Card className={interactiveCardSurfaceClass}>
             <CardHeader className="gap-3">
               <p className="web-eyebrow">{t('profileStoryEyebrow')}</p>
               <CardTitle className="text-2xl text-slate-950 dark:text-white">
@@ -157,7 +160,7 @@ export function ProfileOverviewShell({
             </CardContent>
           </Card>
 
-          <Card className="border-white/70 bg-white/82 dark:border-white/10 dark:bg-slate-950/84">
+          <Card className={interactiveCardSurfaceClass}>
             <CardHeader className="gap-3">
               <p className="web-eyebrow">{t('aiTalkCard.eyebrow')}</p>
               <CardTitle className="text-2xl text-slate-950 dark:text-white">{t('aiTalkCard.title')}</CardTitle>
@@ -166,9 +169,9 @@ export function ProfileOverviewShell({
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-start gap-4">
-              <Link className={publicSitePrimaryCtaLinkClass} href="/ai-talk">
+              <RouteCtaButton href="/ai-talk" tone="primary">
                 {t('aiTalkCard.enter')}
-              </Link>
+              </RouteCtaButton>
             </CardContent>
           </Card>
         </div>

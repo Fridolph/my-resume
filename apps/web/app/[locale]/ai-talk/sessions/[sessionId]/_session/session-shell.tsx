@@ -7,18 +7,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@heroui/react/card'
-import { Chip } from '@heroui/react/chip'
 import { useTranslations } from 'next-intl'
 
-import { Link } from '@i18n/navigation'
 import type {
   ResumeLocale,
   ResumePublishedSnapshot,
 } from '@shared/published-resume/types/published-resume.types'
-import {
-  aiTalkGhostCtaLinkClass,
-  aiTalkPrimaryCtaLinkClass,
-} from '../../../_ai-talk/cta-link-classes'
+import { interactiveCardSurfaceClass } from '@shared/site/card-surface'
+import { RouteCtaButton } from '@shared/site/route-cta-button'
 import { AiTalkPageFrame } from '../../../_ai-talk/page-frame'
 
 interface AiTalkSessionShellProps {
@@ -37,6 +33,10 @@ export function AiTalkSessionShell({
   sessionId,
 }: AiTalkSessionShellProps) {
   const t = useTranslations('aiTalk')
+  const primaryTagClass =
+    'inline-flex min-h-9 items-center rounded-full bg-[var(--display-color-accent)] px-4 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.18)]'
+  const softTagClass =
+    'inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-slate-100/80 px-4 text-sm font-semibold text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-200'
 
   return (
     <AiTalkPageFrame
@@ -46,7 +46,7 @@ export function AiTalkSessionShell({
       publishedResume={publishedResume}>
       {() => (
         <>
-          <Card className="border-white/70 bg-white/82 shadow-[0_30px_80px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-slate-950/84">
+          <Card className={interactiveCardSurfaceClass}>
             <CardHeader className="gap-3">
               <p className="web-eyebrow">{t('session.eyebrow')}</p>
               <CardTitle className="text-3xl text-slate-950 dark:text-white">
@@ -56,20 +56,24 @@ export function AiTalkSessionShell({
                 {t('session.description')}
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-wrap gap-3">
-              <Chip color="accent" variant="primary">
-                {t('status.streaming')}
-              </Chip>
-              <Chip variant="soft">{t('session.badgeTimeline')}</Chip>
-              <Chip variant="soft">{t('session.badgeSources')}</Chip>
+            <CardContent>
+              <div className="flex max-w-full flex-nowrap items-center gap-3 overflow-x-auto">
+                <span className={`${primaryTagClass} shrink-0 whitespace-nowrap`}>
+                  {t('status.streaming')}
+                </span>
+                <span className={`${softTagClass} shrink-0 whitespace-nowrap`}>
+                  {t('session.badgeTimeline')}
+                </span>
+                <span className={`${softTagClass} shrink-0 whitespace-nowrap`}>
+                  {t('session.badgeSources')}
+                </span>
+              </div>
             </CardContent>
           </Card>
 
           <div className="grid gap-6 lg:grid-cols-3">
             {['messages', 'sources', 'quota'].map((item) => (
-              <Card
-                className="border-white/70 bg-white/82 dark:border-white/10 dark:bg-slate-950/84"
-                key={item}>
+              <Card className={interactiveCardSurfaceClass} key={item}>
                 <CardHeader className="gap-3">
                   <p className="web-eyebrow">{t(`session.blocks.${item}.eyebrow`)}</p>
                   <CardTitle className="text-2xl text-slate-950 dark:text-white">
@@ -84,12 +88,12 @@ export function AiTalkSessionShell({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <Link className={aiTalkPrimaryCtaLinkClass} href="/ai-talk/chat">
+            <RouteCtaButton href="/ai-talk/chat" tone="primary">
               {t('session.backToChat')}
-            </Link>
-            <Link className={aiTalkGhostCtaLinkClass} href="/ai-talk">
+            </RouteCtaButton>
+            <RouteCtaButton href="/ai-talk">
               {t('session.backToHub')}
-            </Link>
+            </RouteCtaButton>
           </div>
         </>
       )}

@@ -1,0 +1,93 @@
+.displayCardSurface {
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.13), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(125, 211, 252, 0.1), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 252, 0.9));
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.08);
+}
+
+:global([data-theme='dark']) .displayCardSurface {
+  border-color: rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.14), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(34, 211, 238, 0.1), transparent 24%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(15, 23, 42, 0.86));
+  box-shadow: 0 34px 90px rgba(2, 6, 23, 0.34);
+}
+
+.displayCardInteractive {
+  transition:
+    background 240ms ease,
+    border-color 240ms ease,
+    box-shadow 240ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .displayCardInteractive:hover,
+  .displayCardInteractive:focus-within {
+    border-color: rgba(191, 219, 254, 0.9);
+    background:
+      radial-gradient(circle at top left, rgba(96, 165, 250, 0.16), transparent 30%),
+      radial-gradient(circle at bottom right, rgba(125, 211, 252, 0.12), transparent 26%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 252, 0.9));
+    box-shadow: 0 36px 90px rgba(59, 130, 246, 0.14);
+  }
+
+  :global([data-theme='dark']) .displayCardInteractive:hover,
+  :global([data-theme='dark']) .displayCardInteractive:focus-within {
+    border-color: rgba(96, 165, 250, 0.26);
+    background:
+      radial-gradient(circle at top left, rgba(96, 165, 250, 0.18), transparent 30%),
+      radial-gradient(circle at bottom right, rgba(34, 211, 238, 0.12), transparent 24%),
+      linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(15, 23, 42, 0.86));
+    box-shadow: 0 40px 100px rgba(15, 23, 42, 0.42);
+  }
+}
+
+.displayInsetSurface {
+  border: 1px solid rgba(226, 232, 240, 0.88);
+  background:
+    radial-gradient(circle at top left, rgba(191, 219, 254, 0.27), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.82));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+:global([data-theme='dark']) .displayInsetSurface {
+  border-color: rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.13), transparent 42%),
+    linear-gradient(180deg, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.54));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.displayInsetInteractive {
+  transition:
+    background 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .displayInsetInteractive:hover,
+  .displayInsetInteractive:focus-within {
+    border-color: rgba(191, 219, 254, 0.94);
+    background:
+      radial-gradient(circle at top left, rgba(191, 219, 254, 0.34), transparent 44%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.82));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.82),
+      0 16px 30px rgba(96, 165, 250, 0.1);
+  }
+
+  :global([data-theme='dark']) .displayInsetInteractive:hover,
+  :global([data-theme='dark']) .displayInsetInteractive:focus-within {
+    border-color: rgba(96, 165, 250, 0.24);
+    background:
+      radial-gradient(circle at top left, rgba(96, 165, 250, 0.16), transparent 42%),
+      linear-gradient(180deg, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.54));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 18px 32px rgba(15, 23, 42, 0.22);
+  }
+}

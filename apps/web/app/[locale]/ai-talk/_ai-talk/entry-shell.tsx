@@ -4,13 +4,12 @@ import { Card, CardContent } from '@heroui/react/card'
 import { Chip } from '@heroui/react/chip'
 import { useTranslations } from 'next-intl'
 
-import { Link } from '@i18n/navigation'
 import type {
   ResumeLocale,
   ResumePublishedSnapshot,
 } from '@shared/published-resume/types/published-resume.types'
 import { readLocalizedText } from '@shared/published-resume/published-resume-utils'
-import { aiTalkGhostCtaLinkClass, aiTalkPrimaryCtaLinkClass } from './cta-link-classes'
+import { RouteCtaButton } from '@shared/site/route-cta-button'
 import { AiTalkPageFrame } from './page-frame'
 import styles from './entry-shell.module.css'
 
@@ -182,15 +181,11 @@ export function AiTalkEntryShell({
                         </ul>
 
                         <div className={styles.ctaRow}>
-                          <Link
-                            className={
-                              card.ctaVariant === 'primary'
-                                ? aiTalkPrimaryCtaLinkClass
-                                : aiTalkGhostCtaLinkClass
-                            }
-                            href={card.href}>
+                          <RouteCtaButton
+                            href={card.href}
+                            tone={card.ctaVariant}>
                             {t(`featureCards.${card.key}.back.cta`)}
-                          </Link>
+                          </RouteCtaButton>
                         </div>
                       </div>
                     </div>
