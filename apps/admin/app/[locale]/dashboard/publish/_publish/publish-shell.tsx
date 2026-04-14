@@ -173,11 +173,6 @@ export function AdminPublishShell({ locale }: { locale: AppLocale }) {
             locale={locale}
             role={currentUser.role}
           />
-          <ExportEntryPanel
-            apiBaseUrl={DEFAULT_API_BASE_URL}
-            locale={locale === 'zh' ? 'en' : 'zh'}
-            role={currentUser.role}
-          />
         </div>
       </section>
     </div>

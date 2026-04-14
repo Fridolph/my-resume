@@ -3,6 +3,8 @@
 import { Card, CardContent, CardHeader, Chip } from '@heroui/react'
 import { buildPublishedResumeExportUrl, type ResumeLocale } from '@my-resume/api-client'
 import { DisplaySectionIntro } from '@my-resume/ui/display'
+import type { ChangeEvent } from 'react'
+import { useState } from 'react'
 
 type ExportEntryPanelProps = {
   apiBaseUrl: string
@@ -11,12 +13,31 @@ type ExportEntryPanelProps = {
 }
 
 export function ExportEntryPanel({ apiBaseUrl, locale, role }: ExportEntryPanelProps) {
+  const [selectedLocale, setSelectedLocale] = useState<ResumeLocale>(locale)
+
+  function handleLocaleChange(event: ChangeEvent<HTMLSelectElement>) {
+    setSelectedLocale(event.target.value as ResumeLocale)
+  }
+
   return (
     <Card className="border border-zinc-200/70 dark:border-zinc-800">
       <CardHeader className="flex flex-col items-start gap-2">
-        <div className="flex items-center gap-2">
-          <p className="eyebrow">导出下载</p>
-          <Chip size="sm">{locale.toUpperCase()}</Chip>
+        <div className="flex w-full flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <p className="eyebrow">导出下载</p>
+            <Chip size="sm">{selectedLocale.toUpperCase()}</Chip>
+          </div>
+          <label className="flex min-w-[11rem] items-center gap-2 text-sm font-semibold text-[var(--admin-text-muted)]">
+            <span className="shrink-0">导出语言</span>
+            <select
+              aria-label="导出语言"
+              className="min-h-9 rounded-full px-3 py-1.5 text-sm font-semibold"
+              onChange={handleLocaleChange}
+              value={selectedLocale}>
+              <option value="zh">中文版本</option>
+              <option value="en">英文版本</option>
+            </select>
+          </label>
         </div>
         <DisplaySectionIntro
           className="gap-2"
@@ -26,13 +47,13 @@ export function ExportEntryPanel({ apiBaseUrl, locale, role }: ExportEntryPanelP
         />
       </CardHeader>
       <CardContent className="stack">
-        <div className="flex flex-wrap items-center gap-3" data-testid={`export-actions-${locale}`}>
+        <div className="flex flex-wrap items-center gap-3" data-testid="export-actions">
           <a
             className="link-button min-h-10 px-4 py-2 text-[0.95rem]"
             href={buildPublishedResumeExportUrl({
               apiBaseUrl,
               format: 'markdown',
-              locale,
+              locale: selectedLocale,
             })}
             target="_blank">
             下载 Markdown
@@ -42,7 +63,7 @@ export function ExportEntryPanel({ apiBaseUrl, locale, role }: ExportEntryPanelP
             href={buildPublishedResumeExportUrl({
               apiBaseUrl,
               format: 'pdf',
-              locale,
+              locale: selectedLocale,
             })}
             target="_blank">
             下载 PDF
