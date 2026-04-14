@@ -80,6 +80,14 @@ function renderBulletList(items: string[]): string[] {
   return items.filter(Boolean).map((item) => `- ${item}`)
 }
 
+function formatSkillGroupLabel(name: string, proficiency: number | undefined) {
+  if (typeof proficiency !== 'number') {
+    return name
+  }
+
+  return `${name} (${proficiency}/100)`
+}
+
 @Injectable()
 export class ResumeMarkdownExportService {
   render(resume: StandardResume, locale: ResumeLocale): string {
@@ -278,7 +286,7 @@ export class ResumeMarkdownExportService {
       title: SECTION_TITLES[locale].skills,
       lines: resume.skills.map(
         (group) =>
-          `- **${readLocalizedText(group.name, locale)}**: ${group.keywords.join(' / ')}`,
+          `- **${formatSkillGroupLabel(readLocalizedText(group.name, locale), group.proficiency)}**: ${group.keywords.join(' / ')}`,
       ),
     }
   }

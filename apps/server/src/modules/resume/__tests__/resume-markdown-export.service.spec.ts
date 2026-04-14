@@ -37,4 +37,22 @@ describe('ResumeMarkdownExportService', () => {
     expect(markdown).toContain('**Highlights, Challenges & Solutions:**')
     expect(markdown).toContain('AI Agent workflows')
   })
+
+  it('should include skill proficiency when it exists', () => {
+    const resume = createExampleStandardResume()
+    resume.skills = [
+      {
+        name: {
+          zh: '前端核心能力',
+          en: 'Frontend Core',
+        },
+        keywords: ['Vue 3', 'Next.js', 'TypeScript'],
+        proficiency: 95,
+      },
+    ]
+
+    const markdown = service.render(resume, 'zh')
+
+    expect(markdown).toContain('**前端核心能力 (95/100)**: Vue 3 / Next.js / TypeScript')
+  })
 })
