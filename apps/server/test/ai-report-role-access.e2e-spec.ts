@@ -56,6 +56,7 @@ describe('AI report role access (e2e)', () => {
     await prepareResumeTables(moduleFixture.get<DatabaseClient>(DATABASE_CLIENT))
 
     app = moduleFixture.createNestApplication()
+    app.setGlobalPrefix('api')
     await app.init()
   })
 

@@ -24,6 +24,7 @@
 - 新增 `deploy/templates/stack.env.example`
 - 新增生产版 `compose.prod.yml` / Nginx 模板
 - 新增 `deploy/ecs/README.md` 说明手工部署与回滚流程
+- 修复 PR CI 暴露出的测试环境问题：PDF 文本抽取断言、测试用 `localStorage` mock、e2e 全局 `/api` 前缀与新版导出文案断言
 - `README.md` 增加 ECS 部署脚本入口
 - `.gitignore` 忽略本地 `deploy/ecs/stack.env`
 
@@ -44,6 +45,7 @@
 - 计划执行脚本语法检查
 - 计划本地 dry-run 渲染 `compose.prod.yml` / `nginx.conf`
 - 计划检查 GitHub Actions workflow 的 YAML 结构与 Secrets 契约
+- 已补跑 `pnpm test:ci`
 - 首次 ECS 验证以 `bootstrap -> render-config -> release v2.0.0` 为主线
 
 ## 后续可写成教程 / 博客的切入点

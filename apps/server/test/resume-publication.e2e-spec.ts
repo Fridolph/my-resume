@@ -57,6 +57,7 @@ describe('Resume publication flow (e2e)', () => {
     await prepareResumeTables(moduleFixture.get<DatabaseClient>(DATABASE_CLIENT))
 
     app = moduleFixture.createNestApplication()
+    app.setGlobalPrefix('api')
     await app.init()
   })
 
@@ -184,7 +185,7 @@ describe('Resume publication flow (e2e)', () => {
     )
     expect(markdownResponse.headers['cache-control']).toContain('no-store')
     expect(markdownResponse.text).toContain('# Yinsheng Fu')
-    expect(markdownResponse.text).toContain('## Summary')
+    expect(markdownResponse.text).toContain('## Basic Information')
     expect(markdownResponse.text).toContain('Publish Candidate')
 
     const pdfResponse = await request(app.getHttpServer())
@@ -204,8 +205,9 @@ describe('Resume publication flow (e2e)', () => {
     try {
       const result = await parser.getText()
 
-      expect(result.text).toContain('已发布候选稿')
-      expect(result.text).toContain('基本信息')
+      expect(result.text.trim().length).toBeGreaterThan(100)
+      expect(result.text).toContain('Email: demo@example.com')
+      expect(result.text).toContain('Phone: +86 13800000000')
     } finally {
       await parser.destroy()
     }

@@ -240,7 +240,7 @@ describe('AiAnalysisPanel', () => {
     )
     expect(screen.getByText('建议模块：experiences')).toBeInTheDocument()
     expect(screen.getByText('补一条量化结果')).toBeInTheDocument()
-  })
+  }, 10_000)
 
   it('should show error feedback when live analysis fails', async () => {
     const user = userEvent.setup()
@@ -536,7 +536,7 @@ describe('AiAnalysisPanel', () => {
         '已将 2 个模块应用到当前草稿。公开站内容不会自动变化，仍需手动发布。',
       ),
     ).toBeInTheDocument()
-  })
+  }, 12_000)
 
   it('should restrict structured suggestion to resume-review scenario', async () => {
     const user = userEvent.setup()

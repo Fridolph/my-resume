@@ -14,6 +14,7 @@ describe('Auth viewer access (e2e)', () => {
     }).compile()
 
     app = moduleFixture.createNestApplication()
+    app.setGlobalPrefix('api')
     await app.init()
   })
 

@@ -81,6 +81,7 @@ describe('AI RAG (e2e)', () => {
     }).compile()
 
     app = moduleFixture.createNestApplication()
+    app.setGlobalPrefix('api')
     await app.init()
   })
 
