@@ -1,0 +1,543 @@
+.loginPage {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-height: 100svh;
+  place-items: center;
+  overflow-x: hidden;
+  padding: clamp(1rem, 2vw, 2rem);
+  background:
+    radial-gradient(circle at 18% 20%, rgba(29, 78, 216, 0.12), transparent 28rem),
+    radial-gradient(circle at 82% 12%, rgba(14, 165, 233, 0.12), transparent 24rem),
+    linear-gradient(135deg, #f8fafc 0%, #eef4fb 50%, #f7f1e8 100%);
+}
+
+.loginPage::before {
+  position: absolute;
+  z-index: -1;
+  content: '';
+  pointer-events: none;
+  inset: 0;
+  opacity: 0.28;
+  background-image:
+    linear-gradient(rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: linear-gradient(120deg, transparent 0%, #000 18%, #000 70%, transparent 100%);
+}
+
+.loginFrame {
+  display: grid;
+  width: min(100%, 68rem);
+  grid-template-columns: minmax(0, 1fr) minmax(19rem, clamp(22rem, 34vw, 27rem));
+  gap: clamp(1rem, 2.4vw, 2.25rem);
+  align-items: center;
+}
+
+.storyPanel,
+.formPanel,
+.loadingCard {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.1);
+  backdrop-filter: blur(26px);
+}
+
+.storyPanel {
+  position: relative;
+  overflow: hidden;
+  min-height: min(36rem, calc(100svh - 3rem));
+  border-radius: clamp(1.35rem, 2.8vw, 2rem);
+  padding: clamp(1.35rem, 3.2vw, 2.35rem);
+}
+
+.brandRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.brandMark {
+  display: inline-grid;
+  width: 2.65rem;
+  height: 2.65rem;
+  place-items: center;
+  border-radius: 1.1rem;
+  background: #0f172a;
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: -0.06em;
+}
+
+.kicker {
+  margin: 0;
+  color: #1d4ed8;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.heroCopy {
+  margin-top: clamp(1.25rem, 3.2vw, 2.75rem);
+  max-width: 37rem;
+}
+
+.heroTitle {
+  margin: 0.75rem 0 0;
+  max-width: 10.8em;
+  color: #0f172a;
+  font-size: clamp(2.1rem, 4.2vw, 4rem);
+  font-weight: 740;
+  letter-spacing: -0.055em;
+  line-height: 1.02;
+}
+
+.heroDescription {
+  max-width: 40rem;
+  margin: 1rem 0 0;
+  color: #64748b;
+  font-size: clamp(0.94rem, 1.1vw, 1.02rem);
+  line-height: 1.75;
+}
+
+.capabilityGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: clamp(1.35rem, 3vw, 2.4rem);
+}
+
+.capabilityCard,
+.accountCard {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.capabilityCard {
+  min-height: 8rem;
+  border-radius: 1.25rem;
+  padding: 0.9rem;
+}
+
+.capabilityIndex {
+  color: #93a4b8;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.capabilityTitle {
+  margin: 0.95rem 0 0;
+  color: #0f172a;
+  font-size: 1rem;
+  font-weight: 750;
+}
+
+.capabilityDescription {
+  margin: 0.5rem 0 0;
+  color: #64748b;
+  font-size: 0.82rem;
+  line-height: 1.65;
+}
+
+.quietNote {
+  display: block;
+  max-width: 35rem;
+  margin-top: 1rem;
+  border: 1px solid rgba(29, 78, 216, 0.14);
+  border-radius: 1.15rem;
+  background: rgba(239, 246, 255, 0.74);
+  padding: 0.72rem 0.9rem;
+  color: #475569;
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.formPanel {
+  align-self: center;
+  border-radius: clamp(1.35rem, 2.6vw, 1.9rem);
+  padding: clamp(1.1rem, 2vw, 1.45rem);
+}
+
+.formHeader {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.45rem 0.25rem 1.15rem;
+}
+
+.formTitle {
+  margin: 0;
+  color: #0f172a;
+  font-size: clamp(1.6rem, 2.4vw, 2.05rem);
+  font-weight: 740;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+}
+
+.formDescription {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.formStack {
+  display: grid;
+  gap: 1rem;
+}
+
+.fieldLabel {
+  display: grid;
+  gap: 0.55rem;
+  color: #334155;
+  font-size: 0.88rem;
+  font-weight: 650;
+}
+
+.formPanel :global(input.input--secondary) {
+  min-height: 2.85rem;
+  border-color: rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.78);
+  color: #0f172a;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.formPanel :global(input.input--secondary::placeholder) {
+  color: #94a3b8;
+}
+
+.formPanel :global(input.input--secondary:focus) {
+  border-color: color-mix(in srgb, var(--admin-primary) 58%, transparent);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--admin-primary) 15%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.submitButton {
+  min-height: 3rem;
+  border: 1px solid color-mix(in srgb, var(--admin-primary) 78%, #ffffff 22%) !important;
+  border-radius: 999px;
+  background: var(--admin-primary) !important;
+  color: #ffffff !important;
+  font-weight: 720;
+  letter-spacing: 0.04em;
+  transition:
+    transform 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.submitButton:hover,
+.submitButton[data-hovered='true'] {
+  background: color-mix(in srgb, var(--admin-primary) 88%, #0f172a 12%) !important;
+  box-shadow: 0 14px 28px rgba(29, 78, 216, 0.22);
+  transform: translateY(-1px);
+}
+
+.accountArea {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.accountHeader {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.accountTitle {
+  margin: 0;
+  color: #0f172a;
+  font-size: 0.9rem;
+  font-weight: 760;
+}
+
+.accountHint {
+  margin: 0.2rem 0 0;
+  color: #94a3b8;
+  font-size: 0.78rem;
+}
+
+.accountGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.accountCard {
+  display: grid;
+  width: 100%;
+  min-height: 8rem;
+  gap: 0.55rem;
+  align-content: start;
+  align-items: stretch;
+  appearance: none;
+  border-radius: 1.25rem;
+  justify-items: stretch;
+  padding: 0.88rem;
+  color: #0f172a;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.accountCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(29, 78, 216, 0.24);
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+}
+
+.accountRole {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-weight: 760;
+  line-height: 1.25;
+}
+
+.accountPill {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: rgba(29, 78, 216, 0.09);
+  padding: 0.22rem 0.46rem;
+  color: #1d4ed8;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.accountSecret {
+  display: grid;
+  min-width: 0;
+  gap: 0.18rem;
+  color: #64748b;
+  font-size: 0.74rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.accountSecret code {
+  color: #0f172a;
+  font-family: inherit;
+  font-weight: 720;
+}
+
+.loadingCard {
+  width: min(100%, 34rem);
+  border-radius: 2rem;
+  padding: 3rem 1.5rem;
+  color: #64748b;
+  text-align: center;
+}
+
+@media (max-width: 960px) {
+  .loginFrame {
+    grid-template-columns: 1fr;
+  }
+
+  .storyPanel {
+    min-height: auto;
+  }
+
+  .heroCopy {
+    margin-top: 1.6rem;
+  }
+}
+
+@media (min-width: 961px) and (max-width: 1120px) {
+  .loginFrame {
+    grid-template-columns: minmax(0, 1fr) minmax(19rem, 24rem);
+  }
+
+  .capabilityGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  .accountGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .loginPage {
+    padding: 0.85rem;
+  }
+
+  .storyPanel,
+  .formPanel {
+    border-radius: 1.45rem;
+  }
+
+  .capabilityGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .quietNote {
+    border-radius: 1rem;
+  }
+}
+
+@media (max-height: 760px) and (min-width: 961px) {
+  .loginPage {
+    align-items: start;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .storyPanel {
+    min-height: auto;
+  }
+
+  .brandMark {
+    width: 2.35rem;
+    height: 2.35rem;
+  }
+
+  .heroCopy {
+    margin-top: 0.9rem;
+  }
+
+  .heroTitle {
+    font-size: clamp(1.95rem, 3.6vw, 3.35rem);
+  }
+
+  .heroDescription {
+    line-height: 1.62;
+  }
+
+  .capabilityGrid {
+    margin-top: 1rem;
+  }
+
+  .capabilityCard {
+    min-height: 7rem;
+  }
+
+  .formHeader {
+    padding-bottom: 0.8rem;
+  }
+
+  .formStack {
+    gap: 0.78rem;
+  }
+
+  .accountArea {
+    margin-top: 0.82rem;
+  }
+}
+
+:global(.dark) .loginPage {
+  background:
+    radial-gradient(circle at 20% 12%, rgba(96, 165, 250, 0.16), transparent 30rem),
+    radial-gradient(circle at 80% 18%, rgba(20, 184, 166, 0.1), transparent 24rem),
+    linear-gradient(135deg, #020617 0%, #09090b 52%, #111827 100%);
+}
+
+:global(.dark) .storyPanel,
+:global(.dark) .formPanel,
+:global(.dark) .loadingCard {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.66);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.34);
+}
+
+:global(.dark) .brandMark {
+  background: #f8fafc;
+  color: #020617;
+}
+
+:global(.dark) .heroTitle,
+:global(.dark) .formTitle,
+:global(.dark) .capabilityTitle,
+:global(.dark) .accountTitle,
+:global(.dark) .accountRole,
+:global(.dark) .accountSecret code {
+  color: #f8fafc;
+}
+
+:global(.dark) .heroDescription,
+:global(.dark) .formDescription,
+:global(.dark) .capabilityDescription,
+:global(.dark) .accountSecret {
+  color: #a1a1aa;
+}
+
+:global(.dark) .capabilityCard,
+:global(.dark) .accountCard {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.055);
+}
+
+:global(.dark) .accountCard:hover {
+  border-color: rgba(96, 165, 250, 0.28);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .fieldLabel {
+  color: #cbd5e1;
+}
+
+:global(.dark) .formPanel :global(input.input--secondary) {
+  border-color: rgba(96, 165, 250, 0.34);
+  background: rgba(2, 6, 23, 0.42);
+  color: #f8fafc;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 0 0 1px rgba(96, 165, 250, 0.08);
+}
+
+:global(.dark) .formPanel :global(input.input--secondary::placeholder) {
+  color: #64748b;
+}
+
+:global(.dark) .formPanel :global(input.input--secondary:focus) {
+  border-color: rgba(96, 165, 250, 0.78);
+  background: rgba(15, 23, 42, 0.82);
+  box-shadow:
+    0 0 0 4px rgba(96, 165, 250, 0.2),
+    0 12px 28px rgba(37, 99, 235, 0.12);
+}
+
+:global(.dark) .quietNote {
+  border-color: rgba(96, 165, 250, 0.2);
+  background: rgba(37, 99, 235, 0.12);
+  color: #cbd5e1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .storyPanel,
+  .formPanel {
+    animation: login-rise 520ms ease both;
+  }
+
+  .formPanel {
+    animation-delay: 80ms;
+  }
+}
+
+@keyframes login-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

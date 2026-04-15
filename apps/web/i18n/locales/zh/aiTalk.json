@@ -1,0 +1,260 @@
+{
+  "status": {
+    "comingSoon": "即将上线",
+    "rag": "RAG 对话",
+    "streaming": "流式优先",
+    "trialCode": "试用码"
+  },
+  "hubRow": {
+    "eyebrow": "ai talk",
+    "title": "AI Talk 页面入口",
+    "description": "这里是公开站的 AI 能力入口页：先把 RAG 知识库问答、简历优化建议与数字人展示的产品结构立住，再逐步接入真实试用码、流式回答与后台治理能力。",
+    "plan": {
+      "1": {
+        "title": "RAG 知识库 / 分身问答",
+        "description": "基于已发布简历、项目经历与后续知识库素材，支持招聘方向分身提问。"
+      },
+      "2": {
+        "title": "简历优化与建议",
+        "description": "在当前简历结构基础上生成建议、分析结果与后续可应用的优化方向。"
+      },
+      "3": {
+        "title": "数字人自我介绍",
+        "description": "预留数字人独立页面与媒体契约，后续再逐步接入真实音视频与交互能力。"
+      }
+    },
+    "profile": {
+      "eyebrow": "个人概览",
+      "nextTitle": "接下来会优先补齐什么？",
+      "nextDescription": "先完成对话工作区、试用码与后台治理的最小闭环，再把 AI 建议和数字人能力逐步落到独立页面与工作台。"
+    }
+  },
+  "featureCards": {
+    "rag": {
+      "front": {
+        "eyebrow": "入口一",
+        "title": "RAG 知识库 / 分身问答",
+        "description": "把已发布简历与后续知识库素材整合成可追溯的公开问答入口。",
+        "badge": "对话入口",
+        "status": "可继续进入"
+      },
+      "back": {
+        "eyebrow": "知识库问答",
+        "title": "RAG 对话工作区",
+        "description": "领取试用码后，从这里进入 10 轮问答与真实流式会话。",
+        "tags": {
+          "one": "试用码",
+          "two": "10 轮对话"
+        },
+        "details": {
+          "one": "简历内容、项目经历与后续知识源会作为统一检索上下文。",
+          "two": "回答会优先带上来源片段与剩余额度，方便快速判断依据。"
+        },
+        "cta": "进入 RAG 对话"
+      }
+    },
+    "resumeAdvisor": {
+      "front": {
+        "eyebrow": "入口二",
+        "title": "简历优化与建议",
+        "description": "利用当前简历结构与 AI 分析结果，持续产出更可执行的优化建议。",
+        "badge": "后台能力",
+        "status": "公开站仅说明"
+      },
+      "back": {
+        "eyebrow": "AI 建议",
+        "title": "简历优化与建议",
+        "description": "这块能力会基于当前简历结构生成建议，真实工作流仍放在 admin 工作台。",
+        "tags": {
+          "one": "AI + RAG",
+          "two": "结构化建议"
+        },
+        "details": {
+          "one": "输入会围绕当前 `StandardResume`、发布快照与分析结果展开。",
+          "two": "后续会继续补齐 markdown / PDF 输出、差异预览与应用能力。"
+        },
+        "cta": "查看优化说明"
+      }
+    },
+    "avatar": {
+      "front": {
+        "eyebrow": "入口三",
+        "title": "数字人 / 自我介绍",
+        "description": "单独页面承接媒体展示、自我介绍与未来数字人交互能力。",
+        "badge": "独立页面",
+        "status": "coming soon"
+      },
+      "back": {
+        "eyebrow": "媒体入口",
+        "title": "数字人自我介绍",
+        "description": "数字人会放在独立页面里逐步完善，当前先建立入口、文案与媒体边界。",
+        "tags": {
+          "one": "独立媒体页",
+          "two": "coming soon"
+        },
+        "details": {
+          "one": "后续这里会承接视频、TTS、海报资源与媒体播放状态。",
+          "two": "页面会围绕角色信息、媒体资源与交互控制区继续扩展。"
+        },
+        "cta": "查看数字人入口"
+      }
+    }
+  },
+  "resumeAdvisorPage": {
+    "eyebrow": "resume advisor",
+    "title": "简历优化与建议",
+    "description": "这里是公开站的说明入口：先把能力边界、输入基线与后续高级版方向讲清楚，真实生成与应用流程仍放在 admin 工作台。",
+    "badges": {
+      "one": "结构化基线",
+      "two": "admin 工作台"
+    },
+    "blocks": {
+      "overview": {
+        "eyebrow": "能力概览",
+        "title": "它现在做什么？",
+        "description": "以当前简历结构、发布快照与 AI 分析结果为输入，生成更聚焦的优化建议，而不是重新从一份散乱文本开始。"
+      },
+      "workflow": {
+        "eyebrow": "基础流程",
+        "title": "第一阶段如何落地？",
+        "description": "基础版会先输出建议摘要、改写方向与导出链路说明；更进一步的一键应用、差异预览与字段级落点会放到后续高级版。"
+      },
+      "boundary": {
+        "eyebrow": "页面边界",
+        "title": "为什么公开站只做说明？",
+        "description": "因为这块能力更适合在 admin 端完成治理与审阅。公开站当前保留说明入口，帮助你快速理解后续会接入什么。"
+      }
+    },
+    "primaryCta": "返回 AI Talk 中枢",
+    "secondaryCta": "进入 RAG 对话"
+  },
+  "entry": {
+    "eyebrow": "ai talk",
+    "title": "AI Talk 中枢入口",
+    "description": "这里会成为公开站的 AI 能力总入口：先立住 RAG 对话、数字人自我介绍与会话轨迹，再逐步接入真实试用码、流式问答与知识库治理。",
+    "path": {
+      "eyebrow": "当前阶段",
+      "title": "本轮先把入口与子路由语义立起来",
+      "lineOne": "入口页负责解释产品边界，未来让招聘方知道这里能做什么、不能做什么。",
+      "lineTwo": "真实问答会放到独立 chat / session 工作区，避免后续为了交互复杂度反复推翻结构。",
+      "lineThree": "数字人入口会先预留页面、媒体契约与控制区位置，后续再逐步接入真实媒体能力。"
+    },
+    "prompts": {
+      "eyebrow": "示例问题",
+      "title": "未来可回答的问题方向",
+      "one": "他最近几年主要做过哪些项目？",
+      "two": "他更偏前端还是全栈？",
+      "three": "如果你是招聘方，最值得追问的亮点是什么？"
+    }
+  },
+  "cards": {
+    "chat": {
+      "eyebrow": "入口一",
+      "title": "RAG 对话",
+      "description": "后续从这里领取试用码、开启 10 轮对话，并进入真正的会话工作区。",
+      "badge": "SSR 入口 + 子路由工作区",
+      "cta": "查看对话入口"
+    },
+    "avatar": {
+      "eyebrow": "入口二",
+      "title": "数字人自我介绍",
+      "description": "单独页面承接视频、TTS 与媒体交互，当前先把页面边界和未来契约说明清楚。",
+      "badge": "独立媒体页",
+      "cta": "查看数字人入口"
+    },
+    "sessions": {
+      "eyebrow": "入口三",
+      "title": "会话历史",
+      "description": "未来会在真实会话建立后生成独立的 session 页面，并串起剩余轮次、来源片段与历史记录。",
+      "badge": "Coming soon",
+      "helper": "本轮先保留信息架构，等真实聊天链路接入后再生成可回访的会话历史入口。"
+    }
+  },
+  "chat": {
+    "eyebrow": "rag chat",
+    "title": "RAG 对话入口",
+    "description": "这里会成为公开 AI Talk 的真正启动页：先领试用码，再启动流式问答与多轮会话。",
+    "badgeQuota": "10 轮问答",
+    "badgeStreaming": "流式响应",
+    "steps": {
+      "code": {
+        "eyebrow": "步骤一",
+        "title": "试用码领取",
+        "description": "未来这里会放试用码输入与领取结果，公开访客不需要 admin 登录即可进入对话。"
+      },
+      "session": {
+        "eyebrow": "步骤二",
+        "title": "会话启动",
+        "description": "确认额度后会创建独立 session，并切到真实消息工作区承接后续多轮问答。"
+      },
+      "citations": {
+        "eyebrow": "步骤三",
+        "title": "来源片段",
+        "description": "回答会优先展示来源片段、引用上下文与剩余轮次，帮助招聘方快速判断可信度。"
+      }
+    },
+    "workspacePreview": {
+      "eyebrow": "下一步",
+      "title": "先看未来会话工作区",
+      "description": "真实聊天链路还没接入，但页面结构已经为 session 工作区预留好了位置。",
+      "primaryCta": "查看未来会话工作区",
+      "secondaryCta": "返回 AI Talk 中枢"
+    }
+  },
+  "session": {
+    "eyebrow": "session workspace",
+    "title": "会话工作区 · {sessionId}",
+    "description": "后续真实消息时间线、来源片段与额度信息都会集中在这里展示，当前先把会话页的职责和模块边界立住。",
+    "badgeTimeline": "消息时间线",
+    "badgeSources": "来源片段",
+    "blocks": {
+      "messages": {
+        "eyebrow": "会话区",
+        "title": "消息时间线",
+        "description": "这里会承接用户提问、流式回答和反馈动作，是未来对话体验的核心区域。"
+      },
+      "sources": {
+        "eyebrow": "检索区",
+        "title": "来源片段",
+        "description": "RAG 返回的引用片段、命中文档与解释说明会在这里集中呈现。"
+      },
+      "quota": {
+        "eyebrow": "状态区",
+        "title": "额度与状态",
+        "description": "会话剩余轮次、试用码关联信息和错误提示会放在这里，方便公开演示与后续审计。"
+      }
+    },
+    "backToChat": "返回 RAG 对话",
+    "backToHub": "返回 AI Talk 中枢"
+  },
+  "avatar": {
+    "eyebrow": "avatar intro",
+    "title": "数字人自我介绍",
+    "description": "数字人入口会独立承接自我介绍、媒体播放与未来交互控制，当前先以占位页把契约与展示位预留出来。",
+    "intro": {
+      "eyebrow": "自我介绍",
+      "lineOne": "第一阶段先提供一段简短的自我介绍与能力说明，让招聘方知道这里不是普通静态视频页。",
+      "lineTwo": "后续这里会补充语音、视频或数字人驱动能力，但不会和公开问答工作区混在同一页面。",
+      "lineThree": "页面未来会围绕人物设定、媒体资源、播放状态与交互控制区逐步扩展。"
+    },
+    "contract": {
+      "eyebrow": "页面契约",
+      "title": "为后续媒体能力预留边界",
+      "items": {
+        "role": {
+          "title": "角色信息",
+          "description": "预留数字人角色设定、自我介绍脚本和展示语气等结构化信息。"
+        },
+        "media": {
+          "title": "媒体资源",
+          "description": "预留海报、音频、视频和封面资源位，便于后续接入真实媒体能力。"
+        },
+        "controls": {
+          "title": "交互控制区",
+          "description": "预留播放、静音、重播与未来动作按钮的位置，不把媒体控制塞回通用内容卡片。"
+        }
+      }
+    },
+    "backToHub": "返回 AI Talk 中枢"
+  }
+}

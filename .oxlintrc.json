@@ -1,0 +1,99 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "env": {
+    "builtin": true,
+    "browser": true,
+    "node": true
+  },
+  "plugins": [
+    "oxc",
+    "typescript",
+    "unicorn",
+    "react",
+    "jsx-a11y",
+    "nextjs",
+    "promise",
+    "node",
+    "vitest",
+    "vue"
+  ],
+  "settings": {
+    "next": {
+      "rootDir": ["apps/admin", "apps/web"]
+    },
+    "react": {
+      "version": "19"
+    }
+  },
+  "ignorePatterns": [
+    ".git/**",
+    ".next/**",
+    ".pnpm-store/**",
+    ".turbo/**",
+    ".data/**",
+    "apps/.data/**",
+    "coverage/**",
+    "dist/**",
+    "node_modules/**",
+    "tmp/**",
+    "public/**/*.pdf",
+    "public/**/*.png",
+    "public/**/*.jpg",
+    "public/**/*.jpeg",
+    "public/**/*.webp",
+    "public/**/*.ico",
+    "docs/**",
+    "blog/**",
+    "tailwind.config.cjs",
+    "postcss.config.cjs",
+    "src/assets/iconfont/**"
+  ],
+  "globals": {
+    "JSX": "readonly"
+  },
+  "rules": {
+    "no-unused-vars": "warn",
+    "no-unused-expressions": "warn",
+    "no-shadow": "warn",
+    "block-scoped-var": "off",
+    "no-useless-escape": "warn",
+    "no-explicit-any": "off",
+    "jsx-a11y/aria-role": "warn",
+    "jsx-a11y/label-has-associated-control": "off",
+    "nextjs/no-img-element": "off",
+    "promise/always-return": "off",
+    "react/react-in-jsx-scope": "off",
+    "typescript/no-extraneous-class": "off",
+    "typescript/triple-slash-reference": "off",
+    "unicorn/consistent-function-scoping": "off",
+    "unicorn/no-array-sort": "off",
+    "unicorn/prefer-add-event-listener": "off",
+    "vitest/require-mock-type-parameters": "off"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.{test,spec}.{js,jsx,ts,tsx}", "**/__tests__/**/*.{js,jsx,ts,tsx}"],
+      "globals": {
+        "afterAll": "readonly",
+        "afterEach": "readonly",
+        "beforeAll": "readonly",
+        "beforeEach": "readonly",
+        "describe": "readonly",
+        "expect": "readonly",
+        "it": "readonly",
+        "test": "readonly",
+        "vi": "readonly"
+      }
+    },
+    {
+      "files": ["apps/server/**/*.ts"],
+      "rules": {
+        "no-process-env": "off"
+      }
+    }
+  ]
+}

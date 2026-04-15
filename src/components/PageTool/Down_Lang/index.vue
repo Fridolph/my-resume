@@ -1,9 +1,9 @@
 <template>
   <div
-    class="group absolute top-3 right-3 md:right-0 md:-top-10 z-10 flex flex-row justify-between w-20 h-8 leading-4 bg-white dark:bg-[var(--dark-bg-hover)] rounded p-2 cursor-pointer z-100 dark-transition">
+    class="z-100 dark-transition group absolute right-3 top-3 z-10 flex h-8 w-20 cursor-pointer flex-row justify-between rounded bg-white p-2 leading-4 dark:bg-[var(--dark-bg-hover)] md:-top-10 md:right-0">
     <DownloadTool />
 
-    <div class="w-[1px] h-8 bg-slate-300 dark:bg-slate-800 -translate-y-2"></div>
+    <div class="h-8 w-[1px] -translate-y-2 bg-slate-300 dark:bg-slate-800"></div>
 
     <ToggleLang />
   </div>

@@ -1,82 +1,222 @@
-# 心路历程
+# my-resume
 
-最用心的一个项目（要恰饭敢不认真嘛）添加详尽文档，若对您有帮助，卑微求个 Star 不过分吧 T_T
+一个以“个人简历重构”为主题的教程型全栈 monorepo。
 
-一开始单纯为找工作，随便折腾下，学点新东西，TailWindCSS 最近很火，一直想练练手。随着细节完善就想着干脆掘金发个帖好了，记录 TSS 的学习过程，再一想这不是为找工作嘛，简历公开就公开吧，于是就有了这个项目。
+当前仓库已经从旧版静态 `Vue3 + Vite` 简历站，渐进重构到新的三端结构：
 
-> ps 本质是为了学习 TailWindCss 折腾的，毕竟不是写博客主题，以简约阅读为主
-> 如果您想改成自己的建议直接 Fork。项目的目录结构、模块分层，为新入手 Vue3+TS 的同学提供参考
-> 其他的看掘金帖子上的内容就好，那上面很全，这里捡重要的说
+- `apps/web`：公开简历展示端
+- `apps/admin`：后台管理端
+- `apps/server`：唯一业务后端
 
-在线浏览 [resume.fridolph.top](https://resume.fridolph.top)
+项目定位是“可学习、可开源、可部署、可继续演进”的基础教程版，而不是一次性做成复杂 SaaS。
 
-## 简历进行了较大的修改，所以也对应一些组件的修改
+## 当前状态
 
-- 扩展了 list type，支持 ul dl ，就不用手动写 - 和 1. 序号了 （之前没想这么多，经提醒，是挺脑壳大）
-- 增加了一个学信网的验证，看个人把，不需要注释掉就好
-- 大多是简历润色 = = 需要的可根据最新修改（确实比我的编得好太了，感谢大佬）参考下
-- personal 多了个 最新文章 ，感觉有这个需求嘛
-- 暂时够用，其他请自行修改了
+当前仓库已经达到开源版最小闭环：
 
-## pnpm install
+- 三端可独立启动与访问
+- 公开站可读取已发布双语简历
+- 后台具备草稿编辑、发布、导出与角色边界
+- AI 工作台已具备分析、结构化建议、模块级 diff / apply 与 apply 后草稿反馈
 
-> 注：本项目使用 pnpm 作为包管理工具，请升级 Node 版本到 16.22.2 以上
+如果你是第一次进入仓库，建议把它理解成：
 
-<img
-alt="Static Badge"
-src="https://img.shields.io/badge/%E8%84%9A%E6%89%8B%E6%9E%B6-vite-red" />
-<img
-alt="Static Badge"
-src="https://img.shields.io/badge/%E5%89%8D%E7%AB%AF%E6%A1%86%E6%9E%B6-Vue3-%236495ed" />
-<img
-alt="Static Badge"
-src="https://img.shields.io/badge/UI-TailWind-green" />
-<img
-alt="Static Badge"
-src="https://img.shields.io/badge/%E8%84%9A%E6%9C%AC%E8%AF%AD%E8%A8%80-TypeScript-%25236495ed" />
-<img
-alt="Static Badge"
-src="https://img.shields.io/badge/UI-fri_element_plus-%238a2be2" />
+- 一个已经能跑通主线的教程型作品
+- 一个适合继续做页面升级与个人产品分支扩展的基础底座
+- 一个明确收住边界的开源版，而不是复杂产品的完整版
 
-本以为会用到 postcss，结果还真没在 template 里写 css = = 习惯了 TW 是真的爽。~~fri-element-plus 是之前练手的一个组件库项目顺便实践一下，看管们可自行去掉~~
-在优化实践章节已去掉。
+## 当前能力
 
-## 配置参考
+- `web / admin / server` 三端可独立启动
+- `admin / viewer` 最小鉴权与角色边界
+- 双语标准简历内容模型与草稿 / 发布流
+- `Markdown / PDF` 导出与下载
+- SQLite / libsql + Drizzle 持久化
+- `light / dark` 主题基线
+- AI 文件提取、简历分析、结构化优化建议与一键应用草稿
+- GitHub Actions、Vercel / 云服务器部署基础说明
+- Docker Compose 一键本地启动
 
-### postcss.config.cjs
+## 仓库结构
 
-参考官网配置即可 <https://tailwindcss.com/docs/installation>
+```text
+apps/
+  admin/   Next.js 后台管理端
+  web/     Next.js 公开展示端
+  server/  NestJS 业务后端
 
-```js
-module.exports = {
-  plugins: [
-    require('postcss-import'),
-    require('postcss-nested'),
-    require('autoprefixer'),
-    require('tailwindcss'),
-    require('tailwindcss/nesting'),
-  ],
-}
+packages/
+  api-client/  最小共享契约
+  config/      共享配置
+  ui/          最小共享 UI 与主题
+
+docs/
+  00-文档导航.md
+  10-架构设计/
+  20-研发流程/
+  30-开发日志/
+  40-教程与博客/
 ```
 
-### vite.config.js
+## 快速开始
 
-为打包后的文件提供传统浏览器兼容性支持
+### 方式一：本地开发
 
-> Vite 社区还有很多实用插件，可自行尝试
+1. 安装依赖
 
-- compression 打包生成 .gz
-- chunkSplitPlugin 打包不同的 vendor
-- prefetchPlugin 打包后的 .html 添加 prefetch
+```bash
+pnpm install
+```
 
-### 关于一些坑
+2. 准备环境变量
 
-1. 关于下载：把 public 里的 .md .pdf 换成你自己的即可。检查好简历内容，避免尴尬情况发生。
+```bash
+cp .env.example .env
+```
 
-2. 如果不需要国际化，可切换到另一分支。
+最少需要确认这些变量：
 
-3. 服务器上大多不支持中文，用英文字母+数字命名可避免一些潜在的坑
+- `JWT_SECRET`
+- `DATABASE_URL`
+- `NEXT_PUBLIC_API_BASE_URL`
+- `RESUME_API_BASE_URL`
+- `AI_PROVIDER`
+- 对应 AI Provider 的 API Key
 
-4. 安装问题 看下是不是 taobao 源的锅，注：已经换地址了，老地址不能用
+3. 启动三端
 
-5. 暂时想到这些，祝大家大吉大利，找到满意的工作
+```bash
+pnpm dev
+```
+
+也可以分别启动：
+
+```bash
+pnpm dev:server
+pnpm dev:web
+pnpm dev:admin
+```
+
+默认端口：
+
+- `web`：`http://localhost:5555`
+- `admin`：`http://localhost:5566`
+- `server`：`http://localhost:5577`
+
+### 默认演示账号
+
+当前本地默认演示账号为：
+
+- `admin / admin123456`
+- `viewer / viewer123456`
+
+这些账号只适合本地教程演示；如果你要对外部署，请自行替换。
+
+### 方式二：Docker Compose
+
+1. 准备环境变量
+
+```bash
+cp .env.example .env
+```
+
+2. 一键启动
+
+```bash
+pnpm docker:up
+```
+
+或直接：
+
+```bash
+docker compose up --build
+```
+
+首次构建完成后，同样访问：
+
+- `web`：`http://localhost:5555`
+- `admin`：`http://localhost:5566`
+- `server`：`http://localhost:5577`
+
+停止容器：
+
+```bash
+pnpm docker:down
+```
+
+## 常用命令
+
+```bash
+pnpm test
+pnpm test:e2e
+pnpm typecheck:all
+pnpm build:all
+```
+
+根脚本已经默认切换为 monorepo 主线入口：
+
+- `pnpm dev`
+- `pnpm build`
+- `pnpm typecheck`
+
+旧版 `Vue3 + Vite` 站点脚本仍保留为：
+
+- `pnpm legacy:dev`
+- `pnpm legacy:build`
+- `pnpm legacy:preview`
+- `pnpm legacy:typecheck`
+
+## 环境变量说明
+
+当前仓库内提供了：
+
+- [`.env.example`](./.env.example)
+
+其中比较关键的变量有：
+
+- `PORT`：NestJS 服务端口，默认 `5577`
+- `CORS_ORIGINS`：允许访问后端的前端来源
+- `NEXT_PUBLIC_API_BASE_URL`：浏览器访问后端的公开地址
+- `RESUME_API_BASE_URL`：`apps/web` 服务端渲染时优先使用的后端地址
+- `DATABASE_URL`：SQLite / libsql 连接串
+- `JWT_SECRET`：JWT 签名密钥
+- `AI_PROVIDER`：当前使用的 AI Provider
+
+当前已支持的 Provider 入口：
+
+- `mock`
+- `qiniu`
+- `deepseek`
+- `openai-compatible`
+
+## 阅读入口
+
+- 文档首页：[`docs/README.md`](./docs/README.md)
+- 文档导航：[`docs/00-文档导航.md`](./docs/00-%E6%96%87%E6%A1%A3%E5%AF%BC%E8%88%AA.md)
+- 总方案：[`docs/10-架构设计/01-个人简历-monorepo-重构总方案-v1学习版.md`](./docs/10-%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/01-%E4%B8%AA%E4%BA%BA%E7%AE%80%E5%8E%86-monorepo-%E9%87%8D%E6%9E%84%E6%80%BB%E6%96%B9%E6%A1%88-v1%E5%AD%A6%E4%B9%A0%E7%89%88.md)
+- GitHub 开发流程：[`docs/20-研发流程/01-GitHub-标准开发流程.md`](./docs/20-%E7%A0%94%E5%8F%91%E6%B5%81%E7%A8%8B/01-GitHub-%E6%A0%87%E5%87%86%E5%BC%80%E5%8F%91%E6%B5%81%E7%A8%8B.md)
+- 发布前检查：[`docs/40-部署上线/02-开源版发布前检查清单.md`](./docs/40-%E9%83%A8%E7%BD%B2%E4%B8%8A%E7%BA%BF/02-%E5%BC%80%E6%BA%90%E7%89%88%E5%8F%91%E5%B8%83%E5%89%8D%E6%A3%80%E6%9F%A5%E6%B8%85%E5%8D%95.md)
+- 系列文章目录：[`docs/40-教程与博客/README.md`](./docs/40-%E6%95%99%E7%A8%8B%E4%B8%8E%E5%8D%9A%E5%AE%A2/README.md)
+
+## 发布前建议
+
+如果你准备把当前仓库作为开源版正式发布，建议至少先看一遍：
+
+- [`docs/40-部署上线/02-开源版发布前检查清单.md`](./docs/40-%E9%83%A8%E7%BD%B2%E4%B8%8A%E7%BA%BF/02-%E5%BC%80%E6%BA%90%E7%89%88%E5%8F%91%E5%B8%83%E5%89%8D%E6%A3%80%E6%9F%A5%E6%B8%85%E5%8D%95.md)
+- [`docs/40-部署上线/01-Vercel-与-云服务器-最小部署说明.md`](./docs/40-%E9%83%A8%E7%BD%B2%E4%B8%8A%E7%BA%BF/01-Vercel-%E4%B8%8E-%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8-%E6%9C%80%E5%B0%8F%E9%83%A8%E7%BD%B2%E8%AF%B4%E6%98%8E.md)
+
+## 当前边界
+
+当前开源版保持“小而稳”，明确不包含：
+
+- 多模板简历系统
+- JD 多版本定制简历
+- 完整 AI 队列与任务中心
+- 多租户 SaaS 能力
+- 复杂后台设计系统
+
+这些不是遗漏，而是显式后置到后续里程碑或独立产品线。
+
+## License
+
+`MIT`

@@ -1,22 +1,12 @@
 <template>
-  <div class="w-full h-fit px-4 mb-5">
-    <a
-      v-if="anchor"
-      :id="anchor"
-      class="my-section-title hover:text-[var(--text)]">
-      <Iconfont
-        :name="icon"
-        :size="30" />
-      <span class="align-middle font-bold ml-1 text-lg">{{ title }}</span>
+  <div class="mb-5 h-fit w-full px-4">
+    <a v-if="anchor" :id="anchor" class="my-section-title hover:text-[var(--text)]">
+      <Iconfont :name="icon" :size="30" />
+      <span class="ml-1 align-middle text-lg font-bold">{{ title }}</span>
     </a>
-    <div
-      v-else
-      :href="`#${anchor}`"
-      class="my-section-title">
-      <Iconfont
-        :name="icon"
-        :size="30" />
-      <span class="align-middle font-bold ml-1 text-lg">{{ title }}</span>
+    <div v-else :href="`#${anchor}`" class="my-section-title">
+      <Iconfont :name="icon" :size="30" />
+      <span class="ml-1 align-middle text-lg font-bold">{{ title }}</span>
     </div>
     <slot name="default"></slot>
   </div>

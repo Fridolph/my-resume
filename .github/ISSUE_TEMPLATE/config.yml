@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Development Flow
+    url: https://github.com/Fridolph/my-resume/blob/main/docs/20-%E7%A0%94%E5%8F%91%E6%B5%81%E7%A8%8B/01-GitHub-%E6%A0%87%E5%87%86%E5%BC%80%E5%8F%91%E6%B5%81%E7%A8%8B.md
+    about: Read the repository development flow before creating a new issue.

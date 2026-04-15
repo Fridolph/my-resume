@@ -1,0 +1,42 @@
+{
+  "name": "@my-resume/web",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --turbopack --port 5555",
+    "build": "next build",
+    "start": "next start --port 5555",
+    "lint": "oxlint --config ../../.oxlintrc.json --ignore-path ../../.eslintignore .",
+    "format:check": "oxfmt --config ../../.oxfmtrc.json --ignore-path ../../.prettierignore --check .",
+    "typecheck": "next typegen && tsc --noEmit --incremental false",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@heroui/react": "^3.0.1",
+    "@heroui/styles": "^3.0.1",
+    "@iconify/react": "^5.2.1",
+    "@my-resume/api-client": "workspace:*",
+    "@my-resume/ui": "workspace:*",
+    "@my-resume/utils": "workspace:*",
+    "@tailwindcss/postcss": "^4.2.2",
+    "alova": "^3.5.1",
+    "echarts": "^5.6.0",
+    "framer-motion": "^12.38.0",
+    "next": "^15.5.2",
+    "next-intl": "^4.4.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "tailwindcss": "^4.2.2"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.1.7",
+    "jsdom": "^26.1.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

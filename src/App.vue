@@ -1,14 +1,15 @@
 <template>
   <div
-    class="w-full min-h-screen md:flex md:justify-center md:align-middle p-0 bg-[var(--page-bg)] md:py-[5vh] md:px-[5vw] dark:bg-[var(--dark-page-bg)] dark-transition">
+    class="dark-transition min-h-screen w-full bg-[var(--page-bg)] p-0 dark:bg-[var(--dark-page-bg)] md:flex md:justify-center md:px-[5vw] md:py-[5vh] md:align-middle">
     <section
-      class="relative sm:w-full md:w-full max-w-[1600px] flex flex-col md:flex-row justify-center align-middle text-color shadow-inner sm:shadow-2xl dark:shadow-neutral-700">
+      class="text-color relative flex max-w-[1600px] flex-col justify-center align-middle shadow-inner dark:shadow-neutral-700 sm:w-full sm:shadow-2xl md:w-full md:flex-row">
       <AnchorTool />
       <DownloadTool />
       <ThemeChange />
       <Aside>
         <Avatar />
-        <section class="scrollbar overflow-x-hidden overflow-y-auto pr-[12px] hover:pr-[6px]">
+        <section
+          class="scrollbar overflow-y-auto overflow-x-hidden pr-[12px] hover:pr-[6px]">
           <Baseinfo />
           <Contact />
           <Hobby />

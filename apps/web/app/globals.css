@@ -1,0 +1,55 @@
+@import 'tailwindcss';
+@import '@my-resume/ui/heroui-web.css';
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+:root {
+  --web-page-bg:
+    radial-gradient(circle at top, rgba(59, 130, 246, 0.14), transparent 24%),
+    linear-gradient(180deg, #f7f9fe 0%, #eef3fb 100%);
+}
+
+[data-theme='dark'] {
+  --web-page-bg:
+    radial-gradient(circle at top, rgba(96, 165, 250, 0.14), transparent 24%),
+    linear-gradient(180deg, #020617 0%, #0f172a 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--web-page-bg);
+  color: #0f172a;
+  font-family:
+    'IBM Plex Sans', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+[data-theme='dark'] body {
+  color: #e2e8f0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.web-page-shell {
+  min-height: 100vh;
+}
+
+.web-eyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #2563eb;
+}

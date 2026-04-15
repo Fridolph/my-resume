@@ -1,0 +1,473 @@
+.hubRow {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.14), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(125, 211, 252, 0.11), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 252, 0.9));
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.08);
+  transition:
+    background 240ms ease,
+    border-color 240ms ease,
+    box-shadow 240ms ease;
+}
+
+:global([data-theme='dark']) .hubRow {
+  border-color: rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.14), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(34, 211, 238, 0.1), transparent 24%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(15, 23, 42, 0.86));
+  box-shadow: 0 34px 90px rgba(2, 6, 23, 0.34);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hubRow:hover,
+  .hubRow:focus-within {
+    border-color: rgba(191, 219, 254, 0.9);
+    background:
+      radial-gradient(circle at top left, rgba(96, 165, 250, 0.18), transparent 30%),
+      radial-gradient(circle at bottom right, rgba(125, 211, 252, 0.14), transparent 26%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 252, 0.9));
+    box-shadow: 0 36px 90px rgba(59, 130, 246, 0.14);
+  }
+
+  :global([data-theme='dark']) .hubRow:hover,
+  :global([data-theme='dark']) .hubRow:focus-within {
+    border-color: rgba(96, 165, 250, 0.24);
+    background:
+      radial-gradient(circle at top left, rgba(96, 165, 250, 0.18), transparent 30%),
+      radial-gradient(circle at bottom right, rgba(34, 211, 238, 0.12), transparent 24%),
+      linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(15, 23, 42, 0.86));
+    box-shadow: 0 40px 100px rgba(15, 23, 42, 0.42);
+  }
+}
+
+.hubRowBody {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .hubRowBody {
+    grid-template-columns: minmax(0, 1.1fr) minmax(22rem, 0.9fr);
+    align-items: stretch;
+    grid-auto-rows: 1fr;
+  }
+}
+
+.hubSide {
+  display: grid;
+  gap: 1rem;
+  min-height: 100%;
+}
+
+@media (min-width: 1024px) {
+  .hubSide {
+    grid-template-rows: auto auto 1fr;
+    align-content: stretch;
+  }
+}
+
+.planList {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.planItem {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(226, 232, 240, 0.86);
+  border-radius: 1.4rem;
+  background:
+    radial-gradient(circle at top left, rgba(191, 219, 254, 0.27), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.82));
+  transition:
+    background 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+:global([data-theme='dark']) .planItem {
+  border-color: rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.13), transparent 42%),
+    linear-gradient(180deg, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.54));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .planItem:hover,
+  .planItem:focus-within {
+    border-color: rgba(191, 219, 254, 0.94);
+    background:
+      radial-gradient(circle at top left, rgba(191, 219, 254, 0.34), transparent 44%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.82));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.82),
+      0 16px 30px rgba(96, 165, 250, 0.1);
+  }
+
+  :global([data-theme='dark']) .planItem:hover,
+  :global([data-theme='dark']) .planItem:focus-within {
+    border-color: rgba(96, 165, 250, 0.24);
+    background:
+      radial-gradient(circle at top left, rgba(96, 165, 250, 0.16), transparent 42%),
+      linear-gradient(180deg, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.54));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 18px 32px rgba(15, 23, 42, 0.22);
+  }
+}
+
+.planIndex {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.12);
+  color: #2563eb;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.profilePanel {
+  display: grid;
+  gap: 1rem;
+  height: 100%;
+  min-height: 100%;
+  padding: 1.5rem;
+  border: 1px solid rgba(226, 232, 240, 0.88);
+  border-radius: 1.75rem;
+  background:
+    radial-gradient(circle at top left, rgba(191, 219, 254, 0.27), transparent 40%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.84));
+  transition:
+    background 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+:global([data-theme='dark']) .profilePanel {
+  border-color: rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.13), transparent 42%),
+    linear-gradient(180deg, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.56));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .profilePanel:hover,
+  .profilePanel:focus-within {
+    border-color: rgba(191, 219, 254, 0.94);
+    background:
+      radial-gradient(circle at top left, rgba(191, 219, 254, 0.34), transparent 42%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.84));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.78),
+      0 16px 30px rgba(96, 165, 250, 0.1);
+  }
+
+  :global([data-theme='dark']) .profilePanel:hover,
+  :global([data-theme='dark']) .profilePanel:focus-within {
+    border-color: rgba(96, 165, 250, 0.24);
+    background:
+      radial-gradient(circle at top left, rgba(96, 165, 250, 0.16), transparent 42%),
+      linear-gradient(180deg, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.56));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 18px 32px rgba(15, 23, 42, 0.22);
+  }
+}
+
+@media (min-width: 1024px) {
+  .profilePanel {
+    grid-template-rows: auto auto 1fr;
+    align-content: stretch;
+    align-self: stretch;
+  }
+}
+
+.profileFooter {
+  align-self: end;
+}
+
+.featureGrid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+@media (min-width: 768px) {
+  .featureGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .featureGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1536px) {
+  .featureGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.flipScene {
+  min-height: 28.5rem;
+  cursor: pointer;
+  perspective: 1500px;
+}
+
+.flipInner {
+  position: relative;
+  min-height: inherit;
+  height: 100%;
+  border-radius: 1.75rem;
+  box-shadow: 0 24px 56px rgba(15, 23, 42, 0.08);
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.08);
+  will-change: transform;
+}
+
+.flipFace {
+  position: relative;
+  display: flex;
+  min-height: inherit;
+  height: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 1.75rem;
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.14), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(125, 211, 252, 0.1), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 252, 0.88));
+  color: #0f172a;
+}
+
+:global([data-theme='dark']) .flipFace {
+  border-color: rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.14), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(34, 211, 238, 0.1), transparent 28%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(15, 23, 42, 0.86));
+  color: #f8fafc;
+}
+
+.flipFront {
+  display: none;
+}
+
+.flipBack {
+  position: relative;
+  background:
+    radial-gradient(circle at top left, rgba(147, 197, 253, 0.24), transparent 36%),
+    radial-gradient(circle at bottom right, rgba(186, 230, 253, 0.18), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(239, 246, 255, 0.88));
+}
+
+:global([data-theme='dark']) .flipBack {
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.2), transparent 36%),
+    radial-gradient(circle at bottom right, rgba(34, 211, 238, 0.12), transparent 30%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(15, 23, 42, 0.88));
+}
+
+.backContent {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 0.875rem;
+  height: 100%;
+  grid-template-rows: auto auto 1fr auto;
+  padding: 1.35rem;
+}
+
+.frontContent {
+  position: relative;
+  display: grid;
+  gap: 0.9rem;
+  padding: 1.5rem;
+}
+
+.frontTitle,
+.backTitle {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+}
+
+:global([data-theme='dark']) .frontTitle,
+:global([data-theme='dark']) .backTitle {
+  color: #ffffff;
+}
+
+.frontDescription,
+.backDescription {
+  margin: 0;
+  color: #64748b;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+:global([data-theme='dark']) .frontDescription,
+:global([data-theme='dark']) .backDescription {
+  color: #94a3b8;
+}
+
+.frontMeta {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding: 0 1.5rem 1.5rem;
+}
+
+.backHeader {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.detailList {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  align-content: start;
+}
+
+.detailItem {
+  padding: 0.75rem 0.9rem;
+  border: 1px solid rgba(226, 232, 240, 0.86);
+  border-radius: 1.2rem;
+  background:
+    radial-gradient(circle at top left, rgba(191, 219, 254, 0.28), transparent 44%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(239, 246, 255, 0.78));
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: #475569;
+}
+
+:global([data-theme='dark']) .detailItem {
+  border-color: rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.14), transparent 44%),
+    linear-gradient(180deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.44));
+  color: rgb(203 213 225);
+}
+
+.ctaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding-top: 0.15rem;
+}
+
+.cardGlare {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.cardGlare::after {
+  content: '';
+  position: absolute;
+  top: -55%;
+  left: -70%;
+  width: 220%;
+  height: 220%;
+  background: linear-gradient(
+    45deg,
+    transparent 32%,
+    rgba(255, 255, 255, 0.14) 45%,
+    rgba(255, 255, 255, 0.05) 52%,
+    transparent 66%
+  );
+  opacity: 0;
+  transform: rotate(38deg) translate(-42%, -42%);
+}
+
+@keyframes aiTalkCardGlare {
+  0% {
+    transform: rotate(38deg) translate(-42%, -42%);
+  }
+
+  100% {
+    transform: rotate(38deg) translate(42%, 42%);
+  }
+}
+
+@media (min-width: 768px) {
+  .flipScene {
+    position: relative;
+    height: 28.5rem;
+  }
+
+  .flipFace {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform-style: preserve-3d;
+    transition:
+      box-shadow 0.28s ease,
+      border-color 0.28s ease;
+  }
+
+  .flipFront {
+    display: flex;
+    transform: rotateY(0deg);
+  }
+
+  .flipBack {
+    transform: rotateY(180deg);
+  }
+}
+
+@media (max-width: 767px) {
+  .backContent {
+    padding: 1.25rem;
+  }
+
+  .backDescription {
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+}
+
+@media (min-width: 768px) and (hover: hover) and (pointer: fine) {
+  .flipScene:hover .flipInner,
+  .flipScene:focus-within .flipInner {
+    transform: rotateY(180deg);
+  }
+
+  .flipScene:hover .cardGlare::after,
+  .flipScene:focus-within .cardGlare::after {
+    opacity: 1;
+    animation: aiTalkCardGlare 1.35s ease-in-out;
+  }
+}

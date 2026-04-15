@@ -1,7 +1,5 @@
 <template>
-  <Section
-    :title="t('thanks.title')"
-    icon="ganxie">
+  <Section :title="t('thanks.title')" icon="ganxie">
     <div>{{ t('thanks.p1') }}</div>
     <div>{{ t('thanks.p2') }}</div>
   </Section>

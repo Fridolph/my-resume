@@ -1,9 +1,6 @@
 <template>
-  <div class="flex item-center justify-center hover:text-sky-400 dark-transition">
-    <Iconfont
-      :size="22"
-      name="xiazai"
-      @click="downloadPdf" /> 
+  <div class="item-center dark-transition flex justify-center hover:text-sky-400">
+    <Iconfont :size="22" name="xiazai" @click="downloadPdf" />
   </div>
 </template>
 

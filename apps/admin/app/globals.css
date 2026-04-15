@@ -1,0 +1,154 @@
+@import 'tailwindcss';
+@import '@my-resume/ui/heroui-admin.css';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --admin-page-bg:
+    radial-gradient(circle at top left, rgba(15, 23, 42, 0.05), transparent 26%),
+    linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+  --admin-surface: rgba(255, 255, 255, 0.88);
+  --admin-surface-strong: #ffffff;
+  --admin-surface-muted: #f5f7fb;
+  --admin-border: rgba(15, 23, 42, 0.08);
+  --admin-border-strong: rgba(15, 23, 42, 0.14);
+  --admin-text: #111827;
+  --admin-text-muted: #667085;
+  --admin-primary: #1d4ed8;
+  --admin-primary-soft: rgba(29, 78, 216, 0.1);
+  --admin-button-primary-bg: #111827;
+  --admin-button-primary-bg-hover: #1f2937;
+  --admin-button-primary-text: #ffffff;
+  --admin-button-primary-border: transparent;
+  --admin-warning-bg: #fff7ed;
+  --admin-warning-border: #fdba74;
+  --admin-warning-text: #9a3412;
+  --admin-danger: #dc2626;
+  --admin-radius-card: 24px;
+  --admin-radius-control: 16px;
+  --admin-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+  --display-font-family:
+    'IBM Plex Sans', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --display-color-page-bg: var(--admin-page-bg);
+  --display-page-glow: transparent;
+  --display-color-surface: var(--admin-surface);
+  --display-color-surface-muted: var(--admin-surface-muted);
+  --display-color-text: var(--admin-text);
+  --display-color-text-muted: var(--admin-text-muted);
+  --display-color-border: var(--admin-border);
+  --display-color-accent: var(--admin-primary);
+  --display-color-accent-soft: var(--admin-primary-soft);
+  --display-color-accent-contrast: var(--admin-button-primary-text);
+  --display-color-control-bg: var(--admin-surface-strong);
+  --display-color-strong-surface: var(--admin-button-primary-bg);
+  --display-color-strong-contrast: var(--admin-button-primary-text);
+  --display-color-warning-bg: var(--admin-warning-bg);
+  --display-color-warning-border: var(--admin-warning-border);
+  --display-color-warning-text: var(--admin-warning-text);
+  --display-color-danger: var(--admin-danger);
+  --display-shadow-card: var(--admin-shadow);
+  --display-radius-card: var(--admin-radius-card);
+  --display-radius-control: var(--admin-radius-control);
+  --display-radius-pill: 999px;
+}
+
+.dark {
+  --admin-page-bg:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.12), transparent 28%),
+    linear-gradient(180deg, #09090b 0%, #111827 100%);
+  --admin-surface: rgba(17, 24, 39, 0.84);
+  --admin-surface-strong: rgba(24, 24, 27, 0.92);
+  --admin-surface-muted: rgba(39, 39, 42, 0.7);
+  --admin-border: rgba(255, 255, 255, 0.08);
+  --admin-border-strong: rgba(255, 255, 255, 0.14);
+  --admin-text: #f5f7fb;
+  --admin-text-muted: #a1a1aa;
+  --admin-primary: #60a5fa;
+  --admin-primary-soft: rgba(96, 165, 250, 0.14);
+  --admin-button-primary-bg: rgba(39, 39, 42, 0.96);
+  --admin-button-primary-bg-hover: rgba(63, 63, 70, 0.98);
+  --admin-button-primary-text: #f5f7fb;
+  --admin-button-primary-border: rgba(255, 255, 255, 0.1);
+  --admin-warning-bg: rgba(154, 52, 18, 0.2);
+  --admin-warning-border: rgba(251, 146, 60, 0.44);
+  --admin-warning-text: #fdba74;
+  --admin-danger: #f87171;
+  --admin-shadow: 0 22px 55px rgba(0, 0, 0, 0.34);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--admin-page-bg);
+  color: var(--admin-text);
+  font-family:
+    'IBM Plex Sans', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border-radius: var(--admin-radius-control);
+  border: 1px solid var(--admin-border);
+  background: var(--admin-surface-strong);
+  color: var(--admin-text);
+  padding: 0.875rem 1rem;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--admin-primary) 52%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--admin-primary) 14%, transparent);
+}
+
+textarea {
+  min-height: 140px;
+  resize: vertical;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+    padding: 0.75rem 0.9rem;
+    font-size: 0.95rem;
+    line-height: 1.45;
+  }
+
+  textarea {
+    min-height: 120px;
+  }
+}

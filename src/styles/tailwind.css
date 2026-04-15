@@ -3,10 +3,10 @@
 @tailwind utilities;
 @layer components {
   .my-text-clip {
-    @apply font-bold bg-clip-text text-zinc-300 dark:text-sky-900 group-hover:text-transparent group-hover:bg-gradient-to-r transition-all duration-700 from-yellow-400 to-rose-500;
+    @apply from-yellow-400 to-rose-500 bg-clip-text font-bold text-zinc-300 transition-all duration-700 group-hover:bg-gradient-to-r group-hover:text-transparent dark:text-sky-900;
   }
   .my-section-title {
-    @apply relative block dark:border-[var(--dark-border)] text-[16px]  font-bold antialiased mb-4 align-middle content-none after:absolute after:left-0 after:bottom-0 after:w-0 after:h-0.5 after:bg-slate-300 dark:after:bg-slate-600 after:transition-all after:duration-700 after:ease-in-out hover:after:w-full;
+    @apply relative mb-4 block align-middle text-[16px] font-bold antialiased content-none after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-slate-300 after:transition-all after:duration-700 after:ease-in-out hover:after:w-full dark:border-[var(--dark-border)] dark:after:bg-slate-600;
   }
 
   .dark-transition {
@@ -14,30 +14,30 @@
   }
 
   .hobby-fromBottom {
-    @apply translate-y-full transition-transform ease-in-out duration-500 group-hover:translate-y-0;
+    @apply translate-y-full transition-transform duration-500 ease-in-out group-hover:translate-y-0;
   }
   .hobby-fromTop {
-    @apply -translate-y-full transition-transform ease-in-out duration-500 group-hover:translate-y-0;
+    @apply -translate-y-full transition-transform duration-500 ease-in-out group-hover:translate-y-0;
   }
   .hobby-fromLeft {
-    @apply -translate-x-full transition-transform ease-in-out duration-500 group-hover:translate-x-0;
+    @apply -translate-x-full transition-transform duration-500 ease-in-out group-hover:translate-x-0;
   }
   .hobby-fromRight {
-    @apply translate-x-full transition-transform ease-in-out duration-500 group-hover:translate-x-0;
+    @apply translate-x-full transition-transform duration-500 ease-in-out group-hover:translate-x-0;
   }
   .hobby-fadeIn {
-    @apply transition-opacity ease-in-out duration-500 opacity-0 group-hover:opacity-100;
+    @apply opacity-0 transition-opacity duration-500 ease-in-out group-hover:opacity-100;
   }
 
   .my-btn {
-    @apply p-0 px-2 h-6 mr-2 leading-6 border rounded text-xs hover:bg-gray-500 transition-colors duration-300 hover:text-white dark:border-zinc-700 active:bg-gray-600;
+    @apply mr-2 h-6 rounded border p-0 px-2 text-xs leading-6 transition-colors duration-300 hover:bg-gray-500 hover:text-white active:bg-gray-600 dark:border-zinc-700;
   }
 
   .primary {
-    @apply text-[var(--text-hover)] border-[var(--text-hover)] hover:bg-[var(--text-hover)];
+    @apply border-[var(--text-hover)] text-[var(--text-hover)] hover:bg-[var(--text-hover)];
   }
 
   .warning {
-    @apply text-[var(--warning)] border-[var(--warning)] hover:bg-[var(--warning)];
+    @apply border-[var(--warning)] text-[var(--warning)] hover:bg-[var(--warning)];
   }
 }

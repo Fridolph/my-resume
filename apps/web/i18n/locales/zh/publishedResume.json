@@ -1,0 +1,124 @@
+{
+  "pageEyebrow": "公开简历",
+  "emptyTitle": "当前还没有已发布的公开简历内容。",
+  "emptyDescription": "请先通过后台更新草稿并执行发布动作，公开站才会读取到最新已发布版本。",
+  "loadingTitle": "正在同步公开简历",
+  "loadingDescription": "正在从服务端读取最新发布快照，请稍候。",
+  "syncingSnapshot": "正在后台同步最新发布快照...",
+  "contactTitle": "联系信息",
+  "profileLinksTitle": "公开链接",
+  "interestsTitle": "个人兴趣",
+  "publishedAt": "已发布于",
+  "sidebarProjectNote": "欢迎访问我的个人简历项目，了解更多构建过程与迭代记录",
+  "hero": {
+    "avatarFrontAlt": "{name}头像正面",
+    "avatarBackAlt": "{name}头像背面"
+  },
+  "education": {
+    "eyebrow": "教育经历",
+    "title": "教育背景",
+    "description": "保留稳定学历信息，避免和项目型内容混排。"
+  },
+  "experience": {
+    "eyebrow": "工作经历",
+    "title": "职业经历",
+    "description": "聚焦过往公司的职责范围、业务场景与关键成果。",
+    "summaryLabel": "职责概览",
+    "locationLabel": "地点",
+    "highlightsLabel": "关键亮点",
+    "techStackLabel": "技术栈",
+    "techStackAriaLabel": "{name} 技术栈",
+    "pending": "正在准备工作经历区内容..."
+  },
+  "projects": {
+    "eyebrow": "项目经历",
+    "title": "代表项目",
+    "description": "按标准模型展示项目背景、职责、亮点与技术栈。",
+    "summaryLabel": "项目概览",
+    "coreFunctionsLabel": "项目核心功能",
+    "highlightsLabel": "亮点、难点与解决方案",
+    "techStackLabel": "技术栈",
+    "techStackAriaLabel": "{name} 技术栈",
+    "linksLabel": "项目链接",
+    "pending": "正在准备项目区内容..."
+  },
+  "skills": {
+    "eyebrow": "技能清单",
+    "title": "技能结构",
+    "description": "按类别聚合技术关键词，便于后续主题化展示。",
+    "deferDescription": "技能区将在接近视口时再加载图表与交互资源，先保证首屏内容更轻。",
+    "pending": "正在准备技能区内容...",
+    "viewStructure": "结构",
+    "viewChart": "图表",
+    "chartRadar": "雷达图",
+    "chartPie": "饼图",
+    "chartRadarCaption": "按技能组雷达图分数生成的能力轮廓",
+    "chartPieCaption": "按技能组条目数生成的分布关系",
+    "chartRadarAriaLabel": "技能雷达图",
+    "chartPieAriaLabel": "技能饼图",
+    "cloudTitle": "关键词云",
+    "cloudCaption": "把所有技能关键词统一聚合到一个高密度词云画布中。",
+    "points": "个技能点",
+    "radarTooltipValue": "{name}：{value}%",
+    "radarSeriesName": "技能覆盖度",
+    "pieTooltipValue": "{name}：{value}",
+    "pieCenterTitle": "技能分布"
+  },
+  "highlights": {
+    "eyebrow": "亮点",
+    "title": "补充亮点",
+    "description": "沉淀个人项目、开源参与与团队建设等补充信息。",
+    "signalLensTitle": "信号说明",
+    "signalLensDescription": "这一段不再重复讲“经历”，而是把前端、全栈、AI、工程质量、协作与写作这些招聘方更关心的能力信号直接提炼出来。",
+    "presets": {
+      "frontend": {
+        "badge": "前端架构",
+        "tags": {
+          "one": "设计系统",
+          "two": "交互体验",
+          "three": "组件抽象"
+        }
+      },
+      "fullStack": {
+        "badge": "全栈交付",
+        "tags": {
+          "one": "端到端交付",
+          "two": "接口协作",
+          "three": "发布链路"
+        }
+      },
+      "aiOps": {
+        "badge": "AI 工程化",
+        "tags": {
+          "one": "结构化分析",
+          "two": "自动化工作流",
+          "three": "可解释输出"
+        }
+      },
+      "quality": {
+        "badge": "工程质量",
+        "tags": {
+          "one": "测试基线",
+          "two": "Code Review",
+          "three": "稳定发布"
+        }
+      },
+      "teamwork": {
+        "badge": "团队协作",
+        "tags": {
+          "one": "跨角色协作",
+          "two": "团队建设",
+          "three": "节奏推进"
+        }
+      },
+      "writing": {
+        "badge": "写作开源",
+        "tags": {
+          "one": "教程沉淀",
+          "two": "公共表达",
+          "three": "开源贡献"
+        }
+      }
+    }
+  }
+}

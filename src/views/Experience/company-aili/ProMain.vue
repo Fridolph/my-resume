@@ -12,33 +12,18 @@
     </template>
 
     <p class="pl-3">{{ t('aili.para') }}</p>
-    <div class="pl-3 my-3">
+    <div class="my-3 pl-3">
       <button class="my-btn warning">{{ t('refactor') }}</button>
       <button class="my-btn info">Webpack</button>
       <button class="my-btn info">React</button>
       <button class="my-btn info">react-router</button>
       <button class="my-btn info">Redux</button>
     </div>
-    <ListWrap
-      type="ul"
-      :title="t('contributions')"
-      :list="mainList"
-      inner
-      bold />
+    <ListWrap type="ul" :title="t('contributions')" :list="mainList" inner bold />
 
-    <ListWrap
-      type="ul"
-      :title="t('hard')"
-      :list="hardList"
-      inner
-      bold />
+    <ListWrap type="ul" :title="t('hard')" :list="hardList" inner bold />
 
-    <ListWrap
-      type="ul"
-      :title="t('team.grow')"
-      :list="growList"
-      inner
-      bold />
+    <ListWrap type="ul" :title="t('team.grow')" :list="growList" inner bold />
   </ProjectWrap>
 </template>
 

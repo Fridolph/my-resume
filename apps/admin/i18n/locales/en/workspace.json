@@ -1,0 +1,20 @@
+{
+  "overviewTitle": "Overview",
+  "overviewDescription": "Review account identity, capability boundaries, runtime status and quick entries.",
+  "overviewShortLabel": "Overview",
+  "overviewEyebrow": "Console",
+  "resumeTitle": "Resume Editor",
+  "resumeDescription": "Maintain draft content while keeping the draft-first and manual publish flow.",
+  "resumeShortLabel": "Resume",
+  "resumeEyebrow": "Content Workspace",
+  "aiTitle": "AI Workbench",
+  "aiDescription": "Organize uploads, analysis runs, cached reports, runtime status and draft feedback.",
+  "aiShortLabel": "AI",
+  "aiEyebrow": "Intelligence",
+  "publishTitle": "Publish & Export",
+  "publishDescription": "Centralize role actions, publishing flow and export entry points.",
+  "publishShortLabel": "Publish",
+  "publishEyebrow": "Delivery",
+  "menuButton": "Menu",
+  "dashboardBreadcrumb": "Admin"
+}

@@ -1,0 +1,67 @@
+@import './heroui-base.css';
+
+@utility fade-out-0 {
+  --tw-exit-opacity: 0;
+}
+
+@utility zoom-in-95 {
+  --tw-enter-scale: 0.95;
+}
+
+@utility slide-in-from-top-full {
+  --tw-enter-translate-y: -100%;
+}
+
+@utility slide-in-from-bottom-full {
+  --tw-enter-translate-y: 100%;
+}
+
+@utility slide-in-from-left-full {
+  --tw-enter-translate-x: -100%;
+}
+
+@utility slide-in-from-right-full {
+  --tw-enter-translate-x: 100%;
+}
+
+@utility slide-out-to-top-full {
+  --tw-exit-translate-y: -100%;
+}
+
+@utility slide-out-to-bottom-full {
+  --tw-exit-translate-y: 100%;
+}
+
+@utility slide-out-to-left-full {
+  --tw-exit-translate-x: -100%;
+}
+
+@utility slide-out-to-right-full {
+  --tw-exit-translate-x: 100%;
+}
+
+@import '@heroui/styles/components/button.css' layer(components);
+@import '@heroui/styles/components/avatar.css' layer(components);
+@import '@heroui/styles/components/card.css' layer(components);
+@import '@heroui/styles/components/checkbox.css' layer(components);
+@import '@heroui/styles/components/chip.css' layer(components);
+@import '@heroui/styles/components/disclosure.css' layer(components);
+@import '@heroui/styles/components/input.css' layer(components);
+@import '@heroui/styles/components/list-box.css' layer(components);
+@import '@heroui/styles/components/list-box-item.css' layer(components);
+@import '@heroui/styles/components/list-box-section.css' layer(components);
+@import '@heroui/styles/components/menu.css' layer(components);
+@import '@heroui/styles/components/menu-item.css' layer(components);
+@import '@heroui/styles/components/menu-section.css' layer(components);
+@import '@heroui/styles/components/popover.css' layer(components);
+@import '@heroui/styles/components/select.css' layer(components);
+@import '@heroui/styles/components/separator.css' layer(components);
+@import '@heroui/styles/components/skeleton.css' layer(components);
+@import '@heroui/styles/components/tag-group.css' layer(components);
+@import '@heroui/styles/components/tag.css' layer(components);
+@import '@heroui/styles/components/tabs.css' layer(components);
+@import '@heroui/styles/components/textarea.css' layer(components);
+@import '@heroui/styles/components/tooltip.css' layer(components);
+
+@import '@heroui/styles/utilities';
+@import '@heroui/styles/variants';

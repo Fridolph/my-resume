@@ -10,7 +10,7 @@ import { IconfontProps } from './types'
 
 withDefaults(defineProps<IconfontProps>(), {
   size: 14,
-  color: 'currentColor'
+  color: 'currentColor',
 })
 </script>
 

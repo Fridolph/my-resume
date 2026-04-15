@@ -1,10 +1,6 @@
 <template>
   <div class="dark-transition hover:text-sky-400">
-    <Iconfont
-      v-show="isZh"
-      :size="22"
-      name="zhongyingwen2zhongwen"
-      @click="toggleLang" />
+    <Iconfont v-show="isZh" :size="22" name="zhongyingwen2zhongwen" @click="toggleLang" />
 
     <Iconfont
       v-show="!isZh"

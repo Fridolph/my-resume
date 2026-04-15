@@ -1,12 +1,11 @@
 <template>
-  <div
-    class="group">
+  <div class="group">
     <Iconfont
-      class="size-12 absolute left-0 top-0.5 text-center origin-center duration-[500ms] ease-in group-hover:scale-[2] group-hover:opacity-0 group-hover:invisible"
+      class="absolute left-0 top-0.5 size-12 origin-center text-center duration-[500ms] ease-in group-hover:invisible group-hover:scale-[2] group-hover:opacity-0"
       :size="30"
       name="steam" />
     <Iconfont
-      class="size-12 absolute left-0 top-[-2px] text-center transition-all delay-[200ms] scale-0 ease-in  group-hover:scale-100"
+      class="absolute left-0 top-[-2px] size-12 scale-0 text-center transition-all delay-[200ms] ease-in group-hover:scale-100"
       :size="34"
       name="youxi" />
   </div>

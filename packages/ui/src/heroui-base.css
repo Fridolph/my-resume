@@ -1,0 +1,85 @@
+@layer theme, base, components, utilities;
+
+@keyframes heroui-enter {
+  from {
+    opacity: var(--tw-enter-opacity, 1);
+    transform: translate3d(
+        var(--tw-enter-translate-x, 0),
+        var(--tw-enter-translate-y, 0),
+        0
+      )
+      scale3d(var(--tw-enter-scale, 1), var(--tw-enter-scale, 1), 1);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+}
+
+@keyframes heroui-exit {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+
+  to {
+    opacity: var(--tw-exit-opacity, 0);
+    transform: translate3d(
+        var(--tw-exit-translate-x, 0),
+        var(--tw-exit-translate-y, 0),
+        0
+      )
+      scale3d(var(--tw-exit-scale, 0.95), var(--tw-exit-scale, 0.95), 1);
+  }
+}
+
+@utility animate-in {
+  animation-name: heroui-enter;
+  animation-fill-mode: both;
+}
+
+@utility animate-out {
+  animation-name: heroui-exit;
+  animation-fill-mode: both;
+}
+
+@utility fade-in-0 {
+  --tw-enter-opacity: 0;
+}
+
+@utility fade-out {
+  --tw-exit-opacity: 0;
+}
+
+@utility zoom-in-90 {
+  --tw-enter-scale: 0.9;
+}
+
+@utility zoom-out-95 {
+  --tw-exit-scale: 0.95;
+}
+
+@utility slide-in-from-top-1 {
+  --tw-enter-translate-y: -0.25rem;
+}
+
+@utility slide-in-from-bottom-1 {
+  --tw-enter-translate-y: 0.25rem;
+}
+
+@utility slide-in-from-left-1 {
+  --tw-enter-translate-x: -0.25rem;
+}
+
+@utility slide-in-from-right-1 {
+  --tw-enter-translate-x: 0.25rem;
+}
+
+@utility ease-smooth {
+  transition-timing-function: var(--ease-smooth);
+  animation-timing-function: var(--ease-smooth);
+}
+
+@import '@heroui/styles/base' layer(base);
+@import '@heroui/styles/themes/default' layer(theme);
