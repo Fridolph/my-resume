@@ -194,6 +194,7 @@ describe('AdminProtectedLayout', () => {
     expect(screen.getAllByText('概览').length).toBeGreaterThan(0)
     expect(screen.getAllByText('简历编辑').length).toBeGreaterThan(0)
     expect(screen.getAllByText('AI 工作台').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('优化记录').length).toBeGreaterThan(0)
     expect(screen.getAllByText('发布与导出').length).toBeGreaterThan(0)
     expect(screen.queryByText('当前会话')).not.toBeInTheDocument()
     expect(await screen.findByLabelText('打开项目 GitHub 仓库')).toBeInTheDocument()
@@ -271,6 +272,44 @@ describe('AdminProtectedLayout', () => {
         'false',
       )
     })
+  })
+
+  it('should highlight optimization history as the active navigation item', async () => {
+    pathnameState.value = '/dashboard/ai/optimization-history'
+
+    useAdminSessionMock.mockReturnValue({
+      accessToken: 'admin-token',
+      currentUser: {
+        id: 'admin-demo-user',
+        username: 'admin',
+        role: 'admin',
+        isActive: true,
+        capabilities: {
+          canEditResume: true,
+          canPublishResume: true,
+          canTriggerAiAnalysis: true,
+        },
+      },
+      logout: vi.fn(),
+      refreshSession: vi.fn(),
+      status: 'ready',
+    })
+
+    render(
+      <AdminProtectedLayout>
+        <div>受保护内容</div>
+      </AdminProtectedLayout>,
+    )
+
+    const optimizationHistoryLink = screen.getAllByRole('link', {
+      name: '优化记录',
+    })[0]
+    const aiWorkbenchLink = screen.getAllByRole('link', {
+      name: 'AI 工作台',
+    })[0]
+
+    expect(optimizationHistoryLink).toHaveClass('bg-blue-50', 'text-[#333]')
+    expect(aiWorkbenchLink).not.toHaveClass('bg-blue-50', 'text-[#333]')
   })
 
   it('should open drawer from menu button and reopen after route change', async () => {

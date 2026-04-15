@@ -12,6 +12,7 @@ import { Button } from '@heroui/react/button'
 import { Chip } from '@heroui/react/chip'
 import { Skeleton } from '@heroui/react/skeleton'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
@@ -26,9 +27,19 @@ import type {
   ResumeDraftSnapshot,
   ResumeDraftSummarySnapshot,
 } from '../../resume/_resume/types/resume.types'
+import { CompactWorkbenchInfoCards } from './components/compact-workbench-info-cards'
 import { createFetchAiWorkbenchRuntimeMethod } from './services/ai-workbench-api'
 import type { FileExtractionResult } from './types/ai-file.types'
-import type { AiWorkbenchScenario } from './types/ai-workbench.types'
+import type {
+  AiResumeOptimizationResult,
+  AiWorkbenchScenario,
+} from './types/ai-workbench.types'
+import {
+  DEFAULT_RESUME_OPTIMIZATION_TEMPLATE,
+  readResumeOptimizationContent,
+  upsertResumeOptimizationHistoryEntry,
+  writeResumeOptimizationContent,
+} from './utils/resume-optimization-persistence'
 
 const AiFileExtractionPanel = dynamic(
   () => import('./components/file-extraction-panel').then((module) => module.AiFileExtractionPanel),
@@ -60,21 +71,6 @@ const AiAnalysisPanel = dynamic(
   },
 )
 
-const AiCachedReportsPanel = dynamic(
-  () => import('./components/cached-reports-panel').then((module) => module.AiCachedReportsPanel),
-  {
-    loading: () => (
-      <div className="status-box" data-testid="ai-cached-reports-loading">
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">正在加载缓存报告...</p>
-        <div className="mt-2 grid gap-2">
-          <Skeleton className="h-4 w-3/5 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
-          <Skeleton className="h-4 w-2/3 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
-        </div>
-      </div>
-    ),
-  },
-)
-
 const scenarioCards = {
   'jd-match': {
     title: 'JD 匹配分析',
@@ -89,19 +85,6 @@ const scenarioCards = {
     description: '对比多个机会的成长性、匹配度与风险，帮助做更稳妥的取舍。',
   },
 } as const
-
-function WorkbenchSkeleton({ lines = 3 }: { lines?: number }) {
-  return (
-    <div className="grid gap-2" data-testid="workbench-skeleton">
-      {Array.from({ length: lines }).map((_, index) => (
-        <Skeleton
-          className="h-4 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80"
-          key={`workbench-skeleton-${index}`}
-        />
-      ))}
-    </div>
-  )
-}
 
 export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
   const { accessToken, currentUser, status } = useAdminSession()
@@ -123,7 +106,9 @@ export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
       immediate: false,
     },
   )
-  const [analysisContent, setAnalysisContent] = useState('')
+  const [analysisContent, setAnalysisContent] = useState(
+    DEFAULT_RESUME_OPTIMIZATION_TEMPLATE,
+  )
   const [analysisHelperMessage, setAnalysisHelperMessage] = useState<string | null>(null)
   const {
     data: loadedDraftSnapshot,
@@ -201,18 +186,14 @@ export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
     setDraftSnapshot(loadedDraftSnapshot)
   }, [loadedDraftSnapshot])
 
+  useEffect(() => {
+    setAnalysisContent(readResumeOptimizationContent())
+  }, [])
+
   const isAdmin = Boolean(currentUser?.capabilities.canTriggerAiAnalysis)
   const roleMessage = isAdmin
     ? '当前账号可直接分析当前草稿、查看 diff，并按模块写回后台草稿。'
     : 'viewer 当前只允许查看缓存结果与预设体验，不能分析当前草稿或触发新的真实分析。'
-
-  const cachedReportsPanel = accessToken ? (
-    <AiCachedReportsPanel
-      accessToken={accessToken}
-      apiBaseUrl={DEFAULT_API_BASE_URL}
-      isViewerExperience={!isAdmin}
-    />
-  ) : null
 
   function handleExtractedText(result: FileExtractionResult) {
     setAnalysisContent(result.text)
@@ -223,10 +204,24 @@ export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
 
   function handleAnalysisContentChange(nextContent: string) {
     setAnalysisContent(nextContent)
+    writeResumeOptimizationContent(nextContent)
 
     if (analysisHelperMessage) {
       setAnalysisHelperMessage(null)
     }
+  }
+
+  function handleResetToDefaultTemplate() {
+    setAnalysisContent(DEFAULT_RESUME_OPTIMIZATION_TEMPLATE)
+    writeResumeOptimizationContent(DEFAULT_RESUME_OPTIMIZATION_TEMPLATE)
+    setAnalysisHelperMessage('已恢复默认高级全栈 JD 模板，可直接继续修改后发起分析。')
+  }
+
+  function handleOptimizationGenerated(
+    result: AiResumeOptimizationResult,
+    instruction: string,
+  ) {
+    upsertResumeOptimizationHistoryEntry(result, instruction)
   }
 
   function handleDraftApplied(snapshot: ResumeDraftSnapshot) {
@@ -276,25 +271,32 @@ export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
             <Chip>运行模式：{runtimeSummary?.mode ?? '加载中'}</Chip>
           </div>
 
+          <div className="dashboard-entry-actions">
+            <Link
+              className="inline-flex h-10 items-center justify-center rounded-full border border-zinc-300 px-4 text-sm text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:text-white"
+              href="/dashboard/ai/optimization-history">
+              进入优化记录
+            </Link>
+          </div>
+
           {isAdmin ? (
             <div className="status-box">{roleMessage}</div>
           ) : (
             <div className="readonly-box">{roleMessage}</div>
           )}
 
-          {runtimeLoading ? <WorkbenchSkeleton /> : null}
-          {runtimeError ? (
-            <div className="grid gap-3">
-              <p className="error-text">{runtimeError.message}</p>
-              <Button
-                className="w-fit"
-                onPress={() => void loadRuntimeSummary()}
-                size="sm"
-                variant="secondary">
-                重试运行时读取
-              </Button>
-            </div>
-          ) : null}
+          <CompactWorkbenchInfoCards
+            canEditResume={Boolean(currentUser.capabilities.canEditResume)}
+            draftSnapshot={draftSnapshot}
+            draftSnapshotError={draftSnapshotError}
+            draftSnapshotLoading={draftSnapshotLoading}
+            draftSnapshotMessage={draftSnapshotMessage}
+            onReloadDraftSnapshot={() => void loadDraftSnapshot()}
+            onReloadRuntimeSummary={() => void loadRuntimeSummary()}
+            runtimeError={runtimeError}
+            runtimeLoading={runtimeLoading}
+            runtimeSummary={runtimeSummary}
+          />
         </CardContent>
       </Card>
 
@@ -331,88 +333,26 @@ export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
           draftSnapshot={draftSnapshot}
           helperMessage={analysisHelperMessage}
           inputAccessory={
-            <AiFileExtractionPanel
-              accessToken={accessToken}
-              apiBaseUrl={DEFAULT_API_BASE_URL}
-              canUpload={isAdmin}
-              onExtractedText={handleExtractedText}
-            />
+            <div className="grid gap-3">
+              <AiFileExtractionPanel
+                accessToken={accessToken}
+                apiBaseUrl={DEFAULT_API_BASE_URL}
+                canUpload={isAdmin}
+                onExtractedText={handleExtractedText}
+              />
+              <div className="dashboard-entry-actions">
+                <Button onPress={handleResetToDefaultTemplate} size="sm" variant="outline">
+                  恢复默认 JD 模板
+                </Button>
+              </div>
+            </div>
           }
           onContentChange={handleAnalysisContentChange}
           onDraftApplied={handleDraftApplied}
+          onOptimizationGenerated={handleOptimizationGenerated}
           runtimeSummary={runtimeSummary}
         />
       ) : null}
-
-      {cachedReportsPanel}
-
-      {currentUser.capabilities.canEditResume ? (
-        <Card className="border border-zinc-200/70 dark:border-zinc-800">
-          <CardHeader className="flex flex-col items-start gap-2">
-            <p className="eyebrow">草稿反馈</p>
-            <CardTitle>当前草稿快照</CardTitle>
-            <CardDescription>
-              apply 成功后这里会立即刷新，帮助确认当前草稿是否已经接收 AI 建议，而不必马上切回编辑器。
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="stack">
-            {draftSnapshotLoading ? (
-              <WorkbenchSkeleton lines={4} />
-            ) : null}
-            {draftSnapshotError ? (
-              <div className="grid gap-3">
-                <p className="error-text">{draftSnapshotError.message}</p>
-                <Button
-                  className="w-fit"
-                  onPress={() => void loadDraftSnapshot()}
-                  size="sm"
-                  variant="secondary">
-                  重试草稿快照读取
-                </Button>
-              </div>
-            ) : null}
-            {draftSnapshotMessage ? (
-              <div className="dashboard-inline-note">{draftSnapshotMessage}</div>
-            ) : null}
-            {draftSnapshot ? (
-              <div className="status-box">
-                <strong>{draftSnapshot.resume.profile.headline}</strong>
-                <span>{draftSnapshot.resume.profile.summary}</span>
-                <span>
-                  最近更新时间：
-                  {new Date(draftSnapshot.updatedAt).toLocaleString('zh-CN', {
-                    hour12: false,
-                  })}
-                </span>
-              </div>
-            ) : null}
-          </CardContent>
-        </Card>
-      ) : null}
-
-      <Card className="border border-zinc-200/70 dark:border-zinc-800">
-        <CardHeader className="flex flex-col items-start gap-2">
-          <p className="eyebrow">运行时摘要</p>
-          <CardTitle>Provider 与边界</CardTitle>
-          <CardDescription>
-            在这轮收口里，AI 页面主路径改成“当前草稿优化”，文件提取和分析报告都作为辅助能力保留。
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 xl:grid-cols-3">
-          <div className="status-box">
-            <strong>输入层</strong>
-            <span>当前草稿是唯一优化基线；JD、目标岗位和优化要求只负责告诉 AI 应该朝什么方向改。</span>
-          </div>
-          <div className="status-box">
-            <strong>结论层</strong>
-            <span>输出同时保留可阅读结论与结构化 diff，既方便理解原因，也方便后续按模块应用。</span>
-          </div>
-          <div className="status-box">
-            <strong>应用层</strong>
-            <span>最终是否写回草稿由用户确认，后台继续只应用勾选模块，不做无脑自动覆盖。</span>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }

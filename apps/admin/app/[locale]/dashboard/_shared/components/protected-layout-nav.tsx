@@ -28,6 +28,18 @@ export function AdminNavItems({
 }) {
   const router = useRouter()
   const adminNavigationItems = useMemo(() => getAdminNavigationItems(locale), [locale])
+  const activeHref = useMemo(() => {
+    const exactMatch = adminNavigationItems.find((item) => item.href === currentPathname)
+
+    if (exactMatch) {
+      return exactMatch.href
+    }
+
+    return adminNavigationItems
+      .filter((item) => item.href !== '/dashboard' && currentPathname.startsWith(item.href))
+      .sort((firstItem, secondItem) => secondItem.href.length - firstItem.href.length)[0]
+      ?.href
+  }, [adminNavigationItems, currentPathname])
 
   useEffect(() => {
     adminNavigationItems.forEach((item) => {
@@ -38,10 +50,7 @@ export function AdminNavItems({
   return (
     <div className={collapsed ? 'flex w-full flex-col items-center gap-2' : 'flex flex-col gap-2'}>
       {adminNavigationItems.map((item) => {
-        const isActive =
-          item.href === '/dashboard'
-            ? currentPathname === item.href
-            : currentPathname.startsWith(item.href)
+        const isActive = item.href === activeHref
 
         const navButton = (
           <Link

@@ -1,5 +1,8 @@
 export {
   createApplyAiResumeOptimizationMethod,
+  createFetchAiResumeOptimizationResultMethod,
+  createFetchAiUsageHistoryMethod,
+  createFetchAiUsageRecordDetailMethod,
   createFetchAiWorkbenchRuntimeMethod,
   createFetchCachedAiWorkbenchReportMethod,
   createFetchCachedAiWorkbenchReportsMethod,

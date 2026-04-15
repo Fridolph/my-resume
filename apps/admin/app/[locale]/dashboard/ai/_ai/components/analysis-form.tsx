@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, ListBox, Select, TextArea } from '@heroui/react'
+import { Button, Form, ListBox, Select, TextArea } from '@heroui/react'
 
 import { adminPrimaryButtonClass } from '@core/button-styles'
 import type { ReactNode } from 'react'
@@ -10,15 +10,12 @@ import type { AiWorkbenchLocale, AiWorkbenchScenario } from '../types/ai-workben
 import { localeOptions, scenarioOptions } from '../utils/analysis-utils'
 
 interface AnalysisFormProps {
-  applyFeedbackMessage?: string | null
-  applyPending: boolean
   content: string
   draftSnapshot?: ResumeDraftSummarySnapshot | null
   errorMessage?: string | null
   helperMessage?: string | null
   inputAccessory?: ReactNode
   locale: AiWorkbenchLocale
-  moduleLinkMessage?: string | null
   onChangeLocale: (locale: AiWorkbenchLocale) => void
   onContentChange: (value: string) => void
   onGenerateSuggestion: () => void
@@ -26,20 +23,17 @@ interface AnalysisFormProps {
   onUpdateScenario: (scenario: AiWorkbenchScenario) => void
   pending: boolean
   scenario: AiWorkbenchScenario
-  suggestionErrorMessage?: string | null
+  suggestionFeedbackMessage?: string | null
   suggestionPending: boolean
 }
 
 export function AnalysisForm({
-  applyFeedbackMessage,
-  applyPending,
   content,
   draftSnapshot,
   errorMessage,
   helperMessage,
   inputAccessory,
   locale,
-  moduleLinkMessage,
   onChangeLocale,
   onContentChange,
   onGenerateSuggestion,
@@ -47,12 +41,26 @@ export function AnalysisForm({
   onUpdateScenario,
   pending,
   scenario,
-  suggestionErrorMessage,
+  suggestionFeedbackMessage,
   suggestionPending,
 }: AnalysisFormProps) {
   return (
     <div className="stack self-start">
-      <form
+      {inputAccessory ? (
+        <div className="grid gap-3 rounded-[1.25rem] border border-dashed border-zinc-200/80 bg-zinc-50/70 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+          <div className="grid gap-1">
+            <strong className="text-sm font-semibold text-zinc-950 dark:text-white">
+              辅助参考材料
+            </strong>
+            <p className="text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+              可选：先从 PDF、Markdown 或文本里提取参考内容，再整理到下方优化要求中；但真正被改写的仍是当前草稿。
+            </p>
+          </div>
+          <div className="stack">{inputAccessory}</div>
+        </div>
+      ) : null}
+
+      <Form
         className="stack rounded-[1.75rem] border border-zinc-200/80 bg-white/80 p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/80"
         onSubmit={onSubmit}>
         <section className="grid gap-4">
@@ -85,20 +93,6 @@ export function AnalysisForm({
             )}
           </div>
 
-          {inputAccessory ? (
-            <div className="grid gap-3 rounded-[1.25rem] border border-dashed border-zinc-200/80 bg-zinc-50/70 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
-              <div className="grid gap-1">
-                <strong className="text-sm font-semibold text-zinc-950 dark:text-white">
-                  辅助参考材料
-                </strong>
-                <p className="text-sm leading-6 text-zinc-500 dark:text-zinc-400">
-                  可选：先从 PDF、Markdown 或文本里提取参考内容，再整理到下方优化要求中；但真正被改写的仍是当前草稿。
-                </p>
-              </div>
-              <div className="stack">{inputAccessory}</div>
-            </div>
-          ) : null}
-
           <label className="field">
             <span>目标岗位 / JD / 优化要求</span>
             <TextArea
@@ -114,20 +108,14 @@ export function AnalysisForm({
           {helperMessage ? (
             <div className="dashboard-inline-note">{helperMessage}</div>
           ) : null}
-          {suggestionErrorMessage ? (
-            <p className="error-text">{suggestionErrorMessage}</p>
-          ) : null}
-          {moduleLinkMessage ? (
-            <p className="dashboard-inline-note">{moduleLinkMessage}</p>
-          ) : null}
-          {applyFeedbackMessage ? (
-            <p className="dashboard-inline-note">{applyFeedbackMessage}</p>
+          {suggestionFeedbackMessage ? (
+            <p className="dashboard-inline-note">{suggestionFeedbackMessage}</p>
           ) : null}
 
           <div className="dashboard-entry-actions">
             <Button
               className={adminPrimaryButtonClass}
-              isDisabled={suggestionPending || applyPending}
+              isDisabled={suggestionPending}
               onPress={onGenerateSuggestion}
               size="md"
               type="button"
@@ -212,7 +200,7 @@ export function AnalysisForm({
 
           <div className="dashboard-entry-actions">
             <Button
-              isDisabled={pending || applyPending}
+              isDisabled={pending || suggestionPending}
               size="md"
               type="submit"
               variant="outline">
@@ -220,7 +208,7 @@ export function AnalysisForm({
             </Button>
           </div>
         </section>
-      </form>
+      </Form>
     </div>
   )
 }

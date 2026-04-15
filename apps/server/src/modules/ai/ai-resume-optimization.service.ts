@@ -17,6 +17,7 @@ import {
 } from '../resume/domain/standard-resume'
 import { AiService } from './ai.service'
 import { type AnalysisLocale } from './analysis-report-cache.service'
+import { ResumeOptimizationResultCacheService } from './resume-optimization-result-cache.service'
 
 export type ResumeOptimizationModule =
   | 'profile'
@@ -60,12 +61,13 @@ export interface GenerateResumeOptimizationInput {
 }
 
 export interface GenerateResumeOptimizationResult {
+  resultId: string
+  locale: AnalysisLocale
   summary: string
   focusAreas: string[]
   changedModules: ResumeOptimizationModule[]
   moduleDiffs: ResumeOptimizationModuleDiff[]
-  applyPayload: ResumeOptimizationApplyPayload
-  suggestedResume: StandardResume
+  createdAt: string
   providerSummary: {
     provider: string
     model: string
@@ -76,8 +78,10 @@ export interface GenerateResumeOptimizationResult {
 export interface ResumeOptimizationDiffEntry {
   key: string
   label: string
-  before: string
-  after: string
+  currentValue: string
+  reason: string
+  suggestion: string
+  suggestedValue: string
 }
 
 export interface ResumeOptimizationModuleDiff {
@@ -91,23 +95,12 @@ export interface ResumeOptimizationModuleDiff {
   entries: ResumeOptimizationDiffEntry[]
 }
 
-export interface ResumeOptimizationApplyPayload {
-  /**
-   * 用于校验建议稿是不是基于当前草稿生成的，避免旧建议误覆盖新草稿。
-   */
-  draftUpdatedAt: string
-  /**
-   * applyPayload 只承载结构化 patch，而不是整份 suggestedResume。
-   * 这样服务端才能继续掌控模块级 apply 和最终结构校验。
-   */
-  patch: ResumeOptimizationPatch
-}
-
 export interface ApplyResumeOptimizationInput {
-  draftUpdatedAt: string
-  patch: unknown
+  resultId: string
   modules: ResumeOptimizationModule[]
 }
+
+export type AiResumeOptimizationResultDetail = GenerateResumeOptimizationResult
 
 function cloneResume(resume: StandardResume): StandardResume {
   return JSON.parse(JSON.stringify(resume)) as StandardResume
@@ -435,42 +428,115 @@ function detectChangedModules(
   }) as ResumeOptimizationModule[]
 }
 
-function formatLocalizedValue(value: LocalizedText | undefined): string {
-  const zh = value?.zh.trim() || '（空）'
-  const en = value?.en.trim() || '(empty)'
+function formatLocalizedValue(
+  value: LocalizedText | undefined,
+  locale: AnalysisLocale,
+): string {
+  const localizedValue = locale === 'en' ? value?.en.trim() : value?.zh.trim()
 
-  return `中文：${zh} | English: ${en}`
+  if (localizedValue) {
+    return localizedValue
+  }
+
+  return locale === 'en' ? '(empty)' : '（空）'
 }
 
-function getModulePresentation(module: ResumeOptimizationModule): {
+function getModulePresentation(
+  module: ResumeOptimizationModule,
+  locale: AnalysisLocale,
+): {
   title: string
   reason: string
 } {
   switch (module) {
     case 'profile':
       return {
-        title: '个人定位与摘要',
+        title: locale === 'en' ? 'Positioning & Summary' : '个人定位与摘要',
         reason:
-          '个人摘要和标题决定面试官最先如何理解你的岗位定位，是“是否继续看下去”的第一印象模块。',
+          locale === 'en'
+            ? 'Profile headline and summary define the first impression of your role fit and determine whether recruiters keep reading.'
+            : '个人摘要和标题决定面试官最先如何理解你的岗位定位，是“是否继续看下去”的第一印象模块。',
       }
     case 'experiences':
       return {
-        title: '工作经历与职责边界',
+        title: locale === 'en' ? 'Experience & Ownership' : '工作经历与职责边界',
         reason:
-          '工作经历是证明职责范围、协作方式和交付结果的主证据，直接影响面试官是否相信你的经历深度。',
+          locale === 'en'
+            ? 'Experience is the strongest evidence for ownership, collaboration style, and delivery depth, so it heavily affects credibility.'
+            : '工作经历是证明职责范围、协作方式和交付结果的主证据，直接影响面试官是否相信你的经历深度。',
       }
     case 'projects':
       return {
-        title: '项目摘要与亮点',
+        title: locale === 'en' ? 'Projects & Highlights' : '项目摘要与亮点',
         reason:
-          '项目经历通常承载技术方案、业务场景和个人贡献，是和目标 JD 对齐时最容易被追问的部分。',
+          locale === 'en'
+            ? 'Projects usually carry the technical solution, business context, and personal contribution, making them the easiest section to align with a JD.'
+            : '项目经历通常承载技术方案、业务场景和个人贡献，是和目标 JD 对齐时最容易被追问的部分。',
       }
     case 'highlights':
       return {
-        title: '差异化亮点总结',
+        title: locale === 'en' ? 'Differentiators' : '差异化亮点总结',
         reason:
-          '亮点总结负责帮助招聘方快速记住你最值得被记住的信号，适合在 apply 前再次确认表达是否可信。',
+          locale === 'en'
+            ? 'Highlights help hiring teams remember your most valuable signals quickly, so they are worth a final credibility check before applying.'
+            : '亮点总结负责帮助招聘方快速记住你最值得被记住的信号，适合在 apply 前再次确认表达是否可信。',
       }
+  }
+}
+
+function buildEntryExplanation(input: {
+  label: string
+  locale: AnalysisLocale
+  module: ResumeOptimizationModule
+}): {
+  reason: string
+  suggestion: string
+} {
+  if (input.locale === 'en') {
+    return {
+      suggestion: `Rewrite “${input.label}” so the wording is closer to the target role, clearer in ownership, and easier to compare against the JD.`,
+      reason:
+        input.module === 'profile'
+          ? 'This field shapes the first role-fit signal, so clearer positioning improves the chance that recruiters keep reading.'
+          : input.module === 'experiences'
+            ? 'This field is used to judge ownership and delivery depth, so stronger wording makes the experience more credible.'
+            : input.module === 'projects'
+              ? 'This field connects technical decisions with business context, so a sharper statement makes follow-up questions easier to support.'
+              : 'This field helps summarize memorable strengths, so it should stay concise, credible, and aligned with the target role.',
+    }
+  }
+
+  return {
+    suggestion: `建议将「${input.label}」改写得更贴近目标岗位，突出职责边界、技术关键词与可验证结果。`,
+    reason:
+      input.module === 'profile'
+        ? '该字段决定招聘方第一眼如何判断岗位匹配度，定位越清晰，越容易继续阅读后续经历。'
+        : input.module === 'experiences'
+          ? '该字段用于判断职责范围和交付深度，表达越具体，越能增强经历可信度。'
+          : input.module === 'projects'
+            ? '该字段负责连接技术方案、业务场景与个人贡献，改写后更方便承接面试追问。'
+            : '该字段负责快速总结差异化信号，需要保持简洁、可信，并与目标岗位保持一致。',
+  }
+}
+
+function createDiffEntry(input: {
+  currentValue: string
+  key: string
+  label: string
+  locale: AnalysisLocale
+  module: ResumeOptimizationModule
+  suggestedValue: string
+}): ResumeOptimizationDiffEntry {
+  return {
+    key: input.key,
+    label: input.label,
+    currentValue: input.currentValue,
+    ...buildEntryExplanation({
+      label: input.label,
+      locale: input.locale,
+      module: input.module,
+    }),
+    suggestedValue: input.suggestedValue,
   }
 }
 
@@ -478,6 +544,7 @@ function buildProfileDiff(
   previousResume: StandardResume,
   nextResume: StandardResume,
   patch: ResumeOptimizationPatch,
+  locale: AnalysisLocale,
 ): ResumeOptimizationModuleDiff | null {
   if (!patch.profile) {
     return null
@@ -486,21 +553,25 @@ function buildProfileDiff(
   const entries: ResumeOptimizationDiffEntry[] = []
 
   if (patch.profile.headline) {
-    entries.push({
+    entries.push(createDiffEntry({
       key: 'profile-headline',
-      label: '个人标题',
-      before: formatLocalizedValue(previousResume.profile.headline),
-      after: formatLocalizedValue(nextResume.profile.headline),
-    })
+      label: locale === 'en' ? 'Headline' : '个人标题',
+      currentValue: formatLocalizedValue(previousResume.profile.headline, locale),
+      locale,
+      module: 'profile',
+      suggestedValue: formatLocalizedValue(nextResume.profile.headline, locale),
+    }))
   }
 
   if (patch.profile.summary) {
-    entries.push({
+    entries.push(createDiffEntry({
       key: 'profile-summary',
-      label: '个人摘要',
-      before: formatLocalizedValue(previousResume.profile.summary),
-      after: formatLocalizedValue(nextResume.profile.summary),
-    })
+      label: locale === 'en' ? 'Summary' : '个人摘要',
+      currentValue: formatLocalizedValue(previousResume.profile.summary, locale),
+      locale,
+      module: 'profile',
+      suggestedValue: formatLocalizedValue(nextResume.profile.summary, locale),
+    }))
   }
 
   if (entries.length === 0) {
@@ -509,7 +580,7 @@ function buildProfileDiff(
 
   return {
     module: 'profile',
-    ...getModulePresentation('profile'),
+    ...getModulePresentation('profile', locale),
     entries,
   }
 }
@@ -518,6 +589,7 @@ function buildExperiencesDiff(
   previousResume: StandardResume,
   nextResume: StandardResume,
   patch: ResumeOptimizationPatch,
+  locale: AnalysisLocale,
 ): ResumeOptimizationModuleDiff | null {
   if (!patch.experiences || patch.experiences.length === 0) {
     return null
@@ -533,29 +605,43 @@ function buildExperiencesDiff(
       return
     }
 
-    const scopeLabel = `${previousItem.companyName.zh} · ${previousItem.role.zh}`
+    const scopeLabel =
+      locale === 'en'
+        ? `${previousItem.companyName.en || previousItem.companyName.zh} · ${
+            previousItem.role.en || previousItem.role.zh
+          }`
+        : `${previousItem.companyName.zh} · ${previousItem.role.zh}`
 
     if (item.summary) {
-      entries.push({
+      entries.push(createDiffEntry({
         key: `experience-${item.index}-summary`,
-        label: `${scopeLabel} / 经历摘要`,
-        before: formatLocalizedValue(previousItem.summary),
-        after: formatLocalizedValue(nextItem.summary),
-      })
+        label: locale === 'en' ? `${scopeLabel} / Summary` : `${scopeLabel} / 经历摘要`,
+        currentValue: formatLocalizedValue(previousItem.summary, locale),
+        locale,
+        module: 'experiences',
+        suggestedValue: formatLocalizedValue(nextItem.summary, locale),
+      }))
     }
 
     if (item.highlights) {
       item.highlights.forEach((_, highlightIndex) => {
-        entries.push({
+        entries.push(createDiffEntry({
           key: `experience-${item.index}-highlight-${highlightIndex}`,
-          label: `${scopeLabel} / 亮点 ${highlightIndex + 1}`,
-          before: formatLocalizedValue(
+          label:
+            locale === 'en'
+              ? `${scopeLabel} / Highlight ${highlightIndex + 1}`
+              : `${scopeLabel} / 亮点 ${highlightIndex + 1}`,
+          currentValue: formatLocalizedValue(
             previousItem.highlights[highlightIndex] as LocalizedText | undefined,
+            locale,
           ),
-          after: formatLocalizedValue(
+          locale,
+          module: 'experiences',
+          suggestedValue: formatLocalizedValue(
             nextItem.highlights[highlightIndex] as LocalizedText | undefined,
+            locale,
           ),
-        })
+        }))
       })
     }
   })
@@ -566,7 +652,7 @@ function buildExperiencesDiff(
 
   return {
     module: 'experiences',
-    ...getModulePresentation('experiences'),
+    ...getModulePresentation('experiences', locale),
     entries,
   }
 }
@@ -575,6 +661,7 @@ function buildProjectsDiff(
   previousResume: StandardResume,
   nextResume: StandardResume,
   patch: ResumeOptimizationPatch,
+  locale: AnalysisLocale,
 ): ResumeOptimizationModuleDiff | null {
   if (!patch.projects || patch.projects.length === 0) {
     return null
@@ -590,29 +677,43 @@ function buildProjectsDiff(
       return
     }
 
-    const scopeLabel = `${previousItem.name.zh} · ${previousItem.role.zh}`
+    const scopeLabel =
+      locale === 'en'
+        ? `${previousItem.name.en || previousItem.name.zh} · ${
+            previousItem.role.en || previousItem.role.zh
+          }`
+        : `${previousItem.name.zh} · ${previousItem.role.zh}`
 
     if (item.summary) {
-      entries.push({
+      entries.push(createDiffEntry({
         key: `project-${item.index}-summary`,
-        label: `${scopeLabel} / 项目摘要`,
-        before: formatLocalizedValue(previousItem.summary),
-        after: formatLocalizedValue(nextItem.summary),
-      })
+        label: locale === 'en' ? `${scopeLabel} / Summary` : `${scopeLabel} / 项目摘要`,
+        currentValue: formatLocalizedValue(previousItem.summary, locale),
+        locale,
+        module: 'projects',
+        suggestedValue: formatLocalizedValue(nextItem.summary, locale),
+      }))
     }
 
     if (item.highlights) {
       item.highlights.forEach((_, highlightIndex) => {
-        entries.push({
+        entries.push(createDiffEntry({
           key: `project-${item.index}-highlight-${highlightIndex}`,
-          label: `${scopeLabel} / 亮点 ${highlightIndex + 1}`,
-          before: formatLocalizedValue(
+          label:
+            locale === 'en'
+              ? `${scopeLabel} / Highlight ${highlightIndex + 1}`
+              : `${scopeLabel} / 亮点 ${highlightIndex + 1}`,
+          currentValue: formatLocalizedValue(
             previousItem.highlights[highlightIndex] as LocalizedText | undefined,
+            locale,
           ),
-          after: formatLocalizedValue(
+          locale,
+          module: 'projects',
+          suggestedValue: formatLocalizedValue(
             nextItem.highlights[highlightIndex] as LocalizedText | undefined,
+            locale,
           ),
-        })
+        }))
       })
     }
   })
@@ -623,7 +724,7 @@ function buildProjectsDiff(
 
   return {
     module: 'projects',
-    ...getModulePresentation('projects'),
+    ...getModulePresentation('projects', locale),
     entries,
   }
 }
@@ -632,6 +733,7 @@ function buildHighlightsDiff(
   previousResume: StandardResume,
   nextResume: StandardResume,
   patch: ResumeOptimizationPatch,
+  locale: AnalysisLocale,
 ): ResumeOptimizationModuleDiff | null {
   if (!patch.highlights || patch.highlights.length === 0) {
     return null
@@ -640,23 +742,37 @@ function buildHighlightsDiff(
   const entries: ResumeOptimizationDiffEntry[] = []
 
   patch.highlights.forEach((_, index) => {
-    entries.push({
+    entries.push(createDiffEntry({
       key: `highlight-${index}-title`,
-      label: `亮点 ${index + 1} / 标题`,
-      before: formatLocalizedValue(previousResume.highlights[index]?.title),
-      after: formatLocalizedValue(nextResume.highlights[index]?.title),
-    })
-    entries.push({
+      label:
+        locale === 'en' ? `Highlight ${index + 1} / Title` : `亮点 ${index + 1} / 标题`,
+      currentValue: formatLocalizedValue(previousResume.highlights[index]?.title, locale),
+      locale,
+      module: 'highlights',
+      suggestedValue: formatLocalizedValue(nextResume.highlights[index]?.title, locale),
+    }))
+    entries.push(createDiffEntry({
       key: `highlight-${index}-description`,
-      label: `亮点 ${index + 1} / 描述`,
-      before: formatLocalizedValue(previousResume.highlights[index]?.description),
-      after: formatLocalizedValue(nextResume.highlights[index]?.description),
-    })
+      label:
+        locale === 'en'
+          ? `Highlight ${index + 1} / Description`
+          : `亮点 ${index + 1} / 描述`,
+      currentValue: formatLocalizedValue(
+        previousResume.highlights[index]?.description,
+        locale,
+      ),
+      locale,
+      module: 'highlights',
+      suggestedValue: formatLocalizedValue(
+        nextResume.highlights[index]?.description,
+        locale,
+      ),
+    }))
   })
 
   return {
     module: 'highlights',
-    ...getModulePresentation('highlights'),
+    ...getModulePresentation('highlights', locale),
     entries,
   }
 }
@@ -666,16 +782,17 @@ function buildModuleDiffs(
   nextResume: StandardResume,
   patch: ResumeOptimizationPatch,
   changedModules: ResumeOptimizationModule[],
+  locale: AnalysisLocale,
 ): ResumeOptimizationModuleDiff[] {
   return changedModules.flatMap((module) => {
     const diff =
       module === 'profile'
-        ? buildProfileDiff(previousResume, nextResume, patch)
+        ? buildProfileDiff(previousResume, nextResume, patch, locale)
         : module === 'experiences'
-          ? buildExperiencesDiff(previousResume, nextResume, patch)
+          ? buildExperiencesDiff(previousResume, nextResume, patch, locale)
           : module === 'projects'
-            ? buildProjectsDiff(previousResume, nextResume, patch)
-            : buildHighlightsDiff(previousResume, nextResume, patch)
+            ? buildProjectsDiff(previousResume, nextResume, patch, locale)
+            : buildHighlightsDiff(previousResume, nextResume, patch, locale)
 
     return diff ? [diff] : []
   })
@@ -787,6 +904,8 @@ export class AiResumeOptimizationService {
     private readonly aiService: AiService,
     @Inject(ResumePublicationService)
     private readonly resumePublicationService: ResumePublicationService,
+    @Inject(ResumeOptimizationResultCacheService)
+    private readonly resultCacheService: ResumeOptimizationResultCacheService,
   ) {}
 
   async generateSuggestion(
@@ -796,7 +915,7 @@ export class AiResumeOptimizationService {
     const locale = input.locale ?? 'zh'
 
     if (!instruction) {
-      throw new BadRequestException('Instruction is required')
+      throw new BadRequestException('请先提供目标岗位、JD 或优化要求')
     }
 
     const draft = await this.resumePublicationService.getDraft()
@@ -810,6 +929,7 @@ export class AiResumeOptimizationService {
     const suggestedResume = applyPatch(draft.resume, payload.patch)
     const validationResult = validateStandardResume(suggestedResume)
     const changedModules = detectChangedModules(draft.resume, suggestedResume)
+    const createdAt = new Date().toISOString()
 
     if (!validationResult.valid) {
       throw new BadGatewayException(
@@ -817,35 +937,43 @@ export class AiResumeOptimizationService {
       )
     }
 
-    return {
-      summary: payload.summary,
-      focusAreas: payload.focusAreas,
+    const cachedResult = this.resultCacheService.storeResult({
       changedModules,
-      moduleDiffs: buildModuleDiffs(
-        draft.resume,
-        suggestedResume,
-        payload.patch,
-        changedModules,
-      ),
-      applyPayload: {
-        draftUpdatedAt: draft.updatedAt,
-        patch: payload.patch,
+      createdAt,
+      detailsByLocale: {
+        [locale]: this.buildResultDetail({
+          changedModules,
+          createdAt,
+          currentLocale: locale,
+          focusAreas: payload.focusAreas,
+          nextResume: suggestedResume,
+          patch: payload.patch,
+          previousResume: draft.resume,
+          providerSummary,
+          summary: payload.summary,
+        }),
       },
-      suggestedResume,
-      providerSummary,
-    }
+      draftUpdatedAt: draft.updatedAt,
+      patch: payload.patch,
+    })
+
+    return cachedResult.detailsByLocale[locale] as GenerateResumeOptimizationResult
+  }
+
+  getSuggestionResult(resultId: string, locale: AnalysisLocale) {
+    return this.resultCacheService.getResultDetail(resultId, locale)
   }
 
   async applySuggestion(input: ApplyResumeOptimizationInput) {
     const selectedModules = normalizeModules(input.modules)
+    const cachedResult = this.resultCacheService.getResultForApply(input.resultId)
     const draft = await this.resumePublicationService.getDraft()
 
-    if (draft.updatedAt !== input.draftUpdatedAt) {
+    if (draft.updatedAt !== cachedResult.draftUpdatedAt) {
       throw new ConflictException('当前草稿已发生变化，请重新生成建议稿后再应用')
     }
 
-    const validatedPatch = validatePatch(input.patch, draft.resume)
-    const selectedPatch = pickPatchByModules(validatedPatch, selectedModules)
+    const selectedPatch = pickPatchByModules(cachedResult.patch, selectedModules)
     const nextResume = applyPatch(draft.resume, selectedPatch)
     const appliedModules = detectChangedModules(draft.resume, nextResume)
 
@@ -862,6 +990,39 @@ export class AiResumeOptimizationService {
     }
 
     return this.resumePublicationService.updateDraft(nextResume)
+  }
+
+  private buildResultDetail(input: {
+    changedModules: ResumeOptimizationModule[]
+    createdAt: string
+    currentLocale: AnalysisLocale
+    focusAreas: string[]
+    nextResume: StandardResume
+    patch: ResumeOptimizationPatch
+    previousResume: StandardResume
+    providerSummary: {
+      provider: string
+      model: string
+      mode: string
+    }
+    summary: string
+  }): GenerateResumeOptimizationResult {
+    return {
+      resultId: '',
+      locale: input.currentLocale,
+      summary: input.summary,
+      focusAreas: input.focusAreas,
+      changedModules: input.changedModules,
+      moduleDiffs: buildModuleDiffs(
+        input.previousResume,
+        input.nextResume,
+        input.patch,
+        input.changedModules,
+        input.currentLocale,
+      ),
+      createdAt: input.createdAt,
+      providerSummary: input.providerSummary,
+    }
   }
 
   private async generateProviderSuggestion(
@@ -990,8 +1151,11 @@ export class AiResumeOptimizationService {
         '1. Keep all factual data stable. Do not invent new companies, projects, dates, links, email, phone, or skills.',
         '2. Only rewrite narrative fields in the allowed patch structure.',
         '3. Every localized field must include both zh and en strings.',
-        '4. Use existing experience/project indexes only.',
-        '5. Return JSON only and match the schema exactly.',
+        '4. zh fields must be Chinese-first. en fields must be English-only. Never concatenate "中文/English" labels in the same field.',
+        '5. If one locale cannot be improved reliably, keep the original field value instead of mixing another language into it.',
+        '6. Use existing experience/project indexes only.',
+        '7. Make every rewritten field defensible: the new wording should clearly support the target role and avoid unsupported metrics.',
+        '8. Return JSON only and match the schema exactly.',
         '',
         `Instruction:\n${instruction}`,
         '',
@@ -1007,8 +1171,11 @@ export class AiResumeOptimizationService {
       '1. 保持事实信息稳定，不要虚构新的公司、项目、日期、链接、邮箱、电话或技能。',
       '2. 只能改写允许的 narrative 字段，并严格使用 patch 结构。',
       '3. 每个多语言字段都必须同时返回 zh 和 en。',
-      '4. experiences / projects 只能使用现有 index。',
-      '5. 只能输出 JSON，不要输出 Markdown 和解释文字。',
+      '4. zh 字段只写中文表达，en 字段只写英文表达，不要在同一个字段里拼接“中文：/English:”这类标签。',
+      '5. 如果某个语言版本没有把握，请保留原字段值，不要把另一种语言硬塞进去。',
+      '6. experiences / projects 只能使用现有 index。',
+      '7. 每个被改写字段都要能解释“为什么适合目标岗位”，不要加入没有事实依据的指标。',
+      '8. 只能输出 JSON，不要输出 Markdown 和解释文字。',
       '',
       `输入内容：\n${instruction}`,
       '',

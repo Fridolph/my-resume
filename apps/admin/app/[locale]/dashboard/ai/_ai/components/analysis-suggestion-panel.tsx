@@ -107,11 +107,11 @@ export function AnalysisSuggestionPanel({
                     <div className="grid gap-3 md:grid-cols-2">
                       <div className="status-box">
                         <strong>当前草稿</strong>
-                        <span>{entry.before}</span>
+                        <span>{entry.currentValue}</span>
                       </div>
                       <div className="status-box">
                         <strong>AI 建议稿</strong>
-                        <span>{entry.after}</span>
+                        <span>{entry.suggestedValue}</span>
                       </div>
                     </div>
                   </div>

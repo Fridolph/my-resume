@@ -2,8 +2,8 @@ import type {
   LocalizedText,
   ResumeDraftSnapshot,
   ResumeHighlightItem,
-  StandardResume,
 } from './resume.types'
+import type { ApiRequestInput } from './client.types'
 
 /**
  * AI 工作台场景
@@ -107,6 +107,36 @@ export interface AiWorkbenchCachedReportSummary {
 export interface TriggerAiWorkbenchAnalysisResult {
   cached: boolean
   report: AiWorkbenchReport
+  usageRecordId: string
+}
+
+export type AiUsageRecordOperationType = 'analysis-report' | 'resume-optimization'
+export type AiUsageRecordStatus = 'succeeded' | 'failed'
+export type AiUsageRecordFilterType = 'all' | AiUsageRecordOperationType
+
+export interface AiUsageRecordSummary {
+  id: string
+  operationType: AiUsageRecordOperationType
+  scenario: AiWorkbenchScenario
+  locale: AiWorkbenchLocale
+  inputPreview: string
+  summary: string | null
+  provider: string
+  model: string
+  mode: string
+  generator: AiWorkbenchReportGenerator
+  status: AiUsageRecordStatus
+  relatedReportId: string | null
+  relatedResultId: string | null
+  errorMessage: string | null
+  durationMs: number
+  createdAt: string
+  scoreLabel?: string
+  scoreValue?: number
+}
+
+export interface AiUsageRecordDetail extends AiUsageRecordSummary {
+  detail: unknown | null
 }
 
 /**
@@ -160,8 +190,10 @@ export interface AiResumeOptimizationPatch {
 export interface AiResumeOptimizationDiffEntry {
   key: string
   label: string
-  before: string
-  after: string
+  currentValue: string
+  reason: string
+  suggestion: string
+  suggestedValue: string
 }
 
 /**
@@ -180,29 +212,43 @@ export interface AiResumeOptimizationModuleDiff {
 export interface ApplyAiResumeOptimizationInput {
   apiBaseUrl: string
   accessToken: string
-  draftUpdatedAt: string
+  resultId: string
   modules: AiResumeOptimizationChangedModule[]
-  patch: AiResumeOptimizationPatch
 }
 
 /**
- * 建议生成结果
+ * 建议结果摘要/详情
  */
-export interface AiResumeOptimizationResult {
+export interface AiResumeOptimizationResultDetail {
+  resultId: string
+  usageRecordId?: string
+  locale: AiWorkbenchLocale
   summary: string
   focusAreas: string[]
   changedModules: AiResumeOptimizationChangedModule[]
   moduleDiffs: AiResumeOptimizationModuleDiff[]
-  applyPayload: {
-    draftUpdatedAt: string
-    patch: AiResumeOptimizationPatch
-  }
-  suggestedResume: StandardResume
+  createdAt: string
   providerSummary: {
     provider: string
     model: string
     mode: string
   }
+}
+
+export type AiResumeOptimizationResult = AiResumeOptimizationResultDetail
+
+export interface FetchAiResumeOptimizationResultInput extends RuntimeInput {
+  locale: AiWorkbenchLocale
+  resultId: string
+}
+
+export interface FetchAiUsageHistoryInput extends RuntimeInput {
+  limit?: number
+  type?: AiUsageRecordFilterType
+}
+
+export interface FetchAiUsageRecordDetailInput extends RuntimeInput {
+  recordId: string
 }
 
 /**
@@ -249,6 +295,7 @@ export interface AnalysisInput extends RuntimeInput {
 export interface ResumeOptimizationInput extends RuntimeInput {
   instruction: string
   locale: AiWorkbenchLocale
+  requestInit?: ApiRequestInput['requestInit']
 }
 
 /**

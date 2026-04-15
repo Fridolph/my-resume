@@ -1,6 +1,9 @@
 import { defaultApiClient as Alova } from './client'
 import type {
+  AiResumeOptimizationResultDetail,
   AiResumeOptimizationResult,
+  AiUsageRecordDetail,
+  AiUsageRecordSummary,
   AiWorkbenchCachedReportSummary,
   AiWorkbenchReport,
   AiWorkbenchRuntimeSummary,
@@ -8,6 +11,9 @@ import type {
   ApplyAiResumeOptimizationInput,
   ApplyAiResumeOptimizationResult,
   ExtractTextFromFileInput,
+  FetchAiResumeOptimizationResultInput,
+  FetchAiUsageHistoryInput,
+  FetchAiUsageRecordDetailInput,
   FileExtractionResult,
   ResumeOptimizationInput,
   RuntimeInput,
@@ -23,7 +29,13 @@ export type {
   AiResumeOptimizationPatch,
   AiResumeOptimizationProfilePatch,
   AiResumeOptimizationProjectPatch,
+  AiResumeOptimizationResultDetail,
   AiResumeOptimizationResult,
+  AiUsageRecordDetail,
+  AiUsageRecordFilterType,
+  AiUsageRecordOperationType,
+  AiUsageRecordStatus,
+  AiUsageRecordSummary,
   AiWorkbenchCachedReportSummary,
   AiWorkbenchLocale,
   AiWorkbenchReport,
@@ -38,6 +50,9 @@ export type {
   ApplyAiResumeOptimizationResult,
   ExtractedFileType,
   ExtractTextFromFileInput,
+  FetchAiResumeOptimizationResultInput,
+  FetchAiUsageHistoryInput,
+  FetchAiUsageRecordDetailInput,
   FileExtractionResult,
   ResumeOptimizationInput,
   RuntimeInput,
@@ -56,6 +71,30 @@ export function createFetchAiWorkbenchRuntimeMethod(input: RuntimeInput) {
     pathname: '/ai/reports/runtime',
     accessToken: input.accessToken,
     fallbackErrorMessage: 'AI 工作台运行时信息加载失败',
+  })
+}
+
+export function createFetchAiUsageHistoryMethod(input: FetchAiUsageHistoryInput) {
+  return Alova.createMethod<AiUsageRecordSummary[]>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: '/ai/reports/history',
+    accessToken: input.accessToken,
+    query: {
+      limit: input.limit,
+      type: input.type,
+    },
+    fallbackErrorMessage: 'AI 调用记录加载失败',
+    transform: (payload) =>
+      ((payload as { records?: AiUsageRecordSummary[] }).records ?? []) as AiUsageRecordSummary[],
+  })
+}
+
+export function createFetchAiUsageRecordDetailMethod(input: FetchAiUsageRecordDetailInput) {
+  return Alova.createMethod<AiUsageRecordDetail>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: `/ai/reports/history/${input.recordId}`,
+    accessToken: input.accessToken,
+    fallbackErrorMessage: 'AI 调用记录详情加载失败',
   })
 }
 
@@ -102,7 +141,28 @@ export function createGenerateAiResumeOptimizationMethod(input: ResumeOptimizati
       instruction: input.instruction,
       locale: input.locale,
     }),
+    requestInit: input.requestInit,
     fallbackErrorMessage: '结构化简历建议生成失败，请稍后重试',
+  })
+}
+
+/**
+ * 构造读取结构化建议结果 Method
+ *
+ * @param input 请求参数
+ * @returns 结果详情请求 Method
+ */
+export function createFetchAiResumeOptimizationResultMethod(
+  input: FetchAiResumeOptimizationResultInput,
+) {
+  return Alova.createMethod<AiResumeOptimizationResultDetail>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: `/ai/reports/resume-optimize/results/${input.resultId}`,
+    accessToken: input.accessToken,
+    query: {
+      locale: input.locale,
+    },
+    fallbackErrorMessage: '结构化简历建议结果加载失败，请稍后重试',
   })
 }
 
@@ -122,9 +182,8 @@ export function createApplyAiResumeOptimizationMethod(input: ApplyAiResumeOptimi
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      draftUpdatedAt: input.draftUpdatedAt,
+      resultId: input.resultId,
       modules: input.modules,
-      patch: input.patch,
     }),
     fallbackErrorMessage: 'AI 建议稿应用失败，请稍后重试',
   })

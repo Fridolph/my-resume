@@ -37,6 +37,14 @@ export function getAdminNavigationItems(locale: AppLocale): AdminNavigationItem[
     eyebrow: messages.aiEyebrow,
   },
   {
+    key: 'optimizationHistory',
+    href: '/dashboard/ai/optimization-history',
+    title: messages.optimizationHistoryTitle,
+    description: messages.optimizationHistoryDescription,
+    shortLabel: messages.optimizationHistoryShortLabel,
+    eyebrow: messages.optimizationHistoryEyebrow,
+  },
+  {
     key: 'publish',
     href: '/dashboard/publish',
     title: messages.publishTitle,
@@ -55,9 +63,9 @@ export function getAdminPageMeta(pathname: string, locale: AppLocale): AdminNavi
     return exactMatch
   }
 
-  const nestedMatch = items.find(
-    (item) => item.href !== '/dashboard' && pathname.startsWith(item.href),
-  )
+  const nestedMatch = items
+    .filter((item) => item.href !== '/dashboard' && pathname.startsWith(item.href))
+    .sort((firstItem, secondItem) => secondItem.href.length - firstItem.href.length)[0]
 
   return nestedMatch ?? items[0]
 }
