@@ -82,7 +82,7 @@ const scenarioCards = {
   },
   'resume-review': {
     title: '简历优化建议',
-    description: '围绕当前标准简历输出结构化建议，再由用户决定是否应用到草稿。',
+    description: '直接基于后台当前草稿生成结构化建议与 diff，再由用户决定是否应用到草稿。',
   },
   'offer-compare': {
     title: 'Offer 对比建议',
@@ -203,8 +203,8 @@ export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
 
   const isAdmin = Boolean(currentUser?.capabilities.canTriggerAiAnalysis)
   const roleMessage = isAdmin
-    ? '当前账号可继续接入上传、真实分析和结果阅读。'
-    : 'viewer 当前只允许查看缓存结果与预设体验，不能上传文件或触发真实分析。'
+    ? '当前账号可直接分析当前草稿、查看 diff，并按模块写回后台草稿。'
+    : 'viewer 当前只允许查看缓存结果与预设体验，不能分析当前草稿或触发新的真实分析。'
 
   const cachedReportsPanel = accessToken ? (
     <AiCachedReportsPanel
@@ -217,7 +217,7 @@ export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
   function handleExtractedText(result: FileExtractionResult) {
     setAnalysisContent(result.text)
     setAnalysisHelperMessage(
-      `已将 ${result.fileName} 的提取结果同步到分析输入区，可直接继续编辑或触发分析。`,
+      `已将 ${result.fileName} 的提取结果同步到优化要求输入区，可直接整理后分析当前草稿。`,
     )
   }
 
@@ -328,6 +328,7 @@ export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
           apiBaseUrl={DEFAULT_API_BASE_URL}
           canAnalyze={isAdmin}
           content={analysisContent}
+          draftSnapshot={draftSnapshot}
           helperMessage={analysisHelperMessage}
           inputAccessory={
             <AiFileExtractionPanel
@@ -351,7 +352,7 @@ export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
             <p className="eyebrow">草稿反馈</p>
             <CardTitle>当前草稿快照</CardTitle>
             <CardDescription>
-              apply 成功后这里会立即刷新，减少在多个后台页面之间来回切换确认的成本。
+              apply 成功后这里会立即刷新，帮助确认当前草稿是否已经接收 AI 建议，而不必马上切回编辑器。
             </CardDescription>
           </CardHeader>
           <CardContent className="stack">
@@ -394,22 +395,21 @@ export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
           <p className="eyebrow">运行时摘要</p>
           <CardTitle>Provider 与边界</CardTitle>
           <CardDescription>
-            在这轮 UI 升级里，AI
-            页面仍然保持“输入、结论、应用”三层节奏，不去扩成复杂多步流程。
+            在这轮收口里，AI 页面主路径改成“当前草稿优化”，文件提取和分析报告都作为辅助能力保留。
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 xl:grid-cols-3">
           <div className="status-box">
             <strong>输入层</strong>
-            <span>文件提取和手工输入都统一沉淀为分析内容，便于继续做缓存和重试。</span>
+            <span>当前草稿是唯一优化基线；JD、目标岗位和优化要求只负责告诉 AI 应该朝什么方向改。</span>
           </div>
           <div className="status-box">
             <strong>结论层</strong>
-            <span>报告需要既有可读结论，也有结构化理由和建议，避免只给模糊答案。</span>
+            <span>输出同时保留可阅读结论与结构化 diff，既方便理解原因，也方便后续按模块应用。</span>
           </div>
           <div className="status-box">
             <strong>应用层</strong>
-            <span>最终是否写回草稿由用户确认，后台不做无脑自动覆盖。</span>
+            <span>最终是否写回草稿由用户确认，后台继续只应用勾选模块，不做无脑自动覆盖。</span>
           </div>
         </CardContent>
       </Card>

@@ -84,7 +84,7 @@ vi.mock('next-intl', () => ({
     (key: string): string => {
       const map: Record<string, string> = {
         pageDescription:
-          '这一页先把上传、分析、缓存报告、草稿回写与运行时状态整理为稳定工作台。',
+          '这一页先把“当前草稿优化”收口为 AI 主路径，再把文件提取、辅助分析报告、缓存回看与草稿回写整理成稳定工作台。',
         pageTitle: 'AI 工作台',
       }
 
@@ -132,18 +132,27 @@ vi.mock('../components/analysis-panel', () => ({
   AiAnalysisPanel: ({
     canAnalyze,
     content,
+    draftSnapshot,
     inputAccessory,
     onDraftApplied,
   }: {
     canAnalyze: boolean
     content: string
+    draftSnapshot?: {
+      resume: {
+        profile: {
+          headline: string
+        }
+      }
+    } | null
     inputAccessory?: ReactNode
     onDraftApplied?: (snapshot: ResumeDraftSnapshot) => void
   }) => (
     <div>
       {inputAccessory}
       <span>{canAnalyze ? '真实分析面板占位' : '真实分析只读占位'}</span>
-      <span>{`当前分析内容：${content || '空'}`}</span>
+      <span>{`当前优化要求：${content || '空'}`}</span>
+      <span>{`当前草稿基线：${draftSnapshot?.resume.profile.headline ?? '空'}`}</span>
       {canAnalyze ? (
         <button
           onClick={() =>
@@ -294,7 +303,7 @@ describe('AdminAiWorkbenchShell', () => {
     expect(screen.getByText('简历优化建议')).toBeInTheDocument()
     expect(screen.getByText('Offer 对比建议')).toBeInTheDocument()
     expect(
-      screen.getByText('当前账号可继续接入上传、真实分析和结果阅读。'),
+      screen.getByText('当前账号可直接分析当前草稿、查看 diff，并按模块写回后台草稿。'),
     ).toBeInTheDocument()
     expect(await screen.findByText('文件提取面板占位')).toBeInTheDocument()
     expect(await screen.findByText('真实分析面板占位')).toBeInTheDocument()
@@ -305,14 +314,15 @@ describe('AdminAiWorkbenchShell', () => {
       screen.getByText('admin 也可在这里回看缓存或预设结果，用于对照真实分析输出。'),
     ).toBeInTheDocument()
     expect(await screen.findByText('当前还没有可阅读的缓存报告。')).toBeInTheDocument()
-    expect(screen.getByText('当前分析内容：空')).toBeInTheDocument()
+    expect(screen.getByText('当前优化要求：空')).toBeInTheDocument()
+    expect(screen.getByText('当前草稿基线：当前草稿标题')).toBeInTheDocument()
     expect(await screen.findByText('当前草稿快照')).toBeInTheDocument()
     expect(screen.getByText('当前草稿标题')).toBeInTheDocument()
     expect(screen.getByText('当前草稿摘要')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: '模拟提取完成' }))
 
-    expect(screen.getByText('当前分析内容：resume text content')).toBeInTheDocument()
+    expect(screen.getByText('当前优化要求：resume text content')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: '模拟应用草稿' }))
 
@@ -347,7 +357,7 @@ describe('AdminAiWorkbenchShell', () => {
     expect(await screen.findByText('当前账号：viewer')).toBeInTheDocument()
     expect(
       screen.getByText(
-        'viewer 当前只允许查看缓存结果与预设体验，不能上传文件或触发真实分析。',
+        'viewer 当前只允许查看缓存结果与预设体验，不能分析当前草稿或触发新的真实分析。',
       ),
     ).toBeInTheDocument()
     expect(await screen.findByText('缓存报告与预设体验')).toBeInTheDocument()

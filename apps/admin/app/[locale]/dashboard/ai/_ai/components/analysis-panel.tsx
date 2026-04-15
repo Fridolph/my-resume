@@ -9,6 +9,7 @@ import {
   createGenerateAiResumeOptimizationMethod,
   createTriggerAiWorkbenchAnalysisMethod,
 } from '../services/ai-workbench-api'
+import type { ResumeDraftSummarySnapshot } from '../../../resume/_resume/types/resume.types'
 import type {
   AiResumeOptimizationChangedModule,
   AiResumeOptimizationResult,
@@ -32,6 +33,7 @@ interface AiAnalysisPanelProps {
   content: string
   createGenerateResumeOptimizationMethod?: typeof createGenerateAiResumeOptimizationMethod
   createTriggerAnalysisMethod?: typeof createTriggerAiWorkbenchAnalysisMethod
+  draftSnapshot?: ResumeDraftSummarySnapshot | null
   helperMessage?: string | null
   inputAccessory?: ReactNode
   onDraftApplied?: (snapshot: ApplyAiResumeOptimizationResult) => void
@@ -46,10 +48,10 @@ function renderReadOnlyState(inputAccessory?: ReactNode) {
       <div>
         <p className="eyebrow">真实分析</p>
         <h2>当前角色只读</h2>
-        <p className="muted">只有管理员可触发真实分析并写入新的报告结果。</p>
+        <p className="muted">只有管理员可分析当前草稿、生成 diff，并写回新的草稿结果。</p>
       </div>
       <div className="readonly-box">
-        viewer 当前只保留缓存报告体验，真实分析触发入口会在管理员链路中继续开放。
+        viewer 当前只保留缓存报告体验。当前草稿优化、真实分析与草稿回写入口只在管理员链路中开放。
       </div>
     </section>
   )
@@ -63,6 +65,7 @@ export function AiAnalysisPanel({
   content,
   createGenerateResumeOptimizationMethod = createGenerateAiResumeOptimizationMethod,
   createTriggerAnalysisMethod = createTriggerAiWorkbenchAnalysisMethod,
+  draftSnapshot,
   helperMessage,
   inputAccessory,
   onDraftApplied,
@@ -156,7 +159,7 @@ export function AiAnalysisPanel({
     const normalizedContent = content.trim()
 
     if (!normalizedContent) {
-      setErrorMessage('请先输入分析内容，或先通过文件提取生成输入文本。')
+      setErrorMessage('请先输入 JD、目标岗位或分析要求，再生成辅助分析报告。')
       setReport(null)
       return
     }
@@ -184,13 +187,7 @@ export function AiAnalysisPanel({
     const normalizedContent = content.trim()
 
     if (!normalizedContent) {
-      setSuggestionErrorMessage('请先输入 JD 或优化方向，再生成结构化建议。')
-      setSuggestion(null)
-      return
-    }
-
-    if (scenario !== 'resume-review') {
-      setSuggestionErrorMessage('结构化简历建议当前只支持“简历优化建议”场景。')
+      setSuggestionErrorMessage('请先输入 JD、目标岗位或优化要求，再分析当前草稿。')
       setSuggestion(null)
       return
     }
@@ -228,7 +225,7 @@ export function AiAnalysisPanel({
 
   function handleLinkSuggestionModule(module: AiResumeOptimizationChangedModule) {
     if (!suggestion) {
-      setModuleLinkMessage('请先生成结构化简历建议，再定位到具体改写模块。')
+      setModuleLinkMessage('请先分析当前草稿并生成结构化建议，再定位到具体改写模块。')
       return
     }
 
@@ -292,10 +289,11 @@ export function AiAnalysisPanel({
   return (
     <section className="card stack">
       <div>
-        <p className="eyebrow">真实分析</p>
-        <h2>输入内容并触发真实分析</h2>
+        <p className="eyebrow">当前草稿优化</p>
+        <h2>先基于当前草稿生成结构化建议</h2>
         <p className="muted">
-          当前阶段先保留同步最小闭环，让管理员直接验证 Provider、场景和结果结构。
+          当前阶段把简历优化主路径收口为“当前草稿 + 优化要求”。服务端会读取 DB
+          当前草稿、生成模块 diff，再由你决定是否写回后台草稿。
         </p>
       </div>
 
@@ -304,6 +302,7 @@ export function AiAnalysisPanel({
           applyFeedbackMessage={applyFeedbackMessage}
           applyPending={applyPending}
           content={content}
+          draftSnapshot={draftSnapshot}
           errorMessage={errorMessage}
           helperMessage={helperMessage}
           inputAccessory={inputAccessory}

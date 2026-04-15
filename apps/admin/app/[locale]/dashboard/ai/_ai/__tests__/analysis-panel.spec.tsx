@@ -6,7 +6,10 @@ import { useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { AiAnalysisPanel } from '../components/analysis-panel'
-import type { StandardResume } from '../../../resume/_resume/types/resume.types'
+import type {
+  ResumeDraftSummarySnapshot,
+  StandardResume,
+} from '../../../resume/_resume/types/resume.types'
 
 vi.mock('alova/client', async () => {
   const React = await import('react')
@@ -97,6 +100,29 @@ const runtimeSummary = {
   supportedScenarios: ['jd-match', 'resume-review', 'offer-compare'] as const,
 }
 
+const draftSummarySnapshot: ResumeDraftSummarySnapshot = {
+  status: 'draft',
+  updatedAt: '2026-03-31T09:00:00.000Z',
+  resume: {
+    meta: {
+      slug: 'standard-resume',
+      defaultLocale: 'zh',
+      locale: 'zh',
+    },
+    profile: {
+      headline: '当前草稿标题',
+      summary: '当前草稿摘要',
+    },
+    counts: {
+      education: 0,
+      experiences: 0,
+      projects: 0,
+      skills: 0,
+      highlights: 0,
+    },
+  },
+}
+
 function ControlledAnalysisPanel(props: {
   createApplyResumeOptimizationMethod?: typeof import('../services/ai-workbench-api').createApplyAiResumeOptimizationMethod
   canAnalyze: boolean
@@ -118,6 +144,7 @@ function ControlledAnalysisPanel(props: {
       apiBaseUrl="http://localhost:5577"
       canAnalyze={props.canAnalyze}
       content={content}
+      draftSnapshot={draftSummarySnapshot}
       helperMessage={props.helperMessage}
       onContentChange={setContent}
       onDraftApplied={props.onDraftApplied}
@@ -138,7 +165,7 @@ describe('AiAnalysisPanel', () => {
     expect(screen.getByText('当前角色只读')).toBeInTheDocument()
     expect(
       screen.getByText(
-        'viewer 当前只保留缓存报告体验，真实分析触发入口会在管理员链路中继续开放。',
+        'viewer 当前只保留缓存报告体验。当前草稿优化、真实分析与草稿回写入口只在管理员链路中开放。',
       ),
     ).toBeInTheDocument()
   })
@@ -195,17 +222,19 @@ describe('AiAnalysisPanel', () => {
     render(
       <ControlledAnalysisPanel
         canAnalyze
-        helperMessage="已将 resume.pdf 的提取结果同步到分析输入区。"
+        helperMessage="已将 resume.pdf 的提取结果同步到优化要求输入区，可直接整理后分析当前草稿。"
         initialContent="NestJS React TypeScript"
         createTriggerAnalysisMethod={createTriggerAnalysisMethod as any}
       />,
     )
 
     expect(
-      screen.getByText('已将 resume.pdf 的提取结果同步到分析输入区。'),
+      screen.getByText(
+        '已将 resume.pdf 的提取结果同步到优化要求输入区，可直接整理后分析当前草稿。',
+      ),
     ).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: '开始真实分析' }))
+    await user.click(screen.getByRole('button', { name: '生成辅助分析报告' }))
 
     await waitFor(() => {
       expect(triggerAnalysis).toHaveBeenCalledWith({
@@ -259,7 +288,7 @@ describe('AiAnalysisPanel', () => {
       />,
     )
 
-    await user.click(screen.getByRole('button', { name: '开始真实分析' }))
+    await user.click(screen.getByRole('button', { name: '生成辅助分析报告' }))
 
     expect(await screen.findByText('Provider request failed')).toBeInTheDocument()
   })
@@ -277,10 +306,10 @@ describe('AiAnalysisPanel', () => {
       />,
     )
 
-    await user.click(screen.getByRole('button', { name: '开始真实分析' }))
+    await user.click(screen.getByRole('button', { name: '生成辅助分析报告' }))
 
     expect(
-      await screen.findByText('请先输入分析内容，或先通过文件提取生成输入文本。'),
+      await screen.findByText('请先输入 JD、目标岗位或分析要求，再生成辅助分析报告。'),
     ).toBeInTheDocument()
     expect(triggerAnalysis).not.toHaveBeenCalled()
   })
@@ -331,13 +360,13 @@ describe('AiAnalysisPanel', () => {
       />,
     )
 
-    await user.click(screen.getByRole('button', { name: '开始真实分析' }))
+    await user.click(screen.getByRole('button', { name: '生成辅助分析报告' }))
     await screen.findByText('建议继续补充量化结果与职责边界。')
 
     await user.click(screen.getByRole('button', { name: '定位到 projects 改写模块' }))
 
     expect(
-      await screen.findByText('请先生成结构化简历建议，再定位到具体改写模块。'),
+      await screen.findByText('请先分析当前草稿并生成结构化建议，再定位到具体改写模块。'),
     ).toBeInTheDocument()
   })
 
@@ -479,9 +508,9 @@ describe('AiAnalysisPanel', () => {
       />,
     )
 
-    await user.click(screen.getByRole('button', { name: '开始真实分析' }))
+    await user.click(screen.getByRole('button', { name: '生成辅助分析报告' }))
     await screen.findByText('建议先补强个人摘要，再把项目成果写得更贴近岗位。')
-    await user.click(screen.getByRole('button', { name: '生成结构化简历建议' }))
+    await user.click(screen.getByRole('button', { name: '分析当前草稿并生成建议' }))
 
     await waitFor(() => {
       expect(generateResumeOptimization).toHaveBeenCalledWith({
@@ -493,20 +522,22 @@ describe('AiAnalysisPanel', () => {
     })
 
     expect(await screen.findByText('已生成结构化建议稿')).toBeInTheDocument()
-    expect(screen.getAllByText('模块：profile').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('影响模块：profile').length).toBeGreaterThan(0)
     expect(screen.getByText('个人定位与摘要')).toBeInTheDocument()
     expect(screen.getByText('个人摘要')).toBeInTheDocument()
     expect(screen.getAllByText('当前草稿').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('建议稿').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('AI 建议稿').length).toBeGreaterThan(0)
 
-    await user.click(screen.getByRole('checkbox', { name: '应用模块：projects' }))
+    await user.click(screen.getByRole('checkbox', { name: '应用此模块变更：projects' }))
     await user.click(screen.getByRole('button', { name: '定位到 projects 改写模块' }))
 
     expect(
       await screen.findByText('已定位到 projects 改写模块，可继续确认并应用。'),
     ).toBeInTheDocument()
-    expect(screen.getByRole('checkbox', { name: '应用模块：projects' })).toBeChecked()
-    await user.click(screen.getByRole('button', { name: '应用已选模块到当前草稿' }))
+    expect(
+      screen.getByRole('checkbox', { name: '应用此模块变更：projects' }),
+    ).toBeChecked()
+    await user.click(screen.getByRole('button', { name: '应用已选变更到当前草稿' }))
 
     await waitFor(() => {
       expect(applyResumeOptimization).toHaveBeenCalledWith({
@@ -538,9 +569,45 @@ describe('AiAnalysisPanel', () => {
     ).toBeInTheDocument()
   })
 
-  it('should restrict structured suggestion to resume-review scenario', async () => {
+  it('should allow current-draft suggestion generation regardless of helper report scenario', async () => {
     const user = userEvent.setup()
-    const generateResumeOptimization = vi.fn()
+    const generateResumeOptimization = vi.fn().mockResolvedValue({
+      summary: '已生成结构化建议稿',
+      focusAreas: [],
+      changedModules: ['profile'],
+      moduleDiffs: [
+        {
+          module: 'profile',
+          title: '个人定位与摘要',
+          reason: '摘要决定第一眼岗位定位。',
+          entries: [
+            {
+              key: 'profile-summary',
+              label: '个人摘要',
+              before: '原始摘要',
+              after: '建议摘要',
+            },
+          ],
+        },
+      ],
+      applyPayload: {
+        draftUpdatedAt: '2026-03-30T00:00:00.000Z',
+        patch: {
+          profile: {
+            summary: {
+              zh: '建议摘要',
+              en: 'Suggested summary',
+            },
+          },
+        },
+      },
+      suggestedResume: createTestResume(),
+      providerSummary: {
+        provider: 'qiniu',
+        model: 'deepseek-v3',
+        mode: 'openai-compatible',
+      },
+    })
     const createGenerateResumeOptimizationMethod = vi.fn((input) => ({
       send: () => generateResumeOptimization(input),
     }))
@@ -557,11 +624,15 @@ describe('AiAnalysisPanel', () => {
 
     await user.click(screen.getByLabelText('分析场景'))
     await user.click(await screen.findByRole('option', { name: 'Offer 对比建议' }))
-    await user.click(screen.getByRole('button', { name: '生成结构化简历建议' }))
+    await user.click(screen.getByRole('button', { name: '分析当前草稿并生成建议' }))
 
-    expect(
-      await screen.findByText('结构化简历建议当前只支持“简历优化建议”场景。'),
-    ).toBeInTheDocument()
-    expect(generateResumeOptimization).not.toHaveBeenCalled()
+    await waitFor(() => {
+      expect(generateResumeOptimization).toHaveBeenCalledWith({
+        apiBaseUrl: 'http://localhost:5577',
+        accessToken: 'demo-token',
+        instruction: '请根据 offer 内容给出建议',
+        locale: 'zh',
+      })
+    })
   })
 })
