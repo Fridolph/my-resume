@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader } from '@heroui/react/card'
 import { Chip } from '@heroui/react/chip'
 import dynamic from 'next/dynamic'
 import { useTranslations } from 'next-intl'
-import { memo, useEffect, useState, type ReactNode } from 'react'
+import { memo, useEffect, useState } from 'react'
 
 import type {
   ResumeLocale,
@@ -14,6 +14,7 @@ import {
   formatPublishedAt,
   readLocalizedText,
 } from '@shared/published-resume/published-resume-utils'
+import { PublishedResumeProfileIcon } from './published-resume-profile-icon'
 import styles from './hero.module.css'
 
 const contactItemClass =
@@ -95,31 +96,6 @@ function PhoneIcon() {
       />
     </svg>
   )
-}
-
-function ResumeProfileIcon({ name }: { name: string }) {
-  switch (name) {
-    case 'ri:github-fill':
-      return <GitHubMarkIcon />
-    case 'ri:article-line':
-      return <ArticleIcon />
-    case 'ri:code-s-slash-line':
-      return <CodeIcon />
-    case 'ri:dribbble-line':
-      return <DribbbleIcon />
-    case 'ri:sparkling-line':
-      return <SparklesIcon />
-    case 'ri:music-2-line':
-      return <MusicIcon />
-    case 'ri:robot-2-line':
-      return <RobotIcon />
-    case 'ri:link-m':
-    case 'ri:links-line':
-    case 'ri:external-link-line':
-      return <ExternalLinkIcon />
-    default:
-      return <ExternalLinkIcon />
-  }
 }
 
 function PublishedResumeHeroComponent({
@@ -312,7 +288,7 @@ function PublishedResumeHeroComponent({
                       target="_blank"
                       title={localizedLabel}>
                       <span className={styles.iconLinkInner}>
-                        <ResumeProfileIcon name={link.icon} />
+                        <PublishedResumeProfileIcon name={link.icon} />
                       </span>
                     </a>
                   )
@@ -367,7 +343,7 @@ function PublishedResumeHeroComponent({
                     className={`${styles.interestCard} ${interestCardClass}`}
                     key={`${interest.localizedLabel}-${interest.icon}`}>
                     <span className={styles.interestCardIcon}>
-                      <ResumeProfileIcon name={interest.icon} />
+                      <PublishedResumeProfileIcon name={interest.icon} />
                     </span>
                     <span className={styles.interestCardLabel}>
                       {interest.localizedLabel}
@@ -440,133 +416,3 @@ function PublishedResumeHeroComponent({
 
 export const PublishedResumeHero = memo(PublishedResumeHeroComponent)
 PublishedResumeHero.displayName = 'PublishedResumeHero'
-
-function BaseIcon({
-  children,
-  viewBox = '0 0 24 24',
-}: {
-  children: ReactNode
-  viewBox?: string
-}) {
-  return (
-    <svg aria-hidden="true" fill="none" height="18" viewBox={viewBox} width="18">
-      {children}
-    </svg>
-  )
-}
-
-function GitHubMarkIcon() {
-  return (
-    <BaseIcon viewBox="0 0 24 24">
-      <path
-        d="M12 3C7.03 3 3 7.12 3 12.2c0 4.07 2.58 7.52 6.16 8.74.45.09.61-.2.61-.46 0-.22-.01-.97-.01-1.76-2.5.55-3.03-1.1-3.03-1.1-.41-1.06-1-1.34-1-1.34-.82-.57.06-.56.06-.56.9.06 1.38.95 1.38.95.81 1.4 2.11 1 2.63.77.08-.6.31-1 .57-1.22-2-.23-4.11-1.02-4.11-4.58 0-1.02.36-1.85.95-2.5-.1-.24-.42-1.19.09-2.49 0 0 .77-.25 2.53.95A8.62 8.62 0 0 1 12 7.3c.77 0 1.54.11 2.26.33 1.75-1.2 2.52-.95 2.52-.95.52 1.3.2 2.25.1 2.49.59.65.95 1.48.95 2.5 0 3.57-2.11 4.34-4.13 4.57.32.28.61.84.61 1.7 0 1.22-.01 2.2-.01 2.5 0 .25.16.55.62.45A9.22 9.22 0 0 0 21 12.2C21 7.12 16.97 3 12 3Z"
-        fill="currentColor"
-      />
-    </BaseIcon>
-  )
-}
-
-function ArticleIcon() {
-  return (
-    <BaseIcon>
-      <path
-        d="M7 5.5h10a1.5 1.5 0 0 1 1.5 1.5v10A1.5 1.5 0 0 1 17 18.5H7A1.5 1.5 0 0 1 5.5 17V7A1.5 1.5 0 0 1 7 5.5Z"
-        stroke="currentColor"
-        strokeWidth="1.7"
-      />
-      <path
-        d="M9 9.25h6M9 12h6M9 14.75h3.5"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="1.7"
-      />
-    </BaseIcon>
-  )
-}
-
-function CodeIcon() {
-  return (
-    <BaseIcon>
-      <path
-        d="m8.25 8.5-3 3.5 3 3.5M15.75 8.5l3 3.5-3 3.5M13.25 6l-2.5 12"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="1.7"
-      />
-    </BaseIcon>
-  )
-}
-
-function DribbbleIcon() {
-  return (
-    <BaseIcon>
-      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.7" />
-      <path
-        d="M7 8.5c3.5 0 7 .78 10 2.25M8 16.5c1.5-2.83 4.1-5.63 7.75-7.75M10.25 4.5c1.75 2.18 3.27 4.82 4.25 8.25M5.25 11.75h13.5"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="1.5"
-      />
-    </BaseIcon>
-  )
-}
-
-function SparklesIcon() {
-  return (
-    <BaseIcon>
-      <path
-        d="m12 4 1.55 4.45L18 10l-4.45 1.55L12 16l-1.55-4.45L6 10l4.45-1.55L12 4Z"
-        stroke="currentColor"
-        strokeLinejoin="round"
-        strokeWidth="1.7"
-      />
-      <path
-        d="m18.5 4.75.45 1.3 1.3.45-1.3.45-.45 1.3-.45-1.3-1.3-.45 1.3-.45.45-1.3ZM5.5 14.75l.45 1.3 1.3.45-1.3.45-.45 1.3-.45-1.3-1.3-.45 1.3-.45.45-1.3Z"
-        fill="currentColor"
-      />
-    </BaseIcon>
-  )
-}
-
-function MusicIcon() {
-  return (
-    <BaseIcon>
-      <path
-        d="M15.5 5.5v8.25a2.25 2.25 0 1 1-1.5-2.12V7.25l-5 1.4v6.1a2.25 2.25 0 1 1-1.5-2.12V7.5l8-2Z"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="1.7"
-      />
-    </BaseIcon>
-  )
-}
-
-function RobotIcon() {
-  return (
-    <BaseIcon>
-      <path
-        d="M9.5 4.5h5M12 4.5v2.25M8 9.25h8a2.5 2.5 0 0 1 2.5 2.5v3A2.75 2.75 0 0 1 15.75 17.5h-7.5A2.75 2.75 0 0 1 5.5 14.75v-3A2.5 2.5 0 0 1 8 9.25ZM8 9.25V8a1.75 1.75 0 0 1 1.75-1.75h4.5A1.75 1.75 0 0 1 16 8v1.25M8.5 17.5v2M15.5 17.5v2M8 13h.01M16 13h.01M10 15.25h4"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="1.6"
-      />
-    </BaseIcon>
-  )
-}
-
-function ExternalLinkIcon() {
-  return (
-    <BaseIcon>
-      <path
-        d="M10 6.5H7.5A1.5 1.5 0 0 0 6 8v8.5A1.5 1.5 0 0 0 7.5 18h8.5a1.5 1.5 0 0 0 1.5-1.5V14M13 6h5v5M11.5 12.5 18 6"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="1.7"
-      />
-    </BaseIcon>
-  )
-}

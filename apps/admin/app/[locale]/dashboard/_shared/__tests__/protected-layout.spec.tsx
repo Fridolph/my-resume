@@ -206,7 +206,7 @@ describe('AdminProtectedLayout', () => {
     )
     expect(screen.getAllByRole('link', { name: '概览' })[0]).toHaveClass(
       'bg-blue-50',
-      'text-blue-700',
+      'text-[#333]',
     )
     expect(screen.getByTestId('admin-mobile-header')).toHaveClass('px-3', 'py-2.5')
     expect(screen.getByTestId('admin-mobile-header-secondary')).toBeInTheDocument()

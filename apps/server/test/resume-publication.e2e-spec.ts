@@ -182,6 +182,7 @@ describe('Resume publication flow (e2e)', () => {
     expect(markdownResponse.headers['content-disposition']).toContain(
       'standard-resume-en.md',
     )
+    expect(markdownResponse.headers['cache-control']).toContain('no-store')
     expect(markdownResponse.text).toContain('# Yinsheng Fu')
     expect(markdownResponse.text).toContain('## Summary')
     expect(markdownResponse.text).toContain('Publish Candidate')
@@ -192,6 +193,7 @@ describe('Resume publication flow (e2e)', () => {
 
     expect(pdfResponse.headers['content-type']).toContain('application/pdf')
     expect(pdfResponse.headers['content-disposition']).toContain('standard-resume-zh.pdf')
+    expect(pdfResponse.headers['cache-control']).toContain('no-store')
 
     const parser = new PDFParse({
       data: Buffer.isBuffer(pdfResponse.body)
@@ -203,10 +205,150 @@ describe('Resume publication flow (e2e)', () => {
       const result = await parser.getText()
 
       expect(result.text).toContain('已发布候选稿')
-      expect(result.text).toContain('个人简介')
+      expect(result.text).toContain('基本信息')
     } finally {
       await parser.destroy()
     }
+  })
+
+  it('should export the newest published snapshot immediately after republish', async () => {
+    const loginResponse = await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({
+        username: 'admin',
+        password: 'admin123456',
+      })
+      .expect(200)
+
+    const accessToken = loginResponse.body.accessToken as string
+
+    const baseResume = {
+      meta: {
+        slug: 'standard-resume',
+        version: 1,
+        defaultLocale: 'zh',
+        locales: ['zh', 'en'],
+      },
+      profile: {
+        fullName: {
+          zh: '付寅生',
+          en: 'Yinsheng Fu',
+        },
+        headline: {
+          zh: '首版',
+          en: 'First Publish',
+        },
+        summary: {
+          zh: '第一次发布',
+          en: 'First publish',
+        },
+        location: {
+          zh: '成都',
+          en: 'Chengdu',
+        },
+        email: 'demo@example.com',
+        phone: '+86 13800000000',
+        website: 'https://example.com',
+        hero: {
+          frontImageUrl: '/img/avatar.jpg',
+          backImageUrl: '/img/avatar2.jpg',
+          linkUrl: 'https://github.com/Fridolph/my-resume',
+          slogans: [
+            {
+              zh: '热爱Coding，生命不息，折腾不止',
+              en: 'Driven by coding, always building, always iterating',
+            },
+            {
+              zh: '羽毛球爱好者，快乐挥拍，球场飞翔',
+              en: 'Badminton lover, happy swings, full-court energy',
+            },
+          ],
+        },
+        links: [],
+        interests: [],
+      },
+      education: [],
+      experiences: [
+        {
+          companyName: {
+            zh: '示例公司',
+            en: 'Example Corp',
+          },
+          role: {
+            zh: '前端工程师',
+            en: 'Frontend Engineer',
+          },
+          employmentType: {
+            zh: '全职',
+            en: 'Full-time',
+          },
+          startDate: '2024-01',
+          endDate: '2024-06',
+          location: {
+            zh: '成都',
+            en: 'Chengdu',
+          },
+          summary: {
+            zh: '第一版工作经历',
+            en: 'First version experience',
+          },
+          highlights: [],
+          technologies: [],
+        },
+      ],
+      projects: [],
+      skills: [],
+      highlights: [],
+    }
+
+    await request(app.getHttpServer())
+      .put('/api/resume/draft')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send(baseResume)
+      .expect(200)
+
+    await request(app.getHttpServer())
+      .post('/api/resume/publish')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200)
+
+    const firstExport = await request(app.getHttpServer())
+      .get('/api/resume/published/export/markdown?locale=zh')
+      .expect(200)
+
+    expect(firstExport.text).toContain('2024-01 - 2024-06')
+
+    await request(app.getHttpServer())
+      .put('/api/resume/draft')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        ...baseResume,
+        experiences: [
+          {
+            ...baseResume.experiences[0],
+            endDate: '至今',
+            summary: {
+              zh: '第二版工作经历',
+              en: 'Second version experience',
+            },
+          },
+        ],
+      })
+      .expect(200)
+
+    await request(app.getHttpServer())
+      .post('/api/resume/publish')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200)
+
+    const secondExport = await request(app.getHttpServer())
+      .get('/api/resume/published/export/markdown?locale=zh')
+      .expect(200)
+
+    expect(secondExport.headers['cache-control']).toContain('no-store')
+    expect(secondExport.text).toContain('2024-01 - 至今')
+    expect(secondExport.text).toContain('第二版工作经历')
+    expect(secondExport.text).not.toContain('2024-01 - 2024-06')
   })
 
   it('should keep viewer read-only for draft and publish actions', async () => {

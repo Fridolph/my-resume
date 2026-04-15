@@ -27,8 +27,18 @@ describe('ResumePdfExportService', () => {
       const result = await parser.getText()
 
       expect(result.text).toContain('付寅生')
-      expect(result.text).toContain('个人简介')
-      expect(result.text).toContain('项目经历')
+      expect(result.text).toContain('基本信息')
+      expect(result.text).toContain('核心项目经历')
+      expect(result.text).toContain('专业技能')
+      expect(result.text).toContain('前端核心能力')
+      expect(result.text).toContain('Email: 249121486@qq.com')
+      expect(result.text).toContain('Phone: 16602835945')
+      expect(result.text).toContain('教育经历')
+      expect(result.text).toContain('职位与类型')
+      expect(result.text).not.toContain('在线简历:')
+      expect(result.text).not.toContain('GitHub:')
+      expect(result.text).not.toContain('技术博客:')
+      expect(result.text).not.toContain('95/100')
     } finally {
       await parser.destroy()
     }

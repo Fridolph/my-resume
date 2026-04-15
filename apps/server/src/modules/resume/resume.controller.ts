@@ -130,7 +130,7 @@ export class ResumeController {
       'Content-Disposition',
       `attachment; filename="${published.resume.meta.slug}-${locale}.md"`,
     )
-    this.applyPublicCacheHeaders(response, true)
+    this.applyExportNoStoreHeaders(response)
 
     response.status(HttpStatus.OK).send(markdown)
   }
@@ -163,7 +163,7 @@ export class ResumeController {
       'Content-Disposition',
       `attachment; filename="${published.resume.meta.slug}-${locale}.pdf"`,
     )
-    this.applyPublicCacheHeaders(response, true)
+    this.applyExportNoStoreHeaders(response)
 
     response.status(HttpStatus.OK).send(pdfBuffer)
   }
@@ -284,5 +284,12 @@ export class ResumeController {
     )
     response.setHeader('Pragma', 'no-cache')
     response.setHeader('Vary', 'Authorization, Cookie')
+  }
+
+  private applyExportNoStoreHeaders(response: Response) {
+    response.setHeader('Cache-Control', 'no-store, no-cache, max-age=0, must-revalidate')
+    response.setHeader('Pragma', 'no-cache')
+    response.setHeader('Expires', '0')
+    response.setHeader('Vary', 'Accept-Encoding')
   }
 }
