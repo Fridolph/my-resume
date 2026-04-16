@@ -22,7 +22,7 @@ services:
           'CMD',
           'node',
           '-e',
-          "fetch('http://127.0.0.1:5577/').then((response)=>{if(!response.ok)process.exit(1)}).catch(()=>process.exit(1))",
+          "fetch('http://127.0.0.1:5577/api').then((response)=>{if(!response.ok)process.exit(1)}).catch(()=>process.exit(1))",
         ]
       interval: 20s
       timeout: 10s

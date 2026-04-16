@@ -284,7 +284,7 @@ install_nginx_site_config() {
 healthcheck_url() {
   case "$1" in
     server)
-      printf '%s\n' 'http://127.0.0.1:5577/'
+      printf '%s\n' 'http://127.0.0.1:5577/api'
       ;;
     web)
       printf '%s\n' 'http://127.0.0.1:5555/zh'
