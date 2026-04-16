@@ -9,7 +9,6 @@ import type {
 } from '@shared/published-resume/types/published-resume.types'
 import { readLocalizedText } from '@shared/published-resume/published-resume-utils'
 import { createIndexedRenderKey } from './published-resume-render-key'
-import surfaceStyles from './published-resume-card-surface.module.css'
 import { PublishedResumeSectionCard } from './published-resume-section-card'
 
 interface PublishedResumeEducationSectionProps {
@@ -29,10 +28,9 @@ export function PublishedResumeEducationSection({
 
   return (
     <PublishedResumeSectionCard
-      description={t('education.description')}
       eyebrow={t('education.eyebrow')}
       title={t('education.title')}>
-      <div className="grid gap-4">
+      <div className="grid gap-0 divide-y divide-slate-200/70 dark:divide-white/8">
         {education.map((item, educationIndex) => {
           const educationKey = createIndexedRenderKey(educationIndex, [
             item.schoolName.zh,
@@ -43,7 +41,8 @@ export function PublishedResumeEducationSection({
 
           return (
             <article
-              className={`${surfaceStyles.timelineCardSurface} rounded-[28px] p-5 sm:p-6`}
+              className="grid gap-4 px-1 py-5 sm:px-2 sm:py-6"
+              data-testid="resume-education-item"
               key={educationKey}>
               <div className="grid gap-4">
                 <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">

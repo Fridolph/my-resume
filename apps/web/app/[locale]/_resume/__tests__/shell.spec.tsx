@@ -165,11 +165,20 @@ describe('PublishedResumeShell', () => {
     expect(screen.getByText('+86 13800000000')).toBeInTheDocument()
     expect(screen.getByText('羽毛球')).toBeInTheDocument()
     expect(screen.getByText('摄影')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '四川大学锦江学院' })).toBeInTheDocument()
     expect(screen.queryByText('https://example.com')).not.toBeInTheDocument()
+    expect(screen.queryByText('保留稳定学历信息，避免和项目型内容混排。')).not.toBeInTheDocument()
+    expect(screen.getAllByTestId('resume-education-item')[0]).not.toHaveClass('timelineCardSurface')
     expect(screen.getByRole('link', { name: '技术博客' })).toHaveAttribute(
       'href',
       'https://example.com/blog',
     )
+    expect(
+      await screen.findByText('聚焦过往公司的职责范围、业务场景与关键成果。'),
+    ).toBeInTheDocument()
+    expect(
+      await screen.findByText('按标准模型展示项目背景、职责、亮点与技术栈。'),
+    ).toBeInTheDocument()
     expect(await screen.findByRole('heading', { name: '前端架构落地' })).toBeInTheDocument()
     expect(await screen.findByRole('heading', { name: 'AI 工程化实践' })).toBeInTheDocument()
     expect(await screen.findByText('项目核心功能')).toBeInTheDocument()

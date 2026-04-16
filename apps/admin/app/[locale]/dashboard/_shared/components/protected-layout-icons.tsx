@@ -97,6 +97,30 @@ export function AdminNavIcon({
     )
   }
 
+  if (itemKey === 'optimizationHistory') {
+    return (
+      <svg aria-hidden="true" fill="none" height={size} viewBox="0 0 24 24" width={size}>
+        <path
+          d="M6.5 5.5h11A1.5 1.5 0 0 1 19 7v10a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 17V7a1.5 1.5 0 0 1 1.5-1.5Z"
+          stroke="currentColor"
+          strokeWidth="1.8"
+        />
+        <path
+          d="M8.5 9h7M8.5 12h7M8.5 15h4"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeWidth="1.8"
+        />
+        <path
+          d="M16.5 3.5v4M7.5 3.5v4"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeWidth="1.8"
+        />
+      </svg>
+    )
+  }
+
   return (
     <svg aria-hidden="true" fill="none" height={size} viewBox="0 0 24 24" width={size}>
       <path
