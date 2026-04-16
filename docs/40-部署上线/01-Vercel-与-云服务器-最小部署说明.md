@@ -183,7 +183,7 @@ NEXT_PUBLIC_API_BASE_URL=https://api.resume.example.com
 
 建议安装：
 
-- `Node.js 20`
+- `Node.js 22`
 - `pnpm 10`
 - `Nginx`
 - `PM2`
