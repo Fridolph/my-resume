@@ -32,3 +32,4 @@ dist-ssr
 .data
 .tmp
 apps/server/storage/rag/*.json
+deploy/ecs/stack.env

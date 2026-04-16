@@ -1,0 +1,67 @@
+name: Deploy ECS
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_tag:
+        description: 'Tag to deploy on ECS'
+        required: true
+        default: 'v2.0.0'
+      deploy_root:
+        description: 'Deploy root on ECS'
+        required: true
+        default: '/opt/my-resume/repo'
+
+concurrency:
+  group: deploy-ecs-${{ github.event.inputs.deploy_tag || github.ref_name }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to ECS via SSH
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate target tag exists
+        run: |
+          git fetch --tags --force
+          git rev-parse --verify "${{ github.event.inputs.deploy_tag }}^{tag}" >/dev/null 2>&1 || \
+          git rev-parse --verify "${{ github.event.inputs.deploy_tag }}" >/dev/null 2>&1
+
+      - name: Setup SSH key
+        env:
+          ECS_SSH_PRIVATE_KEY: ${{ secrets.ECS_SSH_PRIVATE_KEY }}
+          ECS_HOST: ${{ secrets.ECS_HOST }}
+        run: |
+          test -n "$ECS_SSH_PRIVATE_KEY"
+          test -n "$ECS_HOST"
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$ECS_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$ECS_HOST" >> ~/.ssh/known_hosts
+
+      - name: Run remote release script
+        env:
+          ECS_HOST: ${{ secrets.ECS_HOST }}
+          ECS_PORT: ${{ secrets.ECS_PORT }}
+          ECS_USER: ${{ secrets.ECS_USER }}
+          DEPLOY_ROOT: ${{ github.event.inputs.deploy_root }}
+          DEPLOY_TAG: ${{ github.event.inputs.deploy_tag }}
+        run: |
+          SSH_PORT="${ECS_PORT:-22}"
+          SSH_USER="${ECS_USER:-root}"
+          ssh -p "$SSH_PORT" "${SSH_USER}@${ECS_HOST}" <<EOF
+          set -euo pipefail
+          cd "$DEPLOY_ROOT"
+          git fetch --tags --force
+          ./deploy/ecs/release.sh "$DEPLOY_TAG"
+          EOF
