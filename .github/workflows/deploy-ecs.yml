@@ -1,19 +1,21 @@
 name: Deploy ECS
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       deploy_tag:
-        description: 'Tag to deploy on ECS'
-        required: true
-        default: 'v2.0.0'
+        description: 'Tag to deploy on ECS (optional, default: latest v*)'
+        required: false
       deploy_root:
-        description: 'Deploy root on ECS'
-        required: true
+        description: 'Deploy repo root on ECS (optional)'
+        required: false
         default: '/opt/my-resume/repo'
 
 concurrency:
-  group: deploy-ecs-${{ github.event.inputs.deploy_tag || github.ref_name }}
+  group: deploy-ecs-${{ github.ref_name }}
   cancel-in-progress: false
 
 permissions:
@@ -30,11 +32,46 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Resolve deploy params
+        id: params
+        env:
+          INPUT_DEPLOY_TAG: ${{ github.event.inputs.deploy_tag }}
+          INPUT_DEPLOY_ROOT: ${{ github.event.inputs.deploy_root }}
+          ECS_DEPLOY_ROOT: ${{ vars.ECS_DEPLOY_ROOT }}
+        run: |
+          set -euo pipefail
+          git fetch --tags --force
+
+          DEPLOY_TAG=""
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" && -n "${INPUT_DEPLOY_TAG:-}" ]]; then
+            DEPLOY_TAG="${INPUT_DEPLOY_TAG}"
+          else
+            DEPLOY_TAG="$(git tag --list 'v*' --sort=-v:refname | head -n 1)"
+          fi
+
+          if [[ -z "$DEPLOY_TAG" ]]; then
+            echo "No release tag found (pattern: v*)." >&2
+            exit 1
+          fi
+
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" && -n "${INPUT_DEPLOY_ROOT:-}" ]]; then
+            DEPLOY_ROOT="${INPUT_DEPLOY_ROOT}"
+          elif [[ -n "${ECS_DEPLOY_ROOT:-}" ]]; then
+            DEPLOY_ROOT="${ECS_DEPLOY_ROOT}"
+          else
+            DEPLOY_ROOT="/opt/my-resume/repo"
+          fi
+
+          echo "deploy_tag=${DEPLOY_TAG}" >> "$GITHUB_OUTPUT"
+          echo "deploy_root=${DEPLOY_ROOT}" >> "$GITHUB_OUTPUT"
+          echo "Resolved deploy tag: ${DEPLOY_TAG}"
+          echo "Resolved deploy root: ${DEPLOY_ROOT}"
+
       - name: Validate target tag exists
         run: |
           git fetch --tags --force
-          git rev-parse --verify "${{ github.event.inputs.deploy_tag }}^{tag}" >/dev/null 2>&1 || \
-          git rev-parse --verify "${{ github.event.inputs.deploy_tag }}" >/dev/null 2>&1
+          git rev-parse --verify "${{ steps.params.outputs.deploy_tag }}^{tag}" >/dev/null 2>&1 || \
+          git rev-parse --verify "${{ steps.params.outputs.deploy_tag }}" >/dev/null 2>&1
 
       - name: Setup SSH key
         env:
@@ -54,8 +91,8 @@ jobs:
           ECS_HOST: ${{ secrets.ECS_HOST }}
           ECS_PORT: ${{ secrets.ECS_PORT }}
           ECS_USER: ${{ secrets.ECS_USER }}
-          DEPLOY_ROOT: ${{ github.event.inputs.deploy_root }}
-          DEPLOY_TAG: ${{ github.event.inputs.deploy_tag }}
+          DEPLOY_ROOT: ${{ steps.params.outputs.deploy_root }}
+          DEPLOY_TAG: ${{ steps.params.outputs.deploy_tag }}
         run: |
           SSH_PORT="${ECS_PORT:-22}"
           SSH_USER="${ECS_USER:-root}"
