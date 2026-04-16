@@ -6,10 +6,13 @@ describe('AiUsageRecordService', () => {
   const createMock = vi.fn()
   const findByIdMock = vi.fn()
   const listAllMock = vi.fn()
+  const findLatestSucceededResumeOptimizationByResultIdMock = vi.fn()
   const repository = {
     create: createMock,
     findById: findByIdMock,
     listAll: listAllMock,
+    findLatestSucceededResumeOptimizationByResultId:
+      findLatestSucceededResumeOptimizationByResultIdMock,
   }
 
   beforeEach(() => {
@@ -202,5 +205,64 @@ describe('AiUsageRecordService', () => {
     expect(detail.detail).toEqual({
       summary: '匹配概览',
     })
+  })
+
+  it('should resolve optimization snapshot by resultId with compatible fallback fields', async () => {
+    findLatestSucceededResumeOptimizationByResultIdMock.mockResolvedValue({
+      id: 'record-opt-001',
+      operationType: 'resume-optimization',
+      scenario: 'resume-review',
+      locale: 'zh',
+      inputPreview: '请优化当前简历',
+      summary: '已生成优化建议',
+      provider: 'qiniu',
+      model: 'deepseek-v3',
+      mode: 'openai-compatible',
+      generator: 'ai-provider',
+      status: 'succeeded',
+      relatedReportId: null,
+      relatedResultId: 'result-opt-001',
+      detailJson: {
+        resultId: 'result-opt-001',
+        locale: 'zh',
+        summary: '已生成优化建议',
+        focusAreas: ['强化摘要'],
+        changedModules: ['profile'],
+        moduleDiffs: [],
+        createdAt: '2026-04-15T12:00:00.000Z',
+        providerSummary: {
+          provider: 'qiniu',
+          model: 'deepseek-v3',
+          mode: 'openai-compatible',
+        },
+        patch: {
+          profile: {
+            summary: {
+              zh: '建议摘要',
+              en: 'Suggested summary',
+            },
+          },
+        },
+        draftUpdatedAt: '2026-04-15T11:59:00.000Z',
+      },
+      errorMessage: null,
+      durationMs: 1800,
+      createdAt: new Date('2026-04-15T12:00:00.000Z'),
+    })
+
+    const service = new AiUsageRecordService(repository as never)
+    const snapshot = await service.findResumeOptimizationSnapshotByResultId('result-opt-001')
+
+    expect(findLatestSucceededResumeOptimizationByResultIdMock).toHaveBeenCalledWith(
+      'result-opt-001',
+    )
+    expect(snapshot).toEqual(
+      expect.objectContaining({
+        resultId: 'result-opt-001',
+        summary: '已生成优化建议',
+        changedModules: ['profile'],
+        draftUpdatedAt: '2026-04-15T11:59:00.000Z',
+      }),
+    )
   })
 })

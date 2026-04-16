@@ -187,6 +187,11 @@ export class AiReportController {
 
     try {
       const result = await this.aiResumeOptimizationService.generateSuggestion(body)
+      const persistedSnapshot =
+        this.aiResumeOptimizationService.getSuggestionSnapshotForPersistence(
+          result.resultId,
+          locale,
+        )
       const usageRecord = await this.aiUsageRecordService.recordSuccess({
         operationType: 'resume-optimization',
         scenario: 'resume-review',
@@ -196,13 +201,7 @@ export class AiReportController {
         providerSummary,
         generator,
         relatedResultId: result.resultId,
-        detail: {
-          changedModules: result.changedModules,
-          createdAt: result.createdAt,
-          focusAreas: result.focusAreas,
-          moduleDiffs: result.moduleDiffs,
-          summary: result.summary,
-        },
+        detail: persistedSnapshot,
         durationMs: Date.now() - startedAt,
       })
 

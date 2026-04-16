@@ -166,6 +166,8 @@ export interface AiResumeOptimizationResult {
   resultId: string
   usageRecordId?: string
   locale: AiWorkbenchLocale
+  source?: 'cache' | 'usage-record'
+  canApply?: boolean
   summary: string
   focusAreas: string[]
   changedModules: AiResumeOptimizationChangedModule[]

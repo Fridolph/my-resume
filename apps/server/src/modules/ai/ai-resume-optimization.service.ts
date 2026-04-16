@@ -4,6 +4,7 @@ import {
   ConflictException,
   Inject,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common'
 
 import { ResumePublicationService } from '../resume/resume-publication.service'
@@ -16,6 +17,10 @@ import {
   validateStandardResume,
 } from '../resume/domain/standard-resume'
 import { AiService } from './ai.service'
+import {
+  AiUsageRecordService,
+  type PersistedResumeOptimizationSnapshot,
+} from './ai-usage-record.service'
 import { type AnalysisLocale } from './analysis-report-cache.service'
 import { ResumeOptimizationResultCacheService } from './resume-optimization-result-cache.service'
 
@@ -100,7 +105,10 @@ export interface ApplyResumeOptimizationInput {
   modules: ResumeOptimizationModule[]
 }
 
-export type AiResumeOptimizationResultDetail = GenerateResumeOptimizationResult
+export interface AiResumeOptimizationResultDetail extends GenerateResumeOptimizationResult {
+  canApply?: boolean
+  source?: 'cache' | 'usage-record'
+}
 
 function cloneResume(resume: StandardResume): StandardResume {
   return JSON.parse(JSON.stringify(resume)) as StandardResume
@@ -897,6 +905,105 @@ function buildMockSuggestion(
   }
 }
 
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+function normalizeDiffEntries(value: unknown): ResumeOptimizationDiffEntry[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.flatMap((item) => {
+    if (!isObjectRecord(item)) {
+      return []
+    }
+
+    if (
+      typeof item.key !== 'string' ||
+      typeof item.label !== 'string' ||
+      typeof item.currentValue !== 'string' ||
+      typeof item.suggestedValue !== 'string' ||
+      typeof item.suggestion !== 'string' ||
+      typeof item.reason !== 'string'
+    ) {
+      return []
+    }
+
+    return [
+      {
+        key: item.key,
+        label: item.label,
+        currentValue: item.currentValue,
+        suggestedValue: item.suggestedValue,
+        suggestion: item.suggestion,
+        reason: item.reason,
+      },
+    ]
+  })
+}
+
+function normalizeModuleDiffs(value: unknown): ResumeOptimizationModuleDiff[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  const validModules: ResumeOptimizationModule[] = [
+    'profile',
+    'experiences',
+    'projects',
+    'highlights',
+  ]
+
+  return value.flatMap((item) => {
+    if (!isObjectRecord(item)) {
+      return []
+    }
+
+    if (
+      typeof item.module !== 'string' ||
+      !validModules.includes(item.module as ResumeOptimizationModule) ||
+      typeof item.title !== 'string' ||
+      typeof item.reason !== 'string'
+    ) {
+      return []
+    }
+
+    const entries = normalizeDiffEntries(item.entries)
+
+    if (entries.length === 0) {
+      return []
+    }
+
+    return [
+      {
+        module: item.module as ResumeOptimizationModule,
+        title: item.title,
+        reason: item.reason,
+        entries,
+      },
+    ]
+  })
+}
+
+function mapPersistedSnapshotToResultDetail(
+  snapshot: PersistedResumeOptimizationSnapshot,
+  fallbackLocale: AnalysisLocale,
+): AiResumeOptimizationResultDetail {
+  return {
+    resultId: snapshot.resultId,
+    locale: snapshot.locale ?? fallbackLocale,
+    summary: snapshot.summary,
+    focusAreas: snapshot.focusAreas,
+    changedModules: snapshot.changedModules,
+    moduleDiffs: normalizeModuleDiffs(snapshot.moduleDiffs),
+    createdAt: snapshot.createdAt,
+    providerSummary: snapshot.providerSummary,
+    canApply: Boolean(snapshot.patch && snapshot.draftUpdatedAt),
+    source: 'usage-record',
+  }
+}
+
 @Injectable()
 export class AiResumeOptimizationService {
   constructor(
@@ -906,6 +1013,8 @@ export class AiResumeOptimizationService {
     private readonly resumePublicationService: ResumePublicationService,
     @Inject(ResumeOptimizationResultCacheService)
     private readonly resultCacheService: ResumeOptimizationResultCacheService,
+    @Inject(AiUsageRecordService)
+    private readonly aiUsageRecordService: AiUsageRecordService,
   ) {}
 
   async generateSuggestion(
@@ -960,20 +1069,45 @@ export class AiResumeOptimizationService {
     return cachedResult.detailsByLocale[locale] as GenerateResumeOptimizationResult
   }
 
-  getSuggestionResult(resultId: string, locale: AnalysisLocale) {
-    return this.resultCacheService.getResultDetail(resultId, locale)
+  async getSuggestionResult(
+    resultId: string,
+    locale: AnalysisLocale,
+  ): Promise<AiResumeOptimizationResultDetail> {
+    try {
+      const detail = this.resultCacheService.getResultDetail(resultId, locale)
+
+      return {
+        ...detail,
+        canApply: true,
+        source: 'cache',
+      }
+    } catch (error) {
+      if (!(error instanceof NotFoundException)) {
+        throw error
+      }
+    }
+
+    const snapshot = await this.aiUsageRecordService.findResumeOptimizationSnapshotByResultId(
+      resultId,
+    )
+
+    if (!snapshot) {
+      throw new NotFoundException('当前优化结果已失效，请回到工作台重新生成')
+    }
+
+    return mapPersistedSnapshotToResultDetail(snapshot, locale)
   }
 
   async applySuggestion(input: ApplyResumeOptimizationInput) {
     const selectedModules = normalizeModules(input.modules)
-    const cachedResult = this.resultCacheService.getResultForApply(input.resultId)
     const draft = await this.resumePublicationService.getDraft()
+    const applyPayload = await this.resolveApplyPayload(input.resultId, draft.resume)
 
-    if (draft.updatedAt !== cachedResult.draftUpdatedAt) {
+    if (draft.updatedAt !== applyPayload.draftUpdatedAt) {
       throw new ConflictException('当前草稿已发生变化，请重新生成建议稿后再应用')
     }
 
-    const selectedPatch = pickPatchByModules(cachedResult.patch, selectedModules)
+    const selectedPatch = pickPatchByModules(applyPayload.patch, selectedModules)
     const nextResume = applyPatch(draft.resume, selectedPatch)
     const appliedModules = detectChangedModules(draft.resume, nextResume)
 
@@ -990,6 +1124,27 @@ export class AiResumeOptimizationService {
     }
 
     return this.resumePublicationService.updateDraft(nextResume)
+  }
+
+  getSuggestionSnapshotForPersistence(
+    resultId: string,
+    locale: AnalysisLocale,
+  ): PersistedResumeOptimizationSnapshot {
+    const cachedResult = this.resultCacheService.getResultForApply(resultId)
+    const detail = this.resultCacheService.getResultDetail(resultId, locale)
+
+    return {
+      resultId: detail.resultId,
+      locale: detail.locale,
+      summary: detail.summary,
+      focusAreas: detail.focusAreas,
+      changedModules: detail.changedModules,
+      moduleDiffs: detail.moduleDiffs,
+      createdAt: detail.createdAt,
+      providerSummary: detail.providerSummary,
+      patch: cachedResult.patch,
+      draftUpdatedAt: cachedResult.draftUpdatedAt,
+    }
   }
 
   private buildResultDetail(input: {
@@ -1055,6 +1210,44 @@ export class AiResumeOptimizationService {
           ? `AI 返回的结构化建议无法解析：${error.message}`
           : 'AI 返回的结构化建议无法解析',
       )
+    }
+  }
+
+  private async resolveApplyPayload(
+    resultId: string,
+    currentResume: StandardResume,
+  ): Promise<{
+    draftUpdatedAt: string
+    patch: ResumeOptimizationPatch
+  }> {
+    try {
+      const cachedResult = this.resultCacheService.getResultForApply(resultId)
+
+      return {
+        draftUpdatedAt: cachedResult.draftUpdatedAt,
+        patch: validatePatch(cachedResult.patch, currentResume),
+      }
+    } catch (error) {
+      if (!(error instanceof NotFoundException)) {
+        throw error
+      }
+    }
+
+    const snapshot = await this.aiUsageRecordService.findResumeOptimizationSnapshotByResultId(
+      resultId,
+    )
+
+    if (!snapshot) {
+      throw new NotFoundException('当前优化结果已失效，请回到工作台重新生成')
+    }
+
+    if (!snapshot.patch || !snapshot.draftUpdatedAt) {
+      throw new BadRequestException('该历史记录不支持再次应用，请重新生成')
+    }
+
+    return {
+      draftUpdatedAt: snapshot.draftUpdatedAt,
+      patch: validatePatch(snapshot.patch, currentResume),
     }
   }
 

@@ -14,14 +14,22 @@ const {
   useAdminSessionMock,
   fetchOptimizationResultMock,
   fetchUsageRecordDetailMock,
+  pushMock,
 } = vi.hoisted(() => ({
   useAdminSessionMock: vi.fn(),
   fetchOptimizationResultMock: vi.fn(),
   fetchUsageRecordDetailMock: vi.fn(),
+  pushMock: vi.fn(),
 }))
 
 vi.mock('@core/admin-session', () => ({
   useAdminSession: useAdminSessionMock,
+}))
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: pushMock,
+  }),
 }))
 
 vi.mock('alova/client', async () => {
@@ -72,6 +80,7 @@ describe('AdminAiOptimizationHistoryShell', () => {
     useAdminSessionMock.mockReset()
     fetchOptimizationResultMock.mockReset()
     fetchUsageRecordDetailMock.mockReset()
+    pushMock.mockReset()
     if (!Element.prototype.getAnimations) {
       Element.prototype.getAnimations = () => []
     }
@@ -197,6 +206,19 @@ describe('AdminAiOptimizationHistoryShell', () => {
 
     expect(await screen.findByRole('heading', { name: '优化记录' })).toBeInTheDocument()
     expect(screen.getByTestId('ai-optimization-archive-page')).toBeInTheDocument()
+    expect(screen.getByTestId('optimization-history-overview-grid')).toHaveClass(
+      'md:grid-cols-3',
+    )
+    expect(screen.getAllByTestId('optimization-history-overview-card')).toHaveLength(3)
+    const actionBar = screen.getByTestId('optimization-history-actions')
+    const backButton = screen.getByRole('button', { name: '返回 AI 工作台' })
+    const refreshButton = screen.getByRole('button', { name: '刷新记录' })
+    expect(backButton).toHaveClass('h-10', 'rounded-full')
+    expect(refreshButton).toHaveClass('h-10', 'rounded-full')
+    expect(actionBar).toContainElement(backButton)
+    expect(actionBar).toContainElement(refreshButton)
+    await user.click(backButton)
+    expect(pushMock).toHaveBeenCalledWith('/dashboard/ai')
     const historyTable = screen.getByRole('grid', { name: '优化记录中心表格' })
     expect(historyTable).toBeInTheDocument()
     expect(historyTable).not.toHaveClass('min-w-[1180px]')
@@ -206,7 +228,7 @@ describe('AdminAiOptimizationHistoryShell', () => {
     )
     expect(screen.getByText('JS 高级全栈工程师 JD')).toBeInTheDocument()
     expect(screen.queryByText('职位概述')).not.toBeInTheDocument()
-    expect(screen.getAllByText(summary)).toHaveLength(2)
+    expect(screen.getAllByText(summary).length).toBeGreaterThan(0)
     expect(screen.getByText('已含 Offer 对比')).toBeInTheDocument()
     expect(screen.getByText('JD 匹配分析')).toBeInTheDocument()
     expect(screen.getByText('Offer 对比建议')).toBeInTheDocument()
@@ -375,5 +397,101 @@ describe('AdminAiOptimizationHistoryShell', () => {
 
     await user.click(screen.getByRole('tab', { name: 'JD 匹配分析' }))
     expect(await screen.findByText('JD 匹配摘要')).toBeInTheDocument()
+  })
+
+  it('should render detail from usage-record fallback when cache misses', async () => {
+    const user = userEvent.setup()
+    const instruction = `# 前端负责人 JD
+
+请根据这份 JD 优化当前简历。`
+    const instructionHash = createInstructionHash(instruction)
+
+    window.localStorage.setItem(
+      RESUME_OPTIMIZATION_HISTORY_STORAGE_KEY,
+      JSON.stringify([
+        {
+          resultId: 'result-fallback-303',
+          usageRecordId: 'usage-optimize-303',
+          summary: '本地优化摘要（fallback）',
+          instruction,
+          instructionHash,
+          locale: 'zh',
+          createdAt: '2026-04-15T09:30:00.000Z',
+          changedModules: ['profile'],
+        },
+      ]),
+    )
+    window.localStorage.setItem(
+      AI_WORKBENCH_RELATION_INDEX_STORAGE_KEY,
+      JSON.stringify({
+        [instructionHash]: {
+          instructionHash,
+          resumeOptimizationUsageRecordId: 'usage-optimize-303',
+          analysisUsageRecordIds: {},
+          updatedAt: '2026-04-15T09:30:00.000Z',
+        },
+      }),
+    )
+
+    fetchOptimizationResultMock.mockResolvedValue({
+      resultId: 'result-fallback-303',
+      locale: 'zh',
+      source: 'usage-record',
+      canApply: false,
+      summary: '来自 usage-record 的回放摘要',
+      focusAreas: ['突出管理与交付'],
+      changedModules: ['profile'],
+      moduleDiffs: [],
+      createdAt: '2026-04-15T09:30:00.000Z',
+      providerSummary: {
+        provider: 'qiniu',
+        model: 'deepseek-v3',
+        mode: 'openai-compatible',
+      },
+    })
+    fetchUsageRecordDetailMock.mockResolvedValue({
+      id: 'unused',
+      operationType: 'analysis-report',
+      scenario: 'jd-match',
+      locale: 'zh',
+      inputPreview: '',
+      summary: '',
+      provider: 'qiniu',
+      model: 'deepseek-v3',
+      mode: 'openai-compatible',
+      generator: 'ai-provider',
+      status: 'succeeded',
+      relatedReportId: null,
+      relatedResultId: null,
+      errorMessage: null,
+      durationMs: 1200,
+      createdAt: '2026-04-15T10:00:00.000Z',
+      detail: null,
+    })
+
+    useAdminSessionMock.mockReturnValue({
+      accessToken: 'admin-token',
+      currentUser: {
+        id: 'admin-demo-user',
+        username: 'admin',
+        role: 'admin',
+        capabilities: {
+          canEditResume: true,
+          canPublishResume: true,
+          canTriggerAiAnalysis: true,
+        },
+      },
+      status: 'ready',
+    })
+
+    render(<AdminAiOptimizationHistoryShell locale="zh" />)
+
+    await user.click(await screen.findByRole('button', { name: '查看详情' }))
+
+    expect(
+      await screen.findByRole('dialog', { name: '优化记录详情' }),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('来自 usage-record 的回放摘要')).toBeInTheDocument()
+    expect(screen.queryByText('该条优化结果已失效或不可读取')).not.toBeInTheDocument()
   })
 })

@@ -10,6 +10,7 @@ describe('AiReportController', () => {
   const recordFailureMock = vi.fn()
   const storeGeneratedReportMock = vi.fn()
   const generateSuggestionMock = vi.fn()
+  const getSuggestionSnapshotForPersistenceMock = vi.fn()
 
   const aiService = {
     generateText: generateTextMock,
@@ -21,6 +22,7 @@ describe('AiReportController', () => {
   }
   const aiResumeOptimizationService = {
     generateSuggestion: generateSuggestionMock,
+    getSuggestionSnapshotForPersistence: getSuggestionSnapshotForPersistenceMock,
     getSuggestionResult: vi.fn(),
     applySuggestion: vi.fn(),
   }
@@ -37,6 +39,29 @@ describe('AiReportController', () => {
       provider: 'qiniu',
       model: 'deepseek-v3',
       mode: 'openai-compatible',
+    })
+    getSuggestionSnapshotForPersistenceMock.mockReturnValue({
+      resultId: 'result-001',
+      locale: 'zh',
+      summary: '优化摘要',
+      focusAreas: ['强化摘要'],
+      changedModules: ['profile'],
+      moduleDiffs: [],
+      createdAt: '2026-04-15T12:00:00.000Z',
+      providerSummary: {
+        provider: 'qiniu',
+        model: 'deepseek-v3',
+        mode: 'openai-compatible',
+      },
+      patch: {
+        profile: {
+          summary: {
+            zh: '建议摘要',
+            en: 'Suggested summary',
+          },
+        },
+      },
+      draftUpdatedAt: '2026-04-15T11:58:00.000Z',
     })
   })
 
@@ -144,6 +169,13 @@ describe('AiReportController', () => {
       expect.objectContaining({
         operationType: 'resume-optimization',
         relatedResultId: 'result-001',
+        detail: expect.objectContaining({
+          resultId: 'result-001',
+          patch: expect.objectContaining({
+            profile: expect.any(Object),
+          }),
+          draftUpdatedAt: '2026-04-15T11:58:00.000Z',
+        }),
       }),
     )
   })

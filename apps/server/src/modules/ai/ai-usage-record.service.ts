@@ -64,6 +64,25 @@ export interface AiUsageRecordDetail extends AiUsageRecordSummary {
 }
 
 type AiUsageRecordRow = NonNullable<Awaited<ReturnType<AiUsageRecordRepository['findById']>>>
+type ResumeOptimizationModule = 'profile' | 'experiences' | 'projects' | 'highlights'
+type ResumeOptimizationLocale = AnalysisLocale
+
+export interface PersistedResumeOptimizationSnapshot {
+  changedModules: ResumeOptimizationModule[]
+  createdAt: string
+  draftUpdatedAt?: string
+  focusAreas: string[]
+  locale: ResumeOptimizationLocale
+  moduleDiffs: unknown[]
+  patch?: unknown
+  providerSummary: {
+    mode: string
+    model: string
+    provider: string
+  }
+  resultId: string
+  summary: string
+}
 
 @Injectable()
 export class AiUsageRecordService {
@@ -153,6 +172,18 @@ export class AiUsageRecordService {
     return this.mapDetail(record)
   }
 
+  async findResumeOptimizationSnapshotByResultId(
+    resultId: string,
+  ): Promise<PersistedResumeOptimizationSnapshot | null> {
+    const record = await this.repository.findLatestSucceededResumeOptimizationByResultId(resultId)
+
+    if (!record) {
+      return null
+    }
+
+    return mapResumeOptimizationSnapshot(record, resultId)
+  }
+
   private mapSummary(record: AiUsageRecordRow) {
     const scoreMeta = extractScoreMeta(record.detailJson)
 
@@ -240,4 +271,91 @@ function extractScoreMeta(detail: unknown): {
     label: typeof candidate.score?.label === 'string' ? candidate.score.label : undefined,
     value: typeof candidate.score?.value === 'number' ? candidate.score.value : undefined,
   }
+}
+
+function mapResumeOptimizationSnapshot(
+  record: AiUsageRecordRow,
+  resultId: string,
+): PersistedResumeOptimizationSnapshot {
+  const detail = toObjectRecord(record.detailJson)
+  const detailProviderSummary = toObjectRecord(detail.providerSummary)
+  const fallbackLocale = record.locale === 'en' ? 'en' : 'zh'
+
+  return {
+    changedModules: normalizeChangedModules(detail.changedModules),
+    createdAt:
+      typeof detail.createdAt === 'string' && detail.createdAt.trim()
+        ? detail.createdAt
+        : record.createdAt.toISOString(),
+    draftUpdatedAt:
+      typeof detail.draftUpdatedAt === 'string' && detail.draftUpdatedAt.trim()
+        ? detail.draftUpdatedAt
+        : undefined,
+    focusAreas: normalizeStringArray(detail.focusAreas),
+    locale:
+      typeof detail.locale === 'string' && (detail.locale === 'en' || detail.locale === 'zh')
+        ? (detail.locale as ResumeOptimizationLocale)
+        : fallbackLocale,
+    moduleDiffs: Array.isArray(detail.moduleDiffs) ? detail.moduleDiffs : [],
+    patch: isObjectRecord(detail.patch) ? detail.patch : undefined,
+    providerSummary: {
+      mode:
+        typeof detailProviderSummary.mode === 'string'
+          ? detailProviderSummary.mode
+          : record.mode,
+      model:
+        typeof detailProviderSummary.model === 'string'
+          ? detailProviderSummary.model
+          : record.model,
+      provider:
+        typeof detailProviderSummary.provider === 'string'
+          ? detailProviderSummary.provider
+          : record.provider,
+    },
+    resultId:
+      typeof detail.resultId === 'string' && detail.resultId.trim()
+        ? detail.resultId
+        : record.relatedResultId ?? resultId,
+    summary:
+      typeof detail.summary === 'string' && detail.summary.trim()
+        ? detail.summary
+        : record.summary ?? '该条优化记录暂无可展示摘要。',
+  }
+}
+
+function normalizeChangedModules(value: unknown): ResumeOptimizationModule[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  const validModules: ResumeOptimizationModule[] = [
+    'profile',
+    'experiences',
+    'projects',
+    'highlights',
+  ]
+
+  return value.filter((item): item is ResumeOptimizationModule =>
+    typeof item === 'string' && validModules.includes(item as ResumeOptimizationModule),
+  )
+}
+
+function normalizeStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+}
+
+function toObjectRecord(value: unknown): Record<string, unknown> {
+  if (!isObjectRecord(value)) {
+    return {}
+  }
+
+  return value
+}
+
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 }

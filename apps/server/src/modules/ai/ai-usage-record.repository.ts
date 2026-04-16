@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { desc, eq } from 'drizzle-orm'
+import { and, desc, eq } from 'drizzle-orm'
 
 import { DATABASE_INSTANCE } from '../../database/database.tokens'
 import type { DatabaseInstance } from '../../database/database.client'
@@ -57,5 +57,22 @@ export class AiUsageRecordRepository {
 
   async listAll() {
     return this.database.select().from(aiUsageRecords).orderBy(desc(aiUsageRecords.createdAt))
+  }
+
+  async findLatestSucceededResumeOptimizationByResultId(resultId: string) {
+    const [record] = await this.database
+      .select()
+      .from(aiUsageRecords)
+      .where(
+        and(
+          eq(aiUsageRecords.relatedResultId, resultId),
+          eq(aiUsageRecords.operationType, 'resume-optimization'),
+          eq(aiUsageRecords.status, 'succeeded'),
+        ),
+      )
+      .orderBy(desc(aiUsageRecords.createdAt))
+      .limit(1)
+
+    return record ?? null
   }
 }

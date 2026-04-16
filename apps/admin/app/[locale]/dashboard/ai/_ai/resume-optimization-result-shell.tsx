@@ -47,6 +47,18 @@ function moduleLabel(module: AiResumeOptimizationChangedModule, locale: 'en' | '
   return moduleMap[module]
 }
 
+const diffCardTitleClassName = 'text-sm font-bold text-zinc-800 dark:text-zinc-100'
+const diffCardTextClassName = 'text-sm leading-6 text-zinc-700 dark:text-zinc-200'
+const diffCardContentClassName = `grid h-full gap-2 p-3 ${diffCardTextClassName}`
+const diffCurrentCardClassName =
+  'min-h-[7rem] border border-zinc-200/80 bg-white/92 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/72'
+const diffSuggestedCardClassName =
+  'min-h-[7rem] border border-rose-200/80 bg-rose-50/80 shadow-[0_14px_32px_rgba(244,63,94,0.08)] dark:border-rose-400/25 dark:bg-rose-500/12'
+const diffSuggestionCardClassName =
+  'min-h-[7rem] border border-sky-200/70 bg-sky-50/75 shadow-sm dark:border-sky-400/20 dark:bg-sky-500/10'
+const diffReasonCardClassName =
+  'min-h-[7rem] border border-amber-200/70 bg-amber-50/80 shadow-sm dark:border-amber-300/25 dark:bg-amber-500/10'
+
 export function ResumeOptimizationResultShell({
   locale,
   resultId,
@@ -93,7 +105,10 @@ export function ResumeOptimizationResultShell({
   )
   const requestKeyRef = useRef<string | null>(null)
   const result = (data ?? null) as AiResumeOptimizationResult | null
-  const canApply = Boolean(currentUser?.capabilities.canEditResume)
+  const canApply =
+    Boolean(currentUser?.capabilities.canEditResume) && (result?.canApply ?? true)
+  const applyDisabledReason =
+    result?.canApply === false ? '该历史记录不支持再次应用，请重新生成。' : null
 
   useEffect(() => {
     if (status !== 'ready' || !accessToken) {
@@ -131,6 +146,11 @@ export function ResumeOptimizationResultShell({
   }
 
   async function handleApplyModules(modules: AiResumeOptimizationChangedModule[]) {
+    if (!canApply) {
+      setFeedbackMessage(applyDisabledReason ?? '当前记录暂不支持再次应用。')
+      return
+    }
+
     const normalizedModules = modules.filter((module) => !appliedModules.includes(module))
 
     if (normalizedModules.length === 0) {
@@ -138,14 +158,20 @@ export function ResumeOptimizationResultShell({
       return
     }
 
-    await applySuggestion(normalizedModules)
-    setAppliedModules((currentModules) => [...currentModules, ...normalizedModules])
-    setSelectedModules((currentModules) =>
-      currentModules.filter((module) => !normalizedModules.includes(module)),
-    )
-    setFeedbackMessage(
-      `已将 ${normalizedModules.length} 个模块写回后台草稿。公开站仍需手动发布。`,
-    )
+    try {
+      await applySuggestion(normalizedModules)
+      setAppliedModules((currentModules) => [...currentModules, ...normalizedModules])
+      setSelectedModules((currentModules) =>
+        currentModules.filter((module) => !normalizedModules.includes(module)),
+      )
+      setFeedbackMessage(
+        `已将 ${normalizedModules.length} 个模块写回后台草稿。公开站仍需手动发布。`,
+      )
+    } catch (applyError) {
+      const message =
+        applyError instanceof Error ? applyError.message : '应用失败，请稍后重试'
+      setFeedbackMessage(message)
+    }
   }
 
   function toggleSelectedModule(module: AiResumeOptimizationChangedModule) {
@@ -207,6 +233,9 @@ export function ResumeOptimizationResultShell({
         </div>
 
         {feedbackMessage ? <div className="dashboard-inline-note">{feedbackMessage}</div> : null}
+        {applyDisabledReason ? (
+          <div className="dashboard-inline-note">{applyDisabledReason}</div>
+        ) : null}
 
         {loading ? (
           <div className="grid gap-3" data-testid="resume-optimization-result-loading">
@@ -359,47 +388,35 @@ export function ResumeOptimizationResultShell({
                             className="grid grid-cols-2 gap-4 md:grid-cols-4"
                             data-testid="resume-diff-grid">
                             <Card
-                              className="min-h-[8rem] border border-zinc-200/80 bg-white/92 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/72"
+                              className={diffCurrentCardClassName}
                               data-testid="resume-diff-current-section">
-                              <CardContent className="grid h-full gap-3 p-4 text-sm leading-7 text-zinc-700 dark:text-zinc-200">
-                                <span className="text-xs font-bold tracking-[0.08em] text-zinc-400 uppercase">
-                                  当前内容
-                                </span>
+                              <CardContent className={diffCardContentClassName}>
+                                <span className={diffCardTitleClassName}>当前内容</span>
                                 <span className="whitespace-pre-wrap">{entry.currentValue}</span>
                               </CardContent>
                             </Card>
                             <Card
-                              className="min-h-[8rem] border border-blue-200/80 bg-blue-50/82 shadow-[0_14px_32px_rgba(37,99,235,0.08)] dark:border-blue-400/24 dark:bg-blue-500/12"
+                              className={diffSuggestedCardClassName}
                               data-testid="resume-diff-suggested-section">
-                              <CardContent className="grid h-full gap-3 p-4 text-sm leading-7 text-zinc-800 dark:text-zinc-100">
-                                <span className="text-xs font-bold tracking-[0.08em] text-blue-600 uppercase dark:text-blue-200">
-                                  修改内容
-                                </span>
+                              <CardContent className={diffCardContentClassName}>
+                                <span className={diffCardTitleClassName}>修改内容</span>
                                 <span className="whitespace-pre-wrap">{entry.suggestedValue}</span>
                               </CardContent>
                             </Card>
                             <Card
-                              className="min-h-[8rem] border border-sky-200/70 bg-white/88 shadow-sm dark:border-sky-400/15 dark:bg-zinc-950/50"
+                              className={diffSuggestionCardClassName}
                               data-testid="resume-diff-suggestion-section">
-                              <CardContent className="grid h-full gap-2 p-4">
-                                <strong className="text-sm text-blue-700 dark:text-blue-200">
-                                  建议说明
-                                </strong>
-                                <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-                                  {entry.suggestion}
-                                </p>
+                              <CardContent className={diffCardContentClassName}>
+                                <strong className={diffCardTitleClassName}>建议说明</strong>
+                                <p>{entry.suggestion}</p>
                               </CardContent>
                             </Card>
                             <Card
-                              className="min-h-[8rem] border border-amber-200/70 bg-amber-50/82 shadow-sm dark:border-amber-300/25 dark:bg-amber-500/10"
+                              className={diffReasonCardClassName}
                               data-testid="resume-diff-reason-section">
-                              <CardContent className="grid h-full gap-2 p-4">
-                                <strong className="text-sm text-[#666] dark:text-amber-100">
-                                  原因说明
-                                </strong>
-                                <p className="text-sm leading-6 text-[#666] dark:text-amber-50/90">
-                                  {entry.reason}
-                                </p>
+                              <CardContent className={diffCardContentClassName}>
+                                <strong className={diffCardTitleClassName}>原因说明</strong>
+                                <p>{entry.reason}</p>
                               </CardContent>
                             </Card>
                           </div>
