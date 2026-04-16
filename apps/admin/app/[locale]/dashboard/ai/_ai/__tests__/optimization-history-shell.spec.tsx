@@ -200,6 +200,10 @@ describe('AdminAiOptimizationHistoryShell', () => {
     const historyTable = screen.getByRole('grid', { name: '优化记录中心表格' })
     expect(historyTable).toBeInTheDocument()
     expect(historyTable).not.toHaveClass('min-w-[1180px]')
+    expect(screen.getByTestId('optimization-history-pagination')).toBeInTheDocument()
+    expect(screen.getByTestId('optimization-history-pagination-summary')).toHaveTextContent(
+      '第 1-1 条，共 1 条',
+    )
     expect(screen.getByText('JS 高级全栈工程师 JD')).toBeInTheDocument()
     expect(screen.queryByText('职位概述')).not.toBeInTheDocument()
     expect(screen.getAllByText(summary)).toHaveLength(2)

@@ -1,9 +1,9 @@
 'use client'
 
-import { Button, Chip, Modal, Table, Tooltip } from '@heroui/react'
+import { Button, Chip, Modal, Pagination, Table, Tooltip } from '@heroui/react'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import {
   extractOptimizationInstructionTitle,
@@ -23,6 +23,8 @@ interface ResumeOptimizationHistoryPanelProps {
     }
   >
 }
+
+const HISTORY_ROWS_PER_PAGE = 5
 
 function formatHistoryTime(createdAt: string) {
   return new Date(createdAt).toLocaleString('zh-CN', {
@@ -171,6 +173,27 @@ export function ResumeOptimizationHistoryPanel({
   onOpenDetail,
   relationStates,
 }: ResumeOptimizationHistoryPanelProps) {
+  const [page, setPage] = useState(1)
+
+  const totalPages = Math.max(1, Math.ceil(entries.length / HISTORY_ROWS_PER_PAGE))
+  const pages = useMemo(
+    () => Array.from({ length: totalPages }, (_, index) => index + 1),
+    [totalPages],
+  )
+  const paginatedEntries = useMemo(() => {
+    const startIndex = (page - 1) * HISTORY_ROWS_PER_PAGE
+
+    return entries.slice(startIndex, startIndex + HISTORY_ROWS_PER_PAGE)
+  }, [entries, page])
+  const rangeStart = entries.length === 0 ? 0 : (page - 1) * HISTORY_ROWS_PER_PAGE + 1
+  const rangeEnd = entries.length === 0 ? 0 : Math.min(page * HISTORY_ROWS_PER_PAGE, entries.length)
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages)
+    }
+  }, [page, totalPages])
+
   return (
     <section className="grid gap-5 rounded-[2rem] border border-zinc-200/80 bg-white/88 p-5 shadow-[0_18px_52px_rgba(15,23,42,0.06)] dark:border-zinc-800 dark:bg-zinc-950/70 dark:shadow-none">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -215,7 +238,7 @@ export function ResumeOptimizationHistoryPanel({
                   <Table.Column className="w-[13rem]">关联状态</Table.Column>
                   <Table.Column className="w-[6.5rem] text-end">操作</Table.Column>
                 </Table.Header>
-                <Table.Body items={entries}>
+                <Table.Body items={paginatedEntries}>
                   {(entry) => {
                     const relationState = relationStates[entry.resultId]
                     const linkedScenarios = relationState?.linkedScenarios ?? []
@@ -316,6 +339,45 @@ export function ResumeOptimizationHistoryPanel({
                 </Table.Body>
               </Table.Content>
             </Table.ScrollContainer>
+            <Table.Footer>
+              <Pagination
+                className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
+                data-testid="optimization-history-pagination"
+                size="sm">
+                <Pagination.Summary data-testid="optimization-history-pagination-summary">
+                  {`第 ${rangeStart}-${rangeEnd} 条，共 ${entries.length} 条`}
+                </Pagination.Summary>
+                <Pagination.Content className="flex flex-wrap justify-end gap-1.5">
+                  <Pagination.Item>
+                    <Pagination.Previous
+                      isDisabled={page === 1}
+                      onPress={() => setPage((currentPage) => Math.max(1, currentPage - 1))}>
+                      <Pagination.PreviousIcon />
+                      上一页
+                    </Pagination.Previous>
+                  </Pagination.Item>
+                  {pages.map((targetPage) => (
+                    <Pagination.Item key={targetPage}>
+                      <Pagination.Link
+                        isActive={targetPage === page}
+                        onPress={() => setPage(targetPage)}>
+                        {targetPage}
+                      </Pagination.Link>
+                    </Pagination.Item>
+                  ))}
+                  <Pagination.Item>
+                    <Pagination.Next
+                      isDisabled={page === totalPages}
+                      onPress={() =>
+                        setPage((currentPage) => Math.min(totalPages, currentPage + 1))
+                      }>
+                      下一页
+                      <Pagination.NextIcon />
+                    </Pagination.Next>
+                  </Pagination.Item>
+                </Pagination.Content>
+              </Pagination>
+            </Table.Footer>
           </Table>
         </div>
       )}
