@@ -121,8 +121,8 @@ docker compose -f compose.prod.yml --env-file .env ps
 
 ```bash
 curl http://127.0.0.1:5577/
-curl http://127.0.0.1:5555/zh
-curl http://127.0.0.1:5566/zh
+curl http://127.0.0.1:5555/
+curl http://127.0.0.1:5566/login
 ```
 
 预期：

@@ -287,10 +287,10 @@ healthcheck_url() {
       printf '%s\n' 'http://127.0.0.1:5577/api'
       ;;
     web)
-      printf '%s\n' 'http://127.0.0.1:5555/zh'
+      printf '%s\n' 'http://127.0.0.1:5555/'
       ;;
     admin)
-      printf '%s\n' 'http://127.0.0.1:5566/zh'
+      printf '%s\n' 'http://127.0.0.1:5566/login'
       ;;
     *)
       die "Unknown service for healthcheck: $1"

@@ -54,7 +54,7 @@ services:
           'CMD',
           'node',
           '-e',
-          "fetch('http://127.0.0.1:5555/zh').then((response)=>{if(!response.ok)process.exit(1)}).catch(()=>process.exit(1))",
+          "fetch('http://127.0.0.1:5555/').then((response)=>{if(!response.ok)process.exit(1)}).catch(()=>process.exit(1))",
         ]
       interval: 20s
       timeout: 10s
@@ -84,7 +84,7 @@ services:
           'CMD',
           'node',
           '-e',
-          "fetch('http://127.0.0.1:5566/zh').then((response)=>{if(!response.ok)process.exit(1)}).catch(()=>process.exit(1))",
+          "fetch('http://127.0.0.1:5566/login').then((response)=>{if(!response.ok)process.exit(1)}).catch(()=>process.exit(1))",
         ]
       interval: 20s
       timeout: 10s
