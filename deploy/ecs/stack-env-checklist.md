@@ -27,7 +27,7 @@ cp /opt/my-resume/repo/deploy/templates/stack.env.example /opt/my-resume/shared/
 - `DEPLOY_ROOT`
   - 用途：部署根目录
   - 默认：`/opt/my-resume`
-  - 一般可不填，除非你想改目录
+  - 如果你当前服务器准备用 `/root/my-resume`，这里必须显式填：`DEPLOY_ROOT=/root/my-resume`
 
 ### 域名
 
@@ -39,11 +39,11 @@ cp /opt/my-resume/repo/deploy/templates/stack.env.example /opt/my-resume/shared/
   - 对应公开站 `web`
 
 - `ADMIN_DOMAIN`
-  - 示例：`admin.fridolph.top`
+  - 示例：`resume-admin.fridolph.top`
   - 对应后台 `admin`
 
 - `API_DOMAIN`
-  - 示例：`api.fridolph.top`
+  - 示例：`resume-api.fridolph.top`
   - 对应 Nest 服务 `server`
 
 ### HTTPS
@@ -85,8 +85,8 @@ cp /opt/my-resume/repo/deploy/templates/stack.env.example /opt/my-resume/shared/
 REPO_URL=https://github.com/Fridolph/my-resume.git
 ROOT_DOMAIN=fridolph.top
 RESUME_DOMAIN=resume.fridolph.top
-ADMIN_DOMAIN=admin.fridolph.top
-API_DOMAIN=api.fridolph.top
+ADMIN_DOMAIN=resume-admin.fridolph.top
+API_DOMAIN=resume-api.fridolph.top
 LETSENCRYPT_EMAIL=ops@fridolph.top
 JWT_SECRET=replace-with-a-long-random-secret
 AI_PROVIDER=qiniu

@@ -25,9 +25,33 @@ if command -v apt-get >/dev/null 2>&1; then
       run_cmd bash -lc 'curl -fsSL https://get.docker.com | sudo sh'
     fi
   fi
+elif command -v dnf >/dev/null 2>&1; then
+  sudo_cmd dnf makecache
+  sudo_cmd dnf install -y ca-certificates curl git nginx certbot python3 python3-certbot-nginx
+
+  if ! command -v docker >/dev/null 2>&1; then
+    if [[ "$(id -u)" -eq 0 ]]; then
+      run_cmd bash -lc 'curl -fsSL https://get.docker.com | sh'
+    else
+      run_cmd bash -lc 'curl -fsSL https://get.docker.com | sudo sh'
+    fi
+  fi
+elif command -v yum >/dev/null 2>&1; then
+  sudo_cmd yum makecache
+  sudo_cmd yum install -y ca-certificates curl git nginx certbot python3 python3-certbot-nginx
+
+  if ! command -v docker >/dev/null 2>&1; then
+    if [[ "$(id -u)" -eq 0 ]]; then
+      run_cmd bash -lc 'curl -fsSL https://get.docker.com | sh'
+    else
+      run_cmd bash -lc 'curl -fsSL https://get.docker.com | sudo sh'
+    fi
+  fi
 else
-  die "bootstrap.sh currently supports apt-based Linux only"
+  die "bootstrap.sh currently supports apt / dnf / yum based Linux only"
 fi
+
+resolve_nginx_site_layout
 
 if [[ "$DRY_RUN" != '1' ]] && ! docker compose version >/dev/null 2>&1; then
   die "Docker Compose plugin is required but not available after bootstrap"
@@ -55,12 +79,17 @@ else
   log "Stack env already exists: $DEPLOY_ROOT/shared/config/stack.env"
 fi
 
-if [[ -L /etc/nginx/sites-enabled/default || -f /etc/nginx/sites-enabled/default ]]; then
+if [[ -n "${NGINX_ENABLED:-}" ]] && [[ -L /etc/nginx/sites-enabled/default || -f /etc/nginx/sites-enabled/default ]]; then
   sudo_cmd rm -f /etc/nginx/sites-enabled/default
 fi
 
 sudo_cmd nginx -t
 sudo_cmd systemctl enable nginx
 sudo_cmd systemctl restart nginx
+
+log "Detected nginx target: $NGINX_TARGET"
+if [[ -n "${NGINX_ENABLED:-}" ]]; then
+  log "Detected nginx enabled link: $NGINX_ENABLED"
+fi
 
 log "Bootstrap completed. Next: fill $DEPLOY_ROOT/shared/config/stack.env and run release.sh v2.0.0"

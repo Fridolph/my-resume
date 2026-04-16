@@ -221,6 +221,50 @@ compose_cmd() {
   sudo_cmd docker compose -f "$compose_file" --env-file "$env_file" "$@"
 }
 
+resolve_nginx_site_layout() {
+  if [[ -d /etc/nginx/conf.d ]]; then
+    NGINX_TARGET=${NGINX_TARGET:-/etc/nginx/conf.d/my-resume.conf}
+    NGINX_ENABLED=${NGINX_ENABLED:-}
+    export NGINX_TARGET NGINX_ENABLED
+    return 0
+  fi
+
+  if [[ -d /etc/nginx/sites-available ]]; then
+    NGINX_TARGET=${NGINX_TARGET:-/etc/nginx/sites-available/my-resume.conf}
+    if [[ -d /etc/nginx/sites-enabled ]]; then
+      NGINX_ENABLED=${NGINX_ENABLED:-/etc/nginx/sites-enabled/my-resume.conf}
+    else
+      NGINX_ENABLED=${NGINX_ENABLED:-}
+    fi
+    export NGINX_TARGET NGINX_ENABLED
+    return 0
+  fi
+
+  if [[ -f /etc/nginx/nginx.conf ]]; then
+    NGINX_TARGET=${NGINX_TARGET:-/etc/nginx/my-resume.conf}
+    NGINX_ENABLED=${NGINX_ENABLED:-}
+    export NGINX_TARGET NGINX_ENABLED
+    return 0
+  fi
+
+  die "Unable to detect nginx site layout under /etc/nginx"
+}
+
+install_nginx_site_config() {
+  local source_config="$1"
+
+  [[ -f "$source_config" ]] || die "Nginx source config not found: $source_config"
+  [[ -n "${NGINX_TARGET:-}" ]] || die "NGINX_TARGET is not resolved"
+
+  sudo_cmd mkdir -p "$(dirname "$NGINX_TARGET")"
+  sudo_cmd cp "$source_config" "$NGINX_TARGET"
+
+  if [[ -n "${NGINX_ENABLED:-}" ]]; then
+    sudo_cmd mkdir -p "$(dirname "$NGINX_ENABLED")"
+    sudo_cmd ln -sfn "$NGINX_TARGET" "$NGINX_ENABLED"
+  fi
+}
+
 healthcheck_url() {
   case "$1" in
     server)

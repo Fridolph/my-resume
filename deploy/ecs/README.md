@@ -43,8 +43,8 @@
 ## 域名与端口
 
 - `resume.<your-domain>` → `web`
-- `admin.<your-domain>` → `admin`
-- `api.<your-domain>` → `server`
+- `resume-admin.<your-domain>` → `admin`
+- `resume-api.<your-domain>` → `server`
 
 容器端口固定为：
 
@@ -54,6 +54,15 @@
 
 对外访问全部经过 Nginx；Compose 只把端口绑定到 `127.0.0.1`。
 
+补充说明：
+
+- `web` / `admin` 虽然是前端应用，但当前并不是静态导出站点，而是 Next.js 生产服务。
+- 线上形态为：
+  - `web`：`next build` 后使用 `standalone` 产物常驻在 `5555`
+  - `admin`：`next build` 后使用 `standalone` 产物常驻在 `5566`
+  - `server`：Nest 生产构建常驻在 `5577`
+- 因此当前方案不需要 PM2，也不需要把 `web/admin` 复制到静态 `dist` 目录交给 Nginx 直出。
+
 ## 首次部署步骤
 
 ### 1. 确认 DNS
@@ -61,8 +70,8 @@
 先把这 3 个子域名都解析到 ECS 公网 IP：
 
 - `resume.<your-domain>`
-- `admin.<your-domain>`
-- `api.<your-domain>`
+- `resume-admin.<your-domain>`
+- `resume-api.<your-domain>`
 
 ### 2. 克隆仓库
 
@@ -98,6 +107,7 @@ cd /opt/my-resume/repo
 至少要填这些项：
 
 - `REPO_URL`
+- `DEPLOY_ROOT=/root/my-resume`（如果你要把整套部署都放在 `/root/my-resume`）
 - `ROOT_DOMAIN`
 - `RESUME_DOMAIN`
 - `ADMIN_DOMAIN`
@@ -118,6 +128,12 @@ cd /opt/my-resume/repo
 ```
 
 ### 6. 发布 `v2.0.0`
+
+如果服务器上已经有旧的静态站点配置文件占用了 `resume.<your-domain>`，先备份移走，避免 `server_name` 冲突。例如：
+
+```bash
+sudo mv /etc/nginx/conf.d/resume-fridolph-top.conf /etc/nginx/conf.d/resume-fridolph-top.conf.bak
+```
 
 ```bash
 ./deploy/ecs/release.sh v2.0.0
@@ -186,6 +202,7 @@ git fetch --tags --force
 ## 当前边界
 
 - 当前脚本不改业务代码，也不顺手收紧 `CORS_ORIGINS`
-- 默认面向 Debian / Ubuntu 这类 `apt` 系 Linux
+- 默认支持 Debian / Ubuntu 的 `apt`，以及 Alibaba Cloud / RHEL 系常见的 `dnf` / `yum`
+- Nginx 站点配置会自动兼容 `/etc/nginx/conf.d` 与 `/etc/nginx/sites-available`
 - TLS 首版基于 `certbot --nginx`，适合先完成 `v2.0.0` 验证与上线
 - SQLite 与 RAG 索引通过宿主机目录持久化，不额外引入外部数据库

@@ -36,11 +36,10 @@ PREVIOUS_RELEASE_FILE="$STATE_DIR/previous-release"
 CURRENT_RELEASE_FILE="$STATE_DIR/current-release"
 NGINX_HTTP_CONFIG="$DEPLOY_ROOT/shared/nginx/my-resume.http.conf"
 NGINX_SSL_CONFIG="$DEPLOY_ROOT/shared/nginx/my-resume.conf"
-NGINX_TARGET="/etc/nginx/sites-available/my-resume.conf"
-NGINX_ENABLED="/etc/nginx/sites-enabled/my-resume.conf"
 CERTBOT_CERT_NAME=${CERTBOT_CERT_NAME:-$RESUME_DOMAIN}
 
 mkdir -p "$STATE_DIR" "$DEPLOY_ROOT/releases"
+resolve_nginx_site_layout
 
 if [[ ! -d "$REPO_CACHE_DIR/.git" ]]; then
   log "Cloning repo cache into $REPO_CACHE_DIR"
@@ -67,29 +66,26 @@ if [[ -L "$CURRENT_LINK" ]]; then
   readlink "$CURRENT_LINK" >"$PREVIOUS_RELEASE_FILE" || true
 fi
 
-sudo_cmd cp "$NGINX_HTTP_CONFIG" "$NGINX_TARGET"
-sudo_cmd ln -sfn "$NGINX_TARGET" "$NGINX_ENABLED"
+install_nginx_site_config "$NGINX_HTTP_CONFIG"
 sudo_cmd nginx -t
 sudo_cmd systemctl reload nginx
 
-if [[ ! -f "/etc/letsencrypt/live/$CERTBOT_CERT_NAME/fullchain.pem" ]]; then
-  log "Issuing initial TLS certificate via certbot --nginx"
-  sudo_cmd certbot --nginx \
-    --non-interactive \
-    --agree-tos \
-    --redirect \
-    --cert-name "$CERTBOT_CERT_NAME" \
-    -m "$LETSENCRYPT_EMAIL" \
-    -d "$RESUME_DOMAIN" \
-    -d "$ADMIN_DOMAIN" \
-    -d "$API_DOMAIN"
-  run_cmd "$SCRIPT_DIR/render-config.sh" --tag "$TAG" --release-dir "$RELEASE_DIR"
-else
-  log "TLS certificate already exists for $CERTBOT_CERT_NAME"
-fi
+log "Ensuring TLS certificate via certbot --nginx"
+sudo_cmd certbot --nginx \
+  --non-interactive \
+  --agree-tos \
+  --redirect \
+  --keep-until-expiring \
+  --expand \
+  --cert-name "$CERTBOT_CERT_NAME" \
+  -m "$LETSENCRYPT_EMAIL" \
+  -d "$RESUME_DOMAIN" \
+  -d "$ADMIN_DOMAIN" \
+  -d "$API_DOMAIN"
 
-sudo_cmd cp "$NGINX_SSL_CONFIG" "$NGINX_TARGET"
-sudo_cmd ln -sfn "$NGINX_TARGET" "$NGINX_ENABLED"
+run_cmd "$SCRIPT_DIR/render-config.sh" --tag "$TAG" --release-dir "$RELEASE_DIR"
+
+install_nginx_site_config "$NGINX_SSL_CONFIG"
 sudo_cmd nginx -t
 sudo_cmd systemctl reload nginx
 

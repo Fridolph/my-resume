@@ -1,226 +1,212 @@
 # my-resume
 
-一个以“个人简历重构”为主题的教程型全栈 monorepo。
+> 教程型全栈 Monorepo：从旧版 Vue 简历站，渐进重构为可开源、可部署、可继续演进的三端架构。
 
-当前仓库已经从旧版静态 `Vue3 + Vite` 简历站，渐进重构到新的三端结构：
+[English](./README.en.md)
 
-- `apps/web`：公开简历展示端
-- `apps/admin`：后台管理端
-- `apps/server`：唯一业务后端
+[![CI](https://img.shields.io/github/actions/workflow/status/Fridolph/my-resume/ci.yml?branch=main&label=CI&logo=githubactions)](https://github.com/Fridolph/my-resume/actions/workflows/ci.yml)
+[![Deploy ECS](https://img.shields.io/github/actions/workflow/status/Fridolph/my-resume/deploy-ecs.yml?branch=main&label=Deploy%20ECS&logo=githubactions)](https://github.com/Fridolph/my-resume/actions/workflows/deploy-ecs.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![Node.js](https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white)](./.nvmrc)
+[![pnpm](https://img.shields.io/badge/pnpm-10.8.0-F69220?logo=pnpm&logoColor=white)](./package.json)
+[![Next.js](https://img.shields.io/badge/Next.js-15.5.2-000000?logo=nextdotjs)](./apps/web/package.json)
+[![React](https://img.shields.io/badge/React-19.1.1-149eca?logo=react&logoColor=white)](./apps/web/package.json)
+[![NestJS](https://img.shields.io/badge/NestJS-11.0.1-E0234E?logo=nestjs&logoColor=white)](./apps/server/package.json)
+[![HeroUI](https://img.shields.io/badge/HeroUI-3.0.1-4F46E5)](./apps/admin/package.json)
+[![Coverage](https://img.shields.io/badge/Coverage-Vitest%20%28local%29-94a3b8)](#测试与质量)
 
-项目定位是“可学习、可开源、可部署、可继续演进”的基础教程版，而不是一次性做成复杂 SaaS。
+## ✨ 项目定位
 
-## 当前状态
+`my-resume` 是一个“边做边讲解”的实战仓库：
 
-当前仓库已经达到开源版最小闭环：
+- 面向 **个人品牌 + 工程化简历产品** 的长期迭代
+- 保持 **Issue 驱动、里程碑推进、可回滚** 的研发节奏
+- 兼顾 **开发体验、部署可行性、教程产出**
 
-- 三端可独立启动与访问
-- 公开站可读取已发布双语简历
-- 后台具备草稿编辑、发布、导出与角色边界
-- AI 工作台已具备分析、结构化建议、模块级 diff / apply 与 apply 后草稿反馈
+当前主线已具备完整闭环：
 
-如果你是第一次进入仓库，建议把它理解成：
+- `web`：公开简历展示（双语、主题、导出入口）
+- `admin`：后台编辑、发布、AI 工作台
+- `server`：唯一业务后端（鉴权、简历、导出、AI/RAG）
 
-- 一个已经能跑通主线的教程型作品
-- 一个适合继续做页面升级与个人产品分支扩展的基础底座
-- 一个明确收住边界的开源版，而不是复杂产品的完整版
+## 🧭 在线地址（当前生产域名）
 
-## 当前能力
+- Web：<https://resume.fridolph.top>
+- Admin：<https://admin-resume.fridolph.top>
+- API：<https://api-resume.fridolph.top>
 
-- `web / admin / server` 三端可独立启动
-- `admin / viewer` 最小鉴权与角色边界
-- 双语标准简历内容模型与草稿 / 发布流
-- `Markdown / PDF` 导出与下载
-- SQLite / libsql + Drizzle 持久化
-- `light / dark` 主题基线
-- AI 文件提取、简历分析、结构化优化建议与一键应用草稿
-- GitHub Actions、Vercel / 云服务器部署基础说明
-- Docker Compose 一键本地启动
-
-## 仓库结构
+## 🏗️ 架构总览
 
 ```text
 apps/
-  admin/   Next.js 后台管理端
-  web/     Next.js 公开展示端
-  server/  NestJS 业务后端
+  web/      Next.js 15 + React 19 公开端
+  admin/    Next.js 15 + React 19 后台端
+  server/   NestJS 11 + Drizzle + libsql/SQLite 后端
 
 packages/
-  api-client/  最小共享契约
+  api-client/  前后端共享请求契约
+  ui/          共享 UI 样式与基础组件
+  utils/       共享工具函数
   config/      共享配置
-  ui/          最小共享 UI 与主题
 
 docs/
   00-文档导航.md
   10-架构设计/
   20-研发流程/
   30-开发日志/
+  40-部署上线/
   40-教程与博客/
 ```
 
-## 快速开始
+## 🧱 技术栈
 
-### 方式一：本地开发
+| Layer | Stack |
+| --- | --- |
+| Frontend | Next.js 15, React 19, HeroUI v3, Tailwind CSS v4 |
+| Backend | NestJS 11, Drizzle ORM, libsql / SQLite |
+| AI | 多 Provider（mock / qiniu / deepseek / openai-compatible）, RAG 最小链路 |
+| Tooling | pnpm workspace, Turbo, Vitest, GitHub Actions, Docker Compose |
 
-1. 安装依赖
+## 🚀 快速开始
+
+### 1) 环境要求
+
+- Node.js `22`（见 `./.nvmrc`）
+- pnpm `10.8.0`
 
 ```bash
-pnpm install
+corepack enable
+pnpm -v
+node -v
 ```
 
-2. 准备环境变量
+### 2) 安装依赖
+
+```bash
+pnpm install --frozen-lockfile
+```
+
+### 3) 配置环境变量
 
 ```bash
 cp .env.example .env
 ```
 
-最少需要确认这些变量：
+至少确认这些变量：
 
 - `JWT_SECRET`
 - `DATABASE_URL`
 - `NEXT_PUBLIC_API_BASE_URL`
 - `RESUME_API_BASE_URL`
-- `AI_PROVIDER`
-- 对应 AI Provider 的 API Key
+- `AI_PROVIDER` 与对应 API Key
 
-3. 启动三端
+### 4) 启动开发环境
 
 ```bash
 pnpm dev
 ```
 
-也可以分别启动：
-
-```bash
-pnpm dev:server
-pnpm dev:web
-pnpm dev:admin
-```
-
 默认端口：
 
-- `web`：`http://localhost:5555`
-- `admin`：`http://localhost:5566`
-- `server`：`http://localhost:5577`
+- Web: <http://localhost:5555>
+- Admin: <http://localhost:5566>
+- Server: <http://localhost:5577>
 
-### 默认演示账号
+可按端单独启动：
 
-当前本地默认演示账号为：
+```bash
+pnpm dev:web
+pnpm dev:admin
+pnpm dev:server
+```
+
+### 5) 本地默认演示账号
 
 - `admin / admin123456`
 - `viewer / viewer123456`
 
-这些账号只适合本地教程演示；如果你要对外部署，请自行替换。
+> 仅用于本地教程演示，生产环境请替换。
 
-### 方式二：Docker Compose
-
-1. 准备环境变量
+## 🐳 Docker 本地一键启动
 
 ```bash
 cp .env.example .env
-```
-
-2. 一键启动
-
-```bash
 pnpm docker:up
 ```
 
-或直接：
-
-```bash
-docker compose up --build
-```
-
-首次构建完成后，同样访问：
-
-- `web`：`http://localhost:5555`
-- `admin`：`http://localhost:5566`
-- `server`：`http://localhost:5577`
-
-停止容器：
+停止：
 
 ```bash
 pnpm docker:down
 ```
 
-## 常用命令
+## 🧪 测试与质量
+
+常用命令：
 
 ```bash
-pnpm test
-pnpm test:e2e
+pnpm test          # workspace tests
+pnpm test:e2e      # server e2e
 pnpm typecheck:all
 pnpm build:all
 ```
 
-根脚本已经默认切换为 monorepo 主线入口：
+覆盖率：
 
-- `pnpm dev`
-- `pnpm build`
-- `pnpm typecheck`
+```bash
+pnpm --filter @my-resume/server test:cov
+```
 
-旧版 `Vue3 + Vite` 站点脚本仍保留为：
+> 当前仓库使用 Vitest 本地生成覆盖率报告；Badge 暂为本地覆盖率模式（未接入外部覆盖率托管）。
 
-- `pnpm legacy:dev`
-- `pnpm legacy:build`
-- `pnpm legacy:preview`
-- `pnpm legacy:typecheck`
+## 📦 常用脚本（根目录）
 
-## 环境变量说明
+| Command | Description |
+| --- | --- |
+| `pnpm dev` | 三端并行开发 |
+| `pnpm build` | 全量构建 |
+| `pnpm typecheck` | 全量类型检查 |
+| `pnpm test:ci` | CI 同款测试入口（unit + e2e） |
+| `pnpm docker:up` | Docker Compose 启动 |
 
-当前仓库内提供了：
+## 🚢 部署文档
 
-- [`.env.example`](./.env.example)
+- [Vercel 与云服务器最小部署说明](./docs/40-部署上线/01-Vercel-与-云服务器-最小部署说明.md)
+- [开源版发布前检查清单](./docs/40-部署上线/02-开源版发布前检查清单.md)
+- [GitHub Actions 连接 ECS 发布说明](./docs/40-部署上线/03-GitHub-Actions-连接-ECS-发布说明.md)
+- [ECS 首次上线验收清单](./docs/40-部署上线/04-ECS-首次上线验收清单.md)
+- [ECS 部署脚本说明](./deploy/ecs/README.md)
 
-其中比较关键的变量有：
+## 📚 文档导航
 
-- `PORT`：NestJS 服务端口，默认 `5577`
-- `CORS_ORIGINS`：允许访问后端的前端来源
-- `NEXT_PUBLIC_API_BASE_URL`：浏览器访问后端的公开地址
-- `RESUME_API_BASE_URL`：`apps/web` 服务端渲染时优先使用的后端地址
-- `DATABASE_URL`：SQLite / libsql 连接串
-- `JWT_SECRET`：JWT 签名密钥
-- `AI_PROVIDER`：当前使用的 AI Provider
+- [文档首页](./docs/README.md)
+- [文档导航](./docs/00-文档导航.md)
+- [重构总方案（学习版）](./docs/10-架构设计/01-个人简历-monorepo-重构总方案-v1学习版.md)
+- [研发流程规范](./docs/20-研发流程/01-GitHub-标准开发流程.md)
+- [教程与博客目录](./docs/40-教程与博客/README.md)
 
-当前已支持的 Provider 入口：
+## 🤝 贡献方式
 
-- `mock`
-- `qiniu`
-- `deepseek`
-- `openai-compatible`
+欢迎提 Issue / PR。建议按以下流程协作：
 
-## 阅读入口
+1. 先建 Issue（背景 / 目标 / 非目标 / 验收 / 测试计划）
+2. 从 `development` 开分支开发
+3. 小步提交 + 测试验证 + 开发日志
+4. CI 通过后再合并
 
-- 文档首页：[`docs/README.md`](./docs/README.md)
-- 文档导航：[`docs/00-文档导航.md`](./docs/00-%E6%96%87%E6%A1%A3%E5%AF%BC%E8%88%AA.md)
-- 总方案：[`docs/10-架构设计/01-个人简历-monorepo-重构总方案-v1学习版.md`](./docs/10-%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/01-%E4%B8%AA%E4%BA%BA%E7%AE%80%E5%8E%86-monorepo-%E9%87%8D%E6%9E%84%E6%80%BB%E6%96%B9%E6%A1%88-v1%E5%AD%A6%E4%B9%A0%E7%89%88.md)
-- GitHub 开发流程：[`docs/20-研发流程/01-GitHub-标准开发流程.md`](./docs/20-%E7%A0%94%E5%8F%91%E6%B5%81%E7%A8%8B/01-GitHub-%E6%A0%87%E5%87%86%E5%BC%80%E5%8F%91%E6%B5%81%E7%A8%8B.md)
-- 发布前检查：[`docs/40-部署上线/02-开源版发布前检查清单.md`](./docs/40-%E9%83%A8%E7%BD%B2%E4%B8%8A%E7%BA%BF/02-%E5%BC%80%E6%BA%90%E7%89%88%E5%8F%91%E5%B8%83%E5%89%8D%E6%A3%80%E6%9F%A5%E6%B8%85%E5%8D%95.md)
-- ECS 手动部署脚本：[`deploy/ecs/README.md`](./deploy/ecs/README.md)
-- ECS `stack.env` 填写清单：[`deploy/ecs/stack-env-checklist.md`](./deploy/ecs/stack-env-checklist.md)
-- GitHub Actions 连接 ECS 发布说明：[`docs/40-部署上线/03-GitHub-Actions-连接-ECS-发布说明.md`](./docs/40-%E9%83%A8%E7%BD%B2%E4%B8%8A%E7%BA%BF/03-GitHub-Actions-%E8%BF%9E%E6%8E%A5-ECS-%E5%8F%91%E5%B8%83%E8%AF%B4%E6%98%8E.md)
-- ECS 首次上线验收清单：[`docs/40-部署上线/04-ECS-首次上线验收清单.md`](./docs/40-%E9%83%A8%E7%BD%B2%E4%B8%8A%E7%BA%BF/04-ECS-%E9%A6%96%E6%AC%A1%E4%B8%8A%E7%BA%BF%E9%AA%8C%E6%94%B6%E6%B8%85%E5%8D%95.md)
-- 系列文章目录：[`docs/40-教程与博客/README.md`](./docs/40-%E6%95%99%E7%A8%8B%E4%B8%8E%E5%8D%9A%E5%AE%A2/README.md)
+详细规范见：
 
-## 发布前建议
+- [GitHub 标准开发流程](./docs/20-研发流程/01-GitHub-标准开发流程.md)
+- [里程碑与 Issue 拆解建议](./docs/20-研发流程/02-里程碑与-Issue-拆解建议.md)
 
-如果你准备把当前仓库作为开源版正式发布，建议至少先看一遍：
+## 🗺️ 路线图
 
-- [`docs/40-部署上线/02-开源版发布前检查清单.md`](./docs/40-%E9%83%A8%E7%BD%B2%E4%B8%8A%E7%BA%BF/02-%E5%BC%80%E6%BA%90%E7%89%88%E5%8F%91%E5%B8%83%E5%89%8D%E6%A3%80%E6%9F%A5%E6%B8%85%E5%8D%95.md)
-- [`docs/40-部署上线/01-Vercel-与-云服务器-最小部署说明.md`](./docs/40-%E9%83%A8%E7%BD%B2%E4%B8%8A%E7%BA%BF/01-Vercel-%E4%B8%8E-%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8-%E6%9C%80%E5%B0%8F%E9%83%A8%E7%BD%B2%E8%AF%B4%E6%98%8E.md)
+仓库采用里程碑式推进（M1 → M20+），每个阶段均有开发日志与教程沉淀。后续演进重点：
 
-## 当前边界
+- AI 工作台持续体验优化
+- RAG 能力增强与可观测性
+- 更稳定的部署与发布自动化
 
-当前开源版保持“小而稳”，明确不包含：
+## 📄 License
 
-- 多模板简历系统
-- JD 多版本定制简历
-- 完整 AI 队列与任务中心
-- 多租户 SaaS 能力
-- 复杂后台设计系统
-
-这些不是遗漏，而是显式后置到后续里程碑或独立产品线。
-
-## License
-
-`MIT`
+MIT © Fridolph

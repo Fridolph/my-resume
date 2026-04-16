@@ -100,5 +100,5 @@ jobs:
           set -euo pipefail
           cd "$DEPLOY_ROOT"
           git fetch --tags --force
-          ./deploy/ecs/release.sh "$DEPLOY_TAG"
+          DEPLOY_ROOT="$DEPLOY_ROOT" ./deploy/ecs/release.sh "$DEPLOY_TAG"
           EOF
