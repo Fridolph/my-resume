@@ -1,4 +1,3 @@
-import type { StandardResume } from '../../../resume/_resume/types/resume.types'
 import type {
   LocalizedText,
   ResumeDraftSnapshot,
@@ -78,6 +77,36 @@ export interface AiWorkbenchCachedReportSummary {
 export interface TriggerAiWorkbenchAnalysisResult {
   cached: boolean
   report: AiWorkbenchReport
+  usageRecordId: string
+}
+
+export type AiUsageRecordOperationType = 'analysis-report' | 'resume-optimization'
+export type AiUsageRecordStatus = 'succeeded' | 'failed'
+export type AiUsageRecordFilterType = 'all' | AiUsageRecordOperationType
+
+export interface AiUsageRecordSummary {
+  id: string
+  operationType: AiUsageRecordOperationType
+  scenario: AiWorkbenchScenario
+  locale: AiWorkbenchLocale
+  inputPreview: string
+  summary: string | null
+  provider: string
+  model: string
+  mode: string
+  generator: AiWorkbenchReportGenerator
+  status: AiUsageRecordStatus
+  relatedReportId: string | null
+  relatedResultId: string | null
+  errorMessage: string | null
+  durationMs: number
+  createdAt: string
+  scoreLabel?: string
+  scoreValue?: number
+}
+
+export interface AiUsageRecordDetail extends AiUsageRecordSummary {
+  detail: unknown | null
 }
 
 export type AiResumeOptimizationChangedModule =
@@ -113,8 +142,10 @@ export interface AiResumeOptimizationPatch {
 export interface AiResumeOptimizationDiffEntry {
   key: string
   label: string
-  before: string
-  after: string
+  currentValue: string
+  reason: string
+  suggestion: string
+  suggestedValue: string
 }
 
 export interface AiResumeOptimizationModuleDiff {
@@ -127,21 +158,21 @@ export interface AiResumeOptimizationModuleDiff {
 export interface ApplyAiResumeOptimizationInput {
   apiBaseUrl: string
   accessToken: string
-  draftUpdatedAt: string
+  resultId: string
   modules: AiResumeOptimizationChangedModule[]
-  patch: AiResumeOptimizationPatch
 }
 
 export interface AiResumeOptimizationResult {
+  resultId: string
+  usageRecordId?: string
+  locale: AiWorkbenchLocale
+  source?: 'cache' | 'usage-record'
+  canApply?: boolean
   summary: string
   focusAreas: string[]
   changedModules: AiResumeOptimizationChangedModule[]
   moduleDiffs: AiResumeOptimizationModuleDiff[]
-  applyPayload: {
-    draftUpdatedAt: string
-    patch: AiResumeOptimizationPatch
-  }
-  suggestedResume: StandardResume
+  createdAt: string
   providerSummary: {
     provider: string
     model: string

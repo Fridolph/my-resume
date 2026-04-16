@@ -2,6 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   createApplyAiResumeOptimizationMethod,
+  createFetchAiResumeOptimizationResultMethod,
+  createFetchAiUsageHistoryMethod,
+  createFetchAiUsageRecordDetailMethod,
   createFetchAiWorkbenchRuntimeMethod,
   createFetchCachedAiWorkbenchReportMethod,
   createFetchCachedAiWorkbenchReportsMethod,
@@ -60,6 +63,7 @@ describe('ai workbench api client', () => {
       vi.fn().mockResolvedValue(
         createJsonResponse(200, {
           cached: false,
+          usageRecordId: 'usage-report-001',
           report: {
             reportId: 'resume-review-demo',
             cacheKey: 'resume-review:zh:demo',
@@ -105,6 +109,7 @@ describe('ai workbench api client', () => {
         }),
       }),
     )
+    expect(response.usageRecordId).toBe('usage-report-001')
     expect(response.report.generator).toBe('ai-provider')
     expect(response.report.sections[0]?.title).toBe('分析结果')
   })
@@ -212,9 +217,13 @@ describe('ai workbench api client', () => {
       'fetch',
       vi.fn().mockResolvedValue(
         createJsonResponse(200, {
+          resultId: 'result-demo-001',
+          usageRecordId: 'usage-optimize-001',
+          locale: 'zh',
           summary: '已生成结构化建议',
           focusAreas: ['强化摘要', '补强项目亮点'],
           changedModules: ['profile', 'projects'],
+          createdAt: '2026-03-30T00:00:00.000Z',
           moduleDiffs: [
             {
               module: 'profile',
@@ -224,74 +233,14 @@ describe('ai workbench api client', () => {
                 {
                   key: 'profile-summary',
                   label: '个人摘要',
-                  before: '中文：原摘要 | English: Original summary',
-                  after: '中文：新的中文摘要 | English: New English summary',
+                  currentValue: '原摘要',
+                  suggestion: '建议将个人摘要改写得更贴近目标岗位。',
+                  reason: '个人摘要决定招聘方第一眼如何判断岗位匹配度。',
+                  suggestedValue: '新的中文摘要',
                 },
               ],
             },
           ],
-          applyPayload: {
-            draftUpdatedAt: '2026-03-30T00:00:00.000Z',
-            patch: {
-              profile: {
-                summary: {
-                  zh: '新的中文摘要',
-                  en: 'New English summary',
-                },
-              },
-            },
-          },
-          suggestedResume: {
-            meta: {
-              slug: 'standard-resume',
-              version: 1,
-              defaultLocale: 'zh',
-              locales: ['zh', 'en'],
-            },
-            profile: {
-              fullName: {
-                zh: '付寅生',
-                en: 'Yinsheng Fu',
-              },
-              headline: {
-                zh: '前端工程师',
-                en: 'Frontend Engineer',
-              },
-              summary: {
-                zh: '新的中文摘要',
-                en: 'New English summary',
-              },
-              location: {
-                zh: '成都',
-                en: 'Chengdu',
-              },
-              email: 'demo@example.com',
-              phone: '123456789',
-              website: 'https://example.com',
-              hero: {
-                frontImageUrl: '/img/avatar.jpg',
-                backImageUrl: '/img/avatar2.jpg',
-                linkUrl: 'https://github.com/Fridolph/my-resume',
-                slogans: [
-                  {
-                    zh: '热爱Coding，生命不息，折腾不止',
-                    en: 'Driven by coding, always building, always iterating',
-                  },
-                  {
-                    zh: '羽毛球爱好者，快乐挥拍，球场飞翔',
-                    en: 'Badminton lover, happy swings, full-court energy',
-                  },
-                ],
-              },
-              links: [],
-              interests: [],
-            },
-            education: [],
-            experiences: [],
-            projects: [],
-            skills: [],
-            highlights: [],
-          },
           providerSummary: {
             provider: 'qiniu',
             model: 'deepseek-v3',
@@ -306,6 +255,9 @@ describe('ai workbench api client', () => {
       accessToken: 'demo-token',
       instruction: '请根据 React 和 Next.js 岗位优化当前简历',
       locale: 'zh',
+      requestInit: {
+        signal: new AbortController().signal,
+      },
     })
 
     expect(fetch).toHaveBeenCalledWith(
@@ -322,10 +274,162 @@ describe('ai workbench api client', () => {
         }),
       }),
     )
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5577/api/ai/reports/resume-optimize',
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }),
+    )
+    expect(response.resultId).toBe('result-demo-001')
+    expect(response.usageRecordId).toBe('usage-optimize-001')
     expect(response.changedModules).toEqual(['profile', 'projects'])
     expect(response.moduleDiffs[0]?.entries[0]?.label).toBe('个人摘要')
-    expect(response.applyPayload.patch.profile?.summary?.zh).toBe('新的中文摘要')
-    expect(response.suggestedResume.profile.summary.zh).toBe('新的中文摘要')
+    expect(response.moduleDiffs[0]?.entries[0]?.suggestion).toBe(
+      '建议将个人摘要改写得更贴近目标岗位。',
+    )
+    expect(response.moduleDiffs[0]?.entries[0]?.reason).toBe(
+      '个人摘要决定招聘方第一眼如何判断岗位匹配度。',
+    )
+    expect(response.moduleDiffs[0]?.entries[0]?.suggestedValue).toBe('新的中文摘要')
+  })
+
+  it('should fetch stored resume optimization result by result id and locale', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        createJsonResponse(200, {
+          resultId: 'result-demo-001',
+          locale: 'zh',
+          summary: '已生成结构化建议',
+          focusAreas: ['强化摘要'],
+          changedModules: ['profile'],
+          createdAt: '2026-03-30T00:00:00.000Z',
+          moduleDiffs: [],
+          providerSummary: {
+            provider: 'qiniu',
+            model: 'deepseek-v3',
+            mode: 'openai-compatible',
+          },
+        }),
+      ),
+    )
+
+    const response = await createFetchAiResumeOptimizationResultMethod({
+      apiBaseUrl: 'http://localhost:5577',
+      accessToken: 'demo-token',
+      locale: 'zh',
+      resultId: 'result-demo-001',
+    })
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5577/api/ai/reports/resume-optimize/results/result-demo-001?locale=zh',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer demo-token',
+        }),
+      }),
+    )
+    expect(response.resultId).toBe('result-demo-001')
+    expect(response.locale).toBe('zh')
+  })
+
+  it('should fetch ai usage history with filter and limit query', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        createJsonResponse(200, {
+          records: [
+            {
+              id: 'usage-report-001',
+              operationType: 'analysis-report',
+              scenario: 'jd-match',
+              locale: 'zh',
+              inputPreview: 'NestJS React',
+              summary: '匹配摘要',
+              provider: 'qiniu',
+              model: 'deepseek-v3',
+              mode: 'openai-compatible',
+              generator: 'ai-provider',
+              status: 'succeeded',
+              relatedReportId: 'report-001',
+              relatedResultId: null,
+              errorMessage: null,
+              durationMs: 1800,
+              createdAt: '2026-04-15T10:00:00.000Z',
+              scoreLabel: '中等匹配',
+              scoreValue: 78,
+            },
+          ],
+        }),
+      ),
+    )
+
+    const response = await createFetchAiUsageHistoryMethod({
+      apiBaseUrl: 'http://localhost:5577',
+      accessToken: 'demo-token',
+      type: 'analysis-report',
+      limit: 20,
+    })
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5577/api/ai/reports/history?limit=20&type=analysis-report',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer demo-token',
+        }),
+      }),
+    )
+    expect(response[0]?.id).toBe('usage-report-001')
+  })
+
+  it('should fetch ai usage history detail by record id', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        createJsonResponse(200, {
+          id: 'usage-report-001',
+          operationType: 'analysis-report',
+          scenario: 'jd-match',
+          locale: 'zh',
+          inputPreview: 'NestJS React',
+          summary: '匹配摘要',
+          provider: 'qiniu',
+          model: 'deepseek-v3',
+          mode: 'openai-compatible',
+          generator: 'ai-provider',
+          status: 'succeeded',
+          relatedReportId: 'report-001',
+          relatedResultId: null,
+          errorMessage: null,
+          durationMs: 1800,
+          createdAt: '2026-04-15T10:00:00.000Z',
+          detail: {
+            reportId: 'report-001',
+            summary: '匹配摘要',
+          },
+        }),
+      ),
+    )
+
+    const response = await createFetchAiUsageRecordDetailMethod({
+      apiBaseUrl: 'http://localhost:5577',
+      accessToken: 'demo-token',
+      recordId: 'usage-report-001',
+    })
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5577/api/ai/reports/history/usage-report-001',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer demo-token',
+        }),
+      }),
+    )
+    expect(response.id).toBe('usage-report-001')
+    expect(response.detail).toEqual({
+      reportId: 'report-001',
+      summary: '匹配摘要',
+    })
   })
 
   it('should apply selected resume optimization modules with bearer token', async () => {
@@ -393,16 +497,8 @@ describe('ai workbench api client', () => {
     const response = await createApplyAiResumeOptimizationMethod({
       apiBaseUrl: 'http://localhost:5577',
       accessToken: 'demo-token',
-      draftUpdatedAt: '2026-03-30T00:00:00.000Z',
+      resultId: 'result-demo-001',
       modules: ['profile'],
-      patch: {
-        profile: {
-          summary: {
-            zh: '新的中文摘要',
-            en: 'New English summary',
-          },
-        },
-      },
     })
 
     expect(fetch).toHaveBeenCalledWith(
@@ -414,16 +510,8 @@ describe('ai workbench api client', () => {
           Authorization: 'Bearer demo-token',
         },
         body: JSON.stringify({
-          draftUpdatedAt: '2026-03-30T00:00:00.000Z',
+          resultId: 'result-demo-001',
           modules: ['profile'],
-          patch: {
-            profile: {
-              summary: {
-                zh: '新的中文摘要',
-                en: 'New English summary',
-              },
-            },
-          },
         }),
       }),
     )

@@ -1,12 +1,71 @@
 'use client'
 
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactNode } from 'react'
 import { useState } from 'react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { AiAnalysisPanel } from '../components/analysis-panel'
-import type { StandardResume } from '../../../resume/_resume/types/resume.types'
+import { AiAnalysisPanel, buildPendingProgress } from '../components/analysis-panel'
+import type { ResumeDraftSummarySnapshot } from '../../../resume/_resume/types/resume.types'
+import {
+  AI_WORKBENCH_RELATION_INDEX_STORAGE_KEY,
+  createInstructionHash,
+} from '../utils/resume-optimization-persistence'
+
+const { routerPushMock, fetchUsageHistoryMock, fetchUsageRecordDetailMock } = vi.hoisted(
+  () => ({
+    routerPushMock: vi.fn(),
+    fetchUsageHistoryMock: vi.fn(),
+    fetchUsageRecordDetailMock: vi.fn(),
+  }),
+)
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: routerPushMock,
+  }),
+}))
+
+vi.mock('../components/ai-analysis-history-table', () => ({
+  AiAnalysisHistoryTable: ({
+    records,
+    onOpenDetail,
+  }: {
+    records: Array<{ id: string; summary: string | null }>
+    onOpenDetail: (recordId: string) => void
+  }) => (
+    <div>
+      <span>{`分析记录数：${records.length}`}</span>
+      {records.map((record) => (
+        <button key={record.id} onClick={() => onOpenDetail(record.id)} type="button">
+          {record.summary ?? record.id}
+        </button>
+      ))}
+    </div>
+  ),
+}))
+
+vi.mock('../components/ai-analysis-report-drawer', () => ({
+  AiAnalysisReportDrawer: ({
+    isOpen,
+    onClose,
+    record,
+  }: {
+    isOpen: boolean
+    onClose: () => void
+    record: null | { summary: string | null; status: string }
+  }) =>
+    isOpen ? (
+      <div aria-label="AI 辅助分析详情" role="dialog">
+        <span>{`drawer:${record?.status}:${record?.summary ?? 'empty'}`}</span>
+        <button onClick={onClose} type="button">
+          关闭详情
+        </button>
+        <button type="button">定位到 projects 改写模块</button>
+      </div>
+    ) : null,
+}))
 
 vi.mock('alova/client', async () => {
   const React = await import('react')
@@ -14,81 +73,46 @@ vi.mock('alova/client', async () => {
   return {
     useRequest: (methodHandler: any) => {
       const [loading, setLoading] = React.useState(false)
+      const [error, setError] = React.useState<Error | undefined>(undefined)
 
-      const send = React.useCallback(async (...args: unknown[]) => {
-        setLoading(true)
+      const send = React.useCallback(
+        async (...args: unknown[]) => {
+          setLoading(true)
+          setError(undefined)
 
-        try {
-          const method =
-            typeof methodHandler === 'function' ? methodHandler(...args) : methodHandler
-          return await method.send()
-        } finally {
-          setLoading(false)
-        }
-      }, [methodHandler])
+          try {
+            const method =
+              typeof methodHandler === 'function' ? methodHandler(...args) : methodHandler
+            return await method.send()
+          } catch (nextError) {
+            const normalizedError =
+              nextError instanceof Error ? nextError : new Error('request failed')
+            setError(normalizedError)
+            throw normalizedError
+          } finally {
+            setLoading(false)
+          }
+        },
+        [methodHandler],
+      )
 
-      return { loading, send }
+      return { error, loading, send }
     },
   }
 })
 
 afterEach(() => {
   cleanup()
+  vi.useRealTimers()
 })
 
-function createTestResume(): StandardResume {
-  return {
-    meta: {
-      slug: 'standard-resume',
-      version: 1,
-      defaultLocale: 'zh',
-      locales: ['zh', 'en'],
-    },
-    profile: {
-      fullName: {
-        zh: '付寅生',
-        en: 'Yinsheng Fu',
-      },
-      headline: {
-        zh: '前端工程师',
-        en: 'Frontend Engineer',
-      },
-      summary: {
-        zh: '原始中文摘要',
-        en: 'Original English summary',
-      },
-      location: {
-        zh: '成都',
-        en: 'Chengdu',
-      },
-      email: 'demo@example.com',
-      phone: '123456789',
-      website: 'https://example.com',
-      hero: {
-        frontImageUrl: '/img/avatar.jpg',
-        backImageUrl: '/img/avatar2.jpg',
-        linkUrl: 'https://github.com/Fridolph/my-resume',
-        slogans: [
-          {
-            zh: '热爱Coding，生命不息，折腾不止',
-            en: 'Driven by coding, always building, always iterating',
-          },
-          {
-            zh: '羽毛球爱好者，快乐挥拍，球场飞翔',
-            en: 'Badminton lover, happy swings, full-court energy',
-          },
-        ],
-      },
-      links: [],
-      interests: [],
-    },
-    education: [],
-    experiences: [],
-    projects: [],
-    skills: [],
-    highlights: [],
-  }
-}
+beforeEach(() => {
+  routerPushMock.mockReset()
+  fetchUsageHistoryMock.mockReset()
+  fetchUsageRecordDetailMock.mockReset()
+  fetchUsageHistoryMock.mockResolvedValue([])
+  fetchUsageRecordDetailMock.mockResolvedValue(null)
+})
 
 const runtimeSummary = {
   provider: 'qiniu',
@@ -97,18 +121,36 @@ const runtimeSummary = {
   supportedScenarios: ['jd-match', 'resume-review', 'offer-compare'] as const,
 }
 
+const draftSummarySnapshot: ResumeDraftSummarySnapshot = {
+  status: 'draft',
+  updatedAt: '2026-03-31T09:00:00.000Z',
+  resume: {
+    meta: {
+      slug: 'standard-resume',
+      defaultLocale: 'zh',
+      locale: 'zh',
+    },
+    profile: {
+      headline: '当前草稿标题',
+      summary: '当前草稿摘要',
+    },
+    counts: {
+      education: 0,
+      experiences: 0,
+      projects: 0,
+      skills: 0,
+      highlights: 0,
+    },
+  },
+}
+
 function ControlledAnalysisPanel(props: {
-  createApplyResumeOptimizationMethod?: typeof import('../services/ai-workbench-api').createApplyAiResumeOptimizationMethod
   canAnalyze: boolean
   createGenerateResumeOptimizationMethod?: typeof import('../services/ai-workbench-api').createGenerateAiResumeOptimizationMethod
-  helperMessage?: string | null
-  onDraftApplied?: (snapshot: {
-    status: 'draft'
-    updatedAt: string
-    resume: StandardResume
-  }) => void
   createTriggerAnalysisMethod?: typeof import('../services/ai-workbench-api').createTriggerAiWorkbenchAnalysisMethod
+  helperMessage?: string | null
   initialContent?: string
+  inputAccessory?: ReactNode
 }) {
   const [content, setContent] = useState(props.initialContent ?? '')
 
@@ -118,35 +160,61 @@ function ControlledAnalysisPanel(props: {
       apiBaseUrl="http://localhost:5577"
       canAnalyze={props.canAnalyze}
       content={content}
-      helperMessage={props.helperMessage}
-      onContentChange={setContent}
-      onDraftApplied={props.onDraftApplied}
-      runtimeSummary={runtimeSummary}
-      createApplyResumeOptimizationMethod={props.createApplyResumeOptimizationMethod}
+      createFetchUsageHistoryMethod={
+        vi.fn((input) => ({
+          send: () => fetchUsageHistoryMock(input),
+        })) as any
+      }
+      createFetchUsageRecordDetailMethod={
+        vi.fn((input) => ({
+          send: () => fetchUsageRecordDetailMock(input.recordId),
+        })) as any
+      }
       createGenerateResumeOptimizationMethod={
         props.createGenerateResumeOptimizationMethod
       }
       createTriggerAnalysisMethod={props.createTriggerAnalysisMethod}
+      draftSnapshot={draftSummarySnapshot}
+      helperMessage={props.helperMessage}
+      inputAccessory={props.inputAccessory}
+      onContentChange={setContent}
+      runtimeSummary={runtimeSummary}
     />
   )
 }
 
 describe('AiAnalysisPanel', () => {
+  it('should compute pending progress with slower growth and completion cap', () => {
+    expect(buildPendingProgress(0)).toBe(0)
+    expect(buildPendingProgress(5)).toBe(7)
+    expect(buildPendingProgress(6)).toBe(9)
+    expect(buildPendingProgress(10)).toBe(15)
+    expect(buildPendingProgress(15)).toBe(24)
+    expect(buildPendingProgress(20)).toBe(36)
+    expect(buildPendingProgress(25)).toBe(51)
+    expect(buildPendingProgress(30)).toBe(70)
+    expect(buildPendingProgress(35)).toBe(75)
+    expect(buildPendingProgress(55)).toBe(95)
+    expect(buildPendingProgress(90)).toBe(95)
+    expect(buildPendingProgress(12, true)).toBe(100)
+  })
+
   it('should show read-only message when current role cannot trigger analysis', () => {
     render(<ControlledAnalysisPanel canAnalyze={false} />)
 
     expect(screen.getByText('当前角色只读')).toBeInTheDocument()
     expect(
       screen.getByText(
-        'viewer 当前只保留缓存报告体验，真实分析触发入口会在管理员链路中继续开放。',
+        'viewer 当前只保留缓存报告体验。当前草稿优化、真实分析与草稿回写入口只在管理员链路中开放。',
       ),
     ).toBeInTheDocument()
   })
 
-  it('should trigger live analysis and render returned report sections', async () => {
+  it('should trigger live analysis, refresh history and open drawer', async () => {
     const user = userEvent.setup()
     const triggerAnalysis = vi.fn().mockResolvedValue({
       cached: false,
+      usageRecordId: 'usage-report-001',
       report: {
         reportId: 'resume-review-demo',
         cacheKey: 'resume-review:zh:demo',
@@ -178,11 +246,6 @@ describe('AiAnalysisPanel', () => {
             title: '分析结果',
             bullets: ['补充量化成果。', '突出主导模块。'],
           },
-          {
-            key: 'provider',
-            title: 'Provider 信息',
-            bullets: ['qiniu / deepseek-v3'],
-          },
         ],
         generator: 'ai-provider',
         createdAt: '2026-03-27T00:00:00.000Z',
@@ -195,17 +258,13 @@ describe('AiAnalysisPanel', () => {
     render(
       <ControlledAnalysisPanel
         canAnalyze
-        helperMessage="已将 resume.pdf 的提取结果同步到分析输入区。"
+        helperMessage="已将 resume.pdf 的提取结果同步到优化要求输入区，可直接整理后分析当前草稿。"
         initialContent="NestJS React TypeScript"
         createTriggerAnalysisMethod={createTriggerAnalysisMethod as any}
       />,
     )
 
-    expect(
-      screen.getByText('已将 resume.pdf 的提取结果同步到分析输入区。'),
-    ).toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: '开始真实分析' }))
+    await user.click(screen.getByRole('button', { name: '生成辅助分析报告' }))
 
     await waitFor(() => {
       expect(triggerAnalysis).toHaveBeenCalledWith({
@@ -218,51 +277,28 @@ describe('AiAnalysisPanel', () => {
     })
 
     expect(
-      await screen.findByText('建议继续补充量化结果与职责边界。'),
+      await screen.findByText('drawer:succeeded:建议继续补充量化结果与职责边界。'),
     ).toBeInTheDocument()
-    expect(screen.getByText('场景：简历优化建议')).toBeInTheDocument()
-    expect(screen.getByText('Provider：qiniu / deepseek-v3')).toBeInTheDocument()
-    expect(screen.getByText('评分：76 / 100')).toBeInTheDocument()
-    expect(screen.getByText('基础匹配良好')).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'AI 辅助分析详情' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '关闭详情' }))
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: 'AI 辅助分析详情' }),
+      ).not.toBeInTheDocument()
+    })
+    expect(fetchUsageHistoryMock).toHaveBeenCalled()
     expect(
-      screen.getByText('已有核心技术关键词，但成果与职责边界仍需补强。'),
-    ).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: '已有优势' })).toBeInTheDocument()
-    expect(
-      screen.getByText('已覆盖 NestJS、React、TypeScript 等岗位基础关键词。'),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('heading', { name: '建议动作', level: 3 }),
-    ).toBeInTheDocument()
-    expect(screen.getByText('当前报告概览').closest('section')).toHaveClass('p-5')
-    expect(screen.getByRole('heading', { name: '结论摘要', level: 3 }).closest('section')).toHaveClass(
-      'p-5',
-    )
-    expect(screen.getByText('建议模块：experiences')).toBeInTheDocument()
-    expect(screen.getByText('补一条量化结果')).toBeInTheDocument()
-  })
-
-  it('should show error feedback when live analysis fails', async () => {
-    const user = userEvent.setup()
-    const triggerAnalysis = vi
-      .fn()
-      .mockRejectedValue(new Error('Provider request failed'))
-    const createTriggerAnalysisMethod = vi.fn((input) => ({
-      send: () => triggerAnalysis(input),
-    }))
-
-    render(
-      <ControlledAnalysisPanel
-        canAnalyze
-        initialContent="NestJS React TypeScript"
-        createTriggerAnalysisMethod={createTriggerAnalysisMethod as any}
-      />,
-    )
-
-    await user.click(screen.getByRole('button', { name: '开始真实分析' }))
-
-    expect(await screen.findByText('Provider request failed')).toBeInTheDocument()
-  })
+      JSON.parse(
+        window.localStorage.getItem(AI_WORKBENCH_RELATION_INDEX_STORAGE_KEY) ?? '{}',
+      ),
+    ).toMatchObject({
+      [createInstructionHash('NestJS React TypeScript')]: {
+        analysisUsageRecordIds: {
+          'resume-review': 'usage-report-001',
+        },
+      },
+    })
+  }, 15000)
 
   it('should guard against empty input before triggering analysis', async () => {
     const user = userEvent.setup()
@@ -277,270 +313,154 @@ describe('AiAnalysisPanel', () => {
       />,
     )
 
-    await user.click(screen.getByRole('button', { name: '开始真实分析' }))
+    await user.click(screen.getByRole('button', { name: '生成辅助分析报告' }))
 
     expect(
-      await screen.findByText('请先输入分析内容，或先通过文件提取生成输入文本。'),
+      await screen.findByText('请先输入 JD、目标岗位或分析要求，再生成辅助分析报告。'),
     ).toBeInTheDocument()
     expect(triggerAnalysis).not.toHaveBeenCalled()
   })
 
-  it('should remind the user to generate a suggestion before linking to a module rewrite', async () => {
-    const user = userEvent.setup()
-    const triggerAnalysis = vi.fn().mockResolvedValue({
-      cached: false,
-      report: {
-        reportId: 'resume-review-demo',
-        cacheKey: 'resume-review:zh:demo',
-        scenario: 'resume-review',
-        locale: 'zh',
-        sourceHash: 'demo',
-        inputPreview: 'NestJS React TypeScript',
-        summary: '建议继续补充量化结果与职责边界。',
-        score: {
-          value: 76,
-          label: '基础匹配良好',
-          reason: '已有核心技术关键词，但成果与职责边界仍需补强。',
-        },
-        strengths: ['已覆盖 NestJS、React、TypeScript 等岗位基础关键词。'],
-        gaps: ['缺少体现业务结果的量化成果。'],
-        risks: ['如果没有主导范围说明，容易被理解为参与而非负责。'],
-        suggestions: [
-          {
-            key: 'project-impact',
-            title: '补强项目成果描述',
-            module: 'projects',
-            reason: '项目模块最适合承接与 JD 对齐的成果表达。',
-            actions: ['补充目标岗位相关成果'],
-          },
-        ],
-        sections: [],
-        generator: 'ai-provider',
-        createdAt: '2026-03-27T00:00:00.000Z',
-      },
-    })
-    const createTriggerAnalysisMethod = vi.fn((input) => ({
-      send: () => triggerAnalysis(input),
-    }))
-
-    render(
+  it('should keep input accessory form outside analysis form to avoid nested forms', () => {
+    const { container } = render(
       <ControlledAnalysisPanel
         canAnalyze
+        inputAccessory={
+          <form aria-label="文件提取表单">
+            <button type="submit">提交文件提取</button>
+          </form>
+        }
         initialContent="NestJS React TypeScript"
-        createTriggerAnalysisMethod={createTriggerAnalysisMethod as any}
       />,
     )
 
-    await user.click(screen.getByRole('button', { name: '开始真实分析' }))
-    await screen.findByText('建议继续补充量化结果与职责边界。')
+    expect(container.querySelectorAll('form form')).toHaveLength(0)
+    expect(screen.getByRole('form', { name: '文件提取表单' })).toBeInTheDocument()
+  })
 
-    await user.click(screen.getByRole('button', { name: '定位到 projects 改写模块' }))
+  it('should render history error without throwing runtime error', async () => {
+    fetchUsageHistoryMock.mockRejectedValue(new Error('Internal server error'))
+
+    render(<ControlledAnalysisPanel canAnalyze initialContent="NestJS React TypeScript" />)
 
     expect(
-      await screen.findByText('请先生成结构化简历建议，再定位到具体改写模块。'),
+      await screen.findByText(
+        'AI 调用记录加载失败：Internal server error。请确认服务端数据库已执行 db:push。',
+      ),
     ).toBeInTheDocument()
   })
 
-  it('should preview module diffs and apply only the selected modules', async () => {
-    const user = userEvent.setup()
-    const triggerAnalysis = vi.fn().mockResolvedValue({
-      cached: false,
-      report: {
-        reportId: 'resume-review-demo',
-        cacheKey: 'resume-review:zh:demo',
+  it('should allow opening history detail and linking to result page after result exists', async () => {
+    fetchUsageHistoryMock.mockResolvedValue([
+      {
+        id: 'usage-history-001',
+        operationType: 'analysis-report',
         scenario: 'resume-review',
         locale: 'zh',
-        sourceHash: 'demo',
-        inputPreview: '请根据 React 和 Next.js 岗位优化当前简历',
-        summary: '建议先补强个人摘要，再把项目成果写得更贴近岗位。',
-        score: {
-          value: 81,
-          label: '岗位方向基本明确',
-          reason: '已经有目标岗位关键词，但项目成果表达还可以更聚焦。',
-        },
-        strengths: ['已具备 React、Next.js 相关关键词。'],
-        gaps: ['项目成果和岗位目标的对应关系还不够清楚。'],
-        risks: ['如果不补项目成果，面试官可能只看到技术名词而看不到产出。'],
-        suggestions: [
-          {
-            key: 'profile-focus',
-            title: '先收束个人定位',
-            module: 'profile',
-            reason: '摘要决定面试官第一眼怎么理解你。',
-            actions: ['强调目标岗位定位'],
-          },
-          {
-            key: 'project-focus',
-            title: '再强化项目成果',
-            module: 'projects',
-            reason: '项目是证明技术方案和业务结果的关键模块。',
-            actions: ['突出项目成果与个人贡献'],
-          },
-        ],
-        sections: [],
+        inputPreview: 'NestJS React TypeScript',
+        summary: '历史报告摘要',
+        provider: 'qiniu',
+        model: 'deepseek-v3',
+        mode: 'live',
         generator: 'ai-provider',
-        createdAt: '2026-03-27T00:00:00.000Z',
+        status: 'succeeded',
+        relatedReportId: 'report-history-001',
+        relatedResultId: null,
+        errorMessage: null,
+        durationMs: 1200,
+        createdAt: '2026-04-15T10:00:00.000Z',
+        scoreLabel: '基础匹配良好',
+        scoreValue: 76,
+      },
+    ])
+    fetchUsageRecordDetailMock.mockResolvedValue({
+      id: 'usage-history-001',
+      operationType: 'analysis-report',
+      scenario: 'resume-review',
+      locale: 'zh',
+      inputPreview: 'NestJS React TypeScript',
+      summary: '历史报告摘要',
+      provider: 'qiniu',
+      model: 'deepseek-v3',
+      mode: 'live',
+      generator: 'ai-provider',
+      status: 'succeeded',
+      relatedReportId: 'report-history-001',
+      relatedResultId: null,
+      errorMessage: null,
+      durationMs: 1200,
+      createdAt: '2026-04-15T10:00:00.000Z',
+      detail: {
+        reportId: 'report-history-001',
+        summary: '历史报告摘要',
       },
     })
-    const createTriggerAnalysisMethod = vi.fn((input) => ({
-      send: () => triggerAnalysis(input),
-    }))
     const generateResumeOptimization = vi.fn().mockResolvedValue({
+      resultId: 'result-demo-001',
+      locale: 'zh',
       summary: '已生成结构化建议稿',
-      focusAreas: ['强化摘要', '补强项目亮点'],
-      changedModules: ['profile', 'projects'],
-      moduleDiffs: [
-        {
-          module: 'profile',
-          title: '个人定位与摘要',
-          reason: '个人摘要决定面试官最先看到的岗位定位。',
-          entries: [
-            {
-              key: 'profile-summary',
-              label: '个人摘要',
-              before: '中文：原始中文摘要 | English: Original English summary',
-              after: '中文：新的中文摘要 | English: New English summary',
-            },
-          ],
-        },
-        {
-          module: 'projects',
-          title: '项目摘要与亮点',
-          reason: '项目经历能证明技术方案、业务场景和个人贡献。',
-          entries: [
-            {
-              key: 'project-0-summary',
-              label: '项目 1 摘要',
-              before: '中文：旧项目摘要 | English: Old project summary',
-              after: '中文：新项目摘要 | English: New project summary',
-            },
-          ],
-        },
-      ],
-      applyPayload: {
-        draftUpdatedAt: '2026-03-30T00:00:00.000Z',
-        patch: {
-          profile: {
-            summary: {
-              zh: '新的中文摘要',
-              en: 'New English summary',
-            },
-          },
-          projects: [
-            {
-              index: 0,
-              summary: {
-                zh: '新项目摘要',
-                en: 'New project summary',
-              },
-            },
-          ],
-        },
-      },
-      suggestedResume: {
-        ...createTestResume(),
-        profile: {
-          ...createTestResume().profile,
-          summary: {
-            zh: '新的中文摘要',
-            en: 'New English summary',
-          },
-        },
-      },
+      focusAreas: ['强化摘要'],
+      changedModules: ['profile'],
+      moduleDiffs: [],
+      createdAt: '2026-03-30T00:00:00.000Z',
       providerSummary: {
         provider: 'qiniu',
         model: 'deepseek-v3',
         mode: 'openai-compatible',
       },
     })
-    const applyResumeOptimization = vi.fn().mockResolvedValue({
-      status: 'draft',
-      resume: createTestResume(),
-      updatedAt: '2026-03-30T00:00:00.000Z',
-    })
     const createGenerateResumeOptimizationMethod = vi.fn((input) => ({
       send: () => generateResumeOptimization(input),
     }))
-    const createApplyResumeOptimizationMethod = vi.fn((input) => ({
-      send: () => applyResumeOptimization(input),
-    }))
-    const onDraftApplied = vi.fn()
 
     render(
       <ControlledAnalysisPanel
-        createApplyResumeOptimizationMethod={createApplyResumeOptimizationMethod as any}
         canAnalyze
         createGenerateResumeOptimizationMethod={
           createGenerateResumeOptimizationMethod as any
         }
         initialContent="请根据 React 和 Next.js 岗位优化当前简历"
-        onDraftApplied={onDraftApplied}
-        createTriggerAnalysisMethod={createTriggerAnalysisMethod as any}
       />,
     )
 
-    await user.click(screen.getByRole('button', { name: '开始真实分析' }))
-    await screen.findByText('建议先补强个人摘要，再把项目成果写得更贴近岗位。')
-    await user.click(screen.getByRole('button', { name: '生成结构化简历建议' }))
+    expect(await screen.findByText('分析记录数：1')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '历史报告摘要' }))
+    expect(await screen.findByText('drawer:succeeded:历史报告摘要')).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'AI 辅助分析详情' })).toBeInTheDocument()
 
-    await waitFor(() => {
-      expect(generateResumeOptimization).toHaveBeenCalledWith({
-        apiBaseUrl: 'http://localhost:5577',
-        accessToken: 'demo-token',
-        instruction: '请根据 React 和 Next.js 岗位优化当前简历',
-        locale: 'zh',
-      })
-    })
+    fireEvent.click(screen.getByRole('button', { name: '分析当前草稿并生成建议' }))
+    expect(await screen.findByText('分析完成，正在进入结果页')).toBeInTheDocument()
+    expect(screen.getByTestId('resume-optimization-pending-progress')).toHaveAttribute(
+      'data-progress-value',
+      '100',
+    )
 
-    expect(await screen.findByText('已生成结构化建议稿')).toBeInTheDocument()
-    expect(screen.getAllByText('模块：profile').length).toBeGreaterThan(0)
-    expect(screen.getByText('个人定位与摘要')).toBeInTheDocument()
-    expect(screen.getByText('个人摘要')).toBeInTheDocument()
-    expect(screen.getAllByText('当前草稿').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('建议稿').length).toBeGreaterThan(0)
-
-    await user.click(screen.getByRole('checkbox', { name: '应用模块：projects' }))
-    await user.click(screen.getByRole('button', { name: '定位到 projects 改写模块' }))
-
-    expect(
-      await screen.findByText('已定位到 projects 改写模块，可继续确认并应用。'),
-    ).toBeInTheDocument()
-    expect(screen.getByRole('checkbox', { name: '应用模块：projects' })).toBeChecked()
-    await user.click(screen.getByRole('button', { name: '应用已选模块到当前草稿' }))
-
-    await waitFor(() => {
-      expect(applyResumeOptimization).toHaveBeenCalledWith({
-        apiBaseUrl: 'http://localhost:5577',
-        accessToken: 'demo-token',
-        draftUpdatedAt: '2026-03-30T00:00:00.000Z',
-        modules: ['profile', 'projects'],
-        patch: expect.objectContaining({
-          profile: expect.objectContaining({
-            summary: {
-              zh: '新的中文摘要',
-              en: 'New English summary',
-            },
-          }),
-        }),
-      })
-    })
-
-    expect(onDraftApplied).toHaveBeenCalledWith({
-      status: 'draft',
-      resume: createTestResume(),
-      updatedAt: '2026-03-30T00:00:00.000Z',
-    })
-
-    expect(
-      await screen.findByText(
-        '已将 2 个模块应用到当前草稿。公开站内容不会自动变化，仍需手动发布。',
-      ),
-    ).toBeInTheDocument()
+    await waitFor(
+      () => {
+        expect(routerPushMock).toHaveBeenCalledWith(
+          '/dashboard/ai/resume-optimization/results/result-demo-001',
+        )
+      },
+      { timeout: 1500 },
+    )
   })
 
-  it('should restrict structured suggestion to resume-review scenario', async () => {
-    const user = userEvent.setup()
-    const generateResumeOptimization = vi.fn()
+  it('should still navigate to result page when history refresh fails after optimization', async () => {
+    fetchUsageHistoryMock.mockRejectedValue(new Error('Internal server error'))
+    const generateResumeOptimization = vi.fn().mockResolvedValue({
+      resultId: 'result-demo-002',
+      locale: 'zh',
+      summary: '已生成结构化建议稿',
+      focusAreas: ['强化摘要'],
+      changedModules: ['profile'],
+      moduleDiffs: [],
+      createdAt: '2026-03-30T00:00:00.000Z',
+      providerSummary: {
+        provider: 'qiniu',
+        model: 'deepseek-v3',
+        mode: 'openai-compatible',
+      },
+    })
     const createGenerateResumeOptimizationMethod = vi.fn((input) => ({
       send: () => generateResumeOptimization(input),
     }))
@@ -551,17 +471,157 @@ describe('AiAnalysisPanel', () => {
         createGenerateResumeOptimizationMethod={
           createGenerateResumeOptimizationMethod as any
         }
-        initialContent="请根据 offer 内容给出建议"
+        initialContent="请根据 React 和 Next.js 岗位优化当前简历"
       />,
     )
 
-    await user.click(screen.getByLabelText('分析场景'))
-    await user.click(await screen.findByRole('option', { name: 'Offer 对比建议' }))
-    await user.click(screen.getByRole('button', { name: '生成结构化简历建议' }))
+    fireEvent.click(screen.getByRole('button', { name: '分析当前草稿并生成建议' }))
+    expect(await screen.findByText('分析完成，正在进入结果页')).toBeInTheDocument()
 
+    await waitFor(
+      () => {
+        expect(routerPushMock).toHaveBeenCalledWith(
+          '/dashboard/ai/resume-optimization/results/result-demo-002',
+        )
+      },
+      { timeout: 1500 },
+    )
     expect(
-      await screen.findByText('结构化简历建议当前只支持“简历优化建议”场景。'),
+      await screen.findByText(
+        'AI 调用记录加载失败：Internal server error。请确认服务端数据库已执行 db:push。',
+      ),
     ).toBeInTheDocument()
-    expect(generateResumeOptimization).not.toHaveBeenCalled()
+  })
+
+  it('should show rich pending overlay and allow cancelling optimization', async () => {
+    vi.useFakeTimers()
+
+    const generateResumeOptimization = vi.fn().mockImplementation(
+      ({
+        requestInit,
+      }: {
+        requestInit?: {
+          signal?: AbortSignal
+        }
+      }) =>
+        new Promise((_, reject) => {
+          requestInit?.signal?.addEventListener('abort', () => {
+            const abortError = new Error('Aborted')
+            abortError.name = 'AbortError'
+            reject(abortError)
+          })
+        }),
+    )
+    const createGenerateResumeOptimizationMethod = vi.fn((input) => ({
+      send: () => generateResumeOptimization(input),
+    }))
+
+    render(
+      <ControlledAnalysisPanel
+        canAnalyze
+        createGenerateResumeOptimizationMethod={
+          createGenerateResumeOptimizationMethod as any
+        }
+        initialContent="请根据高级全栈 JD 优化当前简历"
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: '分析当前草稿并生成建议' }))
+
+    expect(screen.getByTestId('resume-optimization-pending-overlay')).toBeInTheDocument()
+    expect(screen.getByTestId('resume-optimization-pending-card')).toBeInTheDocument()
+    expect(screen.getByText('正在分析当前草稿')).toBeInTheDocument()
+    expect(screen.getByText('模拟进度')).toBeInTheDocument()
+    expect(screen.getByText('0%')).toBeInTheDocument()
+    expect(screen.getByTestId('resume-optimization-pending-progress')).toHaveAttribute(
+      'data-progress-value',
+      '0',
+    )
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5_000)
+    })
+    expect(screen.getByTestId('resume-optimization-pending-progress')).toHaveAttribute(
+      'data-progress-value',
+      '7',
+    )
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5_000)
+    })
+    expect(screen.getByTestId('resume-optimization-pending-progress')).toHaveAttribute(
+      'data-progress-value',
+      '15',
+    )
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5_000)
+    })
+    expect(screen.getByTestId('resume-optimization-pending-progress')).toHaveAttribute(
+      'data-progress-value',
+      '24',
+    )
+    expect(
+      screen.getByText('模型仍在处理中，请继续等待；建议保持当前页面开启。'),
+    ).toBeInTheDocument()
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5_000)
+    })
+    expect(screen.getByTestId('resume-optimization-pending-progress')).toHaveAttribute(
+      'data-progress-value',
+      '36',
+    )
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5_000)
+    })
+    expect(screen.getByTestId('resume-optimization-pending-progress')).toHaveAttribute(
+      'data-progress-value',
+      '51',
+    )
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5_000)
+    })
+    expect(screen.getByText('已等待 30s')).toBeInTheDocument()
+    expect(screen.getByTestId('resume-optimization-pending-progress')).toHaveAttribute(
+      'data-progress-value',
+      '70',
+    )
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5_000)
+    })
+    expect(screen.getByTestId('resume-optimization-pending-progress')).toHaveAttribute(
+      'data-progress-value',
+      '75',
+    )
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(20_000)
+    })
+    expect(screen.getByText('已等待 55s')).toBeInTheDocument()
+    expect(screen.getByText('95%')).toBeInTheDocument()
+    expect(screen.getByTestId('resume-optimization-pending-progress')).toHaveAttribute(
+      'data-progress-value',
+      '95',
+    )
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(35_000)
+    })
+    expect(screen.getByTestId('resume-optimization-pending-progress')).toHaveAttribute(
+      'data-progress-value',
+      '95',
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: '取消本次分析' }))
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    expect(screen.queryByText('分析完成，正在进入结果页')).not.toBeInTheDocument()
+    expect(screen.getByText('已取消本次分析，可继续调整要求后重新生成。')).toBeInTheDocument()
   })
 })

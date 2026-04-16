@@ -149,8 +149,13 @@ export function PublishedResumeHighlightsSection({
 
             return (
               <article
-                className="group relative overflow-hidden rounded-[28px] border border-slate-200/70 bg-[radial-gradient(circle_at_top_left,rgba(191,219,254,0.24),transparent_42%),linear-gradient(180deg,rgba(255,255,255,0.9),rgba(248,250,252,0.82))] p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:border-white/8 dark:bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.12),transparent_42%),linear-gradient(180deg,rgba(30,41,59,0.66),rgba(15,23,42,0.52))]"
+                className="group relative overflow-hidden rounded-[28px] border border-slate-200/70 bg-[radial-gradient(circle_at_top_left,rgba(191,219,254,0.24),transparent_42%),linear-gradient(180deg,rgba(255,255,255,0.9),rgba(248,250,252,0.82))] p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] transition-[background,border-color,box-shadow] duration-300 ease-out hover:border-slate-200/90 hover:shadow-[0_24px_60px_rgba(15,23,42,0.08)] dark:border-white/8 dark:bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.12),transparent_42%),linear-gradient(180deg,rgba(30,41,59,0.66),rgba(15,23,42,0.52))] dark:hover:border-white/12 dark:hover:shadow-[0_24px_60px_rgba(2,6,23,0.24)]"
+                data-testid="resume-highlight-card"
                 key={`${item.title.en}-${item.description.en}-${index}`}>
+                <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100 dark:group-hover:opacity-90">
+                  <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.28),rgba(226,232,240,0.1)_34%,rgba(191,219,254,0.22)_64%,rgba(255,255,255,0.18))] dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.08),rgba(148,163,184,0.03)_34%,rgba(96,165,250,0.16)_64%,rgba(255,255,255,0.04))]" />
+                  <div className="absolute -inset-x-12 top-0 h-24 -rotate-6 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.42),transparent)] opacity-80 blur-2xl dark:bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent)]" />
+                </div>
                 <div
                   className={`pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-br ${signal.accentClassName}`}
                 />

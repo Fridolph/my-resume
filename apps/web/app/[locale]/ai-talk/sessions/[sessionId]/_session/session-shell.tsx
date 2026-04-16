@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@heroui/react/card'
+import { Chip } from '@heroui/react/chip'
 import { useTranslations } from 'next-intl'
 
 import type {
@@ -33,10 +34,6 @@ export function AiTalkSessionShell({
   sessionId,
 }: AiTalkSessionShellProps) {
   const t = useTranslations('aiTalk')
-  const primaryTagClass =
-    'inline-flex min-h-9 items-center rounded-full bg-[var(--display-color-accent)] px-4 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.18)]'
-  const softTagClass =
-    'inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-slate-100/80 px-4 text-sm font-semibold text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-200'
 
   return (
     <AiTalkPageFrame
@@ -57,16 +54,22 @@ export function AiTalkSessionShell({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex max-w-full flex-nowrap items-center gap-3 overflow-x-auto">
-                <span className={`${primaryTagClass} shrink-0 whitespace-nowrap`}>
+              <div
+                className="flex max-w-full flex-nowrap items-center gap-3 overflow-x-auto"
+                data-testid="ai-talk-session-chip-row">
+                <Chip
+                  className="shrink-0 whitespace-nowrap font-semibold"
+                  color="accent"
+                  size="sm"
+                  variant="primary">
                   {t('status.streaming')}
-                </span>
-                <span className={`${softTagClass} shrink-0 whitespace-nowrap`}>
+                </Chip>
+                <Chip className="shrink-0 whitespace-nowrap font-semibold" size="sm" variant="soft">
                   {t('session.badgeTimeline')}
-                </span>
-                <span className={`${softTagClass} shrink-0 whitespace-nowrap`}>
+                </Chip>
+                <Chip className="shrink-0 whitespace-nowrap font-semibold" size="sm" variant="soft">
                   {t('session.badgeSources')}
-                </span>
+                </Chip>
               </div>
             </CardContent>
           </Card>

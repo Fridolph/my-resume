@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react'
 import { DEFAULT_API_BASE_URL } from '@core/env'
 import { Link, usePathname, useRouter } from '@i18n/navigation'
 import { normalizeLocalePathname } from '@i18n/types'
+import { PublicSiteHeaderMobileMenu } from './public-site-header-mobile-menu'
 import type {
   IdleWindowCallbacks,
   PublicSiteHeaderProps,
@@ -54,7 +55,7 @@ export function PublicSiteHeader({
   locale,
 }: PublicSiteHeaderProps) {
   const isJsdom = typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent)
-  const [shouldLoadActions, setShouldLoadActions] = useState(
+  const [shouldLoadDesktopActions, setShouldLoadDesktopActions] = useState(
     () => !deferActionsUntilIdle || isJsdom,
   )
   const t = useTranslations('site')
@@ -63,7 +64,12 @@ export function PublicSiteHeader({
   const normalizedPathname = normalizeLocalePathname(pathname)
 
   useEffect(() => {
-    if (!deferActionsUntilIdle || shouldLoadActions || isJsdom || typeof window === 'undefined') {
+    if (
+      !deferActionsUntilIdle ||
+      shouldLoadDesktopActions ||
+      isJsdom ||
+      typeof window === 'undefined'
+    ) {
       return
     }
 
@@ -72,7 +78,7 @@ export function PublicSiteHeader({
     let idleId: number | null = null
 
     const markReady = () => {
-      setShouldLoadActions(true)
+      setShouldLoadDesktopActions(true)
     }
 
     if (typeof idleWindow.requestIdleCallback === 'function') {
@@ -90,7 +96,7 @@ export function PublicSiteHeader({
         window.clearTimeout(timeoutId)
       }
     }
-  }, [deferActionsUntilIdle, isJsdom, shouldLoadActions])
+  }, [deferActionsUntilIdle, isJsdom, shouldLoadDesktopActions])
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/88 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/82">
@@ -110,7 +116,9 @@ export function PublicSiteHeader({
           </Link>
         </div>
 
-        <div className="order-3 flex w-full justify-start overflow-x-auto pb-1 sm:justify-center md:order-none md:w-auto md:justify-self-center md:overflow-visible md:pb-0">
+        <div
+          className="order-3 hidden w-full justify-start overflow-x-auto pb-1 sm:flex sm:justify-center md:order-none md:w-auto md:justify-self-center md:overflow-visible md:pb-0"
+          data-testid="public-site-nav-shell">
           <div
             aria-label="Public site navigation"
             className={primaryNavWrapperClass}
@@ -145,7 +153,15 @@ export function PublicSiteHeader({
           </div>
         </div>
 
-        <div className="ml-auto flex shrink-0 flex-nowrap items-center justify-end gap-2 md:justify-self-end">
+        <div
+          className="ml-auto flex shrink-0 items-center justify-end sm:hidden"
+          data-testid="public-site-mobile-menu">
+          <PublicSiteHeaderMobileMenu apiBaseUrl={apiBaseUrl} locale={locale} />
+        </div>
+
+        <div
+          className="ml-auto hidden shrink-0 flex-nowrap items-center justify-end gap-2 sm:flex md:justify-self-end"
+          data-testid="public-site-desktop-actions">
           <div className={styles.localeSwitchWrapper}>
             <Button
               className={styles.localeSwitchButton}
@@ -165,7 +181,7 @@ export function PublicSiteHeader({
             </Button>
           </div>
 
-          {shouldLoadActions ? (
+          {shouldLoadDesktopActions ? (
             <DeferredPublicSiteHeaderActions apiBaseUrl={apiBaseUrl} locale={locale} />
           ) : (
             <HeaderActionsFallback />
@@ -188,15 +204,15 @@ function HeaderActionsFallback() {
       className="flex items-center gap-2"
       data-testid="public-site-header-actions-fallback">
       <Skeleton
-        className="h-[30px] w-[30px] rounded-full border border-slate-200/80 bg-white/60 dark:border-white/10 dark:bg-white/5"
+        className="h-[30px] w-[30px] rounded-full"
         data-testid="public-site-header-action-skeleton"
       />
       <Skeleton
-        className="h-[30px] w-12 rounded-full border border-slate-200/80 bg-white/72 dark:border-white/10 dark:bg-white/5"
+        className="h-[30px] w-12 rounded-full"
         data-testid="public-site-theme-switch-skeleton"
       />
       <Skeleton
-        className="h-[30px] w-[30px] rounded-full border border-slate-200/80 bg-white/60 dark:border-white/10 dark:bg-white/5"
+        className="h-[30px] w-[30px] rounded-full"
         data-testid="public-site-header-action-skeleton"
       />
     </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useRequest } from 'alova/client'
-import { Button, Input, TextArea } from '@heroui/react'
+import { Button, Form, Input, TextArea } from '@heroui/react'
 
 import { adminPrimaryButtonClass } from '@core/button-styles'
 import { useState } from 'react'
@@ -94,7 +94,7 @@ export function AiFileExtractionPanel({
         </p>
       </div>
 
-      <form className="stack" onSubmit={(event) => void handleSubmit(event)}>
+      <Form className="stack" onSubmit={(event) => void handleSubmit(event)}>
         <label className="field">
           <span>选择文件</span>
           <Input
@@ -138,7 +138,7 @@ export function AiFileExtractionPanel({
             {pending ? '正在提取文本...' : '开始提取文本'}
           </Button>
         </div>
-      </form>
+      </Form>
 
       {result ? (
         <div className="preview-stack">

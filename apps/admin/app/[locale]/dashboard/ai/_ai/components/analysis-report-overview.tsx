@@ -27,7 +27,7 @@ export function AnalysisReportOverview({
 }: AnalysisReportOverviewProps) {
   return (
     <DisplaySectionCard
-      className="grid gap-4 p-5 md:p-6"
+      className="grid gap-3 p-4 md:p-5"
       compact
       description={
         report
@@ -48,18 +48,18 @@ export function AnalysisReportOverview({
             </DisplayPill>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="status-box">
+            <div className="status-box gap-2 p-3 md:p-3.5">
               <strong>{formatScore(report)}</strong>
               <span>{report.score.label}</span>
             </div>
-            <div className="status-box">
+            <div className="status-box gap-2 p-3 md:p-3.5">
               <strong>输入预览</strong>
               <span>{report.inputPreview}</span>
             </div>
           </div>
         </>
       ) : (
-        <div className="status-box">
+        <div className="status-box gap-2 p-3 md:p-3.5">
           <strong>等待分析结果</strong>
           <span>先在左侧输入完整文本，或通过文件提取同步内容，再触发一次真实分析。</span>
         </div>

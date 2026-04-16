@@ -97,6 +97,30 @@ export function AdminNavIcon({
     )
   }
 
+  if (itemKey === 'optimizationHistory') {
+    return (
+      <svg aria-hidden="true" fill="none" height={size} viewBox="0 0 24 24" width={size}>
+        <path
+          d="M6.5 5.5h11A1.5 1.5 0 0 1 19 7v10a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 17V7a1.5 1.5 0 0 1 1.5-1.5Z"
+          stroke="currentColor"
+          strokeWidth="1.8"
+        />
+        <path
+          d="M8.5 9h7M8.5 12h7M8.5 15h4"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeWidth="1.8"
+        />
+        <path
+          d="M16.5 3.5v4M7.5 3.5v4"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeWidth="1.8"
+        />
+      </svg>
+    )
+  }
+
   return (
     <svg aria-hidden="true" fill="none" height={size} viewBox="0 0 24 24" width={size}>
       <path
@@ -131,6 +155,19 @@ export function GithubIcon() {
       viewBox="0 0 24 24"
       width="18">
       <path d="M12 .75a11.25 11.25 0 0 0-3.56 21.92c.56.1.77-.24.77-.54V20.1c-3.12.68-3.78-1.32-3.78-1.32-.5-1.3-1.25-1.63-1.25-1.63-1.02-.7.08-.68.08-.68 1.12.08 1.7 1.14 1.7 1.14 1 1.72 2.6 1.22 3.24.94.1-.72.38-1.22.68-1.5-2.5-.28-5.12-1.24-5.12-5.54 0-1.22.44-2.22 1.16-3-.12-.28-.5-1.44.12-3 0 0 .96-.3 3.14 1.16a10.82 10.82 0 0 1 5.72 0c2.18-1.46 3.14-1.16 3.14-1.16.62 1.56.24 2.72.12 3 .72.78 1.16 1.78 1.16 3 0 4.3-2.62 5.26-5.12 5.54.4.36.76 1.06.76 2.14v3.17c0 .3.2.66.78.54A11.25 11.25 0 0 0 12 .75Z" />
+    </svg>
+  )
+}
+
+export function MenuIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg aria-hidden="true" fill="none" height={size} viewBox="0 0 24 24" width={size}>
+      <path
+        d="M4.5 7.5h15M4.5 12h15M4.5 16.5h15"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+      />
     </svg>
   )
 }

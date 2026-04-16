@@ -196,6 +196,10 @@ pnpm build:all
 - 总方案：[`docs/10-架构设计/01-个人简历-monorepo-重构总方案-v1学习版.md`](./docs/10-%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/01-%E4%B8%AA%E4%BA%BA%E7%AE%80%E5%8E%86-monorepo-%E9%87%8D%E6%9E%84%E6%80%BB%E6%96%B9%E6%A1%88-v1%E5%AD%A6%E4%B9%A0%E7%89%88.md)
 - GitHub 开发流程：[`docs/20-研发流程/01-GitHub-标准开发流程.md`](./docs/20-%E7%A0%94%E5%8F%91%E6%B5%81%E7%A8%8B/01-GitHub-%E6%A0%87%E5%87%86%E5%BC%80%E5%8F%91%E6%B5%81%E7%A8%8B.md)
 - 发布前检查：[`docs/40-部署上线/02-开源版发布前检查清单.md`](./docs/40-%E9%83%A8%E7%BD%B2%E4%B8%8A%E7%BA%BF/02-%E5%BC%80%E6%BA%90%E7%89%88%E5%8F%91%E5%B8%83%E5%89%8D%E6%A3%80%E6%9F%A5%E6%B8%85%E5%8D%95.md)
+- ECS 手动部署脚本：[`deploy/ecs/README.md`](./deploy/ecs/README.md)
+- ECS `stack.env` 填写清单：[`deploy/ecs/stack-env-checklist.md`](./deploy/ecs/stack-env-checklist.md)
+- GitHub Actions 连接 ECS 发布说明：[`docs/40-部署上线/03-GitHub-Actions-连接-ECS-发布说明.md`](./docs/40-%E9%83%A8%E7%BD%B2%E4%B8%8A%E7%BA%BF/03-GitHub-Actions-%E8%BF%9E%E6%8E%A5-ECS-%E5%8F%91%E5%B8%83%E8%AF%B4%E6%98%8E.md)
+- ECS 首次上线验收清单：[`docs/40-部署上线/04-ECS-首次上线验收清单.md`](./docs/40-%E9%83%A8%E7%BD%B2%E4%B8%8A%E7%BA%BF/04-ECS-%E9%A6%96%E6%AC%A1%E4%B8%8A%E7%BA%BF%E9%AA%8C%E6%94%B6%E6%B8%85%E5%8D%95.md)
 - 系列文章目录：[`docs/40-教程与博客/README.md`](./docs/40-%E6%95%99%E7%A8%8B%E4%B8%8E%E5%8D%9A%E5%AE%A2/README.md)
 
 ## 发布前建议

@@ -58,12 +58,18 @@ export function AiTalkAvatarShell({
                   {t('avatar.description')}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="flex flex-wrap gap-3">
-                <Chip color="accent" variant="primary">
+              <CardContent
+                className="flex max-w-full flex-nowrap flex-row items-center gap-3 overflow-x-auto"
+                data-testid="ai-talk-avatar-chip-row">
+                <Chip color="accent" size="sm" variant="primary">
                   {t('status.comingSoon')}
                 </Chip>
-                <Chip variant="soft">{readLocalizedText(profile.fullName, locale)}</Chip>
-                <Chip variant="soft">{readLocalizedText(profile.headline, locale)}</Chip>
+                <Chip size="sm" variant="soft">
+                  {readLocalizedText(profile.fullName, locale)}
+                </Chip>
+                <Chip size="sm" variant="soft">
+                  {readLocalizedText(profile.headline, locale)}
+                </Chip>
               </CardContent>
             </Card>
 

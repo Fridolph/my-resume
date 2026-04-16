@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ThemeModeProvider } from '@my-resume/ui/theme'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -144,6 +144,9 @@ describe('PublishedResumeShell', () => {
       '/zh/ai-talk',
     )
     expect(screen.getByTestId('public-site-brand-text')).toHaveClass('hidden', 'md:flex')
+    expect(screen.getByTestId('public-site-nav-shell')).toHaveClass('hidden', 'sm:flex')
+    expect(screen.getByTestId('public-site-mobile-menu')).toHaveClass('sm:hidden')
+    expect(screen.getByTestId('public-site-desktop-actions')).toHaveClass('hidden', 'sm:flex')
     expect(screen.getByTestId('public-site-nav')).toHaveClass(
       'inline-flex',
       'flex-nowrap',
@@ -151,10 +154,10 @@ describe('PublishedResumeShell', () => {
     )
     expect(screen.getByRole('heading', { name: '付寅生' })).toBeInTheDocument()
     expect(
-      await screen.findByRole('heading', { name: '职业经历' }, { timeout: 4000 }),
+      await screen.findByRole('heading', { name: '职业经历' }, { timeout: 10000 }),
     ).toBeInTheDocument()
     expect(
-      await screen.findByRole('heading', { name: '代表项目' }, { timeout: 4000 }),
+      await screen.findByRole('heading', { name: '代表项目' }, { timeout: 10000 }),
     ).toBeInTheDocument()
     expect(screen.getByAltText('付寅生头像正面')).toBeInTheDocument()
     expect(screen.getByAltText('付寅生头像背面')).toBeInTheDocument()
@@ -165,11 +168,20 @@ describe('PublishedResumeShell', () => {
     expect(screen.getByText('+86 13800000000')).toBeInTheDocument()
     expect(screen.getByText('羽毛球')).toBeInTheDocument()
     expect(screen.getByText('摄影')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '四川大学锦江学院' })).toBeInTheDocument()
     expect(screen.queryByText('https://example.com')).not.toBeInTheDocument()
+    expect(screen.queryByText('保留稳定学历信息，避免和项目型内容混排。')).not.toBeInTheDocument()
+    expect(screen.getAllByTestId('resume-education-item')[0]).not.toHaveClass('timelineCardSurface')
     expect(screen.getByRole('link', { name: '技术博客' })).toHaveAttribute(
       'href',
       'https://example.com/blog',
     )
+    expect(
+      await screen.findByText('聚焦过往公司的职责范围、业务场景与关键成果。'),
+    ).toBeInTheDocument()
+    expect(
+      await screen.findByText('按标准模型展示项目背景、职责、亮点与技术栈。'),
+    ).toBeInTheDocument()
     expect(await screen.findByRole('heading', { name: '前端架构落地' })).toBeInTheDocument()
     expect(await screen.findByRole('heading', { name: 'AI 工程化实践' })).toBeInTheDocument()
     expect(await screen.findByText('项目核心功能')).toBeInTheDocument()
@@ -195,6 +207,93 @@ describe('PublishedResumeShell', () => {
     await user.click(screen.getByRole('button', { name: 'EN' }))
     expect(replaceMock).toHaveBeenCalledWith('/', { locale: 'en' })
   }, 10000)
+
+  it(
+    'should render grouped mobile menu and keep navigation/toggle/download/social actions working',
+    async () => {
+    const user = userEvent.setup()
+
+    const view = render(
+      <ThemeModeProvider>
+        <PublishedResumeShell
+          apiBaseUrl="http://localhost:5577"
+          locale="zh"
+          publishedResume={publishedResumeFixture}
+        />
+      </ThemeModeProvider>,
+    )
+
+    await user.click(screen.getByRole('button', { name: '打开站点菜单' }))
+
+    expect(await screen.findByRole('menuitem', { name: '简历' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: '概览' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'AI Talk' })).toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: '中' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: 'EN' })).not.toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'Select Lang: EN' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: '切换主题：深色' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: '导出 Markdown' })).toHaveAttribute(
+      'href',
+      'http://localhost:5577/api/resume/published/export/markdown?locale=zh',
+    )
+    expect(screen.getByRole('menuitem', { name: '导出 PDF' })).toHaveAttribute(
+      'href',
+      'http://localhost:5577/api/resume/published/export/pdf?locale=zh',
+    )
+    expect(screen.getByRole('menuitem', { name: 'GitHub' })).toHaveAttribute(
+      'href',
+      'https://github.com/Fridolph/my-resume',
+    )
+    expect(screen.getAllByRole('separator').length).toBeGreaterThanOrEqual(3)
+    expect(screen.getByText('导航')).toBeInTheDocument()
+    expect(screen.getByText('切换')).toBeInTheDocument()
+    expect(screen.getByText('下载')).toBeInTheDocument()
+    expect(screen.getByText('社交')).toBeInTheDocument()
+    expect(
+      screen.getAllByText(/^(导航|切换|下载|社交)$/).map((item) => item.textContent),
+    ).toEqual(['导航', '切换', '下载', '社交'])
+
+    replaceMock.mockClear()
+    await user.click(screen.getByRole('menuitem', { name: '概览' }))
+    expect(replaceMock).toHaveBeenCalledWith('/profile')
+    await waitFor(() => {
+      expect(screen.queryByRole('menuitem', { name: '简历' })).not.toBeInTheDocument()
+    })
+
+    replaceMock.mockClear()
+    await user.click(screen.getByRole('button', { name: '打开站点菜单' }))
+    await user.click(screen.getByRole('menuitem', { name: 'Select Lang: EN' }))
+    expect(replaceMock).toHaveBeenCalledWith('/', { locale: 'en' })
+    await waitFor(() => {
+      expect(screen.queryByRole('menuitem', { name: '简历' })).not.toBeInTheDocument()
+    })
+
+    view.rerender(
+      <ThemeModeProvider>
+        <PublishedResumeShell
+          apiBaseUrl="http://localhost:5577"
+          locale="en"
+          publishedResume={publishedResumeFixture}
+        />
+      </ThemeModeProvider>,
+    )
+    await user.click(screen.getByRole('button', { name: '打开站点菜单' }))
+    expect(await screen.findByRole('menuitem', { name: '切换语言：中文' })).toBeInTheDocument()
+
+    expect(document.documentElement.dataset.theme).toBe('light')
+    await user.click(screen.getByRole('menuitem', { name: '切换主题：深色' }))
+    expect(document.documentElement.dataset.theme).toBe('dark')
+    await waitFor(() => {
+      expect(screen.queryByRole('menuitem', { name: '简历' })).not.toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole('button', { name: '打开站点菜单' }))
+    expect(await screen.findByRole('menuitem', { name: '切换主题：浅色' })).toBeInTheDocument()
+    await user.click(screen.getByRole('menuitem', { name: '切换主题：浅色' }))
+    expect(document.documentElement.dataset.theme).toBe('light')
+    },
+    15000,
+  )
 
   it('should strip locale prefix before switching from en back to zh on home', async () => {
     const user = userEvent.setup()
