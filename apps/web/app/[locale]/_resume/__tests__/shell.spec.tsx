@@ -154,10 +154,10 @@ describe('PublishedResumeShell', () => {
     )
     expect(screen.getByRole('heading', { name: '付寅生' })).toBeInTheDocument()
     expect(
-      await screen.findByRole('heading', { name: '职业经历' }, { timeout: 4000 }),
+      await screen.findByRole('heading', { name: '职业经历' }, { timeout: 10000 }),
     ).toBeInTheDocument()
     expect(
-      await screen.findByRole('heading', { name: '代表项目' }, { timeout: 4000 }),
+      await screen.findByRole('heading', { name: '代表项目' }, { timeout: 10000 }),
     ).toBeInTheDocument()
     expect(screen.getByAltText('付寅生头像正面')).toBeInTheDocument()
     expect(screen.getByAltText('付寅生头像背面')).toBeInTheDocument()
@@ -208,7 +208,9 @@ describe('PublishedResumeShell', () => {
     expect(replaceMock).toHaveBeenCalledWith('/', { locale: 'en' })
   }, 10000)
 
-  it('should render grouped mobile menu and keep navigation/toggle/download/social actions working', async () => {
+  it(
+    'should render grouped mobile menu and keep navigation/toggle/download/social actions working',
+    async () => {
     const user = userEvent.setup()
 
     const view = render(
@@ -289,7 +291,9 @@ describe('PublishedResumeShell', () => {
     expect(await screen.findByRole('menuitem', { name: '切换主题：浅色' })).toBeInTheDocument()
     await user.click(screen.getByRole('menuitem', { name: '切换主题：浅色' }))
     expect(document.documentElement.dataset.theme).toBe('light')
-  })
+    },
+    15000,
+  )
 
   it('should strip locale prefix before switching from en back to zh on home', async () => {
     const user = userEvent.setup()

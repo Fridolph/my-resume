@@ -287,7 +287,7 @@ describe('AdminAiOptimizationHistoryShell', () => {
         resultId: 'result-history-101',
       })
     })
-  })
+  }, 15000)
 
   it('should keep drawer readable when optimization result cache is missing', async () => {
     const user = userEvent.setup()

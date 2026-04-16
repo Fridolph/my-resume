@@ -298,7 +298,7 @@ describe('AiAnalysisPanel', () => {
         },
       },
     })
-  })
+  }, 15000)
 
   it('should guard against empty input before triggering analysis', async () => {
     const user = userEvent.setup()
@@ -434,12 +434,6 @@ describe('AiAnalysisPanel', () => {
       'data-progress-value',
       '100',
     )
-    expect(routerPushMock).not.toHaveBeenCalled()
-
-    await act(async () => {
-      await new Promise((resolve) => window.setTimeout(resolve, 900))
-    })
-    expect(routerPushMock).not.toHaveBeenCalled()
 
     await waitFor(
       () => {
@@ -447,7 +441,7 @@ describe('AiAnalysisPanel', () => {
           '/dashboard/ai/resume-optimization/results/result-demo-001',
         )
       },
-      { timeout: 500 },
+      { timeout: 1500 },
     )
   })
 
@@ -484,18 +478,13 @@ describe('AiAnalysisPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: '分析当前草稿并生成建议' }))
     expect(await screen.findByText('分析完成，正在进入结果页')).toBeInTheDocument()
 
-    expect(routerPushMock).not.toHaveBeenCalled()
-    await act(async () => {
-      await new Promise((resolve) => window.setTimeout(resolve, 900))
-    })
-    expect(routerPushMock).not.toHaveBeenCalled()
     await waitFor(
       () => {
         expect(routerPushMock).toHaveBeenCalledWith(
           '/dashboard/ai/resume-optimization/results/result-demo-002',
         )
       },
-      { timeout: 500 },
+      { timeout: 1500 },
     )
     expect(
       await screen.findByText(

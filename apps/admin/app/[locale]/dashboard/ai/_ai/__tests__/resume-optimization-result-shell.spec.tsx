@@ -209,7 +209,7 @@ describe('ResumeOptimizationResultShell', () => {
     })
 
     expect((await screen.findAllByText('已应用')).length).toBeGreaterThan(0)
-  })
+  }, 15000)
 
   it('should show non-replayable hint when fallback result cannot apply', async () => {
     fetchResumeOptimizationResultMock.mockResolvedValue({

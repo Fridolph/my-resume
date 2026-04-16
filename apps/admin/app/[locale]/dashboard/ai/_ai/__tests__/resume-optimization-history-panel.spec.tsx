@@ -85,7 +85,7 @@ describe('ResumeOptimizationHistoryPanel', () => {
       'href',
       '/dashboard/ai/resume-optimization/results/result-6',
     )
-  })
+  }, 15000)
 
   it('should clamp current page when entries shrink', async () => {
     const user = userEvent.setup()

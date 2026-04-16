@@ -342,6 +342,8 @@ describe('ResumeDraftEditorPanel', () => {
 
     expect(await screen.findByDisplayValue('GitHub')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '删除个人链接 1' })).toHaveClass(
+      'close-button',
+      'close-button--default',
       'inline-flex',
       'items-center',
       'justify-center',
@@ -350,7 +352,7 @@ describe('ResumeDraftEditorPanel', () => {
       'p-0',
       '[&_svg]:h-3.5',
       '[&_svg]:w-3.5',
-      'text-[#999]',
+      'text-rose-500',
     )
   })
 

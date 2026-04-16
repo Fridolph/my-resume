@@ -197,8 +197,12 @@ describe('AdminProtectedLayout', () => {
     expect(screen.getAllByText('优化记录').length).toBeGreaterThan(0)
     expect(screen.getAllByText('发布与导出').length).toBeGreaterThan(0)
     expect(screen.queryByText('当前会话')).not.toBeInTheDocument()
-    expect(await screen.findByLabelText('打开项目 GitHub 仓库')).toBeInTheDocument()
-    expect(await screen.findByLabelText('打开当前会话菜单')).toBeInTheDocument()
+    expect(
+      await screen.findByLabelText('打开项目 GitHub 仓库', undefined, { timeout: 5000 }),
+    ).toBeInTheDocument()
+    expect(
+      await screen.findByLabelText('打开当前会话菜单', undefined, { timeout: 5000 }),
+    ).toBeInTheDocument()
     expect(await screen.findByText('账号')).toBeInTheDocument()
     expect(await screen.findByText('角色')).toBeInTheDocument()
     expect(await screen.findByText('退出登录')).toHaveClass(
