@@ -1,6 +1,6 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { ThemeModeProvider } from '@my-resume/ui/theme'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const pushMock = vi.fn()
 const prefetchMock = vi.fn()
@@ -21,7 +21,7 @@ vi.mock('@i18n/navigation', () => ({
       {children}
     </a>
   ),
-  usePathname: () => '/ai-talk/sessions/demo-session',
+  usePathname: () => '/ai-talk/resume-advisor',
   useRouter: () => ({
     push: pushMock,
     prefetch: prefetchMock,
@@ -38,7 +38,7 @@ vi.mock('next-intl', async () => {
     site: zhSite as Record<string, unknown>,
   }
 
-  const getMessage = (namespace: string, key: string, values?: Record<string, unknown>): string => {
+  const getMessage = (namespace: string, key: string): string => {
     const value = key
       .split('.')
       .reduce<unknown>((currentValue, segment) => {
@@ -49,53 +49,47 @@ vi.mock('next-intl', async () => {
         return (currentValue as Record<string, unknown>)[segment]
       }, bundles[namespace])
 
-    const message = typeof value === 'string' ? value : key
-
-    return Object.entries(values ?? {}).reduce(
-      (currentMessage, [name, value]) =>
-        currentMessage.replaceAll(`{${name}}`, String(value)),
-      message,
-    )
+    return typeof value === 'string' ? value : key
   }
 
   return {
     useTranslations:
       (namespace: string) =>
-      (key: string, values?: Record<string, unknown>): string =>
-        getMessage(namespace, key, values),
+      (key: string): string =>
+        getMessage(namespace, key),
   }
 })
 
 import { publishedResumeFixture } from '@shared/published-resume/__tests__/fixture'
 
-import { AiTalkSessionShell } from '../session-shell'
+import { AiTalkResumeAdvisorShell } from '../resume-advisor-shell'
 
-describe('AiTalkSessionShell', () => {
-  it('should render the future session workspace placeholder', () => {
+describe('AiTalkResumeAdvisorShell', () => {
+  beforeEach(() => {
     pushMock.mockReset()
     prefetchMock.mockReset()
+  })
 
+  it('should render chip-style badges and stronger rag cta', () => {
     render(
       <ThemeModeProvider>
-        <AiTalkSessionShell
-          locale="zh"
-          publishedResume={publishedResumeFixture}
-          sessionId="demo-session"
-        />
+        <AiTalkResumeAdvisorShell locale="zh" publishedResume={publishedResumeFixture} />
       </ThemeModeProvider>,
     )
 
-    expect(screen.getByRole('heading', { name: '会话工作区 · demo-session' })).toBeInTheDocument()
-    const chipRow = screen.getByTestId('ai-talk-session-chip-row')
-    expect(chipRow).toHaveClass('flex-nowrap')
-    expect(within(chipRow).getByText('流式优先')).toBeInTheDocument()
-    expect(within(chipRow).getByText('消息时间线')).toBeInTheDocument()
-    expect(screen.getAllByText('来源片段')).not.toHaveLength(0)
-    fireEvent.click(screen.getByRole('button', { name: '返回 RAG 对话' }))
-    expect(pushMock).toHaveBeenCalledWith('/ai-talk/chat')
+    expect(screen.getByRole('heading', { name: '简历优化与建议' })).toBeInTheDocument()
+    expect(screen.getByTestId('resume-advisor-chip-primary')).toHaveTextContent('结构化基线')
+    expect(screen.getByTestId('resume-advisor-chip-secondary')).toHaveTextContent('admin 工作台')
+
+    const ragButton = screen.getByRole('button', { name: '进入 RAG 对话' })
+    expect(ragButton.className).toContain('border')
+
     fireEvent.click(screen.getByRole('button', { name: '返回 AI Talk 中枢' }))
-    expect(pushMock).toHaveBeenCalledWith('/ai-talk')
-    expect(prefetchMock).toHaveBeenCalledWith('/ai-talk/chat')
+    fireEvent.click(ragButton)
+
     expect(prefetchMock).toHaveBeenCalledWith('/ai-talk')
+    expect(prefetchMock).toHaveBeenCalledWith('/ai-talk/chat')
+    expect(pushMock).toHaveBeenCalledWith('/ai-talk')
+    expect(pushMock).toHaveBeenCalledWith('/ai-talk/chat')
   })
 })
