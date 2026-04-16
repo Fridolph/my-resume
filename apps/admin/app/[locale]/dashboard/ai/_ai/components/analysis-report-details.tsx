@@ -10,7 +10,7 @@ import type {
 
 const analysisTextBlockClass =
   'whitespace-pre-wrap leading-7 text-zinc-900 dark:text-zinc-100'
-const analysisSectionCardClass = 'grid gap-3.5 p-5 md:p-6'
+const analysisSectionCardClass = 'grid gap-3 p-4 md:p-5'
 
 interface AnalysisReportDetailsProps {
   onLinkSuggestionModule: (module: AiResumeOptimizationChangedModule) => void
@@ -24,21 +24,21 @@ export function AnalysisReportDetails({
   return (
     <>
       <DisplaySectionCard
-        className="grid gap-4 p-5 md:p-6"
+        className="grid gap-3 p-4 md:p-5"
         compact
         description="先给出面向用户的整体判断，再展开为什么这样判断。这样更适合简历修改和面试准备。"
         eyebrow="结论层"
         title="结论摘要"
         titleAs="h3">
         <div className={analysisTextBlockClass}>{report.summary}</div>
-        <div className="status-box">
+        <div className="status-box gap-2 p-3 md:p-3.5">
           <strong>判断理由</strong>
           <span>{report.score.reason}</span>
         </div>
       </DisplaySectionCard>
 
       <DisplaySectionCard
-        className="grid gap-4 p-5 md:p-6"
+        className="grid gap-3 p-4 md:p-5"
         compact
         description="这里把已有优势和待补缺口放在同一层，帮助用户理解为什么当前简历会得到这个结论。"
         eyebrow="依据层"
@@ -69,7 +69,7 @@ export function AnalysisReportDetails({
       </DisplaySectionCard>
 
       <DisplaySectionCard
-        className="grid gap-4 p-5 md:p-6"
+        className="grid gap-3 p-4 md:p-5"
         compact
         description="风险提示不是为了制造焦虑，而是提前告诉用户“不改会发生什么”。"
         eyebrow="风险层"
@@ -83,7 +83,7 @@ export function AnalysisReportDetails({
       </DisplaySectionCard>
 
       <DisplaySectionCard
-        className="grid gap-4 p-5 md:p-6"
+        className="grid gap-3 p-4 md:p-5"
         compact
         description="建议动作会尽量指向简历模块，为后续 diff / apply 做准备，也方便用户在确认原因后再执行。"
         eyebrow="行动层"
@@ -96,7 +96,7 @@ export function AnalysisReportDetails({
             return (
               <DisplaySurfaceCard
                 as="section"
-                className="stack p-5 md:p-6"
+                className="stack p-4 md:p-5"
                 key={item.key}>
                 <DisplaySectionIntro
                   compact
@@ -133,7 +133,7 @@ export function AnalysisReportDetails({
 
       {report.sections.length > 0 ? (
         <DisplaySectionCard
-          className="grid gap-4 p-5 md:p-6"
+          className="grid gap-3 p-4 md:p-5"
           compact
           description="兼容缓存阅读面板的过渡结构，便于后续继续统一报告阅读体验。"
           eyebrow="兼容层"

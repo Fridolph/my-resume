@@ -37,7 +37,7 @@ export function AiAnalysisReportDrawer({
       dialogClassName="max-w-[min(92vw,58rem)]"
       isOpen={isOpen}
       onClose={onClose}>
-      <Drawer.Header className="border-b border-zinc-200/80 px-4 py-3 dark:border-zinc-800">
+      <Drawer.Header className="border-b border-zinc-200/80 dark:border-zinc-800">
         <div className="grid gap-2">
           <Drawer.Heading className="text-lg font-semibold text-zinc-950 dark:text-white">
             AI 辅助分析详情
@@ -87,11 +87,6 @@ export function AiAnalysisReportDrawer({
           </>
         ) : null}
       </Drawer.Body>
-      <Drawer.Footer className="border-t border-zinc-200/80 px-4 py-3 dark:border-zinc-800">
-        <Button onPress={onClose} size="md" type="button" variant="outline">
-          关闭详情
-        </Button>
-      </Drawer.Footer>
     </AdminDrawerShell>
   )
 }

@@ -168,9 +168,12 @@ describe('ResumeOptimizationResultShell', () => {
     expect(screen.getByText('个人摘要决定招聘方第一眼如何判断岗位匹配度。')).toBeInTheDocument()
     expect(screen.getAllByTestId('resume-diff-current-section')[0]).toHaveClass('bg-white/92')
     expect(screen.getAllByTestId('resume-diff-grid')[0]).toHaveClass('grid-cols-2', 'md:grid-cols-4')
-    expect(screen.getAllByTestId('resume-diff-suggested-section')[0]).toHaveClass('bg-rose-50/80')
-    expect(screen.getAllByTestId('resume-diff-suggestion-section')[0]).toHaveClass('bg-sky-50/75')
-    expect(screen.getAllByTestId('resume-diff-reason-section')[0]).toHaveClass('bg-amber-50/80')
+    expect(screen.getAllByTestId('resume-diff-suggested-section')[0]).toHaveClass('!bg-rose-50/80')
+    expect(screen.getAllByTestId('resume-diff-suggested-section')[0]).toHaveClass('!border-rose-200/80')
+    expect(screen.getAllByTestId('resume-diff-suggestion-section')[0]).toHaveClass('!bg-sky-50/75')
+    expect(screen.getAllByTestId('resume-diff-suggestion-section')[0]).toHaveClass('!border-sky-200/70')
+    expect(screen.getAllByTestId('resume-diff-reason-section')[0]).toHaveClass('!bg-amber-50/80')
+    expect(screen.getAllByTestId('resume-diff-reason-section')[0]).toHaveClass('!border-amber-200/70')
     expect(screen.getAllByTestId('resume-diff-suggestion-section')[0]).toBeInTheDocument()
     expect(screen.getAllByTestId('resume-diff-reason-section')[0]).toBeInTheDocument()
     expect(screen.getAllByText('修改内容').length).toBeGreaterThan(0)
@@ -178,7 +181,11 @@ describe('ResumeOptimizationResultShell', () => {
     expect(screen.getAllByText('修改内容')[0]).toHaveClass('text-sm', 'font-bold')
     expect(screen.getAllByText('建议说明')[0]).toHaveClass('text-sm', 'font-bold')
     expect(screen.getAllByText('原因说明')[0]).toHaveClass('text-sm', 'font-bold')
-    expect(screen.getAllByText('当前内容')[0]?.parentElement).toHaveClass('p-3', 'gap-2', 'leading-6')
+    const currentCardContent = screen
+      .getAllByTestId('resume-diff-current-section')[0]
+      ?.querySelector('.card__content')
+    expect(currentCardContent).toBeTruthy()
+    expect(currentCardContent).toHaveClass('gap-2', 'leading-6')
 
     await waitFor(() => {
       expect(screen.getByText('当前已选：2 / 2')).toBeInTheDocument()

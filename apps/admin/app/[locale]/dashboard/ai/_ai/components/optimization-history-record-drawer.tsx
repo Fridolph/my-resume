@@ -2,7 +2,7 @@
 
 import { useRequest } from 'alova/client'
 import { Button, Drawer, Skeleton } from '@heroui/react'
-import { DisplaySectionCard, DisplaySurfaceCard } from '@my-resume/ui/display'
+import { DisplayPill, DisplaySectionCard, DisplaySurfaceCard } from '@my-resume/ui/display'
 import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
@@ -223,9 +223,9 @@ export function OptimizationHistoryRecordDrawer({
   function renderOptimizationPanel() {
     if (optimizationLoading && !optimizationDetail) {
       return (
-        <div className="grid gap-3">
-          <Skeleton className="h-24 rounded-[1.25rem] bg-zinc-200/80 dark:bg-zinc-800/80" />
-          <Skeleton className="h-32 rounded-[1.25rem] bg-zinc-200/80 dark:bg-zinc-800/80" />
+        <div className="grid gap-2.5">
+          <Skeleton className="h-20 rounded-[1.1rem] bg-zinc-200/80 dark:bg-zinc-800/80" />
+          <Skeleton className="h-28 rounded-[1.1rem] bg-zinc-200/80 dark:bg-zinc-800/80" />
         </div>
       )
     }
@@ -234,7 +234,7 @@ export function OptimizationHistoryRecordDrawer({
       return (
         <DisplaySurfaceCard
           as="section"
-          className="grid gap-3 border-amber-200/80 bg-amber-50/82 p-4 text-amber-900 dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-100">
+          className="grid gap-2.5 border-amber-200/80 bg-amber-50/82 p-3 text-amber-900 dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-100">
           <div className="grid gap-2">
             <p className="eyebrow text-amber-700 dark:text-amber-200">结果缓存已失效</p>
             <h3 className="text-lg font-semibold">该条优化结果已失效或不可读取</h3>
@@ -243,7 +243,7 @@ export function OptimizationHistoryRecordDrawer({
             </p>
           </div>
           {entry ? (
-            <div className="grid gap-2 rounded-[1rem] border border-amber-200/70 bg-white/58 p-3 dark:border-amber-400/20 dark:bg-zinc-950/30">
+            <div className="grid gap-2 rounded-[1rem] border border-amber-200/70 bg-white/58 p-2.5 dark:border-amber-400/20 dark:bg-zinc-950/30">
               <strong className="text-sm text-zinc-950 dark:text-white">
                 {extractOptimizationInstructionTitle(entry.instruction)}
               </strong>
@@ -252,11 +252,11 @@ export function OptimizationHistoryRecordDrawer({
               </span>
               <div className="flex flex-wrap gap-2">
                 {entry.changedModules.map((module) => (
-                  <span
-                    className="rounded-full border border-amber-200/80 bg-amber-100/70 px-3 py-1 text-xs text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-100"
+                  <DisplayPill
+                    className="min-h-8 border-amber-200/80 bg-amber-100/70 px-3 py-1 text-xs text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-100"
                     key={`${entry.resultId}-fallback-${module}`}>
                     {formatOptimizationModule(module)}
-                  </span>
+                  </DisplayPill>
                 ))}
               </div>
             </div>
@@ -277,9 +277,9 @@ export function OptimizationHistoryRecordDrawer({
     }
 
     return (
-      <div className="grid gap-3">
+      <div className="grid gap-2.5">
         <DisplaySectionCard
-          className="grid gap-3 p-4 md:p-5"
+          className="grid gap-2.5 p-3.5 md:p-4"
           compact
           description="这里保留的是轻量展示摘要，不复制真正的 apply patch；结果页仍是完整阅读与应用入口。"
           eyebrow="优化建议"
@@ -291,28 +291,28 @@ export function OptimizationHistoryRecordDrawer({
             </strong>
             <div className="flex flex-wrap gap-2">
               {optimizationDetail.focusAreas.map((item) => (
-                <span
-                  className="rounded-full border border-blue-200/70 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-blue-200"
+                <DisplayPill
+                  className="min-h-8 border-blue-200/70 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-blue-200"
                   key={`${optimizationDetail.resultId}-${item}`}>
                   {item}
-                </span>
+                </DisplayPill>
               ))}
             </div>
           </div>
         </DisplaySectionCard>
 
-        <DisplaySurfaceCard as="section" className="grid gap-3 p-4 md:p-5">
+        <DisplaySurfaceCard as="section" className="grid gap-2.5 p-3.5 md:p-4">
           <div className="grid gap-2">
             <h3 className="text-base font-semibold text-zinc-950 dark:text-white">
               影响模块
             </h3>
             <div className="flex flex-wrap gap-2">
               {optimizationDetail.changedModules.map((module) => (
-                <span
-                  className="rounded-full border border-zinc-200/80 bg-white px-3 py-1 text-xs text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+                <DisplayPill
+                  className="min-h-8 border-zinc-200/80 bg-white px-3 py-1 text-xs text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
                   key={`${optimizationDetail.resultId}-${module}`}>
                   {formatOptimizationModule(module)}
-                </span>
+                </DisplayPill>
               ))}
             </div>
           </div>
@@ -341,9 +341,9 @@ export function OptimizationHistoryRecordDrawer({
 
     if (analysisDetailLoading && !analysisDetails[scenario] && !analysisErrorMessages[scenario]) {
       return (
-        <div className="grid gap-3">
-          <Skeleton className="h-24 rounded-[1.25rem] bg-zinc-200/80 dark:bg-zinc-800/80" />
-          <Skeleton className="h-40 rounded-[1.25rem] bg-zinc-200/80 dark:bg-zinc-800/80" />
+        <div className="grid gap-2.5">
+          <Skeleton className="h-20 rounded-[1.1rem] bg-zinc-200/80 dark:bg-zinc-800/80" />
+          <Skeleton className="h-32 rounded-[1.1rem] bg-zinc-200/80 dark:bg-zinc-800/80" />
         </div>
       )
     }
@@ -368,7 +368,7 @@ export function OptimizationHistoryRecordDrawer({
     }
 
     return (
-      <div className="grid gap-4">
+      <div className="grid gap-3">
         <AnalysisReportOverview report={report} runtimeSummary={runtimeSummary} />
         <AnalysisReportDetails
           onLinkSuggestionModule={() => undefined}
@@ -380,8 +380,8 @@ export function OptimizationHistoryRecordDrawer({
 
   function renderTabPanel(tab: typeof tabMeta[number]) {
     return (
-      <div className="grid gap-3" role="tabpanel">
-        <div className="rounded-[1.25rem] border border-zinc-200/80 bg-zinc-50/82 p-3 text-sm leading-6 text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-300">
+      <div className="grid gap-2.5" role="tabpanel">
+        <div className="rounded-[1.1rem] border border-zinc-200/80 bg-zinc-50/82 p-2.5 text-sm leading-6 text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-300">
           <strong className="block text-zinc-950 dark:text-white">
             {tab.label}
           </strong>
@@ -422,23 +422,23 @@ export function OptimizationHistoryRecordDrawer({
         </div>
         <Drawer.CloseTrigger aria-label="关闭优化记录详情" />
       </Drawer.Header>
-      <Drawer.Body className="grid gap-4 px-4 py-3">
+      <Drawer.Body className="grid gap-3 px-3 py-2.5 md:px-4 md:py-3">
         {entry ? (
           <>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {entry.changedModules.map((module) => (
-                <span
-                  className="rounded-full border border-zinc-200/80 bg-zinc-50 px-3 py-1 text-xs text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+                <DisplayPill
+                  className="min-h-7 border-zinc-200/80 bg-zinc-50 px-2.5 py-0.5 text-xs text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
                   key={`${entry.resultId}-${module}`}>
                   {formatOptimizationModule(module)}
-                </span>
+                </DisplayPill>
               ))}
             </div>
 
-            <div className="grid gap-3">
+            <div className="grid gap-2.5">
               <div
                 aria-label="选择优化记录详情分组"
-                className="flex flex-wrap gap-1.5 rounded-[1.25rem] border border-zinc-200/80 bg-zinc-50/82 p-1 dark:border-zinc-800 dark:bg-zinc-900/72"
+                className="flex flex-wrap gap-1 rounded-[1.1rem] border border-zinc-200/80 bg-zinc-50/82 p-1 dark:border-zinc-800 dark:bg-zinc-900/72"
                 role="tablist">
                 {tabMeta.map((tab) => {
                   const isSelected = selectedTab === tab.key
@@ -447,9 +447,9 @@ export function OptimizationHistoryRecordDrawer({
                     <button
                       aria-selected={isSelected}
                       className={[
-                        'rounded-full px-2.5 py-1.5 text-sm transition',
+                        'inline-flex min-h-8 items-center justify-center rounded-full px-2.5 py-1 text-sm font-medium leading-none transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-1 focus-visible:ring-offset-white dark:focus-visible:ring-offset-zinc-950',
                         isSelected
-                          ? 'bg-white text-zinc-950 shadow-sm dark:bg-zinc-950 dark:text-white'
+                          ? 'bg-white text-zinc-950 shadow-sm ring-1 ring-zinc-200/80 dark:bg-zinc-950 dark:text-white dark:ring-zinc-700/80'
                           : 'text-zinc-600 hover:bg-white/70 hover:text-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-950/60 dark:hover:text-white',
                       ].join(' ')}
                       key={tab.key}

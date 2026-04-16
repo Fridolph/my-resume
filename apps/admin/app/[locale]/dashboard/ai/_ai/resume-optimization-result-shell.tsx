@@ -1,7 +1,7 @@
 'use client'
 
 import { useRequest } from 'alova/client'
-import { Button, Card, CardContent, Chip, Skeleton } from '@heroui/react'
+import { Button, Card, CardContent, CardHeader, Chip, Skeleton } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
@@ -49,15 +49,15 @@ function moduleLabel(module: AiResumeOptimizationChangedModule, locale: 'en' | '
 
 const diffCardTitleClassName = 'text-sm font-bold text-zinc-800 dark:text-zinc-100'
 const diffCardTextClassName = 'text-sm leading-6 text-zinc-700 dark:text-zinc-200'
-const diffCardContentClassName = `grid h-full gap-2 p-3 ${diffCardTextClassName}`
+const diffCardContentClassName = `grid h-full gap-2 ${diffCardTextClassName}`
 const diffCurrentCardClassName =
   'min-h-[7rem] border border-zinc-200/80 bg-white/92 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/72'
 const diffSuggestedCardClassName =
-  'min-h-[7rem] border border-rose-200/80 bg-rose-50/80 shadow-[0_14px_32px_rgba(244,63,94,0.08)] dark:border-rose-400/25 dark:bg-rose-500/12'
+  'min-h-[7rem] border !border-rose-200/80 !bg-rose-50/80 shadow-[0_14px_32px_rgba(244,63,94,0.08)] dark:!border-rose-400/25 dark:!bg-rose-500/12'
 const diffSuggestionCardClassName =
-  'min-h-[7rem] border border-sky-200/70 bg-sky-50/75 shadow-sm dark:border-sky-400/20 dark:bg-sky-500/10'
+  'min-h-[7rem] border !border-sky-200/70 !bg-sky-50/75 shadow-sm dark:!border-sky-400/20 dark:!bg-sky-500/10'
 const diffReasonCardClassName =
-  'min-h-[7rem] border border-amber-200/70 bg-amber-50/80 shadow-sm dark:border-amber-300/25 dark:bg-amber-500/10'
+  'min-h-[7rem] border !border-amber-200/70 !bg-amber-50/80 shadow-sm dark:!border-amber-300/25 dark:!bg-amber-500/10'
 
 export function ResumeOptimizationResultShell({
   locale,
@@ -373,7 +373,7 @@ export function ResumeOptimizationResultShell({
                     <div className="grid gap-4">
                       {moduleDiff.entries.map((entry) => (
                         <div
-                          className="grid gap-3 rounded-[1.5rem] border border-zinc-200/80 bg-zinc-50/70 p-4 dark:border-zinc-800 dark:bg-zinc-900/42"
+                          className="grid gap-3 rounded-[1.5rem] bg-zinc-50/70 dark:bg-zinc-900/42"
                           key={entry.key}>
                           <div className="flex flex-wrap items-center justify-between gap-3">
                             <strong className="text-sm text-zinc-950 dark:text-white">
@@ -390,32 +390,40 @@ export function ResumeOptimizationResultShell({
                             <Card
                               className={diffCurrentCardClassName}
                               data-testid="resume-diff-current-section">
-                              <CardContent className={diffCardContentClassName}>
+                              <CardHeader>
                                 <span className={diffCardTitleClassName}>当前内容</span>
+                              </CardHeader>
+                              <CardContent className={diffCardContentClassName}>
                                 <span className="whitespace-pre-wrap">{entry.currentValue}</span>
                               </CardContent>
                             </Card>
                             <Card
                               className={diffSuggestedCardClassName}
                               data-testid="resume-diff-suggested-section">
-                              <CardContent className={diffCardContentClassName}>
+                              <CardHeader>
                                 <span className={diffCardTitleClassName}>修改内容</span>
+                              </CardHeader>
+                              <CardContent className={diffCardContentClassName}>
                                 <span className="whitespace-pre-wrap">{entry.suggestedValue}</span>
                               </CardContent>
                             </Card>
                             <Card
                               className={diffSuggestionCardClassName}
                               data-testid="resume-diff-suggestion-section">
-                              <CardContent className={diffCardContentClassName}>
+                              <CardHeader>
                                 <strong className={diffCardTitleClassName}>建议说明</strong>
+                              </CardHeader>
+                              <CardContent className={diffCardContentClassName}>
                                 <p>{entry.suggestion}</p>
                               </CardContent>
                             </Card>
                             <Card
                               className={diffReasonCardClassName}
                               data-testid="resume-diff-reason-section">
-                              <CardContent className={diffCardContentClassName}>
+                              <CardHeader>
                                 <strong className={diffCardTitleClassName}>原因说明</strong>
+                              </CardHeader>
+                              <CardContent className={diffCardContentClassName}>
                                 <p>{entry.reason}</p>
                               </CardContent>
                             </Card>
