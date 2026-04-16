@@ -59,24 +59,27 @@ fi
 
 sudo_cmd mkdir -p \
   "$DEPLOY_ROOT" \
-  "$DEPLOY_ROOT/releases" \
-  "$DEPLOY_ROOT/shared/config" \
-  "$DEPLOY_ROOT/shared/data" \
-  "$DEPLOY_ROOT/shared/logs" \
-  "$DEPLOY_ROOT/shared/nginx" \
-  "$DEPLOY_ROOT/shared/certbot/www" \
-  "$DEPLOY_ROOT/shared/state" \
-  "$DEPLOY_ROOT/shared/storage/rag"
+  "$DEPLOY_RUNTIME_ROOT/repo-cache" \
+  "$DEPLOY_RUNTIME_ROOT/release-snapshots" \
+  "$DEPLOY_RUNTIME_ROOT/shared/config" \
+  "$DEPLOY_RUNTIME_ROOT/shared/data" \
+  "$DEPLOY_RUNTIME_ROOT/shared/logs" \
+  "$DEPLOY_RUNTIME_ROOT/shared/nginx" \
+  "$DEPLOY_RUNTIME_ROOT/shared/state" \
+  "$DEPLOY_RUNTIME_ROOT/shared/storage/rag"
+
+sudo_cmd mkdir -p "${CERTBOT_WEBROOT:-/var/www/my-resume-certbot}"
+sudo_cmd chmod 755 "${CERTBOT_WEBROOT:-/var/www/my-resume-certbot}"
 
 if [[ "$(id -u)" -ne 0 ]]; then
-  sudo_cmd chown -R "$(id -un)":"$(id -gn)" "$DEPLOY_ROOT"
+  sudo_cmd chown -R "$(id -un)":"$(id -gn)" "$DEPLOY_ROOT" "$DEPLOY_RUNTIME_ROOT"
 fi
 
-if [[ ! -f "$DEPLOY_ROOT/shared/config/stack.env" ]]; then
-  run_cmd cp "$TEMPLATE_DIR/stack.env.example" "$DEPLOY_ROOT/shared/config/stack.env"
-  log "Created stack env template: $DEPLOY_ROOT/shared/config/stack.env"
+if [[ ! -f "$DEPLOY_RUNTIME_ROOT/shared/config/stack.env.local" ]]; then
+  run_cmd cp "$TEMPLATE_DIR/stack.env.example" "$DEPLOY_RUNTIME_ROOT/shared/config/stack.env.local"
+  log "Created stack env template: $DEPLOY_RUNTIME_ROOT/shared/config/stack.env.local"
 else
-  log "Stack env already exists: $DEPLOY_ROOT/shared/config/stack.env"
+  log "Stack env already exists: $DEPLOY_RUNTIME_ROOT/shared/config/stack.env.local"
 fi
 
 if [[ -n "${NGINX_ENABLED:-}" ]] && [[ -L /etc/nginx/sites-enabled/default || -f /etc/nginx/sites-enabled/default ]]; then
@@ -92,4 +95,4 @@ if [[ -n "${NGINX_ENABLED:-}" ]]; then
   log "Detected nginx enabled link: $NGINX_ENABLED"
 fi
 
-log "Bootstrap completed. Next: fill $DEPLOY_ROOT/shared/config/stack.env and run release.sh v2.0.0"
+log "Bootstrap completed. Next: fill $DEPLOY_RUNTIME_ROOT/shared/config/stack.env.local and run release.sh v2.1.0"

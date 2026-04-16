@@ -1,20 +1,28 @@
-# `stack.env` 服务器填写清单
+# `stack.env.local` 服务器填写清单
 
-这份清单配合 `/Users/fri/Desktop/personal/my-resume/deploy/templates/stack.env.example:1` 使用，目标是帮助你在 ECS 上快速填好 `/opt/my-resume/shared/config/stack.env`，并避免因为漏项导致 `release.sh` 失败。
+这份清单配合 `/Users/fri/Desktop/personal/my-resume/deploy/templates/stack.env.example:1` 使用，目标是帮助你在 ECS 上快速填好 `/opt/my-resume/.deploy-runtime/shared/config/stack.env.local`，并避免因为漏项导致 `release.sh` 失败。
 
 ## 文件位置
 
 服务器上的正式配置文件：
 
 ```bash
-/opt/my-resume/shared/config/stack.env
+/opt/my-resume/.deploy-runtime/shared/config/stack.env.local
 ```
 
 建议先复制模板：
 
 ```bash
-cp /opt/my-resume/repo/deploy/templates/stack.env.example /opt/my-resume/shared/config/stack.env
+cp /opt/my-resume/deploy/templates/stack.env.example /opt/my-resume/.deploy-runtime/shared/config/stack.env.local
 ```
+
+如果你的 ECS 已经使用旧目录，也可以继续放在：
+
+```bash
+/opt/my-resume/shared/config/stack.env.local
+```
+
+脚本会优先读取 `.deploy-runtime/shared/config/stack.env.local`，然后兼容读取 `shared/config/stack.env.local`。
 
 ## 必填项
 
@@ -39,11 +47,11 @@ cp /opt/my-resume/repo/deploy/templates/stack.env.example /opt/my-resume/shared/
   - 对应公开站 `web`
 
 - `ADMIN_DOMAIN`
-  - 示例：`resume-admin.fridolph.top`
+  - 示例：`admin-resume.fridolph.top`
   - 对应后台 `admin`
 
 - `API_DOMAIN`
-  - 示例：`resume-api.fridolph.top`
+  - 示例：`api-resume.fridolph.top`
   - 对应 Nest 服务 `server`
 
 ### HTTPS
@@ -56,6 +64,16 @@ cp /opt/my-resume/repo/deploy/templates/stack.env.example /opt/my-resume/shared/
   - 用途：Let's Encrypt 证书名
   - 默认：不填则使用 `RESUME_DOMAIN`
   - 建议：首次可先不填
+
+- `CERTBOT_KEY_TYPE`
+  - 用途：Let's Encrypt 证书密钥类型
+  - 默认：`ecdsa`
+  - 如果已有证书是 ECDSA，保持 `ecdsa`，避免 Certbot 误判为从 ECDSA 切到 RSA
+
+- `CERTBOT_WEBROOT`
+  - 用途：ACME challenge 文件目录
+  - 默认：`/var/www/my-resume-certbot`
+  - 不建议放到 `/root` 下，否则 Nginx worker 用户可能没有目录穿透权限，导致 challenge 返回 `403`
 
 ### 鉴权
 
@@ -85,9 +103,10 @@ cp /opt/my-resume/repo/deploy/templates/stack.env.example /opt/my-resume/shared/
 REPO_URL=https://github.com/Fridolph/my-resume.git
 ROOT_DOMAIN=fridolph.top
 RESUME_DOMAIN=resume.fridolph.top
-ADMIN_DOMAIN=resume-admin.fridolph.top
-API_DOMAIN=resume-api.fridolph.top
+ADMIN_DOMAIN=admin-resume.fridolph.top
+API_DOMAIN=api-resume.fridolph.top
 LETSENCRYPT_EMAIL=ops@fridolph.top
+CERTBOT_WEBROOT=/var/www/my-resume-certbot
 JWT_SECRET=replace-with-a-long-random-secret
 AI_PROVIDER=qiniu
 QINIU_AI_API_KEY=replace-with-real-key
@@ -100,16 +119,16 @@ QINIU_AI_MODEL=deepseek-v3
 在服务器上执行：
 
 ```bash
-cd /opt/my-resume/repo
-./deploy/ecs/render-config.sh --tag v2.0.0
+cd /opt/my-resume
+./deploy/ecs/render-config.sh --tag v2.1.0
 ```
 
 如果配置无误，会看到成功渲染：
 
-- `releases/v2.0.0/.env`
-- `releases/v2.0.0/compose.prod.yml`
-- `shared/nginx/my-resume.http.conf`
-- `shared/nginx/my-resume.conf`
+- `.deploy-runtime/release-snapshots/v2.1.0/.env`
+- `.deploy-runtime/release-snapshots/v2.1.0/compose.prod.yml`
+- `.deploy-runtime/shared/nginx/my-resume.http.conf`
+- `.deploy-runtime/shared/nginx/my-resume.conf`
 
 ## 常见漏项
 
@@ -130,5 +149,5 @@ cd /opt/my-resume/repo
 
 说明：
 
-- `stack.env` 仍然保存在 ECS 服务器本地，不建议把业务运行时密钥搬进 GitHub Actions
+- `stack.env.local` 仍然保存在 ECS 服务器本地，不建议把业务运行时密钥搬进 GitHub Actions
 - GitHub Actions 只负责 SSH 到服务器并执行 `release.sh`

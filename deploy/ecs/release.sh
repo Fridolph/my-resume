@@ -6,7 +6,7 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck source=./lib.sh
 source "$SCRIPT_DIR/lib.sh"
 
-TAG="${1:-v2.0.0}"
+TAG="${1:-v2.1.0}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -28,17 +28,22 @@ validate_domain_layout
 resolve_ai_runtime_env
 
 RELEASE_NAME=$(sanitize_release_name "$TAG")
-RELEASE_DIR="$DEPLOY_ROOT/releases/$RELEASE_NAME"
-REPO_CACHE_DIR="$DEPLOY_ROOT/repo"
-STATE_DIR="$DEPLOY_ROOT/shared/state"
-CURRENT_LINK="$DEPLOY_ROOT/current"
+RUNTIME_ROOT="$DEPLOY_RUNTIME_ROOT"
+RELEASE_DIR="$RUNTIME_ROOT/release-snapshots/$RELEASE_NAME"
+REPO_CACHE_DIR="$RUNTIME_ROOT/repo-cache"
+STATE_DIR="$RUNTIME_ROOT/shared/state"
+CURRENT_LINK="$RUNTIME_ROOT/current"
 PREVIOUS_RELEASE_FILE="$STATE_DIR/previous-release"
 CURRENT_RELEASE_FILE="$STATE_DIR/current-release"
-NGINX_HTTP_CONFIG="$DEPLOY_ROOT/shared/nginx/my-resume.http.conf"
-NGINX_SSL_CONFIG="$DEPLOY_ROOT/shared/nginx/my-resume.conf"
+NGINX_HTTP_CONFIG="$RUNTIME_ROOT/shared/nginx/my-resume.http.conf"
+NGINX_SSL_CONFIG="$RUNTIME_ROOT/shared/nginx/my-resume.conf"
+CERTBOT_WEBROOT=${CERTBOT_WEBROOT:-/var/www/my-resume-certbot}
 CERTBOT_CERT_NAME=${CERTBOT_CERT_NAME:-$RESUME_DOMAIN}
+CERTBOT_KEY_TYPE=${CERTBOT_KEY_TYPE:-ecdsa}
 
-mkdir -p "$STATE_DIR" "$DEPLOY_ROOT/releases"
+mkdir -p "$STATE_DIR" "$RUNTIME_ROOT/release-snapshots"
+sudo_cmd mkdir -p "$CERTBOT_WEBROOT"
+sudo_cmd chmod 755 "$CERTBOT_WEBROOT"
 resolve_nginx_site_layout
 
 if [[ ! -d "$REPO_CACHE_DIR/.git" ]]; then
@@ -52,13 +57,13 @@ if ! git -C "$REPO_CACHE_DIR" rev-parse --verify "${TAG}^{tag}" >/dev/null 2>&1 
   die "Tag or ref not found in repo cache: $TAG"
 fi
 
-if [[ ! -d "$RELEASE_DIR/.git" && ! -f "$RELEASE_DIR/package.json" ]]; then
-  mkdir -p "$RELEASE_DIR"
-  log "Creating release snapshot $RELEASE_NAME"
-  run_cmd bash -lc "cd '$REPO_CACHE_DIR' && git archive '$TAG' | tar -xf - -C '$RELEASE_DIR'"
-else
-  log "Release directory already exists, will reuse: $RELEASE_DIR"
-fi
+SNAPSHOT_TMP_DIR="$RUNTIME_ROOT/release-snapshots/.${RELEASE_NAME}.tmp"
+rm -rf "$SNAPSHOT_TMP_DIR"
+mkdir -p "$SNAPSHOT_TMP_DIR"
+log "Creating release snapshot $RELEASE_NAME"
+run_cmd bash -lc "cd '$REPO_CACHE_DIR' && git archive '$TAG' | tar -xf - -C '$SNAPSHOT_TMP_DIR'"
+rm -rf "$RELEASE_DIR"
+mv "$SNAPSHOT_TMP_DIR" "$RELEASE_DIR"
 
 run_cmd "$SCRIPT_DIR/render-config.sh" --tag "$TAG" --release-dir "$RELEASE_DIR"
 
@@ -69,15 +74,17 @@ fi
 install_nginx_site_config "$NGINX_HTTP_CONFIG"
 sudo_cmd nginx -t
 sudo_cmd systemctl reload nginx
+verify_acme_challenge "$CERTBOT_WEBROOT" "$RESUME_DOMAIN" "$ADMIN_DOMAIN" "$API_DOMAIN"
 
-log "Ensuring TLS certificate via certbot --nginx"
-sudo_cmd certbot --nginx \
+log "Ensuring TLS certificate via certbot webroot"
+sudo_cmd certbot certonly --webroot \
   --non-interactive \
   --agree-tos \
-  --redirect \
   --keep-until-expiring \
   --expand \
   --cert-name "$CERTBOT_CERT_NAME" \
+  --key-type "$CERTBOT_KEY_TYPE" \
+  -w "$CERTBOT_WEBROOT" \
   -m "$LETSENCRYPT_EMAIL" \
   -d "$RESUME_DOMAIN" \
   -d "$ADMIN_DOMAIN" \

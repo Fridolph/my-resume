@@ -12,7 +12,7 @@ on:
       deploy_root:
         description: 'Deploy repo root on ECS (optional)'
         required: false
-        default: '/opt/my-resume/repo'
+        default: '/opt/my-resume'
 
 concurrency:
   group: deploy-ecs-${{ github.ref_name }}
@@ -59,7 +59,7 @@ jobs:
           elif [[ -n "${ECS_DEPLOY_ROOT:-}" ]]; then
             DEPLOY_ROOT="${ECS_DEPLOY_ROOT}"
           else
-            DEPLOY_ROOT="/opt/my-resume/repo"
+            DEPLOY_ROOT="/opt/my-resume"
           fi
 
           echo "deploy_tag=${DEPLOY_TAG}" >> "$GITHUB_OUTPUT"

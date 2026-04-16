@@ -7,6 +7,7 @@ REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
 TEMPLATE_DIR="$REPO_ROOT/deploy/templates"
 
 DEPLOY_ROOT=${DEPLOY_ROOT:-/opt/my-resume}
+DEPLOY_RUNTIME_ROOT=${DEPLOY_RUNTIME_ROOT:-$DEPLOY_ROOT/.deploy-runtime}
 STACK_ENV_FILE=${STACK_ENV_FILE:-}
 DRY_RUN=${DRY_RUN:-0}
 
@@ -58,12 +59,27 @@ resolve_stack_env_path() {
     return 0
   fi
 
+  if [[ -f "$REPO_ROOT/deploy/ecs/stack.env.local" ]]; then
+    printf '%s\n' "$REPO_ROOT/deploy/ecs/stack.env.local"
+    return 0
+  fi
+
   if [[ -f "$REPO_ROOT/deploy/ecs/stack.env" ]]; then
     printf '%s\n' "$REPO_ROOT/deploy/ecs/stack.env"
     return 0
   fi
 
-  printf '%s\n' "$DEPLOY_ROOT/shared/config/stack.env"
+  if [[ -f "$DEPLOY_RUNTIME_ROOT/shared/config/stack.env.local" ]]; then
+    printf '%s\n' "$DEPLOY_RUNTIME_ROOT/shared/config/stack.env.local"
+    return 0
+  fi
+
+  if [[ -f "$DEPLOY_ROOT/shared/config/stack.env.local" ]]; then
+    printf '%s\n' "$DEPLOY_ROOT/shared/config/stack.env.local"
+    return 0
+  fi
+
+  printf '%s\n' "$DEPLOY_RUNTIME_ROOT/shared/config/stack.env"
 }
 
 load_stack_env() {
@@ -292,4 +308,31 @@ curl_check() {
   fi
 
   die "Healthcheck failed: $label -> $url"
+}
+
+verify_acme_challenge() {
+  local webroot="$1"
+  shift
+
+  local token="my-resume-acme-check"
+  local challenge_dir="$webroot/.well-known/acme-challenge"
+  local expected="my-resume-ok"
+  local domain
+  local url
+  local response
+
+  sudo_cmd mkdir -p "$challenge_dir"
+  printf '%s\n' "$expected" | sudo_cmd tee "$challenge_dir/$token" >/dev/null
+  sudo_cmd chmod -R 755 "$webroot"
+
+  for domain in "$@"; do
+    url="http://${domain}/.well-known/acme-challenge/${token}"
+    response=$(curl --silent --show-error --location --max-time 20 "$url" || true)
+
+    if [[ "$response" != "$expected" ]]; then
+      die "ACME challenge check failed for $domain. Expected '$expected' from $url, got: ${response:-<empty>}"
+    fi
+
+    log "ACME challenge check passed: $domain"
+  done
 }

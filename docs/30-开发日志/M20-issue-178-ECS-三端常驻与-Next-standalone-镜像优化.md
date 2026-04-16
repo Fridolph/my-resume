@@ -10,8 +10,8 @@
 当前 ECS 方案已经明确采用：
 
 - `resume.fridolph.top` → `web`
-- `resume-admin.fridolph.top` → `admin`
-- `resume-api.fridolph.top` → `server`
+- `admin-resume.fridolph.top` → `admin`
+- `api-resume.fridolph.top` → `server`
 
 三端都通过 Docker Compose 常驻，并由 Nginx 统一反代。  
 在这个前提下，`web` / `admin` 继续使用单阶段 Dockerfile 会把整仓源码、安装缓存和运行时一起塞进镜像，镜像偏重，也不够接近线上推荐的 Next.js 生产形态。

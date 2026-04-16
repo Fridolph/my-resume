@@ -6,7 +6,7 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck source=./lib.sh
 source "$SCRIPT_DIR/lib.sh"
 
-TAG=${TAG:-v2.0.0}
+TAG=${TAG:-v2.1.0}
 RELEASE_DIR=${RELEASE_DIR:-}
 
 while [[ $# -gt 0 ]]; do
@@ -40,25 +40,27 @@ validate_domain_layout
 resolve_ai_runtime_env
 
 RELEASE_NAME=$(sanitize_release_name "$TAG")
-RELEASE_DIR=${RELEASE_DIR:-"$DEPLOY_ROOT/releases/$RELEASE_NAME"}
+RELEASE_DIR=${RELEASE_DIR:-"$DEPLOY_RUNTIME_ROOT/release-snapshots/$RELEASE_NAME"}
 export RELEASE_NAME RELEASE_DIR
 
-HOST_SQLITE_DATA_DIR="$DEPLOY_ROOT/shared/data"
-HOST_RAG_DIR="$DEPLOY_ROOT/shared/storage/rag"
-CERTBOT_WEBROOT="$DEPLOY_ROOT/shared/certbot/www"
+HOST_SQLITE_DATA_DIR="$DEPLOY_RUNTIME_ROOT/shared/data"
+HOST_RAG_DIR="$DEPLOY_RUNTIME_ROOT/shared/storage/rag"
+CERTBOT_WEBROOT=${CERTBOT_WEBROOT:-/var/www/my-resume-certbot}
 CERTBOT_CERT_NAME=${CERTBOT_CERT_NAME:-$RESUME_DOMAIN}
-NGINX_HTTP_CONFIG="$DEPLOY_ROOT/shared/nginx/my-resume.http.conf"
-NGINX_SSL_CONFIG="$DEPLOY_ROOT/shared/nginx/my-resume.conf"
+NGINX_HTTP_CONFIG="$DEPLOY_RUNTIME_ROOT/shared/nginx/my-resume.http.conf"
+NGINX_SSL_CONFIG="$DEPLOY_RUNTIME_ROOT/shared/nginx/my-resume.conf"
 
 export HOST_SQLITE_DATA_DIR HOST_RAG_DIR CERTBOT_WEBROOT CERTBOT_CERT_NAME
 
 if [[ "$DRY_RUN" == '1' ]]; then
   log "[dry-run] Would render release config into $RELEASE_DIR"
-  log "[dry-run] Would write nginx configs under $DEPLOY_ROOT/shared/nginx"
+  log "[dry-run] Would write nginx configs under $DEPLOY_RUNTIME_ROOT/shared/nginx"
   exit 0
 fi
 
-mkdir -p "$RELEASE_DIR" "$HOST_SQLITE_DATA_DIR" "$HOST_RAG_DIR" "$CERTBOT_WEBROOT" "$(dirname "$NGINX_HTTP_CONFIG")"
+mkdir -p "$RELEASE_DIR" "$HOST_SQLITE_DATA_DIR" "$HOST_RAG_DIR" "$(dirname "$NGINX_HTTP_CONFIG")"
+sudo_cmd mkdir -p "$CERTBOT_WEBROOT"
+sudo_cmd chmod 755 "$CERTBOT_WEBROOT"
 
 write_runtime_env_file "$RELEASE_DIR/.env"
 render_template "$TEMPLATE_DIR/compose.prod.yml.tpl" "$RELEASE_DIR/compose.prod.yml"

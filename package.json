@@ -27,10 +27,6 @@
     "docker:up": "docker compose up --build",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
-    "legacy:dev": "vite",
-    "legacy:build": "vue-tsc && vite build",
-    "legacy:preview": "vite preview",
-    "legacy:typecheck": "vue-tsc --noEmit",
     "test": "turbo run test",
     "test:unit": "pnpm build:shared && turbo run test --filter=@my-resume/server --filter=@my-resume/web --filter=@my-resume/admin --filter=@my-resume/api-client --filter=@my-resume/ui",
     "test:e2e": "pnpm --filter @my-resume/server test:e2e",
@@ -43,37 +39,13 @@
     "perf:dev:admin": "node scripts/perf-dev-route.mjs --target admin --base-url http://127.0.0.1:5566 --routes /zh/dashboard,/zh/dashboard/resume,/zh/dashboard/ai,/zh/dashboard/publish --output .tmp/perf/dev-admin.json",
     "perf:build:analyze": "pnpm build:shared && pnpm --filter @my-resume/web build && pnpm --filter @my-resume/admin build && node scripts/perf-build-analyze.mjs --apps web,admin --output .tmp/perf/build-report.json"
   },
-  "dependencies": {
-    "pinia": "^2.1.7",
-    "vue": "^3.4.15",
-    "vue-i18n": "^9.9.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/node": "^20.11.8",
-    "@vitejs/plugin-vue": "^5.0.3",
-    "@vue/eslint-config-typescript": "^12.0.0",
-    "autoprefixer": "^10.4.17",
     "eslint-plugin-oxlint": "^1.59.0",
     "oxfmt": "^0.44.0",
     "oxlint": "^1.59.0",
-    "postcss": "^8.4.33",
-    "postcss-color-mix": "^1.1.0",
-    "postcss-each": "^1.1.0",
-    "postcss-each-variables": "^0.3.0",
-    "postcss-for": "^2.1.1",
-    "postcss-import": "^16.0.0",
-    "postcss-nested": "^6.0.1",
-    "postcss-nesting": "^12.0.2",
-    "tailwindcss": "^3.4.1",
-    "terser": "^5.27.0",
     "turbo": "^2.8.20",
-    "typescript": "5.4.5",
-    "vite": "^5.0.12",
-    "vite-plugin-bundle-prefetch": "^0.0.4",
-    "vite-plugin-chunk-split": "^0.5.0",
-    "vite-plugin-compression2": "^0.11.0",
-    "vite-plugin-eslint": "^1.8.1",
-    "vite-plugin-importus": "^1.0.5",
-    "vue-tsc": "^1.8.27"
+    "typescript": "5.4.5"
   }
 }

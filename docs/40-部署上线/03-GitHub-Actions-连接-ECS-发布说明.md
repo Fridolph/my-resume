@@ -12,13 +12,13 @@
 
 当前工作流保持最小闭环，只做以下事情：
 
-1. 手动输入待部署的 tag，默认 `v2.0.0`
+1. 手动输入待部署的 tag，默认最新 `v*`，当前建议 `v2.1.0`
 2. 校验该 tag 在仓库中存在
 3. 通过 SSH 登录 ECS
 4. 在 ECS 上执行：
 
 ```bash
-cd /opt/my-resume/repo
+cd /opt/my-resume
 git fetch --tags --force
 ./deploy/ecs/release.sh <tag>
 ```
@@ -27,7 +27,7 @@ git fetch --tags --force
 
 - GitHub Actions 只负责“远程触发”
 - 真正的发布逻辑仍在服务器侧 `release.sh`
-- 业务环境变量仍保留在 ECS 本地 `stack.env`
+- 业务环境变量仍保留在 ECS 本地 `stack.env.local`
 
 ## 二、为什么这样设计
 
@@ -115,26 +115,26 @@ chmod 700 ~/.ssh
 ### 1. ECS 上已有仓库目录
 
 ```bash
-/opt/my-resume/repo
+/opt/my-resume
 ```
 
 ### 2. 已执行过 bootstrap
 
 ```bash
-cd /opt/my-resume/repo
+cd /opt/my-resume
 ./deploy/ecs/bootstrap.sh
 ```
 
-### 3. 已填写 `stack.env`
+### 3. 已填写 `stack.env.local`
 
 ```bash
-/opt/my-resume/shared/config/stack.env
+/opt/my-resume/.deploy-runtime/shared/config/stack.env.local
 ```
 
 ### 4. 已手工成功跑过一次 release
 
 ```bash
-./deploy/ecs/release.sh v2.0.0
+./deploy/ecs/release.sh v2.1.0
 ```
 
 这样做的目的，是把“SSH / 权限 / Docker / Nginx / Certbot / 域名”问题先在线下排干净。
@@ -152,8 +152,8 @@ cd /opt/my-resume/repo
 
 默认值：
 
-- `deploy_tag=v2.0.0`
-- `deploy_root=/opt/my-resume/repo`
+- `deploy_tag=v2.1.0`
+- `deploy_root=/opt/my-resume`
 
 一般情况下直接点运行即可。
 
@@ -164,8 +164,8 @@ cd /opt/my-resume/repo
 ### 第一步：先在 ECS 手工验证
 
 ```bash
-cd /opt/my-resume/repo
-./deploy/ecs/release.sh v2.0.0
+cd /opt/my-resume
+./deploy/ecs/release.sh v2.1.0
 ```
 
 ### 第二步：再用 Actions 触发同一 tag
@@ -181,7 +181,7 @@ cd /opt/my-resume/repo
 例如未来发布：
 
 ```text
-v2.0.1
+v2.1.0
 v2.1.0
 ```
 
@@ -202,7 +202,7 @@ v2.1.0
 - 公钥没加到服务器 `authorized_keys`
 - `ECS_USER` 不对
 
-### 3. `cd /opt/my-resume/repo: No such file or directory`
+### 3. `cd /opt/my-resume: No such file or directory`
 
 通常是：
 
@@ -214,8 +214,8 @@ v2.1.0
 这时先不要反复点 Actions，优先直接 SSH 到 ECS，手工执行：
 
 ```bash
-cd /opt/my-resume/repo
-./deploy/ecs/release.sh v2.0.0
+cd /opt/my-resume
+./deploy/ecs/release.sh v2.1.0
 ```
 
 先拿到服务器本地完整日志，再修问题。
