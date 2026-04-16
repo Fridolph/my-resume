@@ -2,9 +2,13 @@
 
 import { Button, Chip, Modal, Pagination, Table, Tooltip } from '@heroui/react'
 import Link from 'next/link'
-import type { ReactNode } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 
+import {
+  AdminActionIconButton,
+  AdminModalShell,
+  adminActionIconTriggerClassName,
+} from '../../../../../_shared/ui/components/heroui'
 import {
   extractOptimizationInstructionTitle,
   type ResumeOptimizationHistoryEntry,
@@ -99,23 +103,6 @@ function HistoryActionIcon({
   )
 }
 
-function HistoryIconButton({
-  children,
-  label,
-}: {
-  children: ReactNode
-  label: string
-}) {
-  return (
-    <Tooltip delay={180}>
-      <Tooltip.Trigger>{children}</Tooltip.Trigger>
-      <Tooltip.Content offset={10} placement="top">
-        {label}
-      </Tooltip.Content>
-    </Tooltip>
-  )
-}
-
 function InstructionContentModal({
   summary,
   title,
@@ -128,42 +115,32 @@ function InstructionContentModal({
 
   return (
     <>
-      <HistoryIconButton label="查看原文">
-        <Button
-          aria-label="查看原文"
-          className="inline-flex h-8 w-8 min-w-8 items-center justify-center rounded-full border border-zinc-200/80 bg-zinc-50 p-0 text-zinc-500 hover:border-zinc-300 hover:bg-white hover:text-zinc-950 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-zinc-700 dark:hover:bg-zinc-950 dark:hover:text-white"
-          isIconOnly
-          onPress={() => setIsOpen(true)}
-          size="sm"
-          type="button"
-          variant="ghost">
-          <HistoryActionIcon type="source" />
-        </Button>
-      </HistoryIconButton>
-      <Modal.Backdrop isOpen={isOpen} onOpenChange={setIsOpen}>
-        <Modal.Container>
-          <Modal.Dialog className="sm:max-w-[720px]">
-            <Modal.CloseTrigger aria-label="关闭原始指令内容" />
-            <Modal.Header>
-              <Modal.Heading>{title}</Modal.Heading>
-            </Modal.Header>
-            <Modal.Body>
-              <div
-                className="max-h-[62vh] overflow-auto rounded-[1.25rem] border border-zinc-200/80 bg-zinc-50/90 p-4 text-sm leading-7 text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-200"
-                data-testid="optimization-history-summary-modal-body">
-                <pre className="whitespace-pre-wrap break-words font-sans">
-                  {displaySummary}
-                </pre>
-              </div>
-            </Modal.Body>
-            <Modal.Footer>
-              <Button slot="close" type="button" variant="secondary">
-                关闭
-              </Button>
-            </Modal.Footer>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
+      <AdminActionIconButton
+        icon={<HistoryActionIcon type="source" />}
+        label="查看原文"
+        onPress={() => setIsOpen(true)}
+      />
+      <AdminModalShell
+        dialogClassName="sm:max-w-180"
+        isOpen={isOpen}
+        onOpenChange={setIsOpen}>
+        <Modal.CloseTrigger aria-label="关闭原始指令内容" />
+        <Modal.Header>
+          <Modal.Heading>{title}</Modal.Heading>
+        </Modal.Header>
+        <Modal.Body>
+          <div
+            className="max-h-[62vh] overflow-auto rounded-[1.25rem] border border-zinc-200/80 bg-zinc-50/90 p-4 text-sm leading-7 text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-200"
+            data-testid="optimization-history-summary-modal-body">
+            <pre className="whitespace-pre-wrap wrap-break-word font-sans">{displaySummary}</pre>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button slot="close" type="button" variant="secondary">
+            关闭
+          </Button>
+        </Modal.Footer>
+      </AdminModalShell>
     </>
   )
 }
@@ -223,163 +200,152 @@ export function ResumeOptimizationHistoryPanel({
           </div>
         </div>
       ) : (
-        <div className="rounded-[1.65rem] border border-zinc-200/80 bg-white/90 p-3 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/80">
-          <Table variant="secondary">
-            <Table.ScrollContainer>
-              <Table.Content
-                aria-label="优化记录中心表格"
-                className="w-full">
-                <Table.Header>
-                  <Table.Column className="w-[8.5rem]" isRowHeader>
-                    生成时间
-                  </Table.Column>
-                  <Table.Column>优化摘要</Table.Column>
-                  <Table.Column className="w-[15rem]">影响模块</Table.Column>
-                  <Table.Column className="w-[13rem]">关联状态</Table.Column>
-                  <Table.Column className="w-[6.5rem] text-end">操作</Table.Column>
-                </Table.Header>
-                <Table.Body items={paginatedEntries}>
-                  {(entry) => {
-                    const relationState = relationStates[entry.resultId]
-                    const linkedScenarios = relationState?.linkedScenarios ?? []
-                    const instructionTitle = extractOptimizationInstructionTitle(
-                      entry.instruction,
-                    )
+        <Table>
+          <Table.ResizableContainer>
+            <Table.Content aria-label="优化记录中心表格">
+              <Table.Header>
+                <Table.Column className="w-34" isRowHeader>
+                  生成时间
+                </Table.Column>
+                <Table.Column>优化摘要</Table.Column>
+                <Table.Column>影响模块</Table.Column>
+                <Table.Column>关联状态</Table.Column>
+                <Table.Column>操作</Table.Column>
+              </Table.Header>
+              <Table.Body items={paginatedEntries}>
+                {(entry) => {
+                  const relationState = relationStates[entry.resultId]
+                  const linkedScenarios = relationState?.linkedScenarios ?? []
+                  const instructionTitle = extractOptimizationInstructionTitle(entry.instruction)
 
-                    return (
-                      <Table.Row id={entry.resultId} key={entry.resultId}>
-                        <Table.Cell>
-                          <div className="grid gap-1">
-                            <strong className="text-sm text-zinc-950 dark:text-white">
-                              {formatHistoryTime(entry.createdAt)}
+                  return (
+                    <Table.Row id={entry.resultId} key={entry.resultId}>
+                      <Table.Cell>
+                        <div className="grid gap-1">
+                          <strong className="text-sm text-zinc-950 dark:text-white">
+                            {formatHistoryTime(entry.createdAt)}
+                          </strong>
+                        </div>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <div className="flex min-w-0 items-start justify-between gap-3">
+                          <div className="min-w-0 grid gap-1.5">
+                            <strong className="line-clamp-1 text-sm leading-6 text-zinc-950 dark:text-white">
+                              {instructionTitle}
                             </strong>
-                            <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                              {entry.locale === 'zh' ? '中文结果' : 'English result'}
+                            <span className="line-clamp-1 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+                              {entry.summary}
                             </span>
                           </div>
-                        </Table.Cell>
-                        <Table.Cell>
-                          <div className="flex min-w-0 items-start justify-between gap-3">
-                            <div className="min-w-0 grid gap-1.5">
-                              <strong className="line-clamp-1 text-sm leading-6 text-zinc-950 dark:text-white">
-                                {instructionTitle}
-                              </strong>
-                              <span className="line-clamp-1 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
-                                {entry.summary}
-                              </span>
-                            </div>
-                            <InstructionContentModal
-                              summary={entry.summary}
-                              title={instructionTitle}
-                            />
-                          </div>
-                        </Table.Cell>
-                        <Table.Cell>
-                          <div className="flex flex-wrap gap-2">
-                            {entry.changedModules.map((module) => (
-                              <Chip
-                                className="text-xs"
-                                key={`${entry.resultId}-${module}`}
-                                size="sm"
-                                variant="soft">
-                                {formatOptimizationModule(module)}
-                              </Chip>
-                            ))}
-                          </div>
-                        </Table.Cell>
-                        <Table.Cell>
-                          <div className="grid gap-2">
-                            <span className="whitespace-nowrap text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                              {relationState?.completionLabel ?? '仅优化建议'}
-                            </span>
-                            <div className="flex flex-wrap gap-2 whitespace-normal">
-                              {linkedScenarios.length > 0 ? (
-                                linkedScenarios.map((scenario) => (
-                                  <span
-                                    className="whitespace-nowrap rounded-full border border-blue-200/70 bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-blue-700 dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-blue-200"
-                                    key={`${entry.resultId}-${scenario}`}>
-                                    {formatLinkedScenarioLabel(scenario)}
-                                  </span>
-                                ))
-                              ) : (
-                                <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                                  暂无辅助分析关联
+                          <InstructionContentModal
+                            summary={entry.summary}
+                            title={instructionTitle}
+                          />
+                        </div>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <div className="flex flex-wrap gap-2">
+                          {entry.changedModules.map((module) => (
+                            <Chip
+                              className="text-xs"
+                              key={`${entry.resultId}-${module}`}
+                              size="sm"
+                              variant="soft">
+                              {formatOptimizationModule(module)}
+                            </Chip>
+                          ))}
+                        </div>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <div className="grid gap-2">
+                          <span className="whitespace-nowrap text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                            {relationState?.completionLabel ?? '仅优化建议'}
+                          </span>
+                          <div className="flex flex-wrap gap-2 whitespace-normal">
+                            {linkedScenarios.length > 0 ? (
+                              linkedScenarios.map((scenario) => (
+                                <span
+                                  className="whitespace-nowrap rounded-full border border-blue-200/70 bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-blue-700 dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-blue-200"
+                                  key={`${entry.resultId}-${scenario}`}>
+                                  {formatLinkedScenarioLabel(scenario)}
                                 </span>
-                              )}
-                            </div>
+                              ))
+                            ) : (
+                              <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                                暂无辅助分析关联
+                              </span>
+                            )}
                           </div>
-                        </Table.Cell>
-                        <Table.Cell>
-                          <div className="flex justify-end gap-2">
-                            <HistoryIconButton label="查看详情">
-                              <Button
-                                aria-label="查看详情"
-                                className="inline-flex h-8 w-8 min-w-8 items-center justify-center rounded-full border border-zinc-200/80 bg-zinc-50 p-0 text-zinc-500 hover:border-zinc-300 hover:bg-white hover:text-zinc-950 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-zinc-700 dark:hover:bg-zinc-950 dark:hover:text-white"
-                                isIconOnly
-                                onPress={() => onOpenDetail(entry)}
-                                size="sm"
-                                type="button"
-                                variant="ghost">
-                                <HistoryActionIcon type="detail" />
-                              </Button>
-                            </HistoryIconButton>
-                            <HistoryIconButton label="打开结果页">
+                        </div>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <div className="flex justify-end gap-2">
+                          <AdminActionIconButton
+                            icon={<HistoryActionIcon type="detail" />}
+                            label="查看详情"
+                            onPress={() => onOpenDetail(entry)}
+                          />
+                          <Tooltip delay={180}>
+                            <Tooltip.Trigger>
                               <Link
                                 aria-label="打开结果页"
-                                className="inline-flex h-8 w-8 min-w-8 items-center justify-center rounded-full border border-zinc-200/80 bg-zinc-50 p-0 text-zinc-500 transition hover:border-zinc-300 hover:bg-white hover:text-zinc-950 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-zinc-700 dark:hover:bg-zinc-950 dark:hover:text-white"
+                                className={adminActionIconTriggerClassName}
                                 href={`/dashboard/ai/resume-optimization/results/${entry.resultId}`}>
                                 <HistoryActionIcon type="open" />
                               </Link>
-                            </HistoryIconButton>
-                          </div>
-                        </Table.Cell>
-                      </Table.Row>
-                    )
-                  }}
-                </Table.Body>
-              </Table.Content>
-            </Table.ScrollContainer>
-            <Table.Footer>
-              <Pagination
-                className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
-                data-testid="optimization-history-pagination"
-                size="sm">
-                <Pagination.Summary data-testid="optimization-history-pagination-summary">
-                  {`第 ${rangeStart}-${rangeEnd} 条，共 ${entries.length} 条`}
-                </Pagination.Summary>
-                <Pagination.Content className="flex flex-wrap justify-end gap-1.5">
-                  <Pagination.Item>
-                    <Pagination.Previous
-                      isDisabled={page === 1}
-                      onPress={() => setPage((currentPage) => Math.max(1, currentPage - 1))}>
-                      <Pagination.PreviousIcon />
-                      上一页
-                    </Pagination.Previous>
+                            </Tooltip.Trigger>
+                            <Tooltip.Content offset={10} placement="top">
+                              打开结果页
+                            </Tooltip.Content>
+                          </Tooltip>
+                        </div>
+                      </Table.Cell>
+                    </Table.Row>
+                  )
+                }}
+              </Table.Body>
+            </Table.Content>
+          </Table.ResizableContainer>
+          <Table.Footer>
+            <Pagination
+              className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
+              data-testid="optimization-history-pagination"
+              size="sm">
+              <Pagination.Summary data-testid="optimization-history-pagination-summary">
+                {`第 ${rangeStart}-${rangeEnd} 条，共 ${entries.length} 条`}
+              </Pagination.Summary>
+              <Pagination.Content className="flex flex-wrap justify-end gap-1.5">
+                <Pagination.Item>
+                  <Pagination.Previous
+                    isDisabled={page === 1}
+                    onPress={() => setPage((currentPage) => Math.max(1, currentPage - 1))}>
+                    <Pagination.PreviousIcon />
+                    上一页
+                  </Pagination.Previous>
+                </Pagination.Item>
+                {pages.map((targetPage) => (
+                  <Pagination.Item key={targetPage}>
+                    <Pagination.Link
+                      isActive={targetPage === page}
+                      onPress={() => setPage(targetPage)}>
+                      {targetPage}
+                    </Pagination.Link>
                   </Pagination.Item>
-                  {pages.map((targetPage) => (
-                    <Pagination.Item key={targetPage}>
-                      <Pagination.Link
-                        isActive={targetPage === page}
-                        onPress={() => setPage(targetPage)}>
-                        {targetPage}
-                      </Pagination.Link>
-                    </Pagination.Item>
-                  ))}
-                  <Pagination.Item>
-                    <Pagination.Next
-                      isDisabled={page === totalPages}
-                      onPress={() =>
-                        setPage((currentPage) => Math.min(totalPages, currentPage + 1))
-                      }>
-                      下一页
-                      <Pagination.NextIcon />
-                    </Pagination.Next>
-                  </Pagination.Item>
-                </Pagination.Content>
-              </Pagination>
-            </Table.Footer>
-          </Table>
-        </div>
+                ))}
+                <Pagination.Item>
+                  <Pagination.Next
+                    isDisabled={page === totalPages}
+                    onPress={() =>
+                      setPage((currentPage) => Math.min(totalPages, currentPage + 1))
+                    }>
+                    下一页
+                    <Pagination.NextIcon />
+                  </Pagination.Next>
+                </Pagination.Item>
+              </Pagination.Content>
+            </Pagination>
+          </Table.Footer>
+        </Table>
       )}
     </section>
   )

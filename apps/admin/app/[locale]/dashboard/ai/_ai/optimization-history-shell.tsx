@@ -1,7 +1,7 @@
 'use client'
 
-import { Button, Chip } from '@heroui/react'
-import Link from 'next/link'
+import { Button, Card, CardContent, Chip } from '@heroui/react'
+import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 
 import { useAdminSession } from '@core/admin-session'
@@ -17,6 +17,7 @@ import {
 } from './utils/resume-optimization-persistence'
 
 export function AdminAiOptimizationHistoryShell({ locale: _locale }: { locale: AppLocale }) {
+  const router = useRouter()
   const { accessToken, currentUser, status } = useAdminSession()
   const [optimizationHistory, setOptimizationHistory] = useState<
     ResumeOptimizationHistoryEntry[]
@@ -114,40 +115,45 @@ export function AdminAiOptimizationHistoryShell({ locale: _locale }: { locale: A
 
   return (
     <div className="stack" data-testid="ai-optimization-archive-page">
-      <section className="relative overflow-hidden rounded-[2.25rem] border border-zinc-200/80 bg-[radial-gradient(circle_at_16%_10%,rgba(37,99,235,0.16),transparent_34%),linear-gradient(135deg,rgba(255,255,255,0.98),rgba(244,248,255,0.92))] p-6 shadow-[0_24px_70px_rgba(15,23,42,0.08)] dark:border-zinc-800 dark:bg-[radial-gradient(circle_at_18%_14%,rgba(59,130,246,0.2),transparent_34%),linear-gradient(135deg,rgba(15,23,42,0.96),rgba(2,6,23,0.92))] dark:shadow-none">
+      <section className="relative overflow-hidden rounded-[2rem] border border-zinc-200/80 bg-[radial-gradient(circle_at_16%_10%,rgba(37,99,235,0.13),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.98),rgba(244,248,255,0.9))] p-4 shadow-[0_18px_52px_rgba(15,23,42,0.07)] dark:border-zinc-800 dark:bg-[radial-gradient(circle_at_18%_14%,rgba(59,130,246,0.16),transparent_30%),linear-gradient(135deg,rgba(15,23,42,0.96),rgba(2,6,23,0.92))] dark:shadow-none sm:p-5">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute right-8 top-8 h-32 w-32 rounded-full border border-blue-200/50 bg-white/30 blur-2xl dark:border-blue-400/10 dark:bg-blue-400/10"
+          className="pointer-events-none absolute right-6 top-6 h-24 w-24 rounded-full border border-blue-200/40 bg-white/20 blur-2xl dark:border-blue-400/10 dark:bg-blue-400/10"
         />
-        <div className="relative grid gap-6 xl:grid-cols-[minmax(0,0.92fr)_minmax(280px,0.48fr)]">
-          <div className="grid gap-5">
-            <div className="flex flex-wrap items-center gap-2">
-              <Chip size="sm">当前账号：{currentUser.username}</Chip>
-              <Chip size="sm">当前角色：{currentUser.role}</Chip>
-              <Chip size="sm">{isAdmin ? '真实分析可用' : '缓存只读体验'}</Chip>
-            </div>
-            <div className="grid gap-3">
+        <div className="relative grid gap-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <Chip size="sm">当前账号：{currentUser.username}</Chip>
+            <Chip size="sm">当前角色：{currentUser.role}</Chip>
+            <Chip size="sm">{isAdmin ? '真实分析可用' : '缓存只读体验'}</Chip>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+            <div className="grid gap-2">
               <p className="eyebrow">AI Archive</p>
-              <h1 className="text-[clamp(2rem,5vw,4rem)] font-semibold leading-[0.98] tracking-[-0.055em] text-zinc-950 dark:text-white">
+              <h1 className="text-[clamp(2rem,4vw,3.25rem)] font-semibold leading-none tracking-[-0.055em] text-zinc-950 dark:text-white">
                 优化记录
               </h1>
-              <p className="max-w-3xl text-sm leading-7 text-zinc-500 dark:text-zinc-400">
+              <p className="max-w-3xl text-sm leading-6 text-zinc-500 dark:text-zinc-400">
                 工作台继续专注“输入与分析”，这里负责“回看、复用与教学记录”。
                 最近优化记录会作为统一入口，在同一条记录下回看简历优化建议与关联分析明细。
               </p>
             </div>
 
-            <div className="dashboard-entry-actions">
-              <Link
-                className="inline-flex h-10 items-center justify-center rounded-full border border-zinc-300 bg-white/70 px-4 text-sm text-zinc-700 transition hover:border-zinc-400 hover:bg-white hover:text-zinc-900 dark:border-zinc-700 dark:bg-zinc-950/40 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:text-white"
-                href="/dashboard/ai">
-                返回 AI 工作台
-              </Link>
+            <div className="flex flex-wrap items-center gap-3" data-testid="optimization-history-actions">
               <Button
+                className="h-10 rounded-full px-4 text-sm font-medium"
+                onPress={() => router.push('/dashboard/ai')}
+                size="md"
+                type="button"
+                variant="outline">
+                返回 AI 工作台
+              </Button>
+              <Button
+                className="h-10 rounded-full px-4 text-sm font-medium"
                 onPress={() => {
                   setOptimizationHistory(readResumeOptimizationHistory())
                 }}
-                size="sm"
+                size="md"
                 type="button"
                 variant="outline">
                 刷新记录
@@ -155,28 +161,32 @@ export function AdminAiOptimizationHistoryShell({ locale: _locale }: { locale: A
             </div>
           </div>
 
-          <div className="grid gap-3 rounded-[1.75rem] border border-white/70 bg-white/70 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-zinc-950/48">
+          <div className="grid gap-3">
             <p className="eyebrow">记录中心总览</p>
-            <div className="grid gap-3">
+            <div
+              className="grid gap-3 sm:grid-cols-2 md:grid-cols-3"
+              data-testid="optimization-history-overview-grid">
               {archiveStats.map((item) => (
-                <div
-                  className="rounded-[1.25rem] border border-zinc-200/70 bg-zinc-50/82 p-4 dark:border-zinc-800 dark:bg-zinc-900/70"
+                <Card
+                  className="border border-zinc-200/70 bg-white/74 shadow-sm backdrop-blur dark:border-white/10 dark:bg-zinc-950/48"
+                  data-testid="optimization-history-overview-card"
                   key={item.label}>
-                  <span className="text-xs font-semibold tracking-[0.08em] text-zinc-400 uppercase">
-                    {item.label}
-                  </span>
-                  <strong className="mt-2 block text-xl font-semibold text-zinc-950 dark:text-white">
-                    {item.value}
-                  </strong>
-                  <span className="mt-1 block text-xs leading-5 text-zinc-500 dark:text-zinc-400">
-                    {item.description}
-                  </span>
-                </div>
+                  <CardContent className="grid gap-1.5 p-3">
+                    <span className="text-[0.68rem] font-semibold tracking-[0.08em] text-zinc-400 uppercase">
+                      {item.label}
+                    </span>
+                    <strong className="truncate text-lg font-semibold text-zinc-950 dark:text-white">
+                      {item.value}
+                    </strong>
+                    <span className="line-clamp-2 text-xs leading-5 text-zinc-500 dark:text-zinc-400">
+                      {item.description}
+                    </span>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </div>
         </div>
-
       </section>
 
       <ResumeOptimizationHistoryPanel

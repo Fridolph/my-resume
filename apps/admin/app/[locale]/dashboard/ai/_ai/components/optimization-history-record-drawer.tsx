@@ -6,6 +6,7 @@ import { DisplaySectionCard, DisplaySurfaceCard } from '@my-resume/ui/display'
 import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
+import { AdminDrawerShell } from '../../../../../_shared/ui/components/heroui'
 import {
   createFetchAiResumeOptimizationResultMethod,
   createFetchAiUsageRecordDetailMethod,
@@ -233,7 +234,7 @@ export function OptimizationHistoryRecordDrawer({
       return (
         <DisplaySurfaceCard
           as="section"
-          className="grid gap-4 border-amber-200/80 bg-amber-50/82 p-5 text-amber-900 dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-100">
+          className="grid gap-3 border-amber-200/80 bg-amber-50/82 p-4 text-amber-900 dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-100">
           <div className="grid gap-2">
             <p className="eyebrow text-amber-700 dark:text-amber-200">结果缓存已失效</p>
             <h3 className="text-lg font-semibold">该条优化结果已失效或不可读取</h3>
@@ -242,7 +243,7 @@ export function OptimizationHistoryRecordDrawer({
             </p>
           </div>
           {entry ? (
-            <div className="grid gap-3 rounded-[1rem] border border-amber-200/70 bg-white/58 p-4 dark:border-amber-400/20 dark:bg-zinc-950/30">
+            <div className="grid gap-2 rounded-[1rem] border border-amber-200/70 bg-white/58 p-3 dark:border-amber-400/20 dark:bg-zinc-950/30">
               <strong className="text-sm text-zinc-950 dark:text-white">
                 {extractOptimizationInstructionTitle(entry.instruction)}
               </strong>
@@ -269,22 +270,22 @@ export function OptimizationHistoryRecordDrawer({
 
     if (!optimizationDetail) {
       return (
-        <div className="rounded-[1.25rem] border border-dashed border-zinc-200/80 bg-zinc-50/80 p-5 text-sm leading-6 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
+        <div className="rounded-[1.25rem] border border-dashed border-zinc-200/80 bg-zinc-50/80 p-4 text-sm leading-6 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
           当前还没有可读取的简历优化摘要。
         </div>
       )
     }
 
     return (
-      <div className="grid gap-4">
+      <div className="grid gap-3">
         <DisplaySectionCard
-          className="grid gap-4 p-5 md:p-6"
+          className="grid gap-3 p-4 md:p-5"
           compact
           description="这里保留的是轻量展示摘要，不复制真正的 apply patch；结果页仍是完整阅读与应用入口。"
           eyebrow="优化建议"
           title="当前优化摘要"
           titleAs="h3">
-          <div className="grid gap-3">
+          <div className="grid gap-2">
             <strong className="text-lg text-zinc-950 dark:text-white">
               {optimizationDetail.summary}
             </strong>
@@ -300,7 +301,7 @@ export function OptimizationHistoryRecordDrawer({
           </div>
         </DisplaySectionCard>
 
-        <DisplaySurfaceCard as="section" className="grid gap-4 p-5 md:p-6">
+        <DisplaySurfaceCard as="section" className="grid gap-3 p-4 md:p-5">
           <div className="grid gap-2">
             <h3 className="text-base font-semibold text-zinc-950 dark:text-white">
               影响模块
@@ -332,7 +333,7 @@ export function OptimizationHistoryRecordDrawer({
 
     if (!usageRecordId) {
       return (
-        <div className="rounded-[1.25rem] border border-dashed border-zinc-200/80 bg-zinc-50/80 p-5 text-sm leading-6 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
+        <div className="rounded-[1.25rem] border border-dashed border-zinc-200/80 bg-zinc-50/80 p-4 text-sm leading-6 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
           该条优化记录下暂无此分析场景记录。
         </div>
       )
@@ -360,7 +361,7 @@ export function OptimizationHistoryRecordDrawer({
 
     if (!detail || !report) {
       return (
-        <div className="rounded-[1.25rem] border border-dashed border-zinc-200/80 bg-zinc-50/80 p-5 text-sm leading-6 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
+        <div className="rounded-[1.25rem] border border-dashed border-zinc-200/80 bg-zinc-50/80 p-4 text-sm leading-6 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
           当前记录没有可阅读的结构化分析详情。
         </div>
       )
@@ -379,12 +380,12 @@ export function OptimizationHistoryRecordDrawer({
 
   function renderTabPanel(tab: typeof tabMeta[number]) {
     return (
-      <div className="grid gap-4" role="tabpanel">
-        <div className="rounded-[1.25rem] border border-zinc-200/80 bg-zinc-50/82 p-4 text-sm leading-6 text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-300">
+      <div className="grid gap-3" role="tabpanel">
+        <div className="rounded-[1.25rem] border border-zinc-200/80 bg-zinc-50/82 p-3 text-sm leading-6 text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-300">
           <strong className="block text-zinc-950 dark:text-white">
             {tab.label}
           </strong>
-          <span className="mt-2 block">{tab.description}</span>
+          <span className="mt-1.5 block">{tab.description}</span>
         </div>
         {tab.key === 'optimization'
           ? renderOptimizationPanel()
@@ -394,92 +395,82 @@ export function OptimizationHistoryRecordDrawer({
   }
 
   return (
-    <Drawer.Backdrop
-      isDismissable
+    <AdminDrawerShell
+      dialogClassName="max-w-[min(94vw,72rem)]"
       isOpen={isOpen}
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) {
-          onClose()
-        }
-      }}>
-      <Drawer.Content placement="right">
-        <Drawer.Dialog className="max-w-[min(94vw,72rem)]">
-          <Drawer.Header className="border-b border-zinc-200/80 px-5 py-4 dark:border-zinc-800">
-            <div className="grid gap-2">
-              <Drawer.Heading className="text-lg font-semibold text-zinc-950 dark:text-white">
-                优化记录详情
-              </Drawer.Heading>
-              {entry ? (
-                <div className="grid gap-2 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
-                  <p>{entry.summary}</p>
-                  <p>
-                    {new Date(entry.createdAt).toLocaleString('zh-CN', {
-                      hour12: false,
-                      month: 'numeric',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}{' '}
-                    · {formatLocale(entry.locale)} · 已关联 {linkedCount}/3 个分析场景
-                  </p>
-                </div>
-              ) : null}
+      onClose={onClose}>
+      <Drawer.Header className="border-b border-zinc-200/80 px-4 py-3 dark:border-zinc-800">
+        <div className="grid gap-2">
+          <Drawer.Heading className="text-lg font-semibold text-zinc-950 dark:text-white">
+            优化记录详情
+          </Drawer.Heading>
+          {entry ? (
+            <div className="grid gap-2 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+              <p>{entry.summary}</p>
+              <p>
+                {new Date(entry.createdAt).toLocaleString('zh-CN', {
+                  hour12: false,
+                  month: 'numeric',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}{' '}
+                · {formatLocale(entry.locale)} · 已关联 {linkedCount}/3 个分析场景
+              </p>
             </div>
-            <Drawer.CloseTrigger aria-label="关闭优化记录详情" />
-          </Drawer.Header>
-          <Drawer.Body className="grid gap-5 px-5 py-5">
-            {entry ? (
-              <>
-                <div className="flex flex-wrap gap-2">
-                  {entry.changedModules.map((module) => (
-                    <span
-                      className="rounded-full border border-zinc-200/80 bg-zinc-50 px-3 py-1 text-xs text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
-                      key={`${entry.resultId}-${module}`}>
-                      {formatOptimizationModule(module)}
-                    </span>
-                  ))}
-                </div>
+          ) : null}
+        </div>
+        <Drawer.CloseTrigger aria-label="关闭优化记录详情" />
+      </Drawer.Header>
+      <Drawer.Body className="grid gap-4 px-4 py-3">
+        {entry ? (
+          <>
+            <div className="flex flex-wrap gap-2">
+              {entry.changedModules.map((module) => (
+                <span
+                  className="rounded-full border border-zinc-200/80 bg-zinc-50 px-3 py-1 text-xs text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+                  key={`${entry.resultId}-${module}`}>
+                  {formatOptimizationModule(module)}
+                </span>
+              ))}
+            </div>
 
-                <div className="grid gap-4">
-                  <div
-                    aria-label="选择优化记录详情分组"
-                    className="flex flex-wrap gap-1.5 rounded-[1.25rem] border border-zinc-200/80 bg-zinc-50/82 p-1.5 dark:border-zinc-800 dark:bg-zinc-900/72"
-                    role="tablist">
-                    {tabMeta.map((tab) => {
-                      const isSelected = selectedTab === tab.key
+            <div className="grid gap-3">
+              <div
+                aria-label="选择优化记录详情分组"
+                className="flex flex-wrap gap-1.5 rounded-[1.25rem] border border-zinc-200/80 bg-zinc-50/82 p-1 dark:border-zinc-800 dark:bg-zinc-900/72"
+                role="tablist">
+                {tabMeta.map((tab) => {
+                  const isSelected = selectedTab === tab.key
 
-                      return (
-                        <button
-                          aria-selected={isSelected}
-                          className={[
-                            'rounded-full px-3 py-2 text-sm transition',
-                            isSelected
-                              ? 'bg-white text-zinc-950 shadow-sm dark:bg-zinc-950 dark:text-white'
-                              : 'text-zinc-600 hover:bg-white/70 hover:text-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-950/60 dark:hover:text-white',
-                          ].join(' ')}
-                          key={tab.key}
-                          onClick={() => setSelectedTab(tab.key)}
-                          role="tab"
-                          type="button">
-                          {tab.label}
-                        </button>
-                      )
-                    })}
-                  </div>
-                  {renderTabPanel(
-                    tabMeta.find((tab) => tab.key === selectedTab) ?? tabMeta[0],
-                  )}
-                </div>
-              </>
-            ) : null}
-          </Drawer.Body>
-          <Drawer.Footer className="border-t border-zinc-200/80 px-5 py-4 dark:border-zinc-800">
-            <Button size="md" slot="close" type="button" variant="secondary">
-              关闭详情
-            </Button>
-          </Drawer.Footer>
-        </Drawer.Dialog>
-      </Drawer.Content>
-    </Drawer.Backdrop>
+                  return (
+                    <button
+                      aria-selected={isSelected}
+                      className={[
+                        'rounded-full px-2.5 py-1.5 text-sm transition',
+                        isSelected
+                          ? 'bg-white text-zinc-950 shadow-sm dark:bg-zinc-950 dark:text-white'
+                          : 'text-zinc-600 hover:bg-white/70 hover:text-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-950/60 dark:hover:text-white',
+                      ].join(' ')}
+                      key={tab.key}
+                      onClick={() => setSelectedTab(tab.key)}
+                      role="tab"
+                      type="button">
+                      {tab.label}
+                    </button>
+                  )
+                })}
+              </div>
+              {renderTabPanel(tabMeta.find((tab) => tab.key === selectedTab) ?? tabMeta[0])}
+            </div>
+          </>
+        ) : null}
+      </Drawer.Body>
+      <Drawer.Footer className="border-t border-zinc-200/80 px-4 py-3 dark:border-zinc-800">
+        <Button size="md" slot="close" type="button" variant="secondary">
+          关闭详情
+        </Button>
+      </Drawer.Footer>
+    </AdminDrawerShell>
   )
 }
