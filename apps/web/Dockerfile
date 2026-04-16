@@ -18,6 +18,7 @@ ENV RESUME_API_BASE_URL=$RESUME_API_BASE_URL
 COPY . .
 
 RUN pnpm install --frozen-lockfile
+RUN pnpm build:shared
 RUN pnpm --filter @my-resume/web build
 
 FROM node:22-slim AS runner
