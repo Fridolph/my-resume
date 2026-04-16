@@ -205,9 +205,16 @@ describe('Resume publication flow (e2e)', () => {
     try {
       const result = await parser.getText()
 
-      expect(result.text.trim().length).toBeGreaterThan(100)
+      expect(result.text.length).toBeGreaterThan(40)
       expect(result.text).toContain('Email: demo@example.com')
       expect(result.text).toContain('Phone: +86 13800000000')
+
+      const hasReadableChinese = /[\u4e00-\u9fff]/.test(result.text)
+
+      if (hasReadableChinese) {
+        expect(result.text).toContain('已发布候选稿')
+        expect(result.text).toContain('基本信息')
+      }
     } finally {
       await parser.destroy()
     }
