@@ -115,7 +115,7 @@ export function AdminHeaderActions({ currentUser, onLogout }: AdminHeaderActions
                 onLogout()
               }}
               type="button"
-              variant="ghost">
+              variant="danger">
               退出登录
             </Button>
           </div>

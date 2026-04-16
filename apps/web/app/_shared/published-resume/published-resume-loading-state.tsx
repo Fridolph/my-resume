@@ -29,9 +29,9 @@ export function PublishedResumeLoadingState() {
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3" data-testid="published-resume-loading-skeleton">
-            <Skeleton className="h-5 w-2/3 rounded-md bg-slate-200/80 dark:bg-slate-700/70" />
-            <Skeleton className="h-5 rounded-md bg-slate-200/80 dark:bg-slate-700/70" />
-            <Skeleton className="h-5 w-4/5 rounded-md bg-slate-200/80 dark:bg-slate-700/70" />
+            <Skeleton className="h-5 w-2/3 rounded-md" />
+            <Skeleton className="h-5 rounded-md" />
+            <Skeleton className="h-5 w-4/5 rounded-md" />
           </CardContent>
         </Card>
       </section>

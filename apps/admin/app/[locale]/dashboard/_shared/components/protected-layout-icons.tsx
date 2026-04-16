@@ -158,3 +158,16 @@ export function GithubIcon() {
     </svg>
   )
 }
+
+export function MenuIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg aria-hidden="true" fill="none" height={size} viewBox="0 0 24 24" width={size}>
+      <path
+        d="M4.5 7.5h15M4.5 12h15M4.5 16.5h15"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  )
+}

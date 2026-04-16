@@ -15,7 +15,7 @@ export const sidebarHeaderCollapsedClass = 'items-center px-2'
 export const sidebarBrandClass = 'flex w-full items-center justify-between gap-2'
 export const sidebarBrandCollapsedClass = 'flex-col justify-start gap-2.5'
 export const sidebarToggleButtonClass =
-  'inline-flex h-9 w-9 items-center justify-center rounded-full border border-zinc-200/80 bg-zinc-100 text-sm font-bold text-zinc-500 dark:border-white/8 dark:bg-white/[0.06] dark:text-zinc-300'
+  'inline-flex h-9 w-9 items-center justify-center rounded-full p-0 text-sm font-bold text-zinc-500 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500/20 dark:text-zinc-300'
 export const sidebarLogoClass =
   'flex h-12 w-12 items-center justify-center rounded-[18px] bg-zinc-900 text-[1.15rem] font-extrabold tracking-[-0.04em] text-white dark:bg-white dark:text-zinc-950'
 export const sidebarContentClass =
@@ -38,10 +38,12 @@ export const headerTextStackClass = 'min-w-0 flex-1 space-y-1.5 sm:space-y-2'
 export const headerSecondaryMetaClass = 'grid gap-1 sm:gap-1.5'
 export const headerTitleClass =
   'text-[2rem] leading-none font-semibold tracking-tight text-zinc-950 dark:text-white sm:text-[2.15rem] md:text-2xl'
+export const headerMenuButtonClass =
+  'inline-flex h-9 w-9 min-w-[36px] items-center justify-center rounded-full p-0 text-zinc-500 transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/15 data-[hovered=true]:text-zinc-900 dark:text-zinc-300 dark:data-[hovered=true]:text-white sm:h-10 sm:w-10 sm:min-w-[40px] md:hidden'
 export const headerIconButtonClass =
-  'inline-flex h-[30px] w-[30px] min-w-[30px] items-center justify-center rounded-full border border-zinc-200/80 bg-zinc-100/85 p-0 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/15 dark:border-white/8 dark:bg-white/[0.06] dark:text-zinc-300 dark:hover:bg-white/[0.08] dark:hover:text-white'
+  'inline-flex h-[30px] w-[30px] min-w-[30px] items-center justify-center rounded-full p-0 text-zinc-500 transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/15 data-[hovered=true]:text-zinc-900 dark:text-zinc-300 dark:data-[hovered=true]:text-white'
 export const headerAvatarButtonClass =
-  'inline-flex h-[30px] w-[30px] min-w-[30px] items-center justify-center rounded-full border border-zinc-200/80 bg-zinc-100/85 p-0 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/15 dark:border-white/8 dark:bg-white/[0.06] dark:text-zinc-300 dark:hover:bg-white/[0.08] dark:hover:text-white'
+  'inline-flex h-[30px] w-[30px] min-w-[30px] items-center justify-center rounded-full p-0 text-zinc-500 transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/15 data-[hovered=true]:text-zinc-900 dark:text-zinc-300 dark:data-[hovered=true]:text-white'
 export const headerAvatarClass =
   'h-[22px] w-[22px] overflow-hidden rounded-full bg-zinc-900 text-[0.66rem] font-bold text-white dark:bg-white dark:text-zinc-950'
 export const headerAvatarFallbackClass =
@@ -55,11 +57,11 @@ export const sessionDropdownItemLabelClass =
   'text-[0.68rem] font-medium tracking-[0.04em] text-zinc-500 dark:text-zinc-400'
 export const sessionDropdownItemValueClass = 'text-[0.98rem] font-semibold text-zinc-950 dark:text-white'
 export const sessionDropdownLogoutButtonClass =
-  'inline-flex h-8 w-full items-center justify-center rounded-full border border-rose-200/80 bg-rose-50/90 px-3 !text-[12px] leading-none font-semibold text-rose-700 transition hover:bg-rose-100 hover:text-rose-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-500/15 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/16 dark:hover:text-rose-100'
+  'inline-flex h-8 w-full items-center justify-center rounded-full px-3 !text-[12px] leading-none font-semibold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-500/15'
 export const mobileDrawerBackdropClass =
   'fixed inset-0 z-40 bg-zinc-950/35 backdrop-blur-[1px] transition-opacity duration-200'
 export const mobileDrawerContentClass = 'fixed inset-y-0 left-0 z-50 w-[min(88vw,22rem)] md:hidden'
 export const mobileDrawerDialogClass =
   'flex h-full w-full flex-col gap-4 border-r border-zinc-200/70 bg-white/95 px-4 py-4 shadow-2xl transition-transform duration-200 dark:border-zinc-800 dark:bg-zinc-950/95'
 export const mobileDrawerCloseButtonClass =
-  'inline-flex h-9 w-9 items-center justify-center rounded-full border border-zinc-200/80 bg-zinc-100/90 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900 dark:border-white/8 dark:bg-white/[0.06] dark:text-zinc-300 dark:hover:bg-white/[0.08] dark:hover:text-white'
+  'inline-flex h-9 w-9 items-center justify-center rounded-full p-0 text-zinc-500 transition-colors data-[hovered=true]:text-zinc-900 dark:text-zinc-300 dark:data-[hovered=true]:text-white'

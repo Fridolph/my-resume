@@ -188,15 +188,15 @@ function HeaderActionsFallback() {
       className="flex items-center gap-2"
       data-testid="public-site-header-actions-fallback">
       <Skeleton
-        className="h-[30px] w-[30px] rounded-full border border-slate-200/80 bg-white/60 dark:border-white/10 dark:bg-white/5"
+        className="h-[30px] w-[30px] rounded-full"
         data-testid="public-site-header-action-skeleton"
       />
       <Skeleton
-        className="h-[30px] w-12 rounded-full border border-slate-200/80 bg-white/72 dark:border-white/10 dark:bg-white/5"
+        className="h-[30px] w-12 rounded-full"
         data-testid="public-site-theme-switch-skeleton"
       />
       <Skeleton
-        className="h-[30px] w-[30px] rounded-full border border-slate-200/80 bg-white/60 dark:border-white/10 dark:bg-white/5"
+        className="h-[30px] w-[30px] rounded-full"
         data-testid="public-site-header-action-skeleton"
       />
     </div>

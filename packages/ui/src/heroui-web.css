@@ -8,6 +8,7 @@
 @import '@heroui/styles/components/menu-item.css' layer(components);
 @import '@heroui/styles/components/menu-section.css' layer(components);
 @import '@heroui/styles/components/popover.css' layer(components);
+@import '@heroui/styles/components/skeleton.css' layer(components);
 @import '@heroui/styles/components/switch.css' layer(components);
 @import '@heroui/styles/components/tag.css' layer(components);
 @import '@heroui/styles/components/tag-group.css' layer(components);

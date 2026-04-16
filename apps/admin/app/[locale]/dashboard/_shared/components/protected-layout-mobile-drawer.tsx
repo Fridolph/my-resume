@@ -71,7 +71,14 @@ export function AdminMobileDrawer({
         type="button"
         variant="ghost"
       />
-      <div className={mobileDrawerContentClass} data-testid="admin-mobile-drawer-content">
+      <div
+        className={[
+          mobileDrawerContentClass,
+          isOpen ? 'pointer-events-auto' : 'pointer-events-none',
+        ]
+          .join(' ')
+          .trim()}
+        data-testid="admin-mobile-drawer-content">
         <div
           className={[
             mobileDrawerDialogClass,
