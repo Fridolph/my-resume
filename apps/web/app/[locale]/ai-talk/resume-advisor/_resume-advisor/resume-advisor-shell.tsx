@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@heroui/react/card'
+import { Chip } from '@heroui/react/chip'
 import { useTranslations } from 'next-intl'
 
 import type {
@@ -31,10 +32,6 @@ export function AiTalkResumeAdvisorShell({
   publishedResume,
 }: AiTalkResumeAdvisorShellProps) {
   const t = useTranslations('aiTalk')
-  const primaryBadgeClass =
-    'inline-flex min-h-10 items-center rounded-full bg-[var(--display-color-accent)] px-5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)] dark:text-white'
-  const softBadgeClass =
-    'inline-flex min-h-10 items-center rounded-full bg-slate-100 px-5 text-sm font-semibold text-slate-900 dark:bg-white/10 dark:text-slate-100'
 
   return (
     <AiTalkPageFrame
@@ -54,9 +51,20 @@ export function AiTalkResumeAdvisorShell({
                 {t('resumeAdvisorPage.description')}
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-wrap gap-3">
-              <span className={primaryBadgeClass}>{t('resumeAdvisorPage.badges.one')}</span>
-              <span className={softBadgeClass}>{t('resumeAdvisorPage.badges.two')}</span>
+            <CardContent className="flex flex-wrap gap-3 flex-row">
+              <Chip
+                className="font-semibold"
+                color="accent"
+                data-testid="resume-advisor-chip-primary"
+                variant="primary">
+                {t('resumeAdvisorPage.badges.one')}
+              </Chip>
+              <Chip
+                className="font-semibold"
+                data-testid="resume-advisor-chip-secondary"
+                variant="soft">
+                {t('resumeAdvisorPage.badges.two')}
+              </Chip>
             </CardContent>
           </Card>
 
@@ -80,7 +88,9 @@ export function AiTalkResumeAdvisorShell({
             <RouteCtaButton href="/ai-talk" tone="primary">
               {t('resumeAdvisorPage.primaryCta')}
             </RouteCtaButton>
-            <RouteCtaButton href="/ai-talk/chat">
+            <RouteCtaButton
+              className="border border-sky-200/80 bg-white/80 font-semibold text-slate-950 shadow-[0_12px_28px_rgba(148,163,184,0.18)] backdrop-blur transition-colors hover:bg-sky-50/85 dark:border-sky-400/20 dark:bg-slate-950/55 dark:text-slate-100 dark:hover:bg-sky-500/10"
+              href="/ai-talk/chat">
               {t('resumeAdvisorPage.secondaryCta')}
             </RouteCtaButton>
           </div>

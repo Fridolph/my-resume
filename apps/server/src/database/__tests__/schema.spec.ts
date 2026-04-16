@@ -1,7 +1,7 @@
 import { getTableColumns } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
 
-import { resumeDrafts, resumePublicationSnapshots, systemMeta } from '../schema'
+import { aiUsageRecords, resumeDrafts, resumePublicationSnapshots, systemMeta } from '../schema'
 
 describe('database schema', () => {
   it('should keep the system meta table for infrastructure bootstrap', () => {
@@ -28,6 +28,28 @@ describe('database schema', () => {
       'schemaVersion',
       'resumeJson',
       'publishedAt',
+    ])
+  })
+
+  it('should define ai usage records for provider call auditing', () => {
+    expect(Object.keys(getTableColumns(aiUsageRecords))).toEqual([
+      'id',
+      'operationType',
+      'scenario',
+      'locale',
+      'inputPreview',
+      'summary',
+      'provider',
+      'model',
+      'mode',
+      'generator',
+      'status',
+      'relatedReportId',
+      'relatedResultId',
+      'detailJson',
+      'errorMessage',
+      'durationMs',
+      'createdAt',
     ])
   })
 })

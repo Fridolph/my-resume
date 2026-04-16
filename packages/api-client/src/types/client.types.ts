@@ -33,7 +33,7 @@ export interface ApiRequestInput<T = unknown> {
   method?: HttpMethod
   pathname: string
   query?: Record<string, string | number | boolean | null | undefined>
-  requestInit?: Omit<FetchRequestInit, 'body' | 'headers' | 'method' | 'signal'>
+  requestInit?: Omit<FetchRequestInit, 'body' | 'headers' | 'method'>
   responseType?: ApiResponseType
   returnNullOnNotFound?: boolean
   transform?: (payload: unknown) => T

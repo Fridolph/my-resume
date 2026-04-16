@@ -84,7 +84,7 @@ export function CloseActionButton({
       </div>
       <div className="flex justify-end gap-2">
         <Button
-          className="rounded-full bg-zinc-100 px-4 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+          className="rounded-full px-4"
           onPress={close}
           size="sm"
           type="button"
@@ -92,7 +92,7 @@ export function CloseActionButton({
           取消
         </Button>
         <Button
-          className="rounded-full bg-rose-500 px-4 !text-white hover:bg-rose-600 dark:bg-rose-500 dark:!text-white dark:hover:bg-rose-600"
+          className="rounded-full px-4 !text-white"
           onPress={() => {
             onClick()
             close()
@@ -111,7 +111,7 @@ export function CloseActionButton({
       <CloseButton
         aria-label={label}
         className={[
-          'inline-flex h-6 w-6 min-w-6 items-center justify-center rounded-full border border-rose-200/90 bg-rose-50/85 p-0 text-[#999] transition-colors hover:border-rose-300 hover:bg-rose-100 hover:text-[#666] focus-visible:ring-2 focus-visible:ring-rose-500/25 [&_svg]:h-3.5 [&_svg]:w-3.5 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-zinc-400 dark:hover:border-rose-500/35 dark:hover:bg-rose-500/16 dark:hover:text-zinc-200',
+          'inline-flex h-6 w-6 min-w-6 items-center justify-center rounded-full p-0 text-rose-500 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500/25 [&_svg]:h-3.5 [&_svg]:w-3.5 data-[hovered=true]:text-rose-700 dark:text-rose-200 dark:data-[hovered=true]:text-rose-100',
           className,
         ]
           .filter(Boolean)
@@ -170,8 +170,8 @@ export function IconActionButton({
             sizeClassName,
             'transition-colors focus-visible:ring-2',
             tone === 'danger'
-              ? 'border-rose-100/90 bg-rose-50/75 text-rose-500 hover:border-rose-200 hover:bg-rose-100 hover:text-rose-700 focus-visible:ring-rose-500/25 dark:border-rose-500/15 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:border-rose-500/30 dark:hover:bg-rose-500/16 dark:hover:text-rose-100'
-              : 'border-zinc-200/80 text-zinc-600 hover:border-zinc-300 hover:bg-zinc-100 hover:text-zinc-950 focus-visible:ring-blue-500/30 dark:border-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-700 dark:hover:bg-zinc-900 dark:hover:text-white',
+              ? 'text-rose-500 focus-visible:ring-rose-500/25 data-[hovered=true]:text-rose-700 dark:text-rose-200 dark:data-[hovered=true]:text-rose-100'
+              : 'text-zinc-600 focus-visible:ring-blue-500/30 data-[hovered=true]:text-zinc-950 dark:text-zinc-300 dark:data-[hovered=true]:text-white',
             forwardedButtonProps.className,
             className,
           ]

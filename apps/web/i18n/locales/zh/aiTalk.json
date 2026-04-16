@@ -228,7 +228,7 @@
     "backToHub": "返回 AI Talk 中枢"
   },
   "avatar": {
-    "eyebrow": "avatar intro",
+    "eyebrow": "头像简介",
     "title": "数字人自我介绍",
     "description": "数字人入口会独立承接自我介绍、媒体播放与未来交互控制，当前先以占位页把契约与展示位预留出来。",
     "intro": {

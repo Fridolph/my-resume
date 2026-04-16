@@ -8,6 +8,7 @@ import type { ReactNode } from 'react'
 import type { AdminNavigationItem } from '../types/admin-navigation.types'
 import {
   headerBodyClass,
+  headerMenuButtonClass,
   headerPageBadgeClass,
   headerPageDescriptionClass,
   headerPageMetaRowClass,
@@ -17,6 +18,7 @@ import {
   headerTextStackClass,
   headerTitleClass,
 } from './protected-layout.constants'
+import { MenuIcon } from './protected-layout-icons'
 
 export function AdminHeader({
   actions,
@@ -34,12 +36,14 @@ export function AdminHeader({
       <div className={headerBodyClass}>
         <div className={headerPrimaryContentClass}>
           <Button
-            className="secondary-button h-9 min-w-0 px-3 text-sm sm:h-10 md:hidden"
+            aria-label={t('menuButton')}
+            className={headerMenuButtonClass}
+            isIconOnly
             onPress={onOpenMenu}
             size="sm"
             type="button"
-            variant="outline">
-            {t('menuButton')}
+            variant="ghost">
+            <MenuIcon />
           </Button>
           <div className={headerTextStackClass}>
             <div className={headerPageMetaRowClass}>

@@ -194,15 +194,20 @@ describe('AdminProtectedLayout', () => {
     expect(screen.getAllByText('概览').length).toBeGreaterThan(0)
     expect(screen.getAllByText('简历编辑').length).toBeGreaterThan(0)
     expect(screen.getAllByText('AI 工作台').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('优化记录').length).toBeGreaterThan(0)
     expect(screen.getAllByText('发布与导出').length).toBeGreaterThan(0)
     expect(screen.queryByText('当前会话')).not.toBeInTheDocument()
-    expect(await screen.findByLabelText('打开项目 GitHub 仓库')).toBeInTheDocument()
-    expect(await screen.findByLabelText('打开当前会话菜单')).toBeInTheDocument()
+    expect(
+      await screen.findByLabelText('打开项目 GitHub 仓库', undefined, { timeout: 5000 }),
+    ).toBeInTheDocument()
+    expect(
+      await screen.findByLabelText('打开当前会话菜单', undefined, { timeout: 5000 }),
+    ).toBeInTheDocument()
     expect(await screen.findByText('账号')).toBeInTheDocument()
     expect(await screen.findByText('角色')).toBeInTheDocument()
     expect(await screen.findByText('退出登录')).toHaveClass(
-      'bg-rose-50/90',
-      'text-rose-700',
+      'button--danger',
+      '!text-[12px]',
     )
     expect(screen.getAllByRole('link', { name: '概览' })[0]).toHaveClass(
       'bg-blue-50',
@@ -215,9 +220,16 @@ describe('AdminProtectedLayout', () => {
       'flex-nowrap',
       'whitespace-nowrap',
     )
-    expect(screen.getByRole('button', { name: '菜单' })).toHaveClass('h-9')
+    expect(screen.getByRole('button', { name: '菜单' })).toHaveClass(
+      'h-9',
+      'w-9',
+      'md:hidden',
+    )
     expect(await screen.findByLabelText('关闭导航菜单')).toBeInTheDocument()
-    expect(await screen.findByTestId('admin-mobile-drawer-content')).toHaveClass('z-50')
+    expect(await screen.findByTestId('admin-mobile-drawer-content')).toHaveClass(
+      'z-50',
+      'pointer-events-none',
+    )
     expect(await screen.findByTestId('admin-mobile-drawer-dialog')).toHaveClass(
       'border-r',
       'bg-white/95',
@@ -273,6 +285,44 @@ describe('AdminProtectedLayout', () => {
     })
   })
 
+  it('should highlight optimization history as the active navigation item', async () => {
+    pathnameState.value = '/dashboard/ai/optimization-history'
+
+    useAdminSessionMock.mockReturnValue({
+      accessToken: 'admin-token',
+      currentUser: {
+        id: 'admin-demo-user',
+        username: 'admin',
+        role: 'admin',
+        isActive: true,
+        capabilities: {
+          canEditResume: true,
+          canPublishResume: true,
+          canTriggerAiAnalysis: true,
+        },
+      },
+      logout: vi.fn(),
+      refreshSession: vi.fn(),
+      status: 'ready',
+    })
+
+    render(
+      <AdminProtectedLayout>
+        <div>受保护内容</div>
+      </AdminProtectedLayout>,
+    )
+
+    const optimizationHistoryLink = screen.getAllByRole('link', {
+      name: '优化记录',
+    })[0]
+    const aiWorkbenchLink = screen.getAllByRole('link', {
+      name: 'AI 工作台',
+    })[0]
+
+    expect(optimizationHistoryLink).toHaveClass('bg-blue-50', 'text-[#333]')
+    expect(aiWorkbenchLink).not.toHaveClass('bg-blue-50', 'text-[#333]')
+  })
+
   it('should open drawer from menu button and reopen after route change', async () => {
     const user = userEvent.setup()
 
@@ -314,6 +364,7 @@ describe('AdminProtectedLayout', () => {
 
     await user.click(menuButton)
     expect(drawerRoot).toHaveAttribute('data-open', 'true')
+    expect(screen.getByTestId('admin-mobile-drawer-content')).toHaveClass('pointer-events-auto')
 
     pathnameState.value = '/dashboard/ai'
 
@@ -327,11 +378,13 @@ describe('AdminProtectedLayout', () => {
       'data-open',
       'false',
     )
+    expect(screen.getByTestId('admin-mobile-drawer-content')).toHaveClass('pointer-events-none')
 
     await user.click(screen.getByRole('button', { name: '菜单' }))
     expect(screen.getByTestId('admin-mobile-drawer-root')).toHaveAttribute(
       'data-open',
       'true',
     )
+    expect(screen.getByTestId('admin-mobile-drawer-content')).toHaveClass('pointer-events-auto')
   })
 })

@@ -48,12 +48,12 @@ export function AnalysisSuggestionPanel({
       <DisplaySectionCard
         className="grid gap-4"
         compact
-        description="服务端已把 AI 返回的结构化 patch 合并回当前 StandardResume，并完成校验。"
-        eyebrow="结构化建议"
-        title="可一键应用的草稿建议">
+        description="服务端已基于当前草稿生成结构化 patch，并完成当前简历结构校验。"
+        eyebrow="结构化 diff"
+        title="当前草稿 vs AI 建议稿">
         <div className="dashboard-badge-row">
           {suggestion.changedModules.map((module) => (
-            <DisplayPill key={module}>模块：{module}</DisplayPill>
+            <DisplayPill key={module}>影响模块：{module}</DisplayPill>
           ))}
           <DisplayPill>
             Provider：{suggestion.providerSummary.provider} /{' '}
@@ -96,7 +96,7 @@ export function AnalysisSuggestionPanel({
                   className={moduleCheckClass}
                   isSelected={checked}
                   onChange={() => onToggleSelectedModule(moduleDiff.module)}>
-                  {`应用模块：${moduleDiff.module}`}
+                  {`应用此模块变更：${moduleDiff.module}`}
                 </Checkbox>
               </div>
 
@@ -107,11 +107,11 @@ export function AnalysisSuggestionPanel({
                     <div className="grid gap-3 md:grid-cols-2">
                       <div className="status-box">
                         <strong>当前草稿</strong>
-                        <span>{entry.before}</span>
+                        <span>{entry.currentValue}</span>
                       </div>
                       <div className="status-box">
-                        <strong>建议稿</strong>
-                        <span>{entry.after}</span>
+                        <strong>AI 建议稿</strong>
+                        <span>{entry.suggestedValue}</span>
                       </div>
                     </div>
                   </div>
@@ -125,9 +125,9 @@ export function AnalysisSuggestionPanel({
       <DisplaySectionCard
         className="card stack"
         compact
-        description="只有勾选的模块会被服务端写回当前草稿，避免前端整份覆盖。"
-        eyebrow="草稿应用"
-        title="将已选模块写回当前草稿"
+        description="只有勾选的模块会被服务端写回当前草稿，避免整份覆盖；公开站仍需手动发布。"
+        eyebrow="写回草稿"
+        title="将已选变更写回当前草稿"
         titleAs="h3">
         <div className="dashboard-inline-note">
           当前已选择 {selectedModules.length} / {suggestion.changedModules.length}{' '}
@@ -141,7 +141,7 @@ export function AnalysisSuggestionPanel({
             size="md"
             type="button"
             variant="primary">
-            {applyPending ? '正在应用到草稿...' : '应用已选模块到当前草稿'}
+            {applyPending ? '正在写回当前草稿...' : '应用已选变更到当前草稿'}
           </Button>
         </div>
       </DisplaySectionCard>

@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common'
 import { AuthModule } from '../auth/auth.module'
 import { ResumeModule } from '../resume/resume.module'
 import { AiFileController } from './ai-file.controller'
+import { AiUsageRecordRepository } from './ai-usage-record.repository'
+import { AiUsageRecordService } from './ai-usage-record.service'
 import { AiReportController } from './ai-report.controller'
 import { AnalysisReportCacheService } from './analysis-report-cache.service'
 import { resolveAiRuntimeConfig } from './config/ai-config'
@@ -15,6 +17,7 @@ import { RagChunkService } from './rag/rag-chunk.service'
 import { RagIndexRepository } from './rag/rag-index.repository'
 import { RagKnowledgeService } from './rag/rag-knowledge.service'
 import { RagService } from './rag/rag.service'
+import { ResumeOptimizationResultCacheService } from './resume-optimization-result-cache.service'
 
 @Module({
   imports: [AuthModule, ResumeModule],
@@ -36,8 +39,11 @@ import { RagService } from './rag/rag.service'
       useFactory: createAiProvider,
     },
     AiService,
+    AiUsageRecordRepository,
+    AiUsageRecordService,
     AiResumeOptimizationService,
     AnalysisReportCacheService,
+    ResumeOptimizationResultCacheService,
     FileExtractionService,
     RagChunkService,
     RagKnowledgeService,
@@ -46,8 +52,10 @@ import { RagService } from './rag/rag.service'
   ],
   exports: [
     AiService,
+    AiUsageRecordService,
     AiResumeOptimizationService,
     AnalysisReportCacheService,
+    ResumeOptimizationResultCacheService,
     FileExtractionService,
     RagService,
   ],

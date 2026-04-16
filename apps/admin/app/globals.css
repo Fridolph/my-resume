@@ -105,50 +105,7 @@ select {
   font: inherit;
 }
 
-input,
-select,
-textarea {
-  width: 100%;
-  border-radius: var(--admin-radius-control);
-  border: 1px solid var(--admin-border);
-  background: var(--admin-surface-strong);
-  color: var(--admin-text);
-  padding: 0.875rem 1rem;
-  transition:
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    background-color 160ms ease;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-  outline: none;
-  border-color: color-mix(in srgb, var(--admin-primary) 52%, transparent);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--admin-primary) 14%, transparent);
-}
-
-textarea {
-  min-height: 140px;
-  resize: vertical;
-}
-
 button:disabled {
   cursor: not-allowed;
   opacity: 0.72;
-}
-
-@media (max-width: 767px) {
-  input,
-  select,
-  textarea {
-    min-height: 44px;
-    padding: 0.75rem 0.9rem;
-    font-size: 0.95rem;
-    line-height: 1.45;
-  }
-
-  textarea {
-    min-height: 120px;
-  }
 }

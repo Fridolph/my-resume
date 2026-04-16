@@ -1,4 +1,5 @@
 import type {
+  AiResumeOptimizationChangedModule,
   AiWorkbenchLocale,
   AiWorkbenchReport,
   AiWorkbenchScenario,
@@ -42,6 +43,19 @@ export function formatScenario(scenario: AiWorkbenchScenario): string {
 
 export function formatLocale(locale: AiWorkbenchLocale): string {
   return locale === 'zh' ? '中文' : 'English'
+}
+
+export function formatOptimizationModule(
+  module: AiResumeOptimizationChangedModule,
+): string {
+  const moduleLabels: Record<AiResumeOptimizationChangedModule, string> = {
+    experiences: '工作经历',
+    highlights: '亮点总结',
+    profile: '个人定位',
+    projects: '项目经历',
+  }
+
+  return moduleLabels[module] ?? module
 }
 
 export function formatGenerator(generator: AiWorkbenchReport['generator']): string {

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { ThemeModeProvider } from '@my-resume/ui/theme'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -86,6 +86,10 @@ describe('AiTalkSessionShell', () => {
     )
 
     expect(screen.getByRole('heading', { name: '会话工作区 · demo-session' })).toBeInTheDocument()
+    const chipRow = screen.getByTestId('ai-talk-session-chip-row')
+    expect(chipRow).toHaveClass('flex-nowrap')
+    expect(within(chipRow).getByText('流式优先')).toBeInTheDocument()
+    expect(within(chipRow).getByText('消息时间线')).toBeInTheDocument()
     expect(screen.getAllByText('来源片段')).not.toHaveLength(0)
     fireEvent.click(screen.getByRole('button', { name: '返回 RAG 对话' }))
     expect(pushMock).toHaveBeenCalledWith('/ai-talk/chat')

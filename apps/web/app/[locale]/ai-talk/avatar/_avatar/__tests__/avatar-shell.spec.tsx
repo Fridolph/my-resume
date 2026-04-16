@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { ThemeModeProvider } from '@my-resume/ui/theme'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -76,6 +76,11 @@ describe('AiTalkAvatarShell', () => {
     )
 
     expect(screen.getByRole('heading', { name: '数字人自我介绍' })).toBeInTheDocument()
+    const chipRow = screen.getByTestId('ai-talk-avatar-chip-row')
+    expect(chipRow).toHaveClass('flex-nowrap')
+    expect(within(chipRow).getByText('即将上线')).toBeInTheDocument()
+    expect(within(chipRow).getByText('付寅生')).toBeInTheDocument()
+    expect(within(chipRow).getByText('全栈开发工程师')).toBeInTheDocument()
     expect(screen.getByText('媒体资源')).toBeInTheDocument()
     const backButton = screen.getByRole('button', { name: '返回 AI Talk 中枢' })
     expect(backButton).toBeInTheDocument()

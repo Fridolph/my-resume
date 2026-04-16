@@ -7,6 +7,7 @@ import {
   Inject,
   Param,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common'
 
@@ -15,20 +16,29 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RoleCapabilitiesGuard } from '../auth/guards/role-capabilities.guard'
 import { AiService } from './ai.service'
 import {
+  AiUsageRecordFilterType,
+  AiUsageRecordService,
+} from './ai-usage-record.service'
+import {
   ApplyResumeOptimizationInput,
   AiResumeOptimizationService,
   GenerateResumeOptimizationInput,
 } from './ai-resume-optimization.service'
 import {
-  AnalysisLocale,
   AnalysisScenario,
   AnalysisReportCacheService,
 } from './analysis-report-cache.service'
+import type { AnalysisLocale } from './analysis-report-cache.service'
 
 interface CacheReportBody {
   scenario: AnalysisScenario
   content: string
   locale?: AnalysisLocale
+}
+
+interface HistoryQuery {
+  limit?: string
+  type?: AiUsageRecordFilterType
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -48,6 +58,8 @@ export class AiReportController {
   constructor(
     @Inject(AiService)
     private readonly aiService: AiService,
+    @Inject(AiUsageRecordService)
+    private readonly aiUsageRecordService: AiUsageRecordService,
     @Inject(AiResumeOptimizationService)
     private readonly aiResumeOptimizationService: AiResumeOptimizationService,
     @Inject(AnalysisReportCacheService)
@@ -74,6 +86,21 @@ export class AiReportController {
     }
   }
 
+  @Get('history')
+  async listUsageHistory(@Query() query: HistoryQuery) {
+    return {
+      records: await this.aiUsageRecordService.listHistory({
+        type: query.type ?? 'all',
+        limit: query.limit ? Number(query.limit) : undefined,
+      }),
+    }
+  }
+
+  @Get('history/:recordId')
+  async getUsageHistoryDetail(@Param('recordId') recordId: string) {
+    return this.aiUsageRecordService.getDetail(recordId)
+  }
+
   @Post('cache')
   @UseGuards(RoleCapabilitiesGuard)
   @RequireCapability('canTriggerAiAnalysis')
@@ -95,19 +122,52 @@ export class AiReportController {
   @UseGuards(RoleCapabilitiesGuard)
   @RequireCapability('canTriggerAiAnalysis')
   async analyzeReport(@Body() body: CacheReportBody) {
-    // 分析流程：构造 prompt -> 调 provider -> 结构化缓存并返回。
-    const result = await this.aiService.generateText({
-      systemPrompt: this.buildAnalysisSystemPrompt(body.locale ?? 'zh'),
-      prompt: this.buildAnalysisPrompt(body),
-    })
+    const locale = body.locale ?? 'zh'
+    const startedAt = Date.now()
+    const providerSummary = this.aiService.getProviderSummary()
+    const generator = providerSummary.mode === 'mock' ? 'mock-cache' : 'ai-provider'
 
-    return {
-      cached: false,
-      report: this.analysisReportCacheService.storeGeneratedReport({
+    try {
+      const result = await this.aiService.generateText({
+        systemPrompt: this.buildAnalysisSystemPrompt(locale),
+        prompt: this.buildAnalysisPrompt(body),
+      })
+      const report = this.analysisReportCacheService.storeGeneratedReport({
         ...body,
         generatedText: result.text,
-        providerSummary: this.aiService.getProviderSummary(),
-      }),
+        providerSummary,
+      })
+      const usageRecord = await this.aiUsageRecordService.recordSuccess({
+        operationType: 'analysis-report',
+        scenario: body.scenario,
+        locale,
+        inputPreview: body.content,
+        summary: report.summary,
+        providerSummary,
+        generator,
+        relatedReportId: report.reportId,
+        detail: report,
+        durationMs: Date.now() - startedAt,
+      })
+
+      return {
+        cached: false,
+        report,
+        usageRecordId: usageRecord.id,
+      }
+    } catch (error) {
+      await this.aiUsageRecordService.recordFailure({
+        operationType: 'analysis-report',
+        scenario: body.scenario,
+        locale,
+        inputPreview: body.content,
+        providerSummary,
+        generator,
+        errorMessage: error instanceof Error ? error.message : 'Analysis request failed',
+        durationMs: Date.now() - startedAt,
+      })
+
+      throw error
     }
   }
 
@@ -120,8 +180,58 @@ export class AiReportController {
   @UseGuards(RoleCapabilitiesGuard)
   @RequireCapability('canTriggerAiAnalysis')
   async optimizeResume(@Body() body: ResumeOptimizationBody) {
-    // 仅生成 suggestion/diff/apply payload，落库由 apply 接口执行。
-    return this.aiResumeOptimizationService.generateSuggestion(body)
+    const locale = body.locale ?? 'zh'
+    const startedAt = Date.now()
+    const providerSummary = this.aiService.getProviderSummary()
+    const generator = providerSummary.mode === 'mock' ? 'mock-cache' : 'ai-provider'
+
+    try {
+      const result = await this.aiResumeOptimizationService.generateSuggestion(body)
+      const persistedSnapshot =
+        this.aiResumeOptimizationService.getSuggestionSnapshotForPersistence(
+          result.resultId,
+          locale,
+        )
+      const usageRecord = await this.aiUsageRecordService.recordSuccess({
+        operationType: 'resume-optimization',
+        scenario: 'resume-review',
+        locale,
+        inputPreview: body.instruction,
+        summary: result.summary,
+        providerSummary,
+        generator,
+        relatedResultId: result.resultId,
+        detail: persistedSnapshot,
+        durationMs: Date.now() - startedAt,
+      })
+
+      return {
+        ...result,
+        usageRecordId: usageRecord.id,
+      }
+    } catch (error) {
+      await this.aiUsageRecordService.recordFailure({
+        operationType: 'resume-optimization',
+        scenario: 'resume-review',
+        locale,
+        inputPreview: body.instruction,
+        providerSummary,
+        generator,
+        errorMessage:
+          error instanceof Error ? error.message : 'Resume optimization request failed',
+        durationMs: Date.now() - startedAt,
+      })
+
+      throw error
+    }
+  }
+
+  @Get('resume-optimize/results/:resultId')
+  getResumeOptimizationResult(
+    @Param('resultId') resultId: string,
+    @Query('locale') locale?: AnalysisLocale,
+  ) {
+    return this.aiResumeOptimizationService.getSuggestionResult(resultId, locale ?? 'zh')
   }
 
   /**

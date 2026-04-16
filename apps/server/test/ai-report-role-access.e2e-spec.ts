@@ -35,6 +35,39 @@ async function prepareResumeTables(client: DatabaseClient) {
     ON resume_publication_snapshots (resume_key, published_at);
   `)
 
+  await client.execute(`
+    CREATE TABLE IF NOT EXISTS ai_usage_records (
+      id text PRIMARY KEY NOT NULL,
+      operation_type text NOT NULL,
+      scenario text NOT NULL,
+      locale text NOT NULL,
+      input_preview text NOT NULL,
+      summary text,
+      provider text NOT NULL,
+      model text NOT NULL,
+      mode text NOT NULL,
+      generator text NOT NULL,
+      status text NOT NULL,
+      related_report_id text,
+      related_result_id text,
+      detail_json text,
+      error_message text,
+      duration_ms integer NOT NULL,
+      created_at integer NOT NULL
+    );
+  `)
+
+  await client.execute(`
+    CREATE INDEX IF NOT EXISTS ai_usage_records_operation_type_created_at_idx
+    ON ai_usage_records (operation_type, created_at);
+  `)
+
+  await client.execute(`
+    CREATE INDEX IF NOT EXISTS ai_usage_records_created_at_idx
+    ON ai_usage_records (created_at);
+  `)
+
+  await client.execute('DELETE FROM ai_usage_records;')
   await client.execute('DELETE FROM resume_publication_snapshots;')
   await client.execute('DELETE FROM resume_drafts;')
 }
@@ -207,16 +240,15 @@ describe('AI report role access (e2e)', () => {
     expect(optimizeResponse.body.summary.length).toBeGreaterThan(0)
     expect(optimizeResponse.body.changedModules).toContain('profile')
     expect(optimizeResponse.body.moduleDiffs.length).toBeGreaterThan(0)
-    expect(optimizeResponse.body.applyPayload.draftUpdatedAt).toBeTruthy()
-    expect(optimizeResponse.body.suggestedResume.meta.slug).toBe('standard-resume')
+    expect(optimizeResponse.body.resultId).toBeTruthy()
+    expect(optimizeResponse.body.usageRecordId).toBeTruthy()
 
     const applyResponse = await request(app.getHttpServer())
       .post('/api/ai/reports/resume-optimize/apply')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
-        draftUpdatedAt: optimizeResponse.body.applyPayload.draftUpdatedAt,
+        resultId: optimizeResponse.body.resultId,
         modules: ['profile'],
-        patch: optimizeResponse.body.applyPayload.patch,
       })
       .expect(200)
 
