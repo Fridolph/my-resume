@@ -1,6 +1,6 @@
 import { render, screen, cleanup } from '@testing-library/react'
 import { createElement } from 'react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import {
   THEME_STORAGE_KEY,
@@ -13,7 +13,33 @@ import {
   writeStoredTheme,
 } from './theme'
 
+function createStorageMock() {
+  const storage = new Map<string, string>()
+
+  return {
+    getItem(key: string) {
+      return storage.get(key) ?? null
+    },
+    setItem(key: string, value: string) {
+      storage.set(key, value)
+    },
+    removeItem(key: string) {
+      storage.delete(key)
+    },
+    clear() {
+      storage.clear()
+    },
+  }
+}
+
 describe('theme helpers', () => {
+  beforeEach(() => {
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      value: createStorageMock(),
+    })
+  })
+
   afterEach(() => {
     cleanup()
     window.localStorage.clear()
