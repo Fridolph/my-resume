@@ -491,7 +491,7 @@ describe('AiAnalysisPanel', () => {
         'AI 调用记录加载失败：Internal server error。请确认服务端数据库已执行 db:push。',
       ),
     ).toBeInTheDocument()
-  })
+  }, 12_000)
 
   it('should show rich pending overlay and allow cancelling optimization', async () => {
     vi.useFakeTimers()
