@@ -44,6 +44,8 @@
 - 默认采用官方 `createAlova + alova/fetch`
 - `beforeRequest` 统一注入 `Authorization`
 - `responded` 统一处理 `json/text/raw`、`204`、`404 -> null` 与错误消息提取
+- `json` 响应支持自动解包标准 envelope：`{ code, message, data, timestamp, traceId }`
+- 错误响应支持提取 `traceId`，便于联动服务端日志排障
 - 业务层继续使用语义化函数，避免页面直接拼接请求细节
 - 不再维护自定义 runtime / retry / axios / legacy adapter 兼容层
 
