@@ -96,6 +96,9 @@ DEPLOY_ROOT=/opt/my-resume ./deploy/ecs/deploy-latest-tag.sh
 
 - `TARGET_BRANCH`：默认 `main`
 - `TAG_PATTERN`：默认 `v*`（按语义版本排序取最新）
+- `TAG_STRATEGY`：默认 `latest`
+  - `latest`：严格使用最新 tag；若镜像仓库缺少该 tag 的 `server/web/admin` manifest，会直接失败
+  - `latest-deployable`：在 image 模式下自动回退到“最新且三端镜像都存在”的 tag
 - `SKIP_PUBLIC_CHECK=1`：仅做本机健康检查，不校验公网域名
 
 ---
