@@ -1,6 +1,6 @@
 # ECS 首次上线验收清单
 
-这份清单用于首次把 `v2.0.0` 部署到 ECS 时做逐项验收，避免“服务启动了，但链路并没有真正可用”。
+这份清单用于首次把 `v2.1.0` 部署到 ECS 时做逐项验收，避免“服务启动了，但链路并没有真正可用”。
 
 配套文档：
 
@@ -40,14 +40,14 @@ git --version
 
 ### 仓库与部署目录
 
-- 存在 `/opt/my-resume/repo`
-- 存在 `/opt/my-resume/shared/config/stack.env`
-- 存在 `/opt/my-resume/shared/data`
-- 存在 `/opt/my-resume/shared/storage/rag`
+- 存在 `/opt/my-resume/.git`
+- 存在 `/opt/my-resume/.deploy-runtime/shared/config/stack.env.local`
+- 存在 `/opt/my-resume/.deploy-runtime/shared/data`
+- 存在 `/opt/my-resume/.deploy-runtime/shared/storage/rag`
 
 ## 二、配置检查
 
-### `stack.env`
+### `stack.env.local`
 
 确认以下关键项不再是占位值：
 
@@ -71,29 +71,29 @@ git --version
 先执行：
 
 ```bash
-cd /opt/my-resume/repo
-./deploy/ecs/render-config.sh --tag v2.0.0
+cd /opt/my-resume
+./deploy/ecs/render-config.sh --tag v2.1.0
 ```
 
 确认以下文件已生成：
 
-- `/opt/my-resume/releases/v2.0.0/.env`
-- `/opt/my-resume/releases/v2.0.0/compose.prod.yml`
-- `/opt/my-resume/shared/nginx/my-resume.http.conf`
-- `/opt/my-resume/shared/nginx/my-resume.conf`
+- `/opt/my-resume/.deploy-runtime/release-snapshots/v2.1.0/.env`
+- `/opt/my-resume/.deploy-runtime/release-snapshots/v2.1.0/compose.prod.yml`
+- `/opt/my-resume/.deploy-runtime/shared/nginx/my-resume.http.conf`
+- `/opt/my-resume/.deploy-runtime/shared/nginx/my-resume.conf`
 
 ## 三、首次发布检查
 
 执行：
 
 ```bash
-cd /opt/my-resume/repo
-./deploy/ecs/release.sh v2.0.0
+cd /opt/my-resume
+./deploy/ecs/release.sh v2.1.0
 ```
 
 发布成功后，确认：
 
-- `/opt/my-resume/current` 已指向 `releases/v2.0.0`
+- `/opt/my-resume/.deploy-runtime/current` 已指向 `release-snapshots/v2.1.0`
 - `docker compose` 无报错退出
 - Nginx reload 成功
 - 首次证书申请成功
@@ -105,7 +105,7 @@ cd /opt/my-resume/repo
 执行：
 
 ```bash
-cd /opt/my-resume/current
+cd /opt/my-resume/.deploy-runtime/current
 docker compose -f compose.prod.yml --env-file .env ps
 ```
 
@@ -121,8 +121,8 @@ docker compose -f compose.prod.yml --env-file .env ps
 
 ```bash
 curl http://127.0.0.1:5577/
-curl http://127.0.0.1:5555/zh
-curl http://127.0.0.1:5566/zh
+curl http://127.0.0.1:5555/
+curl http://127.0.0.1:5566/login
 ```
 
 预期：
@@ -250,8 +250,8 @@ test is successful
 即使首次上线成功，也建议做一次最小回滚演练：
 
 ```bash
-cd /opt/my-resume/repo
-./deploy/ecs/rollback.sh v2.0.0
+cd /opt/my-resume
+./deploy/ecs/rollback.sh v2.1.0
 ```
 
 目标不是回到旧版本，而是确认：
@@ -278,7 +278,7 @@ cd /opt/my-resume/repo
 
 - 域名解析还没生效，导致证书申请失败
 - 安全组没放行 `80/443`
-- `stack.env` 仍然保留占位值
+- `stack.env.local` 仍然保留占位值
 - `JWT_SECRET` 太弱或为空
 - `QINIU_AI_API_KEY` 漏填
 - ECS 上磁盘空间不足，导致镜像构建失败
@@ -286,7 +286,7 @@ cd /opt/my-resume/repo
 
 ## 十二、验收完成标准
 
-满足以下条件后，可以视为 `v2.0.0` 已具备 ECS 上线基线：
+满足以下条件后，可以视为 `v2.1.0` 已具备 ECS 上线基线：
 
 - 三个域名都可通过 HTTPS 打开
 - `web/admin/server` 容器均稳定运行

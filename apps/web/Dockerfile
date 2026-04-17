@@ -1,4 +1,5 @@
-FROM node:22-slim
+ARG BASE_IMAGE=node:22-slim
+FROM ${BASE_IMAGE}
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -16,6 +17,7 @@ ENV RESUME_API_BASE_URL=$RESUME_API_BASE_URL
 COPY . .
 
 RUN pnpm install --frozen-lockfile
+RUN pnpm --filter "./packages/*" --if-present build
 RUN pnpm --filter @my-resume/web build
 
 ENV NODE_ENV=production

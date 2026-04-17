@@ -30,8 +30,6 @@ const requiredPaths = [
   'packages/config/env',
   'packages/config/env/README.md',
   'docs/10-架构设计/04-空应用脚手架策略说明.md',
-  'src/App.vue',
-  'vite.config.ts',
 ]
 
 async function ensureExists(path) {

@@ -31,5 +31,7 @@ dist-ssr
 .local
 .data
 .tmp
+/.deploy-runtime/
 apps/server/storage/rag/*.json
 deploy/ecs/stack.env
+deploy/ecs/stack.env.local

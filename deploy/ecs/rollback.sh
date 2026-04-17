@@ -24,13 +24,14 @@ done
 load_stack_env
 require_commands docker curl
 
-STATE_DIR="$DEPLOY_ROOT/shared/state"
+RUNTIME_ROOT="$DEPLOY_RUNTIME_ROOT"
+STATE_DIR="$RUNTIME_ROOT/shared/state"
 PREVIOUS_RELEASE_FILE="$STATE_DIR/previous-release"
 CURRENT_RELEASE_FILE="$STATE_DIR/current-release"
-CURRENT_LINK="$DEPLOY_ROOT/current"
+CURRENT_LINK="$RUNTIME_ROOT/current"
 
 if [[ -n "$TARGET_TAG" ]]; then
-  TARGET_RELEASE="$DEPLOY_ROOT/releases/$(sanitize_release_name "$TARGET_TAG")"
+  TARGET_RELEASE="$RUNTIME_ROOT/release-snapshots/$(sanitize_release_name "$TARGET_TAG")"
 elif [[ -f "$PREVIOUS_RELEASE_FILE" ]]; then
   TARGET_RELEASE=$(cat "$PREVIOUS_RELEASE_FILE")
 else

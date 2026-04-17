@@ -2,10 +2,13 @@ node_modules
 .git
 .turbo
 .next
+**/.next
 dist
+**/dist
 dist-ssr
 .data
 coverage
+**/coverage
 tmp
 *.log
 .env

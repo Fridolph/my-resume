@@ -1,0 +1,214 @@
+# ECS Image 模式部署教程（从本地构建到上线）
+
+> 目标：把编译负载从 ECS 移走，改成“本地/CI 构建镜像，ECS 只拉取并启动”。
+>
+> 适用：`2核2G` 这类轻量 ECS（强烈推荐）。
+
+---
+
+## 0. 你将得到什么
+
+完成后，发布路径会变成：
+
+1. 本地构建三端镜像（`server/web/admin`）
+2. 推送到镜像仓库（如 GHCR）
+3. ECS 执行 `release.sh <tag>`
+4. ECS 自动 `pull + up --no-build`，不再 `--build`
+
+---
+
+## 1. 本地安装 Docker（你当前还没装）
+
+### macOS（推荐）
+
+1. 安装 [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+2. 启动后确认：
+
+```bash
+docker version
+docker buildx version
+docker compose version
+```
+
+### Ubuntu / Debian（本地 Linux）
+
+```bash
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker "$USER"
+newgrp docker
+
+docker version
+docker buildx version
+docker compose version
+```
+
+### Windows
+
+安装 Docker Desktop（WSL2 模式），然后在 PowerShell / WSL 中执行同样的版本检查。
+
+---
+
+## 2. 准备镜像仓库（以 GHCR 为例）
+
+### 2.1 创建 GitHub Token
+
+创建一个可用于 GHCR 的 token（classic 或 fine-grained 均可），至少包含：
+
+- `write:packages`
+- `read:packages`
+
+### 2.2 本地登录 GHCR
+
+```bash
+echo '<YOUR_GITHUB_TOKEN>' | docker login ghcr.io -u <YOUR_GITHUB_USERNAME> --password-stdin
+```
+
+---
+
+## 3. 本地构建并推送镜像
+
+仓库已内置脚本：`deploy/ecs/build-and-push-images.sh`
+
+```bash
+cd /path/to/my-resume
+
+./deploy/ecs/build-and-push-images.sh \
+  --tag v2.1.0 \
+  --image-prefix ghcr.io/<your-user-or-org>/my-resume \
+  --platform linux/amd64
+```
+
+推送成功后，你会得到：
+
+- `ghcr.io/<...>/my-resume/server:v2.1.0`
+- `ghcr.io/<...>/my-resume/web:v2.1.0`
+- `ghcr.io/<...>/my-resume/admin:v2.1.0`
+
+---
+
+## 4. ECS 侧配置为 image 模式
+
+编辑：
+
+```bash
+/opt/my-resume/.deploy-runtime/shared/config/stack.env.local
+```
+
+关键字段：
+
+```env
+DEPLOY_MODE=image
+IMAGE_REPOSITORY_PREFIX=ghcr.io/<your-user-or-org>/my-resume
+# IMAGE_TAG 可不填，默认使用 release.sh 传入 tag
+```
+
+如果你希望服务器自动 `docker login`，可再填：
+
+```env
+REGISTRY_HOST=ghcr.io
+REGISTRY_USERNAME=<username>
+REGISTRY_PASSWORD=<token>
+```
+
+> 不填也可以，但要在 ECS 手动登录一次：
+>
+> `docker login ghcr.io`
+
+---
+
+## 5. ECS 发布（只拉镜像）
+
+```bash
+cd /opt/my-resume
+git fetch --tags --force
+./deploy/ecs/release.sh v2.1.0
+```
+
+在 `image` 模式下，脚本会自动执行：
+
+1. `docker compose pull`
+2. `docker compose up -d --no-build --remove-orphans`
+
+不会再在 ECS 上做 `next build` / `pnpm install`。
+
+---
+
+## 6. 验收清单
+
+发布后检查：
+
+- `https://resume.fridolph.top`
+- `https://admin-resume.fridolph.top`
+- `https://api-resume.fridolph.top`
+
+服务器检查：
+
+```bash
+docker compose -f /opt/my-resume/.deploy-runtime/current/compose.prod.yml \
+  --env-file /opt/my-resume/.deploy-runtime/current/.env ps
+```
+
+---
+
+## 7. 常见问题
+
+### Q1：ECS 还是在构建
+
+- 检查 `DEPLOY_MODE=image` 是否真的在生效配置文件里。
+- 执行 `./deploy/ecs/render-config.sh --tag v2.1.0` 后查看生成的 `compose.prod.yml`：
+  - 若包含 `image:` 即正确
+  - 若包含 `build:` 说明仍在 build 模式
+
+### Q2：镜像拉取 401/403
+
+- GHCR token 权限不足，补 `read:packages`
+- 仓库权限/包权限不可见
+- ECS 未登录或登录用户不对
+
+### Q3：`manifest unknown`
+
+- 镜像 tag 没推成功，重新执行本地推送
+- `release.sh` 使用的 tag 与镜像 tag 不一致
+
+### Q4：`auth.docker.io` 超时 / token 拉取失败
+
+如果你本地网络对 Docker Hub 不稳定，可在构建脚本里临时切换基础镜像源：
+
+```bash
+./deploy/ecs/build-and-push-images.sh \
+  --tag v2.1.0 \
+  --image-prefix ghcr.io/<your-user-or-org>/my-resume \
+  --platform linux/amd64 \
+  --base-image docker.1ms.run/library/node:22-slim
+```
+
+> 说明：仓库名前缀必须全小写；`--base-image` 仅用于本地构建阶段，不影响 ECS 的 image 模式发布逻辑。
+
+### Q5：`buildx` 仍反复拉取 Docker Hub 导致超时
+
+部分网络环境下，`docker buildx` 的 builder 容器会再次访问 Docker Hub 获取元数据，即使已本地 `docker pull` 也可能超时。  
+这时建议切换到脚本的 `engine` 模式（`docker build + docker push`）：
+
+```bash
+./deploy/ecs/build-and-push-images.sh \
+  --tag v2.2.0 \
+  --image-prefix ghcr.io/<your-user-or-org>/my-resume \
+  --platform linux/amd64 \
+  --engine-build \
+  --base-image docker.1ms.run/library/node:22-slim
+```
+
+> 本项目在 `v2.2.0` 发布阶段已用该模式完成本地构建与推送验证。
+
+---
+
+## 8. 与 CI/CD 的关系
+
+`Deploy ECS` 工作流仍调用 `release.sh`，所以你只需保证：
+
+- ECS 上 `stack.env.local` 配置正确（`DEPLOY_MODE=image`）
+- 镜像仓库可拉取
+
+这样 CI/CD 与手工发布会共用同一条发布链路。

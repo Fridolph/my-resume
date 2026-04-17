@@ -1,4 +1,5 @@
-FROM node:22-slim
+ARG BASE_IMAGE=node:22-slim
+FROM ${BASE_IMAGE}
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -10,6 +11,7 @@ WORKDIR /app
 COPY . .
 
 RUN pnpm install --frozen-lockfile
+RUN pnpm --filter "./packages/*" --if-present build
 RUN pnpm --filter @my-resume/server build
 
 ENV NODE_ENV=production
