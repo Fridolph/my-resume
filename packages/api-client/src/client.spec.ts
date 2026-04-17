@@ -107,6 +107,33 @@ describe('api client core', () => {
     expect(result).toBe('plain text body')
   })
 
+  it('unwraps standardized api envelope payload', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        createJsonResponse(200, {
+          code: 200,
+          message: 'OK',
+          data: {
+            status: 'published',
+          },
+          timestamp: '2026-04-17T12:00:00.000Z',
+          traceId: 'trace-envelope-success',
+        }),
+      ),
+    )
+
+    const result = await defaultApiClient
+      .createMethod<{ status: string }>({
+        apiBaseUrl: 'http://localhost:5577',
+        pathname: '/resume/published',
+        fallbackErrorMessage: '读取失败',
+      })
+      .send()
+
+    expect(result).toEqual({ status: 'published' })
+  })
+
   it('extracts error messages from json payloads', async () => {
     vi.stubGlobal(
       'fetch',
@@ -122,6 +149,31 @@ describe('api client core', () => {
         })
         .send(),
     ).rejects.toThrow('服务繁忙')
+  })
+
+  it('extracts standardized api envelope error with trace id', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        createJsonResponse(500, {
+          code: 500,
+          message: 'Internal server error',
+          data: null,
+          timestamp: '2026-04-17T12:00:00.000Z',
+          traceId: 'trace-envelope-error',
+        }),
+      ),
+    )
+
+    await expect(
+      defaultApiClient
+        .createMethod({
+          apiBaseUrl: 'http://localhost:5577',
+          pathname: '/broken',
+          fallbackErrorMessage: '读取失败',
+        })
+        .send(),
+    ).rejects.toThrow('Internal server error (traceId: trace-envelope-error)')
   })
 
   it('preserves transport errors from fetch', async () => {

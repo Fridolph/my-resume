@@ -16,6 +16,7 @@ import {
 } from '@nestjs/common'
 import type { Response } from 'express'
 
+import { SkipResponseEnvelope } from '../../common/decorators/skip-response-envelope.decorator'
 import { RequireCapability } from '../auth/decorators/require-capability.decorator'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RoleCapabilitiesGuard } from '../auth/guards/role-capabilities.guard'
@@ -109,6 +110,7 @@ export class ResumeController {
    * @returns Promise<void>
    */
   @Get('published/export/markdown')
+  @SkipResponseEnvelope()
   async exportPublishedResumeMarkdown(
     @Query('locale') localeQuery: string | undefined,
     @Res() response: Response,
@@ -142,6 +144,7 @@ export class ResumeController {
    * @returns Promise<void>
    */
   @Get('published/export/pdf')
+  @SkipResponseEnvelope()
   async exportPublishedResumePdf(
     @Query('locale') localeQuery: string | undefined,
     @Res() response: Response,

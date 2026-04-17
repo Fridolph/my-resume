@@ -32,6 +32,32 @@ type AlovaMethodWithMeta = Method<any> & {
   meta?: ApiClientMethodMeta
 }
 
+interface ApiResponseEnvelopeLike<T = unknown> {
+  code: number
+  data: T
+  message: string
+  timestamp: string
+  traceId: string
+}
+
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+function isApiResponseEnvelopeLike(value: unknown): value is ApiResponseEnvelopeLike {
+  if (!isObjectRecord(value)) {
+    return false
+  }
+
+  return (
+    typeof value.code === 'number' &&
+    typeof value.message === 'string' &&
+    'data' in value &&
+    typeof value.timestamp === 'string' &&
+    typeof value.traceId === 'string'
+  )
+}
+
 function normalizeMethod(method: HttpMethod | undefined): HttpMethod {
   return (method ?? 'GET').toUpperCase()
 }
@@ -111,7 +137,13 @@ async function parseResponsePayload(
   const contentType = response.headers.get('content-type') ?? ''
 
   if (contentType.includes('application/json')) {
-    return response.json()
+    const payload = (await response.json()) as unknown
+    // 兼容 server 统一响应契约，默认对 json 自动解包到 data
+    if (isApiResponseEnvelopeLike(payload)) {
+      return payload.data
+    }
+
+    return payload
   }
 
   const textPayload = await response.text()
@@ -136,8 +168,11 @@ async function resolveErrorMessage(
 
     if (contentType.includes('application/json')) {
       const payload = (await response.json()) as {
+        code?: number
+        data?: unknown
         error?: string
         message?: string | string[]
+        traceId?: string
       }
 
       if (typeof payload.error === 'string' && payload.error.trim()) {
@@ -156,6 +191,10 @@ async function resolveErrorMessage(
       }
 
       if (typeof payload.message === 'string' && payload.message.trim()) {
+        if (typeof payload.traceId === 'string' && payload.traceId.trim()) {
+          return `${payload.message} (traceId: ${payload.traceId})`
+        }
+
         return payload.message
       }
     }
@@ -268,7 +307,7 @@ function createMethod<T>(input: ApiRequestInput<T>): ApiClientMethod<T> {
 }
 
 /**
- * 默认 API 客户端：只负责创建 Method，供 Promise facade 与官方 hooks 共用
+ * 默认 API 客户端：只负责创建 Method，供 SSR await 与 CSR hooks 共用
  */
 export const defaultApiClient = {
   alova: alovaInstance,
