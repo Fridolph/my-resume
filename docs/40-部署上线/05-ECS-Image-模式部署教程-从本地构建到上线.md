@@ -186,6 +186,22 @@ docker compose -f /opt/my-resume/.deploy-runtime/current/compose.prod.yml \
 
 > 说明：仓库名前缀必须全小写；`--base-image` 仅用于本地构建阶段，不影响 ECS 的 image 模式发布逻辑。
 
+### Q5：`buildx` 仍反复拉取 Docker Hub 导致超时
+
+部分网络环境下，`docker buildx` 的 builder 容器会再次访问 Docker Hub 获取元数据，即使已本地 `docker pull` 也可能超时。  
+这时建议切换到脚本的 `engine` 模式（`docker build + docker push`）：
+
+```bash
+./deploy/ecs/build-and-push-images.sh \
+  --tag v2.2.0 \
+  --image-prefix ghcr.io/<your-user-or-org>/my-resume \
+  --platform linux/amd64 \
+  --engine-build \
+  --base-image docker.1ms.run/library/node:22-slim
+```
+
+> 本项目在 `v2.2.0` 发布阶段已用该模式完成本地构建与推送验证。
+
 ---
 
 ## 8. 与 CI/CD 的关系
