@@ -387,13 +387,25 @@ healthcheck_url() {
 curl_check() {
   local url="$1"
   local label="$2"
+  local max_seconds="${3:-${HEALTHCHECK_MAX_SECONDS:-120}}"
+  local interval_seconds="${4:-${HEALTHCHECK_INTERVAL_SECONDS:-3}}"
+  local started_at elapsed
 
-  if curl --fail --silent --show-error --max-time 20 "$url" >/dev/null; then
-    log "Healthcheck passed: $label -> $url"
-    return 0
-  fi
+  started_at=$(date +%s)
 
-  die "Healthcheck failed: $label -> $url"
+  while true; do
+    if curl --fail --silent --show-error --max-time 20 "$url" >/dev/null; then
+      log "Healthcheck passed: $label -> $url"
+      return 0
+    fi
+
+    elapsed=$(( $(date +%s) - started_at ))
+    if (( elapsed >= max_seconds )); then
+      die "Healthcheck failed after ${elapsed}s: $label -> $url"
+    fi
+
+    sleep "$interval_seconds"
+  done
 }
 
 verify_acme_challenge() {
