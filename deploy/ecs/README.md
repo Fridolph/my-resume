@@ -116,6 +116,19 @@ DEPLOY_ROOT=/opt/my-resume ./deploy/ecs/deploy-latest-tag.sh
   --platform linux/amd64
 ```
 
+也支持显式三端镜像仓库（适合 server/web/admin 分仓）：
+
+```bash
+./deploy/ecs/build-and-push-images.sh \
+  --tag v2.1.0 \
+  --server-image <registry>/my-resume-server \
+  --web-image <registry>/my-resume-web \
+  --admin-image <registry>/my-resume-admin \
+  --public-api-base-url https://api-resume.example.com \
+  --web-server-api-base-url http://server:5577 \
+  --platform linux/amd64
+```
+
 ### 4.2 ECS 拉取并启动
 
 `release.sh` 在 `DEPLOY_MODE=image` 下会自动执行：
@@ -124,6 +137,25 @@ DEPLOY_ROOT=/opt/my-resume ./deploy/ecs/deploy-latest-tag.sh
 2. `docker compose up -d --no-build --remove-orphans`
 
 无需再 `--build`。
+
+### 4.3 本地一键：版本对齐 + 构建推送 + ECS 发布
+
+```bash
+./deploy/ecs/release-from-local.sh \
+  --version 2.2.4 \
+  --stack-env ./.env.stack.local \
+  --ecs-host <ecs-ip-or-domain> \
+  --ecs-user root \
+  --ecs-port 22
+```
+
+说明：
+
+- `--version 2.2.4` 会自动对齐为发布 tag `v2.2.4`
+- 脚本会保证发布 tag 与镜像 tag 一致（默认 `IMAGE_TAG=v2.2.4` 语义）
+- 若 tag 不存在，可自动创建并 push
+- 本地先构建推送镜像，再通过 SSH 调 ECS `release.sh`
+- 发布后默认会做公网域名健康检查（可加 `--skip-public-check`）
 
 ---
 

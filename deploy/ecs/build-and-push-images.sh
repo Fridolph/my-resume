@@ -7,6 +7,9 @@ REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
 
 TAG=''
 IMAGE_PREFIX=''
+SERVER_IMAGE=''
+WEB_IMAGE=''
+ADMIN_IMAGE=''
 PLATFORM='linux/amd64'
 PUSH='1'
 DRY_RUN='0'
@@ -22,6 +25,10 @@ Usage:
   ./deploy/ecs/build-and-push-images.sh \
     --tag v2.1.0 \
     --image-prefix ghcr.io/<user-or-org>/my-resume \
+    # 或显式：
+    # --server-image ghcr.io/<user-or-org>/my-resume-server \
+    # --web-image ghcr.io/<user-or-org>/my-resume-web \
+    # --admin-image ghcr.io/<user-or-org>/my-resume-admin \
     [--platform linux/amd64] \
     [--engine-build] \
     [--builder-name my-resume-builder] \
@@ -32,10 +39,13 @@ Usage:
 
 Options:
   --tag           镜像 tag（必填）
-  --image-prefix  镜像前缀（必填，必须全小写），会自动推导：
+  --image-prefix  镜像前缀（可选，必须全小写），会自动推导：
                   <prefix>/server:<tag>
                   <prefix>/web:<tag>
                   <prefix>/admin:<tag>
+  --server-image  显式 server 镜像仓库（与 web/admin 一起使用）
+  --web-image     显式 web 镜像仓库（与 server/admin 一起使用）
+  --admin-image   显式 admin 镜像仓库（与 server/web 一起使用）
   --platform      默认 linux/amd64
   --engine-build  使用 docker build + docker push（绕过 buildx 网络问题）
   --builder-name  可选，buildx builder 名称（如 default）
@@ -57,6 +67,18 @@ while [[ $# -gt 0 ]]; do
       ;;
     --image-prefix)
       IMAGE_PREFIX="${2%/}"
+      shift 2
+      ;;
+    --server-image)
+      SERVER_IMAGE="${2%/}"
+      shift 2
+      ;;
+    --web-image)
+      WEB_IMAGE="${2%/}"
+      shift 2
+      ;;
+    --admin-image)
+      ADMIN_IMAGE="${2%/}"
       shift 2
       ;;
     --platform)
@@ -103,27 +125,53 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ -z "$TAG" || -z "$IMAGE_PREFIX" ]]; then
+if [[ -z "$TAG" ]]; then
   usage
   exit 1
 fi
 
-LOWER_IMAGE_PREFIX=$(printf '%s' "$IMAGE_PREFIX" | tr '[:upper:]' '[:lower:]')
-if [[ "$IMAGE_PREFIX" != "$LOWER_IMAGE_PREFIX" ]]; then
-  echo "image-prefix must be lowercase: $IMAGE_PREFIX" >&2
-  echo "Try: --image-prefix $LOWER_IMAGE_PREFIX" >&2
-  exit 1
-fi
-
-if ! command -v docker >/dev/null 2>&1; then
-  echo "docker is required." >&2
-  exit 1
-fi
-
-if [[ "$ENGINE_BUILD" != '1' ]]; then
-  if ! docker buildx version >/dev/null 2>&1; then
-    echo "docker buildx is required (Docker Desktop 4+)." >&2
+if [[ -n "$IMAGE_PREFIX" ]]; then
+  LOWER_IMAGE_PREFIX=$(printf '%s' "$IMAGE_PREFIX" | tr '[:upper:]' '[:lower:]')
+  if [[ "$IMAGE_PREFIX" != "$LOWER_IMAGE_PREFIX" ]]; then
+    echo "image-prefix must be lowercase: $IMAGE_PREFIX" >&2
+    echo "Try: --image-prefix $LOWER_IMAGE_PREFIX" >&2
     exit 1
+  fi
+fi
+
+EXPLICIT_IMAGE_ARGS=0
+if [[ -n "$SERVER_IMAGE" || -n "$WEB_IMAGE" || -n "$ADMIN_IMAGE" ]]; then
+  EXPLICIT_IMAGE_ARGS=1
+fi
+
+if [[ "$EXPLICIT_IMAGE_ARGS" == '1' && -n "$IMAGE_PREFIX" ]]; then
+  echo "--image-prefix and explicit images cannot be used together." >&2
+  exit 1
+fi
+
+if [[ "$EXPLICIT_IMAGE_ARGS" == '1' ]]; then
+  if [[ -z "$SERVER_IMAGE" || -z "$WEB_IMAGE" || -z "$ADMIN_IMAGE" ]]; then
+    echo "When using explicit images, --server-image/--web-image/--admin-image are all required." >&2
+    exit 1
+  fi
+else
+  if [[ -z "$IMAGE_PREFIX" ]]; then
+    echo "Either --image-prefix OR explicit --server-image/--web-image/--admin-image is required." >&2
+    exit 1
+  fi
+fi
+
+if [[ "$DRY_RUN" != '1' ]]; then
+  if ! command -v docker >/dev/null 2>&1; then
+    echo "docker is required." >&2
+    exit 1
+  fi
+
+  if [[ "$ENGINE_BUILD" != '1' ]]; then
+    if ! docker buildx version >/dev/null 2>&1; then
+      echo "docker buildx is required (Docker Desktop 4+)." >&2
+      exit 1
+    fi
   fi
 fi
 
@@ -144,13 +192,24 @@ if [[ "$ENGINE_BUILD" != '1' ]]; then
   fi
 fi
 
-SERVER_REF="${IMAGE_PREFIX}/server:${TAG}"
-WEB_REF="${IMAGE_PREFIX}/web:${TAG}"
-ADMIN_REF="${IMAGE_PREFIX}/admin:${TAG}"
+if [[ "$EXPLICIT_IMAGE_ARGS" == '1' ]]; then
+  SERVER_REF="${SERVER_IMAGE}:${TAG}"
+  WEB_REF="${WEB_IMAGE}:${TAG}"
+  ADMIN_REF="${ADMIN_IMAGE}:${TAG}"
+else
+  SERVER_REF="${IMAGE_PREFIX}/server:${TAG}"
+  WEB_REF="${IMAGE_PREFIX}/web:${TAG}"
+  ADMIN_REF="${IMAGE_PREFIX}/admin:${TAG}"
+fi
 
 echo "Building images with:"
 echo "  TAG            = $TAG"
-echo "  IMAGE_PREFIX   = $IMAGE_PREFIX"
+if [[ "$EXPLICIT_IMAGE_ARGS" == '1' ]]; then
+  echo "  IMAGE_MODE     = explicit"
+else
+  echo "  IMAGE_MODE     = prefix"
+  echo "  IMAGE_PREFIX   = $IMAGE_PREFIX"
+fi
 echo "  PLATFORM       = $PLATFORM"
 if [[ "$ENGINE_BUILD" == '1' ]]; then
   echo "  BUILD_MODE     = engine"
