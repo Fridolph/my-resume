@@ -183,6 +183,92 @@ resolve_ai_runtime_env() {
   esac
 }
 
+resolve_deploy_mode() {
+  local mode
+
+  mode=$(printf '%s' "${DEPLOY_MODE:-}" | tr '[:upper:]' '[:lower:]')
+
+  if [[ -z "$mode" ]]; then
+    if [[ -n "${IMAGE_REPOSITORY_PREFIX:-}" || -n "${SERVER_IMAGE:-}" || -n "${WEB_IMAGE:-}" || -n "${ADMIN_IMAGE:-}" ]]; then
+      mode='image'
+    else
+      mode='build'
+    fi
+  fi
+
+  case "$mode" in
+    build | image)
+      DEPLOY_MODE="$mode"
+      export DEPLOY_MODE
+      ;;
+    *)
+      die "Unsupported DEPLOY_MODE: ${DEPLOY_MODE:-<empty>} (allowed: build | image)"
+      ;;
+  esac
+}
+
+resolve_image_references() {
+  local release_tag="$1"
+  local normalized_prefix
+  local image_tag
+
+  normalized_prefix="${IMAGE_REPOSITORY_PREFIX:-}"
+  normalized_prefix="${normalized_prefix%/}"
+
+  if [[ -z "${SERVER_IMAGE:-}" && -n "$normalized_prefix" ]]; then
+    SERVER_IMAGE="$normalized_prefix/server"
+  fi
+  if [[ -z "${WEB_IMAGE:-}" && -n "$normalized_prefix" ]]; then
+    WEB_IMAGE="$normalized_prefix/web"
+  fi
+  if [[ -z "${ADMIN_IMAGE:-}" && -n "$normalized_prefix" ]]; then
+    ADMIN_IMAGE="$normalized_prefix/admin"
+  fi
+
+  require_vars SERVER_IMAGE WEB_IMAGE ADMIN_IMAGE
+
+  image_tag="${IMAGE_TAG:-$release_tag}"
+
+  IMAGE_TAG="$image_tag"
+  SERVER_IMAGE_REF="${SERVER_IMAGE}:${image_tag}"
+  WEB_IMAGE_REF="${WEB_IMAGE}:${image_tag}"
+  ADMIN_IMAGE_REF="${ADMIN_IMAGE}:${image_tag}"
+
+  export IMAGE_TAG SERVER_IMAGE_REF WEB_IMAGE_REF ADMIN_IMAGE_REF
+}
+
+docker_registry_login_if_configured() {
+  local registry_host
+
+  if [[ "${DEPLOY_MODE:-build}" != 'image' ]]; then
+    return 0
+  fi
+
+  registry_host="${REGISTRY_HOST:-}"
+
+  if [[ -z "$registry_host" && -n "${SERVER_IMAGE:-}" ]]; then
+    registry_host="${SERVER_IMAGE%%/*}"
+  fi
+
+  if [[ -z "${REGISTRY_USERNAME:-}" || -z "${REGISTRY_PASSWORD:-}" ]]; then
+    if [[ -n "$registry_host" ]]; then
+      log "Registry credentials not configured. Assuming docker is already logged in: $registry_host"
+    fi
+    return 0
+  fi
+
+  if [[ -z "$registry_host" ]]; then
+    die "REGISTRY_HOST is required when REGISTRY_USERNAME / REGISTRY_PASSWORD are provided"
+  fi
+
+  log "Logging in to image registry: $registry_host"
+  if [[ "$(id -u)" -eq 0 ]]; then
+    printf '%s\n' "$REGISTRY_PASSWORD" | docker login "$registry_host" -u "$REGISTRY_USERNAME" --password-stdin >/dev/null
+  else
+    printf '%s\n' "$REGISTRY_PASSWORD" | sudo docker login "$registry_host" -u "$REGISTRY_USERNAME" --password-stdin >/dev/null
+  fi
+}
+
 write_runtime_env_file() {
   local output_path="$1"
 

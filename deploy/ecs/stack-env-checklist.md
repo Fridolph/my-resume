@@ -1,153 +1,161 @@
-# `stack.env.local` 服务器填写清单
+# `stack.env.local` 服务器填写清单（Image 模式优先）
 
-这份清单配合 `/Users/fri/Desktop/personal/my-resume/deploy/templates/stack.env.example:1` 使用，目标是帮助你在 ECS 上快速填好 `/opt/my-resume/.deploy-runtime/shared/config/stack.env.local`，并避免因为漏项导致 `release.sh` 失败。
-
-## 文件位置
-
-服务器上的正式配置文件：
+本清单配合 `deploy/templates/stack.env.example` 使用，目标是在 ECS 上正确填写：
 
 ```bash
 /opt/my-resume/.deploy-runtime/shared/config/stack.env.local
 ```
 
-建议先复制模板：
+> 兼容旧路径：`/opt/my-resume/shared/config/stack.env.local`
+
+---
+
+## 1) 文件准备
 
 ```bash
-cp /opt/my-resume/deploy/templates/stack.env.example /opt/my-resume/.deploy-runtime/shared/config/stack.env.local
+cp /opt/my-resume/deploy/templates/stack.env.example \
+  /opt/my-resume/.deploy-runtime/shared/config/stack.env.local
 ```
 
-如果你的 ECS 已经使用旧目录，也可以继续放在：
+---
 
-```bash
-/opt/my-resume/shared/config/stack.env.local
-```
+## 2) 必填项（所有模式）
 
-脚本会优先读取 `.deploy-runtime/shared/config/stack.env.local`，然后兼容读取 `shared/config/stack.env.local`。
-
-## 必填项
-
-### Git 与部署根
+### Git 与部署目录
 
 - `REPO_URL`
-  - 用途：服务器上的 repo cache 首次 clone 来源
-  - 示例：`https://github.com/<your-name>/my-resume.git`
+  - 服务器上 repo-cache 的 clone 来源
+  - 示例：`https://github.com/Fridolph/my-resume.git`
 
 - `DEPLOY_ROOT`
-  - 用途：部署根目录
-  - 默认：`/opt/my-resume`
-  - 如果你当前服务器准备用 `/root/my-resume`，这里必须显式填：`DEPLOY_ROOT=/root/my-resume`
+  - 默认 `/opt/my-resume`
+  - 如果你实际在 `/root/my-resume`，必须显式写：
+    `DEPLOY_ROOT=/root/my-resume`
 
 ### 域名
 
-- `ROOT_DOMAIN`
-  - 示例：`fridolph.top`
-
-- `RESUME_DOMAIN`
-  - 示例：`resume.fridolph.top`
-  - 对应公开站 `web`
-
-- `ADMIN_DOMAIN`
-  - 示例：`admin-resume.fridolph.top`
-  - 对应后台 `admin`
-
-- `API_DOMAIN`
-  - 示例：`api-resume.fridolph.top`
-  - 对应 Nest 服务 `server`
+- `ROOT_DOMAIN`（例：`fridolph.top`）
+- `RESUME_DOMAIN`（例：`resume.fridolph.top`）
+- `ADMIN_DOMAIN`（例：`admin-resume.fridolph.top`）
+- `API_DOMAIN`（例：`api-resume.fridolph.top`）
 
 ### HTTPS
 
 - `LETSENCRYPT_EMAIL`
-  - 用途：Certbot 注册邮箱
-  - 示例：`ops@fridolph.top`
+- `CERTBOT_KEY_TYPE`（建议 `ecdsa`）
+- `CERTBOT_WEBROOT`（建议 `/var/www/my-resume-certbot`，不要放 `/root`）
 
-- `CERTBOT_CERT_NAME`
-  - 用途：Let's Encrypt 证书名
-  - 默认：不填则使用 `RESUME_DOMAIN`
-  - 建议：首次可先不填
+### 鉴权与 AI
 
-- `CERTBOT_KEY_TYPE`
-  - 用途：Let's Encrypt 证书密钥类型
-  - 默认：`ecdsa`
-  - 如果已有证书是 ECDSA，保持 `ecdsa`，避免 Certbot 误判为从 ECDSA 切到 RSA
-
-- `CERTBOT_WEBROOT`
-  - 用途：ACME challenge 文件目录
-  - 默认：`/var/www/my-resume-certbot`
-  - 不建议放到 `/root` 下，否则 Nginx worker 用户可能没有目录穿透权限，导致 challenge 返回 `403`
-
-### 鉴权
-
-- `JWT_SECRET`
-  - 用途：服务端 JWT 签名密钥
-  - 建议：长度至少 32 位，使用随机字符串
-
-### AI Provider
-
+- `JWT_SECRET`（建议 32 位以上随机字符串）
 - `AI_PROVIDER`
-  - 本轮建议固定：`qiniu`
 
-如果 `AI_PROVIDER=qiniu`，以下三项必填：
+若 `AI_PROVIDER=qiniu`，还需：
 
 - `QINIU_AI_API_KEY`
 - `QINIU_AI_BASE_URL`
 - `QINIU_AI_MODEL`
 
-可选：
+---
 
-- `QINIU_AI_CHAT_MODEL`
-- `QINIU_AI_EMBEDDING_MODEL`
+## 3) 镜像部署必填项（推荐）
 
-## 推荐填写示例
+### 切换为 image 模式
+
+```env
+DEPLOY_MODE=image
+```
+
+### 镜像仓库配置（推荐用前缀）
+
+```env
+IMAGE_REPOSITORY_PREFIX=ghcr.io/<your-user-or-org>/my-resume
+```
+
+脚本会自动推导：
+
+- `.../server`
+- `.../web`
+- `.../admin`
+
+### 镜像 Tag
+
+- 通常不填 `IMAGE_TAG`，默认使用 `release.sh <tag>` 传入值（如 `v2.1.0`）
+- 若你要固定镜像 tag，可显式设置：
+
+```env
+IMAGE_TAG=v2.1.0
+```
+
+### 可选：自动 docker login
+
+如果你希望 `release.sh` 自动登录镜像仓库，可再填：
+
+```env
+REGISTRY_HOST=ghcr.io
+REGISTRY_USERNAME=<username>
+REGISTRY_PASSWORD=<token>
+```
+
+> 不填也可以，但需要你在 ECS 上先手动 `docker login` 一次。
+
+---
+
+## 4) 推荐最小示例（image 模式）
 
 ```env
 REPO_URL=https://github.com/Fridolph/my-resume.git
+DEPLOY_ROOT=/root/my-resume
+
+DEPLOY_MODE=image
+IMAGE_REPOSITORY_PREFIX=ghcr.io/fridolph/my-resume
+
 ROOT_DOMAIN=fridolph.top
 RESUME_DOMAIN=resume.fridolph.top
 ADMIN_DOMAIN=admin-resume.fridolph.top
 API_DOMAIN=api-resume.fridolph.top
-LETSENCRYPT_EMAIL=ops@fridolph.top
+
+LETSENCRYPT_EMAIL=249121486@qq.com
+CERTBOT_KEY_TYPE=ecdsa
 CERTBOT_WEBROOT=/var/www/my-resume-certbot
+
 JWT_SECRET=replace-with-a-long-random-secret
+
 AI_PROVIDER=qiniu
 QINIU_AI_API_KEY=replace-with-real-key
 QINIU_AI_BASE_URL=https://api.qnaigc.com/v1
 QINIU_AI_MODEL=deepseek-v3
 ```
 
-## 发布前自查
+---
 
-在服务器上执行：
+## 5) 发布前自查
+
+先渲染配置（不启动服务）：
 
 ```bash
 cd /opt/my-resume
 ./deploy/ecs/render-config.sh --tag v2.1.0
 ```
 
-如果配置无误，会看到成功渲染：
+确认输出：
 
 - `.deploy-runtime/release-snapshots/v2.1.0/.env`
 - `.deploy-runtime/release-snapshots/v2.1.0/compose.prod.yml`
 - `.deploy-runtime/shared/nginx/my-resume.http.conf`
 - `.deploy-runtime/shared/nginx/my-resume.conf`
 
-## 常见漏项
+再发布：
 
-- 域名没有提前解析到 ECS，导致 Certbot 申请失败
-- `JWT_SECRET` 太短或仍是占位值
-- `QINIU_AI_API_KEY` 未填，`release.sh` 会直接失败
-- `REPO_URL` 写成 SSH 地址但服务器未配置 deploy key
-- `DEPLOY_ROOT` 改了，但实际目录和脚本运行位置不一致
+```bash
+./deploy/ecs/release.sh v2.1.0
+```
 
-## 与 GitHub Actions 对应的 Secrets
+---
 
-如果后续启用 `/Users/fri/Desktop/personal/my-resume/.github/workflows/deploy-ecs.yml:1`，建议在仓库 `Settings -> Secrets and variables -> Actions` 中补这些 Secrets：
+## 6) 常见问题
 
-- `ECS_HOST`
-- `ECS_PORT`
-- `ECS_USER`
-- `ECS_SSH_PRIVATE_KEY`
-
-说明：
-
-- `stack.env.local` 仍然保存在 ECS 服务器本地，不建议把业务运行时密钥搬进 GitHub Actions
-- GitHub Actions 只负责 SSH 到服务器并执行 `release.sh`
+- **镜像拉取失败**：先在 ECS 执行 `docker login ghcr.io`，并确认 tag 已推送。
+- **证书申请失败**：先检查 3 个域名 DNS 是否已解析到 ECS。
+- **仍在服务器构建**：确认 `DEPLOY_MODE=image` 已生效。
+- **路径不一致**：`DEPLOY_ROOT` 必须与你实际仓库目录一致。

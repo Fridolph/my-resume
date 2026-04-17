@@ -38,6 +38,11 @@ require_commands python3
 require_vars ROOT_DOMAIN RESUME_DOMAIN ADMIN_DOMAIN API_DOMAIN LETSENCRYPT_EMAIL JWT_SECRET AI_PROVIDER
 validate_domain_layout
 resolve_ai_runtime_env
+resolve_deploy_mode
+
+if [[ "$DEPLOY_MODE" == 'image' ]]; then
+  resolve_image_references "$TAG"
+fi
 
 RELEASE_NAME=$(sanitize_release_name "$TAG")
 RELEASE_DIR=${RELEASE_DIR:-"$DEPLOY_RUNTIME_ROOT/release-snapshots/$RELEASE_NAME"}
@@ -63,7 +68,11 @@ sudo_cmd mkdir -p "$CERTBOT_WEBROOT"
 sudo_cmd chmod 755 "$CERTBOT_WEBROOT"
 
 write_runtime_env_file "$RELEASE_DIR/.env"
-render_template "$TEMPLATE_DIR/compose.prod.yml.tpl" "$RELEASE_DIR/compose.prod.yml"
+if [[ "$DEPLOY_MODE" == 'image' ]]; then
+  render_template "$TEMPLATE_DIR/compose.prod.image.yml.tpl" "$RELEASE_DIR/compose.prod.yml"
+else
+  render_template "$TEMPLATE_DIR/compose.prod.yml.tpl" "$RELEASE_DIR/compose.prod.yml"
+fi
 render_template "$TEMPLATE_DIR/nginx.http.conf.tpl" "$NGINX_HTTP_CONFIG"
 render_template "$TEMPLATE_DIR/nginx.conf.tpl" "$NGINX_SSL_CONFIG"
 
@@ -72,3 +81,4 @@ log "  env      -> $RELEASE_DIR/.env"
 log "  compose  -> $RELEASE_DIR/compose.prod.yml"
 log "  nginx80  -> $NGINX_HTTP_CONFIG"
 log "  nginx443 -> $NGINX_SSL_CONFIG"
+log "  mode     -> $DEPLOY_MODE"

@@ -1,8 +1,6 @@
 services:
   server:
-    build:
-      context: .
-      dockerfile: apps/server/Dockerfile
+    image: __SERVER_IMAGE_REF__
     env_file:
       - ./.env
     environment:
@@ -30,12 +28,7 @@ services:
       start_period: 20s
 
   web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
-      args:
-        NEXT_PUBLIC_API_BASE_URL: https://__API_DOMAIN__
-        RESUME_API_BASE_URL: http://server:5577
+    image: __WEB_IMAGE_REF__
     env_file:
       - ./.env
     environment:
@@ -64,11 +57,7 @@ services:
       start_period: 30s
 
   admin:
-    build:
-      context: .
-      dockerfile: apps/admin/Dockerfile
-      args:
-        NEXT_PUBLIC_API_BASE_URL: https://__API_DOMAIN__
+    image: __ADMIN_IMAGE_REF__
     env_file:
       - ./.env
     environment:
