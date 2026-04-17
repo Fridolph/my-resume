@@ -14,6 +14,7 @@
 - `bootstrap.sh`：安装 Docker / Nginx / Certbot 并初始化部署目录
 - `render-config.sh`：渲染 `.env`、`compose.prod.yml` 与 Nginx 配置
 - `release.sh <tag>`：发布指定版本（自动识别 build/image）
+- `deploy-latest-tag.sh`：同步 `main`+标签后，自动发布最新 tag 并执行验收
 - `rollback.sh [tag]`：回滚到上一版或指定 tag
 - `build-and-push-images.sh`：本地构建并推送三端镜像（image 模式专用）
 - `stack-env-checklist.md`：`stack.env.local` 填写清单
@@ -83,6 +84,19 @@ IMAGE_REPOSITORY_PREFIX=ghcr.io/<your-user-or-org>/my-resume
 cd /opt/my-resume
 ./deploy/ecs/release.sh v2.1.0
 ```
+
+### 3.4 一键发布最新标签并验收
+
+```bash
+cd /opt/my-resume
+DEPLOY_ROOT=/opt/my-resume ./deploy/ecs/deploy-latest-tag.sh
+```
+
+可选环境变量：
+
+- `TARGET_BRANCH`：默认 `main`
+- `TAG_PATTERN`：默认 `v*`（按语义版本排序取最新）
+- `SKIP_PUBLIC_CHECK=1`：仅做本机健康检查，不校验公网域名
 
 ---
 
