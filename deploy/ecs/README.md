@@ -111,6 +111,8 @@ DEPLOY_ROOT=/opt/my-resume ./deploy/ecs/deploy-latest-tag.sh
 ./deploy/ecs/build-and-push-images.sh \
   --tag v2.1.0 \
   --image-prefix ghcr.io/<your-user-or-org>/my-resume \
+  --public-api-base-url https://api-resume.example.com \
+  --web-server-api-base-url http://server:5577 \
   --platform linux/amd64
 ```
 

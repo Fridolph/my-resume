@@ -13,6 +13,8 @@ DRY_RUN='0'
 BUILDER_NAME='my-resume-builder'
 BASE_IMAGE=''
 ENGINE_BUILD='0'
+PUBLIC_API_BASE_URL=''
+WEB_SERVER_API_BASE_URL='http://server:5577'
 
 usage() {
   cat <<'EOF'
@@ -24,6 +26,8 @@ Usage:
     [--engine-build] \
     [--builder-name my-resume-builder] \
     [--base-image docker.1ms.run/library/node:22-slim] \
+    [--public-api-base-url https://api-resume.example.com] \
+    [--web-server-api-base-url http://server:5577] \
     [--load]
 
 Options:
@@ -36,6 +40,10 @@ Options:
   --engine-build  使用 docker build + docker push（绕过 buildx 网络问题）
   --builder-name  可选，buildx builder 名称（如 default）
   --base-image    可选，覆盖 Dockerfile 基础镜像（用于镜像加速）
+  --public-api-base-url
+                  可选，注入 web/admin 的 NEXT_PUBLIC_API_BASE_URL（生产必填）
+  --web-server-api-base-url
+                  可选，注入 web 的 RESUME_API_BASE_URL，默认 http://server:5577
   --load          本地 load，不 push（调试用）
   --dry-run       只打印命令
 EOF
@@ -65,6 +73,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --base-image)
       BASE_IMAGE="$2"
+      shift 2
+      ;;
+    --public-api-base-url)
+      PUBLIC_API_BASE_URL="$2"
+      shift 2
+      ;;
+    --web-server-api-base-url)
+      WEB_SERVER_API_BASE_URL="$2"
       shift 2
       ;;
     --load)
@@ -147,6 +163,10 @@ echo "  ADMIN_IMAGE    = $ADMIN_REF"
 if [[ -n "$BASE_IMAGE" ]]; then
   echo "  BASE_IMAGE     = $BASE_IMAGE"
 fi
+if [[ -n "$PUBLIC_API_BASE_URL" ]]; then
+  echo "  PUBLIC_API     = $PUBLIC_API_BASE_URL"
+fi
+echo "  WEB_SERVER_API = $WEB_SERVER_API_BASE_URL"
 
 if [[ "$PUSH" == '1' ]]; then
   PUBLISH_ARGS=(--push)
@@ -164,14 +184,24 @@ else
 fi
 
 if [[ "$ENGINE_BUILD" == '1' ]]; then
+  WEB_BUILD_ARGS=()
+  ADMIN_BUILD_ARGS=()
+
+  if [[ -n "$PUBLIC_API_BASE_URL" ]]; then
+    WEB_BUILD_ARGS+=(--build-arg "NEXT_PUBLIC_API_BASE_URL=$PUBLIC_API_BASE_URL")
+    ADMIN_BUILD_ARGS+=(--build-arg "NEXT_PUBLIC_API_BASE_URL=$PUBLIC_API_BASE_URL")
+  fi
+
+  WEB_BUILD_ARGS+=(--build-arg "RESUME_API_BASE_URL=$WEB_SERVER_API_BASE_URL")
+
   if [[ -n "$BASE_IMAGE" ]]; then
     run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/server/Dockerfile -t "$SERVER_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" .
-    run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/web/Dockerfile -t "$WEB_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" .
-    run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/admin/Dockerfile -t "$ADMIN_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" .
+    run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/web/Dockerfile -t "$WEB_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" "${WEB_BUILD_ARGS[@]}" .
+    run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/admin/Dockerfile -t "$ADMIN_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" "${ADMIN_BUILD_ARGS[@]}" .
   else
     run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/server/Dockerfile -t "$SERVER_REF" .
-    run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/web/Dockerfile -t "$WEB_REF" .
-    run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/admin/Dockerfile -t "$ADMIN_REF" .
+    run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/web/Dockerfile -t "$WEB_REF" "${WEB_BUILD_ARGS[@]}" .
+    run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/admin/Dockerfile -t "$ADMIN_REF" "${ADMIN_BUILD_ARGS[@]}" .
   fi
 
   if [[ "$PUSH" == '1' ]]; then
@@ -180,14 +210,24 @@ if [[ "$ENGINE_BUILD" == '1' ]]; then
     run_cmd docker push "$ADMIN_REF"
   fi
 else
+  WEB_BUILDX_ARGS=()
+  ADMIN_BUILDX_ARGS=()
+
+  if [[ -n "$PUBLIC_API_BASE_URL" ]]; then
+    WEB_BUILDX_ARGS+=(--build-arg "NEXT_PUBLIC_API_BASE_URL=$PUBLIC_API_BASE_URL")
+    ADMIN_BUILDX_ARGS+=(--build-arg "NEXT_PUBLIC_API_BASE_URL=$PUBLIC_API_BASE_URL")
+  fi
+
+  WEB_BUILDX_ARGS+=(--build-arg "RESUME_API_BASE_URL=$WEB_SERVER_API_BASE_URL")
+
   if [[ -n "$BASE_IMAGE" ]]; then
     run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/server/Dockerfile -t "$SERVER_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" "${PUBLISH_ARGS[@]}" .
-    run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/web/Dockerfile -t "$WEB_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" "${PUBLISH_ARGS[@]}" .
-    run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/admin/Dockerfile -t "$ADMIN_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" "${PUBLISH_ARGS[@]}" .
+    run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/web/Dockerfile -t "$WEB_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" "${WEB_BUILDX_ARGS[@]}" "${PUBLISH_ARGS[@]}" .
+    run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/admin/Dockerfile -t "$ADMIN_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" "${ADMIN_BUILDX_ARGS[@]}" "${PUBLISH_ARGS[@]}" .
   else
     run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/server/Dockerfile -t "$SERVER_REF" "${PUBLISH_ARGS[@]}" .
-    run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/web/Dockerfile -t "$WEB_REF" "${PUBLISH_ARGS[@]}" .
-    run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/admin/Dockerfile -t "$ADMIN_REF" "${PUBLISH_ARGS[@]}" .
+    run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/web/Dockerfile -t "$WEB_REF" "${WEB_BUILDX_ARGS[@]}" "${PUBLISH_ARGS[@]}" .
+    run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/admin/Dockerfile -t "$ADMIN_REF" "${ADMIN_BUILDX_ARGS[@]}" "${PUBLISH_ARGS[@]}" .
   fi
 fi
 
