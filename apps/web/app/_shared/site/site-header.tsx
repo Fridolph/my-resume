@@ -9,7 +9,6 @@ import { useEffect, useState } from 'react'
 import { DEFAULT_API_BASE_URL } from '@core/env'
 import { Link, usePathname, useRouter } from '@i18n/navigation'
 import { normalizeLocalePathname } from '@i18n/types'
-import { PublicSiteHeaderMobileMenu } from './public-site-header-mobile-menu'
 import type {
   IdleWindowCallbacks,
   PublicSiteHeaderProps,
@@ -24,6 +23,17 @@ const DeferredPublicSiteHeaderActions = dynamic(
   {
     ssr: false,
     loading: () => <HeaderActionsFallback />,
+  },
+)
+
+const DeferredPublicSiteHeaderMobileMenu = dynamic(
+  () =>
+    import('./public-site-header-mobile-menu').then(
+      (module) => module.PublicSiteHeaderMobileMenu,
+    ),
+  {
+    ssr: false,
+    loading: () => null,
   },
 )
 
@@ -55,6 +65,9 @@ export function PublicSiteHeader({
   locale,
 }: PublicSiteHeaderProps) {
   const isJsdom = typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent)
+  const [shouldLoadMobileMenu, setShouldLoadMobileMenu] = useState(
+    () => !deferActionsUntilIdle || isJsdom,
+  )
   const [shouldLoadDesktopActions, setShouldLoadDesktopActions] = useState(
     () => !deferActionsUntilIdle || isJsdom,
   )
@@ -97,6 +110,44 @@ export function PublicSiteHeader({
       }
     }
   }, [deferActionsUntilIdle, isJsdom, shouldLoadDesktopActions])
+
+  useEffect(() => {
+    if (
+      !deferActionsUntilIdle ||
+      shouldLoadMobileMenu ||
+      isJsdom ||
+      typeof window === 'undefined'
+    ) {
+      return
+    }
+
+    const mobileMediaQuery = window.matchMedia('(max-width: 639px)')
+    const markReady = () => {
+      if (!mobileMediaQuery.matches) {
+        return
+      }
+
+      setShouldLoadMobileMenu(true)
+    }
+
+    markReady()
+
+    if (shouldLoadMobileMenu) {
+      return
+    }
+
+    if (typeof mobileMediaQuery.addEventListener === 'function') {
+      mobileMediaQuery.addEventListener('change', markReady)
+      return () => {
+        mobileMediaQuery.removeEventListener('change', markReady)
+      }
+    }
+
+    mobileMediaQuery.addListener(markReady)
+    return () => {
+      mobileMediaQuery.removeListener(markReady)
+    }
+  }, [deferActionsUntilIdle, isJsdom, shouldLoadMobileMenu])
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/88 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/82">
@@ -156,7 +207,17 @@ export function PublicSiteHeader({
         <div
           className="ml-auto flex shrink-0 items-center justify-end sm:hidden"
           data-testid="public-site-mobile-menu">
-          <PublicSiteHeaderMobileMenu apiBaseUrl={apiBaseUrl} locale={locale} />
+          {shouldLoadMobileMenu ? (
+            <DeferredPublicSiteHeaderMobileMenu
+              apiBaseUrl={apiBaseUrl}
+              locale={locale}
+            />
+          ) : (
+            <MobileMenuFallback
+              ariaLabel={t('mobileMenuAriaLabel')}
+              onReady={() => setShouldLoadMobileMenu(true)}
+            />
+          )}
         </div>
 
         <div
@@ -216,5 +277,46 @@ function HeaderActionsFallback() {
         data-testid="public-site-header-action-skeleton"
       />
     </div>
+  )
+}
+
+function MobileMenuFallback({
+  ariaLabel,
+  onReady,
+}: {
+  ariaLabel: string
+  onReady: () => void
+}) {
+  return (
+    <button
+      aria-label={ariaLabel}
+      className={styles.headerActionTrigger}
+      data-testid="public-site-mobile-menu-trigger-fallback"
+      onClick={onReady}
+      onFocus={onReady}
+      onPointerEnter={onReady}
+      type="button">
+      <MenuIcon className="h-4 w-4" />
+    </button>
+  )
+}
+
+function MenuIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      fill="none"
+      height="16"
+      viewBox="0 0 24 24"
+      width="16">
+      <path
+        d="M4 7H20M4 12H20M4 17H20"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+    </svg>
   )
 }

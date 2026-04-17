@@ -190,7 +190,9 @@ function PublishedResumeHeroComponent({
                   <img
                     alt={t('hero.avatarFrontAlt', { name })}
                     className="h-full w-full object-cover"
-                    loading="lazy"
+                    decoding="async"
+                    fetchPriority="high"
+                    loading="eager"
                     src={hero.frontImageUrl}
                   />
                 </div>
@@ -198,6 +200,8 @@ function PublishedResumeHeroComponent({
                   <img
                     alt={t('hero.avatarBackAlt', { name })}
                     className="h-full w-full object-cover"
+                    decoding="async"
+                    fetchPriority="low"
                     loading="lazy"
                     src={hero.backImageUrl}
                   />

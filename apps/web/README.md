@@ -26,8 +26,8 @@
 
 ## 环境变量
 
-- `RESUME_API_BASE_URL`：服务端渲染时优先使用的后端地址
-- `NEXT_PUBLIC_API_BASE_URL`：兼容前后端统一配置的公开 API 地址
+- `NEXT_PUBLIC_API_BASE_URL`：客户端可见的公开 API 地址（浏览器请求默认使用它）
+- `RESUME_API_BASE_URL`：服务端渲染读取数据时可选的内部地址（仅服务端）
 - 默认回退：`http://localhost:5577`
 
 ## 当前阶段不做

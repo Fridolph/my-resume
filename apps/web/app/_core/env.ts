@@ -1,4 +1,9 @@
-export const DEFAULT_API_BASE_URL =
-  process.env.RESUME_API_BASE_URL ??
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  'http://localhost:5577'
+const DEFAULT_LOCAL_API_BASE_URL = 'http://localhost:5577'
+
+export const DEFAULT_PUBLIC_API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? DEFAULT_LOCAL_API_BASE_URL
+
+export const DEFAULT_SERVER_API_BASE_URL =
+  process.env.RESUME_API_BASE_URL ?? DEFAULT_PUBLIC_API_BASE_URL
+
+export const DEFAULT_API_BASE_URL = DEFAULT_PUBLIC_API_BASE_URL

@@ -1,10 +1,13 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
 
 import { buildServerEnvFilePaths } from './config/env-paths'
 import { DatabaseModule } from './database/database.module'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
+import { ApiExceptionFilter } from './common/filters/api-exception.filter'
+import { ResponseEnvelopeInterceptor } from './common/interceptors/response-envelope.interceptor'
 import { AiModule } from './modules/ai/ai.module'
 import { AuthModule } from './modules/auth/auth.module'
 import { ResumeModule } from './modules/resume/resume.module'
@@ -22,6 +25,16 @@ import { ResumeModule } from './modules/resume/resume.module'
     ResumeModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseEnvelopeInterceptor,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: ApiExceptionFilter,
+    },
+  ],
 })
 export class AppModule {}
