@@ -15,6 +15,7 @@ ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 COPY . .
 
 RUN pnpm install --frozen-lockfile
+RUN pnpm --filter "./packages/*" --if-present build
 RUN pnpm --filter @my-resume/admin build
 
 ENV NODE_ENV=production

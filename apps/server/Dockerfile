@@ -11,6 +11,7 @@ WORKDIR /app
 COPY . .
 
 RUN pnpm install --frozen-lockfile
+RUN pnpm --filter "./packages/*" --if-present build
 RUN pnpm --filter @my-resume/server build
 
 ENV NODE_ENV=production
