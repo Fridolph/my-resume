@@ -27,6 +27,7 @@
     "docker:up": "docker compose up --build",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
+    "deploy:ecs:one-click": "./deploy/ecs/release-from-local.sh",
     "test": "turbo run test",
     "test:unit": "pnpm build:shared && turbo run test --filter=@my-resume/server --filter=@my-resume/web --filter=@my-resume/admin --filter=@my-resume/api-client --filter=@my-resume/ui",
     "test:e2e": "pnpm --filter @my-resume/server test:e2e",
