@@ -26,6 +26,11 @@ require_commands git docker curl nginx certbot python3
 require_vars REPO_URL ROOT_DOMAIN RESUME_DOMAIN ADMIN_DOMAIN API_DOMAIN LETSENCRYPT_EMAIL JWT_SECRET AI_PROVIDER
 validate_domain_layout
 resolve_ai_runtime_env
+resolve_deploy_mode
+
+if [[ "$DEPLOY_MODE" == 'image' ]]; then
+  resolve_image_references "$TAG"
+fi
 
 RELEASE_NAME=$(sanitize_release_name "$TAG")
 RELEASE_DIR="$DEPLOY_ROOT/releases/$RELEASE_NAME"
@@ -96,10 +101,16 @@ sudo_cmd systemctl reload nginx
 ln -sfn "$RELEASE_DIR" "$CURRENT_LINK"
 printf '%s\n' "$RELEASE_DIR" >"$CURRENT_RELEASE_FILE"
 
-compose_cmd "$RELEASE_DIR/compose.prod.yml" "$RELEASE_DIR/.env" up -d --build --remove-orphans
+if [[ "$DEPLOY_MODE" == 'image' ]]; then
+  docker_registry_login_if_configured
+  compose_cmd "$RELEASE_DIR/compose.prod.yml" "$RELEASE_DIR/.env" pull
+  compose_cmd "$RELEASE_DIR/compose.prod.yml" "$RELEASE_DIR/.env" up -d --no-build --remove-orphans
+else
+  compose_cmd "$RELEASE_DIR/compose.prod.yml" "$RELEASE_DIR/.env" up -d --build --remove-orphans
+fi
 
 curl_check "$(healthcheck_url server)" "server"
 curl_check "$(healthcheck_url web)" "web"
 curl_check "$(healthcheck_url admin)" "admin"
 
-log "Release completed successfully: $TAG"
+log "Release completed successfully: $TAG (mode: $DEPLOY_MODE)"

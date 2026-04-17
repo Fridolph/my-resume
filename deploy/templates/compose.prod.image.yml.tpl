@@ -1,8 +1,6 @@
 services:
   server:
-    build:
-      context: .
-      dockerfile: apps/server/Dockerfile
+    image: __SERVER_IMAGE_REF__
     env_file:
       - ./.env
     environment:
@@ -22,7 +20,7 @@ services:
           'CMD',
           'node',
           '-e',
-          "fetch('http://127.0.0.1:5577/').then((response)=>{if(!response.ok)process.exit(1)}).catch(()=>process.exit(1))",
+          "fetch('http://127.0.0.1:5577/api').then((response)=>{if(!response.ok)process.exit(1)}).catch(()=>process.exit(1))",
         ]
       interval: 20s
       timeout: 10s
@@ -30,12 +28,7 @@ services:
       start_period: 20s
 
   web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
-      args:
-        NEXT_PUBLIC_API_BASE_URL: https://__API_DOMAIN__
-        RESUME_API_BASE_URL: http://server:5577
+    image: __WEB_IMAGE_REF__
     env_file:
       - ./.env
     environment:
@@ -56,7 +49,7 @@ services:
           'CMD',
           'node',
           '-e',
-          "fetch('http://127.0.0.1:5555/zh').then((response)=>{if(!response.ok)process.exit(1)}).catch(()=>process.exit(1))",
+          "fetch('http://127.0.0.1:5555/').then((response)=>{if(!response.ok)process.exit(1)}).catch(()=>process.exit(1))",
         ]
       interval: 20s
       timeout: 10s
@@ -64,11 +57,7 @@ services:
       start_period: 30s
 
   admin:
-    build:
-      context: .
-      dockerfile: apps/admin/Dockerfile
-      args:
-        NEXT_PUBLIC_API_BASE_URL: https://__API_DOMAIN__
+    image: __ADMIN_IMAGE_REF__
     env_file:
       - ./.env
     environment:
@@ -88,7 +77,7 @@ services:
           'CMD',
           'node',
           '-e',
-          "fetch('http://127.0.0.1:5566/zh').then((response)=>{if(!response.ok)process.exit(1)}).catch(()=>process.exit(1))",
+          "fetch('http://127.0.0.1:5566/login').then((response)=>{if(!response.ok)process.exit(1)}).catch(()=>process.exit(1))",
         ]
       interval: 20s
       timeout: 10s

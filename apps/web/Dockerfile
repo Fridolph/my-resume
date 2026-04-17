@@ -1,4 +1,5 @@
-FROM node:20-slim
+ARG BASE_IMAGE=node:22-slim
+FROM ${BASE_IMAGE}
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
