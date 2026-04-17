@@ -1,6 +1,7 @@
 services:
   server:
     image: __SERVER_IMAGE_REF__
+    command: ['node', 'apps/server/dist/src/main.js']
     env_file:
       - ./.env
     environment:
