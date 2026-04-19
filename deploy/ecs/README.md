@@ -14,6 +14,7 @@
 - `bootstrap.sh`：安装 Docker / Nginx / Certbot 并初始化部署目录
 - `render-config.sh`：渲染 `.env`、`compose.prod.yml` 与 Nginx 配置
 - `release.sh <tag>`：发布指定版本（自动识别 build/image）
+- `pre-release-port-cleanup.sh`：发布前清理旧项目残留容器占用端口
 - `deploy-latest-tag.sh`：同步 `main`+标签后，自动发布最新 tag 并执行验收
 - `rollback.sh [tag]`：回滚到上一版或指定 tag
 - `build-and-push-images.sh`：本地构建并推送三端镜像（image 模式专用）
@@ -135,6 +136,7 @@ DEPLOY_ROOT=/opt/my-resume ./deploy/ecs/deploy-latest-tag.sh
 
 1. `docker compose pull`
 2. `docker compose up -d --no-build --remove-orphans`
+3. 发布前自动清理旧 compose 项目占用端口（5577/5555/5566）
 
 无需再 `--build`。
 
@@ -187,6 +189,7 @@ docker compose up -d --build --remove-orphans
 
 - **拉不到镜像**：先在 ECS 上 `docker login ghcr.io`
 - **还是在构建**：检查 `DEPLOY_MODE=image` 是否生效
+- **端口冲突（5577/5555/5566）**：`release.sh` 会自动执行 `pre-release-port-cleanup.sh` 清理旧项目残留容器
 - **证书申请失败**：先检查 DNS 是否全部解析到 ECS
 - **2核2G 机器卡死**：避免 build 模式，统一改 image 模式
 
