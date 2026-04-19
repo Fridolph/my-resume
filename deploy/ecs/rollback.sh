@@ -51,6 +51,12 @@ fi
 ln -sfn "$TARGET_RELEASE" "$CURRENT_LINK"
 printf '%s\n' "$TARGET_RELEASE" >"$CURRENT_RELEASE_FILE"
 
+cleanup_args=(--stack-env "$STACK_ENV_FILE")
+if [[ "$DRY_RUN" == '1' ]]; then
+  cleanup_args+=(--dry-run)
+fi
+run_cmd "$SCRIPT_DIR/pre-release-port-cleanup.sh" "${cleanup_args[@]}"
+
 compose_cmd "$TARGET_RELEASE/compose.prod.yml" "$TARGET_RELEASE/.env" up -d --build --remove-orphans
 
 curl_check "$(healthcheck_url server)" "server"
