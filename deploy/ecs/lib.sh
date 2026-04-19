@@ -237,6 +237,35 @@ resolve_image_references() {
   export IMAGE_TAG SERVER_IMAGE_REF WEB_IMAGE_REF ADMIN_IMAGE_REF
 }
 
+normalize_compose_project_name() {
+  local value="$1"
+
+  value=$(printf '%s' "$value" | tr '[:upper:]' '[:lower:]')
+  value=${value//[^a-z0-9_-]/-}
+  value=${value#-}
+  value=${value#_}
+  value=${value%-}
+  value=${value%_}
+
+  if [[ -z "$value" ]]; then
+    value='my-resume'
+  fi
+
+  printf '%s\n' "$value"
+}
+
+resolve_compose_project_name() {
+  local candidate
+
+  candidate="${COMPOSE_PROJECT_NAME:-${DEPLOY_COMPOSE_PROJECT_NAME:-${ROOT_DOMAIN:-my-resume}}}"
+  candidate=$(normalize_compose_project_name "$candidate")
+
+  COMPOSE_PROJECT_NAME="$candidate"
+  export COMPOSE_PROJECT_NAME
+
+  printf '%s\n' "$COMPOSE_PROJECT_NAME"
+}
+
 docker_registry_login_if_configured() {
   local registry_host
 
@@ -318,9 +347,11 @@ EOF
 compose_cmd() {
   local compose_file="$1"
   local env_file="$2"
+  local compose_project
   shift 2
 
-  sudo_cmd docker compose -f "$compose_file" --env-file "$env_file" "$@"
+  compose_project=$(resolve_compose_project_name)
+  sudo_cmd docker compose --project-name "$compose_project" -f "$compose_file" --env-file "$env_file" "$@"
 }
 
 resolve_nginx_site_layout() {

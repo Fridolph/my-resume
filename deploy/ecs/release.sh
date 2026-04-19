@@ -104,6 +104,12 @@ sudo_cmd systemctl reload nginx
 ln -sfn "$RELEASE_DIR" "$CURRENT_LINK"
 printf '%s\n' "$RELEASE_DIR" >"$CURRENT_RELEASE_FILE"
 
+cleanup_args=(--stack-env "$STACK_ENV_FILE")
+if [[ "$DRY_RUN" == '1' ]]; then
+  cleanup_args+=(--dry-run)
+fi
+run_cmd "$SCRIPT_DIR/pre-release-port-cleanup.sh" "${cleanup_args[@]}"
+
 if [[ "$DEPLOY_MODE" == 'image' ]]; then
   docker_registry_login_if_configured
   compose_cmd "$RELEASE_DIR/compose.prod.yml" "$RELEASE_DIR/.env" pull

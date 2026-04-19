@@ -66,6 +66,12 @@ cp /opt/my-resume/deploy/templates/stack.env.example \
 DEPLOY_MODE=image
 ```
 
+建议同时固定 compose project 名，避免历史发布目录变更导致旧容器残留占用端口：
+
+```env
+DEPLOY_COMPOSE_PROJECT_NAME=my-resume
+```
+
 ### 镜像仓库配置（推荐用前缀）
 
 ```env
