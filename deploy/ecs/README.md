@@ -18,6 +18,7 @@
 - `deploy-latest-tag.sh`：同步 `main`+标签后，自动发布最新 tag 并执行验收
 - `rollback.sh [tag]`：回滚到上一版或指定 tag
 - `build-and-push-images.sh`：本地构建并推送三端镜像（image 模式专用）
+- `ops-health-check.sh`：ECS 一键巡检（资源、服务、容器、端口与健康检查）
 - `stack-env-checklist.md`：`stack.env.local` 填写清单
 
 模板目录：
