@@ -255,12 +255,12 @@ if [[ "$ENGINE_BUILD" == '1' ]]; then
 
   if [[ -n "$BASE_IMAGE" ]]; then
     run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/server/Dockerfile -t "$SERVER_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" .
-    run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/web/Dockerfile -t "$WEB_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" "${WEB_BUILD_ARGS[@]}" .
-    run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/admin/Dockerfile -t "$ADMIN_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" "${ADMIN_BUILD_ARGS[@]}" .
+    run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/web/Dockerfile -t "$WEB_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" "${WEB_BUILD_ARGS[@]-}" .
+    run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/admin/Dockerfile -t "$ADMIN_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" "${ADMIN_BUILD_ARGS[@]-}" .
   else
     run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/server/Dockerfile -t "$SERVER_REF" .
-    run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/web/Dockerfile -t "$WEB_REF" "${WEB_BUILD_ARGS[@]}" .
-    run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/admin/Dockerfile -t "$ADMIN_REF" "${ADMIN_BUILD_ARGS[@]}" .
+    run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/web/Dockerfile -t "$WEB_REF" "${WEB_BUILD_ARGS[@]-}" .
+    run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/admin/Dockerfile -t "$ADMIN_REF" "${ADMIN_BUILD_ARGS[@]-}" .
   fi
 
   if [[ "$PUSH" == '1' ]]; then
@@ -281,12 +281,12 @@ else
 
   if [[ -n "$BASE_IMAGE" ]]; then
     run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/server/Dockerfile -t "$SERVER_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" "${PUBLISH_ARGS[@]}" .
-    run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/web/Dockerfile -t "$WEB_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" "${WEB_BUILDX_ARGS[@]}" "${PUBLISH_ARGS[@]}" .
-    run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/admin/Dockerfile -t "$ADMIN_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" "${ADMIN_BUILDX_ARGS[@]}" "${PUBLISH_ARGS[@]}" .
+    run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/web/Dockerfile -t "$WEB_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" "${WEB_BUILDX_ARGS[@]-}" "${PUBLISH_ARGS[@]}" .
+    run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/admin/Dockerfile -t "$ADMIN_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" "${ADMIN_BUILDX_ARGS[@]-}" "${PUBLISH_ARGS[@]}" .
   else
     run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/server/Dockerfile -t "$SERVER_REF" "${PUBLISH_ARGS[@]}" .
-    run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/web/Dockerfile -t "$WEB_REF" "${WEB_BUILDX_ARGS[@]}" "${PUBLISH_ARGS[@]}" .
-    run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/admin/Dockerfile -t "$ADMIN_REF" "${ADMIN_BUILDX_ARGS[@]}" "${PUBLISH_ARGS[@]}" .
+    run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/web/Dockerfile -t "$WEB_REF" "${WEB_BUILDX_ARGS[@]-}" "${PUBLISH_ARGS[@]}" .
+    run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/admin/Dockerfile -t "$ADMIN_REF" "${ADMIN_BUILDX_ARGS[@]-}" "${PUBLISH_ARGS[@]}" .
   fi
 fi
 
