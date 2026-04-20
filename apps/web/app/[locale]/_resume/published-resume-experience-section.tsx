@@ -77,7 +77,9 @@ export function PublishedResumeExperienceSection({
                     {roleLine ? <p className={itemMetaTextClass}>{roleLine}</p> : null}
                   </div>
                 </div>
-                <span className={itemMetaTextClass}>{formatDateRange(experience)}</span>
+                <span className={itemMetaTextClass}>
+                  {formatDateRange(experience, locale)}
+                </span>
               </div>
 
               <div className="grid gap-4">
