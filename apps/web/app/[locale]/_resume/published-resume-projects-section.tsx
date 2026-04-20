@@ -78,7 +78,7 @@ export function PublishedResumeProjectsSection({
                     {role ? <p className={itemMetaTextClass}>{role}</p> : null}
                   </div>
                 </div>
-                <span className={itemMetaTextClass}>{formatDateRange(project)}</span>
+                <span className={itemMetaTextClass}>{formatDateRange(project, locale)}</span>
               </div>
 
               {summary ? (

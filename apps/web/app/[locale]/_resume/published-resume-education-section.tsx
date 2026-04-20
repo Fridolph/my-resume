@@ -56,7 +56,7 @@ export function PublishedResumeEducationSection({
                     </p>
                   </div>
                   <span className="text-base font-medium text-slate-500 dark:text-slate-400">
-                    {formatDateRange(item)}
+                    {formatDateRange(item, locale)}
                   </span>
                 </div>
 
