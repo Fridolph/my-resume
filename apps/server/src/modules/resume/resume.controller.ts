@@ -14,9 +14,22 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common'
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiProduces,
+  ApiQuery,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger'
 import type { Response } from 'express'
 
 import { SkipResponseEnvelope } from '../../common/decorators/skip-response-envelope.decorator'
+import { ApiEnvelopeResponse } from '../../common/swagger/api-envelope-response.decorator'
 import { RequireCapability } from '../auth/decorators/require-capability.decorator'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RoleCapabilitiesGuard } from '../auth/guards/role-capabilities.guard'
@@ -34,6 +47,7 @@ import type {
 } from './transport/types/resume-response.types'
 
 @Controller('resume')
+@ApiTags('Resume')
 export class ResumeController {
   constructor(
     @Inject(ResumePublicationService)
@@ -50,6 +64,16 @@ export class ResumeController {
    * @returns 发布态快照
    */
   @Get('published')
+  @ApiOperation({
+    summary: '获取发布态简历快照',
+    description: '公开站首屏使用的发布态快照读取入口',
+  })
+  @ApiEnvelopeResponse({
+    description: '读取发布态快照成功',
+  })
+  @ApiNotFoundResponse({
+    description: '当前还没有可公开访问的发布快照',
+  })
   async getPublishedResume(
     @Res({ passthrough: true }) response: Response,
   ): Promise<ResumePublishedSnapshotResponse> {
@@ -73,6 +97,25 @@ export class ResumeController {
    * @returns 发布态摘要快照
    */
   @Get('published/summary')
+  @ApiOperation({
+    summary: '获取发布态简历摘要',
+    description: '公开页轻量渲染入口，可按 locale 返回摘要内容',
+  })
+  @ApiQuery({
+    name: 'locale',
+    required: false,
+    enum: ['zh', 'en'],
+    description: '摘要输出语言，默认跟随发布态默认语言',
+  })
+  @ApiEnvelopeResponse({
+    description: '读取发布态摘要成功',
+  })
+  @ApiBadRequestResponse({
+    description: 'locale 参数不在支持范围',
+  })
+  @ApiNotFoundResponse({
+    description: '当前还没有可公开访问的发布快照',
+  })
   async getPublishedResumeSummary(
     @Query('locale') localeQuery: string | undefined,
     @Headers('cookie') cookieHeader: string | undefined,
@@ -111,6 +154,29 @@ export class ResumeController {
    */
   @Get('published/export/markdown')
   @SkipResponseEnvelope()
+  @ApiOperation({
+    summary: '导出发布态 Markdown',
+    description: '下载当前发布态简历的 markdown 文件',
+  })
+  @ApiQuery({
+    name: 'locale',
+    required: false,
+    enum: ['zh', 'en'],
+    description: '导出语言，默认跟随发布态默认语言',
+  })
+  @ApiProduces('text/markdown')
+  @ApiOkResponse({
+    description: '导出 markdown 成功',
+    schema: {
+      type: 'string',
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'locale 参数不在支持范围',
+  })
+  @ApiNotFoundResponse({
+    description: '当前还没有可公开访问的发布快照',
+  })
   async exportPublishedResumeMarkdown(
     @Query('locale') localeQuery: string | undefined,
     @Res() response: Response,
@@ -145,6 +211,34 @@ export class ResumeController {
    */
   @Get('published/export/pdf')
   @SkipResponseEnvelope()
+  @ApiOperation({
+    summary: '导出发布态 PDF',
+    description: '下载当前发布态简历的 PDF 文件',
+  })
+  @ApiQuery({
+    name: 'locale',
+    required: false,
+    enum: ['zh', 'en'],
+    description: '导出语言，默认跟随发布态默认语言',
+  })
+  @ApiProduces('application/pdf')
+  @ApiOkResponse({
+    description: '导出 PDF 成功',
+    content: {
+      'application/pdf': {
+        schema: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'locale 参数不在支持范围',
+  })
+  @ApiNotFoundResponse({
+    description: '当前还没有可公开访问的发布快照',
+  })
   async exportPublishedResumePdf(
     @Query('locale') localeQuery: string | undefined,
     @Res() response: Response,
@@ -179,6 +273,20 @@ export class ResumeController {
   @Get('draft')
   @UseGuards(JwtAuthGuard, RoleCapabilitiesGuard)
   @RequireCapability('canEditResume')
+  @ApiBearerAuth('bearer')
+  @ApiOperation({
+    summary: '获取草稿态简历快照',
+    description: '后台编辑页使用的草稿读取入口',
+  })
+  @ApiEnvelopeResponse({
+    description: '读取草稿态快照成功',
+  })
+  @ApiUnauthorizedResponse({
+    description: '未提供有效 Bearer Token',
+  })
+  @ApiForbiddenResponse({
+    description: '当前角色没有编辑简历权限',
+  })
   async getDraftResume(
     @Res({ passthrough: true }) response: Response,
   ): Promise<ResumeDraftSnapshotResponse> {
@@ -197,6 +305,29 @@ export class ResumeController {
   @Get('draft/summary')
   @UseGuards(JwtAuthGuard, RoleCapabilitiesGuard)
   @RequireCapability('canEditResume')
+  @ApiBearerAuth('bearer')
+  @ApiOperation({
+    summary: '获取草稿态简历摘要',
+    description: '后台导航与概览场景的草稿摘要读取入口',
+  })
+  @ApiQuery({
+    name: 'locale',
+    required: false,
+    enum: ['zh', 'en'],
+    description: '摘要输出语言，默认跟随草稿默认语言',
+  })
+  @ApiEnvelopeResponse({
+    description: '读取草稿态摘要成功',
+  })
+  @ApiBadRequestResponse({
+    description: 'locale 参数不在支持范围',
+  })
+  @ApiUnauthorizedResponse({
+    description: '未提供有效 Bearer Token',
+  })
+  @ApiForbiddenResponse({
+    description: '当前角色没有编辑简历权限',
+  })
   async getDraftResumeSummary(
     @Query('locale') localeQuery: string | undefined,
     @Headers('cookie') cookieHeader: string | undefined,
@@ -231,6 +362,23 @@ export class ResumeController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard, RoleCapabilitiesGuard)
   @RequireCapability('canEditResume')
+  @ApiBearerAuth('bearer')
+  @ApiOperation({
+    summary: '保存草稿态简历',
+    description: '后台编辑保存入口，会先做结构校验再写入数据库',
+  })
+  @ApiEnvelopeResponse({
+    description: '保存草稿成功',
+  })
+  @ApiBadRequestResponse({
+    description: '简历结构校验失败',
+  })
+  @ApiUnauthorizedResponse({
+    description: '未提供有效 Bearer Token',
+  })
+  @ApiForbiddenResponse({
+    description: '当前角色没有编辑简历权限',
+  })
   async updateDraftResume(
     @Body() resume: StandardResume,
   ): Promise<ResumeDraftSnapshotResponse> {
@@ -252,6 +400,20 @@ export class ResumeController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard, RoleCapabilitiesGuard)
   @RequireCapability('canPublishResume')
+  @ApiBearerAuth('bearer')
+  @ApiOperation({
+    summary: '发布当前草稿',
+    description: '基于草稿生成新的发布快照',
+  })
+  @ApiEnvelopeResponse({
+    description: '发布成功',
+  })
+  @ApiUnauthorizedResponse({
+    description: '未提供有效 Bearer Token',
+  })
+  @ApiForbiddenResponse({
+    description: '当前角色没有发布简历权限',
+  })
   async publishResume(): Promise<ResumePublishedSnapshotResponse> {
     // publish 不是改状态位，而是从 draft 追加一条新的发布快照。
     return this.resumePublicationService.publish()
