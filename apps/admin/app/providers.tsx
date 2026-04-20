@@ -14,6 +14,16 @@ declare global {
   }
 }
 
+const startupBanner = String.raw`
+   __      _     _       _       _     
+  / _|    (_)   | |     | |     | |    
+ | |_ _ __ _  __| | ___ | |_ __ | |__  
+ |  _| '__| |/ _\` |/ _ \\| | '_ \\| '_ \\ 
+ | | | |  | | (_| | (_) | | |_) | | | |
+ |_| |_|  |_|\__,_|\___/|_| .__/|_| |_|
+                          | |          
+                          |_|          `
+
 function ThemeDatasetBridge() {
   const { resolvedTheme } = useTheme()
 
@@ -58,6 +68,7 @@ export function ProvidersWithLocale({
 
     loggedScopes[scope] = true
 
+    console.log(startupBanner)
     console.log('[my-resume:admin] boot', {
       apiBaseUrl: DEFAULT_API_BASE_URL,
       href: window.location.href,
