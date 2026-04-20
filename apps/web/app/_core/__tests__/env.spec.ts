@@ -32,13 +32,23 @@ describe('web env', () => {
     delete process.env.RESUME_API_BASE_URL
 
     const {
+      APP_VERSION,
       DEFAULT_API_BASE_URL,
       DEFAULT_PUBLIC_API_BASE_URL,
       DEFAULT_SERVER_API_BASE_URL,
     } = await importEnvModule()
 
+    expect(APP_VERSION).toBe('0.0.0')
     expect(DEFAULT_PUBLIC_API_BASE_URL).toBe('http://localhost:5577')
     expect(DEFAULT_API_BASE_URL).toBe('http://localhost:5577')
     expect(DEFAULT_SERVER_API_BASE_URL).toBe('http://localhost:5577')
+  })
+
+  it('should expose app version from public env', async () => {
+    process.env.NEXT_PUBLIC_APP_VERSION = 'v2.2.8'
+
+    const { APP_VERSION } = await importEnvModule()
+
+    expect(APP_VERSION).toBe('v2.2.8')
   })
 })
