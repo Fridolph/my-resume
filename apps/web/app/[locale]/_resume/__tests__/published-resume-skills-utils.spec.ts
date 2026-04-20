@@ -40,6 +40,27 @@ describe('published resume skills utils', () => {
     expect(tokens.some((token) => token.label === 'Node.js')).toBe(true)
   })
 
+  it('should translate known chinese skill lines for english rendering', () => {
+    const groups = normalizeSkillGroups(
+      [
+        {
+          ...publishedResumeFixture.resume.skills[0],
+          keywords: ['构建产物分析、懒加载与首屏性能优化'],
+        },
+      ],
+      'en',
+    )
+
+    expect(groups[0]?.parsedKeywords[0]?.content).toBe(
+      'Build artifact analysis, lazy loading, and first-screen performance optimization',
+    )
+
+    const tokens = buildSkillCloudTokens(groups, 'en')
+    expect(tokens[0]?.label).toBe(
+      'Build artifact analysis, lazy loading, and first-screen performance optimization',
+    )
+  })
+
   it('should build radar from proficiency scores and pie from real skill item counts', () => {
     const groups = rankSkillGroups(
       normalizeSkillGroups([

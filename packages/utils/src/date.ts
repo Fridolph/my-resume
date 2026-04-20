@@ -11,6 +11,23 @@ interface DateRangeLike {
   startDate: string
 }
 
-export function formatDateRange(dateRange: DateRangeLike): string {
-  return `${dateRange.startDate} - ${dateRange.endDate}`
+const zhPresentTokens = new Set(['至今', '目前', '现在'])
+const enPresentTokens = new Set(['present', 'current', 'ongoing'])
+
+function resolveLocalizedEndDate(endDate: string, locale: AppLocale): string {
+  const normalized = endDate.trim()
+
+  if (locale === 'en') {
+    return zhPresentTokens.has(normalized) ? 'Present' : endDate
+  }
+
+  return enPresentTokens.has(normalized.toLowerCase()) ? '至今' : endDate
+}
+
+export function formatDateRange(dateRange: DateRangeLike, locale?: AppLocale): string {
+  const localizedEndDate = locale
+    ? resolveLocalizedEndDate(dateRange.endDate, locale)
+    : dateRange.endDate
+
+  return `${dateRange.startDate} - ${localizedEndDate}`
 }

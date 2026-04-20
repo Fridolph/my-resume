@@ -173,7 +173,7 @@ export function PublishedResumeSkillsSection({
     }
   }, [chartMode, chartRenderers, isJsdom, shouldLoadChart])
 
-  const normalizedGroups = useMemo(() => normalizeSkillGroups(skills), [skills])
+  const normalizedGroups = useMemo(() => normalizeSkillGroups(skills, locale), [locale, skills])
   const chartGroups = useMemo(
     () => rankSkillGroups(normalizedGroups, locale),
     [locale, normalizedGroups],

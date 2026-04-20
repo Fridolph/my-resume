@@ -64,8 +64,138 @@ const chartPalette = [
   '#0f766e',
 ] as const
 
+const enSkillKeywordLineMap = new Map<string, string>([
+  [
+    'Vue / React / Next.js / Nuxt 组件化与页面架构',
+    'Vue / React / Next.js / Nuxt component architecture and page systems',
+  ],
+  [
+    'TypeScript 类型建模与 Composition API / Hooks 实践',
+    'TypeScript type modeling with Composition API / Hooks practices',
+  ],
+  [
+    '复杂交互、响应式布局与可访问性体验打磨',
+    'Complex interactions, responsive layouts, and accessibility refinement',
+  ],
+  [
+    '前端状态管理、数据请求与设计系统协作',
+    'Frontend state management, data fetching, and design-system collaboration',
+  ],
+  [
+    'Vite / Webpack / Turborepo / pnpm workspace 工程治理',
+    'Vite / Webpack / Turborepo / pnpm workspace engineering governance',
+  ],
+  [
+    '构建产物分析、懒加载与首屏性能优化',
+    'Build artifact analysis, lazy loading, and first-screen performance optimization',
+  ],
+  [
+    'CI/CD、Lint、Typecheck 与可回滚交付流程',
+    'CI/CD, lint, typecheck, and rollback-safe delivery workflow',
+  ],
+  [
+    'Monorepo 渐进式重构与模块边界拆分',
+    'Progressive monorepo refactoring and module boundary decomposition',
+  ],
+  [
+    'Prompt Engineering、RAG 与知识库问答基础链路',
+    'Prompt engineering, RAG, and knowledge-base Q&A baseline workflow',
+  ],
+  [
+    'Claude Code / Cursor / Codex 辅助开发工作流',
+    'Claude Code / Cursor / Codex assisted development workflow',
+  ],
+  [
+    'AI Provider Adapter 与流式响应接入实践',
+    'AI Provider Adapter and streaming-response integration practices',
+  ],
+  [
+    'OpenClaw / Coze / Agent 工作流学习与验证',
+    'OpenClaw / Coze / Agent workflow learning and validation',
+  ],
+  [
+    '模块边界、路由结构与领域模型拆分',
+    'Module boundaries, route structures, and domain model decomposition',
+  ],
+  [
+    '前后端接口契约、权限边界与发布链路设计',
+    'Frontend-backend API contracts, permission boundaries, and release-flow design',
+  ],
+  [
+    '教学型渐进重构方案、Issue 拆解与 Review 节奏',
+    'Tutorial-driven incremental refactor plans, issue decomposition, and review cadence',
+  ],
+  [
+    '复杂页面信息架构与可维护组件组织',
+    'Complex page information architecture and maintainable component organization',
+  ],
+  [
+    'Node.js / NestJS / RESTful API 服务端开发',
+    'Node.js / NestJS / RESTful API backend development',
+  ],
+  [
+    'JWT 认证、角色能力模型与接口权限控制',
+    'JWT authentication, role capability models, and API access control',
+  ],
+  [
+    'SQLite / Drizzle ORM / MongoDB 数据层实践',
+    'SQLite / Drizzle ORM / MongoDB data-layer practices',
+  ],
+  [
+    'WebSocket / SSE / 文件处理等应用能力接入',
+    'WebSocket / SSE / file-processing capability integration',
+  ],
+  [
+    '安全、SaaS、能源与内容社区等业务场景交付经验',
+    'Delivery experience across security, SaaS, energy, and content-community scenarios',
+  ],
+  [
+    '需求拆解、优先级判断与跨角色沟通推进',
+    'Requirement decomposition, priority judgment, and cross-role collaboration',
+  ],
+  [
+    '从后台治理到公开展示的完整产品链路理解',
+    'End-to-end product flow understanding from admin governance to public presentation',
+  ],
+  [
+    '技术方案文档、教程沉淀与可复用知识资产建设',
+    'Technical proposal docs, tutorial codification, and reusable knowledge assets',
+  ],
+])
+
+const enSkillKeywordPhraseMap = new Map<string, string>([
+  ['构建体系', 'build systems'],
+  ['需求理解', 'requirement understanding'],
+  ['业务洞察', 'business insight'],
+  ['模块边界', 'module boundaries'],
+  ['性能优化', 'performance optimization'],
+  ['可访问性', 'accessibility'],
+])
+
 function stripMarkdownBold(value: string): string {
   return value.replace(/^\*\*(.+)\*\*$/u, '$1').trim()
+}
+
+function hasChineseCharacters(value: string): boolean {
+  return /[\u4e00-\u9fff]/u.test(value)
+}
+
+function localizeSkillLine(raw: string, locale: ResumeLocale): string {
+  if (locale !== 'en' || !hasChineseCharacters(raw)) {
+    return raw
+  }
+
+  const directMatch = enSkillKeywordLineMap.get(raw.trim())
+  if (directMatch) {
+    return directMatch
+  }
+
+  let translated = raw
+  enSkillKeywordPhraseMap.forEach((replacement, phrase) => {
+    translated = translated.replaceAll(phrase, replacement)
+  })
+
+  return translated
 }
 
 export function parseSkillLine(raw: string): ParsedSkillLine {
@@ -90,10 +220,15 @@ export function parseSkillLine(raw: string): ParsedSkillLine {
   }
 }
 
-export function normalizeSkillGroups(skills: ResumeSkillGroup[]): NormalizedSkillGroup[] {
+export function normalizeSkillGroups(
+  skills: ResumeSkillGroup[],
+  locale: ResumeLocale = 'zh',
+): NormalizedSkillGroup[] {
   return skills.map((group) => ({
     ...group,
-    parsedKeywords: group.keywords.map(parseSkillLine),
+    parsedKeywords: group.keywords.map((rawKeyword) =>
+      parseSkillLine(localizeSkillLine(rawKeyword, locale)),
+    ),
   }))
 }
 

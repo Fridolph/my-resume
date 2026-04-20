@@ -71,5 +71,25 @@ describe('@my-resume/utils', () => {
         startDate: '2024-01',
       }),
     ).toBe('2024-01 - 2026-04')
+
+    expect(
+      formatDateRange(
+        {
+          endDate: '至今',
+          startDate: '2024-01',
+        },
+        'en',
+      ),
+    ).toBe('2024-01 - Present')
+
+    expect(
+      formatDateRange(
+        {
+          endDate: 'Present',
+          startDate: '2024-01',
+        },
+        'zh',
+      ),
+    ).toBe('2024-01 - 至今')
   })
 })
