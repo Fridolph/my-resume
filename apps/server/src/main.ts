@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core'
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { randomUUID } from 'node:crypto'
 import type { Express, NextFunction, Request, Response } from 'express'
 import { AppModule } from './app.module'
@@ -15,6 +16,28 @@ async function bootstrap() {
   // 启动入口保持薄层：只做容器启动与基础能力挂载，不承载业务初始化逻辑。
   const app = await NestFactory.create(AppModule)
   app.setGlobalPrefix('api')
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('My Resume API')
+    .setDescription('NestJS server API docs for admin/web/client integration')
+    .setVersion('1.0.0')
+    .addBearerAuth(
+      {
+        bearerFormat: 'JWT',
+        description: 'Paste access token after login',
+        in: 'header',
+        name: 'Authorization',
+        scheme: 'bearer',
+        type: 'http',
+      },
+      'bearer',
+    )
+    .build()
+  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig)
+  // Swagger 文档挂在 /api/docs，和全局前缀保持一致，便于环境切换时统一访问规则。
+  SwaggerModule.setup('docs', app, swaggerDocument, {
+    useGlobalPrefix: true,
+    jsonDocumentUrl: 'docs-json',
+  })
   app.enableCors({
     origin: true,
   })

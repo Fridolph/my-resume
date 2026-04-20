@@ -1,23 +1,33 @@
 import { Body, Controller, Get, Inject, Post, UseGuards } from '@nestjs/common'
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiForbiddenResponse,
+  ApiOperation,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger'
 
+import { ApiEnvelopeResponse } from '../../../common/swagger/api-envelope-response.decorator'
 import { RequireCapability } from '../../auth/decorators/require-capability.decorator'
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard'
 import { RoleCapabilitiesGuard } from '../../auth/guards/role-capabilities.guard'
+import {
+  RagAskBodyDto,
+  RagAskResultDto,
+  RagSearchBodyDto,
+  RagSearchMatchDto,
+  RagStatusDto,
+} from './dto/rag-swagger.dto'
 import { RagService } from './rag.service'
-
-interface RagSearchBody {
-  query: string
-  limit?: number
-}
-
-interface RagAskBody {
-  question: string
-  limit?: number
-  locale?: 'zh' | 'en'
-}
 
 @Controller('ai/rag')
 @UseGuards(JwtAuthGuard)
+@ApiTags('AI RAG')
+@ApiBearerAuth('bearer')
+@ApiUnauthorizedResponse({
+  description: '未提供有效 Bearer Token',
+})
 export class RagController {
   constructor(
     @Inject(RagService)
@@ -29,6 +39,14 @@ export class RagController {
    * @returns RAG 状态
    */
   @Get('status')
+  @ApiOperation({
+    summary: '获取 RAG 索引状态',
+    description: '返回索引存在性、是否过期与关键摘要信息',
+  })
+  @ApiEnvelopeResponse({
+    description: '读取 RAG 状态成功',
+    type: RagStatusDto,
+  })
   getStatus() {
     return this.ragService.getStatus()
   }
@@ -40,6 +58,17 @@ export class RagController {
   @Post('index/rebuild')
   @UseGuards(RoleCapabilitiesGuard)
   @RequireCapability('canTriggerAiAnalysis')
+  @ApiOperation({
+    summary: '重建 RAG 索引',
+    description: '重建简历与知识库向量索引',
+  })
+  @ApiEnvelopeResponse({
+    description: '重建 RAG 索引成功',
+    type: RagStatusDto,
+  })
+  @ApiForbiddenResponse({
+    description: '当前角色没有触发 AI 分析权限',
+  })
   rebuildIndex() {
     // 建索引入口：重切块、重向量化，并写回本地索引文件。
     return this.ragService.rebuildIndex()
@@ -53,7 +82,22 @@ export class RagController {
   @Post('search')
   @UseGuards(RoleCapabilitiesGuard)
   @RequireCapability('canTriggerAiAnalysis')
-  search(@Body() body: RagSearchBody) {
+  @ApiOperation({
+    summary: '执行 RAG 检索',
+    description: '在当前索引中按语义与关键词执行混合检索',
+  })
+  @ApiEnvelopeResponse({
+    description: '检索成功',
+    isArray: true,
+    type: RagSearchMatchDto,
+  })
+  @ApiBadRequestResponse({
+    description: '检索参数不合法',
+  })
+  @ApiForbiddenResponse({
+    description: '当前角色没有触发 AI 分析权限',
+  })
+  search(@Body() body: RagSearchBodyDto) {
     return this.ragService.search(body.query, body.limit)
   }
 
@@ -65,7 +109,21 @@ export class RagController {
   @Post('ask')
   @UseGuards(RoleCapabilitiesGuard)
   @RequireCapability('canTriggerAiAnalysis')
-  ask(@Body() body: RagAskBody) {
+  @ApiOperation({
+    summary: '执行 RAG 问答',
+    description: '先检索上下文，再基于上下文生成回答',
+  })
+  @ApiEnvelopeResponse({
+    description: '问答成功',
+    type: RagAskResultDto,
+  })
+  @ApiBadRequestResponse({
+    description: '问答参数不合法',
+  })
+  @ApiForbiddenResponse({
+    description: '当前角色没有触发 AI 分析权限',
+  })
+  ask(@Body() body: RagAskBodyDto) {
     // ask 先 search，再拼接上下文调用生成接口，不是直接裸问模型。
     return this.ragService.ask(body.question, body.limit, body.locale)
   }

@@ -44,3 +44,10 @@ pnpm --filter @my-resume/server db:check
 默认端口：
 
 - `5577`
+
+## Swagger API 文档
+
+服务启动后可访问：
+
+- Swagger UI：`http://localhost:5577/api/docs`
+- OpenAPI JSON：`http://localhost:5577/api/docs-json`
