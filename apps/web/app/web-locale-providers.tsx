@@ -13,6 +13,16 @@ declare global {
   }
 }
 
+const startupBanner = String.raw`
+   __      _     _       _       _     
+  / _|    (_)   | |     | |     | |    
+ | |_ _ __ _  __| | ___ | |_ __ | |__  
+ |  _| '__| |/ _\` |/ _ \\| | '_ \\| '_ \\ 
+ | | | |  | | (_| | (_) | | |_) | | | |
+ |_| |_|  |_|\__,_|\___/|_| .__/|_| |_|
+                          | |          
+                          |_|          `
+
 export function WebLocaleProviders({
   children,
   heroLocale,
@@ -36,6 +46,7 @@ export function WebLocaleProviders({
 
     loggedScopes[scope] = true
 
+    console.log(startupBanner)
     console.log('[my-resume:web] boot', {
       apiBaseUrl: DEFAULT_PUBLIC_API_BASE_URL,
       href: window.location.href,

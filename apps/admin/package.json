@@ -1,6 +1,6 @@
 {
   "name": "@my-resume/admin",
-  "version": "0.0.1",
+  "version": "2.2.8",
   "private": true,
   "type": "module",
   "scripts": {
