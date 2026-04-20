@@ -38,4 +38,16 @@ describe('database.config', () => {
     expect(config.authToken).toBe('turso-token')
     expect(config.isRemote).toBe(false)
   })
+
+  it('should normalize relative sqlite file url to repo root path', () => {
+    const config = resolveDatabaseConfig(
+      {
+        DATABASE_URL: 'file:./.data/my-resume.db',
+      },
+      '/workspace/my-resume',
+    )
+
+    expect(config.url).toBe('file:/workspace/my-resume/.data/my-resume.db')
+    expect(config.isRemote).toBe(false)
+  })
 })
