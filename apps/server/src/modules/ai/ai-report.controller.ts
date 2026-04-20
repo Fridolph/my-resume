@@ -10,6 +10,20 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common'
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiConflictResponse,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger'
+
+import { ApiEnvelopeResponse } from '../../common/swagger/api-envelope-response.decorator'
 
 import { RequireCapability } from '../auth/decorators/require-capability.decorator'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
@@ -19,32 +33,23 @@ import {
   AiUsageRecordFilterType,
   AiUsageRecordService,
 } from './ai-usage-record.service'
-import {
-  ApplyResumeOptimizationInput,
-  AiResumeOptimizationService,
-  GenerateResumeOptimizationInput,
-} from './ai-resume-optimization.service'
+import { AiResumeOptimizationService } from './ai-resume-optimization.service'
 import {
   AnalysisScenario,
   AnalysisReportCacheService,
 } from './analysis-report-cache.service'
 import type { AnalysisLocale } from './analysis-report-cache.service'
-
-interface CacheReportBody {
-  scenario: AnalysisScenario
-  content: string
-  locale?: AnalysisLocale
-}
-
-interface HistoryQuery {
-  limit?: string
-  type?: AiUsageRecordFilterType
-}
-
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-interface ResumeOptimizationBody extends GenerateResumeOptimizationInput {}
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-interface ApplyResumeOptimizationBody extends ApplyResumeOptimizationInput {}
+import {
+  AnalyzeReportResultDto,
+  ApplyResumeOptimizationBodyDto,
+  CacheReportBodyDto,
+  CachedReportListDto,
+  ResumeOptimizationBodyDto,
+  ResumeOptimizationResultDto,
+  RuntimeSummaryDto,
+  UsageHistoryListDto,
+  UsageHistoryQueryDto,
+} from './dto/ai-report-swagger.dto'
 
 const SUPPORTED_SCENARIOS: AnalysisScenario[] = [
   'jd-match',
@@ -54,6 +59,11 @@ const SUPPORTED_SCENARIOS: AnalysisScenario[] = [
 
 @Controller('ai/reports')
 @UseGuards(JwtAuthGuard)
+@ApiTags('AI Reports')
+@ApiBearerAuth('bearer')
+@ApiUnauthorizedResponse({
+  description: '未提供有效 Bearer Token',
+})
 export class AiReportController {
   constructor(
     @Inject(AiService)
@@ -67,6 +77,14 @@ export class AiReportController {
   ) {}
 
   @Get('cache')
+  @ApiOperation({
+    summary: '获取缓存分析报告列表',
+    description: '返回当前缓存中的分析报告元数据',
+  })
+  @ApiEnvelopeResponse({
+    description: '读取缓存报告列表成功',
+    type: CachedReportListDto,
+  })
   listCachedReports() {
     return {
       reports: this.analysisReportCacheService.listReports(),
@@ -78,6 +96,14 @@ export class AiReportController {
    * @returns 运行时摘要
    */
   @Get('runtime')
+  @ApiOperation({
+    summary: '获取 AI 运行时摘要',
+    description: '返回 provider、model、mode 及支持场景',
+  })
+  @ApiEnvelopeResponse({
+    description: '读取运行时摘要成功',
+    type: RuntimeSummaryDto,
+  })
   getRuntimeSummary() {
     // 先暴露 provider/model 摘要，便于教学演示和运行态排查。
     return {
@@ -87,7 +113,27 @@ export class AiReportController {
   }
 
   @Get('history')
-  async listUsageHistory(@Query() query: HistoryQuery) {
+  @ApiOperation({
+    summary: '查询 AI 调用历史',
+    description: '按类型筛选并返回最近调用记录',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: '返回数量上限，默认 20',
+    example: '20',
+  })
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    enum: ['all', 'analysis-report', 'resume-optimization'] satisfies AiUsageRecordFilterType[],
+    description: '历史类型筛选',
+  })
+  @ApiEnvelopeResponse({
+    description: '读取 AI 调用历史成功',
+    type: UsageHistoryListDto,
+  })
+  async listUsageHistory(@Query() query: UsageHistoryQueryDto) {
     return {
       records: await this.aiUsageRecordService.listHistory({
         type: query.type ?? 'all',
@@ -97,6 +143,21 @@ export class AiReportController {
   }
 
   @Get('history/:recordId')
+  @ApiOperation({
+    summary: '获取 AI 调用历史详情',
+    description: '根据记录 ID 返回完整历史详情',
+  })
+  @ApiParam({
+    name: 'recordId',
+    description: '历史记录 ID',
+    example: 'usage-record-123',
+  })
+  @ApiEnvelopeResponse({
+    description: '读取 AI 调用历史详情成功',
+  })
+  @ApiNotFoundResponse({
+    description: '历史记录不存在',
+  })
   async getUsageHistoryDetail(@Param('recordId') recordId: string) {
     return this.aiUsageRecordService.getDetail(recordId)
   }
@@ -104,11 +165,36 @@ export class AiReportController {
   @Post('cache')
   @UseGuards(RoleCapabilitiesGuard)
   @RequireCapability('canTriggerAiAnalysis')
-  cacheReport(@Body() body: CacheReportBody) {
+  @ApiOperation({
+    summary: '缓存分析报告',
+    description: '按场景和内容缓存结构化分析结果',
+  })
+  @ApiEnvelopeResponse({
+    description: '缓存分析报告成功',
+  })
+  @ApiForbiddenResponse({
+    description: '当前角色没有触发 AI 分析权限',
+  })
+  cacheReport(@Body() body: CacheReportBodyDto) {
     return this.analysisReportCacheService.getOrCreateReport(body)
   }
 
   @Get('cache/:reportId')
+  @ApiOperation({
+    summary: '获取缓存分析报告详情',
+    description: '根据 reportId 读取已缓存的报告详情',
+  })
+  @ApiParam({
+    name: 'reportId',
+    description: '报告 ID',
+    example: 'report-123',
+  })
+  @ApiEnvelopeResponse({
+    description: '读取缓存分析报告成功',
+  })
+  @ApiNotFoundResponse({
+    description: '报告不存在',
+  })
   getCachedReport(@Param('reportId') reportId: string) {
     return this.analysisReportCacheService.getReportById(reportId)
   }
@@ -121,7 +207,21 @@ export class AiReportController {
   @Post('analyze')
   @UseGuards(RoleCapabilitiesGuard)
   @RequireCapability('canTriggerAiAnalysis')
-  async analyzeReport(@Body() body: CacheReportBody) {
+  @ApiOperation({
+    summary: '执行分析并写入缓存',
+    description: '调用 AI 生成结构化结果并关联 usage 记录',
+  })
+  @ApiEnvelopeResponse({
+    description: '分析成功',
+    type: AnalyzeReportResultDto,
+  })
+  @ApiBadRequestResponse({
+    description: '请求体参数不合法',
+  })
+  @ApiForbiddenResponse({
+    description: '当前角色没有触发 AI 分析权限',
+  })
+  async analyzeReport(@Body() body: CacheReportBodyDto) {
     const locale = body.locale ?? 'zh'
     const startedAt = Date.now()
     const providerSummary = this.aiService.getProviderSummary()
@@ -179,7 +279,21 @@ export class AiReportController {
   @Post('resume-optimize')
   @UseGuards(RoleCapabilitiesGuard)
   @RequireCapability('canTriggerAiAnalysis')
-  async optimizeResume(@Body() body: ResumeOptimizationBody) {
+  @ApiOperation({
+    summary: '生成简历优化建议',
+    description: '输出建议摘要、模块 diff 与后续 apply 所需结果 ID',
+  })
+  @ApiEnvelopeResponse({
+    description: '生成简历优化建议成功',
+    type: ResumeOptimizationResultDto,
+  })
+  @ApiBadRequestResponse({
+    description: '请求体参数不合法',
+  })
+  @ApiForbiddenResponse({
+    description: '当前角色没有触发 AI 分析权限',
+  })
+  async optimizeResume(@Body() body: ResumeOptimizationBodyDto) {
     const locale = body.locale ?? 'zh'
     const startedAt = Date.now()
     const providerSummary = this.aiService.getProviderSummary()
@@ -227,6 +341,27 @@ export class AiReportController {
   }
 
   @Get('resume-optimize/results/:resultId')
+  @ApiOperation({
+    summary: '获取简历优化结果详情',
+    description: '按 resultId 读取优化结果，供详情页和 apply 前确认使用',
+  })
+  @ApiParam({
+    name: 'resultId',
+    description: '优化结果 ID',
+    example: 'result-123',
+  })
+  @ApiQuery({
+    name: 'locale',
+    required: false,
+    enum: ['zh', 'en'] satisfies AnalysisLocale[],
+    description: '返回语言，默认 zh',
+  })
+  @ApiEnvelopeResponse({
+    description: '读取简历优化结果成功',
+  })
+  @ApiNotFoundResponse({
+    description: '优化结果不存在或已过期',
+  })
   getResumeOptimizationResult(
     @Param('resultId') resultId: string,
     @Query('locale') locale?: AnalysisLocale,
@@ -243,7 +378,26 @@ export class AiReportController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(RoleCapabilitiesGuard)
   @RequireCapability('canEditResume')
-  async applyResumeOptimization(@Body() body: ApplyResumeOptimizationBody) {
+  @ApiOperation({
+    summary: '应用简历优化建议',
+    description: '将选中模块的 patch 应用到当前草稿并持久化',
+  })
+  @ApiEnvelopeResponse({
+    description: '应用简历优化建议成功',
+  })
+  @ApiBadRequestResponse({
+    description: '模块选择无效或建议内容无法应用',
+  })
+  @ApiConflictResponse({
+    description: '草稿已更新，需要重新生成建议稿',
+  })
+  @ApiForbiddenResponse({
+    description: '当前角色没有编辑简历权限',
+  })
+  @ApiNotFoundResponse({
+    description: '优化结果不存在或已失效',
+  })
+  async applyResumeOptimization(@Body() body: ApplyResumeOptimizationBodyDto) {
     return this.aiResumeOptimizationService.applySuggestion(body)
   }
 
@@ -252,7 +406,7 @@ export class AiReportController {
    * @param body 分析请求体
    * @returns 提示词文本
    */
-  private buildAnalysisPrompt(body: CacheReportBody): string {
+  private buildAnalysisPrompt(body: CacheReportBodyDto): string {
     if (body.locale === 'en') {
       return [
         `Scenario: ${body.scenario}`,

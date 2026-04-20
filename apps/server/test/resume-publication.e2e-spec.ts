@@ -10,6 +10,7 @@ import { App } from 'supertest/types'
 import type { DatabaseClient } from './../src/database/database.client'
 import { DATABASE_CLIENT } from './../src/database/database.tokens'
 import { AppModule } from './../src/app.module'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 async function prepareResumeTables(client: DatabaseClient) {
   await client.execute(`

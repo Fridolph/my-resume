@@ -25,6 +25,7 @@ describe('ResumePdfExportService', () => {
 
     try {
       const result = await parser.getText()
+      const text = result.text
 
       expect(result.text.length).toBeGreaterThan(80)
       expect(result.text).toContain('Email: 249121486@qq.com')
