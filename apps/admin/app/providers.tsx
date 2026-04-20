@@ -5,7 +5,14 @@ import { ThemeProvider, useTheme } from 'next-themes'
 import { useEffect, type ReactNode } from 'react'
 
 import { AdminSessionProvider } from '@core/admin-session'
+import { APP_VERSION, DEFAULT_API_BASE_URL } from '@core/env'
 import { toHeroUiLocale, type AppLocale } from '@i18n/types'
+
+declare global {
+  interface Window {
+    __MY_RESUME_BOOT_LOGGED__?: Record<string, boolean>
+  }
+}
 
 function ThemeDatasetBridge() {
   const { resolvedTheme } = useTheme()
@@ -37,6 +44,28 @@ export function ProvidersWithLocale({
   children: ReactNode
   locale: AppLocale
 }) {
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'test') {
+      return
+    }
+
+    const scope = `admin:${locale}`
+    const loggedScopes = (window.__MY_RESUME_BOOT_LOGGED__ ??= {})
+
+    if (loggedScopes[scope]) {
+      return
+    }
+
+    loggedScopes[scope] = true
+
+    console.log('[my-resume:admin] boot', {
+      apiBaseUrl: DEFAULT_API_BASE_URL,
+      href: window.location.href,
+      locale,
+      version: APP_VERSION,
+    })
+  }, [locale])
+
   return (
     <ThemeProvider
       attribute="class"
