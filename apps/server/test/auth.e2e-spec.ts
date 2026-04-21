@@ -4,6 +4,7 @@ import request from 'supertest'
 import { App } from 'supertest/types'
 
 import { AppModule } from './../src/app.module'
+import { readAccessToken, readApiData } from './helpers/api-envelope'
 
 describe('AuthModule (e2e)', () => {
   let app: INestApplication<App>
@@ -31,7 +32,17 @@ describe('AuthModule (e2e)', () => {
       })
       .expect(200)
 
-    expect(response.body).toMatchObject({
+    const loginPayload = readApiData<{
+      accessToken: string
+      tokenType: string
+      user: {
+        username: string
+        role: string
+        isActive: boolean
+      }
+    }>(response)
+
+    expect(loginPayload).toMatchObject({
       tokenType: 'Bearer',
       user: {
         username: 'admin',
@@ -39,7 +50,7 @@ describe('AuthModule (e2e)', () => {
         isActive: true,
       },
     })
-    expect(response.body.accessToken).toEqual(expect.any(String))
+    expect(loginPayload.accessToken).toEqual(expect.any(String))
   })
 
   it('should reject invalid credentials', () => {
@@ -61,14 +72,27 @@ describe('AuthModule (e2e)', () => {
       })
       .expect(200)
 
-    const accessToken = loginResponse.body.accessToken as string
+    const accessToken = readAccessToken(loginResponse)
 
     const meResponse = await request(app.getHttpServer())
       .get('/api/auth/me')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
 
-    expect(meResponse.body).toMatchObject({
+    const currentUserPayload = readApiData<{
+      user: {
+        username: string
+        role: string
+        isActive: boolean
+        capabilities: {
+          canEditResume: boolean
+          canPublishResume: boolean
+          canTriggerAiAnalysis: boolean
+        }
+      }
+    }>(meResponse)
+
+    expect(currentUserPayload).toMatchObject({
       user: {
         username: 'viewer',
         role: 'viewer',

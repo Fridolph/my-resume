@@ -8,6 +8,9 @@ import type {
   SortableCollectionState,
 } from './draft-editor.types'
 
+/**
+ * 技能分组分节组件入参。
+ */
 export interface SkillsSectionProps {
   addSkillGroup: () => void
   draftFieldValues: DraftFieldValues
@@ -24,6 +27,9 @@ export interface SkillsSectionProps {
   updateSkillProficiency: (index: number, value: string) => void
 }
 
+/**
+ * 亮点分节组件入参。
+ */
 export interface HighlightsSectionProps {
   addHighlight: () => void
   editorLocaleMode: EditorLocaleMode

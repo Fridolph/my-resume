@@ -7,6 +7,7 @@ import request from 'supertest'
 import { App } from 'supertest/types'
 
 import { AppModule } from '../src/app.module'
+import { readAccessToken, readApiData } from './helpers/api-envelope'
 
 const source = `
 profile:
@@ -103,19 +104,28 @@ describe('AI RAG (e2e)', () => {
       })
       .expect(200)
 
-    const accessToken = loginResponse.body.accessToken as string
+    const accessToken = readAccessToken(loginResponse)
 
     const rebuildResponse = await request(app.getHttpServer())
       .post('/api/ai/rag/index/rebuild')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(201)
 
-    expect(rebuildResponse.body.indexed).toBe(true)
-    expect(rebuildResponse.body.stale).toBe(false)
-    expect(rebuildResponse.body.chunkCount).toBeGreaterThan(0)
-    expect(rebuildResponse.body.knowledgeChunkCount).toBeGreaterThan(0)
-    expect(rebuildResponse.body.providerSummary.chatModel).toBe('mock-resume-advisor')
-    expect(rebuildResponse.body.indexedProviderSummary.embeddingModel).toBe(
+    const rebuildPayload = readApiData<{
+      indexed: boolean
+      stale: boolean
+      chunkCount: number
+      knowledgeChunkCount: number
+      providerSummary: { chatModel: string }
+      indexedProviderSummary: { embeddingModel: string }
+    }>(rebuildResponse)
+
+    expect(rebuildPayload.indexed).toBe(true)
+    expect(rebuildPayload.stale).toBe(false)
+    expect(rebuildPayload.chunkCount).toBeGreaterThan(0)
+    expect(rebuildPayload.knowledgeChunkCount).toBeGreaterThan(0)
+    expect(rebuildPayload.providerSummary.chatModel).toBe('mock-resume-advisor')
+    expect(rebuildPayload.indexedProviderSummary.embeddingModel).toBe(
       'mock-resume-advisor-embedding',
     )
 
@@ -128,7 +138,9 @@ describe('AI RAG (e2e)', () => {
       })
       .expect(201)
 
-    expect(searchResponse.body[0].title).toContain('EDR')
+    const searchPayload = readApiData<Array<{ title: string }>>(searchResponse)
+
+    expect(searchPayload[0].title).toContain('EDR')
 
     const askResponse = await request(app.getHttpServer())
       .post('/api/ai/rag/ask')
@@ -139,8 +151,13 @@ describe('AI RAG (e2e)', () => {
       })
       .expect(201)
 
-    expect(askResponse.body.answer).toContain('prompt=')
-    expect(askResponse.body.matches.length).toBeGreaterThan(0)
+    const askPayload = readApiData<{
+      answer: string
+      matches: unknown[]
+    }>(askResponse)
+
+    expect(askPayload.answer).toContain('prompt=')
+    expect(askPayload.matches.length).toBeGreaterThan(0)
 
     const knowledgeSearchResponse = await request(app.getHttpServer())
       .post('/api/ai/rag/search')
@@ -151,8 +168,12 @@ describe('AI RAG (e2e)', () => {
       })
       .expect(201)
 
-    expect(knowledgeSearchResponse.body[0].section).toBe('knowledge')
-    expect(knowledgeSearchResponse.body[0].title).toContain('RAG篇①')
+    const knowledgeSearchPayload = readApiData<Array<{ section: string; title: string }>>(
+      knowledgeSearchResponse,
+    )
+
+    expect(knowledgeSearchPayload[0].section).toBe('knowledge')
+    expect(knowledgeSearchPayload[0].title).toContain('RAG篇①')
 
     const strengthsSearchResponse = await request(app.getHttpServer())
       .post('/api/ai/rag/search')
@@ -164,7 +185,7 @@ describe('AI RAG (e2e)', () => {
       .expect(201)
 
     expect(
-      strengthsSearchResponse.body.some(
+      readApiData<Array<{ section: string; content: string }>>(strengthsSearchResponse).some(
         (item: { section: string; content: string }) =>
           item.section === 'strengths' && item.content.includes('OpenClaw'),
       ),
@@ -180,10 +201,17 @@ describe('AI RAG (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
 
-    expect(statusResponse.body.indexed).toBe(true)
-    expect(statusResponse.body.stale).toBe(true)
-    expect(statusResponse.body.currentSourceHash).not.toBe(
-      statusResponse.body.indexedSourceHash,
+    const statusPayload = readApiData<{
+      indexed: boolean
+      stale: boolean
+      currentSourceHash: string
+      indexedSourceHash: string
+    }>(statusResponse)
+
+    expect(statusPayload.indexed).toBe(true)
+    expect(statusPayload.stale).toBe(true)
+    expect(statusPayload.currentSourceHash).not.toBe(
+      statusPayload.indexedSourceHash,
     )
   })
 })

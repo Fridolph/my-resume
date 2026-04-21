@@ -3,6 +3,7 @@ import { INestApplication } from '@nestjs/common'
 import request from 'supertest'
 import { App } from 'supertest/types'
 import { AppModule } from './../src/app.module'
+import { readApiData } from './helpers/api-envelope'
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>
@@ -16,7 +17,10 @@ describe('AppController (e2e)', () => {
     await app.init()
   })
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer()).get('/').expect(200).expect('Hello World!')
+  it('/ (GET)', async () => {
+    const response = await request(app.getHttpServer()).get('/').expect(200)
+    const payload = readApiData<string>(response)
+
+    expect(payload).toBe('Hello World!')
   })
 })

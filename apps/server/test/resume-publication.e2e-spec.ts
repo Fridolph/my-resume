@@ -10,6 +10,7 @@ import { App } from 'supertest/types'
 import type { DatabaseClient } from './../src/database/database.client'
 import { DATABASE_CLIENT } from './../src/database/database.tokens'
 import { AppModule } from './../src/app.module'
+import { readAccessToken, readApiData } from './helpers/api-envelope'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 async function prepareResumeTables(client: DatabaseClient) {
@@ -96,7 +97,7 @@ describe('Resume publication flow (e2e)', () => {
       })
       .expect(200)
 
-    const accessToken = loginResponse.body.accessToken as string
+    const accessToken = readAccessToken(loginResponse)
 
     const draftResponse = await request(app.getHttpServer())
       .put('/api/resume/draft')
@@ -154,15 +155,31 @@ describe('Resume publication flow (e2e)', () => {
       })
       .expect(200)
 
-    expect(draftResponse.body.status).toBe('draft')
+    const draftPayload = readApiData<{
+      status: string
+    }>(draftResponse)
+
+    expect(draftPayload.status).toBe('draft')
 
     const publishResponse = await request(app.getHttpServer())
       .post('/api/resume/publish')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
 
-    expect(publishResponse.body.status).toBe('published')
-    expect(publishResponse.body.resume.profile.headline).toEqual({
+    const publishPayload = readApiData<{
+      status: string
+      resume: {
+        profile: {
+          headline: {
+            zh: string
+            en: string
+          }
+        }
+      }
+    }>(publishResponse)
+
+    expect(publishPayload.status).toBe('published')
+    expect(publishPayload.resume.profile.headline).toEqual({
       zh: '已发布候选稿',
       en: 'Publish Candidate',
     })
@@ -171,7 +188,18 @@ describe('Resume publication flow (e2e)', () => {
       .get('/api/resume/published')
       .expect(200)
 
-    expect(publicResponse.body.resume.profile.headline).toEqual({
+    const publicPayload = readApiData<{
+      resume: {
+        profile: {
+          headline: {
+            zh: string
+            en: string
+          }
+        }
+      }
+    }>(publicResponse)
+
+    expect(publicPayload.resume.profile.headline).toEqual({
       zh: '已发布候选稿',
       en: 'Publish Candidate',
     })
@@ -230,7 +258,7 @@ describe('Resume publication flow (e2e)', () => {
       })
       .expect(200)
 
-    const accessToken = loginResponse.body.accessToken as string
+    const accessToken = readAccessToken(loginResponse)
 
     const baseResume = {
       meta: {
@@ -370,7 +398,7 @@ describe('Resume publication flow (e2e)', () => {
       })
       .expect(200)
 
-    const accessToken = loginResponse.body.accessToken as string
+    const accessToken = readAccessToken(loginResponse)
 
     await request(app.getHttpServer())
       .put('/api/resume/draft')
@@ -393,7 +421,7 @@ describe('Resume publication flow (e2e)', () => {
       })
       .expect(200)
 
-    const accessToken = loginResponse.body.accessToken as string
+    const accessToken = readAccessToken(loginResponse)
 
     await request(app.getHttpServer())
       .post('/api/resume/publish')
@@ -414,7 +442,7 @@ describe('Resume publication flow (e2e)', () => {
       })
       .expect(200)
 
-    const accessToken = loginResponse.body.accessToken as string
+    const accessToken = readAccessToken(loginResponse)
 
     await request(app.getHttpServer())
       .post('/api/resume/publish')

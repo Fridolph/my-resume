@@ -8,6 +8,9 @@ import type {
   SortableCollectionState,
 } from './draft-editor.types'
 
+/**
+ * 项目经历分节组件入参。
+ */
 export interface ProjectsSectionProps {
   addProject: () => void
   addProjectLink: (projectIndex: number) => void

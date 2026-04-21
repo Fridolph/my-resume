@@ -16,6 +16,7 @@ import { RagController } from './rag/rag.controller'
 import { RagChunkService } from './rag/rag-chunk.service'
 import { RagIndexRepository } from './rag/rag-index.repository'
 import { RagKnowledgeService } from './rag/rag-knowledge.service'
+import { RagRetrievalRepository } from './rag/rag-retrieval.repository'
 import { RagService } from './rag/rag.service'
 import { ResumeOptimizationResultCacheService } from './resume-optimization-result-cache.service'
 
@@ -48,6 +49,7 @@ import { ResumeOptimizationResultCacheService } from './resume-optimization-resu
     RagChunkService,
     RagKnowledgeService,
     RagIndexRepository,
+    RagRetrievalRepository,
     RagService,
   ],
   exports: [

@@ -4,6 +4,7 @@ import request from 'supertest'
 import { App } from 'supertest/types'
 
 import { AppModule } from './../src/app.module'
+import { readAccessToken, readApiData } from './helpers/api-envelope'
 
 describe('AI file extraction (e2e)', () => {
   let app: INestApplication<App>
@@ -31,7 +32,7 @@ describe('AI file extraction (e2e)', () => {
       })
       .expect(200)
 
-    const accessToken = loginResponse.body.accessToken as string
+    const accessToken = readAccessToken(loginResponse)
 
     const response = await request(app.getHttpServer())
       .post('/api/ai/extract-text')
@@ -39,8 +40,13 @@ describe('AI file extraction (e2e)', () => {
       .attach('file', Buffer.from('resume text content', 'utf8'), 'resume.txt')
       .expect(201)
 
-    expect(response.body.fileType).toBe('txt')
-    expect(response.body.text).toContain('resume text content')
+    const extractionResult = readApiData<{
+      fileType: string
+      text: string
+    }>(response)
+
+    expect(extractionResult.fileType).toBe('txt')
+    expect(extractionResult.text).toContain('resume text content')
   })
 
   it('should reject unsupported uploaded files', async () => {
@@ -52,7 +58,7 @@ describe('AI file extraction (e2e)', () => {
       })
       .expect(200)
 
-    const accessToken = loginResponse.body.accessToken as string
+    const accessToken = readAccessToken(loginResponse)
 
     await request(app.getHttpServer())
       .post('/api/ai/extract-text')

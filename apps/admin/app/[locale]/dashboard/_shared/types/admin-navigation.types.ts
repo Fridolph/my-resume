@@ -1,3 +1,6 @@
+/**
+ * 后台导航项模型。
+ */
 export interface AdminNavigationItem {
   key: 'overview' | 'resume' | 'ai' | 'optimizationHistory' | 'publish'
   href:
