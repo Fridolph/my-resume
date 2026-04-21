@@ -4,6 +4,7 @@ import request from 'supertest'
 import { App } from 'supertest/types'
 
 import { AppModule } from './../src/app.module'
+import { readAccessToken } from './helpers/api-envelope'
 
 describe('Auth viewer access (e2e)', () => {
   let app: INestApplication<App>
@@ -31,9 +32,11 @@ describe('Auth viewer access (e2e)', () => {
       })
       .expect(200)
 
+    const accessToken = readAccessToken(loginResponse)
+
     await request(app.getHttpServer())
       .get('/api/auth/demo/viewer-experience')
-      .set('Authorization', `Bearer ${loginResponse.body.accessToken as string}`)
+      .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
   })
 
@@ -46,9 +49,11 @@ describe('Auth viewer access (e2e)', () => {
       })
       .expect(200)
 
+    const accessToken = readAccessToken(loginResponse)
+
     await request(app.getHttpServer())
       .post('/api/auth/demo/publish')
-      .set('Authorization', `Bearer ${loginResponse.body.accessToken as string}`)
+      .set('Authorization', `Bearer ${accessToken}`)
       .expect(403)
   })
 
@@ -61,9 +66,11 @@ describe('Auth viewer access (e2e)', () => {
       })
       .expect(200)
 
+    const accessToken = readAccessToken(loginResponse)
+
     await request(app.getHttpServer())
       .post('/api/auth/demo/ai-analysis')
-      .set('Authorization', `Bearer ${loginResponse.body.accessToken as string}`)
+      .set('Authorization', `Bearer ${accessToken}`)
       .expect(403)
   })
 
@@ -76,14 +83,16 @@ describe('Auth viewer access (e2e)', () => {
       })
       .expect(200)
 
+    const accessToken = readAccessToken(loginResponse)
+
     await request(app.getHttpServer())
       .post('/api/auth/demo/publish')
-      .set('Authorization', `Bearer ${loginResponse.body.accessToken as string}`)
+      .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
 
     await request(app.getHttpServer())
       .post('/api/auth/demo/ai-analysis')
-      .set('Authorization', `Bearer ${loginResponse.body.accessToken as string}`)
+      .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
   })
 })

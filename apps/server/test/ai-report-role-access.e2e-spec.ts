@@ -9,6 +9,7 @@ import { App } from 'supertest/types'
 import type { DatabaseClient } from './../src/database/database.client'
 import { DATABASE_CLIENT } from './../src/database/database.tokens'
 import { AppModule } from './../src/app.module'
+import { readAccessToken, readApiData } from './helpers/api-envelope'
 
 async function prepareResumeTables(client: DatabaseClient) {
   await client.execute(`
@@ -117,24 +118,33 @@ describe('AI report role access (e2e)', () => {
       })
       .expect(200)
 
-    const accessToken = loginResponse.body.accessToken as string
+    const accessToken = readAccessToken(loginResponse)
 
     const runtimeResponse = await request(app.getHttpServer())
       .get('/api/ai/reports/runtime')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
 
-    expect(runtimeResponse.body.supportedScenarios).toContain('jd-match')
-    expect(runtimeResponse.body.provider).toBeDefined()
+    const runtimePayload = readApiData<{
+      supportedScenarios: string[]
+      provider: string
+    }>(runtimeResponse)
+
+    expect(runtimePayload.supportedScenarios).toContain('jd-match')
+    expect(runtimePayload.provider).toBeDefined()
 
     const listResponse = await request(app.getHttpServer())
       .get('/api/ai/reports/cache')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
 
-    expect(listResponse.body.reports.length).toBeGreaterThanOrEqual(1)
+    const listPayload = readApiData<{
+      reports: Array<{ reportId: string }>
+    }>(listResponse)
 
-    const reportId = listResponse.body.reports[0].reportId as string
+    expect(listPayload.reports.length).toBeGreaterThanOrEqual(1)
+
+    const reportId = listPayload.reports[0].reportId
 
     await request(app.getHttpServer())
       .get(`/api/ai/reports/cache/${reportId}`)
@@ -197,14 +207,18 @@ describe('AI report role access (e2e)', () => {
       })
       .expect(200)
 
-    const accessToken = loginResponse.body.accessToken as string
+    const accessToken = readAccessToken(loginResponse)
 
     const runtimeResponse = await request(app.getHttpServer())
       .get('/api/ai/reports/runtime')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
 
-    expect(runtimeResponse.body.supportedScenarios).toEqual([
+    const runtimePayload = readApiData<{
+      supportedScenarios: string[]
+    }>(runtimeResponse)
+
+    expect(runtimePayload.supportedScenarios).toEqual([
       'jd-match',
       'resume-review',
       'offer-compare',
@@ -220,13 +234,25 @@ describe('AI report role access (e2e)', () => {
       })
       .expect(201)
 
-    expect(response.body.report.generator).toBe('ai-provider')
-    expect(response.body.report.summary.length).toBeGreaterThan(0)
-    expect(response.body.report.score.value).toBeGreaterThan(0)
-    expect(response.body.report.strengths.length).toBeGreaterThan(0)
-    expect(response.body.report.gaps.length).toBeGreaterThan(0)
-    expect(response.body.report.risks.length).toBeGreaterThan(0)
-    expect(response.body.report.suggestions.length).toBeGreaterThan(0)
+    const analyzePayload = readApiData<{
+      report: {
+        generator: string
+        summary: string
+        score: { value: number }
+        strengths: unknown[]
+        gaps: unknown[]
+        risks: unknown[]
+        suggestions: unknown[]
+      }
+    }>(response)
+
+    expect(analyzePayload.report.generator).toBe('ai-provider')
+    expect(analyzePayload.report.summary.length).toBeGreaterThan(0)
+    expect(analyzePayload.report.score.value).toBeGreaterThan(0)
+    expect(analyzePayload.report.strengths.length).toBeGreaterThan(0)
+    expect(analyzePayload.report.gaps.length).toBeGreaterThan(0)
+    expect(analyzePayload.report.risks.length).toBeGreaterThan(0)
+    expect(analyzePayload.report.suggestions.length).toBeGreaterThan(0)
 
     const optimizeResponse = await request(app.getHttpServer())
       .post('/api/ai/reports/resume-optimize')
@@ -237,24 +263,48 @@ describe('AI report role access (e2e)', () => {
       })
       .expect(201)
 
-    expect(optimizeResponse.body.summary.length).toBeGreaterThan(0)
-    expect(optimizeResponse.body.changedModules).toContain('profile')
-    expect(optimizeResponse.body.moduleDiffs.length).toBeGreaterThan(0)
-    expect(optimizeResponse.body.resultId).toBeTruthy()
-    expect(optimizeResponse.body.usageRecordId).toBeTruthy()
+    const optimizePayload = readApiData<{
+      summary: string
+      changedModules: string[]
+      moduleDiffs: unknown[]
+      resultId: string
+      usageRecordId: string
+    }>(optimizeResponse)
+
+    expect(optimizePayload.summary.length).toBeGreaterThan(0)
+    expect(optimizePayload.changedModules).toContain('profile')
+    expect(optimizePayload.moduleDiffs.length).toBeGreaterThan(0)
+    expect(optimizePayload.resultId).toBeTruthy()
+    expect(optimizePayload.usageRecordId).toBeTruthy()
 
     const applyResponse = await request(app.getHttpServer())
       .post('/api/ai/reports/resume-optimize/apply')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
-        resultId: optimizeResponse.body.resultId,
+        resultId: optimizePayload.resultId,
         modules: ['profile'],
       })
       .expect(200)
 
-    expect(applyResponse.body.status).toBe('draft')
-    expect(applyResponse.body.resume.profile.summary.zh).not.toBe('')
-    expect(applyResponse.body.resume.projects[0].summary.zh).toBe(
+    const applyPayload = readApiData<{
+      status: string
+      resume: {
+        profile: {
+          summary: {
+            zh: string
+          }
+        }
+        projects: Array<{
+          summary: {
+            zh: string
+          }
+        }>
+      }
+    }>(applyResponse)
+
+    expect(applyPayload.status).toBe('draft')
+    expect(applyPayload.resume.profile.summary.zh).not.toBe('')
+    expect(applyPayload.resume.projects[0].summary.zh).toBe(
       '为全球光伏安装商提供在线项目设计与报价服务，支持多国家、多税率、多币种的复杂业务场景。',
     )
   })

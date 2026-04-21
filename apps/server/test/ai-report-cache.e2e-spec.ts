@@ -4,6 +4,7 @@ import request from 'supertest'
 import { App } from 'supertest/types'
 
 import { AppModule } from './../src/app.module'
+import { readAccessToken, readApiData } from './helpers/api-envelope'
 
 describe('AI report cache (e2e)', () => {
   let app: INestApplication<App>
@@ -31,7 +32,7 @@ describe('AI report cache (e2e)', () => {
       })
       .expect(200)
 
-    const accessToken = loginResponse.body.accessToken as string
+    const accessToken = readAccessToken(loginResponse)
     const payload = {
       scenario: 'jd-match',
       content: 'NestJS React TypeScript Redis BullMQ',
@@ -50,22 +51,41 @@ describe('AI report cache (e2e)', () => {
       .send(payload)
       .expect(201)
 
-    expect(first.body.cached).toBe(false)
-    expect(second.body.cached).toBe(true)
-    expect(second.body.report.reportId).toBe(first.body.report.reportId)
+    const firstPayload = readApiData<{
+      cached: boolean
+      report: { reportId: string }
+    }>(first)
+    const secondPayload = readApiData<{
+      cached: boolean
+      report: { reportId: string }
+    }>(second)
+
+    expect(firstPayload.cached).toBe(false)
+    expect(secondPayload.cached).toBe(true)
+    expect(secondPayload.report.reportId).toBe(firstPayload.report.reportId)
 
     const detail = await request(app.getHttpServer())
-      .get(`/api/ai/reports/cache/${first.body.report.reportId}`)
+      .get(`/api/ai/reports/cache/${firstPayload.report.reportId}`)
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
 
-    expect(detail.body.reportId).toBe(first.body.report.reportId)
-    expect(detail.body.score.value).toBeGreaterThan(0)
-    expect(detail.body.strengths.length).toBeGreaterThan(0)
-    expect(detail.body.gaps.length).toBeGreaterThan(0)
-    expect(detail.body.risks.length).toBeGreaterThan(0)
-    expect(detail.body.suggestions.length).toBeGreaterThan(0)
-    expect(detail.body.sections).toHaveLength(4)
+    const detailPayload = readApiData<{
+      reportId: string
+      score: { value: number }
+      strengths: unknown[]
+      gaps: unknown[]
+      risks: unknown[]
+      suggestions: unknown[]
+      sections: unknown[]
+    }>(detail)
+
+    expect(detailPayload.reportId).toBe(firstPayload.report.reportId)
+    expect(detailPayload.score.value).toBeGreaterThan(0)
+    expect(detailPayload.strengths.length).toBeGreaterThan(0)
+    expect(detailPayload.gaps.length).toBeGreaterThan(0)
+    expect(detailPayload.risks.length).toBeGreaterThan(0)
+    expect(detailPayload.suggestions.length).toBeGreaterThan(0)
+    expect(detailPayload.sections).toHaveLength(4)
   })
 
   it('should reject unsupported analysis scenarios', async () => {
@@ -77,7 +97,7 @@ describe('AI report cache (e2e)', () => {
       })
       .expect(200)
 
-    const accessToken = loginResponse.body.accessToken as string
+    const accessToken = readAccessToken(loginResponse)
 
     await request(app.getHttpServer())
       .post('/api/ai/reports/cache')
