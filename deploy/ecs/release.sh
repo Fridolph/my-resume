@@ -108,6 +108,8 @@ cleanup_args=(--stack-env "$STACK_ENV_FILE")
 if [[ "$DRY_RUN" == '1' ]]; then
   cleanup_args+=(--dry-run)
 fi
+
+run_cmd "$SCRIPT_DIR/pre-release-disk-cleanup.sh" "${cleanup_args[@]}"
 run_cmd "$SCRIPT_DIR/pre-release-port-cleanup.sh" "${cleanup_args[@]}"
 
 if [[ "$DEPLOY_MODE" == 'image' ]]; then

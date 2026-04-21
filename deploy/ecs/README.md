@@ -15,6 +15,7 @@
 - `render-config.sh`：渲染 `.env`、`compose.prod.yml` 与 Nginx 配置
 - `release.sh <tag>`：发布指定版本（自动识别 build/image）
 - `pre-release-port-cleanup.sh`：发布前清理旧项目残留容器占用端口
+- `pre-release-disk-cleanup.sh`：发布前检查 Docker 磁盘空间并按阈值自动清理
 - `deploy-latest-tag.sh`：同步 `main`+标签后，自动发布最新 tag 并执行验收
 - `rollback.sh [tag]`：回滚到上一版或指定 tag
 - `build-and-push-images.sh`：本地构建并推送三端镜像（image 模式专用）
@@ -328,6 +329,15 @@ DEPLOY_APT_SECURITY_MIRROR_URL=http://mirrors.aliyun.com/debian-security
 - **拉不到镜像**：先在 ECS 上 `docker login ghcr.io`
 - **还是在构建**：检查 `DEPLOY_MODE=image` 是否生效
 - **端口冲突（5577/5555/5566）**：`release.sh` 会自动执行 `pre-release-port-cleanup.sh` 清理旧项目残留容器
+- **`no space left on device`（ECS 磁盘打满）**：
+  - `release.sh` 会自动执行 `pre-release-disk-cleanup.sh`
+  - 可在 `stack.env.local` 调整阈值与策略：
+
+```env
+DEPLOY_DOCKER_MIN_FREE_MB=4096
+DEPLOY_AUTO_DOCKER_PRUNE=1
+DEPLOY_RELEASE_SNAPSHOT_KEEP=5
+```
 - **证书申请失败**：先检查 DNS 是否全部解析到 ECS
 - **2核2G 机器卡死**：避免 build 模式，统一改 image 模式
 
