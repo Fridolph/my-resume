@@ -84,6 +84,23 @@ IMAGE_REPOSITORY_PREFIX=ghcr.io/<your-user-or-org>/my-resume
 - `.../web`
 - `.../admin`
 
+### 基础镜像配置（推荐）
+
+为避免 `buildx` 在构建阶段访问 `auth.docker.io` 超时，建议把基础镜像同步到你的私有仓库，然后配置：
+
+```env
+DEPLOY_BASE_IMAGE=crpi-xxxx.cn-<region>.personal.cr.aliyuncs.com/<namespace>/my-resume-base-node:22-slim
+```
+
+如需 apt 镜像源覆盖，可选配置：
+
+```env
+DEPLOY_APT_DEBIAN_MIRROR_URL=http://mirrors.aliyun.com/debian
+DEPLOY_APT_SECURITY_MIRROR_URL=http://mirrors.aliyun.com/debian-security
+```
+
+> 不配置 `DEPLOY_APT_*` 时默认使用 Debian 官方源。
+
 ### 镜像 Tag
 
 - 通常不填 `IMAGE_TAG`，默认使用 `release.sh <tag>` 传入值（如 `v2.1.0`）

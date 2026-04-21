@@ -35,6 +35,18 @@ const cloudTokenToneClasses = [
   'hover:border-emerald-500/45 hover:text-emerald-600 hover:shadow-[0_14px_30px_rgba(16,185,129,0.15)] dark:hover:text-emerald-300',
 ] as const
 
+function resolveSkillTooltipText(
+  locale: PublishedResumeSkillsSectionProps['locale'],
+  rawText: string,
+  fallbackLabel: string,
+) {
+  if (locale === 'en' && /[\u4e00-\u9fff]/u.test(rawText)) {
+    return fallbackLabel
+  }
+
+  return rawText
+}
+
 async function loadSkillChartRenderer(mode: SkillChartMode): Promise<SkillChartRenderer> {
   if (mode === 'radar') {
     const radarChartModule = await import('./published-resume-skills-radar-chart')
@@ -385,7 +397,9 @@ export function PublishedResumeSkillsSection({
                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                           {token.groupLabel}
                         </p>
-                        <p className="text-sm leading-6">{token.raw}</p>
+                        <p className="text-sm leading-6">
+                          {resolveSkillTooltipText(locale, token.raw, token.label)}
+                        </p>
                       </div>
                     </Tooltip.Content>
                   </Tooltip>

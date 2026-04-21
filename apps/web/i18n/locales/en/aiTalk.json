@@ -36,12 +36,12 @@
         "title": "RAG knowledge / persona Q&A",
         "description": "Turn the published resume and future knowledge sources into a traceable public Q&A entry.",
         "badge": "Chat entry",
-        "status": "Available now"
+        "status": "Not open yet"
       },
       "back": {
         "eyebrow": "Knowledge chat",
         "title": "RAG chat workspace",
-        "description": "Redeem a trial code here, then move into a 10-turn conversation and the streaming workspace.",
+        "description": "This route currently shows product planning only. Trial code and live chat are not open yet.",
         "tags": {
           "one": "Trial code",
           "two": "10 turns"
@@ -50,7 +50,7 @@
           "one": "Resume data, project history, and future knowledge sources become one retrieval context.",
           "two": "Answers surface source snippets and remaining quota so the rationale is easy to inspect."
         },
-        "cta": "Open RAG chat"
+        "cta": "Not open yet"
       }
     },
     "resumeAdvisor": {
@@ -151,9 +151,9 @@
     "chat": {
       "eyebrow": "Entry One",
       "title": "RAG Chat",
-      "description": "Later this is where visitors redeem a trial code, start a 10-turn conversation, and enter the real chat workspace.",
+      "description": "This card is currently informational only. Trial code and live chat are not open yet.",
       "badge": "SSR entry + sub-route workspace",
-      "cta": "Open chat entry"
+      "cta": "Not open yet"
     },
     "avatar": {
       "eyebrow": "Entry Two",
@@ -173,14 +173,14 @@
   "chat": {
     "eyebrow": "rag chat",
     "title": "RAG Chat Entry",
-    "description": "This becomes the true start page for public AI Talk: redeem a trial code first, then begin streaming Q&A and a multi-turn session.",
+    "description": "This page currently serves as a capability preview. Live Q&A is not open yet.",
     "badgeQuota": "10-turn quota",
     "badgeStreaming": "Streaming response",
     "steps": {
       "code": {
         "eyebrow": "Step One",
         "title": "Trial code redemption",
-        "description": "Later this section accepts a trial code and lets a public visitor start chatting without an admin login."
+        "description": "The input flow is reserved for now. Trial code redemption will be enabled in a future release."
       },
       "session": {
         "eyebrow": "Step Two",
@@ -196,7 +196,7 @@
     "workspacePreview": {
       "eyebrow": "Next Step",
       "title": "Preview the future session workspace",
-      "description": "The real chat pipeline is not wired yet, but the route structure already reserves a dedicated session workspace.",
+      "description": "The real chat pipeline is not open yet, and this page currently previews the future session workspace.",
       "primaryCta": "Preview session workspace",
       "secondaryCta": "Back to AI Talk hub"
     }

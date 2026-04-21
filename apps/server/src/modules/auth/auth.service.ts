@@ -28,7 +28,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
   {
     id: 'admin-demo-user',
     username: 'admin',
-    password: 'admin123456',
+    password: 'fri5945admin',
     role: UserRole.ADMIN,
     isActive: true,
   },

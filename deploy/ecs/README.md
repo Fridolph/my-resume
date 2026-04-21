@@ -18,6 +18,7 @@
 - `deploy-latest-tag.sh`：同步 `main`+标签后，自动发布最新 tag 并执行验收
 - `rollback.sh [tag]`：回滚到上一版或指定 tag
 - `build-and-push-images.sh`：本地构建并推送三端镜像（image 模式专用）
+- `sync-base-image.sh`：同步基础镜像到私有仓库（降低 DockerHub 依赖风险）
 - `stack-env-checklist.md`：`stack.env.local` 填写清单
 
 模板目录：
@@ -106,14 +107,37 @@ DEPLOY_ROOT=/opt/my-resume ./deploy/ecs/deploy-latest-tag.sh
 
 ## 4. Image 模式工作流（推荐）
 
+### 4.0 先同步基础镜像到私有仓库（强烈推荐）
+
+```bash
+./deploy/ecs/sync-base-image.sh \
+  --source-image node:22-slim \
+  --target-repo crpi-xxxx.cn-<region>.personal.cr.aliyuncs.com/<namespace>/my-resume-base-node \
+  --target-tag 22-slim \
+  --stamp-tag 22-slim-20260421
+```
+
+在 `stack.env.local` 中配置：
+
+```env
+DEPLOY_BASE_IMAGE=crpi-xxxx.cn-<region>.personal.cr.aliyuncs.com/<namespace>/my-resume-base-node:22-slim
+```
+
 ### 4.1 本地构建并推送镜像
+
+支持三种 tag 输入方式：
+
+- 显式 `--tag v2.2.9`
+- 显式 `--version 2.2.9`（会自动转成 `v2.2.9`）
+- 自动 `--auto-tag`（从当前 `HEAD` 识别 `v*` tag）
 
 ```bash
 ./deploy/ecs/build-and-push-images.sh \
-  --tag v2.1.0 \
+  --version 2.1.0 \
   --image-prefix ghcr.io/<your-user-or-org>/my-resume \
   --public-api-base-url https://api-resume.example.com \
   --web-server-api-base-url http://server:5577 \
+  --services all \
   --platform linux/amd64
 ```
 
@@ -125,6 +149,22 @@ DEPLOY_ROOT=/opt/my-resume ./deploy/ecs/deploy-latest-tag.sh
   --server-image <registry>/my-resume-server \
   --web-image <registry>/my-resume-web \
   --admin-image <registry>/my-resume-admin \
+  --public-api-base-url https://api-resume.example.com \
+  --web-server-api-base-url http://server:5577 \
+  --services all \
+  --platform linux/amd64
+```
+
+按服务选择构建（不变服务复用旧 tag）：
+
+```bash
+./deploy/ecs/build-and-push-images.sh \
+  --tag v2.2.9 \
+  --server-image <registry>/my-resume-server \
+  --web-image <registry>/my-resume-web \
+  --admin-image <registry>/my-resume-admin \
+  --services web,admin \
+  --reuse-from-tag v2.2.8 \
   --public-api-base-url https://api-resume.example.com \
   --web-server-api-base-url http://server:5577 \
   --platform linux/amd64
@@ -142,6 +182,12 @@ DEPLOY_ROOT=/opt/my-resume ./deploy/ecs/deploy-latest-tag.sh
 
 ### 4.3 本地一键：版本对齐 + 构建推送 + ECS 发布
 
+同样支持三种发布标识来源：
+
+- 显式 `--tag`
+- 显式 `--version`
+- 自动 `--auto-tag`（当前提交必须已打 `v*` tag）
+
 ```bash
 ./deploy/ecs/release-from-local.sh \
   --version 2.2.4 \
@@ -155,9 +201,82 @@ DEPLOY_ROOT=/opt/my-resume ./deploy/ecs/deploy-latest-tag.sh
 
 - `--version 2.2.4` 会自动对齐为发布 tag `v2.2.4`
 - 脚本会保证发布 tag 与镜像 tag 一致（默认 `IMAGE_TAG=v2.2.4` 语义）
+- 自动创建 tag 前会强校验：必须在 `main`、工作区干净、且 `main` 与 `origin/main` 完全同步
 - 若 tag 不存在，可自动创建并 push
 - 本地先构建推送镜像，再通过 SSH 调 ECS `release.sh`
 - 发布后默认会做公网域名健康检查（可加 `--skip-public-check`）
+- 如遇 DockerHub 网络问题，建议把 `node:22-slim` 同步到你自己的仓库，并配置 `DEPLOY_BASE_IMAGE`
+- 如遇 apt 源网络/证书问题，可配置 `DEPLOY_APT_DEBIAN_MIRROR_URL` 与 `DEPLOY_APT_SECURITY_MIRROR_URL`（不配置时使用 Debian 官方源）
+
+自动识别当前 tag 的发布示例：
+
+```bash
+./deploy/ecs/release-from-local.sh \
+  --auto-tag \
+  --stack-env ./.env.stack.local \
+  --ecs-host <ecs-ip-or-domain>
+```
+
+#### 4.4 四种发布场景（推荐模板）
+
+设：
+
+- 旧版本：`v2.2.8`
+- 新版本：`v2.2.9`
+
+1) 仅升级 `server`（`web/admin` 复用旧版本）：
+
+```bash
+./deploy/ecs/release-from-local.sh \
+  --version 2.2.9 \
+  --services server \
+  --reuse-from-tag v2.2.8 \
+  --stack-env ./.env.stack.local \
+  --ecs-host <ecs-ip-or-domain>
+```
+
+2) 仅升级 `web`：
+
+```bash
+./deploy/ecs/release-from-local.sh \
+  --version 2.2.9 \
+  --services web \
+  --reuse-from-tag v2.2.8 \
+  --stack-env ./.env.stack.local \
+  --ecs-host <ecs-ip-or-domain>
+```
+
+3) 仅升级 `admin`：
+
+```bash
+./deploy/ecs/release-from-local.sh \
+  --version 2.2.9 \
+  --services admin \
+  --reuse-from-tag v2.2.8 \
+  --stack-env ./.env.stack.local \
+  --ecs-host <ecs-ip-or-domain>
+```
+
+4) 同时升级 `web + admin`（`server` 复用旧版本）：
+
+```bash
+./deploy/ecs/release-from-local.sh \
+  --version 2.2.9 \
+  --services web,admin \
+  --reuse-from-tag v2.2.8 \
+  --stack-env ./.env.stack.local \
+  --ecs-host <ecs-ip-or-domain>
+```
+
+5) 全量升级三端：
+
+```bash
+./deploy/ecs/release-from-local.sh \
+  --version 2.2.9 \
+  --services all \
+  --stack-env ./.env.stack.local \
+  --ecs-host <ecs-ip-or-domain>
+```
 
 ---
 
@@ -186,6 +305,25 @@ docker compose up -d --build --remove-orphans
 ---
 
 ## 7. 常见问题
+
+- **`failed to fetch oauth token` / `auth.docker.io` 连接失败**：
+  - 根因：本地到 DockerHub 鉴权链路不稳定或被拦截
+  - 建议：先同步基础镜像到你的私有仓库，再在 `stack.env.local` 配置 `DEPLOY_BASE_IMAGE`：
+
+```env
+DEPLOY_BASE_IMAGE=crpi-xxxx.cn-<region>.personal.cr.aliyuncs.com/<namespace>/my-resume-base-node:22-slim
+DEPLOY_APT_DEBIAN_MIRROR_URL=http://mirrors.aliyun.com/debian
+DEPLOY_APT_SECURITY_MIRROR_URL=http://mirrors.aliyun.com/debian-security
+```
+
+  - 同步命令：
+
+```bash
+./deploy/ecs/sync-base-image.sh \
+  --source-image node:22-slim \
+  --target-repo crpi-xxxx.cn-<region>.personal.cr.aliyuncs.com/<namespace>/my-resume-base-node \
+  --target-tag 22-slim
+```
 
 - **拉不到镜像**：先在 ECS 上 `docker login ghcr.io`
 - **还是在构建**：检查 `DEPLOY_MODE=image` 是否生效

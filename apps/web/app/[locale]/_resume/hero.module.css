@@ -293,21 +293,136 @@
 }
 
 .highlightCard {
+  --highlight-card-bg: linear-gradient(
+    135deg,
+    rgba(248, 250, 252, 0.21),
+    rgba(241, 245, 249, 0.17)
+  );
+  --highlight-card-bg-hover: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.57),
+    rgba(239, 246, 255, 0.48),
+    rgba(224, 242, 254, 0.47)
+  );
+  --highlight-card-border-hover: rgba(96, 165, 250, 0.55);
+  --highlight-card-shadow: 0 14px 28px rgba(37, 99, 235, 0.12);
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(226, 232, 240, 0.8);
   border-radius: 1.2rem;
-  background: rgba(248, 250, 252, 0.9);
+  background: var(--highlight-card-bg);
   padding: 0.75rem 0.875rem;
   box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
   transition:
     transform 0.2s ease,
     border-color 0.2s ease,
-    background-color 0.2s ease;
+    box-shadow 0.24s ease;
+}
+
+.highlightCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0;
+  pointer-events: none;
+  background: var(--highlight-card-bg-hover);
+  transition: opacity 0.24s ease;
+}
+
+.highlightCard:hover::before {
+  opacity: 1;
+}
+
+.highlightCard > * {
+  position: relative;
+  z-index: 1;
 }
 
 .highlightCard:hover {
   transform: translateY(-2px);
+  border-color: var(--highlight-card-border-hover);
+  box-shadow: var(--highlight-card-shadow);
+}
+
+.highlightCardThemeSky {
+  --highlight-card-bg: linear-gradient(
+    135deg,
+    rgba(239, 246, 255, 0.18),
+    rgba(224, 242, 254, 0.14)
+  );
+  --highlight-card-bg-hover: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.57),
+    rgba(219, 234, 254, 0.5),
+    rgba(186, 230, 253, 0.45)
+  );
+  --highlight-card-border-hover: rgba(59, 130, 246, 0.56);
+  --highlight-card-shadow: 0 16px 30px rgba(59, 130, 246, 0.14);
+}
+
+.highlightCardThemeEmerald {
+  --highlight-card-bg: linear-gradient(
+    135deg,
+    rgba(236, 253, 245, 0.18),
+    rgba(204, 251, 241, 0.14)
+  );
+  --highlight-card-bg-hover: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.57),
+    rgba(209, 250, 229, 0.48),
+    rgba(153, 246, 228, 0.42)
+  );
+  --highlight-card-border-hover: rgba(16, 185, 129, 0.56);
+  --highlight-card-shadow: 0 16px 30px rgba(16, 185, 129, 0.14);
+}
+
+.highlightCardThemeViolet {
+  --highlight-card-bg: linear-gradient(
+    135deg,
+    rgba(245, 243, 255, 0.18),
+    rgba(233, 213, 255, 0.14)
+  );
+  --highlight-card-bg-hover: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.57),
+    rgba(224, 231, 255, 0.47),
+    rgba(216, 180, 254, 0.38)
+  );
+  --highlight-card-border-hover: rgba(139, 92, 246, 0.54);
+  --highlight-card-shadow: 0 16px 30px rgba(139, 92, 246, 0.13);
+}
+
+.highlightCardThemeAmber {
+  --highlight-card-bg: linear-gradient(
+    135deg,
+    rgba(255, 251, 235, 0.18),
+    rgba(254, 243, 199, 0.14)
+  );
+  --highlight-card-bg-hover: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.58),
+    rgba(254, 240, 138, 0.42),
+    rgba(253, 186, 116, 0.36)
+  );
+  --highlight-card-border-hover: rgba(245, 158, 11, 0.52);
+  --highlight-card-shadow: 0 16px 30px rgba(245, 158, 11, 0.13);
+}
+
+.highlightCardThemeRose {
+  --highlight-card-bg: linear-gradient(
+    135deg,
+    rgba(255, 241, 242, 0.18),
+    rgba(254, 205, 211, 0.14)
+  );
+  --highlight-card-bg-hover: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.58),
+    rgba(254, 205, 211, 0.45),
+    rgba(251, 207, 232, 0.39)
+  );
+  --highlight-card-border-hover: rgba(244, 63, 94, 0.5);
+  --highlight-card-shadow: 0 16px 30px rgba(244, 63, 94, 0.13);
 }
 
 .publishedMetaCard {
@@ -361,7 +476,98 @@
   );
 }
 
-:global([data-theme='dark']) .highlightCard,
+:global([data-theme='dark']) .highlightCard {
+  border-color: rgba(255, 255, 255, 0.1);
+  --highlight-card-border-hover: rgba(125, 211, 252, 0.5);
+  --highlight-card-shadow: 0 18px 34px rgba(2, 6, 23, 0.42);
+  --highlight-card-bg: linear-gradient(
+    135deg,
+    rgba(30, 41, 59, 0.19),
+    rgba(15, 23, 42, 0.16)
+  );
+  --highlight-card-bg-hover: linear-gradient(
+    135deg,
+    rgba(96, 165, 250, 0.15),
+    rgba(56, 189, 248, 0.09),
+    rgba(15, 23, 42, 0.27)
+  );
+}
+
+:global([data-theme='dark']) .highlightCardThemeSky {
+  --highlight-card-border-hover: rgba(125, 211, 252, 0.58);
+  --highlight-card-bg: linear-gradient(
+    135deg,
+    rgba(30, 58, 138, 0.1),
+    rgba(12, 74, 110, 0.07)
+  );
+  --highlight-card-bg-hover: linear-gradient(
+    135deg,
+    rgba(96, 165, 250, 0.26),
+    rgba(34, 211, 238, 0.15),
+    rgba(15, 23, 42, 0.3)
+  );
+}
+
+:global([data-theme='dark']) .highlightCardThemeEmerald {
+  --highlight-card-border-hover: rgba(52, 211, 153, 0.54);
+  --highlight-card-bg: linear-gradient(
+    135deg,
+    rgba(6, 95, 70, 0.1),
+    rgba(17, 94, 89, 0.07)
+  );
+  --highlight-card-bg-hover: linear-gradient(
+    135deg,
+    rgba(16, 185, 129, 0.24),
+    rgba(45, 212, 191, 0.14),
+    rgba(15, 23, 42, 0.29)
+  );
+}
+
+:global([data-theme='dark']) .highlightCardThemeViolet {
+  --highlight-card-border-hover: rgba(196, 181, 253, 0.55);
+  --highlight-card-bg: linear-gradient(
+    135deg,
+    rgba(76, 29, 149, 0.1),
+    rgba(67, 56, 202, 0.07)
+  );
+  --highlight-card-bg-hover: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.23),
+    rgba(167, 139, 250, 0.14),
+    rgba(15, 23, 42, 0.29)
+  );
+}
+
+:global([data-theme='dark']) .highlightCardThemeAmber {
+  --highlight-card-border-hover: rgba(253, 186, 116, 0.54);
+  --highlight-card-bg: linear-gradient(
+    135deg,
+    rgba(120, 53, 15, 0.11),
+    rgba(146, 64, 14, 0.07)
+  );
+  --highlight-card-bg-hover: linear-gradient(
+    135deg,
+    rgba(245, 158, 11, 0.21),
+    rgba(251, 191, 36, 0.14),
+    rgba(15, 23, 42, 0.27)
+  );
+}
+
+:global([data-theme='dark']) .highlightCardThemeRose {
+  --highlight-card-border-hover: rgba(251, 113, 133, 0.54);
+  --highlight-card-bg: linear-gradient(
+    135deg,
+    rgba(136, 19, 55, 0.1),
+    rgba(131, 24, 67, 0.07)
+  );
+  --highlight-card-bg-hover: linear-gradient(
+    135deg,
+    rgba(244, 63, 94, 0.21),
+    rgba(244, 114, 182, 0.12),
+    rgba(15, 23, 42, 0.27)
+  );
+}
+
 :global([data-theme='dark']) .publishedMetaCard {
   border-color: rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.04);

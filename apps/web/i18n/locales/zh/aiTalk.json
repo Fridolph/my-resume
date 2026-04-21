@@ -36,12 +36,12 @@
         "title": "RAG 知识库 / 分身问答",
         "description": "把已发布简历与后续知识库素材整合成可追溯的公开问答入口。",
         "badge": "对话入口",
-        "status": "可继续进入"
+        "status": "暂未开放"
       },
       "back": {
         "eyebrow": "知识库问答",
         "title": "RAG 对话工作区",
-        "description": "领取试用码后，从这里进入 10 轮问答与真实流式会话。",
+        "description": "当前仅展示对话规划，试用码与真实会话暂未开放。",
         "tags": {
           "one": "试用码",
           "two": "10 轮对话"
@@ -50,7 +50,7 @@
           "one": "简历内容、项目经历与后续知识源会作为统一检索上下文。",
           "two": "回答会优先带上来源片段与剩余额度，方便快速判断依据。"
         },
-        "cta": "进入 RAG 对话"
+        "cta": "暂未开放"
       }
     },
     "resumeAdvisor": {
@@ -151,9 +151,9 @@
     "chat": {
       "eyebrow": "入口一",
       "title": "RAG 对话",
-      "description": "后续从这里领取试用码、开启 10 轮对话，并进入真正的会话工作区。",
+      "description": "当前仅保留公开说明，试用码与真实对话能力暂未开放。",
       "badge": "SSR 入口 + 子路由工作区",
-      "cta": "查看对话入口"
+      "cta": "暂未开放"
     },
     "avatar": {
       "eyebrow": "入口二",
@@ -173,14 +173,14 @@
   "chat": {
     "eyebrow": "rag chat",
     "title": "RAG 对话入口",
-    "description": "这里会成为公开 AI Talk 的真正启动页：先领试用码，再启动流式问答与多轮会话。",
+    "description": "这里当前只做能力说明与结构占位，真实问答暂未开放。",
     "badgeQuota": "10 轮问答",
     "badgeStreaming": "流式响应",
     "steps": {
       "code": {
         "eyebrow": "步骤一",
         "title": "试用码领取",
-        "description": "未来这里会放试用码输入与领取结果，公开访客不需要 admin 登录即可进入对话。"
+        "description": "当前先保留交互位置，试用码输入与领取流程将在后续版本开放。"
       },
       "session": {
         "eyebrow": "步骤二",
@@ -196,7 +196,7 @@
     "workspacePreview": {
       "eyebrow": "下一步",
       "title": "先看未来会话工作区",
-      "description": "真实聊天链路还没接入，但页面结构已经为 session 工作区预留好了位置。",
+      "description": "真实聊天链路尚未开放，当前页面仅用于展示未来会话工作区结构。",
       "primaryCta": "查看未来会话工作区",
       "secondaryCta": "返回 AI Talk 中枢"
     }

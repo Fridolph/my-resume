@@ -41,7 +41,7 @@ export function PublishedResumeEducationSection({
 
           return (
             <article
-              className="grid gap-4 px-1 py-5 sm:px-2 sm:py-6"
+              className="grid gap-4"
               data-testid="resume-education-item"
               key={educationKey}>
               <div className="grid gap-4">

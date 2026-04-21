@@ -125,3 +125,40 @@
   - `resume /zh`：TTFB `p50=80.8ms` / `p95=274.4ms`，Total `p50=132.7ms` / `p95=440.2ms`
   - `api /api`：TTFB `p50=67.1ms` / `p95=282.4ms`
   - `api /api/resume/published`：TTFB `p50=100.1ms` / `p95=289.1ms`
+
+## 第三轮补充（2026-04-20，修复 API 报错后）
+
+### 本地构建基线（`pnpm run perf:build:analyze`）
+
+- 数据源：
+  - 最新：`.tmp/perf/build-report.json`（`2026-04-20T09:24:56.243Z`）
+  - 上轮：`.tmp/perf/build-report-latest.json`（`2026-04-17T12:07:59.703Z`）
+  - 对比结果：`.tmp/perf/build-compare-v228-r3.json`
+
+### Build 对比结论
+
+- `web` 静态资源总量：
+  - `1952238B -> 1964145B`（`+11907B`，约 `+11.6KiB`）
+- `admin` 静态资源总量：
+  - `2081274B -> 2076860B`（`-4414B`，约 `-4.3KiB`）
+- 说明：
+  - 总体体积基本持平，变动在可接受范围；
+  - 仍需重点关注 `web` 的 `static/chunks/764.*.js`（约 `452.55KiB`）与 `admin` 主 CSS（约 `441.54KiB`）。
+
+### Next build 首屏链路变化（关键收益）
+
+- `web /[locale]` First Load JS：
+  - `219kB -> 178kB`（明显下降）
+- `web /[locale]/ai-talk*` 系列：
+  - `207~208kB -> 167~168kB`（明显下降）
+- `admin /dashboard`：
+  - `169kB -> 151kB`（下降）
+
+> 结论：这轮修复后，`web` 首屏与主要业务路由首包有明确收敛，符合“先控主链路体感”的目标。
+
+### 第三轮加固判断
+
+- ✅ 线上可用性：已恢复并稳定
+- ✅ 性能基线：已有 Lighthouse + HTTP p50/p95 + Build 体积三层证据
+- ✅ 可教学性：具备“问题 -> 修复 -> 指标变化”闭环材料
+- ⏭️ 下一步：进入“单变量优化实验”（图片格式/响应式尺寸、CSS 阻塞收敛、console error 归零验证）

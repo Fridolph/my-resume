@@ -49,6 +49,13 @@ const highlightAccentClasses = [
   'from-amber-500/20 via-orange-400/12 to-transparent dark:from-amber-400/22 dark:via-orange-300/12',
   'from-rose-500/20 via-pink-400/12 to-transparent dark:from-rose-400/22 dark:via-pink-300/12',
 ] as const
+const highlightCardThemeClassNames = [
+  'highlightCardThemeSky',
+  'highlightCardThemeEmerald',
+  'highlightCardThemeViolet',
+  'highlightCardThemeAmber',
+  'highlightCardThemeRose',
+] as const
 
 function LocationIcon() {
   return (
@@ -180,11 +187,7 @@ function PublishedResumeHeroComponent({
       <CardHeader className="grid gap-5 border-b border-slate-200/80 pb-5 dark:border-white/10">
         <div className="grid gap-4">
           <div className="mx-auto flex w-full max-w-[17rem] flex-col items-center gap-4 text-center">
-            <a
-              className={`${styles.avatarFlip} w-full max-w-[13.5rem]`}
-              href={hero.linkUrl}
-              rel="noreferrer"
-              target="_blank">
+            <div className={`${styles.avatarFlip} w-full max-w-40`}>
               <div className={styles.avatarFlipInner}>
                 <div className={styles.avatarFace}>
                   <img
@@ -207,7 +210,7 @@ function PublishedResumeHeroComponent({
                   />
                 </div>
               </div>
-            </a>
+            </div>
 
             <div className="grid gap-2">
               {localizedHeroSlogans.map((line) => (
@@ -221,7 +224,7 @@ function PublishedResumeHeroComponent({
           </div>
 
           <div className="grid gap-2 text-center">
-            <h2 className="text-[clamp(2rem,4.2vw,2.7rem)] leading-none tracking-[-0.06em] text-slate-950 dark:text-white">
+            <h2 className="text-[clamp(2rem,3.6vw,2rem)] leading-none tracking-[-0.06em] text-slate-950 dark:text-white">
               {name}
             </h2>
             <p className="text-base font-semibold tracking-[-0.03em] text-slate-500 dark:text-slate-300">
@@ -229,9 +232,16 @@ function PublishedResumeHeroComponent({
             </p>
           </div>
 
-          <p className="text-sm leading-7 text-slate-500 dark:text-slate-400">
-            {readLocalizedText(profile.summary, locale)}
-          </p>
+          <article className={styles.githubCard}>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+              INTRO
+            </p>
+            <p
+              className={`${styles.gradientCopy} mt-2 text-sm font-semibold leading-6 text-slate-700 dark:text-slate-100`}>
+              {t('sidebarProjectNote')}
+            </p>
+          </article>
+
         </div>
       </CardHeader>
 
@@ -321,20 +331,6 @@ function PublishedResumeHeroComponent({
           </div>
         ) : null}
 
-        <a
-          className={styles.githubCard}
-          href="https://github.com/Fridolph/my-resume"
-          rel="noreferrer"
-          target="_blank">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-            GitHub
-          </p>
-          <p
-            className={`${styles.gradientCopy} mt-2 text-sm font-semibold leading-6 text-slate-700 dark:text-slate-100`}>
-            {t('sidebarProjectNote')}
-          </p>
-        </a>
-
         {localizedInterests.length > 0 ? (
           <div className="grid gap-3">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
@@ -381,7 +377,7 @@ function PublishedResumeHeroComponent({
             <div className="grid gap-2.5">
               {highlights.map((item, index) => (
                 <article
-                  className={styles.highlightCard}
+                  className={`${styles.highlightCard} group ${styles[highlightCardThemeClassNames[index % highlightCardThemeClassNames.length]]}`}
                   key={`${item.title.en}-${index}`}>
                   <div
                     className={`pointer-events-none absolute inset-0 bg-gradient-to-br opacity-0 transition duration-300 group-hover:opacity-100 ${highlightAccentClasses[index % highlightAccentClasses.length]}`}

@@ -15,10 +15,10 @@ import surfaceStyles from './published-resume-card-surface.module.css'
 import { PublishedResumeSectionCard } from './published-resume-section-card'
 
 const timelineItemClass =
-  `grid gap-2 rounded-3xl p-5 ${surfaceStyles.timelineCardSurface}`
+  `relative grid gap-2 rounded-3xl p-5 ${surfaceStyles.timelineCardSurface}`
 const itemHeaderClass =
-  'mb-2 flex flex-col items-start gap-3 md:flex-row md:justify-between'
-const itemHeaderMainClass = 'flex w-full items-stretch gap-3.5 md:w-auto'
+  'mb-2 flex flex-col items-start gap-3 md:flex-row md:items-start md:justify-between'
+const itemHeaderMainClass = 'grid gap-1.5'
 const itemTitleClass = 'm-0 text-[1.08rem] font-bold text-slate-900 dark:text-slate-50'
 const itemMetaTextClass = 'text-slate-500 dark:text-slate-400'
 const itemSummaryClass =
@@ -66,16 +66,11 @@ export function PublishedResumeExperienceSection({
 
           return (
             <article className={timelineItemClass} key={experienceKey}>
+              <span aria-hidden="true" className={surfaceStyles.timelineCardTab} />
               <div className={itemHeaderClass}>
                 <div className={itemHeaderMainClass}>
-                  <span
-                    aria-hidden="true"
-                    className="min-w-[3px] w-[3px] rounded-full bg-[linear-gradient(180deg,rgba(37,99,235,0.9),rgba(96,165,250,0.56))]"
-                  />
-                  <div className="grid gap-1.5">
-                    <h3 className={itemTitleClass}>{companyName}</h3>
-                    {roleLine ? <p className={itemMetaTextClass}>{roleLine}</p> : null}
-                  </div>
+                  <h3 className={itemTitleClass}>{companyName}</h3>
+                  {roleLine ? <p className={itemMetaTextClass}>{roleLine}</p> : null}
                 </div>
                 <span className={itemMetaTextClass}>
                   {formatDateRange(experience, locale)}

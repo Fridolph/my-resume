@@ -61,6 +61,30 @@ describe('published resume skills utils', () => {
     )
   })
 
+  it('should translate chinese labeled lines in english mode', () => {
+    const groups = normalizeSkillGroups(
+      [
+        {
+          ...publishedResumeFixture.resume.skills[0],
+          keywords: [
+            '测试与质量：具备 Jest、Vitest、TDD 基础，能够编写组件与模块级单元测试，保障重构稳定性',
+          ],
+        },
+      ],
+      'en',
+    )
+
+    const parsed = groups[0]?.parsedKeywords[0]
+    expect(parsed?.label).toBe('Testing & Quality')
+    expect(parsed?.content).toBe(
+      'Solid Jest, Vitest, and TDD fundamentals; able to write component- and module-level unit tests to keep refactors stable.',
+    )
+
+    const tokens = buildSkillCloudTokens(groups, 'en')
+    expect(tokens[0]?.label).toBe('Testing & Quality')
+    expect(tokens[0]?.raw).toContain('Solid Jest, Vitest, and TDD fundamentals')
+  })
+
   it('should build radar from proficiency scores and pie from real skill item counts', () => {
     const groups = rankSkillGroups(
       normalizeSkillGroups([

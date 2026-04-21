@@ -55,11 +55,13 @@ describe('@my-resume/utils', () => {
     expect(formatDateTimeByLocale(dateTime, 'zh')).toBe(
       new Date(dateTime).toLocaleString('zh-CN', {
         hour12: false,
+        timeZone: 'Asia/Shanghai',
       }),
     )
     expect(formatDateTimeByLocale(dateTime, 'en')).toBe(
       new Date(dateTime).toLocaleString('en-US', {
         hour12: false,
+        timeZone: 'Asia/Shanghai',
       }),
     )
   })

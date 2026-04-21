@@ -24,15 +24,15 @@
 }
 
 .primaryNavLink:hover {
-  background: #334155;
+  background: #3b82f6;
   color: #f8fafc;
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.2);
 }
 
 .primaryNavLinkActive {
-  background: #0f172a;
+  background: #2563eb;
   color: #ffffff;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.26);
 }
 
 .localeSwitchWrapper {
@@ -188,14 +188,15 @@
 }
 
 :global([data-theme='dark']) .primaryNavLink:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(59, 130, 246, 0.78);
   color: #ffffff;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
 }
 
 :global([data-theme='dark']) .primaryNavLinkActive {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(37, 99, 235, 0.9);
   color: #ffffff;
-  box-shadow: none;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.32);
 }
 
 :global([data-theme='dark']) .localeSwitchWrapper {
