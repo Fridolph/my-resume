@@ -53,6 +53,15 @@ export interface CreateRagIndexRunInput {
   updatedAt: Date
 }
 
+export interface UpdateRagIndexRunStatusInput {
+  id: string
+  status: RagIndexRunStatus
+  chunkCount?: number
+  errorMessage?: string | null
+  finishedAt?: Date | null
+  updatedAt: Date
+}
+
 @Injectable()
 export class RagRetrievalRepository {
   constructor(
@@ -186,6 +195,44 @@ export class RagRetrievalRepository {
       errorMessage: input.errorMessage ?? null,
       finishedAt: input.finishedAt ?? null,
     })
+
+    return this.findIndexRunById(input.id)
+  }
+
+  /**
+   * 更新索引运行状态与收敛字段。
+   *
+   * @param input 状态更新参数
+   * @returns 更新后的记录或 null
+   */
+  async updateIndexRunStatus(input: UpdateRagIndexRunStatusInput) {
+    const updateData: {
+      status: RagIndexRunStatus
+      chunkCount?: number
+      errorMessage?: string | null
+      finishedAt?: Date | null
+      updatedAt: Date
+    } = {
+      status: input.status,
+      updatedAt: input.updatedAt,
+    }
+
+    if (typeof input.chunkCount === 'number') {
+      updateData.chunkCount = input.chunkCount
+    }
+
+    if (typeof input.errorMessage !== 'undefined') {
+      updateData.errorMessage = input.errorMessage ?? null
+    }
+
+    if (typeof input.finishedAt !== 'undefined') {
+      updateData.finishedAt = input.finishedAt ?? null
+    }
+
+    await this.database
+      .update(ragIndexRuns)
+      .set(updateData)
+      .where(eq(ragIndexRuns.id, input.id))
 
     return this.findIndexRunById(input.id)
   }

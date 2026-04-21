@@ -1,4 +1,10 @@
-import { Inject, Injectable, ServiceUnavailableException } from '@nestjs/common'
+import {
+  Inject,
+  Injectable,
+  Logger,
+  Optional,
+  ServiceUnavailableException,
+} from '@nestjs/common'
 
 import {
   isSqliteLockedError,
@@ -12,6 +18,7 @@ import {
   type ResumeLocale,
 } from './domain/standard-resume'
 import { ResumePublicationRepository } from './resume-publication.repository'
+import { ResumeRagSyncService } from './resume-rag-sync.service'
 import type {
   ResumeDraftSnapshot,
   ResumeDraftSummarySnapshot,
@@ -52,9 +59,14 @@ function toPublishedSnapshot<TResume>(
 
 @Injectable()
 export class ResumePublicationService {
+  private readonly logger = new Logger(ResumePublicationService.name)
+
   constructor(
     @Inject(ResumePublicationRepository)
     private readonly resumePublicationRepository: ResumePublicationRepository,
+    @Optional()
+    @Inject(ResumeRagSyncService)
+    private readonly resumeRagSyncService?: ResumeRagSyncService,
   ) {}
 
   /**
@@ -141,6 +153,9 @@ export class ResumePublicationService {
       const savedDraft = await this.resumePublicationRepository.saveDraft(
         normalizeStandardResume(cloneStandardResume(resume)),
       )
+      await this.trySyncResumeRetrieval(() =>
+        this.resumeRagSyncService?.syncDraft(savedDraft.resumeJson, savedDraft.updatedAt),
+      )
 
       return toDraftSnapshot(
         normalizeStandardResume(cloneStandardResume(savedDraft.resumeJson)),
@@ -161,6 +176,12 @@ export class ResumePublicationService {
         await this.resumePublicationRepository.createPublishedSnapshot(
           cloneStandardResume(draft.resume),
         )
+      await this.trySyncResumeRetrieval(() =>
+        this.resumeRagSyncService?.syncPublished(
+          publishedSnapshot.resumeJson,
+          publishedSnapshot.publishedAt,
+        ),
+      )
 
       return toPublishedSnapshot(
         cloneStandardResume(publishedSnapshot.resumeJson),
@@ -178,6 +199,17 @@ export class ResumePublicationService {
       }
 
       throw error
+    }
+  }
+
+  private async trySyncResumeRetrieval(operation: () => Promise<unknown> | undefined) {
+    try {
+      await operation()
+    } catch (error) {
+      // 简历主链路优先保证可用；检索态失败可通过 index_runs 可观测并重试。
+      const message = error instanceof Error ? error.message : String(error)
+
+      this.logger.warn(`resume rag sync skipped: ${message}`)
     }
   }
 }
