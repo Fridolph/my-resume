@@ -2,6 +2,9 @@ import type { ReactNode } from 'react'
 
 import type { EditorLocaleMode } from './draft-editor.types'
 
+/**
+ * 图标按钮基础入参。
+ */
 export interface IconActionButtonProps {
   buttonProps?: Record<string, unknown>
   className?: string
@@ -13,6 +16,9 @@ export interface IconActionButtonProps {
   variant?: 'ghost' | 'outline'
 }
 
+/**
+ * 双语编辑字段入参。
+ */
 export interface LocalizedEditorFieldProps {
   label: string
   localeMode: EditorLocaleMode
@@ -23,6 +29,9 @@ export interface LocalizedEditorFieldProps {
   variant?: 'input' | 'textarea'
 }
 
+/**
+ * 编辑分节容器入参。
+ */
 export interface EditorSectionProps {
   action?: ReactNode
   children: ReactNode
@@ -32,6 +41,9 @@ export interface EditorSectionProps {
   title: string
 }
 
+/**
+ * 编辑条目容器入参。
+ */
 export interface EditorEntryProps {
   action?: ReactNode
   children: ReactNode

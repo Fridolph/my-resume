@@ -44,6 +44,18 @@ git pull origin development
 git checkout -b feat/m1-issue-01-workspace-bootstrap
 ```
 
+### 3.1 AI 功能开发（边做边学）补充流程
+
+- 当前任务若是 AI / RAG / Agent 相关，默认采用“边做边学”模式推进：
+  1. 先对齐背景、目标、非目标与验收
+  2. 从 `development` 切新 issue 分支
+  3. 先做最小设计，再进入实现
+  4. 对 AI 交互与核心逻辑补充注释，方法补 TSDoc
+  5. 先跑当前改动相关自测，再补开发日志与教程材料
+  6. 提交并推送分支，PR 合并回 `development`
+  7. `development` 稳定后再进入 `main`
+- 若对核心逻辑理解未达预期，先停在设计与伪代码阶段，不直接硬写实现。
+
 ### 4. 先 Plan，再做 TDD
 
 - 开始任务前先梳理需求和边界

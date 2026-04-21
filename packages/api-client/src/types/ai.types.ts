@@ -110,10 +110,24 @@ export interface TriggerAiWorkbenchAnalysisResult {
   usageRecordId: string
 }
 
+/**
+ * AI 使用记录操作类型。
+ */
 export type AiUsageRecordOperationType = 'analysis-report' | 'resume-optimization'
+
+/**
+ * AI 使用记录状态。
+ */
 export type AiUsageRecordStatus = 'succeeded' | 'failed'
+
+/**
+ * AI 使用记录过滤类型。
+ */
 export type AiUsageRecordFilterType = 'all' | AiUsageRecordOperationType
 
+/**
+ * AI 使用记录摘要。
+ */
 export interface AiUsageRecordSummary {
   id: string
   operationType: AiUsageRecordOperationType
@@ -135,6 +149,9 @@ export interface AiUsageRecordSummary {
   scoreValue?: number
 }
 
+/**
+ * AI 使用记录详情。
+ */
 export interface AiUsageRecordDetail extends AiUsageRecordSummary {
   detail: unknown | null
 }
@@ -239,16 +256,25 @@ export interface AiResumeOptimizationResultDetail {
 
 export type AiResumeOptimizationResult = AiResumeOptimizationResultDetail
 
+/**
+ * 获取优化结果请求参数。
+ */
 export interface FetchAiResumeOptimizationResultInput extends RuntimeInput {
   locale: AiWorkbenchLocale
   resultId: string
 }
 
+/**
+ * 获取 AI 使用历史请求参数。
+ */
 export interface FetchAiUsageHistoryInput extends RuntimeInput {
   limit?: number
   type?: AiUsageRecordFilterType
 }
 
+/**
+ * 获取 AI 使用记录详情请求参数。
+ */
 export interface FetchAiUsageRecordDetailInput extends RuntimeInput {
   recordId: string
 }

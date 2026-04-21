@@ -1,3 +1,6 @@
+/**
+ * 后台角色能力定义。
+ */
 export interface RoleCapabilities {
   canAccessAdminSurface?: boolean
   canReadPublishedResume?: boolean
@@ -7,6 +10,9 @@ export interface RoleCapabilities {
   canTriggerAiAnalysis?: boolean
 }
 
+/**
+ * 当前登录用户视图。
+ */
 export interface AuthUserView {
   id: string
   username: string
@@ -15,6 +21,9 @@ export interface AuthUserView {
   capabilities: RoleCapabilities
 }
 
+/**
+ * 登录成功返回模型。
+ */
 export interface LoginResult {
   accessToken: string
   tokenType: 'Bearer'

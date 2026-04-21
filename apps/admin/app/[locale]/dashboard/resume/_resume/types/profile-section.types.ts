@@ -8,6 +8,9 @@ import type {
   SortableCollectionState,
 } from './draft-editor.types'
 
+/**
+ * 个人资料分节组件入参。
+ */
 export interface ProfileSectionProps {
   addProfileInterest: () => void
   addProfileLink: () => void
