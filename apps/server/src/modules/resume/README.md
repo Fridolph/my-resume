@@ -7,9 +7,12 @@
 
 ## 目录分层（NestJS 风格）
 - `domain/`：领域模型与纯领域规则（例如 `StandardResume`、校验与归一化）。
-- `application/`：用例层类型与编排辅助（本模块快照类型在 `application/types/`）。
-- `transport/`：HTTP 层 DTO/响应类型（controller 对外返回类型从这里引用）。
-- 根目录 service/controller/repository：保持各自职责，不内联重复类型定义。
+- `application/services/`：简历用例编排（发布、导出、RAG 同步、摘要）。
+- `application/types/`：应用层快照类型定义。
+- `transport/controllers/`：HTTP 控制器入口。
+- `transport/types/`：controller 对外响应类型。
+- `infrastructure/repositories/`：仓储与持久化访问。
+- 根目录保留兼容 `re-export`，支持渐进迁移。
 
 ## 类型管理约定
 - 快照类类型统一通过 `ResumeSnapshot<S, TResume>` 组合生成，避免 `draft/published + summary/full` 重复声明。

@@ -72,3 +72,71 @@
 - 为什么 `sourceVersion` 要显式化，而不是依赖“最新一条”隐式语义。
 - 为什么检索态同步失败不直接阻断编辑主链路。
 - 如何用最小状态机（`pending/succeeded/failed`）建立可观测与可重试能力。
+
+---
+
+## Follow-up（本分支补充）：API Server 渐进 DDD 分层重组（第一/二批）
+
+### 背景
+
+- 在 `#178` 基础功能可用后，`apps/server/src/modules` 的目录组织仍偏“历史混排”。
+- 为保证后续教学节奏与可维护性，本分支补了一轮“**不改业务行为**”的渐进式分层重组。
+
+### 本轮目标
+
+- 保持现有接口行为与测试契约不变。
+- 先把 `ai`、`auth`、`resume` 三个核心模块切到统一分层目录：
+  - `domain/`
+  - `application/services/`
+  - `infrastructure/repositories/`（按需）
+  - `transport/controllers/` + `transport/dto|types`
+- 保留旧路径兼容导出（`re-export`），避免一次性破坏现有引用。
+
+### 实际改动
+
+- `ai` 模块完成第一批分层重组（含 `README` 与兼容层）：
+  - 新增：
+    - `apps/server/src/modules/ai/application/services/*`
+    - `apps/server/src/modules/ai/domain/ports/*`
+    - `apps/server/src/modules/ai/infrastructure/{config,providers,repositories}/*`
+    - `apps/server/src/modules/ai/transport/{controllers,dto}/*`
+  - `apps/server/src/modules/ai/ai.module.ts` 改为装配新分层实现。
+  - 根目录旧文件改为 `export * from ...` 兼容导出。
+
+- `auth` 模块完成第二批分层重组（含 `README` 与兼容层）：
+  - 新增：
+    - `apps/server/src/modules/auth/application/services/auth.service.ts`
+    - `apps/server/src/modules/auth/transport/controllers/{auth.controller.ts,auth-demo.controller.ts}`
+  - `apps/server/src/modules/auth/auth.module.ts` 改为装配新路径。
+  - 旧路径 `auth.service.ts` / `auth.controller.ts` / `auth-demo.controller.ts` 改为兼容导出。
+
+- `resume` 模块完成第二批核心重组（含 `README` 更新与兼容层）：
+  - 新增：
+    - `apps/server/src/modules/resume/application/services/*`
+    - `apps/server/src/modules/resume/infrastructure/repositories/resume-publication.repository.ts`
+    - `apps/server/src/modules/resume/transport/controllers/resume.controller.ts`
+  - `apps/server/src/modules/resume/resume.module.ts` 改为装配新路径。
+  - 旧路径核心文件改为兼容导出。
+
+- 工具与流程文档同步：
+  - `apps/server/scripts/scaffold-module.mjs`：脚手架目录补齐到分层子目录。
+  - `apps/server/README.md` 与 `docs/20-研发流程/01-GitHub-标准开发流程.md` 同步脚手架规范。
+  - 新增 `apps/server/src/modules/README.md` 作为 server 模块级架构约定。
+
+### Review 记录
+
+- 本轮严格限定在目录分层与 import 装配调整，不改业务流程与接口行为。
+- 采用“先迁移、后兼容、再渐进清理”的迁移策略，确保可回滚、可教学。
+
+### 测试与验证
+
+- 已执行：
+  - `apps/server/node_modules/.bin/tsc --noEmit -p apps/server/tsconfig.build.json`（通过）
+- 当前环境限制：
+  - `vitest` 受本地 Rollup 可选依赖签名问题影响，未在该环境完成全量单测复跑。
+
+### 后续建议
+
+- 后续 Issue 可继续逐步移除 `re-export` 兼容层，最终收敛到分层目录唯一入口。
+- 新增模块统一走：
+  - `pnpm --filter @my-resume/server scaffold:module -- <module-name>`

@@ -49,7 +49,7 @@ pnpm --filter @my-resume/server scaffold:module -- <module-name>
 pnpm --filter @my-resume/server scaffold:module -- user
 ```
 
-该命令会先执行 `nest g module/controller/service`，再补齐模块分层目录与 `README.md`，便于后续按 `domain / application / infrastructure / transport` 演进。
+该命令会先执行 `nest g module/controller/service`，再补齐模块分层目录与 `README.md`，便于后续按 `domain / application/services / infrastructure/repositories / transport/controllers + dto` 演进。
 
 本地 SQLite 提醒：
 

@@ -53,9 +53,10 @@ function ensureModuleReadme(moduleName) {
 ## 目录职责
 
 - \`domain/\`：领域对象与纯业务规则
-- \`application/\`：用例编排与应用层类型
-- \`infrastructure/\`：仓储、外部依赖适配
-- \`transport/\`：controller/dto/response 适配
+- \`application/services/\`：用例编排、业务服务
+- \`infrastructure/repositories/\`：仓储与外部依赖适配
+- \`transport/controllers/\`：HTTP 控制器
+- \`transport/dto/\`：请求与响应 DTO
 - \`__tests__/\`：模块相关测试
 `
 
@@ -86,8 +87,11 @@ const moduleRoot = join(sourceRoot, modulePath)
 ensureDirectory(join(moduleRoot, '__tests__'))
 ensureDirectory(join(moduleRoot, 'domain'))
 ensureDirectory(join(moduleRoot, 'application'))
+ensureDirectory(join(moduleRoot, 'application', 'services'))
 ensureDirectory(join(moduleRoot, 'infrastructure'))
+ensureDirectory(join(moduleRoot, 'infrastructure', 'repositories'))
 ensureDirectory(join(moduleRoot, 'transport'))
+ensureDirectory(join(moduleRoot, 'transport', 'controllers'))
 ensureDirectory(join(moduleRoot, 'transport', 'dto'))
 ensureModuleReadme(moduleName)
 

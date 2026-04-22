@@ -148,8 +148,9 @@ pnpm --filter @my-resume/server scaffold:module -- <module-name>
 - 并补齐模块目录：
   - `__tests__/`
   - `domain/`
-  - `application/`
-  - `infrastructure/`
+  - `application/services/`
+  - `infrastructure/repositories/`
+  - `transport/controllers/`
   - `transport/dto/`
   - `README.md`
 - 若后续需要细化分层，可在该骨架基础上按 Issue 范围增量演进，不做一次性大重构。
