@@ -18,6 +18,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/src/main.js",
+    "scaffold:module": "node ./scripts/scaffold-module.mjs",
     "lint": "oxlint --config ../../.oxlintrc.json --ignore-path ../../.eslintignore .",
     "lint:eslint": "eslint \"{src,test}/**/*.ts\"",
     "typecheck": "tsc --noEmit -p tsconfig.build.json",

@@ -132,6 +132,28 @@ Review 阶段必须回答两个问题：
 - `transport` 放 controller 对外响应 DTO 类型，controller 统一引用 `transport/types`，不在 controller 内临时定义重复响应结构。
 - 新模块至少提供模块级 `README`，明确目录职责、类型边界与示例引用路径。
 
+### 13. API Server 模块脚手架规范（M21 补充）
+
+- `apps/server` 下新增目录模块时，**必须先使用 Nest CLI 生成骨架**，禁止直接手写 module/controller/service 起步。
+- 统一使用本地命令：
+
+```bash
+pnpm --filter @my-resume/server scaffold:module -- <module-name>
+```
+
+- 该命令内部会执行：
+  - `nest g module modules/<module-name>`
+  - `nest g controller modules/<module-name>`
+  - `nest g service modules/<module-name>`
+- 并补齐模块目录：
+  - `__tests__/`
+  - `domain/`
+  - `application/`
+  - `infrastructure/`
+  - `transport/dto/`
+  - `README.md`
+- 若后续需要细化分层，可在该骨架基础上按 Issue 范围增量演进，不做一次性大重构。
+
 ## Merge 策略建议
 
 - 功能分支 → `development`：使用 `squash merge`

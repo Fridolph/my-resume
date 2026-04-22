@@ -35,6 +35,22 @@ pnpm --filter @my-resume/server start:dev
 pnpm --filter @my-resume/server db:check
 ```
 
+## 模块脚手架（推荐）
+
+新增 `apps/server/src/modules/*` 目录模块时，先用 Nest CLI 骨架生成：
+
+```bash
+pnpm --filter @my-resume/server scaffold:module -- <module-name>
+```
+
+例如：
+
+```bash
+pnpm --filter @my-resume/server scaffold:module -- user
+```
+
+该命令会先执行 `nest g module/controller/service`，再补齐模块分层目录与 `README.md`，便于后续按 `domain / application / infrastructure / transport` 演进。
+
 本地 SQLite 提醒：
 
 - 默认数据库文件位于仓库根目录 `.data/my-resume.db`
