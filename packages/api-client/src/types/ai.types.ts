@@ -334,3 +334,32 @@ export interface ExtractTextFromFileInput {
   accessToken: string
   file: File
 }
+
+/**
+ * RAG user_docs 入库作用域。
+ */
+export type RagUserDocIngestScope = 'draft' | 'published'
+
+/**
+ * RAG user_docs 入库参数。
+ */
+export interface IngestRagUserDocInput {
+  apiBaseUrl: string
+  accessToken: string
+  file: File
+  scope?: RagUserDocIngestScope
+}
+
+/**
+ * RAG user_docs 入库结果。
+ */
+export interface RagUserDocIngestResult {
+  documentId: string
+  sourceId: string
+  sourceScope: RagUserDocIngestScope
+  sourceVersion: string
+  chunkCount: number
+  fileName: string
+  fileType: ExtractedFileType
+  uploadedAt: string
+}

@@ -1,1 +1,4 @@
-export { createExtractTextFromFileMethod } from '@my-resume/api-client'
+export {
+  createExtractTextFromFileMethod,
+  createIngestRagUserDocMethod,
+} from '@my-resume/api-client'

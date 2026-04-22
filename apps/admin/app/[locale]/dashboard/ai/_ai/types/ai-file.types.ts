@@ -13,3 +13,22 @@ export interface FileExtractionResult {
   text: string
   charCount: number
 }
+
+/**
+ * user_docs 入库作用域。
+ */
+export type UserDocIngestScope = 'draft' | 'published'
+
+/**
+ * user_docs 入库结果。
+ */
+export interface UserDocIngestResult {
+  documentId: string
+  sourceId: string
+  sourceScope: UserDocIngestScope
+  sourceVersion: string
+  chunkCount: number
+  fileName: string
+  fileType: ExtractedFileType
+  uploadedAt: string
+}

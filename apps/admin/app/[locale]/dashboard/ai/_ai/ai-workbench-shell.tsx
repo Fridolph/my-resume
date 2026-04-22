@@ -30,6 +30,7 @@ import type {
 import { CompactWorkbenchInfoCards } from './components/compact-workbench-info-cards'
 import { createFetchAiWorkbenchRuntimeMethod } from './services/ai-workbench-api'
 import type { FileExtractionResult } from './types/ai-file.types'
+import type { UserDocIngestResult } from './types/ai-file.types'
 import type {
   AiResumeOptimizationResult,
   AiWorkbenchScenario,
@@ -65,6 +66,24 @@ const AiAnalysisPanel = dynamic(
         <div className="mt-2 grid gap-2">
           <Skeleton className="h-4 w-3/4 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
           <Skeleton className="h-4 w-4/5 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
+        </div>
+      </div>
+    ),
+  },
+)
+
+const AiUserDocIngestionPanel = dynamic(
+  () =>
+    import('./components/user-doc-ingestion-panel').then(
+      (module) => module.AiUserDocIngestionPanel,
+    ),
+  {
+    loading: () => (
+      <div className="status-box" data-testid="ai-user-doc-ingestion-loading">
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">正在加载资料入库面板...</p>
+        <div className="mt-2 grid gap-2">
+          <Skeleton className="h-4 w-3/4 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
+          <Skeleton className="h-4 w-2/3 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
         </div>
       </div>
     ),
@@ -202,6 +221,12 @@ export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
     )
   }
 
+  function handleUserDocIngested(result: UserDocIngestResult) {
+    setAnalysisHelperMessage(
+      `已将 ${result.fileName} 写入 ${result.sourceScope} 检索态，切块 ${result.chunkCount} 条。`,
+    )
+  }
+
   function handleAnalysisContentChange(nextContent: string) {
     setAnalysisContent(nextContent)
     writeResumeOptimizationContent(nextContent)
@@ -334,6 +359,12 @@ export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
           helperMessage={analysisHelperMessage}
           inputAccessory={
             <div className="grid gap-3">
+              <AiUserDocIngestionPanel
+                accessToken={accessToken}
+                apiBaseUrl={DEFAULT_API_BASE_URL}
+                canUpload={isAdmin}
+                onIngested={handleUserDocIngested}
+              />
               <AiFileExtractionPanel
                 accessToken={accessToken}
                 apiBaseUrl={DEFAULT_API_BASE_URL}
