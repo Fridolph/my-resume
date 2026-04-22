@@ -17,6 +17,7 @@ import { RagIndexRepository } from './rag/rag-index.repository'
 import { RagKnowledgeService } from './rag/rag-knowledge.service'
 import { RagRetrievalRepository } from './rag/rag-retrieval.repository'
 import { RagService } from './rag/rag.service'
+import { UserDocsIngestionService } from './rag/user-docs-ingestion.service'
 import { AiFileController } from './transport/controllers/ai-file.controller'
 import { AiReportController } from './transport/controllers/ai-report.controller'
 
@@ -50,6 +51,7 @@ import { AiReportController } from './transport/controllers/ai-report.controller
     RagKnowledgeService,
     RagIndexRepository,
     RagRetrievalRepository,
+    UserDocsIngestionService,
     RagService,
   ],
   exports: [
