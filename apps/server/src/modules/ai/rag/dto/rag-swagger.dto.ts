@@ -76,6 +76,67 @@ export class RagResumeSyncResultDto {
   }
 }
 
+export class RagUserDocIngestBodyDto {
+  @ApiPropertyOptional({
+    description: 'user_docs 入库作用域',
+    enum: ['draft', 'published'],
+    example: 'draft',
+  })
+  scope?: 'draft' | 'published'
+}
+
+export class RagUserDocIngestResultDto {
+  @ApiProperty({
+    description: '文档记录 ID',
+    example: 'user-doc:adf932d7b65f01a9eb87bc2d:und',
+  })
+  documentId!: string
+
+  @ApiProperty({
+    description: '来源 ID',
+    example: 'adf932d7b65f01a9eb87bc2d',
+  })
+  sourceId!: string
+
+  @ApiProperty({
+    description: '入库作用域',
+    enum: ['draft', 'published'],
+    example: 'draft',
+  })
+  sourceScope!: 'draft' | 'published'
+
+  @ApiProperty({
+    description: '来源版本键',
+    example: 'upload:1776839100000',
+  })
+  sourceVersion!: string
+
+  @ApiProperty({
+    description: '切块数量',
+    example: 12,
+  })
+  chunkCount!: number
+
+  @ApiProperty({
+    description: '上传文件名',
+    example: 'rag-notes.md',
+  })
+  fileName!: string
+
+  @ApiProperty({
+    description: '上传文件类型',
+    enum: ['txt', 'md', 'pdf', 'docx'],
+    example: 'md',
+  })
+  fileType!: 'txt' | 'md' | 'pdf' | 'docx'
+
+  @ApiProperty({
+    description: '上传时间（ISO）',
+    example: '2026-04-22T03:45:00.000Z',
+  })
+  uploadedAt!: string
+}
+
 export class RagSearchMatchDto {
   @ApiProperty({
     description: '命中文档块 ID',

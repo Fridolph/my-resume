@@ -6,9 +6,28 @@ import { AiService } from '../ai.service'
 import { FileExtractionService } from '../file-extraction.service'
 import { RagRetrievalRepository } from './rag-retrieval.repository'
 
-const DEFAULT_CHUNK_SIZE = 900
-const DEFAULT_CHUNK_OVERLAP = 120
+/**
+ * user_docs 默认切块大小（字符）。
+ *
+ * 说明：
+ * - 相比 resume_core，user_docs（博客/笔记）文本跨度更大，过大的 chunk 会稀释检索精度。
+ * - 这里取 500，优先保证召回粒度与可解释性。
+ */
+const DEFAULT_CHUNK_SIZE = 500
 
+/**
+ * user_docs 默认切块重叠长度（字符）。
+ *
+ * 说明：
+ * - overlap 用于减少语义断裂；
+ * - 过大会带来冗余，过小会丢失上下文衔接。
+ * - 这里取 50，作为教学场景下的折中默认值。
+ */
+const DEFAULT_CHUNK_OVERLAP = 50
+
+/**
+ * 用户资料入库输入。
+ */
 export interface IngestUserDocInput {
   buffer: Buffer
   originalname: string
@@ -18,6 +37,9 @@ export interface IngestUserDocInput {
   uploadedAt?: Date
 }
 
+/**
+ * 用户资料入库结果摘要。
+ */
 export interface IngestUserDocResult {
   documentId: string
   sourceId: string
@@ -29,10 +51,26 @@ export interface IngestUserDocResult {
   uploadedAt: string
 }
 
+/**
+ * 构建 user_docs 的 sourceVersion。
+ *
+ * 规则：`upload:<timestamp_ms>`
+ *
+ * @param uploadedAt 上传时间
+ * @returns 稳定版本键
+ */
 export function buildUserDocSourceVersion(uploadedAt: Date | string): string {
   return `upload:${new Date(uploadedAt).getTime()}`
 }
 
+/**
+ * 将提取后的文本按固定窗口切块，并保留 overlap。
+ *
+ * @param text 原始文本
+ * @param chunkSize 每块最大字符数
+ * @param chunkOverlap 相邻块重叠字符数
+ * @returns 切分后的 chunk 文本列表
+ */
 export function splitUserDocTextIntoChunks(
   text: string,
   chunkSize = DEFAULT_CHUNK_SIZE,
@@ -64,10 +102,28 @@ export function splitUserDocTextIntoChunks(
   return chunks
 }
 
+/**
+ * 计算内容哈希，用于去重与追踪。
+ *
+ * @param content 文本内容
+ * @returns sha256 哈希
+ */
 function computeContentHash(content: string): string {
   return createHash('sha256').update(content).digest('hex')
 }
 
+/**
+ * 构建 user_docs sourceId。
+ *
+ * 说明：
+ * - 使用 `文件名 + 上传时间 + 文本长度` 的指纹生成稳定短键；
+ * - 用于 document 与 chunk 的来源关联。
+ *
+ * @param fileName 文件名
+ * @param uploadedAt 上传时间
+ * @param text 提取文本
+ * @returns 来源 ID
+ */
 function buildUserDocSourceId(fileName: string, uploadedAt: Date, text: string): string {
   return createHash('sha256')
     .update(`${fileName}:${uploadedAt.toISOString()}:${text.length}`)
