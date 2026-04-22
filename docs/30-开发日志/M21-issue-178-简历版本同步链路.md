@@ -140,3 +140,21 @@
 - 后续 Issue 可继续逐步移除 `re-export` 兼容层，最终收敛到分层目录唯一入口。
 - 新增模块统一走：
   - `pnpm --filter @my-resume/server scaffold:module -- <module-name>`
+
+## Issue 验收映射（关闭前核对）
+
+- [x] 建立 `draft/published` 与知识索引的同步触发点  
+  - `updateDraft` 触发：`apps/server/src/modules/resume/application/services/resume-publication.service.ts`
+  - `publish` 触发：`apps/server/src/modules/resume/application/services/resume-publication.service.ts`
+- [x] 设计 `resumeVersion/sourceVersion` 对齐策略  
+  - `draft:<updatedAt_ms>` / `published:<publishedAt_ms>`：`apps/server/src/modules/resume/application/services/resume-rag-sync.service.ts`
+- [x] 最小可回滚的重建/增量同步流程  
+  - `syncCurrent(draft|published|all)`：`apps/server/src/modules/resume/application/services/resume-rag-sync.service.ts`
+- [x] 索引状态可观测（`pending/succeeded/failed`）  
+  - 契约与表结构：`apps/server/src/database/schema.ts`
+  - 状态写回：`apps/server/src/modules/ai/rag/rag-retrieval.repository.ts`
+- [x] 异常重试与人工重建入口  
+  - `POST /api/ai/rag/sync/resume`：`apps/server/src/modules/ai/rag/rag.controller.ts`
+- [x] 测试补充  
+  - 同步链路与状态流转：`apps/server/src/modules/resume/__tests__/resume-rag-sync.service.spec.ts`
+  - 版本契约：`apps/server/src/modules/ai/rag/__tests__/rag.types.spec.ts`
