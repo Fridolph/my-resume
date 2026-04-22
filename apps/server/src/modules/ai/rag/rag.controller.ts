@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Inject, Post, UseGuards } from '@nestjs/common'
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Post,
+  UseGuards,
+} from '@nestjs/common'
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -12,9 +20,12 @@ import { ApiEnvelopeResponse } from '../../../common/swagger/api-envelope-respon
 import { RequireCapability } from '../../auth/decorators/require-capability.decorator'
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard'
 import { RoleCapabilitiesGuard } from '../../auth/guards/role-capabilities.guard'
+import { ResumeRagSyncService } from '../../resume/resume-rag-sync.service'
 import {
   RagAskBodyDto,
   RagAskResultDto,
+  RagResumeSyncBodyDto,
+  RagResumeSyncResultDto,
   RagSearchBodyDto,
   RagSearchMatchDto,
   RagStatusDto,
@@ -32,6 +43,8 @@ export class RagController {
   constructor(
     @Inject(RagService)
     private readonly ragService: RagService,
+    @Inject(ResumeRagSyncService)
+    private readonly resumeRagSyncService: ResumeRagSyncService,
   ) {}
 
   /**
@@ -72,6 +85,39 @@ export class RagController {
   rebuildIndex() {
     // 建索引入口：重切块、重向量化，并写回本地索引文件。
     return this.ragService.rebuildIndex()
+  }
+
+  /**
+   * 人工触发简历检索态同步。
+   *
+   * @param body 同步范围
+   * @returns 同步摘要
+   */
+  @Post('sync/resume')
+  @UseGuards(RoleCapabilitiesGuard)
+  @RequireCapability('canTriggerAiAnalysis')
+  @ApiOperation({
+    summary: '人工触发简历检索态同步',
+    description: '按 scope 同步 draft/published 到检索态表',
+  })
+  @ApiEnvelopeResponse({
+    description: '简历检索态同步成功',
+    type: RagResumeSyncResultDto,
+  })
+  @ApiBadRequestResponse({
+    description: '同步参数不合法',
+  })
+  @ApiForbiddenResponse({
+    description: '当前角色没有触发 AI 分析权限',
+  })
+  syncResumeRetrieval(@Body() body: RagResumeSyncBodyDto = {}) {
+    const scope = body.scope ?? 'all'
+
+    if (scope !== 'draft' && scope !== 'published' && scope !== 'all') {
+      throw new BadRequestException(`Unsupported sync scope: ${scope}`)
+    }
+
+    return this.resumeRagSyncService.syncCurrent(scope)
   }
 
   /**

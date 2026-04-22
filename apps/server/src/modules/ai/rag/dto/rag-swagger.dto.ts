@@ -39,6 +39,43 @@ export class RagAskBodyDto {
   locale?: 'zh' | 'en'
 }
 
+export class RagResumeSyncBodyDto {
+  @ApiPropertyOptional({
+    description: '简历检索同步范围',
+    enum: ['draft', 'published', 'all'],
+    example: 'all',
+  })
+  scope?: 'draft' | 'published' | 'all'
+}
+
+export class RagResumeSyncResultDto {
+  @ApiProperty({
+    description: '草稿态同步结果',
+    type: Object,
+    example: {
+      synced: true,
+      sourceVersion: 'draft:1760000000000',
+    },
+  })
+  draft!: {
+    synced: boolean
+    sourceVersion: string | null
+  }
+
+  @ApiProperty({
+    description: '发布态同步结果',
+    type: Object,
+    example: {
+      synced: false,
+      sourceVersion: null,
+    },
+  })
+  published!: {
+    synced: boolean
+    sourceVersion: string | null
+  }
+}
+
 export class RagSearchMatchDto {
   @ApiProperty({
     description: '命中文档块 ID',
