@@ -19,6 +19,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/src/main.js",
     "scaffold:module": "node ./scripts/scaffold-module.mjs",
+    "rag:chunk:compare": "ts-node -P tsconfig.json ./scripts/compare-user-doc-chunking.ts",
     "lint": "oxlint --config ../../.oxlintrc.json --ignore-path ../../.eslintignore .",
     "lint:eslint": "eslint \"{src,test}/**/*.ts\"",
     "typecheck": "tsc --noEmit -p tsconfig.build.json",

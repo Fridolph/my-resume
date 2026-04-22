@@ -118,3 +118,31 @@
 - 进入 Phase 1 / Step 4：补 admin 最小上传入口（不做复杂管理界面）。
 - 明确 `500/50` 与 `1000/100` 两组参数的对比验证计划（样本、指标、结论模板）。
 - 继续保持每一步“先测试设计，再实现”的节奏。
+
+---
+
+## Phase 2 / Step 1（进行中）：切块参数对比实验基线
+
+### 本轮新增
+
+- 在服务层新增切块对比统计能力（不改默认入库参数）：
+  - `compareUserDocChunkingStrategies`
+  - `summarizeUserDocChunking`
+  - `USER_DOC_CHUNKING_STRATEGIES`（`500/50`、`1000/100`）
+- 新增策略基线测试（固定“同一文本下两组参数差异”）：
+  - `apps/server/src/modules/ai/rag/__tests__/user-doc-chunking-strategy.spec.ts`
+- 新增本地实验脚本：
+  - `apps/server/scripts/compare-user-doc-chunking.ts`
+  - `apps/server/package.json` 新命令：
+    - `pnpm --filter @my-resume/server rag:chunk:compare <file...>`
+
+### 建议实验命令
+
+```bash
+pnpm --filter @my-resume/server rag:chunk:compare \
+  /Users/fri/Desktop/github/AI-Journey-Fighting/drafts/rag-test/xxx.md \
+  /Users/fri/Desktop/github/AI-Journey-Fighting/articles/yyy.md
+```
+
+> 观察指标：`chunkCount`、`totalChunkChars`、`redundantChars`、`redundancyRatio`。  
+> 先用这组“静态切块指标”定基线，再进入后续检索质量对比。

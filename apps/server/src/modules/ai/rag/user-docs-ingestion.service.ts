@@ -5,25 +5,18 @@ import { RagSourceScope } from '../../../database/schema'
 import { AiService } from '../ai.service'
 import { FileExtractionService } from '../file-extraction.service'
 import { RagRetrievalRepository } from './rag-retrieval.repository'
+import { splitUserDocTextIntoChunks } from './user-doc-chunking'
 
-/**
- * user_docs 默认切块大小（字符）。
- *
- * 说明：
- * - 相比 resume_core，user_docs（博客/笔记）文本跨度更大，过大的 chunk 会稀释检索精度。
- * - 这里取 500，优先保证召回粒度与可解释性。
- */
-const DEFAULT_CHUNK_SIZE = 500
-
-/**
- * user_docs 默认切块重叠长度（字符）。
- *
- * 说明：
- * - overlap 用于减少语义断裂；
- * - 过大会带来冗余，过小会丢失上下文衔接。
- * - 这里取 50，作为教学场景下的折中默认值。
- */
-const DEFAULT_CHUNK_OVERLAP = 50
+export {
+  compareUserDocChunkingStrategies,
+  DEFAULT_CHUNK_OVERLAP,
+  DEFAULT_CHUNK_SIZE,
+  normalizeUserDocText,
+  splitUserDocTextIntoChunks,
+  summarizeUserDocChunking,
+  USER_DOC_CHUNKING_STRATEGIES,
+} from './user-doc-chunking'
+export type { UserDocChunkingStrategy, UserDocChunkingSummary } from './user-doc-chunking'
 
 /**
  * 用户资料入库输入。
@@ -61,45 +54,6 @@ export interface IngestUserDocResult {
  */
 export function buildUserDocSourceVersion(uploadedAt: Date | string): string {
   return `upload:${new Date(uploadedAt).getTime()}`
-}
-
-/**
- * 将提取后的文本按固定窗口切块，并保留 overlap。
- *
- * @param text 原始文本
- * @param chunkSize 每块最大字符数
- * @param chunkOverlap 相邻块重叠字符数
- * @returns 切分后的 chunk 文本列表
- */
-export function splitUserDocTextIntoChunks(
-  text: string,
-  chunkSize = DEFAULT_CHUNK_SIZE,
-  chunkOverlap = DEFAULT_CHUNK_OVERLAP,
-): string[] {
-  const normalizedText = text.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim()
-
-  if (!normalizedText) {
-    return []
-  }
-
-  const safeChunkSize = Math.max(Math.floor(chunkSize), 1)
-  const safeChunkOverlap = Math.min(Math.max(Math.floor(chunkOverlap), 0), safeChunkSize - 1)
-  const step = safeChunkSize - safeChunkOverlap
-  const chunks: string[] = []
-
-  for (let start = 0; start < normalizedText.length; start += step) {
-    const chunk = normalizedText.slice(start, start + safeChunkSize).trim()
-
-    if (chunk) {
-      chunks.push(chunk)
-    }
-
-    if (start + safeChunkSize >= normalizedText.length) {
-      break
-    }
-  }
-
-  return chunks
 }
 
 /**
