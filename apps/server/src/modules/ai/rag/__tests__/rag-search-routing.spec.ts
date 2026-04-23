@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { resolveRagSearchRoutingConfig } from '../rag-search-routing'
+import {
+  mergeRagSearchRoutingConfig,
+  resolveRagSearchRoutingConfig,
+} from '../rag-search-routing'
 
 describe('resolveRagSearchRoutingConfig', () => {
   it('should use safe defaults', () => {
@@ -33,5 +36,25 @@ describe('resolveRagSearchRoutingConfig', () => {
         RAG_SEARCH_VECTOR_SCOPE: 'team',
       }),
     ).toThrow('Unsupported RAG_SEARCH_VECTOR_SCOPE: team')
+  })
+
+  it('should merge request override on top of defaults', () => {
+    const merged = mergeRagSearchRoutingConfig(
+      {
+        useVectorStore: false,
+        vectorScope: 'published',
+        fallbackToLocal: true,
+      },
+      {
+        useVectorStore: true,
+        vectorScope: 'draft',
+      },
+    )
+
+    expect(merged).toEqual({
+      useVectorStore: true,
+      vectorScope: 'draft',
+      fallbackToLocal: true,
+    })
   })
 })

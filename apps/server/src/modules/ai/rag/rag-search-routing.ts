@@ -11,6 +11,15 @@ export interface RagSearchRoutingConfig {
   fallbackToLocal: boolean
 }
 
+/**
+ * 请求级检索路由覆盖项。
+ */
+export interface RagSearchRoutingOverride {
+  useVectorStore?: boolean
+  vectorScope?: RagSourceScope | 'all'
+  fallbackToLocal?: boolean
+}
+
 function parseBooleanFlag(value: string | undefined, fallback: boolean): boolean {
   if (!value) {
     return fallback
@@ -50,5 +59,19 @@ export function resolveRagSearchRoutingConfig(
     useVectorStore: parseBooleanFlag(env.RAG_SEARCH_USE_VECTOR_STORE, false),
     vectorScope,
     fallbackToLocal: parseBooleanFlag(env.RAG_SEARCH_VECTOR_FALLBACK_TO_LOCAL, true),
+  }
+}
+
+/**
+ * 合并环境级默认配置与请求级覆盖配置。
+ */
+export function mergeRagSearchRoutingConfig(
+  base: RagSearchRoutingConfig,
+  override: RagSearchRoutingOverride = {},
+): RagSearchRoutingConfig {
+  return {
+    useVectorStore: override.useVectorStore ?? base.useVectorStore,
+    vectorScope: override.vectorScope ?? base.vectorScope,
+    fallbackToLocal: override.fallbackToLocal ?? base.fallbackToLocal,
   }
 }

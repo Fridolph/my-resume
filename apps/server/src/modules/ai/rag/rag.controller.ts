@@ -221,9 +221,22 @@ export class RagController {
     description: '当前角色没有触发 AI 分析权限',
   })
   search(@Body() body: RagSearchBodyDto) {
+    if (
+      body.vectorScope &&
+      body.vectorScope !== 'draft' &&
+      body.vectorScope !== 'published' &&
+      body.vectorScope !== 'all'
+    ) {
+      throw new BadRequestException(`Unsupported search vectorScope: ${body.vectorScope}`)
+    }
+
     return this.ragService.search(body.query, body.limit, {
       minScore: body.minScore,
       minScoreGap: body.minScoreGap,
+    }, {
+      useVectorStore: body.useVectorStore,
+      vectorScope: body.vectorScope,
+      fallbackToLocal: body.vectorFallbackToLocal,
     })
   }
 

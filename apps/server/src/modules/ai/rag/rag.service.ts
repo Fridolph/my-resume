@@ -7,7 +7,11 @@ import { AiService } from '../ai.service'
 import { RagChunkService } from './rag-chunk.service'
 import { RagIndexRepository } from './rag-index.repository'
 import { RagKnowledgeService } from './rag-knowledge.service'
-import { resolveRagSearchRoutingConfig } from './rag-search-routing'
+import {
+  mergeRagSearchRoutingConfig,
+  RagSearchRoutingOverride,
+  resolveRagSearchRoutingConfig,
+} from './rag-search-routing'
 import {
   applyRagSearchQualityGate,
   RagSearchQualityGate,
@@ -206,16 +210,25 @@ export class RagService {
     query: string,
     limit = 5,
     qualityGate: RagSearchQualityGate = this.defaultSearchQualityGate,
+    routingOverride: RagSearchRoutingOverride = {},
   ): Promise<RagSearchMatch[]> {
     // 检索分数采用“向量相似度 + 关键词命中”的混合策略，兼顾效果和可解释性。
+    const routingConfig = mergeRagSearchRoutingConfig(
+      this.searchRoutingConfig,
+      routingOverride,
+    )
     const queryEmbedding = await this.aiService.embedTexts({
       texts: [query],
     })
     const [queryVector] = queryEmbedding.embeddings
-    const vectorStoreMatches = await this.searchFromVectorStore(queryVector ?? [], limit)
+    const vectorStoreMatches = await this.searchFromVectorStore(
+      queryVector ?? [],
+      limit,
+      routingConfig,
+    )
 
     if (vectorStoreMatches) {
-      if (vectorStoreMatches.length > 0 || !this.searchRoutingConfig.fallbackToLocal) {
+      if (vectorStoreMatches.length > 0 || !routingConfig.fallbackToLocal) {
         return applyRagSearchQualityGate(vectorStoreMatches, qualityGate)
       }
     }
@@ -263,16 +276,17 @@ export class RagService {
   private async searchFromVectorStore(
     queryVector: number[],
     limit: number,
+    routingConfig: ReturnType<typeof mergeRagSearchRoutingConfig>,
   ): Promise<RagSearchMatch[] | null> {
-    if (!this.searchRoutingConfig.useVectorStore) {
+    if (!routingConfig.useVectorStore) {
       return null
     }
 
     try {
       const sourceScope =
-        this.searchRoutingConfig.vectorScope === 'all'
+        routingConfig.vectorScope === 'all'
           ? undefined
-          : this.searchRoutingConfig.vectorScope
+          : routingConfig.vectorScope
       const matches = await this.ragVectorStore.search({
         queryVector,
         limit,
@@ -281,7 +295,7 @@ export class RagService {
 
       return matches.map((item) => this.mapVectorMatchToSearchMatch(item))
     } catch (error) {
-      if (this.searchRoutingConfig.fallbackToLocal) {
+      if (routingConfig.fallbackToLocal) {
         return null
       }
 

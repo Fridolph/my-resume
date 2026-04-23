@@ -453,4 +453,65 @@ describe('RagService', () => {
 
     expect(matches).toHaveLength(0)
   })
+
+  it('should allow request-level routing override without changing env', async () => {
+    const aiService = new AiService(
+      createAiProvider(
+        {
+          provider: 'mock',
+          mode: 'mock',
+          model: 'mock-resume-advisor',
+        },
+        vi.fn<typeof fetch>(),
+      ),
+    )
+    const vectorSearch = vi.fn().mockResolvedValue([
+      {
+        id: 'user-doc-chunk:2',
+        documentId: 'user-doc:2:und',
+        sourceType: 'user_docs',
+        sourceScope: 'draft',
+        sourceVersion: 'upload:1770000000001',
+        section: 'user_docs',
+        content: 'Request override routed search.',
+        embedding: [],
+        metadataJson: {
+          fileName: 'override.md',
+        },
+        score: 0.83,
+      },
+    ])
+    const service = new RagService(
+      aiService,
+      new RagChunkService(),
+      new RagKnowledgeService(),
+      new RagIndexRepository(),
+      {
+        backend: 'milvus',
+        upsertChunks: vi.fn(),
+        deleteChunksByDocument: vi.fn(),
+        search: vectorSearch,
+      } as unknown as RagVectorStore,
+    )
+
+    const matches = await service.search(
+      'override query',
+      2,
+      {},
+      {
+        useVectorStore: true,
+        vectorScope: 'draft',
+        fallbackToLocal: false,
+      },
+    )
+
+    expect(vectorSearch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        limit: 2,
+        sourceScope: 'draft',
+      }),
+    )
+    expect(matches).toHaveLength(1)
+    expect(matches[0]?.title).toBe('override.md')
+  })
 })

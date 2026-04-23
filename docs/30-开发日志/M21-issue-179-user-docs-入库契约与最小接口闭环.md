@@ -288,3 +288,24 @@ pnpm --filter @my-resume/server rag:chunk:compare \
 - 触发方式：
   - GitHub Actions 页面手动运行（`workflow_dispatch`）
   - 默认不加入常规 CI 主链路，避免增加日常流水线耗时与外部服务依赖。
+
+### Step 4-5：请求级检索路由开关（便于 A/B 学习实验）
+
+- 新增请求级路由覆盖能力：
+  - `apps/server/src/modules/ai/rag/rag-search-routing.ts`
+  - 在环境级默认配置上，支持按请求覆盖：
+    - `useVectorStore`
+    - `vectorScope`
+    - `fallbackToLocal`
+- `search` 接口新增实验参数（可选）：
+  - `apps/server/src/modules/ai/rag/dto/rag-swagger.dto.ts`
+  - `apps/server/src/modules/ai/rag/rag.controller.ts`
+- `RagService.search` 接入路由覆盖：
+  - `apps/server/src/modules/ai/rag/rag.service.ts`
+  - 保持默认行为不变（不开开关仍走本地）
+
+### Step 4-5 验证
+
+- 测试通过：
+  - `pnpm --filter @my-resume/server exec vitest run --config ./vitest.config.mts src/modules/ai/rag/__tests__/rag-search-routing.spec.ts src/modules/ai/rag/__tests__/rag.service.spec.ts src/modules/ai/rag/__tests__/rag.controller.spec.ts`
+  - `pnpm --filter @my-resume/server typecheck`

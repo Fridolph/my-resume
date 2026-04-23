@@ -96,4 +96,52 @@ describe('RagController', () => {
       }),
     ).toThrow('Unsupported ingest scope: all')
   })
+
+  it('should pass search quality and routing options to rag service', async () => {
+    const controller = new RagController(
+      ragService as never,
+      resumeRagSyncService as never,
+      userDocsIngestionService as never,
+    )
+    vi.mocked(ragService.search).mockResolvedValue([])
+
+    await controller.search({
+      query: 'Milvus 实验',
+      limit: 3,
+      minScore: 0.5,
+      minScoreGap: 0.12,
+      useVectorStore: true,
+      vectorScope: 'draft',
+      vectorFallbackToLocal: false,
+    })
+
+    expect(vi.mocked(ragService.search)).toHaveBeenCalledWith(
+      'Milvus 实验',
+      3,
+      {
+        minScore: 0.5,
+        minScoreGap: 0.12,
+      },
+      {
+        useVectorStore: true,
+        vectorScope: 'draft',
+        fallbackToLocal: false,
+      },
+    )
+  })
+
+  it('should reject unsupported search vectorScope', async () => {
+    const controller = new RagController(
+      ragService as never,
+      resumeRagSyncService as never,
+      userDocsIngestionService as never,
+    )
+
+    expect(() =>
+      controller.search({
+        query: 'Milvus 实验',
+        vectorScope: 'team' as never,
+      }),
+    ).toThrow('Unsupported search vectorScope: team')
+  })
 })
