@@ -1,5 +1,9 @@
 import { RagMilvusRuntimeConfig } from '../config'
 import {
+  createMilvusSdkClient,
+  MilvusVectorStoreClient,
+} from '../milvus-sdk.client'
+import {
   RagVectorSearchInput,
   RagVectorSearchMatch,
   RagVectorStore,
@@ -39,11 +43,20 @@ function cosineSimilarity(vectorA: number[], vectorB: number[]): number {
 export class MilvusRagVectorStoreAdapter implements RagVectorStore {
   readonly backend = 'milvus' as const
   private readonly mockStore = new Map<string, RagVectorChunkPayload>()
+  private sdkClient: MilvusVectorStoreClient | null
 
-  constructor(private readonly config: RagMilvusRuntimeConfig) {}
+  constructor(
+    private readonly config: RagMilvusRuntimeConfig,
+    sdkClient?: MilvusVectorStoreClient,
+  ) {
+    this.sdkClient = sdkClient ?? null
+  }
 
   async upsertChunks(chunks: RagVectorChunkPayload[]): Promise<void> {
-    this.assertModeSupported('upsert')
+    if (this.config.mode === 'sdk') {
+      await this.getSdkClient().upsertChunks(chunks)
+      return
+    }
 
     for (const chunk of chunks) {
       this.mockStore.set(chunk.id, chunk)
@@ -51,7 +64,10 @@ export class MilvusRagVectorStoreAdapter implements RagVectorStore {
   }
 
   async deleteChunksByDocument(documentId: string): Promise<void> {
-    this.assertModeSupported('delete')
+    if (this.config.mode === 'sdk') {
+      await this.getSdkClient().deleteChunksByDocument(documentId)
+      return
+    }
 
     for (const [id, chunk] of this.mockStore.entries()) {
       if (chunk.documentId === documentId) {
@@ -61,7 +77,9 @@ export class MilvusRagVectorStoreAdapter implements RagVectorStore {
   }
 
   async search(input: RagVectorSearchInput): Promise<RagVectorSearchMatch[]> {
-    this.assertModeSupported('search')
+    if (this.config.mode === 'sdk') {
+      return this.getSdkClient().search(input)
+    }
 
     const candidates = Array.from(this.mockStore.values())
       .filter((chunk) =>
@@ -80,16 +98,11 @@ export class MilvusRagVectorStoreAdapter implements RagVectorStore {
       .slice(0, Math.max(Math.floor(input.limit), 0))
   }
 
-  /**
-   * 仅允许 mock 模式执行，其他模式在当前阶段快速失败。
-   */
-  private assertModeSupported(operation: string): void {
-    if (this.config.mode === 'mock') {
-      return
+  private getSdkClient(): MilvusVectorStoreClient {
+    if (!this.sdkClient) {
+      this.sdkClient = createMilvusSdkClient(this.config)
     }
 
-    throw new Error(
-      `Milvus SDK mode is not implemented yet (operation=${operation}, mode=${this.config.mode})`,
-    )
+    return this.sdkClient
   }
 }

@@ -212,3 +212,34 @@ pnpm --filter @my-resume/server rag:chunk:compare \
 - 通过：
   - `pnpm --filter @my-resume/server exec vitest run --config ./vitest.config.mts src/modules/ai/rag/__tests__/user-docs-ingestion.service.spec.ts src/modules/ai/rag/__tests__/vector-store/config.spec.ts src/modules/ai/rag/__tests__/vector-store/factory.spec.ts src/modules/ai/rag/__tests__/vector-store/milvus.adapter.spec.ts src/modules/ai/rag/__tests__/rag.controller.spec.ts`
   - `pnpm --filter @my-resume/server typecheck`
+
+---
+
+## Phase 2 / Step 4（进行中）：真实 Milvus SDK 最小闭环（仅向量层）
+
+### 本轮新增
+
+- 引入官方 Milvus Node SDK：
+  - `apps/server/package.json` 新增依赖 `@zilliz/milvus2-sdk-node`
+- 新增 Milvus SDK client 端口与实现：
+  - `apps/server/src/modules/ai/rag/vector-store/milvus-sdk.client.ts`
+  - 能力：
+    - `ensureCollectionReady`（不存在则建 collection + 向量索引 + load）
+    - `upsertChunks`
+    - `deleteChunksByDocument`
+    - `search`
+- `MilvusRagVectorStoreAdapter` 在 `sdk` 模式下从“fail-fast 占位”升级为“委托 SDK client”：
+  - `apps/server/src/modules/ai/rag/vector-store/adapters/milvus.adapter.ts`
+
+### 测试与成本控制
+
+- `sdk` 模式测试不连真实 Milvus，使用 client 端口 mock 验证委托调用：
+  - `apps/server/src/modules/ai/rag/__tests__/vector-store/milvus.adapter.spec.ts`
+- 仍保持“默认 mock 优先”，避免开发与 CI 调用真实 AI/向量服务带来成本：
+  - 单测与常规 e2e 使用 mock provider；
+  - 真实 Milvus/真实 AI 建议走单独 integration 命令并显式开关。
+
+### 本轮边界
+
+- 仅完成“向量存储层”的真实 SDK 可调用闭环。
+- 暂未替换现有 `RagService.search` 主检索链路（仍保持本地索引逻辑），后续按步骤逐步切换。

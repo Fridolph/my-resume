@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { MilvusRagVectorStoreAdapter } from '../../vector-store/adapters/milvus.adapter'
+import { MilvusVectorStoreClient } from '../../vector-store/milvus-sdk.client'
 
 function createAdapter(mode: 'mock' | 'sdk' = 'mock') {
   return new MilvusRagVectorStoreAdapter({
@@ -97,14 +98,58 @@ describe('MilvusRagVectorStoreAdapter', () => {
     expect(matches[0]?.id).toBe('chunk-2')
   })
 
-  it('should fail fast in sdk mode during skeleton stage', async () => {
-    const adapter = createAdapter('sdk')
+  it('should delegate to sdk client in sdk mode', async () => {
+    const sdkClient: MilvusVectorStoreClient = {
+      upsertChunks: vi.fn(),
+      deleteChunksByDocument: vi.fn(),
+      search: vi.fn().mockResolvedValue([
+        {
+          id: 'chunk-1',
+          documentId: 'doc-a',
+          sourceType: 'user_docs',
+          sourceScope: 'draft',
+          sourceVersion: 'upload:1',
+          section: 'user_docs',
+          content: 'Milvus sdk result',
+          embedding: [],
+          metadataJson: null,
+          score: 0.88,
+        },
+      ]),
+    }
+    const adapter = new MilvusRagVectorStoreAdapter(
+      {
+        mode: 'sdk',
+        address: 'http://127.0.0.1:19530',
+        database: 'default',
+        collection: 'resume_rag_chunks',
+        vectorDimension: 4,
+      },
+      sdkClient,
+    )
 
-    await expect(
-      adapter.search({
-        queryVector: [1, 0, 0, 0],
-        limit: 1,
-      }),
-    ).rejects.toThrow('Milvus SDK mode is not implemented yet')
+    await adapter.upsertChunks([
+      {
+        id: 'chunk-1',
+        documentId: 'doc-a',
+        sourceType: 'user_docs',
+        sourceScope: 'draft',
+        sourceVersion: 'upload:1',
+        section: 'user_docs',
+        content: 'A',
+        embedding: [1, 0, 0, 0],
+      },
+    ])
+    await adapter.deleteChunksByDocument('doc-a')
+
+    const matches = await adapter.search({
+      queryVector: [1, 0, 0, 0],
+      limit: 1,
+    })
+
+    expect(vi.mocked(sdkClient.upsertChunks)).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(sdkClient.deleteChunksByDocument)).toHaveBeenCalledWith('doc-a')
+    expect(vi.mocked(sdkClient.search)).toHaveBeenCalledTimes(1)
+    expect(matches[0]?.content).toContain('sdk')
   })
 })
