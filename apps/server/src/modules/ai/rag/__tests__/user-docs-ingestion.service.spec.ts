@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { AiService } from '../../ai.service'
 import { FileExtractionService } from '../../file-extraction.service'
 import { RagRetrievalRepository } from '../rag-retrieval.repository'
-import { RagVectorStore } from '../rag-vector-store.types'
+import { RagVectorStore } from '../vector-store/types'
 import {
   buildUserDocSourceVersion,
   splitUserDocTextIntoChunks,

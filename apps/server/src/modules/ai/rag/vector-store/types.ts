@@ -1,4 +1,4 @@
-import { RagSourceScope, RagSourceType } from '../../../database/schema'
+import { RagSourceScope, RagSourceType } from '../../../../database/schema'
 
 /**
  * 向量存储后端类型。

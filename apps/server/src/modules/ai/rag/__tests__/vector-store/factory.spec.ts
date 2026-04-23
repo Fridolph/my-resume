@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { createRagVectorStore } from '../rag-vector-store.factory'
+import { createRagVectorStore } from '../../vector-store/factory'
 
 describe('createRagVectorStore', () => {
   it('should create local adapter', () => {

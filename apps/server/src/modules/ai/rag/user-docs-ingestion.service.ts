@@ -5,8 +5,8 @@ import { RagSourceScope } from '../../../database/schema'
 import { AiService } from '../ai.service'
 import { FileExtractionService } from '../file-extraction.service'
 import { RagRetrievalRepository } from './rag-retrieval.repository'
-import { RAG_VECTOR_STORE } from './rag-vector-store.tokens'
-import type { RagVectorChunkPayload, RagVectorStore } from './rag-vector-store.types'
+import { RAG_VECTOR_STORE } from './vector-store/tokens'
+import type { RagVectorChunkPayload, RagVectorStore } from './vector-store/types'
 import { splitUserDocTextIntoChunks } from './user-doc-chunking'
 
 export {

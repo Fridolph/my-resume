@@ -1,7 +1,7 @@
-import { RagVectorStoreRuntimeConfig } from './rag-vector-store.config'
-import { LocalRagVectorStoreAdapter } from './rag-vector-store.local.adapter'
-import { MilvusRagVectorStoreAdapter } from './rag-vector-store.milvus.adapter'
-import { RagVectorStore } from './rag-vector-store.types'
+import { LocalRagVectorStoreAdapter } from './adapters/local.adapter'
+import { MilvusRagVectorStoreAdapter } from './adapters/milvus.adapter'
+import { RagVectorStoreRuntimeConfig } from './config'
+import { RagVectorStore } from './types'
 
 /**
  * 根据运行时配置创建向量存储实现。

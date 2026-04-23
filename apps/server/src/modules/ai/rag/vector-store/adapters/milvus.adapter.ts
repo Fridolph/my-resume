@@ -1,10 +1,10 @@
-import { RagMilvusRuntimeConfig } from './rag-vector-store.config'
+import { RagMilvusRuntimeConfig } from '../config'
 import {
   RagVectorSearchInput,
   RagVectorSearchMatch,
   RagVectorStore,
   RagVectorChunkPayload,
-} from './rag-vector-store.types'
+} from '../types'
 
 function cosineSimilarity(vectorA: number[], vectorB: number[]): number {
   if (vectorA.length === 0 || vectorB.length === 0) {

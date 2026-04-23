@@ -3,7 +3,7 @@ import {
   RagVectorSearchMatch,
   RagVectorStore,
   RagVectorChunkPayload,
-} from './rag-vector-store.types'
+} from '../types'
 
 /**
  * local 向量存储适配器（占位实现）。

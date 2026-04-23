@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { resolveRagVectorStoreRuntimeConfig } from '../rag-vector-store.config'
+import { resolveRagVectorStoreRuntimeConfig } from '../../vector-store/config'
 
 describe('resolveRagVectorStoreRuntimeConfig', () => {
   it('should use local backend by default', () => {

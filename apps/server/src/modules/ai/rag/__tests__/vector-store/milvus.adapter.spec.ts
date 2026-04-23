@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { MilvusRagVectorStoreAdapter } from '../rag-vector-store.milvus.adapter'
+import { MilvusRagVectorStoreAdapter } from '../../vector-store/adapters/milvus.adapter'
 
 function createAdapter(mode: 'mock' | 'sdk' = 'mock') {
   return new MilvusRagVectorStoreAdapter({
