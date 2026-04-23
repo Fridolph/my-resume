@@ -7,18 +7,28 @@ import { FileExtractionService } from '../file-extraction.service'
 import { RagRetrievalRepository } from './rag-retrieval.repository'
 import { RAG_VECTOR_STORE } from './vector-store/tokens'
 import type { RagVectorChunkPayload, RagVectorStore } from './vector-store/types'
-import { splitUserDocTextIntoChunks } from './user-doc-chunking'
+import {
+  resolveUserDocChunkingStrategy,
+  splitUserDocTextIntoChunks,
+  type UserDocChunkingProfile,
+} from './user-doc-chunking'
 
 export {
   compareUserDocChunkingStrategies,
   DEFAULT_CHUNK_OVERLAP,
   DEFAULT_CHUNK_SIZE,
   normalizeUserDocText,
+  resolveUserDocChunkingStrategy,
   splitUserDocTextIntoChunks,
   summarizeUserDocChunking,
+  USER_DOC_CHUNKING_PROFILE_MAP,
   USER_DOC_CHUNKING_STRATEGIES,
 } from './user-doc-chunking'
-export type { UserDocChunkingStrategy, UserDocChunkingSummary } from './user-doc-chunking'
+export type {
+  UserDocChunkingProfile,
+  UserDocChunkingStrategy,
+  UserDocChunkingSummary,
+} from './user-doc-chunking'
 
 /**
  * 用户资料入库输入。
@@ -29,6 +39,7 @@ export interface IngestUserDocInput {
   mimetype: string
   size: number
   sourceScope?: RagSourceScope
+  chunkingProfile?: UserDocChunkingProfile
   uploadedAt?: Date
 }
 
@@ -43,6 +54,9 @@ export interface IngestUserDocResult {
   chunkCount: number
   fileName: string
   fileType: 'txt' | 'md' | 'pdf' | 'docx'
+  chunkingProfile: UserDocChunkingProfile
+  chunkSize: number
+  chunkOverlap: number
   uploadedAt: string
 }
 
@@ -54,6 +68,9 @@ interface BuildVectorChunksInput {
   fileName: string
   sourceScope: RagSourceScope
   sourceVersion: string
+  chunkingProfile: UserDocChunkingProfile
+  chunkSize: number
+  chunkOverlap: number
   uploadedAt: Date
 }
 
@@ -121,6 +138,8 @@ export class UserDocsIngestionService {
     const startedAt = new Date()
     const uploadedAt = input.uploadedAt ?? startedAt
     const sourceScope = input.sourceScope ?? 'draft'
+    const chunkingProfile = input.chunkingProfile ?? 'balanced'
+    const chunkingStrategy = resolveUserDocChunkingStrategy(chunkingProfile)
     const sourceVersion = buildUserDocSourceVersion(uploadedAt)
     const runId = randomUUID()
 
@@ -143,7 +162,11 @@ export class UserDocsIngestionService {
         mimetype: input.mimetype,
         size: input.size,
       })
-      const chunks = splitUserDocTextIntoChunks(extracted.text)
+      const chunks = splitUserDocTextIntoChunks(
+        extracted.text,
+        chunkingStrategy.chunkSize,
+        chunkingStrategy.chunkOverlap,
+      )
       const sourceId = buildUserDocSourceId(extracted.fileName, uploadedAt, extracted.text)
       const documentId = `user-doc:${sourceId}:und`
       const now = new Date()
@@ -166,6 +189,9 @@ export class UserDocsIngestionService {
           fileName: extracted.fileName,
           fileType: extracted.fileType,
           mimeType: extracted.mimeType,
+          chunkingProfile,
+          chunkSize: chunkingStrategy.chunkSize,
+          chunkOverlap: chunkingStrategy.chunkOverlap,
           uploadedAt: uploadedAt.toISOString(),
         },
         createdAt: now,
@@ -185,6 +211,9 @@ export class UserDocsIngestionService {
           metadataJson: {
             fileName: extracted.fileName,
             sourceType: 'user_docs',
+            chunkingProfile,
+            chunkSize: chunkingStrategy.chunkSize,
+            chunkOverlap: chunkingStrategy.chunkOverlap,
             uploadedAt: uploadedAt.toISOString(),
             chunkIndex,
             chunkCount: chunks.length,
@@ -203,6 +232,9 @@ export class UserDocsIngestionService {
           fileName: extracted.fileName,
           sourceScope,
           sourceVersion,
+          chunkingProfile,
+          chunkSize: chunkingStrategy.chunkSize,
+          chunkOverlap: chunkingStrategy.chunkOverlap,
           uploadedAt,
         }),
       )
@@ -224,6 +256,9 @@ export class UserDocsIngestionService {
         chunkCount: chunks.length,
         fileName: extracted.fileName,
         fileType: extracted.fileType,
+        chunkingProfile,
+        chunkSize: chunkingStrategy.chunkSize,
+        chunkOverlap: chunkingStrategy.chunkOverlap,
         uploadedAt: uploadedAt.toISOString(),
       }
     } catch (error) {
@@ -258,6 +293,9 @@ export class UserDocsIngestionService {
       metadataJson: {
         sourceType: 'user_docs',
         fileName: input.fileName,
+        chunkingProfile: input.chunkingProfile,
+        chunkSize: input.chunkSize,
+        chunkOverlap: input.chunkOverlap,
         uploadedAt: input.uploadedAt.toISOString(),
         chunkIndex,
         chunkCount: input.chunks.length,

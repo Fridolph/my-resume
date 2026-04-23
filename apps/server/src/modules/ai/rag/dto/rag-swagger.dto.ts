@@ -135,6 +135,13 @@ export class RagUserDocIngestBodyDto {
     example: 'draft',
   })
   scope?: 'draft' | 'published'
+
+  @ApiPropertyOptional({
+    description: '切片策略 profile（默认 balanced=500/50）',
+    enum: ['balanced', 'contextual'],
+    example: 'balanced',
+  })
+  chunkingProfile?: 'balanced' | 'contextual'
 }
 
 export class RagUserDocIngestResultDto {
@@ -181,6 +188,25 @@ export class RagUserDocIngestResultDto {
     example: 'md',
   })
   fileType!: 'txt' | 'md' | 'pdf' | 'docx'
+
+  @ApiProperty({
+    description: '切片策略 profile',
+    enum: ['balanced', 'contextual'],
+    example: 'balanced',
+  })
+  chunkingProfile!: 'balanced' | 'contextual'
+
+  @ApiProperty({
+    description: '切片大小（字符）',
+    example: 500,
+  })
+  chunkSize!: number
+
+  @ApiProperty({
+    description: '切片重叠（字符）',
+    example: 50,
+  })
+  chunkOverlap!: number
 
   @ApiProperty({
     description: '上传时间（ISO）',

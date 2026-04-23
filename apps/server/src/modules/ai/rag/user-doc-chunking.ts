@@ -27,6 +27,11 @@ export interface UserDocChunkingStrategy {
 }
 
 /**
+ * user_docs 切片 profile（对外稳定键）。
+ */
+export type UserDocChunkingProfile = 'balanced' | 'contextual'
+
+/**
  * 对比实验默认策略（本轮只关注两组参数）。
  */
 export const USER_DOC_CHUNKING_STRATEGIES: readonly UserDocChunkingStrategy[] = [
@@ -41,6 +46,17 @@ export const USER_DOC_CHUNKING_STRATEGIES: readonly UserDocChunkingStrategy[] = 
     chunkOverlap: 100,
   },
 ]
+
+/**
+ * 切片 profile 到策略映射。
+ */
+export const USER_DOC_CHUNKING_PROFILE_MAP: Record<
+  UserDocChunkingProfile,
+  UserDocChunkingStrategy
+> = {
+  balanced: USER_DOC_CHUNKING_STRATEGIES[0],
+  contextual: USER_DOC_CHUNKING_STRATEGIES[1],
+}
 
 /**
  * 单个切块策略的统计摘要。
@@ -160,4 +176,18 @@ export function compareUserDocChunkingStrategies(
   strategies: readonly UserDocChunkingStrategy[] = USER_DOC_CHUNKING_STRATEGIES,
 ): UserDocChunkingSummary[] {
   return strategies.map((strategy) => summarizeUserDocChunking(text, strategy))
+}
+
+/**
+ * 解析 user_docs 切片 profile。
+ *
+ * 默认使用 `balanced`（500/50），保持当前行为不变。
+ *
+ * @param profile 可选 profile
+ * @returns profile 对应切片策略
+ */
+export function resolveUserDocChunkingStrategy(
+  profile: UserDocChunkingProfile = 'balanced',
+): UserDocChunkingStrategy {
+  return USER_DOC_CHUNKING_PROFILE_MAP[profile]
 }

@@ -42,11 +42,15 @@ describe('RagController', () => {
       chunkCount: 2,
       fileName: 'rag-notes.md',
       fileType: 'md',
+      chunkingProfile: 'balanced',
+      chunkSize: 500,
+      chunkOverlap: 50,
       uploadedAt: '2026-04-22T03:45:00.000Z',
     })
 
     const result = await controller.ingestUserDoc(file, {
       scope: 'published',
+      chunkingProfile: 'contextual',
     })
 
     expect(vi.mocked(userDocsIngestionService.ingest)).toHaveBeenCalledWith({
@@ -55,6 +59,7 @@ describe('RagController', () => {
       mimetype: 'text/markdown',
       size: 3,
       sourceScope: 'published',
+      chunkingProfile: 'contextual',
     })
     expect(result).toMatchObject({
       sourceScope: 'published',
@@ -95,6 +100,26 @@ describe('RagController', () => {
         scope: 'all' as never,
       }),
     ).toThrow('Unsupported ingest scope: all')
+  })
+
+  it('should reject unsupported user_docs chunking profile', async () => {
+    const controller = new RagController(
+      ragService as never,
+      resumeRagSyncService as never,
+      userDocsIngestionService as never,
+    )
+    const file = {
+      buffer: Buffer.from('doc'),
+      originalname: 'rag-notes.md',
+      mimetype: 'text/markdown',
+      size: 3,
+    } as Express.Multer.File
+
+    expect(() =>
+      controller.ingestUserDoc(file, {
+        chunkingProfile: 'aggressive' as never,
+      }),
+    ).toThrow('Unsupported ingest chunkingProfile: aggressive')
   })
 
   it('should pass search quality and routing options to rag service', async () => {

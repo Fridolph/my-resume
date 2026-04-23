@@ -159,6 +159,11 @@ export class RagController {
           enum: ['draft', 'published'],
           type: 'string',
         },
+        chunkingProfile: {
+          description: '切片策略（balanced=500/50，contextual=1000/100）',
+          enum: ['balanced', 'contextual'],
+          type: 'string',
+        },
       },
       required: ['file'],
       type: 'object',
@@ -188,12 +193,23 @@ export class RagController {
       throw new BadRequestException(`Unsupported ingest scope: ${sourceScope}`)
     }
 
+    if (
+      body.chunkingProfile &&
+      body.chunkingProfile !== 'balanced' &&
+      body.chunkingProfile !== 'contextual'
+    ) {
+      throw new BadRequestException(
+        `Unsupported ingest chunkingProfile: ${body.chunkingProfile}`,
+      )
+    }
+
     return this.userDocsIngestionService.ingest({
       buffer: file.buffer,
       originalname: file.originalname,
       mimetype: file.mimetype,
       size: file.size,
       sourceScope,
+      chunkingProfile: body.chunkingProfile,
     })
   }
 

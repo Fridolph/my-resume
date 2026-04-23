@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   compareUserDocChunkingStrategies,
+  resolveUserDocChunkingStrategy,
   UserDocChunkingStrategy,
 } from '../user-doc-chunking'
 
@@ -19,6 +20,26 @@ const STRATEGIES: readonly UserDocChunkingStrategy[] = [
 ]
 
 describe('user docs chunking strategy baseline', () => {
+  it('should resolve balanced profile as safe default strategy', () => {
+    const strategy = resolveUserDocChunkingStrategy()
+
+    expect(strategy).toMatchObject({
+      label: '500/50',
+      chunkSize: 500,
+      chunkOverlap: 50,
+    })
+  })
+
+  it('should resolve contextual profile to larger context strategy', () => {
+    const strategy = resolveUserDocChunkingStrategy('contextual')
+
+    expect(strategy).toMatchObject({
+      label: '1000/100',
+      chunkSize: 1000,
+      chunkOverlap: 100,
+    })
+  })
+
   it('should show smaller strategy creates more chunks and higher redundancy', () => {
     const text = 'A'.repeat(2400)
     const [smallStrategy, largeStrategy] = compareUserDocChunkingStrategies(

@@ -98,6 +98,9 @@ describe('UserDocsIngestionService', () => {
     expect(result.sourceScope).toBe('draft')
     expect(result.sourceVersion).toBe(expectedVersion)
     expect(result.fileName).toBe('rag-notes.md')
+    expect(result.chunkingProfile).toBe('balanced')
+    expect(result.chunkSize).toBe(500)
+    expect(result.chunkOverlap).toBe(50)
 
     expect(vi.mocked(ragRetrievalRepository.createIndexRun)).toHaveBeenCalledTimes(1)
     expect(
@@ -121,6 +124,9 @@ describe('UserDocsIngestionService', () => {
         fileName: 'rag-notes.md',
         fileType: 'md',
         mimeType: 'text/markdown',
+        chunkingProfile: 'balanced',
+        chunkSize: 500,
+        chunkOverlap: 50,
         uploadedAt: uploadedAt.toISOString(),
       },
     })
@@ -137,6 +143,9 @@ describe('UserDocsIngestionService', () => {
       metadataJson: {
         sourceType: 'user_docs',
         fileName: 'rag-notes.md',
+        chunkingProfile: 'balanced',
+        chunkSize: 500,
+        chunkOverlap: 50,
         chunkIndex: 0,
       },
     })
@@ -151,6 +160,9 @@ describe('UserDocsIngestionService', () => {
       metadataJson: {
         fileName: 'rag-notes.md',
         sourceType: 'user_docs',
+        chunkingProfile: 'balanced',
+        chunkSize: 500,
+        chunkOverlap: 50,
         chunkIndex: 0,
       },
     })
@@ -162,6 +174,37 @@ describe('UserDocsIngestionService', () => {
       status: 'succeeded',
       errorMessage: null,
     })
+  })
+
+  it('should use contextual profile chunking when requested', async () => {
+    const { service, fileExtractionService, aiService } = createHarness()
+
+    vi.mocked(fileExtractionService.extractText).mockResolvedValue({
+      fileName: 'long-notes.md',
+      fileType: 'md',
+      mimeType: 'text/markdown',
+      text: 'A'.repeat(2400),
+      charCount: 2400,
+    })
+    vi.mocked(aiService.embedTexts).mockImplementation(async ({ texts }) => ({
+      provider: 'mock',
+      model: 'mock-resume-advisor-embedding',
+      embeddings: texts.map(() => [0.1, 0.2]),
+      raw: null,
+    }))
+
+    const result = await service.ingest({
+      buffer: Buffer.from('fake'),
+      originalname: 'long-notes.md',
+      mimetype: 'text/markdown',
+      size: 4,
+      chunkingProfile: 'contextual',
+    })
+
+    expect(result.chunkingProfile).toBe('contextual')
+    expect(result.chunkSize).toBe(1000)
+    expect(result.chunkOverlap).toBe(100)
+    expect(result.chunkCount).toBe(3)
   })
 
   it('should mark run failed when embedding throws', async () => {

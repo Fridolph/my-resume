@@ -337,3 +337,37 @@ pnpm --filter @my-resume/server rag:chunk:compare \
 - 测试通过：
   - `pnpm --filter @my-resume/server exec vitest run --config ./vitest.config.mts src/modules/ai/rag/__tests__/rag-search-routing.spec.ts src/modules/ai/rag/__tests__/rag.service.spec.ts src/modules/ai/rag/__tests__/rag.controller.spec.ts`
   - `pnpm --filter @my-resume/server typecheck`
+
+### Step 4-7：user_docs 切片 profile 化（为知识库策略实验准备）
+
+- 目标：
+  - 保留默认 `500/50` 行为不变；
+  - 同时支持按请求选择更大上下文切片，便于后续知识库实验。
+- 新增：
+  - `apps/server/src/modules/ai/rag/user-doc-chunking.ts`
+    - 新增 `UserDocChunkingProfile = 'balanced' | 'contextual'`
+    - 新增 `resolveUserDocChunkingStrategy(profile)`：
+      - `balanced => 500/50`
+      - `contextual => 1000/100`
+  - `apps/server/src/modules/ai/rag/user-docs-ingestion.service.ts`
+    - 入库参数新增 `chunkingProfile`（可选）
+    - 入库结果新增 `chunkingProfile/chunkSize/chunkOverlap`
+    - 文档/切块/vector metadata 写入切片配置，保证可追溯
+  - `apps/server/src/modules/ai/rag/dto/rag-swagger.dto.ts`
+    - `RagUserDocIngestBodyDto` 新增 `chunkingProfile`
+    - `RagUserDocIngestResultDto` 新增切片配置字段
+  - `apps/server/src/modules/ai/rag/rag.controller.ts`
+    - 增加 `chunkingProfile` 入参校验与透传
+- 测试：
+  - `apps/server/src/modules/ai/rag/__tests__/user-doc-chunking-strategy.spec.ts`
+    - 覆盖 profile 解析与默认策略
+  - `apps/server/src/modules/ai/rag/__tests__/user-docs-ingestion.service.spec.ts`
+    - 覆盖默认 profile metadata 与 contextual 切片计数
+  - `apps/server/src/modules/ai/rag/__tests__/rag.controller.spec.ts`
+    - 覆盖 `chunkingProfile` 透传与非法值拒绝
+
+### Step 4-7 验证
+
+- 测试通过：
+  - `pnpm --filter @my-resume/server exec vitest run --config ./vitest.config.mts src/modules/ai/rag/__tests__/user-doc-chunking-strategy.spec.ts src/modules/ai/rag/__tests__/user-docs-ingestion.service.spec.ts src/modules/ai/rag/__tests__/rag.controller.spec.ts`
+  - `pnpm --filter @my-resume/server typecheck`
