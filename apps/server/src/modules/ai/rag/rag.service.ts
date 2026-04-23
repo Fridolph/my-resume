@@ -325,11 +325,17 @@ export class RagService {
    * @param question 提问内容
    * @param limit 检索上下文数量
    * @param locale 回答语言
+   * @param routingOverride 请求级检索路由覆盖项
    * @returns 问答结果
    */
-  async ask(question: string, limit = 4, locale: 'zh' | 'en' = 'zh') {
+  async ask(
+    question: string,
+    limit = 4,
+    locale: 'zh' | 'en' = 'zh',
+    routingOverride: RagSearchRoutingOverride = {},
+  ) {
     // ask = search + context assembly + generateText。
-    const matches = await this.search(question, limit)
+    const matches = await this.search(question, limit, this.defaultSearchQualityGate, routingOverride)
     const context = matches
       .map(
         (item, index) =>

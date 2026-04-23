@@ -70,6 +70,25 @@ export class RagAskBodyDto {
     example: 'zh',
   })
   locale?: 'zh' | 'en'
+
+  @ApiPropertyOptional({
+    description: '是否强制走向量存储检索（用于实验，默认走环境配置）',
+    example: true,
+  })
+  useVectorStore?: boolean
+
+  @ApiPropertyOptional({
+    description: '向量检索 scope（用于实验，默认走环境配置）',
+    enum: ['draft', 'published', 'all'],
+    example: 'published',
+  })
+  vectorScope?: 'draft' | 'published' | 'all'
+
+  @ApiPropertyOptional({
+    description: '向量检索为空/异常时是否回退本地检索（用于实验）',
+    example: true,
+  })
+  vectorFallbackToLocal?: boolean
 }
 
 export class RagResumeSyncBodyDto {

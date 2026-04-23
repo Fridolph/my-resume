@@ -144,4 +144,52 @@ describe('RagController', () => {
       }),
     ).toThrow('Unsupported search vectorScope: team')
   })
+
+  it('should pass ask routing options to rag service', async () => {
+    const controller = new RagController(
+      ragService as never,
+      resumeRagSyncService as never,
+      userDocsIngestionService as never,
+    )
+    vi.mocked(ragService.ask).mockResolvedValue({
+      answer: 'ok',
+      matches: [],
+      providerSummary: {},
+    })
+
+    await controller.ask({
+      question: '总结我的 user_docs',
+      limit: 4,
+      locale: 'zh',
+      useVectorStore: true,
+      vectorScope: 'published',
+      vectorFallbackToLocal: false,
+    })
+
+    expect(vi.mocked(ragService.ask)).toHaveBeenCalledWith(
+      '总结我的 user_docs',
+      4,
+      'zh',
+      {
+        useVectorStore: true,
+        vectorScope: 'published',
+        fallbackToLocal: false,
+      },
+    )
+  })
+
+  it('should reject unsupported ask vectorScope', async () => {
+    const controller = new RagController(
+      ragService as never,
+      resumeRagSyncService as never,
+      userDocsIngestionService as never,
+    )
+
+    expect(() =>
+      controller.ask({
+        question: 'query',
+        vectorScope: 'team' as never,
+      }),
+    ).toThrow('Unsupported ask vectorScope: team')
+  })
 })

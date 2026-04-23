@@ -263,7 +263,20 @@ export class RagController {
     description: '当前角色没有触发 AI 分析权限',
   })
   ask(@Body() body: RagAskBodyDto) {
+    if (
+      body.vectorScope &&
+      body.vectorScope !== 'draft' &&
+      body.vectorScope !== 'published' &&
+      body.vectorScope !== 'all'
+    ) {
+      throw new BadRequestException(`Unsupported ask vectorScope: ${body.vectorScope}`)
+    }
+
     // ask 先 search，再拼接上下文调用生成接口，不是直接裸问模型。
-    return this.ragService.ask(body.question, body.limit, body.locale)
+    return this.ragService.ask(body.question, body.limit, body.locale, {
+      useVectorStore: body.useVectorStore,
+      vectorScope: body.vectorScope,
+      fallbackToLocal: body.vectorFallbackToLocal,
+    })
   }
 }

@@ -309,3 +309,31 @@ pnpm --filter @my-resume/server rag:chunk:compare \
 - 测试通过：
   - `pnpm --filter @my-resume/server exec vitest run --config ./vitest.config.mts src/modules/ai/rag/__tests__/rag-search-routing.spec.ts src/modules/ai/rag/__tests__/rag.service.spec.ts src/modules/ai/rag/__tests__/rag.controller.spec.ts`
   - `pnpm --filter @my-resume/server typecheck`
+
+### Step 4-6：`ask` 接口支持请求级路由覆盖（与 `search` 对齐）
+
+- 目标：
+  - 让问答入口也能在单次请求中切换 `local/milvus` 路由，便于学习实验与对比，不改默认环境行为。
+- 实现：
+  - `apps/server/src/modules/ai/rag/dto/rag-swagger.dto.ts`
+    - `RagAskBodyDto` 新增可选字段：
+      - `useVectorStore`
+      - `vectorScope`
+      - `vectorFallbackToLocal`
+  - `apps/server/src/modules/ai/rag/rag.controller.ts`
+    - `ask` 入参校验 `vectorScope`（仅允许 `draft|published|all`）
+    - 将请求级路由覆盖参数透传给 `RagService.ask`
+  - `apps/server/src/modules/ai/rag/rag.service.ts`
+    - `ask` 方法新增 `routingOverride` 参数，并透传至 `search`
+- 测试：
+  - `apps/server/src/modules/ai/rag/__tests__/rag.controller.spec.ts`
+    - 断言 `ask` 会把路由覆盖参数传递给 service
+    - 断言非法 `vectorScope` 返回 `BadRequestException`
+  - `apps/server/src/modules/ai/rag/__tests__/rag.service.spec.ts`
+    - 断言 `ask -> search` 的路由透传行为
+
+### Step 4-6 验证
+
+- 测试通过：
+  - `pnpm --filter @my-resume/server exec vitest run --config ./vitest.config.mts src/modules/ai/rag/__tests__/rag-search-routing.spec.ts src/modules/ai/rag/__tests__/rag.service.spec.ts src/modules/ai/rag/__tests__/rag.controller.spec.ts`
+  - `pnpm --filter @my-resume/server typecheck`

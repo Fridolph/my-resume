@@ -263,6 +263,59 @@ describe('RagService', () => {
     ).toBe(true)
   })
 
+  it('should pass request-level routing override through ask to search', async () => {
+    const aiService = new AiService(
+      createAiProvider(
+        {
+          provider: 'mock',
+          mode: 'mock',
+          model: 'mock-resume-advisor',
+        },
+        vi.fn<typeof fetch>(),
+      ),
+    )
+    const service = new RagService(
+      aiService,
+      new RagChunkService(),
+      new RagKnowledgeService(),
+      new RagIndexRepository(),
+      {
+        backend: 'milvus',
+        upsertChunks: vi.fn(),
+        deleteChunksByDocument: vi.fn(),
+        search: vi.fn().mockResolvedValue([]),
+      } as unknown as RagVectorStore,
+    )
+    const searchSpy = vi.spyOn(service, 'search').mockResolvedValue([
+      {
+        id: 'user-doc-chunk:1',
+        title: 'rag-notes.md',
+        section: 'user_docs',
+        content: 'Milvus ask routing test',
+        sourceType: 'user_docs',
+        sourcePath: 'rag-notes.md',
+        score: 0.9,
+      },
+    ])
+
+    await service.ask('Milvus ask', 2, 'zh', {
+      useVectorStore: true,
+      vectorScope: 'draft',
+      fallbackToLocal: false,
+    })
+
+    expect(searchSpy).toHaveBeenCalledWith(
+      'Milvus ask',
+      2,
+      expect.any(Object),
+      {
+        useVectorStore: true,
+        vectorScope: 'draft',
+        fallbackToLocal: false,
+      },
+    )
+  })
+
   it('should index blog knowledge alongside the resume source', async () => {
     const aiService = new AiService(
       createAiProvider(
