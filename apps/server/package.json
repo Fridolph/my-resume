@@ -20,6 +20,7 @@
     "start:prod": "node dist/src/main.js",
     "scaffold:module": "node ./scripts/scaffold-module.mjs",
     "rag:chunk:compare": "ts-node -P tsconfig.json ./scripts/compare-user-doc-chunking.ts",
+    "rag:retrieval:compare": "ts-node -P tsconfig.json ./scripts/compare-user-doc-retrieval.ts",
     "rag:milvus:verify": "ts-node -P tsconfig.json ./scripts/verify-rag-milvus-integration.ts",
     "lint": "oxlint --config ../../.oxlintrc.json --ignore-path ../../.eslintignore .",
     "lint:eslint": "eslint \"{src,test}/**/*.ts\"",

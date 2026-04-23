@@ -371,3 +371,33 @@ pnpm --filter @my-resume/server rag:chunk:compare \
 - 测试通过：
   - `pnpm --filter @my-resume/server exec vitest run --config ./vitest.config.mts src/modules/ai/rag/__tests__/user-doc-chunking-strategy.spec.ts src/modules/ai/rag/__tests__/user-docs-ingestion.service.spec.ts src/modules/ai/rag/__tests__/rag.controller.spec.ts`
   - `pnpm --filter @my-resume/server typecheck`
+
+### Step 4-8：低成本检索对比脚本（按 profile 看命中差异）
+
+- 目标：
+  - 不调用真实 AI，不增加成本；
+  - 先用关键词检索基线对比 `balanced/contextual` 两种切片配置的命中趋势。
+- 新增：
+  - `apps/server/src/modules/ai/rag/user-doc-retrieval-evaluator.ts`
+    - `calculateKeywordScore`
+    - `rankUserDocChunksByKeywordQuery`
+    - `evaluateUserDocRetrievalByProfiles`
+  - `apps/server/scripts/compare-user-doc-retrieval.ts`
+    - 新命令：`pnpm --filter @my-resume/server rag:retrieval:compare "<query>" <file1> [file2 ...]`
+    - 输出字段：`profile/chunkCount/hitChunkCount/topScore/avgTopScore/topChunk`
+  - `apps/server/package.json`
+    - 注册 `rag:retrieval:compare` 脚本
+- 测试：
+  - 新增 `apps/server/src/modules/ai/rag/__tests__/user-doc-retrieval-evaluator.spec.ts`
+  - 覆盖：
+    - 命中排序正确性
+    - profile 对比（`balanced` chunk 更多）
+    - 空/未命中 query 的零分行为
+
+### Step 4-8 验证
+
+- 测试通过：
+  - `pnpm --filter @my-resume/server exec vitest run --config ./vitest.config.mts src/modules/ai/rag/__tests__/user-doc-retrieval-evaluator.spec.ts src/modules/ai/rag/__tests__/user-doc-chunking-strategy.spec.ts src/modules/ai/rag/__tests__/user-docs-ingestion.service.spec.ts`
+  - `pnpm --filter @my-resume/server typecheck`
+- 脚本手工验证通过：
+  - `pnpm --filter @my-resume/server rag:retrieval:compare "Milvus 检索" /Users/fri/Desktop/personal/my-resume/docs/30-开发日志/M21-issue-179-user-docs-入库契约与最小接口闭环.md`
