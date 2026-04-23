@@ -262,3 +262,16 @@ pnpm --filter @my-resume/server rag:chunk:compare \
   - `apps/server/src/modules/ai/rag/__tests__/rag.service.spec.ts`
 
 > 这一步的目标是“可灰度验证”，不是“立即替换主检索链路”。
+
+### Step 4-3：本地 Milvus 集成验证脚本（不进 CI）
+
+- 新增本地集成验证脚本：
+  - `apps/server/scripts/verify-rag-milvus-integration.ts`
+  - 覆盖链路：`upsert -> search -> cleanup(delete)`
+- 新增命令：
+  - `pnpm --filter @my-resume/server rag:milvus:verify`
+- 成本控制：
+  - 默认不自动执行；
+  - 需显式加开关：
+    - `RUN_MILVUS_INTEGRATION=1 pnpm --filter @my-resume/server rag:milvus:verify`
+  - 可避免 CI 与日常开发误连真实 Milvus 服务。
