@@ -146,3 +146,28 @@ pnpm --filter @my-resume/server rag:chunk:compare \
 
 > 观察指标：`chunkCount`、`totalChunkChars`、`redundantChars`、`redundancyRatio`。  
 > 先用这组“静态切块指标”定基线，再进入后续检索质量对比。
+
+---
+
+## Phase 2 / Step 2（进行中）：检索质量门控（阈值 + 断层）
+
+### 本轮新增
+
+- 新增检索质量门控纯函数模块：
+  - `apps/server/src/modules/ai/rag/rag-search-quality.ts`
+  - 能力：
+    - `resolveRagSearchQualityGate`（从环境变量解析默认门控）
+    - `applyRagSearchQualityGate`（对排序结果执行阈值/断层过滤）
+- `RagService.search` 接入门控：
+  - `apps/server/src/modules/ai/rag/rag.service.ts`
+  - 搜索签名新增可选门控参数：`minScore`、`minScoreGap`
+- 搜索 API 请求体新增可选门控字段：
+  - `apps/server/src/modules/ai/rag/dto/rag-swagger.dto.ts`
+  - `apps/server/src/modules/ai/rag/rag.controller.ts`
+- 新增门控单测：
+  - `apps/server/src/modules/ai/rag/__tests__/rag-search-quality.spec.ts`
+
+### 本轮目的（和 Milvus 学习内容对齐）
+
+- 先把你在 `milvus-test` 里验证过的“召回后过滤思路”固化在当前 RAG 链路中。
+- 这样后续切到 Milvus 作为向量召回层时，门控策略无需重写，可直接复用。

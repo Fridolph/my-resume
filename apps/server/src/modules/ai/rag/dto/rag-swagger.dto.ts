@@ -14,6 +14,20 @@ export class RagSearchBodyDto {
     maximum: 20,
   })
   limit?: number
+
+  @ApiPropertyOptional({
+    description: '最低分数阈值（低于该分数的结果会被过滤）',
+    example: 0.55,
+    minimum: 0,
+  })
+  minScore?: number
+
+  @ApiPropertyOptional({
+    description: 'Top1 与 Top2 分数断层阈值（达到阈值仅保留 Top1）',
+    example: 0.15,
+    minimum: 0,
+  })
+  minScoreGap?: number
 }
 
 export class RagAskBodyDto {

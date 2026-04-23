@@ -7,6 +7,11 @@ import { AiService } from '../ai.service'
 import { RagChunkService } from './rag-chunk.service'
 import { RagIndexRepository } from './rag-index.repository'
 import { RagKnowledgeService } from './rag-knowledge.service'
+import {
+  applyRagSearchQualityGate,
+  RagSearchQualityGate,
+  resolveRagSearchQualityGate,
+} from './rag-search-quality'
 import { RagIndexFile, RagSearchMatch } from './rag.types'
 
 function computeContentHash(content: string): string {
@@ -92,6 +97,9 @@ function cosineSimilarity(vectorA: number[], vectorB: number[]): number {
 
 @Injectable()
 export class RagService {
+  private readonly defaultSearchQualityGate: RagSearchQualityGate =
+    resolveRagSearchQualityGate(process.env)
+
   constructor(
     @Inject(AiService)
     private readonly aiService: AiService,
@@ -188,7 +196,11 @@ export class RagService {
    * @param limit 返回数量上限
    * @returns 检索结果
    */
-  async search(query: string, limit = 5): Promise<RagSearchMatch[]> {
+  async search(
+    query: string,
+    limit = 5,
+    qualityGate: RagSearchQualityGate = this.defaultSearchQualityGate,
+  ): Promise<RagSearchMatch[]> {
     // 检索分数采用“向量相似度 + 关键词命中”的混合策略，兼顾效果和可解释性。
     const index = await this.ensureIndex()
     const queryEmbedding = await this.aiService.embedTexts({
@@ -196,7 +208,7 @@ export class RagService {
     })
     const [queryVector] = queryEmbedding.embeddings
 
-    return index.chunks
+    const topMatches = index.chunks
       .map((chunk) => ({
         id: chunk.id,
         title: chunk.title,
@@ -213,6 +225,8 @@ export class RagService {
       }))
       .sort((left, right) => right.score - left.score)
       .slice(0, limit)
+
+    return applyRagSearchQualityGate(topMatches, qualityGate)
   }
 
   /**

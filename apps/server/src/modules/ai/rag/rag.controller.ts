@@ -221,7 +221,10 @@ export class RagController {
     description: '当前角色没有触发 AI 分析权限',
   })
   search(@Body() body: RagSearchBodyDto) {
-    return this.ragService.search(body.query, body.limit)
+    return this.ragService.search(body.query, body.limit, {
+      minScore: body.minScore,
+      minScoreGap: body.minScoreGap,
+    })
   }
 
   /**
