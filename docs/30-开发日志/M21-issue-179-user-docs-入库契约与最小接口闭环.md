@@ -275,3 +275,16 @@ pnpm --filter @my-resume/server rag:chunk:compare \
   - 需显式加开关：
     - `RUN_MILVUS_INTEGRATION=1 pnpm --filter @my-resume/server rag:milvus:verify`
   - 可避免 CI 与日常开发误连真实 Milvus 服务。
+
+### Step 4-4：手动触发 CI 集成验证（workflow_dispatch）
+
+- 新增手动 workflow：
+  - `.github/workflows/milvus-integration-verify.yml`
+- 流程：
+  - 在 GitHub Runner 内启动 `milvus run standalone`
+  - 健康检查通过后执行：
+    - `pnpm --filter @my-resume/server typecheck`
+    - `RUN_MILVUS_INTEGRATION=1 pnpm --filter @my-resume/server rag:milvus:verify`
+- 触发方式：
+  - GitHub Actions 页面手动运行（`workflow_dispatch`）
+  - 默认不加入常规 CI 主链路，避免增加日常流水线耗时与外部服务依赖。
