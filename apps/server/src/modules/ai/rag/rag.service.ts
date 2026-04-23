@@ -7,12 +7,15 @@ import { AiService } from '../ai.service'
 import { RagChunkService } from './rag-chunk.service'
 import { RagIndexRepository } from './rag-index.repository'
 import { RagKnowledgeService } from './rag-knowledge.service'
+import { resolveRagSearchRoutingConfig } from './rag-search-routing'
 import {
   applyRagSearchQualityGate,
   RagSearchQualityGate,
   resolveRagSearchQualityGate,
 } from './rag-search-quality'
 import { RagIndexFile, RagSearchMatch } from './rag.types'
+import { RAG_VECTOR_STORE } from './vector-store/tokens'
+import type { RagVectorSearchMatch, RagVectorStore } from './vector-store/types'
 
 function computeContentHash(content: string): string {
   return createHash('sha256').update(content).digest('hex')
@@ -99,6 +102,7 @@ function cosineSimilarity(vectorA: number[], vectorB: number[]): number {
 export class RagService {
   private readonly defaultSearchQualityGate: RagSearchQualityGate =
     resolveRagSearchQualityGate(process.env)
+  private readonly searchRoutingConfig = resolveRagSearchRoutingConfig(process.env)
 
   constructor(
     @Inject(AiService)
@@ -109,6 +113,8 @@ export class RagService {
     private readonly ragKnowledgeService: RagKnowledgeService,
     @Inject(RagIndexRepository)
     private readonly ragIndexRepository: RagIndexRepository,
+    @Inject(RAG_VECTOR_STORE)
+    private readonly ragVectorStore: RagVectorStore,
   ) {}
 
   /**
@@ -202,11 +208,29 @@ export class RagService {
     qualityGate: RagSearchQualityGate = this.defaultSearchQualityGate,
   ): Promise<RagSearchMatch[]> {
     // 检索分数采用“向量相似度 + 关键词命中”的混合策略，兼顾效果和可解释性。
-    const index = await this.ensureIndex()
     const queryEmbedding = await this.aiService.embedTexts({
       texts: [query],
     })
     const [queryVector] = queryEmbedding.embeddings
+    const vectorStoreMatches = await this.searchFromVectorStore(queryVector ?? [], limit)
+
+    if (vectorStoreMatches) {
+      if (vectorStoreMatches.length > 0 || !this.searchRoutingConfig.fallbackToLocal) {
+        return applyRagSearchQualityGate(vectorStoreMatches, qualityGate)
+      }
+    }
+
+    const topMatches = await this.searchFromLocalIndex(query, queryVector ?? [], limit)
+
+    return applyRagSearchQualityGate(topMatches, qualityGate)
+  }
+
+  private async searchFromLocalIndex(
+    query: string,
+    queryVector: number[],
+    limit: number,
+  ): Promise<RagSearchMatch[]> {
+    const index = await this.ensureIndex()
 
     const topMatches = index.chunks
       .map((chunk) => ({
@@ -218,7 +242,7 @@ export class RagService {
         sourcePath: chunk.sourcePath,
         score: Number(
           (
-            cosineSimilarity(queryVector ?? [], chunk.embedding) * 0.7 +
+            cosineSimilarity(queryVector, chunk.embedding) * 0.7 +
             calculateKeywordScore(query, chunk.content) * 0.3
           ).toFixed(6),
         ),
@@ -226,7 +250,60 @@ export class RagService {
       .sort((left, right) => right.score - left.score)
       .slice(0, limit)
 
-    return applyRagSearchQualityGate(topMatches, qualityGate)
+    return topMatches
+  }
+
+  /**
+   * 在灰度开关开启时，尝试走向量存储检索。
+   *
+   * 返回值约定：
+   * - `null`：未启用向量检索，或发生错误且允许回退；
+   * - `[]`：已启用向量检索且命中为空（是否回退由上层控制）。
+   */
+  private async searchFromVectorStore(
+    queryVector: number[],
+    limit: number,
+  ): Promise<RagSearchMatch[] | null> {
+    if (!this.searchRoutingConfig.useVectorStore) {
+      return null
+    }
+
+    try {
+      const sourceScope =
+        this.searchRoutingConfig.vectorScope === 'all'
+          ? undefined
+          : this.searchRoutingConfig.vectorScope
+      const matches = await this.ragVectorStore.search({
+        queryVector,
+        limit,
+        sourceScope,
+      })
+
+      return matches.map((item) => this.mapVectorMatchToSearchMatch(item))
+    } catch (error) {
+      if (this.searchRoutingConfig.fallbackToLocal) {
+        return null
+      }
+
+      throw error
+    }
+  }
+
+  private mapVectorMatchToSearchMatch(match: RagVectorSearchMatch): RagSearchMatch {
+    const metadata =
+      match.metadataJson && typeof match.metadataJson === 'object' ? match.metadataJson : null
+    const fileName =
+      metadata && typeof metadata.fileName === 'string' ? metadata.fileName : undefined
+
+    return {
+      id: match.id,
+      title: fileName ?? `${match.sourceType}:${match.documentId}`,
+      section: match.section,
+      content: match.content,
+      sourceType: match.sourceType,
+      sourcePath: fileName,
+      score: Number(match.score.toFixed(6)),
+    }
   }
 
   /**

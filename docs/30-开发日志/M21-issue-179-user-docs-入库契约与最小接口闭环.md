@@ -243,3 +243,22 @@ pnpm --filter @my-resume/server rag:chunk:compare \
 
 - 仅完成“向量存储层”的真实 SDK 可调用闭环。
 - 暂未替换现有 `RagService.search` 主检索链路（仍保持本地索引逻辑），后续按步骤逐步切换。
+
+### Step 4-2：检索灰度路由（向量优先 + 本地回退）
+
+- 新增检索路由配置解析：
+  - `apps/server/src/modules/ai/rag/rag-search-routing.ts`
+  - 开关：
+    - `RAG_SEARCH_USE_VECTOR_STORE`（默认 `false`）
+    - `RAG_SEARCH_VECTOR_SCOPE`（默认 `published`）
+    - `RAG_SEARCH_VECTOR_FALLBACK_TO_LOCAL`（默认 `true`）
+- `RagService.search` 接入灰度策略：
+  - `apps/server/src/modules/ai/rag/rag.service.ts`
+  - 行为：
+    - 开关关闭：完全走本地索引（与历史一致）
+    - 开关开启：先走向量 store；命中为空且允许回退时再走本地索引
+- 新增/更新测试：
+  - `apps/server/src/modules/ai/rag/__tests__/rag-search-routing.spec.ts`
+  - `apps/server/src/modules/ai/rag/__tests__/rag.service.spec.ts`
+
+> 这一步的目标是“可灰度验证”，不是“立即替换主检索链路”。
