@@ -70,11 +70,11 @@ describe('RagController', () => {
       userDocsIngestionService as never,
     )
 
-    await expect(
+    expect(() =>
       controller.ingestUserDoc(undefined, {
         scope: 'draft',
       }),
-    ).rejects.toThrow(BadRequestException)
+    ).toThrow(BadRequestException)
   })
 
   it('should reject unsupported user_docs ingest scope', async () => {
@@ -90,10 +90,10 @@ describe('RagController', () => {
       size: 3,
     } as Express.Multer.File
 
-    await expect(
+    expect(() =>
       controller.ingestUserDoc(file, {
         scope: 'all' as never,
       }),
-    ).rejects.toThrow('Unsupported ingest scope: all')
+    ).toThrow('Unsupported ingest scope: all')
   })
 })

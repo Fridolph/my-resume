@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { AiService } from '../../ai.service'
 import { FileExtractionService } from '../../file-extraction.service'
 import { RagRetrievalRepository } from '../rag-retrieval.repository'
+import { RagVectorStore } from '../rag-vector-store.types'
 import {
   buildUserDocSourceVersion,
   splitUserDocTextIntoChunks,
@@ -25,10 +26,18 @@ function createHarness() {
     updateIndexRunStatus: vi.fn(),
   } as unknown as RagRetrievalRepository
 
+  const ragVectorStore = {
+    backend: 'local',
+    upsertChunks: vi.fn(),
+    deleteChunksByDocument: vi.fn(),
+    search: vi.fn(),
+  } as unknown as RagVectorStore
+
   const service = new UserDocsIngestionService(
     fileExtractionService,
     aiService,
     ragRetrievalRepository,
+    ragVectorStore,
   )
 
   return {
@@ -36,14 +45,16 @@ function createHarness() {
     fileExtractionService,
     aiService,
     ragRetrievalRepository,
+    ragVectorStore,
   }
 }
 
 describe('UserDocsIngestionService', () => {
   it('should generate stable upload sourceVersion', () => {
     const uploadedAt = '2026-04-22T03:45:00.000Z'
+    const expectedVersion = `upload:${new Date(uploadedAt).getTime()}`
 
-    expect(buildUserDocSourceVersion(uploadedAt)).toBe('upload:1776839100000')
+    expect(buildUserDocSourceVersion(uploadedAt)).toBe(expectedVersion)
   })
 
   it('should split text into overlap chunks', () => {
@@ -56,7 +67,8 @@ describe('UserDocsIngestionService', () => {
   })
 
   it('should ingest extracted file into retrieval tables with metadata', async () => {
-    const { service, fileExtractionService, aiService, ragRetrievalRepository } = createHarness()
+    const { service, fileExtractionService, aiService, ragRetrievalRepository, ragVectorStore } =
+      createHarness()
 
     vi.mocked(fileExtractionService.extractText).mockResolvedValue({
       fileName: 'rag-notes.md',
@@ -74,6 +86,7 @@ describe('UserDocsIngestionService', () => {
     })
 
     const uploadedAt = new Date('2026-04-22T03:45:00.000Z')
+    const expectedVersion = `upload:${uploadedAt.getTime()}`
     const result = await service.ingest({
       buffer: Buffer.from('fake'),
       originalname: 'rag-notes.md',
@@ -83,7 +96,7 @@ describe('UserDocsIngestionService', () => {
     })
 
     expect(result.sourceScope).toBe('draft')
-    expect(result.sourceVersion).toBe('upload:1776839100000')
+    expect(result.sourceVersion).toBe(expectedVersion)
     expect(result.fileName).toBe('rag-notes.md')
 
     expect(vi.mocked(ragRetrievalRepository.createIndexRun)).toHaveBeenCalledTimes(1)
@@ -92,7 +105,7 @@ describe('UserDocsIngestionService', () => {
     ).toMatchObject({
       sourceType: 'user_docs',
       sourceScope: 'draft',
-      sourceVersion: 'upload:1776839100000',
+      sourceVersion: expectedVersion,
       status: 'pending',
     })
 
@@ -127,6 +140,20 @@ describe('UserDocsIngestionService', () => {
         chunkIndex: 0,
       },
     })
+    expect(vi.mocked(ragVectorStore.deleteChunksByDocument)).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(ragVectorStore.deleteChunksByDocument)).toHaveBeenCalledWith(documentId)
+    expect(vi.mocked(ragVectorStore.upsertChunks)).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(ragVectorStore.upsertChunks).mock.calls[0]?.[0][0]).toMatchObject({
+      sourceType: 'user_docs',
+      sourceScope: 'draft',
+      sourceVersion: expectedVersion,
+      section: 'user_docs',
+      metadataJson: {
+        fileName: 'rag-notes.md',
+        sourceType: 'user_docs',
+        chunkIndex: 0,
+      },
+    })
 
     expect(vi.mocked(ragRetrievalRepository.updateIndexRunStatus)).toHaveBeenCalledTimes(1)
     expect(
@@ -138,7 +165,8 @@ describe('UserDocsIngestionService', () => {
   })
 
   it('should mark run failed when embedding throws', async () => {
-    const { service, fileExtractionService, aiService, ragRetrievalRepository } = createHarness()
+    const { service, fileExtractionService, aiService, ragRetrievalRepository, ragVectorStore } =
+      createHarness()
 
     vi.mocked(fileExtractionService.extractText).mockResolvedValue({
       fileName: 'rag-notes.md',
@@ -165,5 +193,6 @@ describe('UserDocsIngestionService', () => {
       status: 'failed',
       errorMessage: 'embed failed',
     })
+    expect(vi.mocked(ragVectorStore.upsertChunks)).not.toHaveBeenCalled()
   })
 })

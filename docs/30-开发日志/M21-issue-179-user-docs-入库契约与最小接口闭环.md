@@ -171,3 +171,44 @@ pnpm --filter @my-resume/server rag:chunk:compare \
 
 - 先把你在 `milvus-test` 里验证过的“召回后过滤思路”固化在当前 RAG 链路中。
 - 这样后续切到 Milvus 作为向量召回层时，门控策略无需重写，可直接复用。
+
+---
+
+## Phase 2 / Step 3（进行中）：Milvus 向量存储适配器骨架（并行可切换）
+
+### 本轮新增
+
+- 新增向量存储抽象契约与统一载荷：
+  - `apps/server/src/modules/ai/rag/rag-vector-store.types.ts`
+- 新增后端配置解析（默认 `local`，可切 `milvus`）：
+  - `apps/server/src/modules/ai/rag/rag-vector-store.config.ts`
+  - `apps/server/src/modules/ai/rag/rag-vector-store.tokens.ts`
+- 新增适配器工厂与两种实现：
+  - `apps/server/src/modules/ai/rag/rag-vector-store.factory.ts`
+  - `apps/server/src/modules/ai/rag/rag-vector-store.local.adapter.ts`（占位 no-op，不改变现有主链路）
+  - `apps/server/src/modules/ai/rag/rag-vector-store.milvus.adapter.ts`（`mock` 模式可回归，`sdk` 模式先 fail-fast 占位）
+- 模块注册与注入：
+  - `apps/server/src/modules/ai/ai.module.ts` 注入 `RAG_VECTOR_STORE_CONFIG` 与 `RAG_VECTOR_STORE`
+  - `apps/server/src/modules/ai/rag/user-docs-ingestion.service.ts` 在写检索态表后并行写入 vector store（先删文档旧向量，再 upsert 新向量）
+
+### 回归测试
+
+- 新增配置/工厂/适配器测试：
+  - `apps/server/src/modules/ai/rag/__tests__/rag-vector-store.config.spec.ts`
+  - `apps/server/src/modules/ai/rag/__tests__/rag-vector-store.factory.spec.ts`
+  - `apps/server/src/modules/ai/rag/__tests__/rag-vector-store.milvus.adapter.spec.ts`
+- 更新入库服务测试（断言 vector store 调用）：
+  - `apps/server/src/modules/ai/rag/__tests__/user-docs-ingestion.service.spec.ts`
+
+### 本轮结论
+
+- 已实现“并行可切换”骨架：
+  - 默认 `local`，当前 RAG 检索主链路不变；
+  - 可通过 `RAG_VECTOR_STORE_BACKEND=milvus` 切到 Milvus 适配器骨架；
+  - 真实 Milvus SDK 接入留待下一步（当前仅 `mock` 模式）。
+
+### 本轮验证
+
+- 通过：
+  - `pnpm --filter @my-resume/server exec vitest run --config ./vitest.config.mts src/modules/ai/rag/__tests__/user-docs-ingestion.service.spec.ts src/modules/ai/rag/__tests__/rag-vector-store.config.spec.ts src/modules/ai/rag/__tests__/rag-vector-store.factory.spec.ts src/modules/ai/rag/__tests__/rag-vector-store.milvus.adapter.spec.ts src/modules/ai/rag/__tests__/rag.controller.spec.ts`
+  - `pnpm --filter @my-resume/server typecheck`

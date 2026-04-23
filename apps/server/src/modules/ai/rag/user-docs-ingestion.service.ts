@@ -5,6 +5,8 @@ import { RagSourceScope } from '../../../database/schema'
 import { AiService } from '../ai.service'
 import { FileExtractionService } from '../file-extraction.service'
 import { RagRetrievalRepository } from './rag-retrieval.repository'
+import { RAG_VECTOR_STORE } from './rag-vector-store.tokens'
+import type { RagVectorChunkPayload, RagVectorStore } from './rag-vector-store.types'
 import { splitUserDocTextIntoChunks } from './user-doc-chunking'
 
 export {
@@ -42,6 +44,17 @@ export interface IngestUserDocResult {
   fileName: string
   fileType: 'txt' | 'md' | 'pdf' | 'docx'
   uploadedAt: string
+}
+
+interface BuildVectorChunksInput {
+  chunks: string[]
+  embeddings: number[][]
+  sourceId: string
+  documentId: string
+  fileName: string
+  sourceScope: RagSourceScope
+  sourceVersion: string
+  uploadedAt: Date
 }
 
 /**
@@ -94,6 +107,8 @@ export class UserDocsIngestionService {
     private readonly aiService: AiService,
     @Inject(RagRetrievalRepository)
     private readonly ragRetrievalRepository: RagRetrievalRepository,
+    @Inject(RAG_VECTOR_STORE)
+    private readonly ragVectorStore: RagVectorStore,
   ) {}
 
   /**
@@ -178,6 +193,19 @@ export class UserDocsIngestionService {
           updatedAt: now,
         })),
       )
+      await this.ragVectorStore.deleteChunksByDocument(documentId)
+      await this.ragVectorStore.upsertChunks(
+        this.buildVectorChunks({
+          chunks,
+          embeddings: embeddingResult.embeddings,
+          sourceId,
+          documentId,
+          fileName: extracted.fileName,
+          sourceScope,
+          sourceVersion,
+          uploadedAt,
+        }),
+      )
 
       await this.ragRetrievalRepository.updateIndexRunStatus({
         id: runId,
@@ -209,5 +237,31 @@ export class UserDocsIngestionService {
 
       throw error
     }
+  }
+
+  /**
+   * 将入库切块转换为向量存储统一载荷。
+   *
+   * @param input 组装向量块所需输入
+   * @returns 向量存储层可消费的 chunk 列表
+   */
+  private buildVectorChunks(input: BuildVectorChunksInput): RagVectorChunkPayload[] {
+    return input.chunks.map((chunk, chunkIndex) => ({
+      id: `user-doc-chunk:${input.sourceId}:${chunkIndex + 1}`,
+      documentId: input.documentId,
+      sourceType: 'user_docs',
+      sourceScope: input.sourceScope,
+      sourceVersion: input.sourceVersion,
+      section: 'user_docs',
+      content: chunk,
+      embedding: input.embeddings[chunkIndex] ?? [],
+      metadataJson: {
+        sourceType: 'user_docs',
+        fileName: input.fileName,
+        uploadedAt: input.uploadedAt.toISOString(),
+        chunkIndex,
+        chunkCount: input.chunks.length,
+      },
+    }))
   }
 }
