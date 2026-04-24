@@ -14,6 +14,39 @@ export class RagSearchBodyDto {
     maximum: 20,
   })
   limit?: number
+
+  @ApiPropertyOptional({
+    description: '最低分数阈值（低于该分数的结果会被过滤）',
+    example: 0.55,
+    minimum: 0,
+  })
+  minScore?: number
+
+  @ApiPropertyOptional({
+    description: 'Top1 与 Top2 分数断层阈值（达到阈值仅保留 Top1）',
+    example: 0.15,
+    minimum: 0,
+  })
+  minScoreGap?: number
+
+  @ApiPropertyOptional({
+    description: '是否强制走向量存储检索（用于实验，默认走环境配置）',
+    example: true,
+  })
+  useVectorStore?: boolean
+
+  @ApiPropertyOptional({
+    description: '向量检索 scope（用于实验，默认走环境配置）',
+    enum: ['draft', 'published', 'all'],
+    example: 'published',
+  })
+  vectorScope?: 'draft' | 'published' | 'all'
+
+  @ApiPropertyOptional({
+    description: '向量检索为空/异常时是否回退本地检索（用于实验）',
+    example: true,
+  })
+  vectorFallbackToLocal?: boolean
 }
 
 export class RagAskBodyDto {
@@ -37,6 +70,25 @@ export class RagAskBodyDto {
     example: 'zh',
   })
   locale?: 'zh' | 'en'
+
+  @ApiPropertyOptional({
+    description: '是否强制走向量存储检索（用于实验，默认走环境配置）',
+    example: true,
+  })
+  useVectorStore?: boolean
+
+  @ApiPropertyOptional({
+    description: '向量检索 scope（用于实验，默认走环境配置）',
+    enum: ['draft', 'published', 'all'],
+    example: 'published',
+  })
+  vectorScope?: 'draft' | 'published' | 'all'
+
+  @ApiPropertyOptional({
+    description: '向量检索为空/异常时是否回退本地检索（用于实验）',
+    example: true,
+  })
+  vectorFallbackToLocal?: boolean
 }
 
 export class RagResumeSyncBodyDto {
@@ -74,6 +126,93 @@ export class RagResumeSyncResultDto {
     synced: boolean
     sourceVersion: string | null
   }
+}
+
+export class RagUserDocIngestBodyDto {
+  @ApiPropertyOptional({
+    description: 'user_docs 入库作用域',
+    enum: ['draft', 'published'],
+    example: 'draft',
+  })
+  scope?: 'draft' | 'published'
+
+  @ApiPropertyOptional({
+    description: '切片策略 profile（默认 balanced=500/50）',
+    enum: ['balanced', 'contextual'],
+    example: 'balanced',
+  })
+  chunkingProfile?: 'balanced' | 'contextual'
+}
+
+export class RagUserDocIngestResultDto {
+  @ApiProperty({
+    description: '文档记录 ID',
+    example: 'user-doc:adf932d7b65f01a9eb87bc2d:und',
+  })
+  documentId!: string
+
+  @ApiProperty({
+    description: '来源 ID',
+    example: 'adf932d7b65f01a9eb87bc2d',
+  })
+  sourceId!: string
+
+  @ApiProperty({
+    description: '入库作用域',
+    enum: ['draft', 'published'],
+    example: 'draft',
+  })
+  sourceScope!: 'draft' | 'published'
+
+  @ApiProperty({
+    description: '来源版本键',
+    example: 'upload:1776839100000',
+  })
+  sourceVersion!: string
+
+  @ApiProperty({
+    description: '切块数量',
+    example: 12,
+  })
+  chunkCount!: number
+
+  @ApiProperty({
+    description: '上传文件名',
+    example: 'rag-notes.md',
+  })
+  fileName!: string
+
+  @ApiProperty({
+    description: '上传文件类型',
+    enum: ['txt', 'md', 'pdf', 'docx'],
+    example: 'md',
+  })
+  fileType!: 'txt' | 'md' | 'pdf' | 'docx'
+
+  @ApiProperty({
+    description: '切片策略 profile',
+    enum: ['balanced', 'contextual'],
+    example: 'balanced',
+  })
+  chunkingProfile!: 'balanced' | 'contextual'
+
+  @ApiProperty({
+    description: '切片大小（字符）',
+    example: 500,
+  })
+  chunkSize!: number
+
+  @ApiProperty({
+    description: '切片重叠（字符）',
+    example: 50,
+  })
+  chunkOverlap!: number
+
+  @ApiProperty({
+    description: '上传时间（ISO）',
+    example: '2026-04-22T03:45:00.000Z',
+  })
+  uploadedAt!: string
 }
 
 export class RagSearchMatchDto {

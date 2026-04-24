@@ -17,6 +17,13 @@ import { RagIndexRepository } from './rag/rag-index.repository'
 import { RagKnowledgeService } from './rag/rag-knowledge.service'
 import { RagRetrievalRepository } from './rag/rag-retrieval.repository'
 import { RagService } from './rag/rag.service'
+import { resolveRagVectorStoreRuntimeConfig } from './rag/vector-store/config'
+import { createRagVectorStore } from './rag/vector-store/factory'
+import {
+  RAG_VECTOR_STORE,
+  RAG_VECTOR_STORE_CONFIG,
+} from './rag/vector-store/tokens'
+import { UserDocsIngestionService } from './rag/user-docs-ingestion.service'
 import { AiFileController } from './transport/controllers/ai-file.controller'
 import { AiReportController } from './transport/controllers/ai-report.controller'
 
@@ -32,6 +39,17 @@ import { AiReportController } from './transport/controllers/ai-report.controller
     {
       provide: AI_FETCH,
       useValue: fetch,
+    },
+    {
+      // RAG 向量存储后端配置，默认 local（不改变当前主链路）。
+      provide: RAG_VECTOR_STORE_CONFIG,
+      useFactory: () => resolveRagVectorStoreRuntimeConfig(process.env),
+    },
+    {
+      // 通过工厂按环境变量切换 local / milvus(mock) 实现。
+      provide: RAG_VECTOR_STORE,
+      inject: [RAG_VECTOR_STORE_CONFIG],
+      useFactory: createRagVectorStore,
     },
     {
       // 对上层只暴露统一 AiProvider 接口，屏蔽厂商差异。
@@ -50,6 +68,7 @@ import { AiReportController } from './transport/controllers/ai-report.controller
     RagKnowledgeService,
     RagIndexRepository,
     RagRetrievalRepository,
+    UserDocsIngestionService,
     RagService,
   ],
   exports: [

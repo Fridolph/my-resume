@@ -133,11 +133,54 @@ vi.mock('../components/file-extraction-panel', () => ({
     ),
 }))
 
+vi.mock('../components/user-doc-ingestion-panel', () => ({
+  AiUserDocIngestionPanel: ({
+    canUpload,
+    onIngested,
+  }: {
+    canUpload: boolean
+    onIngested?: (result: {
+      documentId: string
+      sourceId: string
+      sourceScope: 'draft' | 'published'
+      sourceVersion: string
+      chunkCount: number
+      fileName: string
+      fileType: 'md'
+      uploadedAt: string
+    }) => void
+  }) =>
+    canUpload ? (
+      <div>
+        <span>资料入库面板占位</span>
+        <button
+          onClick={() =>
+            onIngested?.({
+              documentId: 'user-doc:abc:und',
+              sourceId: 'abc',
+              sourceScope: 'published',
+              sourceVersion: 'upload:1776839100000',
+              chunkCount: 2,
+              fileName: 'rag-notes.md',
+              fileType: 'md',
+              uploadedAt: '2026-04-22T03:45:00.000Z',
+            })
+          }
+          type="button">
+          模拟入库完成
+        </button>
+      </div>
+    ) : (
+      <div>资料入库只读占位</div>
+    ),
+}))
+
 vi.mock('../components/analysis-panel', () => ({
   AiAnalysisPanel: ({
     canAnalyze,
     content,
     draftSnapshot,
+    helperMessage,
     inputAccessory,
     onDraftApplied,
     onOptimizationGenerated,
@@ -151,6 +194,7 @@ vi.mock('../components/analysis-panel', () => ({
         }
       }
     } | null
+    helperMessage?: string | null
     inputAccessory?: ReactNode
     onDraftApplied?: (snapshot: ResumeDraftSnapshot) => void
     onOptimizationGenerated?: (
@@ -176,6 +220,7 @@ vi.mock('../components/analysis-panel', () => ({
       <span>{canAnalyze ? '真实分析面板占位' : '真实分析只读占位'}</span>
       <span>{`当前优化要求：${content || '空'}`}</span>
       <span>{`当前草稿基线：${draftSnapshot?.resume.profile.headline ?? '空'}`}</span>
+      <span>{`辅助提示：${helperMessage ?? '空'}`}</span>
       {canAnalyze ? (
         <button
           onClick={() =>
@@ -355,6 +400,7 @@ describe('AdminAiWorkbenchShell', () => {
     expect(
       screen.getByText('当前账号可直接分析当前草稿、查看 diff，并按模块写回后台草稿。'),
     ).toBeInTheDocument()
+    expect(await screen.findByText('资料入库面板占位')).toBeInTheDocument()
     expect(await screen.findByText('文件提取面板占位')).toBeInTheDocument()
     expect(await screen.findByText('真实分析面板占位')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: '进入优化记录' })).toHaveAttribute(
@@ -371,11 +417,17 @@ describe('AdminAiWorkbenchShell', () => {
     expect(
       screen.getByText((content) => content.startsWith('当前草稿基线：当前草稿标题')),
     ).toBeInTheDocument()
+    expect(screen.getByText('辅助提示：空')).toBeInTheDocument()
     expect(await screen.findByTestId('compact-workbench-info-cards')).toBeInTheDocument()
     expect(screen.getByText('草稿反馈')).toBeInTheDocument()
     expect(screen.getByText('运行时摘要')).toBeInTheDocument()
     expect(screen.getByText((content) => content.startsWith('当前草稿标题'))).toBeInTheDocument()
     expect(screen.queryByText('当前草稿快照')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '模拟入库完成' }))
+    expect(
+      screen.getByText('辅助提示：已将 rag-notes.md 写入 published 检索态，切块 2 条。'),
+    ).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: '模拟提取完成' }))
 
@@ -447,6 +499,7 @@ describe('AdminAiWorkbenchShell', () => {
       '/dashboard/ai/optimization-history',
     )
     expect(screen.queryByText('缓存报告与预设体验')).not.toBeInTheDocument()
+    expect(await screen.findByText('资料入库只读占位')).toBeInTheDocument()
     expect(await screen.findByText('文件提取只读占位')).toBeInTheDocument()
     expect(await screen.findByText('真实分析只读占位')).toBeInTheDocument()
     expect(fetchDraftResumeSummaryMock).not.toHaveBeenCalled()
