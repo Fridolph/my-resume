@@ -5,11 +5,15 @@ import { App } from 'supertest/types'
 
 import { AppModule } from './../src/app.module'
 import { readAccessToken, readApiData } from './helpers/api-envelope'
+import { assignTempDatabaseUrl, restoreTempDatabaseUrl } from './helpers/temp-database-env'
 
 describe('AI file extraction (e2e)', () => {
   let app: INestApplication<App>
+  let databaseContext: ReturnType<typeof assignTempDatabaseUrl>
 
   beforeEach(async () => {
+    databaseContext = assignTempDatabaseUrl('my-resume-ai-file-e2e')
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile()
@@ -21,6 +25,7 @@ describe('AI file extraction (e2e)', () => {
 
   afterEach(async () => {
     await app.close()
+    restoreTempDatabaseUrl(databaseContext)
   })
 
   it('should extract text from uploaded txt file', async () => {

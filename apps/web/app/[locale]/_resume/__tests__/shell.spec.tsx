@@ -199,11 +199,12 @@ describe('PublishedResumeShell', () => {
     ).not.toBeInTheDocument()
     expect(screen.getByText('INTRO')).toBeInTheDocument()
     expect(
-      screen.getByText('90后十年前端老兵，学习AI Agent开发中；专注羽毛球、传统文化、易经学习与爱好者'),
+      screen.getByText('专注前端工程化与 Node.js 后端。'),
     ).toBeInTheDocument()
     await screen.findByTestId('hero-tooltip-ready')
-    await user.hover(screen.getByRole('link', { name: 'GitHub' }))
-    expect(await screen.findByText('GitHub')).toBeInTheDocument()
+    const githubLink = screen.getByRole('link', { name: 'GitHub' })
+    await user.hover(githubLink)
+    expect(githubLink).toHaveAttribute('href', 'https://github.com/Fridolph')
 
     await user.click(screen.getByRole('button', { name: 'EN' }))
     expect(replaceMock).toHaveBeenCalledWith('/', { locale: 'en' })

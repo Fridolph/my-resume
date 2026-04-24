@@ -5,11 +5,15 @@ import { App } from 'supertest/types'
 
 import { AppModule } from './../src/app.module'
 import { readAccessToken } from './helpers/api-envelope'
+import { assignTempDatabaseUrl, restoreTempDatabaseUrl } from './helpers/temp-database-env'
 
 describe('Auth viewer access (e2e)', () => {
   let app: INestApplication<App>
+  let databaseContext: ReturnType<typeof assignTempDatabaseUrl>
 
   beforeEach(async () => {
+    databaseContext = assignTempDatabaseUrl('my-resume-auth-viewer-access-e2e')
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile()
@@ -21,6 +25,7 @@ describe('Auth viewer access (e2e)', () => {
 
   afterEach(async () => {
     await app.close()
+    restoreTempDatabaseUrl(databaseContext)
   })
 
   it('should allow viewer to read demo access summary', async () => {

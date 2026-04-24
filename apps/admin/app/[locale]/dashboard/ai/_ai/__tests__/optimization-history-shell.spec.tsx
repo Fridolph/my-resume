@@ -274,7 +274,7 @@ describe('AdminAiOptimizationHistoryShell', () => {
       await screen.findByText('该条优化记录下暂无此分析场景记录。'),
     ).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: '关闭详情' }))
+    await user.click(screen.getByRole('button', { name: '关闭优化记录详情' }))
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: '优化记录详情' })).not.toBeInTheDocument()
     })

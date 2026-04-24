@@ -85,6 +85,27 @@ describe('published resume skills utils', () => {
     expect(tokens[0]?.raw).toContain('Solid Jest, Vitest, and TDD fundamentals')
   })
 
+  it('should translate markdown chinese labels for english cloud tags', () => {
+    const groups = normalizeSkillGroups(
+      [
+        {
+          ...publishedResumeFixture.resume.skills[0],
+          keywords: [
+            '**Vue 生态**: 熟练掌握 Vue2/3、Nuxt、Composition API、Pinia',
+            '**React 生态**: 熟悉 Hooks、Redux、Next.js',
+            '**现代 CSS**: 精通 TailwindCSS、Sass/Less',
+          ],
+        },
+      ],
+      'en',
+    )
+
+    const tokens = buildSkillCloudTokens(groups, 'en')
+    expect(tokens.map((token) => token.label)).toEqual(
+      expect.arrayContaining(['Vue Ecosystem', 'React Ecosystem', 'Modern CSS']),
+    )
+  })
+
   it('should build radar from proficiency scores and pie from real skill item counts', () => {
     const groups = rankSkillGroups(
       normalizeSkillGroups([

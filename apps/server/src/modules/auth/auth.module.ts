@@ -1,9 +1,12 @@
 import { Module } from '@nestjs/common'
 import { JwtModule } from '@nestjs/jwt'
 
+import { AuthUserSeedService } from './application/services/auth-user-seed.service'
 import { AuthService } from './application/services/auth.service'
+import { PasswordHashService } from './application/services/password-hash.service'
 import { JwtAuthGuard } from './guards/jwt-auth.guard'
 import { RoleCapabilitiesGuard } from './guards/role-capabilities.guard'
+import { AuthUserRepository } from './infrastructure/repositories/auth-user.repository'
 import { AuthController } from './transport/controllers/auth.controller'
 import { AuthDemoController } from './transport/controllers/auth-demo.controller'
 
@@ -20,7 +23,14 @@ import { AuthDemoController } from './transport/controllers/auth-demo.controller
     }),
   ],
   controllers: [AuthController, AuthDemoController],
-  providers: [AuthService, JwtAuthGuard, RoleCapabilitiesGuard],
+  providers: [
+    AuthUserRepository,
+    PasswordHashService,
+    AuthUserSeedService,
+    AuthService,
+    JwtAuthGuard,
+    RoleCapabilitiesGuard,
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}
