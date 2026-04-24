@@ -1,0 +1,19 @@
+{
+  "name": "resume-memory-rag-qa",
+  "version": "1.0.0",
+  "description": "Resume field-aware RAG QA demo backed by Milvus",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "inspect": "node ./src/inspect-resume.mjs",
+    "ingest": "node ./src/ingest-resume.mjs",
+    "ask": "node ./src/ask-resume-5-config-ask.mjs"
+  },
+  "dependencies": {
+    "@langchain/core": "^1.1.41",
+    "@langchain/openai": "^1.2.3",
+    "@langchain/textsplitters": "^1.0.1",
+    "@zilliz/milvus2-sdk-node": "^2.6.9",
+    "dotenv": "^17.2.3"
+  }
+}

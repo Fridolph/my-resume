@@ -1,0 +1,6 @@
+{
+  "keywordBoostPerHit": 0.015,
+  "keywordBoostMax": 0.09,
+  "rawScoreNoiseThreshold": 0.5,
+  "preferredSectionKeepScore": 0.63
+}

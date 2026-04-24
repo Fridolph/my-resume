@@ -1,0 +1,22 @@
+{
+  "experience": {
+    "projects": { "summary": 0.12, "default": 0.1 },
+    "work_experience": { "summary": 0.1, "default": 0.08 },
+    "core_strengths": { "default": 0.02 },
+    "skills": { "default": -0.08 },
+    "__default": { "default": -0.05 }
+  },
+  "project": {
+    "projects": { "summary": 0.14, "default": 0.1 },
+    "work_experience": { "default": 0.04 },
+    "skills": { "default": -0.05 },
+    "__default": { "default": -0.03 }
+  },
+  "skill": {
+    "skills": { "default": 0.1 },
+    "core_strengths": { "default": 0.05 },
+    "projects": { "default": 0.01 },
+    "work_experience": { "default": 0.01 },
+    "__default": { "default": 0 }
+  }
+}

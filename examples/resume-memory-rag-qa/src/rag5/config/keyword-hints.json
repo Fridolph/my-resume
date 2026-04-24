@@ -1,0 +1,8 @@
+{
+  "ai": ["ai", "agent", "prompt", "sse", "流式", "工作流", "多 agent", "多智能体", "ai 工作台", "ai 分析"],
+  "agent": ["agent", "多 agent", "多智能体", "工作流", "规划", "执行", "验证", "反馈"],
+  "my-resume": ["my-resume", "简历", "ai 工作台", "markdown", "pdf", "monorepo"],
+  "简历": ["my-resume", "简历", "ai 工作台", "markdown", "pdf", "monorepo"],
+  "sse": ["sse", "流式", "会话管理", "上下文"],
+  "流式": ["sse", "流式", "会话管理", "上下文"]
+}
