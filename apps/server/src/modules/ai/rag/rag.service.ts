@@ -17,6 +17,7 @@ import {
   RagSearchQualityGate,
   resolveRagSearchQualityGate,
 } from './rag-search-quality'
+import { applyRagSearchRerank } from './rag-search-rerank'
 import { RagIndexFile, RagSearchMatch } from './rag.types'
 import { RAG_VECTOR_STORE } from './vector-store/tokens'
 import type { RagVectorSearchMatch, RagVectorStore } from './vector-store/types'
@@ -261,9 +262,8 @@ export class RagService {
         ),
       }))
       .sort((left, right) => right.score - left.score)
-      .slice(0, limit)
 
-    return topMatches
+    return applyRagSearchRerank(topMatches, query, limit)
   }
 
   /**

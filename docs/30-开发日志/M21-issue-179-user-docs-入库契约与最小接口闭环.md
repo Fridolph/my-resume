@@ -401,3 +401,29 @@ pnpm --filter @my-resume/server rag:chunk:compare \
   - `pnpm --filter @my-resume/server typecheck`
 - 脚本手工验证通过：
   - `pnpm --filter @my-resume/server rag:retrieval:compare "Milvus 检索" /Users/fri/Desktop/personal/my-resume/docs/30-开发日志/M21-issue-179-user-docs-入库契约与最小接口闭环.md`
+
+### Step 4-9：本地检索后处理引入 rerank 纯函数（策略 + hints + 噪声原因）
+
+- 目标：
+  - 在 `my-resume` server 内部，把“检索重排”从实验脚本迁移到可复用模块；
+  - 先作用于本地检索后处理，不改向量存储主链路。
+- 新增：
+  - `apps/server/src/modules/ai/rag/rag-search-rerank.ts`
+    - `detectRagSearchQuestionStrategy`
+    - `rerankRagSearchMatches`（输出 `rerankScore/matchedHints/noiseReasons`）
+    - `applyRagSearchRerank`（返回 API 友好的重排结果）
+- 接入：
+  - `apps/server/src/modules/ai/rag/rag.service.ts`
+    - `searchFromLocalIndex` 里在原始 score 排序后增加 rerank 后处理，再截断 `limit`
+- 测试：
+  - 新增 `apps/server/src/modules/ai/rag/__tests__/rag-search-rerank.spec.ts`
+    - 覆盖策略识别
+    - 覆盖经验类问题下项目优先提升
+    - 覆盖 tail 结果噪声原因输出
+    - 覆盖 API 返回结果截断顺序
+
+### Step 4-9 验证
+
+- 测试通过：
+  - `pnpm --filter @my-resume/server exec vitest run --config ./vitest.config.mts src/modules/ai/rag/__tests__/rag-search-rerank.spec.ts src/modules/ai/rag/__tests__/rag.service.spec.ts src/modules/ai/rag/__tests__/rag-search-quality.spec.ts`
+  - `pnpm --filter @my-resume/server typecheck`
