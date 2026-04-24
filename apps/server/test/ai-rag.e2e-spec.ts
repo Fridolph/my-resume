@@ -8,6 +8,7 @@ import { App } from 'supertest/types'
 
 import { AppModule } from '../src/app.module'
 import { readAccessToken, readApiData } from './helpers/api-envelope'
+import { assignTempDatabaseUrl, restoreTempDatabaseUrl } from './helpers/temp-database-env'
 
 const source = `
 profile:
@@ -66,9 +67,11 @@ describe('AI RAG (e2e)', () => {
 
   let app: INestApplication<App>
   let tempDirectory: string
+  let databaseContext: ReturnType<typeof assignTempDatabaseUrl>
 
   beforeEach(async () => {
     tempDirectory = mkdtempSync(join(tmpdir(), 'resume-rag-e2e-'))
+    databaseContext = assignTempDatabaseUrl('my-resume-ai-rag-e2e')
     process.env.AI_PROVIDER = 'mock'
     process.env.RAG_RESUME_SOURCE_PATH = join(tempDirectory, 'resume.zh.yaml')
     process.env.RAG_BLOG_DIRECTORY_PATH = join(tempDirectory, 'blog')
@@ -88,6 +91,7 @@ describe('AI RAG (e2e)', () => {
 
   afterEach(async () => {
     await app.close()
+    restoreTempDatabaseUrl(databaseContext)
     process.env.AI_PROVIDER = originalEnv.AI_PROVIDER
     process.env.RAG_RESUME_SOURCE_PATH = originalEnv.RAG_RESUME_SOURCE_PATH
     process.env.RAG_BLOG_DIRECTORY_PATH = originalEnv.RAG_BLOG_DIRECTORY_PATH

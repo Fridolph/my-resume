@@ -125,6 +125,8 @@ pnpm dev:server
 - `admin / admin123456`
 - `viewer / viewer123456`
 
+> On first boot, these users are persisted in the `users` table with password hashes only (no plaintext storage).  
+> Override defaults via `AUTH_ADMIN_PASSWORD` / `AUTH_VIEWER_PASSWORD` in `.env`.  
 > For local tutorial use only. Replace credentials before public deployment.
 
 ## 🐳 Docker (local one-command startup)

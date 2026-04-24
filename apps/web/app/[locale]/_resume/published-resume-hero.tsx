@@ -116,6 +116,7 @@ function PublishedResumeHeroComponent({
   const profile = publishedResume.resume.profile
   const hero = profile.hero
   const highlights = publishedResume.resume.highlights
+  const intro = readLocalizedText(profile.summary, locale) || t('sidebarProjectNote')
   const localizedInterests = profile.interests.map((item) => ({
     ...item,
     localizedLabel: readLocalizedText(item.label, locale),
@@ -238,7 +239,7 @@ function PublishedResumeHeroComponent({
             </p>
             <p
               className={`${styles.gradientCopy} mt-2 text-sm font-semibold leading-6 text-slate-700 dark:text-slate-100`}>
-              {t('sidebarProjectNote')}
+              {intro}
             </p>
           </article>
 

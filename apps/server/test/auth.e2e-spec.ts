@@ -5,11 +5,15 @@ import { App } from 'supertest/types'
 
 import { AppModule } from './../src/app.module'
 import { readAccessToken, readApiData } from './helpers/api-envelope'
+import { assignTempDatabaseUrl, restoreTempDatabaseUrl } from './helpers/temp-database-env'
 
 describe('AuthModule (e2e)', () => {
   let app: INestApplication<App>
+  let databaseContext: ReturnType<typeof assignTempDatabaseUrl>
 
   beforeEach(async () => {
+    databaseContext = assignTempDatabaseUrl('my-resume-auth-e2e')
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile()
@@ -21,6 +25,7 @@ describe('AuthModule (e2e)', () => {
 
   afterEach(async () => {
     await app.close()
+    restoreTempDatabaseUrl(databaseContext)
   })
 
   it('should login with the demo admin account', async () => {

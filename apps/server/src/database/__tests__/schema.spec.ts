@@ -9,9 +9,23 @@ import {
   resumeDrafts,
   resumePublicationSnapshots,
   systemMeta,
+  users,
 } from '../schema'
 
 describe('database schema', () => {
+  it('should define users table for persisted auth identities', () => {
+    expect(Object.keys(getTableColumns(users))).toEqual([
+      'id',
+      'username',
+      'passwordHash',
+      'role',
+      'isActive',
+      'lastLoginAt',
+      'createdAt',
+      'updatedAt',
+    ])
+  })
+
   it('should keep the system meta table for infrastructure bootstrap', () => {
     expect(Object.keys(getTableColumns(systemMeta))).toEqual([
       'key',

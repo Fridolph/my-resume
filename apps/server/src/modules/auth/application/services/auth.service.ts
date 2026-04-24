@@ -3,13 +3,10 @@ import { JwtService } from '@nestjs/jwt'
 
 import { buildRoleCapabilities } from '../../domain/auth-role-policy'
 import { AuthUser } from '../../domain/auth-user'
-import { UserRole } from '../../domain/user-role.enum'
 import { LoginDto } from '../../dto/login.dto'
 import { AuthTokenPayload } from '../../interfaces/auth-token-payload.interface'
-
-interface DemoAccount extends AuthUser {
-  password: string
-}
+import { AuthUserRecord, AuthUserRepository } from '../../infrastructure/repositories/auth-user.repository'
+import { PasswordHashService } from './password-hash.service'
 
 export interface AuthUserView extends AuthUser {
   capabilities: ReturnType<typeof buildRoleCapabilities>
@@ -24,26 +21,15 @@ export interface LoginResult {
 
 const ACCESS_TOKEN_EXPIRES_IN_SECONDS = 60 * 60
 
-const DEMO_ACCOUNTS: DemoAccount[] = [
-  {
-    id: 'admin-demo-user',
-    username: 'admin',
-    password: 'admin123456',
-    role: UserRole.ADMIN,
-    isActive: true,
-  },
-  {
-    id: 'viewer-demo-user',
-    username: 'viewer',
-    password: 'viewer123456',
-    role: UserRole.VIEWER,
-    isActive: true,
-  },
-]
-
 @Injectable()
 export class AuthService {
-  constructor(@Inject(JwtService) private readonly jwtService: JwtService) {}
+  constructor(
+    @Inject(JwtService) private readonly jwtService: JwtService,
+    @Inject(AuthUserRepository)
+    private readonly authUserRepository: AuthUserRepository,
+    @Inject(PasswordHashService)
+    private readonly passwordHashService: PasswordHashService,
+  ) {}
 
   /**
    * 完成登录鉴权并签发访问令牌
@@ -51,8 +37,8 @@ export class AuthService {
    * @returns 登录结果
    */
   async login(loginDto: LoginDto): Promise<LoginResult> {
-    // 教程型最小鉴权：先校验 demo 账号，再签发 JWT，并返回能力映射。
-    const authUser = this.validateCredentials(loginDto)
+    // 登录流程：先读数据库用户，再校验密码哈希，最后签发 JWT。
+    const authUser = await this.validateCredentials(loginDto)
 
     if (!authUser) {
       throw new UnauthorizedException('Invalid credentials')
@@ -63,6 +49,7 @@ export class AuthService {
       username: authUser.username,
       role: authUser.role,
     })
+    await this.authUserRepository.updateLastLoginAt(authUser.id)
 
     return {
       accessToken,
@@ -81,20 +68,18 @@ export class AuthService {
     // 守卫只负责转交 token；真正校验和用户恢复在 service 完成。
     try {
       const payload = await this.jwtService.verifyAsync<AuthTokenPayload>(accessToken)
+      const userRecord = await this.authUserRepository.findById(payload.sub)
 
-      const authUser = DEMO_ACCOUNTS.find(
-        (account) =>
-          account.id === payload.sub &&
-          account.username === payload.username &&
-          account.role === payload.role &&
-          account.isActive,
-      )
-
-      if (!authUser) {
+      if (
+        !userRecord ||
+        !userRecord.isActive ||
+        userRecord.username !== payload.username ||
+        userRecord.role !== payload.role
+      ) {
         throw new UnauthorizedException('Invalid token')
       }
 
-      return this.stripPassword(authUser)
+      return this.toAuthUser(userRecord)
     } catch (error) {
       if (error instanceof UnauthorizedException) {
         throw error
@@ -117,18 +102,26 @@ export class AuthService {
     }
   }
 
-  private validateCredentials(loginDto: LoginDto): AuthUser | null {
-    const account = DEMO_ACCOUNTS.find(
-      (candidate) =>
-        candidate.username === loginDto.username &&
-        candidate.password === loginDto.password &&
-        candidate.isActive,
+  private async validateCredentials(loginDto: LoginDto): Promise<AuthUser | null> {
+    const userRecord = await this.authUserRepository.findByUsername(loginDto.username)
+
+    if (!userRecord || !userRecord.isActive) {
+      return null
+    }
+
+    const isPasswordValid = await this.passwordHashService.verifyPassword(
+      loginDto.password,
+      userRecord.passwordHash,
     )
 
-    return account ? this.stripPassword(account) : null
+    if (!isPasswordValid) {
+      return null
+    }
+
+    return this.toAuthUser(userRecord)
   }
 
-  private stripPassword(account: DemoAccount): AuthUser {
+  private toAuthUser(account: AuthUserRecord): AuthUser {
     return {
       id: account.id,
       username: account.username,

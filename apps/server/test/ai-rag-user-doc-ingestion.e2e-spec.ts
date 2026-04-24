@@ -7,13 +7,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AppModule } from '../src/app.module'
 import { UserDocsIngestionService } from '../src/modules/ai/rag/user-docs-ingestion.service'
 import { readAccessToken, readApiData } from './helpers/api-envelope'
+import { assignTempDatabaseUrl, restoreTempDatabaseUrl } from './helpers/temp-database-env'
 
 describe('AI RAG user docs ingestion (e2e)', () => {
   let app: INestApplication<App>
   const ingest = vi.fn()
+  let databaseContext: ReturnType<typeof assignTempDatabaseUrl>
 
   beforeEach(async () => {
     ingest.mockReset()
+    databaseContext = assignTempDatabaseUrl('my-resume-rag-user-doc-ingestion-e2e')
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -29,6 +32,7 @@ describe('AI RAG user docs ingestion (e2e)', () => {
 
   afterEach(async () => {
     await app.close()
+    restoreTempDatabaseUrl(databaseContext)
   })
 
   it('should allow admin to ingest user docs with published scope', async () => {

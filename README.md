@@ -125,6 +125,8 @@ pnpm dev:server
 - `admin / admin123456`
 - `viewer / viewer123456`
 
+> 首次启动会自动写入数据库 `users` 表（仅保存密码哈希，不保存明文）。  
+> 可通过 `.env` 中 `AUTH_ADMIN_PASSWORD` / `AUTH_VIEWER_PASSWORD` 覆盖默认密码。  
 > 仅用于本地教程演示，生产环境请替换。
 
 ## 🐳 Docker 本地一键启动

@@ -1,8 +1,46 @@
 import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
 
+import { UserRole } from '../modules/auth/domain/user-role.enum'
 import type { StandardResume } from '../modules/resume/domain/standard-resume'
 
 import { STANDARD_RESUME_KEY } from './resume-records'
+
+/**
+ * users：后台登录用户表。
+ *
+ * 作用：
+ * - 持久化 admin / viewer 等账号身份信息。
+ * - 仅保存密码哈希，禁止明文密码落库。
+ * - 为后续扩展更多角色与用户状态保留稳定主表。
+ */
+export const users = sqliteTable(
+  'users',
+  {
+    id: text('id').primaryKey(),
+    username: text('username').notNull(),
+    passwordHash: text('password_hash').notNull(),
+    role: text('role').$type<UserRole>().notNull(),
+    isActive: integer('is_active', {
+      mode: 'boolean',
+    })
+      .notNull()
+      .$defaultFn(() => true),
+    lastLoginAt: integer('last_login_at', {
+      mode: 'timestamp_ms',
+    }),
+    createdAt: integer('created_at', {
+      mode: 'timestamp_ms',
+    }).notNull(),
+    updatedAt: integer('updated_at', {
+      mode: 'timestamp_ms',
+    }).notNull(),
+  },
+  (table) => ({
+    usernameUnique: uniqueIndex('users_username_unique').on(table.username),
+    roleActiveIndex: index('users_role_is_active_idx').on(table.role, table.isActive),
+    createdAtIndex: index('users_created_at_idx').on(table.createdAt),
+  }),
+)
 
 /**
  * system_meta：系统级键值元信息表。
