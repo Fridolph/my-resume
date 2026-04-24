@@ -17,7 +17,7 @@ import {
   RagSearchQualityGate,
   resolveRagSearchQualityGate,
 } from './rag-search-quality'
-import { applyRagSearchRerank } from './rag-search-rerank'
+import { buildLocalRagSearchContext } from './rag-search-context-builder'
 import { RagIndexFile, RagSearchMatch } from './rag.types'
 import { RAG_VECTOR_STORE } from './vector-store/tokens'
 import type { RagVectorSearchMatch, RagVectorStore } from './vector-store/types'
@@ -44,63 +44,6 @@ function computeKnowledgeDirectoryHash(directoryPath: string): string {
     .join('\n\n====\n\n')
 
   return computeContentHash(fingerprint)
-}
-
-function buildSearchTokens(text: string): string[] {
-  const normalized = text.trim().toLowerCase()
-  const latinTokens = normalized.match(/[a-z0-9.+#-]+/g) ?? []
-  const hanSequences = normalized.match(/[\p{Script=Han}]+/gu) ?? []
-  const hanBigrams = hanSequences.flatMap((item) => {
-    if (item.length === 1) {
-      return [item]
-    }
-
-    const tokens: string[] = []
-
-    for (let index = 0; index < item.length - 1; index += 1) {
-      tokens.push(item.slice(index, index + 2))
-    }
-
-    return tokens
-  })
-
-  return [...new Set([...latinTokens, ...hanBigrams])]
-}
-
-function calculateKeywordScore(query: string, content: string): number {
-  const queryTokens = buildSearchTokens(query)
-
-  if (queryTokens.length === 0) {
-    return 0
-  }
-
-  const normalizedContent = content.toLowerCase()
-  const hitCount = queryTokens.filter((token) => normalizedContent.includes(token)).length
-
-  return hitCount / queryTokens.length
-}
-
-function cosineSimilarity(vectorA: number[], vectorB: number[]): number {
-  if (vectorA.length === 0 || vectorB.length === 0) {
-    return 0
-  }
-
-  const length = Math.min(vectorA.length, vectorB.length)
-  let dot = 0
-  let magnitudeA = 0
-  let magnitudeB = 0
-
-  for (let index = 0; index < length; index += 1) {
-    dot += vectorA[index] * vectorB[index]
-    magnitudeA += vectorA[index] * vectorA[index]
-    magnitudeB += vectorB[index] * vectorB[index]
-  }
-
-  if (magnitudeA === 0 || magnitudeB === 0) {
-    return 0
-  }
-
-  return dot / (Math.sqrt(magnitudeA) * Math.sqrt(magnitudeB))
 }
 
 @Injectable()
@@ -246,24 +189,12 @@ export class RagService {
   ): Promise<RagSearchMatch[]> {
     const index = await this.ensureIndex()
 
-    const topMatches = index.chunks
-      .map((chunk) => ({
-        id: chunk.id,
-        title: chunk.title,
-        section: chunk.section,
-        content: chunk.content,
-        sourceType: chunk.sourceType,
-        sourcePath: chunk.sourcePath,
-        score: Number(
-          (
-            cosineSimilarity(queryVector, chunk.embedding) * 0.7 +
-            calculateKeywordScore(query, chunk.content) * 0.3
-          ).toFixed(6),
-        ),
-      }))
-      .sort((left, right) => right.score - left.score)
-
-    return applyRagSearchRerank(topMatches, query, limit)
+    return buildLocalRagSearchContext({
+      query,
+      queryVector,
+      chunks: index.chunks,
+      limit,
+    })
   }
 
   /**

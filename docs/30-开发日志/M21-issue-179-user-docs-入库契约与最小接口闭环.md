@@ -450,3 +450,28 @@ pnpm --filter @my-resume/server rag:chunk:compare \
 - 测试通过：
   - `pnpm --filter @my-resume/server exec vitest run --config ./vitest.config.mts src/modules/ai/rag/__tests__/rag-search-rerank.spec.ts src/modules/ai/rag/__tests__/rag.service.spec.ts src/modules/ai/rag/__tests__/rag-search-quality.spec.ts`
   - `pnpm --filter @my-resume/server typecheck`
+
+### Step 4-11：拆分本地检索 context-builder（v5 对位，先做职责解耦）
+
+- 目标：
+  - 将 `RagService` 中“本地检索上下文构建（评分/排序/rerank）”拆成独立模块；
+  - 先做结构解耦，不改当前对外 API 契约与返回格式。
+- 新增：
+  - `apps/server/src/modules/ai/rag/rag-search-context-builder.ts`
+    - `cosineSimilarity`
+    - `calculateKeywordScore`
+    - `buildLocalRagSearchContext`
+- 调整：
+  - `apps/server/src/modules/ai/rag/rag.service.ts`
+    - `searchFromLocalIndex` 改为委托 `buildLocalRagSearchContext`
+    - 删除 service 内部重复的本地评分函数
+- 测试：
+  - 新增 `apps/server/src/modules/ai/rag/__tests__/rag-search-context-builder.spec.ts`
+    - 覆盖向量相似度与关键词分数计算
+    - 覆盖本地 context 构建与 rerank 后顺序
+
+### Step 4-11 验证
+
+- 测试通过：
+  - `pnpm --filter @my-resume/server exec vitest run --config ./vitest.config.mts src/modules/ai/rag/__tests__/rag-search-context-builder.spec.ts src/modules/ai/rag/__tests__/rag-search-rerank.spec.ts src/modules/ai/rag/__tests__/rag.service.spec.ts`
+  - `pnpm --filter @my-resume/server typecheck`
