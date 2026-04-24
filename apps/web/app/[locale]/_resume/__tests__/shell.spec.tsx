@@ -197,9 +197,10 @@ describe('PublishedResumeShell', () => {
     expect(
       screen.queryByRole('heading', { name: '公开简历速览' }),
     ).not.toBeInTheDocument()
+    expect(screen.getByText('INTRO')).toBeInTheDocument()
     expect(
-      (await screen.findByRole('button', { name: '打开项目 GitHub 仓库' })).closest('a'),
-    ).toHaveAttribute('href', 'https://github.com/Fridolph/my-resume')
+      screen.getByText('90后十年前端老兵，学习AI Agent开发中；专注羽毛球、传统文化、易经学习与爱好者'),
+    ).toBeInTheDocument()
     await screen.findByTestId('hero-tooltip-ready')
     await user.hover(screen.getByRole('link', { name: 'GitHub' }))
     expect(await screen.findByText('GitHub')).toBeInTheDocument()

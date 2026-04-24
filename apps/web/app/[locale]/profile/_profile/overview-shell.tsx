@@ -91,7 +91,7 @@ export function ProfileOverviewShell({
     <main className="web-page-shell">
       <PublicSiteHeader locale={locale} />
 
-      <section className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 sm:px-6">
+      <section className="mx-auto grid w-full max-w-7xl gap-6 p-2 sm:py-6 sm:px-6">
         {syncState === 'error' && syncMessage ? (
           <div className="rounded-[16px] border border-red-200/70 bg-red-50/80 px-4 py-3 text-sm text-red-600 dark:border-red-500/35 dark:bg-red-500/10 dark:text-red-300">
             {syncMessage}

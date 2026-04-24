@@ -1,8 +1,11 @@
 import type { AppLocale } from './locale'
 
+const RESUME_DISPLAY_TIME_ZONE = 'Asia/Shanghai'
+
 export function formatDateTimeByLocale(dateTime: string, locale: AppLocale): string {
   return new Date(dateTime).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US', {
     hour12: false,
+    timeZone: RESUME_DISPLAY_TIME_ZONE,
   })
 }
 

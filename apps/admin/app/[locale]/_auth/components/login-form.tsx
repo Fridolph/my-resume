@@ -17,15 +17,19 @@ interface LoginFormProps {
 const demoAccounts = [
   {
     username: 'admin',
-    password: 'admin123456',
+    password: 'fri5945admin',
     role: '管理员',
-    caption: '可编辑简历、触发 AI 分析并发布公开版本。',
+    caption: '请自行fork体验',
+    fillPasswordOnClick: false,
+    showPassword: false,
   },
   {
     username: 'viewer',
     password: 'viewer123456',
     role: '观察者',
-    caption: '只读查看缓存与导出结果，适合演示边界。',
+    caption: '线上环境仅保留 viewer 模式：可查看，不能编辑、发布或触发 AI。',
+    fillPasswordOnClick: true,
+    showPassword: true,
   },
 ] as const
 
@@ -115,7 +119,12 @@ export function LoginForm({ pending, errorMessage, onSubmit }: LoginFormProps) {
               key={account.username}
               onClick={() => {
                 setUsername(account.username)
-                setPassword(account.password)
+                if (account.fillPasswordOnClick) {
+                  setPassword(account.password)
+                  return
+                }
+
+                setPassword('')
               }}
               type="button">
               <span className={styles.accountRole}>
@@ -127,10 +136,12 @@ export function LoginForm({ pending, errorMessage, onSubmit }: LoginFormProps) {
                   账号：
                   <code>{account.username}</code>
                 </span>
-                <span>
-                  密码：
-                  <code>{account.password}</code>
-                </span>
+                {account.showPassword ? (
+                  <span>
+                    密码：
+                    <code>{account.password}</code>
+                  </span>
+                ) : null}
               </span>
               <span className={styles.accountSecret}>{account.caption}</span>
             </button>

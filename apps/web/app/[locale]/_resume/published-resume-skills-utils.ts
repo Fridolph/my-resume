@@ -163,6 +163,29 @@ const enSkillKeywordLineMap = new Map<string, string>([
   ],
 ])
 
+const enSkillKeywordLabelMap = new Map<string, string>([
+  ['Agent 工作', 'Agent Workflow'],
+  ['测试与质量', 'Testing & Quality'],
+  ['技术输出', 'Technical Writing'],
+  ['性能调优', 'Performance Tuning'],
+  ['产品化意识', 'Product Mindset'],
+  ['业务抽象', 'Business Abstraction'],
+  ['跨端协同', 'Cross-Platform Collaboration'],
+  ['结果导向', 'Outcome Orientation'],
+  ['前端架构设计', 'Frontend Architecture Design'],
+  ['技术方案输出', 'Technical Solution Delivery'],
+  ['重构与演进', 'Refactoring & Evolution'],
+  ['组件与规范建设', 'Components & Standards'],
+  ['问题定位与权衡', 'Problem Diagnosis & Trade-off'],
+])
+
+const enSkillKeywordContentMap = new Map<string, string>([
+  [
+    '具备 Jest、Vitest、TDD 基础，能够编写组件与模块级单元测试，保障重构稳定性',
+    'Solid Jest, Vitest, and TDD fundamentals; able to write component- and module-level unit tests to keep refactors stable.',
+  ],
+])
+
 const enSkillKeywordPhraseMap = new Map<string, string>([
   ['构建体系', 'build systems'],
   ['需求理解', 'requirement understanding'],
@@ -170,6 +193,18 @@ const enSkillKeywordPhraseMap = new Map<string, string>([
   ['模块边界', 'module boundaries'],
   ['性能优化', 'performance optimization'],
   ['可访问性', 'accessibility'],
+  ['技术输出', 'technical writing'],
+  ['性能调优', 'performance tuning'],
+  ['产品化意识', 'product mindset'],
+  ['业务抽象', 'business abstraction'],
+  ['跨端协同', 'cross-platform collaboration'],
+  ['结果导向', 'outcome orientation'],
+  ['前端架构设计', 'frontend architecture design'],
+  ['技术方案输出', 'technical solution delivery'],
+  ['重构与演进', 'refactoring and evolution'],
+  ['组件与规范建设', 'component and standards'],
+  ['问题定位与权衡', 'problem diagnosis and trade-off'],
+  ['测试与质量', 'testing and quality'],
 ])
 
 function stripMarkdownBold(value: string): string {
@@ -180,22 +215,51 @@ function hasChineseCharacters(value: string): boolean {
   return /[\u4e00-\u9fff]/u.test(value)
 }
 
-function localizeSkillLine(raw: string, locale: ResumeLocale): string {
-  if (locale !== 'en' || !hasChineseCharacters(raw)) {
-    return raw
+function localizeSkillFragment(raw: string): string {
+  const trimmed = raw.trim()
+  if (!trimmed) {
+    return trimmed
   }
 
-  const directMatch = enSkillKeywordLineMap.get(raw.trim())
-  if (directMatch) {
-    return directMatch
+  const labelMatch = enSkillKeywordLabelMap.get(trimmed)
+  if (labelMatch) {
+    return labelMatch
   }
 
-  let translated = raw
+  const contentMatch = enSkillKeywordContentMap.get(trimmed)
+  if (contentMatch) {
+    return contentMatch
+  }
+
+  let translated = trimmed
   enSkillKeywordPhraseMap.forEach((replacement, phrase) => {
     translated = translated.replaceAll(phrase, replacement)
   })
 
   return translated
+}
+
+function localizeSkillLine(raw: string, locale: ResumeLocale): string {
+  if (locale !== 'en' || !hasChineseCharacters(raw)) {
+    return raw
+  }
+
+  const trimmed = raw.trim()
+  const directMatch = enSkillKeywordLineMap.get(trimmed)
+  if (directMatch) {
+    return directMatch
+  }
+
+  const dividerMatch = trimmed.match(/^(.+?)\s*[:：]\s*(.+)$/u)
+  if (dividerMatch) {
+    const [, left, right] = dividerMatch
+    const localizedLeft = localizeSkillFragment(left)
+    const localizedRight = localizeSkillFragment(right)
+
+    return `${localizedLeft}: ${localizedRight}`
+  }
+
+  return localizeSkillFragment(trimmed)
 }
 
 export function parseSkillLine(raw: string): ParsedSkillLine {
