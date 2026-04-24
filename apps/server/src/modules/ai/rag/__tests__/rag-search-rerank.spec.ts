@@ -5,6 +5,7 @@ import {
   detectRagSearchQuestionStrategy,
   rerankRagSearchMatches,
 } from '../rag-search-rerank'
+import { DEFAULT_RAG_SEARCH_RERANK_CONFIG } from '../config/rag-search-rerank.config'
 import { RagSearchMatch } from '../rag.types'
 
 const baseMatches: RagSearchMatch[] = [
@@ -70,5 +71,45 @@ describe('rag search rerank', () => {
     )
 
     expect(topMatches.map((item) => item.id)).toEqual(['project-1', 'skills-1'])
+  })
+
+  it('should allow tuning behavior via externalized rerank config', () => {
+    const noBoostConfig = {
+      ...DEFAULT_RAG_SEARCH_RERANK_CONFIG,
+      sectionBoost: {
+        ...DEFAULT_RAG_SEARCH_RERANK_CONFIG.sectionBoost,
+        experience: {
+          projects: {
+            default: 0,
+            summary: 0,
+          },
+          work_experience: {
+            default: 0,
+            summary: 0,
+          },
+          core_strengths: {
+            default: 0,
+          },
+          skills: {
+            default: 0,
+          },
+        },
+      },
+      thresholds: {
+        ...DEFAULT_RAG_SEARCH_RERANK_CONFIG.thresholds,
+        keywordBoostPerHit: 0,
+        keywordBoostMax: 0,
+      },
+    }
+
+    const topMatches = applyRagSearchRerank(
+      baseMatches,
+      '这个候选人有哪些 AI Agent 开发相关经验？',
+      2,
+      'experience',
+      noBoostConfig,
+    )
+
+    expect(topMatches.map((item) => item.id)).toEqual(['skills-1', 'project-1'])
   })
 })

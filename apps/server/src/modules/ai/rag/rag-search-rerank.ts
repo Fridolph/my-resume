@@ -1,9 +1,14 @@
 import { RagSearchMatch } from './rag.types'
+import {
+  DEFAULT_RAG_SEARCH_RERANK_CONFIG,
+  RagSearchRerankConfig,
+  RagSearchRerankStrategy,
+} from './config/rag-search-rerank.config'
 
 /**
  * 检索问题策略类型。
  */
-export type RagSearchQuestionStrategy = 'experience' | 'project' | 'skill' | 'general'
+export type RagSearchQuestionStrategy = RagSearchRerankStrategy
 
 /**
  * 单条命中的重排诊断信息。
@@ -46,115 +51,50 @@ export function detectRagSearchQuestionStrategy(query: string): RagSearchQuestio
   return 'general'
 }
 
-function getQuestionHints(query: string): string[] {
+function getQuestionHints(query: string, config: RagSearchRerankConfig): string[] {
   const normalized = normalizeText(query)
   const hints = new Set<string>()
 
-  if (normalized.includes('ai')) {
-    ;[
-      'ai',
-      'agent',
-      'prompt',
-      'sse',
-      '流式',
-      '工作流',
-      '多 agent',
-      '多智能体',
-      'ai 工作台',
-      'ai 分析',
-    ].forEach((item) => hints.add(item))
-  }
+  for (const [trigger, expansions] of Object.entries(config.keywordHints)) {
+    if (!normalized.includes(normalizeText(trigger))) {
+      continue
+    }
 
-  if (normalized.includes('agent')) {
-    ;['agent', '多 agent', '多智能体', '工作流', '规划', '执行', '验证', '反馈'].forEach(
-      (item) => hints.add(item),
-    )
-  }
-
-  if (normalized.includes('my-resume') || normalized.includes('简历')) {
-    ;['my-resume', '简历', 'ai 工作台', 'markdown', 'pdf', 'monorepo'].forEach((item) =>
-      hints.add(item),
-    )
-  }
-
-  if (/sse|流式/.test(normalized)) {
-    ;['sse', '流式', '会话管理', '上下文'].forEach((item) => hints.add(item))
+    expansions.forEach((item) => hints.add(item))
   }
 
   return [...hints]
 }
 
-function getPreferredSections(strategy: RagSearchQuestionStrategy): string[] {
-  if (strategy === 'experience') {
-    return ['projects', 'work_experience', 'core_strengths']
-  }
-
-  if (strategy === 'project') {
-    return ['projects', 'work_experience']
-  }
-
-  if (strategy === 'skill') {
-    return ['skills', 'core_strengths', 'projects']
-  }
-
-  return ['projects', 'work_experience', 'skills', 'core_strengths', 'profile']
+function getPreferredSections(
+  strategy: RagSearchQuestionStrategy,
+  config: RagSearchRerankConfig,
+): string[] {
+  return config.preferredSections[strategy] ?? config.preferredSections.general
 }
 
-function scoreSectionBoost(match: RagSearchMatch, strategy: RagSearchQuestionStrategy): number {
+function scoreSectionBoost(
+  match: RagSearchMatch,
+  strategy: RagSearchQuestionStrategy,
+  config: RagSearchRerankConfig,
+): number {
   const section = normalizeText(match.section)
   const content = normalizeText(match.content)
+  const strategyConfig = config.sectionBoost[strategy] ?? config.sectionBoost.general
+  const rule = strategyConfig[section] ?? strategyConfig.__default
 
-  if (strategy === 'experience') {
-    if (section === 'projects') {
-      return content.includes('项目概览') ? 0.12 : 0.1
-    }
-
-    if (section === 'work_experience') {
-      return content.includes('工作概述') ? 0.1 : 0.08
-    }
-
-    if (section === 'core_strengths') {
-      return 0.02
-    }
-
-    if (section === 'skills') {
-      return -0.02
-    }
+  if (!rule) {
+    return 0
   }
 
-  if (strategy === 'project') {
-    if (section === 'projects') {
-      return content.includes('项目概览') ? 0.14 : 0.1
-    }
+  const summaryHints = config.summaryHintsBySection[section] ?? []
+  const summaryMatched = summaryHints.some((hint) => content.includes(normalizeText(hint)))
 
-    if (section === 'work_experience') {
-      return 0.04
-    }
-
-    if (section === 'skills') {
-      return -0.03
-    }
+  if (summaryMatched && typeof rule.summary === 'number') {
+    return rule.summary
   }
 
-  if (strategy === 'skill') {
-    if (section === 'skills') {
-      return 0.1
-    }
-
-    if (section === 'core_strengths') {
-      return 0.05
-    }
-
-    if (section === 'projects') {
-      return 0.01
-    }
-
-    if (section === 'work_experience') {
-      return 0.01
-    }
-  }
-
-  return 0
+  return rule.default
 }
 
 function getMatchedHints(match: RagSearchMatch, hints: readonly string[]): string[] {
@@ -173,8 +113,14 @@ function getMatchedHints(match: RagSearchMatch, hints: readonly string[]): strin
   return hints.filter((hint) => haystack.includes(normalizeText(hint)))
 }
 
-function scoreKeywordBoost(matchedHints: readonly string[]): number {
-  return Math.min(matchedHints.length * 0.015, 0.09)
+function scoreKeywordBoost(
+  matchedHints: readonly string[],
+  config: RagSearchRerankConfig,
+): number {
+  return Math.min(
+    matchedHints.length * config.thresholds.keywordBoostPerHit,
+    config.thresholds.keywordBoostMax,
+  )
 }
 
 function buildNoiseReasons(input: {
@@ -184,9 +130,10 @@ function buildNoiseReasons(input: {
   baseScore: number
   rerankScore: number
   leaderRerankScore: number
+  config: RagSearchRerankConfig
 }): string[] {
   const reasons: string[] = []
-  const preferredSections = getPreferredSections(input.strategy)
+  const preferredSections = getPreferredSections(input.strategy, input.config)
   const section = normalizeText(input.match.section)
 
   if (!preferredSections.includes(section)) {
@@ -197,15 +144,15 @@ function buildNoiseReasons(input: {
     reasons.push('未命中问题主题 hints')
   }
 
-  if (input.leaderRerankScore - input.rerankScore > 0.14) {
+  if (input.leaderRerankScore - input.rerankScore > input.config.thresholds.rerankGapNoiseThreshold) {
     reasons.push('与头部结果分差过大')
   }
 
-  if (input.baseScore < 0.48) {
+  if (input.baseScore < input.config.thresholds.rawScoreNoiseThreshold) {
     reasons.push('原始分数偏低')
   }
 
-  if (input.rerankScore < 0.6) {
+  if (input.rerankScore < input.config.thresholds.rerankScoreNoiseThreshold) {
     reasons.push('重排后分数偏低')
   }
 
@@ -224,15 +171,16 @@ export function rerankRagSearchMatches(
   matches: RagSearchMatch[],
   query: string,
   strategy: RagSearchQuestionStrategy = detectRagSearchQuestionStrategy(query),
+  config: RagSearchRerankConfig = DEFAULT_RAG_SEARCH_RERANK_CONFIG,
 ): RagSearchRerankDetail[] {
-  const hints = getQuestionHints(query)
+  const hints = getQuestionHints(query, config)
 
   const reranked = matches
     .map((match) => {
       const baseScore = Number(match.score || 0)
-      const sectionBoost = scoreSectionBoost(match, strategy)
+      const sectionBoost = scoreSectionBoost(match, strategy, config)
       const matchedHints = getMatchedHints(match, hints)
-      const keywordBoost = scoreKeywordBoost(matchedHints)
+      const keywordBoost = scoreKeywordBoost(matchedHints, config)
       const rerankScore = Number((baseScore + sectionBoost + keywordBoost).toFixed(6))
 
       return {
@@ -257,6 +205,7 @@ export function rerankRagSearchMatches(
       baseScore: item.baseScore,
       rerankScore: item.rerankScore,
       leaderRerankScore,
+      config,
     }),
   }))
 }
@@ -275,8 +224,9 @@ export function applyRagSearchRerank(
   query: string,
   limit = matches.length,
   strategy?: RagSearchQuestionStrategy,
+  config: RagSearchRerankConfig = DEFAULT_RAG_SEARCH_RERANK_CONFIG,
 ): RagSearchMatch[] {
-  return rerankRagSearchMatches(matches, query, strategy)
+  return rerankRagSearchMatches(matches, query, strategy, config)
     .slice(0, Math.max(Math.floor(limit), 0))
     .map((item) => item.match)
 }

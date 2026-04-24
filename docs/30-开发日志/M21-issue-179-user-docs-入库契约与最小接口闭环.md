@@ -427,3 +427,26 @@ pnpm --filter @my-resume/server rag:chunk:compare \
 - 测试通过：
   - `pnpm --filter @my-resume/server exec vitest run --config ./vitest.config.mts src/modules/ai/rag/__tests__/rag-search-rerank.spec.ts src/modules/ai/rag/__tests__/rag.service.spec.ts src/modules/ai/rag/__tests__/rag-search-quality.spec.ts`
   - `pnpm --filter @my-resume/server typecheck`
+
+### Step 4-10：rerank 规则配置外置（v5 对位，先不改 API 契约）
+
+- 目标：
+  - 把 `rag-search-rerank.ts` 内的关键词扩展、section 权重、去噪阈值从硬编码拆出；
+  - 先外置成可维护配置模块，保持当前链路行为与接口稳定。
+- 新增：
+  - `apps/server/src/modules/ai/rag/config/rag-search-rerank.config.ts`
+    - `DEFAULT_RAG_SEARCH_RERANK_CONFIG`
+    - 外置 `keywordHints/preferredSections/sectionBoost/summaryHintsBySection/thresholds`
+- 调整：
+  - `apps/server/src/modules/ai/rag/rag-search-rerank.ts`
+    - 读取外置配置而非内嵌常量
+    - `rerankRagSearchMatches` / `applyRagSearchRerank` 支持传入配置，便于实验
+- 测试：
+  - `apps/server/src/modules/ai/rag/__tests__/rag-search-rerank.spec.ts`
+    - 新增“修改配置可改变重排行为”的断言
+
+### Step 4-10 验证
+
+- 测试通过：
+  - `pnpm --filter @my-resume/server exec vitest run --config ./vitest.config.mts src/modules/ai/rag/__tests__/rag-search-rerank.spec.ts src/modules/ai/rag/__tests__/rag.service.spec.ts src/modules/ai/rag/__tests__/rag-search-quality.spec.ts`
+  - `pnpm --filter @my-resume/server typecheck`
