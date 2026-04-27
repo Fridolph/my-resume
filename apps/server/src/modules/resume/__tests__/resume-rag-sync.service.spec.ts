@@ -65,11 +65,33 @@ describe('ResumeRagSyncService', () => {
     expect(vi.mocked(ragRetrievalRepository.upsertDocument)).toHaveBeenCalledTimes(2)
     expect(vi.mocked(ragRetrievalRepository.replaceChunksForDocument)).toHaveBeenCalledTimes(2)
     expect(vi.mocked(ragRetrievalRepository.updateIndexRunStatus)).toHaveBeenCalledTimes(1)
+
+    const [, zhChunks] = vi.mocked(ragRetrievalRepository.replaceChunksForDocument).mock
+      .calls[0] ?? ['', []]
+
+    expect(zhChunks.length).toBeGreaterThan(1)
+    expect(zhChunks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          section: 'profile',
+          metadataJson: expect.objectContaining({
+            chunkKind: 'resume_semantic',
+            entityType: 'profile_summary',
+          }),
+        }),
+        expect.objectContaining({
+          section: 'projects',
+          metadataJson: expect.objectContaining({
+            entityType: 'project_summary',
+          }),
+        }),
+      ]),
+    )
     expect(
       vi.mocked(ragRetrievalRepository.updateIndexRunStatus).mock.calls[0]?.[0],
     ).toMatchObject({
       status: 'succeeded',
-      chunkCount: 2,
+      chunkCount: zhChunks.length * 2,
       errorMessage: null,
     })
   })

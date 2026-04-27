@@ -8,6 +8,7 @@ import type { ResumeLocale } from '../../domain/standard-resume'
 import { RagRetrievalRepository } from '../../../ai/rag/rag-retrieval.repository'
 import { ResumePublicationRepository } from '../../infrastructure/repositories/resume-publication.repository'
 import { ResumeMarkdownExportService } from './resume-markdown-export.service'
+import { buildResumeRagSemanticChunks } from './resume-rag-semantic-chunking'
 
 export type ResumeRagSyncScope = RagSourceScope | 'all'
 
@@ -197,6 +198,7 @@ export class ResumeRagSyncService {
       for (const locale of locales) {
         const markdown = this.resumeMarkdownExportService.render(input.resume, locale)
         const contentHash = computeContentHash(markdown)
+        const semanticChunks = buildResumeRagSemanticChunks(input.resume, locale)
         const now = new Date()
         const documentId = `resume-core:${input.sourceScope}:${input.sourceVersion}:${locale}`
         const title = `${input.resume.profile.fullName[locale]} / ${input.resume.profile.headline[locale]}`
@@ -212,29 +214,41 @@ export class ResumeRagSyncService {
           contentHash,
           metadataJson: {
             format: 'markdown',
+            indexingMode: 'semantic_chunks',
+            semanticChunkCount: semanticChunks.length,
           },
           createdAt: now,
           updatedAt: now,
         })
 
-        await this.ragRetrievalRepository.replaceChunksForDocument(documentId, [
-          {
-            id: `${documentId}:chunk:0`,
+        await this.ragRetrievalRepository.replaceChunksForDocument(
+          documentId,
+          semanticChunks.map((chunk) => ({
+            id: `${documentId}:semantic:${chunk.stableKey}:${chunk.chunkIndex}`,
             documentId,
-            chunkIndex: 0,
-            section: 'resume',
-            content: markdown,
-            contentHash,
+            chunkIndex: chunk.chunkIndex,
+            section: chunk.section,
+            content: chunk.content,
+            contentHash: chunk.contentHash,
             embeddingJson: [],
             metadataJson: {
               locale,
+              chunkKind: 'resume_semantic',
+              section: chunk.section,
+              subsectionKey: chunk.subsectionKey,
+              subsectionTitle: chunk.subsectionTitle,
+              entityType: chunk.entityType,
+              title: chunk.title,
+              tags: chunk.tags,
+              chunkIndex: chunk.chunkIndex,
+              chunkCount: chunk.chunkCount,
             },
             createdAt: now,
             updatedAt: now,
-          },
-        ])
+          })),
+        )
 
-        totalChunkCount += 1
+        totalChunkCount += semanticChunks.length
       }
 
       await this.ragRetrievalRepository.updateIndexRunStatus({

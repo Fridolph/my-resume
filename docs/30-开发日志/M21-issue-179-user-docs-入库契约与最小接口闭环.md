@@ -475,3 +475,33 @@ pnpm --filter @my-resume/server rag:chunk:compare \
 - 测试通过：
   - `pnpm --filter @my-resume/server exec vitest run --config ./vitest.config.mts src/modules/ai/rag/__tests__/rag-search-context-builder.spec.ts src/modules/ai/rag/__tests__/rag-search-rerank.spec.ts src/modules/ai/rag/__tests__/rag.service.spec.ts`
   - `pnpm --filter @my-resume/server typecheck`
+
+### Step 4-12：`resume_core` 语义块入库起步（从全文单块升级为结构化多块）
+
+- 目标：
+  - 吸收 `resume-memory-rag-qa` v7 学习结论中最稳定的一条：先把“知识怎么进库”做对；
+  - 将 `resume_core` 从“每个 locale 一整份 markdown 作为单个 chunk”升级为“按简历业务语义生成多个 chunk”；
+  - 先不引入复杂 Prompt、多轮会话或 cross-section 补证策略。
+- 新增：
+  - `apps/server/src/modules/resume/application/services/resume-rag-semantic-chunking.ts`
+    - `buildResumeRagSemanticChunks`
+    - 按 `profile / core_strengths / skills / work_experience / projects / education` 生成语义块
+    - 每个块保留 `subsectionKey / subsectionTitle / entityType / title / tags / contentHash`
+- 调整：
+  - `apps/server/src/modules/resume/application/services/resume-rag-sync.service.ts`
+    - `rag_documents` 仍保留当前 locale 的简历文档记录；
+    - `rag_chunks` 改为写入多个 `resume_semantic` chunk；
+    - `index run` 的 `chunkCount` 改为真实语义块数量。
+- 测试：
+  - 新增 `apps/server/src/modules/resume/__tests__/resume-rag-semantic-chunking.spec.ts`
+    - 固定语义块契约与 locale 内容；
+    - 断言 stableKey 稳定、section/entityType 完整。
+  - 更新 `apps/server/src/modules/resume/__tests__/resume-rag-sync.service.spec.ts`
+    - 断言同步服务写入多 chunk；
+    - 断言 metadata 中包含 `chunkKind: resume_semantic` 与 `entityType`。
+
+### Step 4-12 验证
+
+- 测试通过：
+  - `pnpm --filter @my-resume/server exec vitest run --config ./vitest.config.mts src/modules/resume/__tests__/resume-rag-semantic-chunking.spec.ts src/modules/resume/__tests__/resume-rag-sync.service.spec.ts`
+  - `pnpm --filter @my-resume/server typecheck`
