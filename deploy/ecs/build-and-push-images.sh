@@ -19,7 +19,12 @@ BUILDER_NAME='my-resume-builder'
 BASE_IMAGE=''
 APT_DEBIAN_MIRROR_URL=''
 APT_SECURITY_MIRROR_URL=''
+CACHE_REF=''
 ENGINE_BUILD='0'
+DEFAULT_APT_DEBIAN_MIRROR_URL='http://mirrors.aliyun.com/debian'
+DEFAULT_APT_SECURITY_MIRROR_URL='http://mirrors.aliyun.com/debian-security'
+DEFAULT_NPM_REGISTRY_URL='https://registry.npmmirror.com'
+NPM_REGISTRY_URL=''
 PUBLIC_API_BASE_URL=''
 WEB_SERVER_API_BASE_URL='http://server:5577'
 SERVICES='all'
@@ -71,6 +76,11 @@ Options:
                   可选，覆盖 Debian apt 源（如 http://mirrors.aliyun.com/debian）
   --apt-security-mirror-url
                   可选，覆盖 Debian Security apt 源（默认按 debian 源自动推导）
+  --cache-ref     可选，buildx registry cache 引用，如 registry/repo:buildcache
+                  默认会按服务派生为 registry/repo:buildcache-server/web/admin
+                  也可使用 {service} 占位符，如 registry/repo:cache-{service}
+  --npm-registry-url
+                  可选，覆盖 npm/pnpm 包下载源，默认 https://registry.npmmirror.com
   --public-api-base-url
                   可选，注入 web/admin 的 NEXT_PUBLIC_API_BASE_URL（生产必填）
   --web-server-api-base-url
@@ -226,6 +236,14 @@ while [[ $# -gt 0 ]]; do
       APT_SECURITY_MIRROR_URL="$2"
       shift 2
       ;;
+    --cache-ref)
+      CACHE_REF="$2"
+      shift 2
+      ;;
+    --npm-registry-url)
+      NPM_REGISTRY_URL="$2"
+      shift 2
+      ;;
     --public-api-base-url)
       PUBLIC_API_BASE_URL="$2"
       shift 2
@@ -279,6 +297,31 @@ fi
 if [[ -z "$APT_SECURITY_MIRROR_URL" && -n "${DEPLOY_APT_SECURITY_MIRROR_URL:-}" ]]; then
   APT_SECURITY_MIRROR_URL="${DEPLOY_APT_SECURITY_MIRROR_URL}"
   echo "Using DEPLOY_APT_SECURITY_MIRROR_URL from env: $APT_SECURITY_MIRROR_URL"
+fi
+
+if [[ -z "$APT_DEBIAN_MIRROR_URL" ]]; then
+  APT_DEBIAN_MIRROR_URL="$DEFAULT_APT_DEBIAN_MIRROR_URL"
+  echo "Using default APT_DEBIAN_MIRROR_URL: $APT_DEBIAN_MIRROR_URL"
+fi
+
+if [[ -z "$APT_SECURITY_MIRROR_URL" ]]; then
+  APT_SECURITY_MIRROR_URL="$DEFAULT_APT_SECURITY_MIRROR_URL"
+  echo "Using default APT_SECURITY_MIRROR_URL: $APT_SECURITY_MIRROR_URL"
+fi
+
+if [[ -z "$CACHE_REF" && -n "${DEPLOY_DOCKER_CACHE_REF:-}" ]]; then
+  CACHE_REF="${DEPLOY_DOCKER_CACHE_REF}"
+  echo "Using DEPLOY_DOCKER_CACHE_REF from env: $CACHE_REF"
+fi
+
+if [[ -z "$NPM_REGISTRY_URL" && -n "${DEPLOY_NPM_REGISTRY_URL:-}" ]]; then
+  NPM_REGISTRY_URL="${DEPLOY_NPM_REGISTRY_URL}"
+  echo "Using DEPLOY_NPM_REGISTRY_URL from env: $NPM_REGISTRY_URL"
+fi
+
+if [[ -z "$NPM_REGISTRY_URL" ]]; then
+  NPM_REGISTRY_URL="$DEFAULT_NPM_REGISTRY_URL"
+  echo "Using default NPM_REGISTRY_URL: $NPM_REGISTRY_URL"
 fi
 
 if [[ "$AUTO_TAG" == '1' && ( -n "$TAG" || -n "$VERSION" ) ]]; then
@@ -389,6 +432,55 @@ run_cmd() {
   "$@"
 }
 
+platform_arch() {
+  case "$1" in
+    linux/amd64)
+      printf 'amd64\n'
+      ;;
+    linux/arm64 | linux/arm64/v8)
+      printf 'arm64\n'
+      ;;
+    *)
+      printf '%s\n' "${1#*/}"
+      ;;
+  esac
+}
+
+validate_local_image_platform() {
+  local image_ref="$1"
+  local platform="$2"
+  local expected_os="${platform%%/*}"
+  local expected_arch
+  local actual_os
+  local actual_arch
+
+  expected_arch=$(platform_arch "$platform")
+  actual_os=$(docker image inspect "$image_ref" --format '{{.Os}}' 2>/dev/null || true)
+  actual_arch=$(docker image inspect "$image_ref" --format '{{.Architecture}}' 2>/dev/null || true)
+
+  if [[ -z "$actual_os" || -z "$actual_arch" ]]; then
+    echo "Unable to inspect pulled base image: $image_ref" >&2
+    exit 1
+  fi
+
+  if [[ "$actual_os" != "$expected_os" || "$actual_arch" != "$expected_arch" ]]; then
+    cat >&2 <<EOF
+Base image platform mismatch:
+  image    = $image_ref
+  expected = $platform
+  actual   = $actual_os/$actual_arch
+
+Please resync the base image with the expected platform, or use another --base-image that supports $platform.
+Example:
+  ./deploy/ecs/sync-base-image.sh \\
+    --platform $platform \\
+    --source-image docker.1ms.run/library/node:22-slim \\
+    --target-repo <registry>/<namespace>/my-resume-base-node
+EOF
+    exit 1
+  fi
+}
+
 if [[ "$ENGINE_BUILD" != '1' ]]; then
   if [[ "$BUILDER_NAME" == 'default' ]]; then
     run_cmd docker buildx use default >/dev/null 2>&1 || true
@@ -430,6 +522,27 @@ copy_image_tag() {
   run_cmd docker push "$target_ref"
 }
 
+CACHE_BUILD_ARGS=()
+set_cache_args_for_service() {
+  local service="$1"
+  CACHE_BUILD_ARGS=()
+  if [[ -z "$CACHE_REF" ]]; then
+    return 0
+  fi
+
+  local service_cache_ref="$CACHE_REF"
+  if [[ "$service_cache_ref" == *"{service}"* ]]; then
+    service_cache_ref="${service_cache_ref//\{service\}/$service}"
+  else
+    service_cache_ref="${service_cache_ref}-${service}"
+  fi
+
+  CACHE_BUILD_ARGS=(
+    --cache-from "type=registry,ref=$service_cache_ref"
+    --cache-to "type=registry,ref=$service_cache_ref,mode=max"
+  )
+}
+
 echo "Building images with:"
 echo "  TAG            = $TAG"
 if [[ "$EXPLICIT_IMAGE_ARGS" == '1' ]]; then
@@ -456,6 +569,10 @@ fi
 if [[ -n "$APT_SECURITY_MIRROR_URL" ]]; then
   echo "  APT_SECURITY   = $APT_SECURITY_MIRROR_URL"
 fi
+if [[ -n "$CACHE_REF" ]]; then
+  echo "  CACHE_REF      = $CACHE_REF"
+fi
+echo "  NPM_REGISTRY   = $NPM_REGISTRY_URL"
 if [[ -n "$PUBLIC_API_BASE_URL" ]]; then
   echo "  PUBLIC_API     = $PUBLIC_API_BASE_URL"
 fi
@@ -486,12 +603,17 @@ cd "$REPO_ROOT"
 if [[ -n "$BASE_IMAGE" ]]; then
   log_msg="Prefetch base image: $BASE_IMAGE"
   echo "$log_msg"
-  run_cmd docker pull "$BASE_IMAGE"
+  run_cmd docker pull --platform "$PLATFORM" "$BASE_IMAGE"
+  if [[ "$DRY_RUN" != '1' ]]; then
+    validate_local_image_platform "$BASE_IMAGE" "$PLATFORM"
+  fi
 fi
 
 if [[ "$ENGINE_BUILD" == '1' ]]; then
-  WEB_BUILD_ARGS=(--build-arg "NEXT_PUBLIC_APP_VERSION=$TAG")
-  ADMIN_BUILD_ARGS=(--build-arg "NEXT_PUBLIC_APP_VERSION=$TAG")
+  COMMON_BUILD_ARGS=(--build-arg "NPM_REGISTRY_URL=$NPM_REGISTRY_URL")
+  WEB_BUILD_ARGS=("${COMMON_BUILD_ARGS[@]}" --build-arg "NEXT_PUBLIC_APP_VERSION=$TAG")
+  ADMIN_BUILD_ARGS=("${COMMON_BUILD_ARGS[@]}" --build-arg "NEXT_PUBLIC_APP_VERSION=$TAG")
+  SERVER_BUILD_ARGS=("${COMMON_BUILD_ARGS[@]}" "${SERVER_APT_BUILD_ARGS[@]+"${SERVER_APT_BUILD_ARGS[@]}"}")
 
   if [[ -n "$PUBLIC_API_BASE_URL" ]]; then
     WEB_BUILD_ARGS+=(--build-arg "NEXT_PUBLIC_API_BASE_URL=$PUBLIC_API_BASE_URL")
@@ -502,7 +624,7 @@ if [[ "$ENGINE_BUILD" == '1' ]]; then
 
   if [[ -n "$BASE_IMAGE" ]]; then
     if service_selected server; then
-      run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/server/Dockerfile -t "$SERVER_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" "${SERVER_APT_BUILD_ARGS[@]+"${SERVER_APT_BUILD_ARGS[@]}"}" .
+      run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/server/Dockerfile -t "$SERVER_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" "${SERVER_BUILD_ARGS[@]}" .
     fi
     if service_selected web; then
       run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/web/Dockerfile -t "$WEB_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" "${WEB_BUILD_ARGS[@]}" .
@@ -512,7 +634,7 @@ if [[ "$ENGINE_BUILD" == '1' ]]; then
     fi
   else
     if service_selected server; then
-      run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/server/Dockerfile -t "$SERVER_REF" "${SERVER_APT_BUILD_ARGS[@]+"${SERVER_APT_BUILD_ARGS[@]}"}" .
+      run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/server/Dockerfile -t "$SERVER_REF" "${SERVER_BUILD_ARGS[@]}" .
     fi
     if service_selected web; then
       run_cmd docker build --pull=false --platform "$PLATFORM" -f apps/web/Dockerfile -t "$WEB_REF" "${WEB_BUILD_ARGS[@]}" .
@@ -534,8 +656,10 @@ if [[ "$ENGINE_BUILD" == '1' ]]; then
     fi
   fi
 else
-  WEB_BUILDX_ARGS=(--build-arg "NEXT_PUBLIC_APP_VERSION=$TAG")
-  ADMIN_BUILDX_ARGS=(--build-arg "NEXT_PUBLIC_APP_VERSION=$TAG")
+  COMMON_BUILDX_ARGS=(--build-arg "NPM_REGISTRY_URL=$NPM_REGISTRY_URL")
+  WEB_BUILDX_ARGS=("${COMMON_BUILDX_ARGS[@]}" --build-arg "NEXT_PUBLIC_APP_VERSION=$TAG")
+  ADMIN_BUILDX_ARGS=("${COMMON_BUILDX_ARGS[@]}" --build-arg "NEXT_PUBLIC_APP_VERSION=$TAG")
+  SERVER_BUILDX_ARGS=("${COMMON_BUILDX_ARGS[@]}" "${SERVER_APT_BUILD_ARGS[@]+"${SERVER_APT_BUILD_ARGS[@]}"}")
 
   if [[ -n "$PUBLIC_API_BASE_URL" ]]; then
     WEB_BUILDX_ARGS+=(--build-arg "NEXT_PUBLIC_API_BASE_URL=$PUBLIC_API_BASE_URL")
@@ -546,23 +670,29 @@ else
 
   if [[ -n "$BASE_IMAGE" ]]; then
     if service_selected server; then
-      run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/server/Dockerfile -t "$SERVER_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" "${SERVER_APT_BUILD_ARGS[@]+"${SERVER_APT_BUILD_ARGS[@]}"}" "${PUBLISH_ARGS[@]}" .
+      set_cache_args_for_service server
+      run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/server/Dockerfile -t "$SERVER_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" "${SERVER_BUILDX_ARGS[@]}" "${CACHE_BUILD_ARGS[@]+"${CACHE_BUILD_ARGS[@]}"}" "${PUBLISH_ARGS[@]}" .
     fi
     if service_selected web; then
-      run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/web/Dockerfile -t "$WEB_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" "${WEB_BUILDX_ARGS[@]}" "${PUBLISH_ARGS[@]}" .
+      set_cache_args_for_service web
+      run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/web/Dockerfile -t "$WEB_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" "${WEB_BUILDX_ARGS[@]}" "${CACHE_BUILD_ARGS[@]+"${CACHE_BUILD_ARGS[@]}"}" "${PUBLISH_ARGS[@]}" .
     fi
     if service_selected admin; then
-      run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/admin/Dockerfile -t "$ADMIN_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" "${ADMIN_BUILDX_ARGS[@]}" "${PUBLISH_ARGS[@]}" .
+      set_cache_args_for_service admin
+      run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/admin/Dockerfile -t "$ADMIN_REF" --build-arg "BASE_IMAGE=$BASE_IMAGE" "${ADMIN_BUILDX_ARGS[@]}" "${CACHE_BUILD_ARGS[@]+"${CACHE_BUILD_ARGS[@]}"}" "${PUBLISH_ARGS[@]}" .
     fi
   else
     if service_selected server; then
-      run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/server/Dockerfile -t "$SERVER_REF" "${SERVER_APT_BUILD_ARGS[@]+"${SERVER_APT_BUILD_ARGS[@]}"}" "${PUBLISH_ARGS[@]}" .
+      set_cache_args_for_service server
+      run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/server/Dockerfile -t "$SERVER_REF" "${SERVER_BUILDX_ARGS[@]}" "${CACHE_BUILD_ARGS[@]+"${CACHE_BUILD_ARGS[@]}"}" "${PUBLISH_ARGS[@]}" .
     fi
     if service_selected web; then
-      run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/web/Dockerfile -t "$WEB_REF" "${WEB_BUILDX_ARGS[@]}" "${PUBLISH_ARGS[@]}" .
+      set_cache_args_for_service web
+      run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/web/Dockerfile -t "$WEB_REF" "${WEB_BUILDX_ARGS[@]}" "${CACHE_BUILD_ARGS[@]+"${CACHE_BUILD_ARGS[@]}"}" "${PUBLISH_ARGS[@]}" .
     fi
     if service_selected admin; then
-      run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/admin/Dockerfile -t "$ADMIN_REF" "${ADMIN_BUILDX_ARGS[@]}" "${PUBLISH_ARGS[@]}" .
+      set_cache_args_for_service admin
+      run_cmd docker buildx build --builder "$BUILDER_NAME" --pull=false --platform "$PLATFORM" -f apps/admin/Dockerfile -t "$ADMIN_REF" "${ADMIN_BUILDX_ARGS[@]}" "${CACHE_BUILD_ARGS[@]+"${CACHE_BUILD_ARGS[@]}"}" "${PUBLISH_ARGS[@]}" .
     fi
   fi
 fi

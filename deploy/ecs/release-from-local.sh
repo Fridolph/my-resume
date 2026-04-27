@@ -13,6 +13,7 @@ AUTO_TAG='0'
 REMOTE_HOST=''
 REMOTE_PORT='22'
 REMOTE_USER='root'
+REMOTE_SSH_TARGET=''
 REMOTE_DEPLOY_ROOT=''
 REMOTE_STACK_ENV_FILE=''
 PUBLIC_API_BASE_URL=''
@@ -23,6 +24,8 @@ BUILDER_NAME=''
 BASE_IMAGE=''
 APT_DEBIAN_MIRROR_URL=''
 APT_SECURITY_MIRROR_URL=''
+CACHE_REF=''
+NPM_REGISTRY_URL=''
 SERVICES='all'
 REUSE_FROM_TAG=''
 SKIP_REUSE_UNSELECTED='0'
@@ -61,6 +64,8 @@ Options:
   --ecs-host               ECS 主机（必填，除非 --skip-deploy）
   --ecs-user               ECS SSH 用户，默认 root
   --ecs-port               ECS SSH 端口，默认 22
+  --ssh-target             SSH 目标别名或完整目标，如 fri / root@host
+                           设置后优先使用本机 ~/.ssh/config，不再拼接 --ecs-user/--ecs-port
   --remote-deploy-root     ECS 仓库目录，默认读取 stack env 中 DEPLOY_ROOT
   --remote-stack-env       ECS 端 stack env 文件路径（可选）
   --public-api-base-url    注入 web/admin 的 NEXT_PUBLIC_API_BASE_URL
@@ -73,6 +78,8 @@ Options:
   --apt-debian-mirror-url Debian apt 源覆盖（如 http://mirrors.aliyun.com/debian）
   --apt-security-mirror-url
                            Debian security apt 源覆盖（默认按 debian 源自动推导）
+  --cache-ref              buildx registry cache 引用，如 registry/repo:buildcache
+  --npm-registry-url       npm/pnpm 包下载源，默认由构建脚本使用 npmmirror
   --services               构建服务范围（all/server/web/admin/server,web...）
   --reuse-from-tag         仅构建部分服务时，未构建服务从该 tag 复制到新 tag
   --skip-reuse-unselected  只构建选中服务，不自动复制未构建服务（高级用法）
@@ -182,6 +189,10 @@ while [[ $# -gt 0 ]]; do
       REMOTE_PORT="$2"
       shift 2
       ;;
+    --ssh-target)
+      REMOTE_SSH_TARGET="$2"
+      shift 2
+      ;;
     --remote-deploy-root)
       REMOTE_DEPLOY_ROOT="$2"
       shift 2
@@ -220,6 +231,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --apt-security-mirror-url)
       APT_SECURITY_MIRROR_URL="$2"
+      shift 2
+      ;;
+    --cache-ref)
+      CACHE_REF="$2"
+      shift 2
+      ;;
+    --npm-registry-url)
+      NPM_REGISTRY_URL="$2"
       shift 2
       ;;
     --services)
@@ -344,6 +363,16 @@ if [[ -z "$APT_SECURITY_MIRROR_URL" && -n "${DEPLOY_APT_SECURITY_MIRROR_URL:-}" 
   log "Using DEPLOY_APT_SECURITY_MIRROR_URL from stack env: $APT_SECURITY_MIRROR_URL"
 fi
 
+if [[ -z "$CACHE_REF" && -n "${DEPLOY_DOCKER_CACHE_REF:-}" ]]; then
+  CACHE_REF="${DEPLOY_DOCKER_CACHE_REF}"
+  log "Using DEPLOY_DOCKER_CACHE_REF from stack env: $CACHE_REF"
+fi
+
+if [[ -z "$NPM_REGISTRY_URL" && -n "${DEPLOY_NPM_REGISTRY_URL:-}" ]]; then
+  NPM_REGISTRY_URL="${DEPLOY_NPM_REGISTRY_URL}"
+  log "Using DEPLOY_NPM_REGISTRY_URL from stack env: $NPM_REGISTRY_URL"
+fi
+
 IMAGE_ARGS=()
 if [[ -n "${IMAGE_REPOSITORY_PREFIX:-}" ]]; then
   IMAGE_ARGS+=(--image-prefix "${IMAGE_REPOSITORY_PREFIX}")
@@ -357,6 +386,12 @@ log "Release tag resolved: $TAG"
 log "Public API base resolved: $PUBLIC_API_BASE_URL"
 log "Remote deploy root: $REMOTE_DEPLOY_ROOT"
 log "Services selected: $SERVICES"
+if [[ -n "$CACHE_REF" ]]; then
+  log "Docker cache ref resolved: $CACHE_REF"
+fi
+if [[ -n "$NPM_REGISTRY_URL" ]]; then
+  log "NPM registry resolved: $NPM_REGISTRY_URL"
+fi
 if [[ -n "$REUSE_FROM_TAG" ]]; then
   log "Reuse from tag: $(normalize_tag "$REUSE_FROM_TAG")"
 fi
@@ -393,6 +428,12 @@ if [[ "$SKIP_BUILD" != '1' ]]; then
   if [[ -n "$APT_SECURITY_MIRROR_URL" ]]; then
     BUILD_CMD+=(--apt-security-mirror-url "$APT_SECURITY_MIRROR_URL")
   fi
+  if [[ -n "$CACHE_REF" ]]; then
+    BUILD_CMD+=(--cache-ref "$CACHE_REF")
+  fi
+  if [[ -n "$NPM_REGISTRY_URL" ]]; then
+    BUILD_CMD+=(--npm-registry-url "$NPM_REGISTRY_URL")
+  fi
   if [[ -n "$REUSE_FROM_TAG" ]]; then
     BUILD_CMD+=(--reuse-from-tag "$REUSE_FROM_TAG")
   fi
@@ -414,10 +455,10 @@ if [[ "$SKIP_DEPLOY" != '1' ]]; then
     require_commands ssh
   fi
 
-  if [[ -z "$REMOTE_HOST" ]]; then
+  if [[ -z "$REMOTE_SSH_TARGET" && -z "$REMOTE_HOST" ]]; then
     REMOTE_HOST="${ECS_HOST:-}"
   fi
-  [[ -n "$REMOTE_HOST" ]] || die "Missing ECS host. Use --ecs-host."
+  [[ -n "$REMOTE_SSH_TARGET" || -n "$REMOTE_HOST" ]] || die "Missing ECS host. Use --ecs-host or --ssh-target."
 
   REMOTE_ENV_PREFIX="IMAGE_TAG='$TAG' DEPLOY_ROOT='$REMOTE_DEPLOY_ROOT'"
   if [[ -n "$REMOTE_STACK_ENV_FILE" ]]; then
@@ -427,10 +468,19 @@ if [[ "$SKIP_DEPLOY" != '1' ]]; then
   REMOTE_COMMAND="set -euo pipefail; cd '$REMOTE_DEPLOY_ROOT'; git fetch --tags --force; $REMOTE_ENV_PREFIX ./deploy/ecs/release.sh '$TAG'"
 
   if [[ "$DRY_RUN" == '1' ]]; then
-    log "[dry-run] ssh -p $REMOTE_PORT ${REMOTE_USER}@${REMOTE_HOST} \"$REMOTE_COMMAND\""
+    if [[ -n "$REMOTE_SSH_TARGET" ]]; then
+      log "[dry-run] ssh -o BatchMode=yes $REMOTE_SSH_TARGET \"$REMOTE_COMMAND\""
+    else
+      log "[dry-run] ssh -o BatchMode=yes -p $REMOTE_PORT ${REMOTE_USER}@${REMOTE_HOST} \"$REMOTE_COMMAND\""
+    fi
   else
-    log "Deploying to ECS: ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PORT}"
-    ssh -p "$REMOTE_PORT" "${REMOTE_USER}@${REMOTE_HOST}" "$REMOTE_COMMAND"
+    if [[ -n "$REMOTE_SSH_TARGET" ]]; then
+      log "Deploying to ECS: $REMOTE_SSH_TARGET"
+      ssh -o BatchMode=yes "$REMOTE_SSH_TARGET" "$REMOTE_COMMAND"
+    else
+      log "Deploying to ECS: ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PORT}"
+      ssh -o BatchMode=yes -p "$REMOTE_PORT" "${REMOTE_USER}@${REMOTE_HOST}" "$REMOTE_COMMAND"
+    fi
   fi
 
   if [[ "$SKIP_PUBLIC_CHECK" != '1' ]]; then

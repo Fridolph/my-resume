@@ -1,13 +1,19 @@
 ARG BASE_IMAGE=node:22-slim
-FROM ${BASE_IMAGE}
-ARG APT_DEBIAN_MIRROR_URL=
-ARG APT_SECURITY_MIRROR_URL=
 
+FROM ${BASE_IMAGE} AS base
+ARG NPM_REGISTRY_URL=https://registry.npmmirror.com
+ARG PNPM_VERSION=10.8.0
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+ENV npm_config_registry=$NPM_REGISTRY_URL
+ENV NPM_CONFIG_REGISTRY=$NPM_REGISTRY_URL
+ENV PNPM_CONFIG_REGISTRY=$NPM_REGISTRY_URL
+RUN npm install -g "pnpm@$PNPM_VERSION" --registry="$NPM_REGISTRY_URL"
+WORKDIR /app
 
-RUN corepack enable
-
+FROM base AS runtime-base
+ARG APT_DEBIAN_MIRROR_URL=
+ARG APT_SECURITY_MIRROR_URL=
 RUN set -eux; \
   APT_OPTIONS='-o Acquire::Retries=6 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30'; \
   ORIGINAL_DEBIAN_SOURCES=''; \
@@ -65,17 +71,32 @@ RUN set -eux; \
   done; \
   rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
+FROM base AS deps
+COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY apps/web/package.json apps/web/package.json
+COPY apps/admin/package.json apps/admin/package.json
+COPY apps/server/package.json apps/server/package.json
+COPY packages/api-client/package.json packages/api-client/package.json
+COPY packages/config/package.json packages/config/package.json
+COPY packages/ui/package.json packages/ui/package.json
+COPY packages/utils/package.json packages/utils/package.json
+RUN pnpm install --frozen-lockfile --filter @my-resume/server...
 
+FROM deps AS builder
 COPY . .
-
-RUN pnpm install --frozen-lockfile
-RUN pnpm --filter "./packages/*" --if-present build
 RUN pnpm --filter @my-resume/server build
+RUN pnpm --filter @my-resume/server deploy --legacy --prod /prod/server
 
+FROM runtime-base AS runner
 ENV NODE_ENV=production
 ENV PORT=5577
 
+COPY pnpm-workspace.yaml ./
+COPY --from=builder /prod/server/node_modules ./node_modules
+COPY --from=builder /app/apps/server/dist ./apps/server/dist
+COPY --from=builder /app/apps/server/data ./apps/server/data
+COPY --from=builder /app/apps/server/storage ./apps/server/storage
+
 EXPOSE 5577
 
-CMD ["pnpm", "--filter", "@my-resume/server", "start:prod"]
+CMD ["node", "apps/server/dist/src/main.js"]

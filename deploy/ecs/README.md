@@ -112,16 +112,24 @@ DEPLOY_ROOT=/opt/my-resume ./deploy/ecs/deploy-latest-tag.sh
 
 ```bash
 ./deploy/ecs/sync-base-image.sh \
-  --source-image node:22-slim \
-  --target-repo crpi-xxxx.cn-<region>.personal.cr.aliyuncs.com/<namespace>/my-resume-base-node \
-  --target-tag 22-slim \
+  --platform linux/amd64 \
+  --source-image docker.1ms.run/library/node:22-slim \
+  --stack-env ./.env.stack.local \
   --stamp-tag 22-slim-20260421
 ```
 
-在 `stack.env.local` 中配置：
+在你的本地 stack env 文件中手动配置（不要提交真实值）：
 
 ```env
-DEPLOY_BASE_IMAGE=crpi-xxxx.cn-<region>.personal.cr.aliyuncs.com/<namespace>/my-resume-base-node:22-slim
+DEPLOY_BASE_IMAGE=crpi-xxxx.cn-<region>.personal.cr.aliyuncs.com/<namespace>/my-resume-base-node:22-slim-amd64
+```
+
+本地如果是 Apple Silicon，也必须使用 `linux/amd64` 版本，否则 ECS 构建/运行目标平台会和本地 `arm64` 缓存冲突。
+
+如果 npm 官方源不稳定，可在你的本地 stack env 文件中手动配置：
+
+```env
+DEPLOY_NPM_REGISTRY_URL=https://registry.npmmirror.com
 ```
 
 ### 4.1 本地构建并推送镜像
@@ -141,6 +149,27 @@ DEPLOY_BASE_IMAGE=crpi-xxxx.cn-<region>.personal.cr.aliyuncs.com/<namespace>/my-
   --services all \
   --platform linux/amd64
 ```
+
+如果希望 buildx 在多次发布间复用远端缓存，可配置：
+
+```env
+DEPLOY_DOCKER_CACHE_REF=<registry>/my-resume-build-cache:buildcache
+```
+
+或在命令中显式传入：
+
+```bash
+./deploy/ecs/build-and-push-images.sh \
+  --version 2.2.17 \
+  --server-image <registry>/my-resume-server \
+  --web-image <registry>/my-resume-web \
+  --admin-image <registry>/my-resume-admin \
+  --cache-ref <registry>/my-resume-build-cache:buildcache \
+  --services all \
+  --platform linux/amd64
+```
+
+脚本会按服务派生缓存 tag，例如 `buildcache-server`、`buildcache-web`、`buildcache-admin`。也可以使用 `{service}` 占位符自定义位置。
 
 也支持显式三端镜像仓库（适合 server/web/admin 分仓）：
 
@@ -198,6 +227,17 @@ DEPLOY_BASE_IMAGE=crpi-xxxx.cn-<region>.personal.cr.aliyuncs.com/<namespace>/my-
   --ecs-port 22
 ```
 
+如果本机已在 `~/.ssh/config` 配好 ECS 别名，推荐直接使用别名，避免脚本拼接 `root@ip` 后绕过你的密钥配置：
+
+```bash
+./deploy/ecs/release-from-local.sh \
+  --version 2.2.4 \
+  --stack-env ./.env.stack.local \
+  --ssh-target fri
+```
+
+脚本会使用 `ssh -o BatchMode=yes <alias>`，密钥不可用时会快速失败，不会退回密码交互。
+
 说明：
 
 - `--version 2.2.4` 会自动对齐为发布 tag `v2.2.4`
@@ -207,7 +247,8 @@ DEPLOY_BASE_IMAGE=crpi-xxxx.cn-<region>.personal.cr.aliyuncs.com/<namespace>/my-
 - 本地先构建推送镜像，再通过 SSH 调 ECS `release.sh`
 - 发布后默认会做公网域名健康检查（可加 `--skip-public-check`）
 - 如遇 DockerHub 网络问题，建议把 `node:22-slim` 同步到你自己的仓库，并配置 `DEPLOY_BASE_IMAGE`
-- 如遇 apt 源网络/证书问题，可配置 `DEPLOY_APT_DEBIAN_MIRROR_URL` 与 `DEPLOY_APT_SECURITY_MIRROR_URL`（不配置时使用 Debian 官方源）
+- 如遇 apt 源网络/证书问题，可配置 `DEPLOY_APT_DEBIAN_MIRROR_URL` 与 `DEPLOY_APT_SECURITY_MIRROR_URL`（不配置时构建脚本默认使用阿里云 Debian 源）
+- 如遇 npm 包下载 `ECONNRESET`，可配置 `DEPLOY_NPM_REGISTRY_URL`；不配置时构建脚本默认使用 `https://registry.npmmirror.com`
 
 自动识别当前 tag 的发布示例：
 
@@ -309,10 +350,11 @@ docker compose up -d --build --remove-orphans
 
 - **`failed to fetch oauth token` / `auth.docker.io` 连接失败**：
   - 根因：本地到 DockerHub 鉴权链路不稳定或被拦截
-  - 建议：先同步基础镜像到你的私有仓库，再在 `stack.env.local` 配置 `DEPLOY_BASE_IMAGE`：
+  - 建议：先同步基础镜像到你的私有仓库，再在你的本地 stack env 文件中配置 `DEPLOY_BASE_IMAGE`：
 
 ```env
-DEPLOY_BASE_IMAGE=crpi-xxxx.cn-<region>.personal.cr.aliyuncs.com/<namespace>/my-resume-base-node:22-slim
+DEPLOY_BASE_IMAGE=crpi-xxxx.cn-<region>.personal.cr.aliyuncs.com/<namespace>/my-resume-base-node:22-slim-amd64
+DEPLOY_NPM_REGISTRY_URL=https://registry.npmmirror.com
 DEPLOY_APT_DEBIAN_MIRROR_URL=http://mirrors.aliyun.com/debian
 DEPLOY_APT_SECURITY_MIRROR_URL=http://mirrors.aliyun.com/debian-security
 ```
@@ -321,9 +363,10 @@ DEPLOY_APT_SECURITY_MIRROR_URL=http://mirrors.aliyun.com/debian-security
 
 ```bash
 ./deploy/ecs/sync-base-image.sh \
+  --platform linux/amd64 \
   --source-image node:22-slim \
   --target-repo crpi-xxxx.cn-<region>.personal.cr.aliyuncs.com/<namespace>/my-resume-base-node \
-  --target-tag 22-slim
+  --target-tag 22-slim-amd64
 ```
 
 - **拉不到镜像**：先在 ECS 上 `docker login ghcr.io`

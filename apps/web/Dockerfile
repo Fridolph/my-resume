@@ -1,13 +1,28 @@
 ARG BASE_IMAGE=node:22-slim
-FROM ${BASE_IMAGE}
 
+FROM ${BASE_IMAGE} AS base
+ARG NPM_REGISTRY_URL=https://registry.npmmirror.com
+ARG PNPM_VERSION=10.8.0
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-
-RUN corepack enable
-
+ENV npm_config_registry=$NPM_REGISTRY_URL
+ENV NPM_CONFIG_REGISTRY=$NPM_REGISTRY_URL
+ENV PNPM_CONFIG_REGISTRY=$NPM_REGISTRY_URL
+RUN npm install -g "pnpm@$PNPM_VERSION" --registry="$NPM_REGISTRY_URL"
 WORKDIR /app
 
+FROM base AS deps
+COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY apps/web/package.json apps/web/package.json
+COPY apps/admin/package.json apps/admin/package.json
+COPY apps/server/package.json apps/server/package.json
+COPY packages/api-client/package.json packages/api-client/package.json
+COPY packages/config/package.json packages/config/package.json
+COPY packages/ui/package.json packages/ui/package.json
+COPY packages/utils/package.json packages/utils/package.json
+RUN pnpm install --frozen-lockfile --filter @my-resume/web...
+
+FROM deps AS builder
 ARG NEXT_PUBLIC_API_BASE_URL=http://localhost:5577
 ARG RESUME_API_BASE_URL=http://localhost:5577
 ARG NEXT_PUBLIC_APP_VERSION=0.0.0
@@ -17,14 +32,18 @@ ENV RESUME_API_BASE_URL=$RESUME_API_BASE_URL
 ENV NEXT_PUBLIC_APP_VERSION=$NEXT_PUBLIC_APP_VERSION
 
 COPY . .
-
-RUN pnpm install --frozen-lockfile
 RUN pnpm --filter "./packages/*" --if-present build
 RUN pnpm --filter @my-resume/web build
 
+FROM base AS runner
 ENV NODE_ENV=production
 ENV PORT=5555
+ENV HOSTNAME=0.0.0.0
+
+COPY --from=builder /app/apps/web/.next/standalone ./
+COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder /app/apps/web/public ./apps/web/public
 
 EXPOSE 5555
 
-CMD ["pnpm", "--filter", "@my-resume/web", "start"]
+CMD ["node", "apps/web/server.js"]
