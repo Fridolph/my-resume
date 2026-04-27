@@ -76,7 +76,20 @@ describe('ResumeMarkdownExportService', () => {
           zh: '前端核心能力',
           en: 'Frontend Core',
         },
-        keywords: ['Vue 3', 'Next.js', 'TypeScript'],
+        keywords: [
+          {
+            zh: 'Vue 3',
+            en: 'Vue 3',
+          },
+          {
+            zh: 'Next.js',
+            en: 'Next.js',
+          },
+          {
+            zh: 'TypeScript',
+            en: 'TypeScript',
+          },
+        ],
         proficiency: 95,
       },
     ]

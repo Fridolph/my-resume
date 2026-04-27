@@ -548,7 +548,18 @@ describe('PublishedResumeShell', () => {
             en: '',
           },
           keywords:
-            index === 0 ? ['**Node.js**: 能力描述', '**Node.js**: 能力描述'] : group.keywords,
+            index === 0
+              ? [
+                  {
+                    zh: '**Node.js**: 能力描述',
+                    en: '',
+                  },
+                  {
+                    zh: '**Node.js**: 能力描述',
+                    en: '',
+                  },
+                ]
+              : group.keywords,
         })),
       },
     }

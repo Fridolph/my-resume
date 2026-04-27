@@ -79,7 +79,7 @@ export interface ResumeProjectItem {
 
 export interface ResumeSkillGroup {
   name: LocalizedText
-  keywords: string[]
+  keywords: LocalizedText[]
   proficiency?: number
 }
 
@@ -130,6 +130,10 @@ export function createLocalizedText(zh: string, en: string): LocalizedText {
     zh,
     en,
   }
+}
+
+function createLocalizedTextLines(lines: Array<[zh: string, en: string]>): LocalizedText[] {
+  return lines.map(([zh, en]) => createLocalizedText(zh, en))
 }
 
 export function createDefaultResumeProfileHero(): ResumeProfileHero {
@@ -636,52 +640,112 @@ export function createExampleStandardResume(): StandardResume {
       {
         name: createLocalizedText('前端核心能力', 'Frontend Core'),
         proficiency: 95,
-        keywords: [
-          'Vue / React / Next.js / Nuxt 组件化与页面架构',
-          'TypeScript 类型建模与 Composition API / Hooks 实践',
-          '复杂交互、响应式布局与可访问性体验打磨',
-          '前端状态管理、数据请求与设计系统协作',
-        ],
+        keywords: createLocalizedTextLines([
+          [
+            'Vue / React / Next.js / Nuxt 组件化与页面架构',
+            'Vue / React / Next.js / Nuxt component architecture and page systems',
+          ],
+          [
+            'TypeScript 类型建模与 Composition API / Hooks 实践',
+            'TypeScript type modeling with Composition API / Hooks practices',
+          ],
+          [
+            '复杂交互、响应式布局与可访问性体验打磨',
+            'Complex interactions, responsive layouts, and accessibility refinement',
+          ],
+          [
+            '前端状态管理、数据请求与设计系统协作',
+            'Frontend state management, data fetching, and design-system collaboration',
+          ],
+        ]),
       },
       {
         name: createLocalizedText('工程化与性能优化', 'Engineering & Performance'),
         proficiency: 88,
-        keywords: [
-          'Vite / Webpack / Turborepo / pnpm workspace 工程治理',
-          '构建产物分析、懒加载与首屏性能优化',
-          'CI/CD、Lint、Typecheck 与可回滚交付流程',
-          'Monorepo 渐进式重构与模块边界拆分',
-        ],
+        keywords: createLocalizedTextLines([
+          [
+            'Vite / Webpack / Turborepo / pnpm workspace 工程治理',
+            'Vite / Webpack / Turborepo / pnpm workspace engineering governance',
+          ],
+          [
+            '构建产物分析、懒加载与首屏性能优化',
+            'Build artifact analysis, lazy loading, and first-screen performance optimization',
+          ],
+          [
+            'CI/CD、Lint、Typecheck 与可回滚交付流程',
+            'CI/CD, lint, typecheck, and rollback-safe delivery workflow',
+          ],
+          [
+            'Monorepo 渐进式重构与模块边界拆分',
+            'Progressive monorepo refactoring and module boundary decomposition',
+          ],
+        ]),
       },
       {
         name: createLocalizedText('AI Agent 开发', 'AI Agent Development'),
         proficiency: 73,
-        keywords: [
-          'Prompt Engineering、RAG 与知识库问答基础链路',
-          'Claude Code / Cursor / Codex 辅助开发工作流',
-          'AI Provider Adapter 与流式响应接入实践',
-          'OpenClaw / Coze / Agent 工作流学习与验证',
-        ],
+        keywords: createLocalizedTextLines([
+          [
+            'Prompt Engineering、RAG 与知识库问答基础链路',
+            'Prompt engineering, RAG, and knowledge-base Q&A baseline workflow',
+          ],
+          [
+            'Claude Code / Cursor / Codex 辅助开发工作流',
+            'Claude Code / Cursor / Codex assisted development workflow',
+          ],
+          [
+            'AI Provider Adapter 与流式响应接入实践',
+            'AI Provider Adapter and streaming-response integration practices',
+          ],
+          [
+            'OpenClaw / Coze / Agent 工作流学习与验证',
+            'OpenClaw / Coze / Agent workflow learning and validation',
+          ],
+        ]),
       },
       {
         name: createLocalizedText('架构设计与技术方案', 'Architecture & Technical Design'),
         proficiency: 90,
-        keywords: [
-          '模块边界、路由结构与领域模型拆分',
-          '前后端接口契约、权限边界与发布链路设计',
-          '教学型渐进重构方案、Issue 拆解与 Review 节奏',
-          '复杂页面信息架构与可维护组件组织',
-        ],
+        keywords: createLocalizedTextLines([
+          [
+            '模块边界、路由结构与领域模型拆分',
+            'Module boundaries, route structures, and domain model decomposition',
+          ],
+          [
+            '前后端接口契约、权限边界与发布链路设计',
+            'Frontend-backend API contracts, permission boundaries, and release-flow design',
+          ],
+          [
+            '教学型渐进重构方案、Issue 拆解与 Review 节奏',
+            'Tutorial-driven incremental refactor plans, issue decomposition, and review cadence',
+          ],
+          [
+            '复杂页面信息架构与可维护组件组织',
+            'Complex page information architecture and maintainable component organization',
+          ],
+        ]),
       },
       {
         name: createLocalizedText('全栈开发能力', 'Full-Stack Development'),
         proficiency: 77,
-        keywords: [
-          'Node.js / NestJS / RESTful API 服务端开发',
-          'JWT 认证、角色能力模型与接口权限控制',
-          'SQLite / Drizzle ORM / MongoDB 数据层实践',
-          'WebSocket / SSE / 文件处理等应用能力接入',
-        ],
+        keywords: createLocalizedTextLines([
+          [
+            'Node.js / NestJS / RESTful API 服务端开发',
+            'Node.js / NestJS / RESTful API backend development',
+          ],
+          [
+            'JWT 认证、角色能力模型与接口权限控制',
+            'JWT authentication, role capability models, and API access control',
+          ],
+          [
+            'SQLite / Drizzle ORM / MongoDB 数据层实践',
+            'SQLite / Drizzle ORM / MongoDB data-layer practices',
+          ],
+          [
+            'WebSocket / SSE / 文件处理等应用能力接入',
+            'WebSocket / SSE / file-processing capability integration',
+          ],
+        ]),
       },
       {
         name: createLocalizedText(
@@ -689,12 +753,24 @@ export function createExampleStandardResume(): StandardResume {
           'Business Understanding & Product Delivery',
         ),
         proficiency: 86,
-        keywords: [
-          '安全、SaaS、能源与内容社区等业务场景交付经验',
-          '需求拆解、优先级判断与跨角色沟通推进',
-          '从后台治理到公开展示的完整产品链路理解',
-          '技术方案文档、教程沉淀与可复用知识资产建设',
-        ],
+        keywords: createLocalizedTextLines([
+          [
+            '安全、SaaS、能源与内容社区等业务场景交付经验',
+            'Delivery experience across security, SaaS, energy, and content-community scenarios',
+          ],
+          [
+            '需求拆解、优先级判断与跨角色沟通推进',
+            'Requirement decomposition, priority judgment, and cross-role collaboration',
+          ],
+          [
+            '从后台治理到公开展示的完整产品链路理解',
+            'End-to-end product flow understanding from admin governance to public presentation',
+          ],
+          [
+            '技术方案文档、教程沉淀与可复用知识资产建设',
+            'Technical proposal docs, tutorial codification, and reusable knowledge assets',
+          ],
+        ]),
       },
     ],
     highlights: [
@@ -732,6 +808,37 @@ export function createExampleStandardResume(): StandardResume {
 
 function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === 'string')
+}
+
+function normalizeSkillKeyword(value: unknown): LocalizedText | null {
+  if (isLocalizedText(value)) {
+    return value
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.trim()
+
+    if (!normalized) {
+      return null
+    }
+
+    return {
+      zh: normalized,
+      en: normalized,
+    }
+  }
+
+  return null
+}
+
+function normalizeSkillKeywords(value: unknown): LocalizedText[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value
+    .map((item) => normalizeSkillKeyword(item))
+    .filter((item): item is LocalizedText => item !== null)
 }
 
 function normalizeResumeLink(value: unknown): ResumeProfileLink | null {
@@ -847,7 +954,26 @@ export function normalizeStandardResume(resume: StandardResume): StandardResume 
           }
         })
       : [],
-    skills: Array.isArray(resume.skills) ? resume.skills : [],
+    skills: Array.isArray(resume.skills)
+      ? resume.skills.map((item) => {
+          if (!item || typeof item !== 'object') {
+            return item as ResumeSkillGroup
+          }
+
+          const candidate = item as ResumeSkillGroup & {
+            keywords?: unknown
+            name?: unknown
+          }
+
+          return {
+            ...candidate,
+            name: isLocalizedText(candidate.name)
+              ? candidate.name
+              : createEmptyLocalizedText(),
+            keywords: normalizeSkillKeywords(candidate.keywords),
+          }
+        })
+      : [],
     highlights: Array.isArray(resume.highlights) ? resume.highlights : [],
   }
 }
@@ -1036,9 +1162,7 @@ export function validateStandardResume(resume: StandardResume): ResumeValidation
     resume.skills.forEach((item, index) => {
       validateLocalizedTextField(item.name, `skills[${index}].name`, errors)
 
-      if (!isStringArray(item.keywords)) {
-        errors.push(`skills[${index}].keywords must be a string array`)
-      }
+      validateLocalizedTextArray(item.keywords, `skills[${index}].keywords`, errors)
 
       if (
         item.proficiency !== undefined &&

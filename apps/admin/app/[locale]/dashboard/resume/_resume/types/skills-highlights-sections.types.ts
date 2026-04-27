@@ -22,7 +22,7 @@ export interface SkillsSectionProps {
   sensors: ComponentProps<typeof DndContext>['sensors']
   sortableCollections: SortableCollectionState
   translationAction?: ReactNode
-  updateSkillKeywords: (index: number, value: string) => void
+  updateSkillKeywords: (index: number, locale: 'zh' | 'en', value: string) => void
   updateSkillLocalizedField: (index: number, locale: 'zh' | 'en', value: string) => void
   updateSkillProficiency: (index: number, value: string) => void
 }

@@ -10,6 +10,7 @@ import type {
 import type { ComposeOption } from 'echarts/core'
 
 import type {
+  LocalizedText,
   ResumeLocale,
   ResumeSkillGroup,
 } from '@shared/published-resume/types/published-resume.types'
@@ -271,6 +272,19 @@ function localizeSkillLine(raw: string, locale: ResumeLocale): string {
   return localizeSkillFragment(trimmed)
 }
 
+function pickSkillKeywordText(keyword: LocalizedText, locale: ResumeLocale): string {
+  const preferred = keyword[locale].trim()
+  if (preferred) {
+    return preferred
+  }
+
+  if (locale === 'en') {
+    return keyword.zh.trim() || keyword.en.trim()
+  }
+
+  return keyword.en.trim() || keyword.zh.trim()
+}
+
 export function parseSkillLine(raw: string): ParsedSkillLine {
   const trimmed = raw.trim().replace(/^[-•]\s*/u, '')
   const dividerIndex = trimmed.search(/[:：]/u)
@@ -299,9 +313,11 @@ export function normalizeSkillGroups(
 ): NormalizedSkillGroup[] {
   return skills.map((group) => ({
     ...group,
-    parsedKeywords: group.keywords.map((rawKeyword) =>
-      parseSkillLine(localizeSkillLine(rawKeyword, locale)),
-    ),
+    parsedKeywords: group.keywords
+      .map((keyword) =>
+        parseSkillLine(localizeSkillLine(pickSkillKeywordText(keyword, locale), locale)),
+      )
+      .filter((item) => Boolean(item.label || item.content.trim())),
   }))
 }
 

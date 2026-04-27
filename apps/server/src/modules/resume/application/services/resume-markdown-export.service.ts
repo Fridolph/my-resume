@@ -514,7 +514,10 @@ export class ResumeMarkdownExportService {
       title: SECTION_TITLES[locale].skills,
       lines: resume.skills.flatMap((group) => [
         indentLine(`### ${readLocalizedText(group.name, locale)}`),
-        ...renderIndentedBulletList(group.keywords, 2),
+        ...renderIndentedBulletList(
+          group.keywords.map((keyword) => readLocalizedText(keyword, locale)),
+          2,
+        ),
         '',
       ]),
     }

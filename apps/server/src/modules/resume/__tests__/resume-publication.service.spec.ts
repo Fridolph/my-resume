@@ -236,7 +236,20 @@ describe('ResumePublicationService', () => {
         icon: 'ri:links-line',
       },
     ]
-    nextDraft.skills[0].keywords = ['TypeScript', 'Next.js', 'NestJS']
+    nextDraft.skills[0].keywords = [
+      {
+        zh: 'TypeScript',
+        en: 'TypeScript',
+      },
+      {
+        zh: 'Next.js',
+        en: 'Next.js',
+      },
+      {
+        zh: 'NestJS',
+        en: 'NestJS',
+      },
+    ]
     nextDraft.highlights[0].title = {
       zh: '新的优势总结',
       en: 'Updated Highlight',
@@ -305,9 +318,18 @@ describe('ResumePublicationService', () => {
       },
     ])
     expect(republished.resume.skills[0]?.keywords).toEqual([
-      'TypeScript',
-      'Next.js',
-      'NestJS',
+      {
+        zh: 'TypeScript',
+        en: 'TypeScript',
+      },
+      {
+        zh: 'Next.js',
+        en: 'Next.js',
+      },
+      {
+        zh: 'NestJS',
+        en: 'NestJS',
+      },
     ])
     expect(republished.resume.highlights[0]?.title.zh).toBe('新的优势总结')
     expect(republished.resume.profile.links).toEqual([

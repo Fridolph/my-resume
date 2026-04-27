@@ -302,8 +302,10 @@ export function buildDraftFieldValues(resume: StandardResume): DraftFieldValues 
   })
 
   resume.skills.forEach((skill, index) => {
-    nextValues[buildDraftFieldKey('skill', index, 'keywords')] =
-      formatLineSeparatedValues(skill.keywords)
+    nextValues[buildDraftFieldKey('skill', index, 'keywords', 'zh')] =
+      formatLocalizedLines(skill.keywords, 'zh')
+    nextValues[buildDraftFieldKey('skill', index, 'keywords', 'en')] =
+      formatLocalizedLines(skill.keywords, 'en')
   })
 
   nextValues[buildDraftFieldKey('profile', 'hero', 'slogans', 'zh')] =

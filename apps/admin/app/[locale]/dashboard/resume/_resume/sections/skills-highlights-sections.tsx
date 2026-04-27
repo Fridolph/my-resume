@@ -3,10 +3,10 @@
 import { DndContext, closestCenter } from '@dnd-kit/core'
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { Input, TextArea } from '@heroui/react'
+import { Input } from '@heroui/react'
 import {
   buildDraftFieldKey,
-  formatLineSeparatedValues,
+  formatLocalizedLines,
 } from '../editor/draft-editor-helpers'
 import {
   CloseActionButton,
@@ -53,7 +53,7 @@ export function SkillsSection({
       count={resumeDraft.skills.length}
       description={
         isTranslationMode
-          ? '英文翻译工作区只维护技能组名称。关键词仍按当前原始技术名在中文主编辑中维护。'
+          ? '英文翻译工作区可维护技能组名称与关键词翻译，方便公开页英文词云与结构视图保持同步。'
           : '按技能组维护关键词，公开页会按组展示能力结构。'
       }
       title="技能组">
@@ -109,39 +109,42 @@ export function SkillsSection({
                     />
 
                     {!isTranslationMode ? (
-                      <>
-                        <label className="field">
-                          <span>{`技能组 ${index + 1} 雷达图分数（0-100）`}</span>
-                          <Input
-                            fullWidth
-                            max={100}
-                            min={0}
-                            onChange={(event) =>
-                              updateSkillProficiency(index, event.target.value)
-                            }
-                            type="number"
-                            value={String(skill.proficiency ?? '')}
-                            variant="secondary"
-                          />
-                        </label>
-                        <label className="field">
-                          <span>{`技能组 ${index + 1} 关键词（每行一条）`}</span>
-                          <TextArea
-                            fullWidth
-                            onChange={(event) =>
-                              updateSkillKeywords(index, event.target.value)
-                            }
-                            rows={5}
-                            value={
-                              draftFieldValues[
-                                buildDraftFieldKey('skill', index, 'keywords')
-                              ] ?? formatLineSeparatedValues(skill.keywords)
-                            }
-                            variant="secondary"
-                          />
-                        </label>
-                      </>
+                      <label className="field">
+                        <span>{`技能组 ${index + 1} 雷达图分数（0-100）`}</span>
+                        <Input
+                          fullWidth
+                          max={100}
+                          min={0}
+                          onChange={(event) =>
+                            updateSkillProficiency(index, event.target.value)
+                          }
+                          type="number"
+                          value={String(skill.proficiency ?? '')}
+                          variant="secondary"
+                        />
+                      </label>
                     ) : null}
+
+                    <LocalizedEditorField
+                      label={`技能组 ${index + 1} 关键词（每行一条）`}
+                      localeMode={editorLocaleMode}
+                      onChange={(value) =>
+                        updateSkillKeywords(index, editorLocaleMode, value)
+                      }
+                      rows={5}
+                      sourceValue={formatLocalizedLines(skill.keywords, 'zh')}
+                      value={
+                        draftFieldValues[
+                          buildDraftFieldKey(
+                            'skill',
+                            index,
+                            'keywords',
+                            editorLocaleMode,
+                          )
+                        ] ?? formatLocalizedLines(skill.keywords, editorLocaleMode)
+                      }
+                      variant="textarea"
+                    />
                   </EditorEntry>
                 )}
               </SortableItemShell>

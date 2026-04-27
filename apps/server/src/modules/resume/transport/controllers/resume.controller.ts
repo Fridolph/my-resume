@@ -36,7 +36,11 @@ import {
 import { ResumePdfExportService } from '../../application/services/resume-pdf-export.service'
 import { ResumePublicationService } from '../../application/services/resume-publication.service'
 import { buildResumeSummary, resolveResumeSummaryLocale } from '../../application/services/resume-summary'
-import { ResumeLocale, validateStandardResume } from '../../domain/standard-resume'
+import {
+  normalizeStandardResume,
+  ResumeLocale,
+  validateStandardResume,
+} from '../../domain/standard-resume'
 import type { StandardResume } from '../../domain/standard-resume'
 import { RequireCapability } from '../../../auth/decorators/require-capability.decorator'
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard'
@@ -384,14 +388,16 @@ export class ResumeController {
   async updateDraftResume(
     @Body() resume: StandardResume,
   ): Promise<ResumeDraftSnapshotResponse> {
+    const normalizedResume = normalizeStandardResume(resume)
+
     // 保存草稿前先做结构校验，避免非法 JSON 直接落库。
-    const validationResult = validateStandardResume(resume)
+    const validationResult = validateStandardResume(normalizedResume)
 
     if (!validationResult.valid) {
       throw new BadRequestException(validationResult.errors)
     }
 
-    return this.resumePublicationService.updateDraft(resume)
+    return this.resumePublicationService.updateDraft(normalizedResume)
   }
 
   /**

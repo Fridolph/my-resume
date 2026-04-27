@@ -66,6 +66,10 @@ describe('standard resume domain', () => {
       '全栈开发能力',
       '业务理解与产品化落地',
     ])
+    expect(resume.skills[0]?.keywords[0]).toEqual({
+      zh: 'Vue / React / Next.js / Nuxt 组件化与页面架构',
+      en: 'Vue / React / Next.js / Nuxt component architecture and page systems',
+    })
     expect(resume.skills.map((item) => item.proficiency)).toEqual([95, 88, 73, 90, 77, 86])
   })
 
@@ -146,6 +150,33 @@ describe('standard resume domain', () => {
       zh: '',
       en: '',
     })
+  })
+
+  it('should normalize legacy skill keywords into bilingual lines', () => {
+    const resume = createExampleStandardResume() as ReturnType<
+      typeof createExampleStandardResume
+    > & {
+      skills: Array<
+        Omit<ReturnType<typeof createExampleStandardResume>['skills'][number], 'keywords'> & {
+          keywords: string[]
+        }
+      >
+    }
+
+    resume.skills[0].keywords = ['TypeScript', 'NestJS']
+
+    const normalized = normalizeStandardResume(resume)
+
+    expect(normalized.skills[0]?.keywords).toEqual([
+      {
+        zh: 'TypeScript',
+        en: 'TypeScript',
+      },
+      {
+        zh: 'NestJS',
+        en: 'NestJS',
+      },
+    ])
   })
 
   it('should normalize legacy interests into labeled interest items', () => {
@@ -265,7 +296,7 @@ describe('standard resume domain', () => {
         'projects[0].highlights must be an array',
         'projects[0].links must be an array',
         'skills[0].name must be a localized text object',
-        'skills[0].keywords must be a string array',
+        'skills[0].keywords must be an array',
         'highlights[0].title must be a localized text object',
         'highlights[0].description must be a localized text object',
       ],

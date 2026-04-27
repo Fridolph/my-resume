@@ -10,6 +10,13 @@ import {
   rankSkillGroups,
 } from '../published-resume-skills-utils'
 
+function createSkillKeyword(zh: string, en = zh) {
+  return {
+    zh,
+    en,
+  }
+}
+
 describe('published resume skills utils', () => {
   it('should parse labeled and plain skill lines', () => {
     expect(parseSkillLine('**Vue 生态**: 熟练掌握 Vue3')).toEqual({
@@ -45,7 +52,7 @@ describe('published resume skills utils', () => {
       [
         {
           ...publishedResumeFixture.resume.skills[0],
-          keywords: ['构建产物分析、懒加载与首屏性能优化'],
+          keywords: [createSkillKeyword('构建产物分析、懒加载与首屏性能优化', '')],
         },
       ],
       'en',
@@ -67,7 +74,10 @@ describe('published resume skills utils', () => {
         {
           ...publishedResumeFixture.resume.skills[0],
           keywords: [
-            '测试与质量：具备 Jest、Vitest、TDD 基础，能够编写组件与模块级单元测试，保障重构稳定性',
+            createSkillKeyword(
+              '测试与质量：具备 Jest、Vitest、TDD 基础，能够编写组件与模块级单元测试，保障重构稳定性',
+              '',
+            ),
           ],
         },
       ],
@@ -91,9 +101,12 @@ describe('published resume skills utils', () => {
         {
           ...publishedResumeFixture.resume.skills[0],
           keywords: [
-            '**Vue 生态**: 熟练掌握 Vue2/3、Nuxt、Composition API、Pinia',
-            '**React 生态**: 熟悉 Hooks、Redux、Next.js',
-            '**现代 CSS**: 精通 TailwindCSS、Sass/Less',
+            createSkillKeyword(
+              '**Vue 生态**: 熟练掌握 Vue2/3、Nuxt、Composition API、Pinia',
+              '',
+            ),
+            createSkillKeyword('**React 生态**: 熟悉 Hooks、Redux、Next.js', ''),
+            createSkillKeyword('**现代 CSS**: 精通 TailwindCSS、Sass/Less', ''),
           ],
         },
       ],
