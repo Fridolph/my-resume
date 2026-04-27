@@ -1,23 +1,31 @@
 import { Module } from '@nestjs/common'
 import { AuthModule } from '../auth/auth.module'
 import { ResumeModule } from '../resume/resume.module'
-import { AiFileController } from './ai-file.controller'
-import { AiUsageRecordRepository } from './ai-usage-record.repository'
-import { AiUsageRecordService } from './ai-usage-record.service'
-import { AiReportController } from './ai-report.controller'
-import { AnalysisReportCacheService } from './analysis-report-cache.service'
-import { resolveAiRuntimeConfig } from './config/ai-config'
-import { AiResumeOptimizationService } from './ai-resume-optimization.service'
-import { AiService } from './ai.service'
-import { FileExtractionService } from './file-extraction.service'
+import { AnalysisReportCacheService } from './application/services/analysis-report-cache.service'
+import { AiResumeOptimizationService } from './application/services/ai-resume-optimization.service'
+import { AiService } from './application/services/ai.service'
+import { AiUsageRecordService } from './application/services/ai-usage-record.service'
+import { FileExtractionService } from './application/services/file-extraction.service'
+import { ResumeOptimizationResultCacheService } from './application/services/resume-optimization-result-cache.service'
 import { AI_FETCH, AI_PROVIDER_INSTANCE, AI_RUNTIME_CONFIG } from './ai.tokens'
-import { createAiProvider } from './providers/ai-provider.factory'
+import { resolveAiRuntimeConfig } from './infrastructure/config/ai-config'
+import { createAiProvider } from './infrastructure/providers/ai-provider.factory'
+import { AiUsageRecordRepository } from './infrastructure/repositories/ai-usage-record.repository'
 import { RagController } from './rag/rag.controller'
 import { RagChunkService } from './rag/rag-chunk.service'
 import { RagIndexRepository } from './rag/rag-index.repository'
 import { RagKnowledgeService } from './rag/rag-knowledge.service'
+import { RagRetrievalRepository } from './rag/rag-retrieval.repository'
 import { RagService } from './rag/rag.service'
-import { ResumeOptimizationResultCacheService } from './resume-optimization-result-cache.service'
+import { resolveRagVectorStoreRuntimeConfig } from './rag/vector-store/config'
+import { createRagVectorStore } from './rag/vector-store/factory'
+import {
+  RAG_VECTOR_STORE,
+  RAG_VECTOR_STORE_CONFIG,
+} from './rag/vector-store/tokens'
+import { UserDocsIngestionService } from './rag/user-docs-ingestion.service'
+import { AiFileController } from './transport/controllers/ai-file.controller'
+import { AiReportController } from './transport/controllers/ai-report.controller'
 
 @Module({
   imports: [AuthModule, ResumeModule],
@@ -31,6 +39,17 @@ import { ResumeOptimizationResultCacheService } from './resume-optimization-resu
     {
       provide: AI_FETCH,
       useValue: fetch,
+    },
+    {
+      // RAG 向量存储后端配置，默认 local（不改变当前主链路）。
+      provide: RAG_VECTOR_STORE_CONFIG,
+      useFactory: () => resolveRagVectorStoreRuntimeConfig(process.env),
+    },
+    {
+      // 通过工厂按环境变量切换 local / milvus(mock) 实现。
+      provide: RAG_VECTOR_STORE,
+      inject: [RAG_VECTOR_STORE_CONFIG],
+      useFactory: createRagVectorStore,
     },
     {
       // 对上层只暴露统一 AiProvider 接口，屏蔽厂商差异。
@@ -48,6 +67,8 @@ import { ResumeOptimizationResultCacheService } from './resume-optimization-resu
     RagChunkService,
     RagKnowledgeService,
     RagIndexRepository,
+    RagRetrievalRepository,
+    UserDocsIngestionService,
     RagService,
   ],
   exports: [

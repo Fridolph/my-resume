@@ -171,10 +171,22 @@ export const publishedResumeFixture: ResumePublishedSnapshot = {
           en: 'Frontend Engineering',
         },
         keywords: [
-          '**Vue 生态**: 熟练掌握 Vue2/3、Nuxt、Composition API、Pinia，主导 3+ 项目 Vue2→Vue3 架构升级',
-          '**React 生态**: 熟悉 Hooks、Redux、Next.js，有中小型项目实践经验',
-          '**现代 CSS**: 精通 TailwindCSS、Sass/Less，擅长响应式设计',
-          '**TypeScript**: 制定团队 TS 规范，提升代码可维护性',
+          {
+            zh: '**Vue 生态**: 熟练掌握 Vue2/3、Nuxt、Composition API、Pinia，主导 3+ 项目 Vue2→Vue3 架构升级',
+            en: '**Vue Ecosystem**: Proficient in Vue2/3, Nuxt, Composition API, and Pinia; led 3+ Vue2→Vue3 architecture upgrades.',
+          },
+          {
+            zh: '**React 生态**: 熟悉 Hooks、Redux、Next.js，有中小型项目实践经验',
+            en: '**React Ecosystem**: Familiar with Hooks, Redux, and Next.js through small-to-mid sized projects.',
+          },
+          {
+            zh: '**现代 CSS**: 精通 TailwindCSS、Sass/Less，擅长响应式设计',
+            en: '**Modern CSS**: Skilled in TailwindCSS and Sass/Less, with strong responsive design practices.',
+          },
+          {
+            zh: '**TypeScript**: 制定团队 TS 规范，提升代码可维护性',
+            en: '**TypeScript**: Established team TypeScript standards to improve maintainability.',
+          },
         ],
       },
       {
@@ -183,9 +195,18 @@ export const publishedResumeFixture: ResumePublishedSnapshot = {
           en: 'Full-Stack Delivery',
         },
         keywords: [
-          '**Node.js**: 熟练使用 Express、NestJS，能独立完成 RESTful API 与认证设计',
-          '**工程化**：Monorepo 实践（pnpm workspace）、微服务架构设计、CI/CD 流程搭建',
-          '**数据库**: MySQL、MongoDB、SQLite、Drizzle ORM，了解事务处理与索引优化',
+          {
+            zh: '**Node.js**: 熟练使用 Express、NestJS，能独立完成 RESTful API 与认证设计',
+            en: '**Node.js**: Experienced with Express and NestJS, able to deliver RESTful APIs and authentication design independently.',
+          },
+          {
+            zh: '**工程化**：Monorepo 实践（pnpm workspace）、微服务架构设计、CI/CD 流程搭建',
+            en: '**Engineering**: Hands-on monorepo practices (pnpm workspace), microservice architecture design, and CI/CD setup.',
+          },
+          {
+            zh: '**数据库**: MySQL、MongoDB、SQLite、Drizzle ORM，了解事务处理与索引优化',
+            en: '**Databases**: MySQL, MongoDB, SQLite, and Drizzle ORM with transaction handling and index optimization awareness.',
+          },
         ],
       },
     ],

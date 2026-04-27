@@ -4,11 +4,16 @@ import request from 'supertest'
 import { App } from 'supertest/types'
 
 import { AppModule } from './../src/app.module'
+import { readAccessToken, readApiData } from './helpers/api-envelope'
+import { assignTempDatabaseUrl, restoreTempDatabaseUrl } from './helpers/temp-database-env'
 
 describe('AI file extraction (e2e)', () => {
   let app: INestApplication<App>
+  let databaseContext: ReturnType<typeof assignTempDatabaseUrl>
 
   beforeEach(async () => {
+    databaseContext = assignTempDatabaseUrl('my-resume-ai-file-e2e')
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile()
@@ -20,6 +25,7 @@ describe('AI file extraction (e2e)', () => {
 
   afterEach(async () => {
     await app.close()
+    restoreTempDatabaseUrl(databaseContext)
   })
 
   it('should extract text from uploaded txt file', async () => {
@@ -31,7 +37,7 @@ describe('AI file extraction (e2e)', () => {
       })
       .expect(200)
 
-    const accessToken = loginResponse.body.accessToken as string
+    const accessToken = readAccessToken(loginResponse)
 
     const response = await request(app.getHttpServer())
       .post('/api/ai/extract-text')
@@ -39,8 +45,13 @@ describe('AI file extraction (e2e)', () => {
       .attach('file', Buffer.from('resume text content', 'utf8'), 'resume.txt')
       .expect(201)
 
-    expect(response.body.fileType).toBe('txt')
-    expect(response.body.text).toContain('resume text content')
+    const extractionResult = readApiData<{
+      fileType: string
+      text: string
+    }>(response)
+
+    expect(extractionResult.fileType).toBe('txt')
+    expect(extractionResult.text).toContain('resume text content')
   })
 
   it('should reject unsupported uploaded files', async () => {
@@ -52,7 +63,7 @@ describe('AI file extraction (e2e)', () => {
       })
       .expect(200)
 
-    const accessToken = loginResponse.body.accessToken as string
+    const accessToken = readAccessToken(loginResponse)
 
     await request(app.getHttpServer())
       .post('/api/ai/extract-text')

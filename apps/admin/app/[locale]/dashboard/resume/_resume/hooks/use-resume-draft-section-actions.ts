@@ -12,7 +12,6 @@ import {
   buildDraftFieldKey,
   mergeLocalizedLines,
   parseCommaSeparatedValues,
-  parseLineSeparatedValues,
   createEmptyEducation,
   createEmptyExperience,
   createEmptyHighlight,
@@ -494,14 +493,18 @@ export function useResumeDraftSectionActions({
   )
 
   const updateSkillKeywords = useCallback(
-    (index: number, value: string) => {
+    (index: number, locale: 'zh' | 'en', value: string) => {
       setDraftFieldValues((current) => ({
         ...current,
-        [buildDraftFieldKey('skill', index, 'keywords')]: value,
+        [buildDraftFieldKey('skill', index, 'keywords', locale)]: value,
       }))
 
       updateResumeDraft((draft) => {
-        draft.skills[index].keywords = parseLineSeparatedValues(value)
+        draft.skills[index].keywords = mergeLocalizedLines(
+          draft.skills[index].keywords,
+          locale,
+          value,
+        )
       })
     },
     [setDraftFieldValues, updateResumeDraft],

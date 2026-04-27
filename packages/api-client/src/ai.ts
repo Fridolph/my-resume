@@ -15,6 +15,8 @@ import type {
   FetchAiUsageHistoryInput,
   FetchAiUsageRecordDetailInput,
   FileExtractionResult,
+  IngestRagUserDocInput,
+  RagUserDocIngestResult,
   ResumeOptimizationInput,
   RuntimeInput,
   TriggerAiWorkbenchAnalysisResult,
@@ -54,6 +56,9 @@ export type {
   FetchAiUsageHistoryInput,
   FetchAiUsageRecordDetailInput,
   FileExtractionResult,
+  IngestRagUserDocInput,
+  RagUserDocIngestResult,
+  RagUserDocIngestScope,
   ResumeOptimizationInput,
   RuntimeInput,
   TriggerAiWorkbenchAnalysisResult,
@@ -243,5 +248,29 @@ export function createExtractTextFromFileMethod(input: ExtractTextFromFileInput)
     accessToken: input.accessToken,
     body: formData,
     fallbackErrorMessage: '文件提取失败，请稍后重试',
+  })
+}
+
+/**
+ * 构造上传 user_docs 入库 Method
+ *
+ * @param input 请求参数
+ * @returns user_docs 入库请求 Method
+ */
+export function createIngestRagUserDocMethod(input: IngestRagUserDocInput) {
+  const formData = new FormData()
+  formData.append('file', input.file)
+
+  if (input.scope) {
+    formData.append('scope', input.scope)
+  }
+
+  return Alova.createMethod<RagUserDocIngestResult>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: '/ai/rag/ingest/user-doc',
+    method: 'POST',
+    accessToken: input.accessToken,
+    body: formData,
+    fallbackErrorMessage: 'user_docs 入库失败，请稍后重试',
   })
 }

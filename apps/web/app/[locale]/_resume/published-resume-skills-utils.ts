@@ -10,6 +10,7 @@ import type {
 import type { ComposeOption } from 'echarts/core'
 
 import type {
+  LocalizedText,
   ResumeLocale,
   ResumeSkillGroup,
 } from '@shared/published-resume/types/published-resume.types'
@@ -164,6 +165,15 @@ const enSkillKeywordLineMap = new Map<string, string>([
 ])
 
 const enSkillKeywordLabelMap = new Map<string, string>([
+  ['Vue 生态', 'Vue Ecosystem'],
+  ['React 生态', 'React Ecosystem'],
+  ['现代 CSS', 'Modern CSS'],
+  ['服务端框架', 'Backend Frameworks'],
+  ['数据库', 'Databases'],
+  ['接口协同', 'API Collaboration'],
+  ['部署基础', 'Deployment Foundations'],
+  ['AI 辅助开发', 'AI-Assisted Development'],
+  ['AI 交互', 'AI Interaction'],
   ['Agent 工作', 'Agent Workflow'],
   ['测试与质量', 'Testing & Quality'],
   ['技术输出', 'Technical Writing'],
@@ -216,7 +226,7 @@ function hasChineseCharacters(value: string): boolean {
 }
 
 function localizeSkillFragment(raw: string): string {
-  const trimmed = raw.trim()
+  const trimmed = stripMarkdownBold(raw.trim())
   if (!trimmed) {
     return trimmed
   }
@@ -262,6 +272,19 @@ function localizeSkillLine(raw: string, locale: ResumeLocale): string {
   return localizeSkillFragment(trimmed)
 }
 
+function pickSkillKeywordText(keyword: LocalizedText, locale: ResumeLocale): string {
+  const preferred = keyword[locale].trim()
+  if (preferred) {
+    return preferred
+  }
+
+  if (locale === 'en') {
+    return keyword.zh.trim() || keyword.en.trim()
+  }
+
+  return keyword.en.trim() || keyword.zh.trim()
+}
+
 export function parseSkillLine(raw: string): ParsedSkillLine {
   const trimmed = raw.trim().replace(/^[-•]\s*/u, '')
   const dividerIndex = trimmed.search(/[:：]/u)
@@ -290,9 +313,11 @@ export function normalizeSkillGroups(
 ): NormalizedSkillGroup[] {
   return skills.map((group) => ({
     ...group,
-    parsedKeywords: group.keywords.map((rawKeyword) =>
-      parseSkillLine(localizeSkillLine(rawKeyword, locale)),
-    ),
+    parsedKeywords: group.keywords
+      .map((keyword) =>
+        parseSkillLine(localizeSkillLine(pickSkillKeywordText(keyword, locale), locale)),
+      )
+      .filter((item) => Boolean(item.label || item.content.trim())),
   }))
 }
 

@@ -9,7 +9,7 @@ export class LoginDto {
 
   @ApiProperty({
     description: '登录密码',
-    example: 'fri5945admin',
+    example: 'admin123456',
   })
   password!: string
 }

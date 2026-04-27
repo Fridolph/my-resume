@@ -928,9 +928,18 @@ Next.js`,
     ])
     expect(submittedResume.skills[0]?.name.zh).toBe('前端工程化')
     expect(submittedResume.skills[0]?.keywords).toEqual([
-      'TypeScript',
-      'React',
-      'Next.js',
+      {
+        zh: 'TypeScript',
+        en: '',
+      },
+      {
+        zh: 'React',
+        en: '',
+      },
+      {
+        zh: 'Next.js',
+        en: '',
+      },
     ])
     expect(submittedResume.skills[0]?.proficiency).toBe(88)
     expect(submittedResume.highlights[0]?.title.zh).toBe('技术写作')

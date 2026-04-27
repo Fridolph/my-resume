@@ -1,7 +1,7 @@
 'use client'
 
 import { useRequest } from 'alova/client'
-import { Button, Drawer, Skeleton } from '@heroui/react'
+import { Drawer, Skeleton } from '@heroui/react'
 import { DisplayPill, DisplaySectionCard, DisplaySurfaceCard } from '@my-resume/ui/display'
 import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -396,7 +396,7 @@ export function OptimizationHistoryRecordDrawer({
 
   return (
     <AdminDrawerShell
-      dialogClassName="max-w-[min(94vw,72rem)]"
+      dialogClassName="max-w-[min(94vw,72rem)] !p-0"
       isOpen={isOpen}
       onClose={onClose}>
       <Drawer.Header className="border-b border-zinc-200/80 px-4 py-3 dark:border-zinc-800">
@@ -425,13 +425,14 @@ export function OptimizationHistoryRecordDrawer({
       <Drawer.Body className="grid gap-3 px-3 py-2.5 md:px-4 md:py-3">
         {entry ? (
           <>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
               {entry.changedModules.map((module) => (
-                <DisplayPill
-                  className="min-h-7 border-zinc-200/80 bg-zinc-50 px-2.5 py-0.5 text-xs text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
-                  key={`${entry.resultId}-${module}`}>
+                <button
+                  className="button button--sm button--outline h-8 rounded-full border-zinc-200/80 bg-zinc-50 px-3 text-xs font-medium text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+                  key={`${entry.resultId}-${module}`}
+                  type="button">
                   {formatOptimizationModule(module)}
-                </DisplayPill>
+                </button>
               ))}
             </div>
 
@@ -447,11 +448,10 @@ export function OptimizationHistoryRecordDrawer({
                     <button
                       aria-selected={isSelected}
                       className={[
-                        'inline-flex min-h-8 items-center justify-center rounded-full px-2.5 py-1 text-sm font-medium leading-none transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-1 focus-visible:ring-offset-white dark:focus-visible:ring-offset-zinc-950',
-                        isSelected
-                          ? 'bg-white text-zinc-950 shadow-sm ring-1 ring-zinc-200/80 dark:bg-zinc-950 dark:text-white dark:ring-zinc-700/80'
-                          : 'text-zinc-600 hover:bg-white/70 hover:text-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-950/60 dark:hover:text-white',
+                        'button button--sm h-9 rounded-full px-4 text-sm font-medium whitespace-nowrap',
+                        isSelected ? 'button--primary' : 'button--outline',
                       ].join(' ')}
+                      data-selected={String(isSelected)}
                       key={tab.key}
                       onClick={() => setSelectedTab(tab.key)}
                       role="tab"
@@ -466,11 +466,6 @@ export function OptimizationHistoryRecordDrawer({
           </>
         ) : null}
       </Drawer.Body>
-      <Drawer.Footer className="border-t border-zinc-200/80 px-4 py-3 dark:border-zinc-800">
-        <Button size="md" slot="close" type="button" variant="secondary">
-          关闭详情
-        </Button>
-      </Drawer.Footer>
     </AdminDrawerShell>
   )
 }

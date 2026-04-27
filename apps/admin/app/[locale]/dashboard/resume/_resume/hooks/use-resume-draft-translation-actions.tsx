@@ -188,21 +188,29 @@ export function useResumeDraftTranslationActions({
   }, [setErrorMessage, setFeedbackMessage, updateResumeDraft])
 
   const copySkillTranslations = useCallback(() => {
-    updateResumeDraft((draft) => {
-      draft.skills.forEach((skill) => {
-        copyLocalizedTextValue(skill.name)
-      })
-    })
+    updateResumeDraft(
+      (draft) => {
+        draft.skills.forEach((skill) => {
+          copyLocalizedTextValue(skill.name)
+          skill.keywords = copyLocalizedLineValues(skill.keywords)
+        })
+      },
+      { syncDraftFields: true },
+    )
     setErrorMessage(null)
-    setFeedbackMessage('已将技能组名称复制到英文翻译工作区。')
+    setFeedbackMessage('已将技能组名称和关键词复制到英文翻译工作区。')
   }, [setErrorMessage, setFeedbackMessage, updateResumeDraft])
 
   const clearSkillTranslations = useCallback(() => {
-    updateResumeDraft((draft) => {
-      draft.skills.forEach((skill) => {
-        clearLocalizedTextValue(skill.name)
-      })
-    })
+    updateResumeDraft(
+      (draft) => {
+        draft.skills.forEach((skill) => {
+          clearLocalizedTextValue(skill.name)
+          skill.keywords = clearLocalizedLineValues(skill.keywords)
+        })
+      },
+      { syncDraftFields: true },
+    )
     setErrorMessage(null)
     setFeedbackMessage('已清空技能组中的英文翻译字段。')
   }, [setErrorMessage, setFeedbackMessage, updateResumeDraft])

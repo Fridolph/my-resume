@@ -1,0 +1,2 @@
+export const RAG_VECTOR_STORE_CONFIG = Symbol('RAG_VECTOR_STORE_CONFIG')
+export const RAG_VECTOR_STORE = Symbol('RAG_VECTOR_STORE')

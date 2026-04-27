@@ -4,6 +4,7 @@ import {
   createFetchAiUsageHistoryMethod,
   createFetchAiUsageRecordDetailMethod,
   createFetchCachedAiWorkbenchReportsMethod,
+  createIngestRagUserDocMethod,
 } from './ai'
 
 function createJsonResponse(status: number, payload: unknown): Response {
@@ -124,5 +125,52 @@ describe('ai api client methods', () => {
     expect(detail.detail).toEqual({
       reportId: 'report-001',
     })
+  })
+
+  it('uploads user docs file to rag ingestion endpoint', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        createJsonResponse(201, {
+          documentId: 'user-doc:abc:und',
+          sourceId: 'abc',
+          sourceScope: 'published',
+          sourceVersion: 'upload:1776839100000',
+          chunkCount: 2,
+          fileName: 'rag-notes.md',
+          fileType: 'md',
+          uploadedAt: '2026-04-22T03:45:00.000Z',
+        }),
+      ),
+    )
+
+    const file = new File(['# RAG notes'], 'rag-notes.md', {
+      type: 'text/markdown',
+    })
+
+    const result = await createIngestRagUserDocMethod({
+      apiBaseUrl: 'http://localhost:5577',
+      accessToken: 'admin-token',
+      file,
+      scope: 'published',
+    })
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5577/api/ai/rag/ingest/user-doc',
+      expect.objectContaining({
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer admin-token',
+        },
+        body: expect.any(FormData),
+      }),
+    )
+
+    const requestInit = vi.mocked(fetch).mock.calls[0]?.[1] as RequestInit | undefined
+    const formData = requestInit?.body as FormData | undefined
+    expect(formData?.get('scope')).toBe('published')
+
+    expect(result.sourceScope).toBe('published')
+    expect(result.chunkCount).toBe(2)
   })
 })

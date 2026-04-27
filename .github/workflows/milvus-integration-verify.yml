@@ -1,0 +1,96 @@
+name: Milvus Integration Verify
+
+on:
+  workflow_dispatch:
+    inputs:
+      milvus_image:
+        description: 'Milvus docker image'
+        required: false
+        default: 'milvusdb/milvus:v2.6.13'
+      vector_dimension:
+        description: 'Vector dimension for integration verification'
+        required: false
+        default: '1536'
+      collection_name:
+        description: 'Milvus collection for integration verification'
+        required: false
+        default: 'resume_rag_chunks_ci'
+
+concurrency:
+  group: milvus-integration-${{ github.ref_name }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify Milvus Integration Path
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Start Milvus standalone container
+        env:
+          MILVUS_IMAGE: ${{ github.event.inputs.milvus_image }}
+        run: |
+          set -euo pipefail
+          docker rm -f milvus-standalone >/dev/null 2>&1 || true
+          docker run -d \
+            --name milvus-standalone \
+            -p 19530:19530 \
+            -p 9091:9091 \
+            "$MILVUS_IMAGE" \
+            milvus run standalone
+
+      - name: Wait for Milvus health endpoint
+        run: |
+          set -euo pipefail
+          for i in {1..60}; do
+            if curl -fsS "http://127.0.0.1:9091/healthz" >/dev/null; then
+              echo "Milvus is healthy."
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "Milvus failed to become healthy in time." >&2
+          docker logs milvus-standalone || true
+          exit 1
+
+      - name: Run server typecheck
+        run: pnpm --filter @my-resume/server typecheck
+
+      - name: Run Milvus integration verification
+        env:
+          RUN_MILVUS_INTEGRATION: '1'
+          RAG_MILVUS_ADDRESS: 'http://127.0.0.1:19530'
+          RAG_MILVUS_MODE: 'sdk'
+          RAG_MILVUS_VECTOR_DIMENSION: ${{ github.event.inputs.vector_dimension }}
+          RAG_MILVUS_COLLECTION: ${{ github.event.inputs.collection_name }}
+        run: pnpm --filter @my-resume/server rag:milvus:verify
+
+      - name: Dump Milvus logs on failure
+        if: failure()
+        run: docker logs milvus-standalone || true
+
+      - name: Stop Milvus container
+        if: always()
+        run: docker rm -f milvus-standalone >/dev/null 2>&1 || true

@@ -8,6 +8,9 @@ import type {
   SortableCollectionState,
 } from './draft-editor.types'
 
+/**
+ * 教育经历分节组件入参。
+ */
 export interface EducationSectionProps {
   addEducation: () => void
   draftFieldValues: DraftFieldValues

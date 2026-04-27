@@ -24,6 +24,13 @@ export type ApiClientMethod<T = unknown> = Method<AlovaGenerics<T>>
  */
 export type ApiResponseType = 'json' | 'text' | 'raw'
 
+/**
+ * 标准 API 请求参数。
+ *
+ * 说明：
+ * - 统一承载 baseUrl/path/query/header/body 等基础请求语义。
+ * - 被各业务请求入参复用，减少重复定义。
+ */
 export interface ApiRequestInput<T = unknown> {
   accessToken?: string
   apiBaseUrl: string

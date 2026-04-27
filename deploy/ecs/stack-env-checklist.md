@@ -48,6 +48,11 @@ cp /opt/my-resume/deploy/templates/stack.env.example \
 ### 鉴权与 AI
 
 - `JWT_SECRET`（建议 32 位以上随机字符串）
+- `AUTH_BOOTSTRAP_DEFAULT_USERS`（默认 `true`）
+- `AUTH_ADMIN_USERNAME`
+- `AUTH_VIEWER_USERNAME`
+- `AUTH_ADMIN_PASSWORD`（强密码）
+- `AUTH_VIEWER_PASSWORD`（强密码）
 - `AI_PROVIDER`
 
 若 `AI_PROVIDER=qiniu`，还需：
@@ -157,6 +162,11 @@ CERTBOT_KEY_TYPE=ecdsa
 CERTBOT_WEBROOT=/var/www/my-resume-certbot
 
 JWT_SECRET=replace-with-a-long-random-secret
+AUTH_BOOTSTRAP_DEFAULT_USERS=true
+AUTH_ADMIN_USERNAME=admin
+AUTH_VIEWER_USERNAME=viewer
+AUTH_ADMIN_PASSWORD=replace-with-a-strong-admin-password
+AUTH_VIEWER_PASSWORD=replace-with-a-strong-viewer-password
 
 AI_PROVIDER=qiniu
 QINIU_AI_API_KEY=replace-with-real-key

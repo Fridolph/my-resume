@@ -117,7 +117,7 @@ export interface ResumeProjectItem {
  */
 export interface ResumeSkillGroup {
   name: LocalizedText
-  keywords: string[]
+  keywords: LocalizedText[]
   proficiency?: number
 }
 

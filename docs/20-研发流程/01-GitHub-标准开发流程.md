@@ -44,6 +44,18 @@ git pull origin development
 git checkout -b feat/m1-issue-01-workspace-bootstrap
 ```
 
+### 3.1 AI 功能开发（边做边学）补充流程
+
+- 当前任务若是 AI / RAG / Agent 相关，默认采用“边做边学”模式推进：
+  1. 先对齐背景、目标、非目标与验收
+  2. 从 `development` 切新 issue 分支
+  3. 先做最小设计，再进入实现
+  4. 对 AI 交互与核心逻辑补充注释，方法补 TSDoc
+  5. 先跑当前改动相关自测，再补开发日志与教程材料
+  6. 提交并推送分支，PR 合并回 `development`
+  7. `development` 稳定后再进入 `main`
+- 若对核心逻辑理解未达预期，先停在设计与伪代码阶段，不直接硬写实现。
+
 ### 4. 先 Plan，再做 TDD
 
 - 开始任务前先梳理需求和边界
@@ -119,6 +131,29 @@ Review 阶段必须回答两个问题：
 - `application` 放用例层输入输出类型（service 编排使用），避免在 service 内重复声明 interface。
 - `transport` 放 controller 对外响应 DTO 类型，controller 统一引用 `transport/types`，不在 controller 内临时定义重复响应结构。
 - 新模块至少提供模块级 `README`，明确目录职责、类型边界与示例引用路径。
+
+### 13. API Server 模块脚手架规范（M21 补充）
+
+- `apps/server` 下新增目录模块时，**必须先使用 Nest CLI 生成骨架**，禁止直接手写 module/controller/service 起步。
+- 统一使用本地命令：
+
+```bash
+pnpm --filter @my-resume/server scaffold:module -- <module-name>
+```
+
+- 该命令内部会执行：
+  - `nest g module modules/<module-name>`
+  - `nest g controller modules/<module-name>`
+  - `nest g service modules/<module-name>`
+- 并补齐模块目录：
+  - `__tests__/`
+  - `domain/`
+  - `application/services/`
+  - `infrastructure/repositories/`
+  - `transport/controllers/`
+  - `transport/dto/`
+  - `README.md`
+- 若后续需要细化分层，可在该骨架基础上按 Issue 范围增量演进，不做一次性大重构。
 
 ## Merge 策略建议
 

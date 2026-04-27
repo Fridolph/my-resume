@@ -1,7 +1,20 @@
-import { Body, Controller, Get, Inject, Post, UseGuards } from '@nestjs/common'
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Post,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common'
+import { FileInterceptor } from '@nestjs/platform-express'
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
   ApiForbiddenResponse,
   ApiOperation,
   ApiTags,
@@ -12,14 +25,20 @@ import { ApiEnvelopeResponse } from '../../../common/swagger/api-envelope-respon
 import { RequireCapability } from '../../auth/decorators/require-capability.decorator'
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard'
 import { RoleCapabilitiesGuard } from '../../auth/guards/role-capabilities.guard'
+import { ResumeRagSyncService } from '../../resume/resume-rag-sync.service'
 import {
   RagAskBodyDto,
   RagAskResultDto,
+  RagResumeSyncBodyDto,
+  RagResumeSyncResultDto,
   RagSearchBodyDto,
   RagSearchMatchDto,
   RagStatusDto,
+  RagUserDocIngestBodyDto,
+  RagUserDocIngestResultDto,
 } from './dto/rag-swagger.dto'
 import { RagService } from './rag.service'
+import { UserDocsIngestionService } from './user-docs-ingestion.service'
 
 @Controller('ai/rag')
 @UseGuards(JwtAuthGuard)
@@ -32,6 +51,10 @@ export class RagController {
   constructor(
     @Inject(RagService)
     private readonly ragService: RagService,
+    @Inject(ResumeRagSyncService)
+    private readonly resumeRagSyncService: ResumeRagSyncService,
+    @Inject(UserDocsIngestionService)
+    private readonly userDocsIngestionService: UserDocsIngestionService,
   ) {}
 
   /**
@@ -75,6 +98,122 @@ export class RagController {
   }
 
   /**
+   * 人工触发简历检索态同步。
+   *
+   * @param body 同步范围
+   * @returns 同步摘要
+   */
+  @Post('sync/resume')
+  @UseGuards(RoleCapabilitiesGuard)
+  @RequireCapability('canTriggerAiAnalysis')
+  @ApiOperation({
+    summary: '人工触发简历检索态同步',
+    description: '按 scope 同步 draft/published 到检索态表',
+  })
+  @ApiEnvelopeResponse({
+    description: '简历检索态同步成功',
+    type: RagResumeSyncResultDto,
+  })
+  @ApiBadRequestResponse({
+    description: '同步参数不合法',
+  })
+  @ApiForbiddenResponse({
+    description: '当前角色没有触发 AI 分析权限',
+  })
+  syncResumeRetrieval(@Body() body: RagResumeSyncBodyDto = {}) {
+    const scope = body.scope ?? 'all'
+
+    if (scope !== 'draft' && scope !== 'published' && scope !== 'all') {
+      throw new BadRequestException(`Unsupported sync scope: ${scope}`)
+    }
+
+    return this.resumeRagSyncService.syncCurrent(scope)
+  }
+
+  /**
+   * 上传并写入 user_docs 检索态（仅 draft/published）。
+   *
+   * @param file 上传文件
+   * @param body 入库参数
+   * @returns 入库结果摘要
+   */
+  @Post('ingest/user-doc')
+  @UseGuards(RoleCapabilitiesGuard)
+  @RequireCapability('canTriggerAiAnalysis')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({
+    summary: '上传并入库 user_docs',
+    description: '提取文件文本后切块向量化，并写入 user_docs 检索态表',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      properties: {
+        file: {
+          description: '待入库的用户资料文件',
+          format: 'binary',
+          type: 'string',
+        },
+        scope: {
+          description: '入库作用域（仅 draft/published）',
+          enum: ['draft', 'published'],
+          type: 'string',
+        },
+        chunkingProfile: {
+          description: '切片策略（balanced=500/50，contextual=1000/100）',
+          enum: ['balanced', 'contextual'],
+          type: 'string',
+        },
+      },
+      required: ['file'],
+      type: 'object',
+    },
+  })
+  @ApiEnvelopeResponse({
+    description: 'user_docs 入库成功',
+    type: RagUserDocIngestResultDto,
+  })
+  @ApiBadRequestResponse({
+    description: '文件缺失或入库参数不合法',
+  })
+  @ApiForbiddenResponse({
+    description: '当前角色没有触发 AI 分析权限',
+  })
+  ingestUserDoc(
+    @UploadedFile() file?: Express.Multer.File,
+    @Body() body: RagUserDocIngestBodyDto = {},
+  ) {
+    if (!file) {
+      throw new BadRequestException('File is required')
+    }
+
+    const sourceScope = body.scope ?? 'draft'
+
+    if (sourceScope !== 'draft' && sourceScope !== 'published') {
+      throw new BadRequestException(`Unsupported ingest scope: ${sourceScope}`)
+    }
+
+    if (
+      body.chunkingProfile &&
+      body.chunkingProfile !== 'balanced' &&
+      body.chunkingProfile !== 'contextual'
+    ) {
+      throw new BadRequestException(
+        `Unsupported ingest chunkingProfile: ${body.chunkingProfile}`,
+      )
+    }
+
+    return this.userDocsIngestionService.ingest({
+      buffer: file.buffer,
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+      sourceScope,
+      chunkingProfile: body.chunkingProfile,
+    })
+  }
+
+  /**
    * 在当前索引上执行语义检索
    * @param body 检索请求体
    * @returns 检索结果列表
@@ -98,7 +237,23 @@ export class RagController {
     description: '当前角色没有触发 AI 分析权限',
   })
   search(@Body() body: RagSearchBodyDto) {
-    return this.ragService.search(body.query, body.limit)
+    if (
+      body.vectorScope &&
+      body.vectorScope !== 'draft' &&
+      body.vectorScope !== 'published' &&
+      body.vectorScope !== 'all'
+    ) {
+      throw new BadRequestException(`Unsupported search vectorScope: ${body.vectorScope}`)
+    }
+
+    return this.ragService.search(body.query, body.limit, {
+      minScore: body.minScore,
+      minScoreGap: body.minScoreGap,
+    }, {
+      useVectorStore: body.useVectorStore,
+      vectorScope: body.vectorScope,
+      fallbackToLocal: body.vectorFallbackToLocal,
+    })
   }
 
   /**
@@ -124,7 +279,20 @@ export class RagController {
     description: '当前角色没有触发 AI 分析权限',
   })
   ask(@Body() body: RagAskBodyDto) {
+    if (
+      body.vectorScope &&
+      body.vectorScope !== 'draft' &&
+      body.vectorScope !== 'published' &&
+      body.vectorScope !== 'all'
+    ) {
+      throw new BadRequestException(`Unsupported ask vectorScope: ${body.vectorScope}`)
+    }
+
     // ask 先 search，再拼接上下文调用生成接口，不是直接裸问模型。
-    return this.ragService.ask(body.question, body.limit, body.locale)
+    return this.ragService.ask(body.question, body.limit, body.locale, {
+      useVectorStore: body.useVectorStore,
+      vectorScope: body.vectorScope,
+      fallbackToLocal: body.vectorFallbackToLocal,
+    })
   }
 }
