@@ -505,3 +505,37 @@ pnpm --filter @my-resume/server rag:chunk:compare \
 - 测试通过：
   - `pnpm --filter @my-resume/server exec vitest run --config ./vitest.config.mts src/modules/resume/__tests__/resume-rag-semantic-chunking.spec.ts src/modules/resume/__tests__/resume-rag-sync.service.spec.ts`
   - `pnpm --filter @my-resume/server typecheck`
+
+### Step 4-13：`resume_core` 语义块检索对比脚本（低成本验证）
+
+- 目标：
+  - 在不调用真实 AI / embedding 的前提下，验证 `resume_core` 语义块是否能把 `projects / work_experience` 推到更可见的位置；
+  - 用可解释的关键词基线辅助学习，不把它当成最终线上召回结论。
+- 新增：
+  - `apps/server/src/modules/resume/application/services/resume-rag-retrieval-evaluator.ts`
+    - `rankResumeSemanticChunksByKeywordQuery`
+    - `evaluateResumeRagRetrieval`
+  - `apps/server/scripts/compare-resume-rag-retrieval.ts`
+    - 新命令：`pnpm --filter @my-resume/server rag:resume:retrieval:compare "<query>" [zh|en]`
+    - 输出字段：`fullTextScore / semanticChunkCount / hitSections / topMatches`
+  - `apps/server/src/modules/resume/__tests__/resume-rag-retrieval-evaluator.spec.ts`
+    - 覆盖语义块排序；
+    - 覆盖全文分数与语义块可见性对比。
+- 手工验证样例：
+
+```bash
+pnpm --filter @my-resume/server rag:resume:retrieval:compare "项目 复杂权限 TypeScript" zh
+```
+
+- 观察结论：
+  - 全文块只能得到整体相关分数，无法解释具体证据位置；
+  - 语义块 top matches 能展示 `work_experience / projects / skills` 的具体排序；
+  - 当前样例下 `work_experience` 与 `projects` 排在前面，`skills` 作为辅助证据保留在后面，符合“经验类问题优先项目/经历”的迁移方向。
+
+### Step 4-13 验证
+
+- 测试通过：
+  - `pnpm --filter @my-resume/server exec vitest run --config ./vitest.config.mts src/modules/resume/__tests__/resume-rag-retrieval-evaluator.spec.ts src/modules/resume/__tests__/resume-rag-semantic-chunking.spec.ts`
+  - `pnpm --filter @my-resume/server typecheck`
+- 脚本手工验证通过：
+  - `pnpm --filter @my-resume/server rag:resume:retrieval:compare "项目 复杂权限 TypeScript" zh`
