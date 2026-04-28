@@ -6,6 +6,7 @@ import { AiResumeOptimizationService } from './application/services/ai-resume-op
 import { AiService } from './application/services/ai.service'
 import { AiUsageRecordService } from './application/services/ai-usage-record.service'
 import { FileExtractionService } from './application/services/file-extraction.service'
+import { ResumeImportRecognitionService } from './application/services/resume-import-recognition.service'
 import { ResumeOptimizationResultCacheService } from './application/services/resume-optimization-result-cache.service'
 import { AI_FETCH, AI_PROVIDER_INSTANCE, AI_RUNTIME_CONFIG } from './ai.tokens'
 import { resolveAiRuntimeConfig } from './infrastructure/config/ai-config'
@@ -26,10 +27,11 @@ import {
 import { UserDocsIngestionService } from './rag/user-docs-ingestion.service'
 import { AiFileController } from './transport/controllers/ai-file.controller'
 import { AiReportController } from './transport/controllers/ai-report.controller'
+import { AiResumeImportController } from './transport/controllers/ai-resume-import.controller'
 
 @Module({
   imports: [AuthModule, ResumeModule],
-  controllers: [AiFileController, AiReportController, RagController],
+  controllers: [AiFileController, AiReportController, AiResumeImportController, RagController],
   providers: [
     {
       // 先解析统一 AI 运行时配置，再根据配置创建 provider。
@@ -63,6 +65,7 @@ import { AiReportController } from './transport/controllers/ai-report.controller
     AiResumeOptimizationService,
     AnalysisReportCacheService,
     ResumeOptimizationResultCacheService,
+    ResumeImportRecognitionService,
     FileExtractionService,
     RagChunkService,
     RagKnowledgeService,
@@ -77,6 +80,7 @@ import { AiReportController } from './transport/controllers/ai-report.controller
     AiResumeOptimizationService,
     AnalysisReportCacheService,
     ResumeOptimizationResultCacheService,
+    ResumeImportRecognitionService,
     FileExtractionService,
     RagService,
   ],

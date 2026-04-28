@@ -254,3 +254,68 @@ export interface AiResumeOptimizationResult {
  * 应用优化后的返回快照。
  */
 export type ApplyAiResumeOptimizationResult = ResumeDraftSnapshot
+
+/**
+ * AI 简历导入可回填模块。
+ */
+export type AiResumeImportModule =
+  | 'profile'
+  | 'education'
+  | 'experiences'
+  | 'projects'
+  | 'skills'
+  | 'highlights'
+
+export type AiResumeImportDiffStatus = 'added' | 'changed' | 'unchanged' | 'warning'
+
+export interface AiResumeImportDiffEntry {
+  key: string
+  label: string
+  currentValue: string
+  suggestedValue: string
+  status: AiResumeImportDiffStatus
+  warning?: string
+}
+
+export interface AiResumeImportModuleDiff {
+  module: AiResumeImportModule
+  title: string
+  status: AiResumeImportDiffStatus
+  reason: string
+  entries: AiResumeImportDiffEntry[]
+}
+
+export interface AiResumeImportModuleStats {
+  education: number
+  experiences: number
+  projects: number
+  skills: number
+  highlights: number
+}
+
+/**
+ * AI 简历导入识别结果。
+ */
+export interface AiResumeImportResult {
+  resultId: string
+  locale: AiWorkbenchLocale
+  fileName: string
+  fileType: 'txt' | 'md'
+  charCount: number
+  summary: string
+  warnings: string[]
+  changedModules: AiResumeImportModule[]
+  moduleDiffs: AiResumeImportModuleDiff[]
+  moduleStats: AiResumeImportModuleStats
+  createdAt: string
+  providerSummary: {
+    provider: string
+    model: string
+    mode: string
+  }
+}
+
+/**
+ * 应用导入结果后的返回快照。
+ */
+export type ApplyAiResumeImportResult = ResumeDraftSnapshot

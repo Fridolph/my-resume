@@ -4,13 +4,17 @@ import type {
   AiResumeOptimizationResult,
   AiUsageRecordDetail,
   AiUsageRecordSummary,
+  AiResumeImportResult,
   AiWorkbenchCachedReportSummary,
   AiWorkbenchReport,
   AiWorkbenchRuntimeSummary,
   AnalysisInput,
+  ApplyAiResumeImportInput,
+  ApplyAiResumeImportResult,
   ApplyAiResumeOptimizationInput,
   ApplyAiResumeOptimizationResult,
   ExtractTextFromFileInput,
+  FetchAiResumeImportResultInput,
   FetchAiResumeOptimizationResultInput,
   FetchAiUsageHistoryInput,
   FetchAiUsageRecordDetailInput,
@@ -18,6 +22,7 @@ import type {
   IngestRagUserDocInput,
   RagUserDocIngestResult,
   ResumeOptimizationInput,
+  RecognizeAiResumeImportInput,
   RuntimeInput,
   TriggerAiWorkbenchAnalysisResult,
 } from './types/ai.types'
@@ -33,6 +38,12 @@ export type {
   AiResumeOptimizationProjectPatch,
   AiResumeOptimizationResultDetail,
   AiResumeOptimizationResult,
+  AiResumeImportDiffEntry,
+  AiResumeImportDiffStatus,
+  AiResumeImportModule,
+  AiResumeImportModuleDiff,
+  AiResumeImportModuleStats,
+  AiResumeImportResult,
   AiUsageRecordDetail,
   AiUsageRecordFilterType,
   AiUsageRecordOperationType,
@@ -48,10 +59,13 @@ export type {
   AiWorkbenchScore,
   AiWorkbenchSuggestion,
   AnalysisInput,
+  ApplyAiResumeImportInput,
+  ApplyAiResumeImportResult,
   ApplyAiResumeOptimizationInput,
   ApplyAiResumeOptimizationResult,
   ExtractedFileType,
   ExtractTextFromFileInput,
+  FetchAiResumeImportResultInput,
   FetchAiResumeOptimizationResultInput,
   FetchAiUsageHistoryInput,
   FetchAiUsageRecordDetailInput,
@@ -59,6 +73,7 @@ export type {
   IngestRagUserDocInput,
   RagUserDocIngestResult,
   RagUserDocIngestScope,
+  RecognizeAiResumeImportInput,
   ResumeOptimizationInput,
   RuntimeInput,
   TriggerAiWorkbenchAnalysisResult,
@@ -191,6 +206,67 @@ export function createApplyAiResumeOptimizationMethod(input: ApplyAiResumeOptimi
       modules: input.modules,
     }),
     fallbackErrorMessage: 'AI 建议稿应用失败，请稍后重试',
+  })
+}
+
+/**
+ * 构造上传简历并识别为候选草稿 Method
+ *
+ * @param input 请求参数
+ * @returns 简历导入识别请求 Method
+ */
+export function createRecognizeAiResumeImportMethod(input: RecognizeAiResumeImportInput) {
+  const formData = new FormData()
+  formData.append('file', input.file)
+
+  return Alova.createMethod<AiResumeImportResult>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: '/ai/resume-import/recognize',
+    method: 'POST',
+    accessToken: input.accessToken,
+    body: formData,
+    requestInit: input.requestInit,
+    fallbackErrorMessage: '简历导入识别失败，请稍后重试',
+  })
+}
+
+/**
+ * 构造读取简历导入识别结果 Method
+ *
+ * @param input 请求参数
+ * @returns 简历导入识别结果请求 Method
+ */
+export function createFetchAiResumeImportResultMethod(
+  input: FetchAiResumeImportResultInput,
+) {
+  return Alova.createMethod<AiResumeImportResult>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: `/ai/resume-import/results/${input.resultId}`,
+    accessToken: input.accessToken,
+    fallbackErrorMessage: '简历导入识别结果加载失败，请稍后重试',
+  })
+}
+
+/**
+ * 构造按模块回填简历导入结果 Method
+ *
+ * @param input 请求参数
+ * @returns 回填请求 Method
+ */
+export function createApplyAiResumeImportMethod(input: ApplyAiResumeImportInput) {
+  return Alova.createMethod<ApplyAiResumeImportResult>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: '/ai/resume-import/apply',
+    method: 'POST',
+    accessToken: input.accessToken,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      resultId: input.resultId,
+      modules: input.modules,
+    }),
+    fallbackErrorMessage: '简历导入结果回填失败，请稍后重试',
   })
 }
 

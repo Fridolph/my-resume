@@ -257,6 +257,106 @@ export interface AiResumeOptimizationResultDetail {
 export type AiResumeOptimizationResult = AiResumeOptimizationResultDetail
 
 /**
+ * AI 简历导入可回填模块。
+ */
+export type AiResumeImportModule =
+  | 'profile'
+  | 'education'
+  | 'experiences'
+  | 'projects'
+  | 'skills'
+  | 'highlights'
+
+/**
+ * AI 简历导入模块 diff 状态。
+ */
+export type AiResumeImportDiffStatus = 'added' | 'changed' | 'unchanged' | 'warning'
+
+/**
+ * AI 简历导入模块差异条目。
+ */
+export interface AiResumeImportDiffEntry {
+  key: string
+  label: string
+  currentValue: string
+  suggestedValue: string
+  status: AiResumeImportDiffStatus
+  warning?: string
+}
+
+/**
+ * AI 简历导入模块差异。
+ */
+export interface AiResumeImportModuleDiff {
+  module: AiResumeImportModule
+  title: string
+  status: AiResumeImportDiffStatus
+  reason: string
+  entries: AiResumeImportDiffEntry[]
+}
+
+/**
+ * AI 简历导入模块统计。
+ */
+export interface AiResumeImportModuleStats {
+  education: number
+  experiences: number
+  projects: number
+  skills: number
+  highlights: number
+}
+
+/**
+ * AI 简历导入识别结果。
+ */
+export interface AiResumeImportResult {
+  resultId: string
+  locale: AiWorkbenchLocale
+  fileName: string
+  fileType: 'txt' | 'md'
+  charCount: number
+  summary: string
+  warnings: string[]
+  changedModules: AiResumeImportModule[]
+  moduleDiffs: AiResumeImportModuleDiff[]
+  moduleStats: AiResumeImportModuleStats
+  createdAt: string
+  providerSummary: {
+    provider: string
+    model: string
+    mode: string
+  }
+}
+
+/**
+ * 上传简历并识别为候选草稿参数。
+ */
+export interface RecognizeAiResumeImportInput extends RuntimeInput {
+  file: File
+  requestInit?: ApiRequestInput['requestInit']
+}
+
+/**
+ * 获取简历导入识别结果参数。
+ */
+export interface FetchAiResumeImportResultInput extends RuntimeInput {
+  resultId: string
+}
+
+/**
+ * 应用简历导入结果参数。
+ */
+export interface ApplyAiResumeImportInput extends RuntimeInput {
+  resultId: string
+  modules: AiResumeImportModule[]
+}
+
+/**
+ * 应用简历导入结果后的返回快照。
+ */
+export type ApplyAiResumeImportResult = ResumeDraftSnapshot
+
+/**
  * 获取优化结果请求参数。
  */
 export interface FetchAiResumeOptimizationResultInput extends RuntimeInput {

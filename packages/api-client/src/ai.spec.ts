@@ -1,10 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  createApplyAiResumeImportMethod,
+  createFetchAiResumeImportResultMethod,
   createFetchAiUsageHistoryMethod,
   createFetchAiUsageRecordDetailMethod,
   createFetchCachedAiWorkbenchReportsMethod,
   createIngestRagUserDocMethod,
+  createRecognizeAiResumeImportMethod,
 } from './ai'
 
 function createJsonResponse(status: number, payload: unknown): Response {
@@ -172,5 +175,130 @@ describe('ai api client methods', () => {
 
     expect(result.sourceScope).toBe('published')
     expect(result.chunkCount).toBe(2)
+  })
+
+  it('uploads a resume file to the resume import recognition endpoint', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        createJsonResponse(201, {
+          resultId: 'resume-import-001',
+          locale: 'zh',
+          fileName: 'lifeiyu-mock-zh.md',
+          fileType: 'md',
+          charCount: 12000,
+          summary: '已识别候选草稿',
+          warnings: [],
+          changedModules: ['profile', 'projects'],
+          moduleDiffs: [],
+          moduleStats: {
+            education: 1,
+            experiences: 4,
+            projects: 4,
+            skills: 6,
+            highlights: 5,
+          },
+          createdAt: '2026-04-28T12:00:00.000Z',
+          providerSummary: {
+            provider: 'mock',
+            model: 'mock-resume-import',
+            mode: 'mock',
+          },
+        }),
+      ),
+    )
+
+    const file = new File(['# 厉飞雨'], 'lifeiyu-mock-zh.md', {
+      type: 'text/markdown',
+    })
+
+    const result = await createRecognizeAiResumeImportMethod({
+      apiBaseUrl: 'http://localhost:5577',
+      accessToken: 'admin-token',
+      file,
+    })
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5577/api/ai/resume-import/recognize',
+      expect.objectContaining({
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer admin-token',
+        },
+        body: expect.any(FormData),
+      }),
+    )
+    expect(result.resultId).toBe('resume-import-001')
+    expect(result.moduleStats.projects).toBe(4)
+  })
+
+  it('fetches and applies resume import results', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce(
+          createJsonResponse(200, {
+            resultId: 'resume-import-001',
+            locale: 'zh',
+            fileName: 'lifeiyu-mock-zh.md',
+            fileType: 'md',
+            charCount: 12000,
+            summary: '已识别候选草稿',
+            warnings: ['联系方式不完整'],
+            changedModules: ['profile'],
+            moduleDiffs: [],
+            moduleStats: {
+              education: 1,
+              experiences: 4,
+              projects: 4,
+              skills: 6,
+              highlights: 5,
+            },
+            createdAt: '2026-04-28T12:00:00.000Z',
+            providerSummary: {
+              provider: 'mock',
+              model: 'mock-resume-import',
+              mode: 'mock',
+            },
+          }),
+        )
+        .mockResolvedValueOnce(
+          createJsonResponse(200, {
+            status: 'draft',
+            resume: {},
+            updatedAt: '2026-04-28T12:10:00.000Z',
+          }),
+        ),
+    )
+
+    const result = await createFetchAiResumeImportResultMethod({
+      apiBaseUrl: 'http://localhost:5577',
+      accessToken: 'admin-token',
+      resultId: 'resume-import-001',
+    })
+    const applied = await createApplyAiResumeImportMethod({
+      apiBaseUrl: 'http://localhost:5577',
+      accessToken: 'admin-token',
+      resultId: 'resume-import-001',
+      modules: ['profile'],
+    })
+
+    expect(result.warnings).toEqual(['联系方式不完整'])
+    expect(applied.status).toBe('draft')
+    expect(fetch).toHaveBeenLastCalledWith(
+      'http://localhost:5577/api/ai/resume-import/apply',
+      expect.objectContaining({
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer admin-token',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          resultId: 'resume-import-001',
+          modules: ['profile'],
+        }),
+      }),
+    )
   })
 })

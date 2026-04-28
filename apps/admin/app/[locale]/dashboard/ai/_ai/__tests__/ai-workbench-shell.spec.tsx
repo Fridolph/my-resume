@@ -175,6 +175,34 @@ vi.mock('../components/user-doc-ingestion-panel', () => ({
     ),
 }))
 
+vi.mock('../components/resume-import-panel', () => ({
+  ResumeImportPanel: ({
+    canUpload,
+    onRecognized,
+  }: {
+    canUpload: boolean
+    onRecognized?: (result: {
+      resultId: string
+    }) => void
+  }) =>
+    canUpload ? (
+      <div>
+        <span>简历导入识别面板占位</span>
+        <button
+          onClick={() =>
+            onRecognized?.({
+              resultId: 'resume-import-001',
+            })
+          }
+          type="button">
+          模拟识别完成
+        </button>
+      </div>
+    ) : (
+      <div>简历导入识别只读占位</div>
+    ),
+}))
+
 vi.mock('../components/analysis-panel', () => ({
   AiAnalysisPanel: ({
     canAnalyze,

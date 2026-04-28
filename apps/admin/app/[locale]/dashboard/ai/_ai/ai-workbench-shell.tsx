@@ -90,6 +90,21 @@ const AiUserDocIngestionPanel = dynamic(
   },
 )
 
+const ResumeImportPanel = dynamic(
+  () => import('./components/resume-import-panel').then((module) => module.ResumeImportPanel),
+  {
+    loading: () => (
+      <div className="status-box" data-testid="resume-import-panel-loading">
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">正在加载简历导入识别...</p>
+        <div className="mt-2 grid gap-2">
+          <Skeleton className="h-4 w-3/4 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
+          <Skeleton className="h-4 w-2/3 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
+        </div>
+      </div>
+    ),
+  },
+)
+
 const scenarioCards = {
   'jd-match': {
     title: 'JD 匹配分析',
@@ -249,6 +264,12 @@ export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
     upsertResumeOptimizationHistoryEntry(result, instruction)
   }
 
+  function handleResumeImportRecognized() {
+    setAnalysisHelperMessage(
+      '已生成简历导入候选草稿，请在结果页确认模块 diff 后再写回当前草稿。',
+    )
+  }
+
   function handleDraftApplied(snapshot: ResumeDraftSnapshot) {
     setDraftSnapshot(
       buildDraftSummarySnapshot(
@@ -359,6 +380,12 @@ export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
           helperMessage={analysisHelperMessage}
           inputAccessory={
             <div className="grid gap-3">
+              <ResumeImportPanel
+                accessToken={accessToken}
+                apiBaseUrl={DEFAULT_API_BASE_URL}
+                canUpload={isAdmin}
+                onRecognized={handleResumeImportRecognized}
+              />
               <AiUserDocIngestionPanel
                 accessToken={accessToken}
                 apiBaseUrl={DEFAULT_API_BASE_URL}

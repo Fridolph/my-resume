@@ -1,5 +1,7 @@
 export {
+  createApplyAiResumeImportMethod,
   createApplyAiResumeOptimizationMethod,
+  createFetchAiResumeImportResultMethod,
   createFetchAiResumeOptimizationResultMethod,
   createFetchAiUsageHistoryMethod,
   createFetchAiUsageRecordDetailMethod,
@@ -7,5 +9,6 @@ export {
   createFetchCachedAiWorkbenchReportMethod,
   createFetchCachedAiWorkbenchReportsMethod,
   createGenerateAiResumeOptimizationMethod,
+  createRecognizeAiResumeImportMethod,
   createTriggerAiWorkbenchAnalysisMethod,
 } from '@my-resume/api-client'
