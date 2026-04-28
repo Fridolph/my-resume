@@ -43,10 +43,10 @@ describe('resolveAiRuntimeConfig', () => {
       provider: 'deepseek',
       mode: 'openai-compatible',
       apiKey: 'sk-deepseek-demo',
-      baseUrl: 'https://api.deepseek.com/v1',
-      model: 'deepseek-chat',
-      chatModel: 'deepseek-chat',
-      embeddingModel: 'deepseek-chat',
+      baseUrl: 'https://api.deepseek.com',
+      model: 'deepseek-v4-flash',
+      chatModel: 'deepseek-v4-flash',
+      embeddingModel: 'deepseek-v4-flash',
       providerLabel: 'DeepSeek',
     })
   })
@@ -79,5 +79,14 @@ describe('resolveAiRuntimeConfig', () => {
         AI_PROVIDER: 'qiniu',
       }),
     ).toThrow('QINIU_AI_API_KEY is required')
+  })
+
+  it('should reject placeholder provider credentials before making real requests', () => {
+    expect(() =>
+      resolveAiRuntimeConfig({
+        AI_PROVIDER: 'deepseek',
+        DEEPSEEK_API_KEY: 'replace-with-your-own-key',
+      }),
+    ).toThrow('DEEPSEEK_API_KEY is still a placeholder')
   })
 })

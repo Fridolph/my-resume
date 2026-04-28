@@ -110,4 +110,34 @@ describe('OpenAiCompatibleAiProvider', () => {
       embeddingModel: 'text-embedding-v1',
     })
   })
+
+  it('should include provider error body when chat completions fails', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue({
+      ok: false,
+      status: 401,
+      text: async () => '{"error":{"message":"Authentication Fails"}}',
+    } as Response)
+
+    const provider = new OpenAiCompatibleAiProvider(
+      {
+        provider: 'deepseek',
+        mode: 'openai-compatible',
+        apiKey: 'sk-deepseek-demo',
+        baseUrl: 'https://api.deepseek.com',
+        model: 'deepseek-v4-flash',
+        chatModel: 'deepseek-v4-flash',
+        embeddingModel: 'deepseek-v4-flash',
+        providerLabel: 'DeepSeek',
+      },
+      fetchMock,
+    )
+
+    await expect(
+      provider.generateText({
+        prompt: '请识别简历',
+      }),
+    ).rejects.toThrow(
+      'DeepSeek chat completions request failed with status 401: {"error":{"message":"Authentication Fails"}}',
+    )
+  })
 })

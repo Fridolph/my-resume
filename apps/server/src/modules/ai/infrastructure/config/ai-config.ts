@@ -33,6 +33,22 @@ function readRequiredValue(
   return value
 }
 
+function readRequiredSecret(
+  env: EnvironmentVariables,
+  key: string,
+  errorMessage: string,
+): string {
+  const value = readRequiredValue(env, key, errorMessage)
+
+  if (value === 'replace-with-your-own-key') {
+    throw new Error(
+      `${key} is still a placeholder; set a real API key or use AI_PROVIDER=mock`,
+    )
+  }
+
+  return value
+}
+
 function readOptionalValue(env: EnvironmentVariables, key: string): string | undefined {
   const value = env[key]?.trim()
 
@@ -62,7 +78,7 @@ export function resolveAiRuntimeConfig(env: EnvironmentVariables): AiRuntimeConf
     return {
       provider: 'qiniu',
       mode: 'openai-compatible',
-      apiKey: readRequiredValue(env, 'QINIU_AI_API_KEY', 'QINIU_AI_API_KEY is required'),
+      apiKey: readRequiredSecret(env, 'QINIU_AI_API_KEY', 'QINIU_AI_API_KEY is required'),
       baseUrl: env.QINIU_AI_BASE_URL?.trim() || 'https://api.qnaigc.com/v1',
       model: chatModel,
       chatModel,
@@ -75,14 +91,14 @@ export function resolveAiRuntimeConfig(env: EnvironmentVariables): AiRuntimeConf
     const chatModel =
       readOptionalValue(env, 'DEEPSEEK_CHAT_MODEL') ??
       readOptionalValue(env, 'DEEPSEEK_MODEL') ??
-      'deepseek-chat'
+      'deepseek-v4-flash'
     const embeddingModel = readOptionalValue(env, 'DEEPSEEK_EMBEDDING_MODEL') ?? chatModel
 
     return {
       provider: 'deepseek',
       mode: 'openai-compatible',
-      apiKey: readRequiredValue(env, 'DEEPSEEK_API_KEY', 'DEEPSEEK_API_KEY is required'),
-      baseUrl: env.DEEPSEEK_BASE_URL?.trim() || 'https://api.deepseek.com/v1',
+      apiKey: readRequiredSecret(env, 'DEEPSEEK_API_KEY', 'DEEPSEEK_API_KEY is required'),
+      baseUrl: env.DEEPSEEK_BASE_URL?.trim() || 'https://api.deepseek.com',
       model: chatModel,
       chatModel,
       embeddingModel,
@@ -104,7 +120,7 @@ export function resolveAiRuntimeConfig(env: EnvironmentVariables): AiRuntimeConf
     return {
       provider: 'openai-compatible',
       mode: 'openai-compatible',
-      apiKey: readRequiredValue(
+      apiKey: readRequiredSecret(
         env,
         'OPENAI_COMPATIBLE_API_KEY',
         'OPENAI_COMPATIBLE_API_KEY is required',

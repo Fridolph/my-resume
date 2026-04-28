@@ -50,6 +50,28 @@ function extractMessageContent(response: OpenAiCompatibleResponse): string {
   throw new Error('Provider response does not include message content')
 }
 
+async function readErrorBody(response: Response): Promise<string | undefined> {
+  try {
+    const body = await response.text()
+    const normalizedBody = body.trim()
+
+    return normalizedBody ? normalizedBody.slice(0, 500) : undefined
+  } catch {
+    return undefined
+  }
+}
+
+function formatProviderError(
+  providerLabel: string,
+  action: string,
+  response: Response,
+  body?: string,
+) {
+  const detail = body ? `: ${body}` : ''
+
+  return `${providerLabel} ${action} request failed with status ${response.status}${detail}`
+}
+
 export class OpenAiCompatibleAiProvider implements AiProvider {
   constructor(
     private readonly config: Extract<AiRuntimeConfig, { mode: 'openai-compatible' }>,
@@ -107,7 +129,12 @@ export class OpenAiCompatibleAiProvider implements AiProvider {
 
     if (!response.ok) {
       throw new Error(
-        `${this.config.providerLabel} request failed with status ${response.status}`,
+        formatProviderError(
+          this.config.providerLabel,
+          'chat completions',
+          response,
+          await readErrorBody(response),
+        ),
       )
     }
 
@@ -137,7 +164,12 @@ export class OpenAiCompatibleAiProvider implements AiProvider {
 
     if (!response.ok) {
       throw new Error(
-        `${this.config.providerLabel} embeddings request failed with status ${response.status}`,
+        formatProviderError(
+          this.config.providerLabel,
+          'embeddings',
+          response,
+          await readErrorBody(response),
+        ),
       )
     }
 
