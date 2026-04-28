@@ -97,7 +97,9 @@ describe('AiUserDocIngestionPanel', () => {
       })
     })
 
-    expect(await screen.findByText('published')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getAllByText('published').length).toBeGreaterThan(1)
+    })
     expect(screen.getByText('3')).toBeInTheDocument()
     expect(onIngested).toHaveBeenCalledWith(
       expect.objectContaining({

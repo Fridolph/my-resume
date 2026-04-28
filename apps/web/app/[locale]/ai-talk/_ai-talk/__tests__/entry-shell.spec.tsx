@@ -110,7 +110,7 @@ describe('AiTalkEntryShell', () => {
     const avatarCard = screen.getByTestId('ai-talk-card-avatar')
 
     expect(within(ragCard).getAllByText('RAG 知识库 / 分身问答')).not.toHaveLength(0)
-    const ragButton = within(ragCard).getByRole('button', { name: '进入 RAG 对话' })
+    const ragButton = within(ragCard).getByRole('button', { name: '暂未开放' })
     expect(ragButton.className).toContain('button--primary')
     fireEvent.click(ragButton)
     expect(pushMock).toHaveBeenCalledWith('/ai-talk/chat')
@@ -147,7 +147,7 @@ describe('AiTalkEntryShell', () => {
     expect(screen.getByRole('link', { name: 'Resume' })).toHaveAttribute('href', '/en')
     expect(screen.getByRole('link', { name: 'Profile' })).toHaveAttribute('href', '/en/profile')
     expect(screen.getByRole('link', { name: 'AI Talk' })).toHaveAttribute('aria-current', 'page')
-    const ragButton = screen.getByRole('button', { name: 'Open RAG chat' })
+    const ragButton = screen.getByRole('button', { name: 'Not open yet' })
     expect(ragButton).toBeInTheDocument()
     fireEvent.click(ragButton)
     expect(pushMock).toHaveBeenCalledWith('/ai-talk/chat')
