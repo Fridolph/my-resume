@@ -375,12 +375,12 @@ describe('AdminAiWorkbenchShell', () => {
   })
 
   afterEach(() => {
+    cleanup()
     vi.clearAllMocks()
     window.localStorage.clear()
   })
 
-  it('should render runtime summary and scenario cards for admin', async () => {
-    const user = userEvent.setup()
+  it('should render runtime summary and module entry cards for admin', async () => {
     useAdminSessionMock.mockReturnValue({
       accessToken: 'admin-token',
       currentUser: adminUser,
@@ -397,80 +397,46 @@ describe('AdminAiWorkbenchShell', () => {
     expect(screen.getByText('当前 Provider：qiniu')).toBeInTheDocument()
     expect(screen.getByText('当前模型：deepseek-v3')).toBeInTheDocument()
     expect(screen.getByText('运行模式：live')).toBeInTheDocument()
-    expect(screen.getByText('JD 匹配分析')).toBeInTheDocument()
-    expect(screen.getByText('简历优化建议')).toBeInTheDocument()
-    expect(screen.getByText('Offer 对比建议')).toBeInTheDocument()
     expect(
-      screen.getByText('当前账号可直接分析当前草稿、查看 diff，并按模块写回后台草稿。'),
+      screen.getByText(
+        '当前账号可进入各个 AI 子模块：导入识别、针对性分析、RAG 入库与诊断工具。',
+      ),
     ).toBeInTheDocument()
-    expect(await screen.findByText('资料入库面板占位')).toBeInTheDocument()
-    expect(await screen.findByText('文件提取面板占位')).toBeInTheDocument()
-    expect(await screen.findByText('真实分析面板占位')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: '进入简历导入识别' })).toHaveAttribute(
+
+    expect(screen.getByRole('link', { name: /简历导入识别/ })).toHaveAttribute(
       'href',
       '/dashboard/ai/resume-import',
     )
-    expect(screen.getByRole('link', { name: '进入优化记录' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /简历针对性分析/ })).toHaveAttribute(
+      'href',
+      '/dashboard/ai/resume-optimization',
+    )
+    expect(screen.getByRole('link', { name: /RAG 资料入库/ })).toHaveAttribute(
+      'href',
+      '/dashboard/ai/knowledge',
+    )
+    expect(screen.getByRole('link', { name: /文件提取诊断/ })).toHaveAttribute(
+      'href',
+      '/dashboard/ai/file-extraction',
+    )
+    expect(screen.getByRole('link', { name: /AI 优化记录/ })).toHaveAttribute(
       'href',
       '/dashboard/ai/optimization-history',
     )
-    expect(screen.queryByText('缓存报告与预设体验')).not.toBeInTheDocument()
-    expect(screen.queryByText('最近优化记录')).not.toBeInTheDocument()
-    expect(
-      screen.getByText((content) =>
-        content.startsWith('当前优化要求：# JS 高级全栈工程师 JD'),
-      ),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByText((content) => content.startsWith('当前草稿基线：当前草稿标题')),
-    ).toBeInTheDocument()
-    expect(screen.getByText('辅助提示：空')).toBeInTheDocument()
+
+    expect(screen.getByText('JD 匹配分析')).toBeInTheDocument()
+    expect(screen.getByText('简历优化建议')).toBeInTheDocument()
+    expect(screen.getByText('Offer 对比建议')).toBeInTheDocument()
+    expect(screen.queryByText('资料入库面板占位')).not.toBeInTheDocument()
+    expect(screen.queryByText('文件提取面板占位')).not.toBeInTheDocument()
+    expect(screen.queryByText('真实分析面板占位')).not.toBeInTheDocument()
     expect(await screen.findByTestId('compact-workbench-info-cards')).toBeInTheDocument()
     expect(screen.getByText('草稿反馈')).toBeInTheDocument()
     expect(screen.getByText('运行时摘要')).toBeInTheDocument()
     expect(
       screen.getByText((content) => content.startsWith('当前草稿标题')),
     ).toBeInTheDocument()
-    expect(screen.queryByText('当前草稿快照')).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: '模拟入库完成' }))
-    expect(
-      screen.getByText('辅助提示：已将 rag-notes.md 写入 published 检索态，切块 2 条。'),
-    ).toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: '模拟提取完成' }))
-
-    expect(screen.getByText('当前优化要求：resume text content')).toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: '恢复默认 JD 模板' }))
-
-    expect(
-      screen.getByText((content) =>
-        content.startsWith('当前优化要求：# JS 高级全栈工程师 JD'),
-      ),
-    ).toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: '模拟生成结构化建议完成' }))
-
-    const storedHistory = JSON.parse(
-      window.localStorage.getItem(RESUME_OPTIMIZATION_HISTORY_STORAGE_KEY) ?? '[]',
-    )
-
-    expect(storedHistory).toHaveLength(1)
-    expect(storedHistory[0]).toEqual(
-      expect.objectContaining({
-        resultId: 'result-history-001',
-        instructionHash: createInstructionHash(storedHistory[0].instruction),
-      }),
-    )
-
-    await user.click(screen.getByRole('button', { name: '模拟应用草稿' }))
-
-    expect(
-      await screen.findByText((content) => content.startsWith('AI 优化后标题')),
-    ).toBeInTheDocument()
-    await user.click(screen.getAllByRole('button', { name: '展开' })[0]!)
-    expect(screen.getByText('AI 优化后的中文摘要')).toBeInTheDocument()
     await waitFor(() => {
       expect(fetchAiWorkbenchRuntimeMock).toHaveBeenCalledTimes(1)
       expect(fetchDraftResumeSummaryMock).toHaveBeenCalledTimes(1)
@@ -500,25 +466,32 @@ describe('AdminAiWorkbenchShell', () => {
     expect(await screen.findByText('当前账号：viewer')).toBeInTheDocument()
     expect(
       screen.getByText(
-        'viewer 当前只允许查看缓存结果与预设体验，不能分析当前草稿或触发新的真实分析。',
+        'viewer 当前只允许查看缓存结果与预设体验，不能触发上传、识别、分析或写回。',
       ),
     ).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: '进入优化记录' })).toHaveAttribute(
-      'href',
-      '/dashboard/ai/optimization-history',
-    )
-    expect(screen.queryByText('缓存报告与预设体验')).not.toBeInTheDocument()
-    expect(await screen.findByText('资料入库只读占位')).toBeInTheDocument()
-    expect(await screen.findByText('文件提取只读占位')).toBeInTheDocument()
-    expect(await screen.findByText('真实分析只读占位')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: '进入简历导入识别' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /简历导入识别/ })).toHaveAttribute(
       'href',
       '/dashboard/ai/resume-import',
     )
+    expect(screen.getByRole('link', { name: /简历针对性分析/ })).toHaveAttribute(
+      'href',
+      '/dashboard/ai/resume-optimization',
+    )
+    expect(screen.getByRole('link', { name: /RAG 资料入库/ })).toHaveAttribute(
+      'href',
+      '/dashboard/ai/knowledge',
+    )
+    expect(screen.getByRole('link', { name: /文件提取诊断/ })).toHaveAttribute(
+      'href',
+      '/dashboard/ai/file-extraction',
+    )
+    expect(screen.queryByText('资料入库只读占位')).not.toBeInTheDocument()
+    expect(screen.queryByText('文件提取只读占位')).not.toBeInTheDocument()
+    expect(screen.queryByText('真实分析只读占位')).not.toBeInTheDocument()
     expect(fetchDraftResumeSummaryMock).not.toHaveBeenCalled()
   })
 
-  it('should load persisted content from local storage', async () => {
+  it('should keep the workbench home independent from persisted optimization input', async () => {
     window.localStorage.setItem(
       RESUME_OPTIMIZATION_CONTENT_STORAGE_KEY,
       '已保存的自定义 JD',
@@ -536,6 +509,11 @@ describe('AdminAiWorkbenchShell', () => {
 
     render(<AdminAiWorkbenchShell locale="zh" />)
 
-    expect(await screen.findByText('当前优化要求：已保存的自定义 JD')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'AI 工作台' })).toBeInTheDocument()
+    expect(screen.queryByText('当前优化要求：已保存的自定义 JD')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /简历针对性分析/ })).toHaveAttribute(
+      'href',
+      '/dashboard/ai/resume-optimization',
+    )
   })
 })

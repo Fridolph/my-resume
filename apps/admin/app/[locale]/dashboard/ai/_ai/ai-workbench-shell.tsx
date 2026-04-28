@@ -8,94 +8,21 @@ import {
   CardHeader,
   CardTitle,
 } from '@heroui/react/card'
-import { Button } from '@heroui/react/button'
 import { Chip } from '@heroui/react/chip'
-import { Skeleton } from '@heroui/react/skeleton'
-import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, type ReactNode } from 'react'
 
 import { useAdminSession } from '@core/admin-session'
 import { DEFAULT_API_BASE_URL } from '@core/env'
 import type { AppLocale } from '@i18n/types'
 
 import { readResumeLocaleCookie } from '../../resume/_resume/utils/resume-locale'
-import { buildDraftSummarySnapshot } from '../../resume/_resume/utils/resume-summary'
 import { createFetchDraftResumeSummaryMethod } from '../../resume/_resume/services/resume-draft-api'
-import type {
-  ResumeDraftSnapshot,
-  ResumeDraftSummarySnapshot,
-} from '../../resume/_resume/types/resume.types'
+import type { ResumeDraftSummarySnapshot } from '../../resume/_resume/types/resume.types'
 import { CompactWorkbenchInfoCards } from './components/compact-workbench-info-cards'
 import { createFetchAiWorkbenchRuntimeMethod } from './services/ai-workbench-api'
-import type { FileExtractionResult } from './types/ai-file.types'
-import type { UserDocIngestResult } from './types/ai-file.types'
-import type {
-  AiResumeOptimizationResult,
-  AiWorkbenchScenario,
-} from './types/ai-workbench.types'
-import {
-  DEFAULT_RESUME_OPTIMIZATION_TEMPLATE,
-  readResumeOptimizationContent,
-  upsertResumeOptimizationHistoryEntry,
-  writeResumeOptimizationContent,
-} from './utils/resume-optimization-persistence'
-
-const AiFileExtractionPanel = dynamic(
-  () =>
-    import('./components/file-extraction-panel').then(
-      (module) => module.AiFileExtractionPanel,
-    ),
-  {
-    loading: () => (
-      <div className="status-box" data-testid="ai-file-extraction-loading">
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          正在加载文件提取面板...
-        </p>
-        <div className="mt-2 grid gap-2">
-          <Skeleton className="h-4 w-4/5 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
-          <Skeleton className="h-4 w-2/3 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
-        </div>
-      </div>
-    ),
-  },
-)
-
-const AiAnalysisPanel = dynamic(
-  () => import('./components/analysis-panel').then((module) => module.AiAnalysisPanel),
-  {
-    loading: () => (
-      <div className="status-box" data-testid="ai-analysis-panel-loading">
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">正在加载分析面板...</p>
-        <div className="mt-2 grid gap-2">
-          <Skeleton className="h-4 w-3/4 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
-          <Skeleton className="h-4 w-4/5 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
-        </div>
-      </div>
-    ),
-  },
-)
-
-const AiUserDocIngestionPanel = dynamic(
-  () =>
-    import('./components/user-doc-ingestion-panel').then(
-      (module) => module.AiUserDocIngestionPanel,
-    ),
-  {
-    loading: () => (
-      <div className="status-box" data-testid="ai-user-doc-ingestion-loading">
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          正在加载资料入库面板...
-        </p>
-        <div className="mt-2 grid gap-2">
-          <Skeleton className="h-4 w-3/4 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
-          <Skeleton className="h-4 w-2/3 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
-        </div>
-      </div>
-    ),
-  },
-)
+import type { AiWorkbenchScenario } from './types/ai-workbench.types'
 
 const scenarioCards = {
   'jd-match': {
@@ -112,6 +39,104 @@ const scenarioCards = {
     description: '对比多个机会的成长性、匹配度与风险，帮助做更稳妥的取舍。',
   },
 } as const
+
+const moduleCards = [
+  {
+    eyebrow: '入口一',
+    title: '简历导入识别',
+    description:
+      '上传已有中文 md/txt 简历，AI 识别成候选草稿，再通过模块级 diff 回填到 draft。',
+    href: '/dashboard/ai/resume-import',
+    status: '异步 Job',
+    tone: 'from-blue-50 via-white to-sky-50 dark:from-blue-950/30 dark:via-zinc-950 dark:to-slate-950',
+  },
+  {
+    eyebrow: '入口二',
+    title: '简历针对性分析',
+    description:
+      '基于当前草稿与 JD/优化要求生成结构化建议，进入结果页后按模块应用到草稿。',
+    href: '/dashboard/ai/resume-optimization',
+    status: '核心能力',
+    tone: 'from-emerald-50 via-white to-teal-50 dark:from-emerald-950/25 dark:via-zinc-950 dark:to-slate-950',
+  },
+  {
+    eyebrow: '入口三',
+    title: 'RAG 资料入库',
+    description:
+      '上传 user_docs，选择 draft/published 作用域，写入检索态文档和切块，为知识库做准备。',
+    href: '/dashboard/ai/knowledge',
+    status: '实验中',
+    tone: 'from-amber-50 via-white to-orange-50 dark:from-amber-950/25 dark:via-zinc-950 dark:to-slate-950',
+  },
+  {
+    eyebrow: '工具',
+    title: '文件提取诊断',
+    description:
+      '单独验证 TXT / Markdown / PDF / DOCX 的文本提取结果，方便排查上传与解析边界。',
+    href: '/dashboard/ai/file-extraction',
+    status: '诊断工具',
+    tone: 'from-zinc-50 via-white to-slate-50 dark:from-zinc-900 dark:via-zinc-950 dark:to-slate-950',
+  },
+  {
+    eyebrow: '归档',
+    title: 'AI 优化记录',
+    description: '回看历史优化结果、关联分析记录与本地缓存，便于复用和撰写开发复盘。',
+    href: '/dashboard/ai/optimization-history',
+    status: '记录中心',
+    tone: 'from-rose-50 via-white to-stone-50 dark:from-rose-950/20 dark:via-zinc-950 dark:to-slate-950',
+  },
+] as const
+
+function ModuleCard({
+  description,
+  eyebrow,
+  href,
+  status,
+  title,
+  tone,
+}: (typeof moduleCards)[number]) {
+  return (
+    <Link
+      className={`group relative min-h-[15rem] overflow-hidden rounded-[2rem] border border-white/80 bg-gradient-to-br ${tone} p-6 shadow-[0_18px_50px_rgba(15,23,42,0.07)] outline-none transition duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_24px_70px_rgba(37,99,235,0.14)] focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-zinc-800 dark:shadow-none dark:hover:border-blue-500/40`}
+      href={href}>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/70 blur-2xl transition group-hover:scale-125 dark:bg-blue-400/10"
+      />
+      <div className="relative flex h-full flex-col justify-between gap-8">
+        <div className="grid gap-4">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm font-semibold text-blue-600 dark:text-blue-300">
+              {eyebrow}
+            </span>
+            <Chip size="sm" variant="soft">
+              {status}
+            </Chip>
+          </div>
+          <div className="grid gap-3">
+            <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-white">
+              {title}
+            </h2>
+            <p className="text-sm leading-7 text-zinc-600 dark:text-zinc-400">
+              {description}
+            </p>
+          </div>
+        </div>
+        <span className="inline-flex w-fit rounded-full bg-white/80 px-3 py-1 text-sm font-medium text-zinc-800 ring-1 ring-zinc-200 transition group-hover:bg-blue-600 group-hover:text-white group-hover:ring-blue-600 dark:bg-zinc-900/80 dark:text-zinc-100 dark:ring-zinc-800">
+          进入子模块
+        </span>
+      </div>
+    </Link>
+  )
+}
+
+function InfoBlock({ children }: { children: ReactNode }) {
+  return (
+    <div className="rounded-[1.5rem] border border-blue-100 bg-blue-50/70 p-4 text-sm leading-7 text-blue-950 dark:border-blue-900/50 dark:bg-blue-950/20 dark:text-blue-100">
+      {children}
+    </div>
+  )
+}
 
 export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
   const { accessToken, currentUser, status } = useAdminSession()
@@ -133,12 +158,8 @@ export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
       immediate: false,
     },
   )
-  const [analysisContent, setAnalysisContent] = useState(
-    DEFAULT_RESUME_OPTIMIZATION_TEMPLATE,
-  )
-  const [analysisHelperMessage, setAnalysisHelperMessage] = useState<string | null>(null)
   const {
-    data: loadedDraftSnapshot,
+    data: draftSnapshot,
     error: draftSnapshotError,
     loading: draftSnapshotLoading,
     send: loadDraftSnapshot,
@@ -154,10 +175,6 @@ export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
       immediate: false,
     },
   )
-  const [draftSnapshot, setDraftSnapshot] = useState<ResumeDraftSummarySnapshot | null>(
-    null,
-  )
-  const [draftSnapshotMessage, setDraftSnapshotMessage] = useState<string | null>(null)
   const loadRuntimeSummaryRef = useRef(loadRuntimeSummary)
   const loadDraftSnapshotRef = useRef(loadDraftSnapshot)
   const runtimeRequestKeyRef = useRef<string | null>(null)
@@ -202,72 +219,13 @@ export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
     }
 
     draftRequestKeyRef.current = draftRequestKey
-    setDraftSnapshotMessage(null)
     void loadDraftSnapshotRef.current().catch(() => undefined)
   }, [draftRequestKey])
 
-  useEffect(() => {
-    if (!loadedDraftSnapshot) {
-      return
-    }
-
-    setDraftSnapshot(loadedDraftSnapshot)
-  }, [loadedDraftSnapshot])
-
-  useEffect(() => {
-    setAnalysisContent(readResumeOptimizationContent())
-  }, [])
-
   const isAdmin = Boolean(currentUser?.capabilities.canTriggerAiAnalysis)
   const roleMessage = isAdmin
-    ? '当前账号可直接分析当前草稿、查看 diff，并按模块写回后台草稿。'
-    : 'viewer 当前只允许查看缓存结果与预设体验，不能分析当前草稿或触发新的真实分析。'
-
-  function handleExtractedText(result: FileExtractionResult) {
-    setAnalysisContent(result.text)
-    setAnalysisHelperMessage(
-      `已将 ${result.fileName} 的提取结果同步到优化要求输入区，可直接整理后分析当前草稿。`,
-    )
-  }
-
-  function handleUserDocIngested(result: UserDocIngestResult) {
-    setAnalysisHelperMessage(
-      `已将 ${result.fileName} 写入 ${result.sourceScope} 检索态，切块 ${result.chunkCount} 条。`,
-    )
-  }
-
-  function handleAnalysisContentChange(nextContent: string) {
-    setAnalysisContent(nextContent)
-    writeResumeOptimizationContent(nextContent)
-
-    if (analysisHelperMessage) {
-      setAnalysisHelperMessage(null)
-    }
-  }
-
-  function handleResetToDefaultTemplate() {
-    setAnalysisContent(DEFAULT_RESUME_OPTIMIZATION_TEMPLATE)
-    writeResumeOptimizationContent(DEFAULT_RESUME_OPTIMIZATION_TEMPLATE)
-    setAnalysisHelperMessage('已恢复默认高级全栈 JD 模板，可直接继续修改后发起分析。')
-  }
-
-  function handleOptimizationGenerated(
-    result: AiResumeOptimizationResult,
-    instruction: string,
-  ) {
-    upsertResumeOptimizationHistoryEntry(result, instruction)
-  }
-
-  function handleDraftApplied(snapshot: ResumeDraftSnapshot) {
-    setDraftSnapshot(
-      buildDraftSummarySnapshot(
-        snapshot,
-        summaryLocale ?? snapshot.resume.meta.defaultLocale,
-      ),
-    )
-    setDraftSnapshotMessage('当前草稿快照已刷新，可直接确认 AI 改写结果。')
-  }
-
+    ? '当前账号可进入各个 AI 子模块：导入识别、针对性分析、RAG 入库与诊断工具。'
+    : 'viewer 当前只允许查看缓存结果与预设体验，不能触发上传、识别、分析或写回。'
   const scenarioEntries = useMemo(
     () =>
       runtimeSummary?.supportedScenarios.map((scenario: AiWorkbenchScenario) => ({
@@ -288,6 +246,7 @@ export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
           <div className="flex flex-wrap gap-2">
             <Chip size="sm">当前账号：{currentUser.username}</Chip>
             <Chip size="sm">当前角色：{currentUser.role}</Chip>
+            <Chip size="sm">AI 能力地图</Chip>
           </div>
           <div className="space-y-2">
             <CardTitle className="text-3xl font-semibold tracking-tight">
@@ -305,26 +264,14 @@ export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
             <Chip>运行模式：{runtimeSummary?.mode ?? '加载中'}</Chip>
           </div>
 
-          <div className="dashboard-entry-actions">
-            <Link
-              className="inline-flex h-10 items-center justify-center rounded-full border border-zinc-300 px-4 text-sm text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:text-white"
-              href="/dashboard/ai/optimization-history">
-              进入优化记录
-            </Link>
-          </div>
-
-          {isAdmin ? (
-            <div className="status-box">{roleMessage}</div>
-          ) : (
-            <div className="readonly-box">{roleMessage}</div>
-          )}
+          <InfoBlock>{roleMessage}</InfoBlock>
 
           <CompactWorkbenchInfoCards
             canEditResume={Boolean(currentUser.capabilities.canEditResume)}
-            draftSnapshot={draftSnapshot}
+            draftSnapshot={draftSnapshot as ResumeDraftSummarySnapshot | null | undefined}
             draftSnapshotError={draftSnapshotError}
             draftSnapshotLoading={draftSnapshotLoading}
-            draftSnapshotMessage={draftSnapshotMessage}
+            draftSnapshotMessage={null}
             onReloadDraftSnapshot={() => void loadDraftSnapshot()}
             onReloadRuntimeSummary={() => void loadRuntimeSummary()}
             runtimeError={runtimeError}
@@ -334,12 +281,20 @@ export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
         </CardContent>
       </Card>
 
+      <section
+        className="grid gap-5 lg:grid-cols-2 xl:grid-cols-3"
+        aria-label="AI 子模块入口">
+        {moduleCards.map((entry) => (
+          <ModuleCard key={entry.href} {...entry} />
+        ))}
+      </section>
+
       <Card className="border border-zinc-200/70 dark:border-zinc-800">
         <CardHeader className="flex flex-col items-start gap-2">
           <p className="eyebrow">场景规划</p>
           <CardTitle>支持的分析场景</CardTitle>
           <CardDescription>
-            当前先把分析场景收束成固定三类，既方便教学，也方便保证输出结构稳定。
+            当前先把分析场景收束成固定三类，具体操作入口已经拆到独立子模块，首页只负责导航与状态总览。
           </CardDescription>
         </CardHeader>
         <CardContent className="stack">
@@ -357,59 +312,6 @@ export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
           )}
         </CardContent>
       </Card>
-
-      {accessToken && runtimeSummary ? (
-        <AiAnalysisPanel
-          accessToken={accessToken}
-          apiBaseUrl={DEFAULT_API_BASE_URL}
-          canAnalyze={isAdmin}
-          content={analysisContent}
-          draftSnapshot={draftSnapshot}
-          helperMessage={analysisHelperMessage}
-          inputAccessory={
-            <div className="grid gap-3">
-              <div className="status-box">
-                <strong>简历导入识别</strong>
-                <span>
-                  上传自己的中文 md/txt 简历，进入独立子页面查看阶段进度、失败详情和模块
-                  diff。
-                </span>
-                <div className="dashboard-entry-actions">
-                  <Link
-                    className="inline-flex h-10 items-center justify-center rounded-full border border-zinc-300 px-4 text-sm text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:text-white"
-                    href="/dashboard/ai/resume-import">
-                    进入简历导入识别
-                  </Link>
-                </div>
-              </div>
-              <AiUserDocIngestionPanel
-                accessToken={accessToken}
-                apiBaseUrl={DEFAULT_API_BASE_URL}
-                canUpload={isAdmin}
-                onIngested={handleUserDocIngested}
-              />
-              <AiFileExtractionPanel
-                accessToken={accessToken}
-                apiBaseUrl={DEFAULT_API_BASE_URL}
-                canUpload={isAdmin}
-                onExtractedText={handleExtractedText}
-              />
-              <div className="dashboard-entry-actions">
-                <Button
-                  onPress={handleResetToDefaultTemplate}
-                  size="sm"
-                  variant="outline">
-                  恢复默认 JD 模板
-                </Button>
-              </div>
-            </div>
-          }
-          onContentChange={handleAnalysisContentChange}
-          onDraftApplied={handleDraftApplied}
-          onOptimizationGenerated={handleOptimizationGenerated}
-          runtimeSummary={runtimeSummary}
-        />
-      ) : null}
     </div>
   )
 }
