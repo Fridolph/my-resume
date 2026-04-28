@@ -1,7 +1,13 @@
 export interface GenerateTextInput {
   prompt: string
   systemPrompt?: string
+  maxTokens?: number
+  reasoningEffort?: 'low' | 'medium' | 'high'
+  responseFormat?: {
+    type: 'json_object'
+  }
   temperature?: number
+  thinkingEnabled?: boolean
 }
 
 export interface EmbedTextsInput {

@@ -25,6 +25,23 @@ interface OpenAiCompatibleEmbeddingResponse {
   }>
 }
 
+interface OpenAiCompatibleRequestBody {
+  max_tokens?: number
+  messages: Array<{
+    content: string
+    role: 'system' | 'user'
+  }>
+  model: string
+  reasoning_effort?: 'low' | 'medium' | 'high'
+  response_format?: {
+    type: 'json_object'
+  }
+  temperature: number
+  thinking?: {
+    type: 'enabled'
+  }
+}
+
 function joinChatCompletionsUrl(baseUrl: string): string {
   return `${baseUrl.replace(/\/$/, '')}/chat/completions`
 }
@@ -86,6 +103,35 @@ export class OpenAiCompatibleAiProvider implements AiProvider {
     return this.config.embeddingModel?.trim() || this.config.model
   }
 
+  private buildChatRequestBody(input: GenerateTextInput): OpenAiCompatibleRequestBody {
+    const thinkingEnabled = input.thinkingEnabled ?? this.config.thinkingEnabled
+    const reasoningEffort = input.reasoningEffort ?? this.config.reasoningEffort
+    const maxTokens = input.maxTokens ?? this.config.maxTokens
+
+    return {
+      model: this.getChatModel(),
+      temperature: input.temperature ?? 0.2,
+      ...(typeof maxTokens === 'number' ? { max_tokens: maxTokens } : {}),
+      ...(input.responseFormat ? { response_format: input.responseFormat } : {}),
+      ...(thinkingEnabled ? { thinking: { type: 'enabled' as const } } : {}),
+      ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
+      messages: [
+        ...(input.systemPrompt
+          ? [
+              {
+                role: 'system' as const,
+                content: input.systemPrompt,
+              },
+            ]
+          : []),
+        {
+          role: 'user' as const,
+          content: input.prompt,
+        },
+      ],
+    }
+  }
+
   getSummary() {
     const chatModel = this.getChatModel()
     const embeddingModel = this.getEmbeddingModel()
@@ -107,24 +153,7 @@ export class OpenAiCompatibleAiProvider implements AiProvider {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${this.config.apiKey}`,
       },
-      body: JSON.stringify({
-        model: chatModel,
-        temperature: input.temperature ?? 0.2,
-        messages: [
-          ...(input.systemPrompt
-            ? [
-                {
-                  role: 'system',
-                  content: input.systemPrompt,
-                },
-              ]
-            : []),
-          {
-            role: 'user',
-            content: input.prompt,
-          },
-        ],
-      }),
+      body: JSON.stringify(this.buildChatRequestBody(input)),
     })
 
     if (!response.ok) {

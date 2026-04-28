@@ -1,4 +1,3 @@
-import { BadGatewayException, BadRequestException } from '@nestjs/common'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
@@ -11,6 +10,7 @@ import {
 import { AiService } from '../application/services/ai.service'
 import { FileExtractionService } from '../application/services/file-extraction.service'
 import { ResumeImportRecognitionService } from '../application/services/resume-import-recognition.service'
+import type { ResumeImportJobDetail } from '../application/services/resume-import-recognition.service'
 
 function createUploadInput(fileName: string, text: string, mimeType = 'text/markdown') {
   const buffer = Buffer.from(text, 'utf8')
@@ -65,29 +65,55 @@ function createService(input?: {
   )
 }
 
+async function waitForJob(
+  service: ResumeImportRecognitionService,
+  jobId: string,
+): Promise<ResumeImportJobDetail> {
+  for (let index = 0; index < 20; index += 1) {
+    const job = service.getJob(jobId)
+
+    if (job.status !== 'running') {
+      return job
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 0))
+  }
+
+  throw new Error(`job ${jobId} did not finish`)
+}
+
 describe('ResumeImportRecognitionService', () => {
-  it('rejects unsupported resume file types before extraction', async () => {
+  it('starts a recognition job and fails unsupported resume file types by stage', async () => {
     const service = createService()
 
-    await expect(
-      service.recognize(createUploadInput('resume.pdf', 'fake pdf', 'application/pdf')),
-    ).rejects.toBeInstanceOf(BadRequestException)
-  })
-
-  it('rejects empty or too short resume text', async () => {
-    const service = createService()
-
-    await expect(service.recognize(createUploadInput('resume.md', '太短'))).rejects.toThrow(
-      '简历文本过短',
+    const job = service.recognize(
+      createUploadInput('resume.pdf', 'fake pdf', 'application/pdf'),
     )
+    const failedJob = await waitForJob(service, job.jobId)
+
+    expect(job.status).toBe('running')
+    expect(failedJob.status).toBe('failed')
+    expect(failedJob.error?.message).toContain('第一版仅支持上传 md/txt')
   })
 
-  it('rejects oversized resume text before calling the AI provider', async () => {
+  it('fails empty or too short resume text with readable job error', async () => {
     const service = createService()
 
-    await expect(
-      service.recognize(createUploadInput('resume.md', '简历'.repeat(30_000))),
-    ).rejects.toThrow('简历文本过长')
+    const job = service.recognize(createUploadInput('resume.md', '太短'))
+    const failedJob = await waitForJob(service, job.jobId)
+
+    expect(failedJob.status).toBe('failed')
+    expect(failedJob.error?.message).toContain('简历文本过短')
+  })
+
+  it('fails oversized resume text before calling the AI provider', async () => {
+    const service = createService()
+
+    const job = service.recognize(createUploadInput('resume.md', '简历'.repeat(30_000)))
+    const failedJob = await waitForJob(service, job.jobId)
+
+    expect(failedJob.status).toBe('failed')
+    expect(failedJob.error?.message).toContain('简历文本过长')
   })
 
   it('parses lifeiyu-style Chinese markdown into a valid candidate draft in mock mode', async () => {
@@ -97,8 +123,12 @@ describe('ResumeImportRecognitionService', () => {
       'utf8',
     )
 
-    const result = await service.recognize(createUploadInput('lifeiyu-mock-zh.md', sample))
+    const job = service.recognize(createUploadInput('lifeiyu-mock-zh.md', sample))
+    const completedJob = await waitForJob(service, job.jobId)
+    const result = service.getResult(completedJob.resultId!)
 
+    expect(completedJob.status).toBe('completed')
+    expect(completedJob.steps.every((step) => step.status === 'completed')).toBe(true)
     expect(result.resultId).toBeTruthy()
     expect(result.fileType).toBe('md')
     expect(result.providerSummary.mode).toBe('mock')
@@ -130,9 +160,13 @@ describe('ResumeImportRecognitionService', () => {
     } as Partial<AiService>)
     const service = createService({ aiService })
 
-    await expect(
-      service.recognize(createUploadInput('resume.md', '有效简历内容'.repeat(100))),
-    ).rejects.toBeInstanceOf(BadGatewayException)
+    const job = service.recognize(
+      createUploadInput('resume.md', '有效简历内容'.repeat(100)),
+    )
+    const failedJob = await waitForJob(service, job.jobId)
+
+    expect(failedJob.status).toBe('failed')
+    expect(failedJob.error?.message).toContain('AI 未返回可解析的 JSON')
   })
 
   it('applies only selected modules back to draft', async () => {
@@ -144,7 +178,9 @@ describe('ResumeImportRecognitionService', () => {
       join(process.cwd(), '../../public/lifeiyu-mock-zh.md'),
       'utf8',
     )
-    const result = await service.recognize(createUploadInput('lifeiyu-mock-zh.md', sample))
+    const job = service.recognize(createUploadInput('lifeiyu-mock-zh.md', sample))
+    const completedJob = await waitForJob(service, job.jobId)
+    const result = service.getResult(completedJob.resultId!)
 
     await service.apply({
       resultId: result.resultId,
@@ -152,7 +188,8 @@ describe('ResumeImportRecognitionService', () => {
     })
 
     expect(resumePublicationService.updateDraft).toHaveBeenCalledTimes(1)
-    const nextResume = resumePublicationService.updateDraft.mock.calls[0]?.[0] as StandardResume
+    const nextResume = resumePublicationService.updateDraft.mock
+      .calls[0]?.[0] as StandardResume
 
     expect(nextResume.profile.fullName.zh).toBe('厉飞雨')
     expect(nextResume.projects[0]?.name.zh).toBe('Agent Knowledge Lab')

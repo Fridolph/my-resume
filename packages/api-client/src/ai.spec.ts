@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   createApplyAiResumeImportMethod,
+  createFetchAiResumeImportJobMethod,
   createFetchAiResumeImportResultMethod,
   createFetchAiUsageHistoryMethod,
   createFetchAiUsageRecordDetailMethod,
@@ -177,33 +178,24 @@ describe('ai api client methods', () => {
     expect(result.chunkCount).toBe(2)
   })
 
-  it('uploads a resume file to the resume import recognition endpoint', async () => {
+  it('starts a resume import recognition job for an uploaded resume file', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(
-        createJsonResponse(201, {
-          resultId: 'resume-import-001',
-          locale: 'zh',
-          fileName: 'lifeiyu-mock-zh.md',
-          fileType: 'md',
-          charCount: 12000,
-          summary: '已识别候选草稿',
-          warnings: [],
-          changedModules: ['profile', 'projects'],
-          moduleDiffs: [],
-          moduleStats: {
-            education: 1,
-            experiences: 4,
-            projects: 4,
-            skills: 6,
-            highlights: 5,
-          },
+        createJsonResponse(202, {
+          jobId: 'resume-import-job-001',
+          status: 'running',
+          currentStage: 'accepted',
+          steps: [
+            {
+              stage: 'accepted',
+              label: '已接收上传请求',
+              status: 'running',
+            },
+          ],
           createdAt: '2026-04-28T12:00:00.000Z',
-          providerSummary: {
-            provider: 'mock',
-            model: 'mock-resume-import',
-            mode: 'mock',
-          },
+          updatedAt: '2026-04-28T12:00:00.000Z',
+          elapsedMs: 0,
         }),
       ),
     )
@@ -228,8 +220,43 @@ describe('ai api client methods', () => {
         body: expect.any(FormData),
       }),
     )
+    expect(result.jobId).toBe('resume-import-job-001')
+    expect(result.currentStage).toBe('accepted')
+  })
+
+  it('fetches resume import recognition job state', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        createJsonResponse(200, {
+          jobId: 'resume-import-job-001',
+          status: 'completed',
+          currentStage: 'completed',
+          steps: [],
+          createdAt: '2026-04-28T12:00:00.000Z',
+          updatedAt: '2026-04-28T12:00:05.000Z',
+          elapsedMs: 5000,
+          resultId: 'resume-import-001',
+        }),
+      ),
+    )
+
+    const result = await createFetchAiResumeImportJobMethod({
+      apiBaseUrl: 'http://localhost:5577',
+      accessToken: 'admin-token',
+      jobId: 'resume-import-job-001',
+    })
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5577/api/ai/resume-import/jobs/resume-import-job-001',
+      expect.objectContaining({
+        method: 'GET',
+        headers: expect.objectContaining({
+          Authorization: 'Bearer admin-token',
+        }),
+      }),
+    )
     expect(result.resultId).toBe('resume-import-001')
-    expect(result.moduleStats.projects).toBe(4)
   })
 
   it('fetches and applies resume import results', async () => {

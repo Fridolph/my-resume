@@ -7,6 +7,7 @@ describe('AiResumeImportController', () => {
   it('rejects recognize requests without an uploaded file', async () => {
     const controller = new AiResumeImportController({
       recognize: vi.fn(),
+      getJob: vi.fn(),
       getResult: vi.fn(),
       apply: vi.fn(),
     } as never)
@@ -15,11 +16,13 @@ describe('AiResumeImportController', () => {
   })
 
   it('passes uploaded file data to the recognition service', async () => {
-    const recognize = vi.fn().mockResolvedValue({
-      resultId: 'resume-import-001',
+    const recognize = vi.fn().mockReturnValue({
+      jobId: 'resume-import-job-001',
+      status: 'running',
     })
     const controller = new AiResumeImportController({
       recognize,
+      getJob: vi.fn(),
       getResult: vi.fn(),
       apply: vi.fn(),
     } as never)
@@ -30,8 +33,9 @@ describe('AiResumeImportController', () => {
       size: 8,
     } as Express.Multer.File
 
-    await expect(controller.recognize(file)).resolves.toEqual({
-      resultId: 'resume-import-001',
+    expect(controller.recognize(file)).toEqual({
+      jobId: 'resume-import-job-001',
+      status: 'running',
     })
     expect(recognize).toHaveBeenCalledWith({
       buffer: file.buffer,
@@ -42,6 +46,11 @@ describe('AiResumeImportController', () => {
   })
 
   it('delegates result lookup and apply to the recognition service', async () => {
+    const getJob = vi.fn().mockReturnValue({
+      jobId: 'resume-import-job-001',
+      status: 'completed',
+      resultId: 'resume-import-001',
+    })
     const getResult = vi.fn().mockReturnValue({
       resultId: 'resume-import-001',
     })
@@ -50,10 +59,16 @@ describe('AiResumeImportController', () => {
     })
     const controller = new AiResumeImportController({
       recognize: vi.fn(),
+      getJob,
       getResult,
       apply,
     } as never)
 
+    expect(controller.getJob('resume-import-job-001')).toEqual({
+      jobId: 'resume-import-job-001',
+      status: 'completed',
+      resultId: 'resume-import-001',
+    })
     expect(controller.getResult('resume-import-001')).toEqual({
       resultId: 'resume-import-001',
     })

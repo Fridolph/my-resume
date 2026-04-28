@@ -2,6 +2,7 @@ export {
   createApplyAiResumeImportMethod,
   createApplyAiResumeOptimizationMethod,
   createFetchAiResumeImportResultMethod,
+  createFetchAiResumeImportJobMethod,
   createFetchAiResumeOptimizationResultMethod,
   createFetchAiUsageHistoryMethod,
   createFetchAiUsageRecordDetailMethod,

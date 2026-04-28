@@ -34,6 +34,7 @@ export type ResumeImportDiffStatus = 'added' | 'changed' | 'unchanged' | 'warnin
 
 export interface RecognizeResumeImportInput {
   buffer: Buffer
+  traceId?: string
   originalname: string
   mimetype: string
   size: number
@@ -86,11 +87,57 @@ export interface ResumeImportResultDetail {
   }
 }
 
+export type ResumeImportJobStage =
+  | 'accepted'
+  | 'extracting'
+  | 'text_validating'
+  | 'ai_generating'
+  | 'json_parsing'
+  | 'schema_validating'
+  | 'diff_building'
+  | 'completed'
+  | 'failed'
+
+export type ResumeImportJobStatus = 'running' | 'completed' | 'failed'
+
+export type ResumeImportJobStepStatus = 'pending' | 'running' | 'completed' | 'failed'
+
+export interface ResumeImportJobStep {
+  stage: ResumeImportJobStage
+  label: string
+  status: ResumeImportJobStepStatus
+  startedAt?: string
+  completedAt?: string
+  message?: string
+}
+
+export interface ResumeImportJobError {
+  message: string
+  traceId?: string
+}
+
+export interface ResumeImportJobDetail {
+  jobId: string
+  status: ResumeImportJobStatus
+  currentStage: ResumeImportJobStage
+  steps: ResumeImportJobStep[]
+  createdAt: string
+  updatedAt: string
+  elapsedMs: number
+  resultId?: string
+  error?: ResumeImportJobError
+}
+
 interface CachedResumeImportResult {
   candidateResume: StandardResume
   createdAt: string
   detail: ResumeImportResultDetail
   draftUpdatedAt: string
+}
+
+interface CachedResumeImportJob {
+  createdAt: string
+  detail: Omit<ResumeImportJobDetail, 'elapsedMs'>
 }
 
 interface ProviderResumeImportPayload {
@@ -104,6 +151,8 @@ const MIN_TEXT_CHARS = 500
 const MAX_TEXT_CHARS = 50_000
 const RESULT_TTL_MS = 30 * 60 * 1000
 const MAX_RESULT_COUNT = 20
+const JOB_TTL_MS = RESULT_TTL_MS
+const MAX_JOB_COUNT = MAX_RESULT_COUNT
 const RESUME_IMPORT_MODULES: readonly ResumeImportModule[] = [
   'profile',
   'education',
@@ -111,6 +160,39 @@ const RESUME_IMPORT_MODULES: readonly ResumeImportModule[] = [
   'projects',
   'skills',
   'highlights',
+]
+const RESUME_IMPORT_JOB_STEPS: Array<{
+  stage: Exclude<ResumeImportJobStage, 'completed' | 'failed'>
+  label: string
+}> = [
+  {
+    stage: 'accepted',
+    label: '已接收上传请求',
+  },
+  {
+    stage: 'extracting',
+    label: '正在提取文件文本',
+  },
+  {
+    stage: 'text_validating',
+    label: '正在校验文本边界',
+  },
+  {
+    stage: 'ai_generating',
+    label: '正在调用 AI 生成候选草稿',
+  },
+  {
+    stage: 'json_parsing',
+    label: '正在解析 AI JSON 输出',
+  },
+  {
+    stage: 'schema_validating',
+    label: '正在校验 StandardResume 结构',
+  },
+  {
+    stage: 'diff_building',
+    label: '正在生成模块 diff 看台',
+  },
 ]
 
 function readFileExtension(fileName: string): string {
@@ -141,7 +223,9 @@ function sectionBetween(text: string, startTitle: string, endTitles: string[]): 
   return text.slice(contentStart, endIndex).trim()
 }
 
-function splitByMarkdownHeading(section: string): Array<{ title: string; meta: string; body: string }> {
+function splitByMarkdownHeading(
+  section: string,
+): Array<{ title: string; meta: string; body: string }> {
   const headingPattern = /^ {0,4}###\s+(?:\*\*(.+?)\*\*|(.+?))(?:\s*（(.+?)）)?\s*$/gm
   const matches = Array.from(section.matchAll(headingPattern))
 
@@ -167,7 +251,9 @@ function extractField(body: string, label: string): string {
 
 function extractListAfterLabel(body: string, label: string): string[] {
   const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const pattern = new RegExp(`\\*\\*${escapedLabel}：\\*\\*([\\s\\S]*?)(?=\\n\\s*\\*\\*|$)`)
+  const pattern = new RegExp(
+    `\\*\\*${escapedLabel}：\\*\\*([\\s\\S]*?)(?=\\n\\s*\\*\\*|$)`,
+  )
   const match = body.match(pattern)
 
   if (!match?.[1]) {
@@ -239,7 +325,9 @@ function buildModuleDiffs(
     const suggestedValue = candidateResume[module]
     const changed = isModuleChanged(currentResume, candidateResume, module)
     const currentEmpty = Array.isArray(currentValue) ? currentValue.length === 0 : false
-    const suggestedEmpty = Array.isArray(suggestedValue) ? suggestedValue.length === 0 : false
+    const suggestedEmpty = Array.isArray(suggestedValue)
+      ? suggestedValue.length === 0
+      : false
     const warning = warnings.find((item) => item.includes(moduleTitle(module)))
     const status: ResumeImportDiffStatus = warning
       ? 'warning'
@@ -317,7 +405,13 @@ function parseMockResumeFromMarkdown(text: string): StandardResume {
   const summary = profileSection
     .split('\n')
     .map((line) => line.trim())
-    .filter((line) => line && !line.startsWith('#') && !line.startsWith('|') && !line.includes('Email:'))
+    .filter(
+      (line) =>
+        line &&
+        !line.startsWith('#') &&
+        !line.startsWith('|') &&
+        !line.includes('Email:'),
+    )
     .join('\n')
 
   resume.profile.fullName = localizedZh(headingName)
@@ -457,10 +551,46 @@ function normalizeModules(modules: unknown): ResumeImportModule[] {
   return Array.from(new Set(selectedModules))
 }
 
+function createInitialJobDetail(jobId: string): Omit<ResumeImportJobDetail, 'elapsedMs'> {
+  const now = new Date().toISOString()
+
+  return {
+    jobId,
+    status: 'running',
+    currentStage: 'accepted',
+    steps: RESUME_IMPORT_JOB_STEPS.map((step) => ({
+      ...step,
+      status: step.stage === 'accepted' ? 'running' : 'pending',
+      ...(step.stage === 'accepted' ? { startedAt: now } : {}),
+    })),
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
+function cloneJobDetail(job: CachedResumeImportJob): ResumeImportJobDetail {
+  return {
+    ...job.detail,
+    steps: job.detail.steps.map((step) => ({ ...step })),
+    error: job.detail.error ? { ...job.detail.error } : undefined,
+    elapsedMs: Date.now() - new Date(job.createdAt).getTime(),
+  }
+}
+
+function normalizeErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message
+  }
+
+  return '简历导入识别失败，请稍后重试'
+}
+
 @Injectable()
 export class ResumeImportRecognitionService {
   private readonly resultMap = new Map<string, CachedResumeImportResult>()
   private readonly insertionOrder: string[] = []
+  private readonly jobMap = new Map<string, CachedResumeImportJob>()
+  private readonly jobInsertionOrder: string[] = []
 
   constructor(
     @Inject(FileExtractionService)
@@ -471,7 +601,38 @@ export class ResumeImportRecognitionService {
     private readonly resumePublicationService: ResumePublicationService,
   ) {}
 
-  async recognize(input: RecognizeResumeImportInput): Promise<ResumeImportResultDetail> {
+  recognize(input: RecognizeResumeImportInput): ResumeImportJobDetail {
+    const jobId = randomUUID()
+    const detail = createInitialJobDetail(jobId)
+    const job = {
+      createdAt: detail.createdAt,
+      detail,
+    }
+
+    this.storeJob(job)
+    void this.runRecognitionJob(jobId, input)
+
+    return cloneJobDetail(job)
+  }
+
+  getJob(jobId: string): ResumeImportJobDetail {
+    return cloneJobDetail(this.getJobOrThrow(jobId))
+  }
+
+  private async runRecognitionJob(jobId: string, input: RecognizeResumeImportInput) {
+    try {
+      const detail = await this.createRecognitionResult(jobId, input)
+      this.completeJob(jobId, detail.resultId)
+    } catch (error) {
+      this.failJob(jobId, normalizeErrorMessage(error), input.traceId)
+    }
+  }
+
+  private async createRecognitionResult(
+    jobId: string,
+    input: RecognizeResumeImportInput,
+  ): Promise<ResumeImportResultDetail> {
+    this.startJobStage(jobId, 'extracting')
     const extension = readFileExtension(input.originalname)
 
     if (extension !== 'md' && extension !== 'txt') {
@@ -484,6 +645,7 @@ export class ResumeImportRecognitionService {
 
     const extracted = await this.fileExtractionService.extractText(input)
 
+    this.startJobStage(jobId, 'text_validating')
     if (extracted.charCount < MIN_TEXT_CHARS) {
       throw new BadRequestException('简历文本过短，无法稳定识别为结构化简历')
     }
@@ -494,14 +656,17 @@ export class ResumeImportRecognitionService {
 
     const draft = await this.resumePublicationService.getDraft()
     const providerSummary = this.aiService.getProviderSummary()
+
+    this.startJobStage(jobId, 'ai_generating')
     const payload =
       providerSummary.mode === 'mock'
         ? {
             resume: parseMockResumeFromMarkdown(extracted.text),
             summary: '已从上传简历中识别出结构化候选草稿。',
           }
-        : await this.generateProviderRecognition(extracted.text)
+        : await this.generateProviderRecognition(extracted.text, jobId)
 
+    this.startJobStage(jobId, 'schema_validating')
     const candidateResume = normalizeStandardResume(payload.resume)
     const validationResult = validateStandardResume(candidateResume)
 
@@ -511,6 +676,7 @@ export class ResumeImportRecognitionService {
       )
     }
 
+    this.startJobStage(jobId, 'diff_building')
     const warnings = [...collectWarnings(candidateResume), ...(payload.warnings ?? [])]
     const changedModules = RESUME_IMPORT_MODULES.filter((module) =>
       isModuleChanged(draft.resume, candidateResume, module),
@@ -564,7 +730,9 @@ export class ResumeImportRecognitionService {
     const nextResume = cloneResume(draft.resume)
 
     for (const selectedModule of selectedModules) {
-      nextResume[selectedModule] = cloneResume(cachedResult.candidateResume)[selectedModule] as never
+      nextResume[selectedModule] = cloneResume(cachedResult.candidateResume)[
+        selectedModule
+      ] as never
     }
 
     const appliedModules = RESUME_IMPORT_MODULES.filter((module) =>
@@ -586,12 +754,22 @@ export class ResumeImportRecognitionService {
     return this.resumePublicationService.updateDraft(nextResume)
   }
 
-  private async generateProviderRecognition(text: string): Promise<ProviderResumeImportPayload> {
+  private async generateProviderRecognition(
+    text: string,
+    jobId: string,
+  ): Promise<ProviderResumeImportPayload> {
     const result = await this.aiService.generateText({
-      systemPrompt: '你是一个简历结构化识别助手。你只能输出合法 JSON，不要输出 Markdown。',
+      systemPrompt:
+        '你是一个简历结构化识别助手。你只能输出合法 JSON，不要输出 Markdown。',
       temperature: 0.1,
+      maxTokens: 8192,
+      responseFormat: {
+        type: 'json_object',
+      },
       prompt: this.buildPrompt(text),
     })
+
+    this.startJobStage(jobId, 'json_parsing')
     const jsonText = extractJsonObject(result.text)
 
     try {
@@ -644,6 +822,100 @@ export class ResumeImportRecognitionService {
     this.pruneOverflowResults()
   }
 
+  private storeJob(input: CachedResumeImportJob) {
+    this.pruneExpiredJobs()
+    this.jobMap.set(input.detail.jobId, input)
+    this.jobInsertionOrder.push(input.detail.jobId)
+    this.pruneOverflowJobs()
+  }
+
+  private getJobOrThrow(jobId: string): CachedResumeImportJob {
+    this.pruneExpiredJobs()
+    const job = this.jobMap.get(jobId)
+
+    if (!job) {
+      throw new NotFoundException('当前简历导入识别任务已失效，请重新上传识别')
+    }
+
+    return job
+  }
+
+  private startJobStage(jobId: string, stage: ResumeImportJobStage) {
+    const job = this.getJobOrThrow(jobId)
+    const now = new Date().toISOString()
+    const activeIndex = RESUME_IMPORT_JOB_STEPS.findIndex((step) => step.stage === stage)
+
+    job.detail.currentStage = stage
+    job.detail.updatedAt = now
+    job.detail.steps = job.detail.steps.map((step, index) => {
+      if (activeIndex < 0) {
+        return step
+      }
+
+      if (index < activeIndex) {
+        return {
+          ...step,
+          status: 'completed',
+          completedAt: step.completedAt ?? now,
+        }
+      }
+
+      if (index === activeIndex) {
+        return {
+          ...step,
+          status: 'running',
+          startedAt: step.startedAt ?? now,
+        }
+      }
+
+      return {
+        ...step,
+        status: 'pending',
+      }
+    })
+  }
+
+  private completeJob(jobId: string, resultId: string) {
+    const job = this.getJobOrThrow(jobId)
+    const now = new Date().toISOString()
+
+    job.detail.status = 'completed'
+    job.detail.currentStage = 'completed'
+    job.detail.resultId = resultId
+    job.detail.updatedAt = now
+    job.detail.steps = job.detail.steps.map((step) => ({
+      ...step,
+      status: 'completed',
+      startedAt: step.startedAt ?? now,
+      completedAt: step.completedAt ?? now,
+    }))
+  }
+
+  private failJob(jobId: string, message: string, traceId?: string) {
+    const job = this.getJobOrThrow(jobId)
+    const now = new Date().toISOString()
+
+    job.detail.status = 'failed'
+    job.detail.currentStage = 'failed'
+    job.detail.error = {
+      message,
+      ...(traceId ? { traceId } : {}),
+    }
+    job.detail.updatedAt = now
+    job.detail.steps = job.detail.steps.map((step) => {
+      if (step.status === 'running') {
+        return {
+          ...step,
+          status: 'failed',
+          completedAt: now,
+          message,
+        }
+      }
+
+      return step
+    })
+  }
+
   private getResultOrThrow(resultId: string): CachedResumeImportResult {
     this.pruneExpiredResults()
     const result = this.resultMap.get(resultId)
@@ -685,6 +957,39 @@ export class ResumeImportRecognitionService {
 
     if (index >= 0) {
       this.insertionOrder.splice(index, 1)
+    }
+  }
+
+  private pruneExpiredJobs() {
+    const now = Date.now()
+
+    for (const [jobId, job] of this.jobMap.entries()) {
+      if (now - new Date(job.createdAt).getTime() <= JOB_TTL_MS) {
+        continue
+      }
+
+      this.jobMap.delete(jobId)
+      this.removeFromJobInsertionOrder(jobId)
+    }
+  }
+
+  private pruneOverflowJobs() {
+    while (this.jobInsertionOrder.length > MAX_JOB_COUNT) {
+      const oldestJobId = this.jobInsertionOrder.shift()
+
+      if (!oldestJobId) {
+        return
+      }
+
+      this.jobMap.delete(oldestJobId)
+    }
+  }
+
+  private removeFromJobInsertionOrder(jobId: string) {
+    const index = this.jobInsertionOrder.indexOf(jobId)
+
+    if (index >= 0) {
+      this.jobInsertionOrder.splice(index, 1)
     }
   }
 }

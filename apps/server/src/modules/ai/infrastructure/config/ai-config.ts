@@ -16,7 +16,10 @@ export type AiRuntimeConfig =
       model: string
       chatModel?: string
       embeddingModel?: string
+      maxTokens?: number
       providerLabel: string
+      reasoningEffort?: 'low' | 'medium' | 'high'
+      thinkingEnabled?: boolean
     }
 
 function readRequiredValue(
@@ -53,6 +56,43 @@ function readOptionalValue(env: EnvironmentVariables, key: string): string | und
   const value = env[key]?.trim()
 
   return value ? value : undefined
+}
+
+function readOptionalBoolean(
+  env: EnvironmentVariables,
+  key: string,
+): boolean | undefined {
+  const value = readOptionalValue(env, key)?.toLowerCase()
+
+  if (!value) {
+    return undefined
+  }
+
+  return ['1', 'true', 'yes', 'on'].includes(value)
+}
+
+function readOptionalPositiveInteger(
+  env: EnvironmentVariables,
+  key: string,
+): number | undefined {
+  const value = readOptionalValue(env, key)
+
+  if (!value) {
+    return undefined
+  }
+
+  const parsedValue = Number.parseInt(value, 10)
+
+  return Number.isInteger(parsedValue) && parsedValue > 0 ? parsedValue : undefined
+}
+
+function readOptionalReasoningEffort(
+  env: EnvironmentVariables,
+  key: string,
+): 'low' | 'medium' | 'high' | undefined {
+  const value = readOptionalValue(env, key)?.toLowerCase()
+
+  return value === 'low' || value === 'medium' || value === 'high' ? value : undefined
 }
 
 export function resolveAiRuntimeConfig(env: EnvironmentVariables): AiRuntimeConfig {
@@ -99,10 +139,13 @@ export function resolveAiRuntimeConfig(env: EnvironmentVariables): AiRuntimeConf
       mode: 'openai-compatible',
       apiKey: readRequiredSecret(env, 'DEEPSEEK_API_KEY', 'DEEPSEEK_API_KEY is required'),
       baseUrl: env.DEEPSEEK_BASE_URL?.trim() || 'https://api.deepseek.com',
+      maxTokens: readOptionalPositiveInteger(env, 'DEEPSEEK_MAX_TOKENS'),
       model: chatModel,
       chatModel,
       embeddingModel,
       providerLabel: 'DeepSeek',
+      reasoningEffort: readOptionalReasoningEffort(env, 'DEEPSEEK_REASONING_EFFORT'),
+      thinkingEnabled: readOptionalBoolean(env, 'DEEPSEEK_THINKING_ENABLED'),
     }
   }
 

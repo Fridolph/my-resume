@@ -40,25 +40,28 @@ vi.mock('alova/client', async () => {
       const [loading, setLoading] = React.useState(false)
       const [error, setError] = React.useState<Error | undefined>(undefined)
 
-      const send = React.useCallback(async (...args: unknown[]) => {
-        setLoading(true)
-        setError(undefined)
+      const send = React.useCallback(
+        async (...args: unknown[]) => {
+          setLoading(true)
+          setError(undefined)
 
-        try {
-          const method =
-            typeof methodHandler === 'function' ? methodHandler(...args) : methodHandler
-          const result = await method.send()
-          setData(result)
-          return result
-        } catch (nextError) {
-          const normalizedError =
-            nextError instanceof Error ? nextError : new Error('request failed')
-          setError(normalizedError)
-          throw normalizedError
-        } finally {
-          setLoading(false)
-        }
-      }, [methodHandler])
+          try {
+            const method =
+              typeof methodHandler === 'function' ? methodHandler(...args) : methodHandler
+            const result = await method.send()
+            setData(result)
+            return result
+          } catch (nextError) {
+            const normalizedError =
+              nextError instanceof Error ? nextError : new Error('request failed')
+            setError(normalizedError)
+            throw normalizedError
+          } finally {
+            setLoading(false)
+          }
+        },
+        [methodHandler],
+      )
 
       return { data, error, loading, send }
     },
@@ -172,34 +175,6 @@ vi.mock('../components/user-doc-ingestion-panel', () => ({
       </div>
     ) : (
       <div>资料入库只读占位</div>
-    ),
-}))
-
-vi.mock('../components/resume-import-panel', () => ({
-  ResumeImportPanel: ({
-    canUpload,
-    onRecognized,
-  }: {
-    canUpload: boolean
-    onRecognized?: (result: {
-      resultId: string
-    }) => void
-  }) =>
-    canUpload ? (
-      <div>
-        <span>简历导入识别面板占位</span>
-        <button
-          onClick={() =>
-            onRecognized?.({
-              resultId: 'resume-import-001',
-            })
-          }
-          type="button">
-          模拟识别完成
-        </button>
-      </div>
-    ) : (
-      <div>简历导入识别只读占位</div>
     ),
 }))
 
@@ -431,6 +406,10 @@ describe('AdminAiWorkbenchShell', () => {
     expect(await screen.findByText('资料入库面板占位')).toBeInTheDocument()
     expect(await screen.findByText('文件提取面板占位')).toBeInTheDocument()
     expect(await screen.findByText('真实分析面板占位')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '进入简历导入识别' })).toHaveAttribute(
+      'href',
+      '/dashboard/ai/resume-import',
+    )
     expect(screen.getByRole('link', { name: '进入优化记录' })).toHaveAttribute(
       'href',
       '/dashboard/ai/optimization-history',
@@ -449,7 +428,9 @@ describe('AdminAiWorkbenchShell', () => {
     expect(await screen.findByTestId('compact-workbench-info-cards')).toBeInTheDocument()
     expect(screen.getByText('草稿反馈')).toBeInTheDocument()
     expect(screen.getByText('运行时摘要')).toBeInTheDocument()
-    expect(screen.getByText((content) => content.startsWith('当前草稿标题'))).toBeInTheDocument()
+    expect(
+      screen.getByText((content) => content.startsWith('当前草稿标题')),
+    ).toBeInTheDocument()
     expect(screen.queryByText('当前草稿快照')).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: '模拟入库完成' }))
@@ -530,6 +511,10 @@ describe('AdminAiWorkbenchShell', () => {
     expect(await screen.findByText('资料入库只读占位')).toBeInTheDocument()
     expect(await screen.findByText('文件提取只读占位')).toBeInTheDocument()
     expect(await screen.findByText('真实分析只读占位')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '进入简历导入识别' })).toHaveAttribute(
+      'href',
+      '/dashboard/ai/resume-import',
+    )
     expect(fetchDraftResumeSummaryMock).not.toHaveBeenCalled()
   })
 

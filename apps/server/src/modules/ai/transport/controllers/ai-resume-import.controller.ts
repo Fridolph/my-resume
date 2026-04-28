@@ -8,6 +8,7 @@ import {
   Inject,
   Param,
   Post,
+  Req,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -28,12 +29,14 @@ import {
 } from '@nestjs/swagger'
 
 import { ApiEnvelopeResponse } from '../../../../common/swagger/api-envelope-response.decorator'
+import type { RequestWithTraceId } from '../../../../common/http/trace-id'
 import { RequireCapability } from '../../../auth/decorators/require-capability.decorator'
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard'
 import { RoleCapabilitiesGuard } from '../../../auth/guards/role-capabilities.guard'
 import { ResumeImportRecognitionService } from '../../application/services/resume-import-recognition.service'
 import {
   ApplyResumeImportBodyDto,
+  ResumeImportJobDto,
   ResumeImportResultDto,
 } from '../dto/resume-import-swagger.dto'
 
@@ -51,6 +54,7 @@ export class AiResumeImportController {
   ) {}
 
   @Post('recognize')
+  @HttpCode(HttpStatus.ACCEPTED)
   @UseGuards(RoleCapabilitiesGuard)
   @RequireCapability('canTriggerAiAnalysis')
   @UseInterceptors(FileInterceptor('file'))
@@ -74,8 +78,8 @@ export class AiResumeImportController {
     },
   })
   @ApiEnvelopeResponse({
-    description: '简历导入识别成功',
-    type: ResumeImportResultDto,
+    description: '简历导入识别任务已启动',
+    type: ResumeImportJobDto,
   })
   @ApiBadRequestResponse({
     description: '文件缺失、类型不支持、文本过短或过长',
@@ -83,7 +87,10 @@ export class AiResumeImportController {
   @ApiForbiddenResponse({
     description: '当前角色没有触发 AI 分析权限',
   })
-  recognize(@UploadedFile() file?: Express.Multer.File) {
+  recognize(
+    @UploadedFile() file?: Express.Multer.File,
+    @Req() request?: RequestWithTraceId,
+  ) {
     if (!file) {
       throw new BadRequestException('File is required')
     }
@@ -91,9 +98,31 @@ export class AiResumeImportController {
     return this.resumeImportRecognitionService.recognize({
       buffer: file.buffer,
       originalname: file.originalname,
+      traceId: request?.traceId,
       mimetype: file.mimetype,
       size: file.size,
     })
+  }
+
+  @Get('jobs/:jobId')
+  @ApiOperation({
+    summary: '获取简历导入识别任务状态',
+    description: '按 jobId 读取当前识别阶段、步骤时间线、失败详情与完成后的 resultId。',
+  })
+  @ApiParam({
+    name: 'jobId',
+    description: '识别任务 ID',
+    example: 'job-123456',
+  })
+  @ApiEnvelopeResponse({
+    description: '读取简历导入识别任务成功',
+    type: ResumeImportJobDto,
+  })
+  @ApiNotFoundResponse({
+    description: '识别任务不存在或已过期',
+  })
+  getJob(@Param('jobId') jobId: string) {
+    return this.resumeImportRecognitionService.getJob(jobId)
   }
 
   @Get('results/:resultId')

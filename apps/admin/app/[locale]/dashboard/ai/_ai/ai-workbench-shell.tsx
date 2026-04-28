@@ -43,11 +43,16 @@ import {
 } from './utils/resume-optimization-persistence'
 
 const AiFileExtractionPanel = dynamic(
-  () => import('./components/file-extraction-panel').then((module) => module.AiFileExtractionPanel),
+  () =>
+    import('./components/file-extraction-panel').then(
+      (module) => module.AiFileExtractionPanel,
+    ),
   {
     loading: () => (
       <div className="status-box" data-testid="ai-file-extraction-loading">
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">正在加载文件提取面板...</p>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          正在加载文件提取面板...
+        </p>
         <div className="mt-2 grid gap-2">
           <Skeleton className="h-4 w-4/5 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
           <Skeleton className="h-4 w-2/3 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
@@ -80,22 +85,9 @@ const AiUserDocIngestionPanel = dynamic(
   {
     loading: () => (
       <div className="status-box" data-testid="ai-user-doc-ingestion-loading">
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">正在加载资料入库面板...</p>
-        <div className="mt-2 grid gap-2">
-          <Skeleton className="h-4 w-3/4 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
-          <Skeleton className="h-4 w-2/3 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
-        </div>
-      </div>
-    ),
-  },
-)
-
-const ResumeImportPanel = dynamic(
-  () => import('./components/resume-import-panel').then((module) => module.ResumeImportPanel),
-  {
-    loading: () => (
-      <div className="status-box" data-testid="resume-import-panel-loading">
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">正在加载简历导入识别...</p>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          正在加载资料入库面板...
+        </p>
         <div className="mt-2 grid gap-2">
           <Skeleton className="h-4 w-3/4 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
           <Skeleton className="h-4 w-2/3 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
@@ -112,7 +104,8 @@ const scenarioCards = {
   },
   'resume-review': {
     title: '简历优化建议',
-    description: '直接基于后台当前草稿生成结构化建议与 diff，再由用户决定是否应用到草稿。',
+    description:
+      '直接基于后台当前草稿生成结构化建议与 diff，再由用户决定是否应用到草稿。',
   },
   'offer-compare': {
     title: 'Offer 对比建议',
@@ -169,7 +162,8 @@ export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
   const loadDraftSnapshotRef = useRef(loadDraftSnapshot)
   const runtimeRequestKeyRef = useRef<string | null>(null)
   const draftRequestKeyRef = useRef<string | null>(null)
-  const runtimeRequestKey = status === 'ready' && accessToken ? `${status}:${accessToken}` : null
+  const runtimeRequestKey =
+    status === 'ready' && accessToken ? `${status}:${accessToken}` : null
   const draftRequestKey =
     status === 'ready' && accessToken && currentUser?.capabilities.canEditResume
       ? `${status}:${accessToken}:${summaryLocale}`
@@ -262,12 +256,6 @@ export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
     instruction: string,
   ) {
     upsertResumeOptimizationHistoryEntry(result, instruction)
-  }
-
-  function handleResumeImportRecognized() {
-    setAnalysisHelperMessage(
-      '已生成简历导入候选草稿，请在结果页确认模块 diff 后再写回当前草稿。',
-    )
   }
 
   function handleDraftApplied(snapshot: ResumeDraftSnapshot) {
@@ -380,12 +368,20 @@ export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
           helperMessage={analysisHelperMessage}
           inputAccessory={
             <div className="grid gap-3">
-              <ResumeImportPanel
-                accessToken={accessToken}
-                apiBaseUrl={DEFAULT_API_BASE_URL}
-                canUpload={isAdmin}
-                onRecognized={handleResumeImportRecognized}
-              />
+              <div className="status-box">
+                <strong>简历导入识别</strong>
+                <span>
+                  上传自己的中文 md/txt 简历，进入独立子页面查看阶段进度、失败详情和模块
+                  diff。
+                </span>
+                <div className="dashboard-entry-actions">
+                  <Link
+                    className="inline-flex h-10 items-center justify-center rounded-full border border-zinc-300 px-4 text-sm text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:text-white"
+                    href="/dashboard/ai/resume-import">
+                    进入简历导入识别
+                  </Link>
+                </div>
+              </div>
               <AiUserDocIngestionPanel
                 accessToken={accessToken}
                 apiBaseUrl={DEFAULT_API_BASE_URL}
@@ -399,7 +395,10 @@ export function AdminAiWorkbenchShell({ locale }: { locale: AppLocale }) {
                 onExtractedText={handleExtractedText}
               />
               <div className="dashboard-entry-actions">
-                <Button onPress={handleResetToDefaultTemplate} size="sm" variant="outline">
+                <Button
+                  onPress={handleResetToDefaultTemplate}
+                  size="sm"
+                  variant="outline">
                   恢复默认 JD 模板
                 </Button>
               </div>

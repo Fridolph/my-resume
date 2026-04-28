@@ -4,6 +4,7 @@ import type {
   AiResumeOptimizationResult,
   AiUsageRecordDetail,
   AiUsageRecordSummary,
+  AiResumeImportJob,
   AiResumeImportResult,
   AiWorkbenchCachedReportSummary,
   AiWorkbenchReport,
@@ -14,6 +15,7 @@ import type {
   ApplyAiResumeOptimizationInput,
   ApplyAiResumeOptimizationResult,
   ExtractTextFromFileInput,
+  FetchAiResumeImportJobInput,
   FetchAiResumeImportResultInput,
   FetchAiResumeOptimizationResultInput,
   FetchAiUsageHistoryInput,
@@ -40,6 +42,11 @@ export type {
   AiResumeOptimizationResult,
   AiResumeImportDiffEntry,
   AiResumeImportDiffStatus,
+  AiResumeImportJob,
+  AiResumeImportJobStage,
+  AiResumeImportJobStatus,
+  AiResumeImportJobStep,
+  AiResumeImportJobStepStatus,
   AiResumeImportModule,
   AiResumeImportModuleDiff,
   AiResumeImportModuleStats,
@@ -65,6 +72,7 @@ export type {
   ApplyAiResumeOptimizationResult,
   ExtractedFileType,
   ExtractTextFromFileInput,
+  FetchAiResumeImportJobInput,
   FetchAiResumeImportResultInput,
   FetchAiResumeOptimizationResultInput,
   FetchAiUsageHistoryInput,
@@ -105,11 +113,14 @@ export function createFetchAiUsageHistoryMethod(input: FetchAiUsageHistoryInput)
     },
     fallbackErrorMessage: 'AI 调用记录加载失败',
     transform: (payload) =>
-      ((payload as { records?: AiUsageRecordSummary[] }).records ?? []) as AiUsageRecordSummary[],
+      ((payload as { records?: AiUsageRecordSummary[] }).records ??
+        []) as AiUsageRecordSummary[],
   })
 }
 
-export function createFetchAiUsageRecordDetailMethod(input: FetchAiUsageRecordDetailInput) {
+export function createFetchAiUsageRecordDetailMethod(
+  input: FetchAiUsageRecordDetailInput,
+) {
   return Alova.createMethod<AiUsageRecordDetail>({
     apiBaseUrl: input.apiBaseUrl,
     pathname: `/ai/reports/history/${input.recordId}`,
@@ -192,7 +203,9 @@ export function createFetchAiResumeOptimizationResultMethod(
  * @param input 请求参数
  * @returns 应用建议请求 Method
  */
-export function createApplyAiResumeOptimizationMethod(input: ApplyAiResumeOptimizationInput) {
+export function createApplyAiResumeOptimizationMethod(
+  input: ApplyAiResumeOptimizationInput,
+) {
   return Alova.createMethod<ApplyAiResumeOptimizationResult>({
     apiBaseUrl: input.apiBaseUrl,
     pathname: '/ai/reports/resume-optimize/apply',
@@ -219,7 +232,7 @@ export function createRecognizeAiResumeImportMethod(input: RecognizeAiResumeImpo
   const formData = new FormData()
   formData.append('file', input.file)
 
-  return Alova.createMethod<AiResumeImportResult>({
+  return Alova.createMethod<AiResumeImportJob>({
     apiBaseUrl: input.apiBaseUrl,
     pathname: '/ai/resume-import/recognize',
     method: 'POST',
@@ -227,6 +240,21 @@ export function createRecognizeAiResumeImportMethod(input: RecognizeAiResumeImpo
     body: formData,
     requestInit: input.requestInit,
     fallbackErrorMessage: '简历导入识别失败，请稍后重试',
+  })
+}
+
+/**
+ * 构造读取简历导入识别任务 Method
+ *
+ * @param input 请求参数
+ * @returns 简历导入识别任务请求 Method
+ */
+export function createFetchAiResumeImportJobMethod(input: FetchAiResumeImportJobInput) {
+  return Alova.createMethod<AiResumeImportJob>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: `/ai/resume-import/jobs/${input.jobId}`,
+    accessToken: input.accessToken,
+    fallbackErrorMessage: '简历导入识别任务加载失败，请稍后重试',
   })
 }
 
@@ -283,8 +311,8 @@ export function createFetchCachedAiWorkbenchReportsMethod(input: RuntimeInput) {
     accessToken: input.accessToken,
     fallbackErrorMessage: '缓存报告列表加载失败',
     transform: (payload) =>
-      ((payload as { reports?: AiWorkbenchCachedReportSummary[] }).reports ?? []) as
-        AiWorkbenchCachedReportSummary[],
+      ((payload as { reports?: AiWorkbenchCachedReportSummary[] }).reports ??
+        []) as AiWorkbenchCachedReportSummary[],
   })
 }
 

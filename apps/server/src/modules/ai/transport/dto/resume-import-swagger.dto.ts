@@ -1,6 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import type { ResumeImportModule } from '../../application/services/resume-import-recognition.service'
+import type {
+  ResumeImportJobStage,
+  ResumeImportJobStatus,
+  ResumeImportJobStepStatus,
+  ResumeImportModule,
+} from '../../application/services/resume-import-recognition.service'
 
 const RESUME_IMPORT_MODULE_ENUM: ResumeImportModule[] = [
   'profile',
@@ -25,6 +30,102 @@ export class ApplyResumeImportBodyDto {
     isArray: true,
   })
   modules!: ResumeImportModule[]
+}
+
+const RESUME_IMPORT_JOB_STAGE_ENUM: ResumeImportJobStage[] = [
+  'accepted',
+  'extracting',
+  'text_validating',
+  'ai_generating',
+  'json_parsing',
+  'schema_validating',
+  'diff_building',
+  'completed',
+  'failed',
+]
+
+const RESUME_IMPORT_JOB_STATUS_ENUM: ResumeImportJobStatus[] = [
+  'running',
+  'completed',
+  'failed',
+]
+
+const RESUME_IMPORT_JOB_STEP_STATUS_ENUM: ResumeImportJobStepStatus[] = [
+  'pending',
+  'running',
+  'completed',
+  'failed',
+]
+
+export class ResumeImportJobDto {
+  @ApiProperty({
+    description: '识别任务 ID',
+    example: 'job-123456',
+  })
+  jobId!: string
+
+  @ApiProperty({
+    description: '任务状态',
+    enum: RESUME_IMPORT_JOB_STATUS_ENUM,
+    example: 'running',
+  })
+  status!: ResumeImportJobStatus
+
+  @ApiProperty({
+    description: '当前阶段',
+    enum: RESUME_IMPORT_JOB_STAGE_ENUM,
+    example: 'ai_generating',
+  })
+  currentStage!: ResumeImportJobStage
+
+  @ApiProperty({
+    description: '阶段时间线',
+    isArray: true,
+    type: Object,
+  })
+  steps!: Array<{
+    stage: ResumeImportJobStage
+    label: string
+    status: ResumeImportJobStepStatus
+    startedAt?: string
+    completedAt?: string
+    message?: string
+  }>
+
+  @ApiProperty({
+    description: '任务创建时间',
+    example: '2026-04-28T12:00:00.000Z',
+  })
+  createdAt!: string
+
+  @ApiProperty({
+    description: '任务更新时间',
+    example: '2026-04-28T12:00:03.000Z',
+  })
+  updatedAt!: string
+
+  @ApiProperty({
+    description: '已耗时毫秒',
+    example: 3200,
+  })
+  elapsedMs!: number
+
+  @ApiProperty({
+    description: '完成后的识别结果 ID',
+    example: 'result-123456',
+    required: false,
+  })
+  resultId?: string
+
+  @ApiProperty({
+    description: '失败详情',
+    required: false,
+    type: Object,
+  })
+  error?: {
+    message: string
+    traceId?: string
+  }
 }
 
 export class ResumeImportResultDto {

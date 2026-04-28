@@ -328,6 +328,45 @@ export interface AiResumeImportResult {
   }
 }
 
+export type AiResumeImportJobStage =
+  | 'accepted'
+  | 'extracting'
+  | 'text_validating'
+  | 'ai_generating'
+  | 'json_parsing'
+  | 'schema_validating'
+  | 'diff_building'
+  | 'completed'
+  | 'failed'
+
+export type AiResumeImportJobStatus = 'running' | 'completed' | 'failed'
+
+export type AiResumeImportJobStepStatus = 'pending' | 'running' | 'completed' | 'failed'
+
+export interface AiResumeImportJobStep {
+  stage: AiResumeImportJobStage
+  label: string
+  status: AiResumeImportJobStepStatus
+  startedAt?: string
+  completedAt?: string
+  message?: string
+}
+
+export interface AiResumeImportJob {
+  jobId: string
+  status: AiResumeImportJobStatus
+  currentStage: AiResumeImportJobStage
+  steps: AiResumeImportJobStep[]
+  createdAt: string
+  updatedAt: string
+  elapsedMs: number
+  resultId?: string
+  error?: {
+    message: string
+    traceId?: string
+  }
+}
+
 /**
  * 上传简历并识别为候选草稿参数。
  */
@@ -341,6 +380,13 @@ export interface RecognizeAiResumeImportInput extends RuntimeInput {
  */
 export interface FetchAiResumeImportResultInput extends RuntimeInput {
   resultId: string
+}
+
+/**
+ * 获取简历导入识别任务参数。
+ */
+export interface FetchAiResumeImportJobInput extends RuntimeInput {
+  jobId: string
 }
 
 /**

@@ -51,6 +51,28 @@ describe('resolveAiRuntimeConfig', () => {
     })
   })
 
+  it('should resolve deepseek v4 reasoning options from environment variables', () => {
+    const env: EnvironmentVariables = {
+      AI_PROVIDER: 'deepseek',
+      DEEPSEEK_API_KEY: 'sk-deepseek-demo',
+      DEEPSEEK_MODEL: 'deepseek-v4-pro',
+      DEEPSEEK_THINKING_ENABLED: 'true',
+      DEEPSEEK_REASONING_EFFORT: 'high',
+      DEEPSEEK_MAX_TOKENS: '8192',
+    }
+
+    expect(resolveAiRuntimeConfig(env)).toEqual(
+      expect.objectContaining({
+        provider: 'deepseek',
+        model: 'deepseek-v4-pro',
+        chatModel: 'deepseek-v4-pro',
+        thinkingEnabled: true,
+        reasoningEffort: 'high',
+        maxTokens: 8192,
+      }),
+    )
+  })
+
   it('should allow chat and embedding models to be configured separately', () => {
     const env: EnvironmentVariables = {
       AI_PROVIDER: 'openai-compatible',

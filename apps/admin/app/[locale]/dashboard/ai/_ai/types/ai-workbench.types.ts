@@ -315,6 +315,45 @@ export interface AiResumeImportResult {
   }
 }
 
+export type AiResumeImportJobStage =
+  | 'accepted'
+  | 'extracting'
+  | 'text_validating'
+  | 'ai_generating'
+  | 'json_parsing'
+  | 'schema_validating'
+  | 'diff_building'
+  | 'completed'
+  | 'failed'
+
+export type AiResumeImportJobStatus = 'running' | 'completed' | 'failed'
+
+export type AiResumeImportJobStepStatus = 'pending' | 'running' | 'completed' | 'failed'
+
+export interface AiResumeImportJobStep {
+  stage: AiResumeImportJobStage
+  label: string
+  status: AiResumeImportJobStepStatus
+  startedAt?: string
+  completedAt?: string
+  message?: string
+}
+
+export interface AiResumeImportJob {
+  jobId: string
+  status: AiResumeImportJobStatus
+  currentStage: AiResumeImportJobStage
+  steps: AiResumeImportJobStep[]
+  createdAt: string
+  updatedAt: string
+  elapsedMs: number
+  resultId?: string
+  error?: {
+    message: string
+    traceId?: string
+  }
+}
+
 /**
  * 应用导入结果后的返回快照。
  */
