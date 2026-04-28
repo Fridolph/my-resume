@@ -132,6 +132,8 @@ describe('ResumeImportRecognitionService', () => {
     expect(result.resultId).toBeTruthy()
     expect(result.fileType).toBe('md')
     expect(result.providerSummary.mode).toBe('mock')
+    expect(result.canApply).toBe(true)
+    expect(result.appliedModules).toEqual([])
     expect(result.moduleStats).toMatchObject({
       education: 1,
       experiences: 4,
@@ -284,7 +286,7 @@ describe('ResumeImportRecognitionService', () => {
     expect(schemaStep?.details?.[0]).toContain('proficiency')
   })
 
-  it('applies only selected modules back to draft', async () => {
+  it('applies selected modules once and marks the import result as consumed', async () => {
     const resumePublicationService = createResumePublicationService()
     const service = createService({
       resumePublicationService,
@@ -311,5 +313,18 @@ describe('ResumeImportRecognitionService', () => {
     expect(nextResume.experiences[0]?.companyName.zh).toBe(
       createExampleStandardResume().experiences[0]?.companyName.zh,
     )
+
+    const consumedResult = service.getResult(result.resultId)
+
+    expect(consumedResult.canApply).toBe(false)
+    expect(consumedResult.appliedModules).toEqual(['profile', 'projects'])
+    expect(consumedResult.appliedAt).toBeTruthy()
+    await expect(
+      service.apply({
+        resultId: result.resultId,
+        modules: ['experiences'],
+      }),
+    ).rejects.toThrow('该识别结果已写回过草稿，请重新上传识别后再回填')
+    expect(resumePublicationService.updateDraft).toHaveBeenCalledTimes(1)
   })
 })

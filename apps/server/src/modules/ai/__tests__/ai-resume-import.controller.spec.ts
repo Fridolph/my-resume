@@ -1,9 +1,16 @@
 import { BadRequestException } from '@nestjs/common'
 import { describe, expect, it, vi } from 'vitest'
 
-import { AiResumeImportController } from '../transport/controllers/ai-resume-import.controller'
+import {
+  AiResumeImportController,
+  RESUME_IMPORT_UPLOAD_MAX_BYTES,
+} from '../transport/controllers/ai-resume-import.controller'
 
 describe('AiResumeImportController', () => {
+  it('keeps the resume import upload limit at 1MB for the request layer', () => {
+    expect(RESUME_IMPORT_UPLOAD_MAX_BYTES).toBe(1024 * 1024)
+  })
+
   it('rejects recognize requests without an uploaded file', async () => {
     const controller = new AiResumeImportController({
       recognize: vi.fn(),

@@ -40,6 +40,8 @@ import {
   ResumeImportResultDto,
 } from '../dto/resume-import-swagger.dto'
 
+export const RESUME_IMPORT_UPLOAD_MAX_BYTES = 1024 * 1024
+
 @Controller('ai/resume-import')
 @UseGuards(JwtAuthGuard)
 @ApiTags('AI Resume Import')
@@ -57,11 +59,17 @@ export class AiResumeImportController {
   @HttpCode(HttpStatus.ACCEPTED)
   @UseGuards(RoleCapabilitiesGuard)
   @RequireCapability('canTriggerAiAnalysis')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: {
+        fileSize: RESUME_IMPORT_UPLOAD_MAX_BYTES,
+      },
+    }),
+  )
   @ApiOperation({
     summary: '识别上传简历为候选草稿',
     description:
-      '第一版仅支持中文 md/txt。识别结果只进入临时结果缓存，不直接覆盖草稿或发布态。',
+      '第一版仅支持中文 md/txt。接口返回 202 表示异步任务已创建；扩展名、文本长度、AI 生成和 schema 校验等内容类错误会通过 GET /api/ai/resume-import/jobs/:jobId 的 failed 状态返回。识别结果只进入临时结果缓存，不直接覆盖草稿或发布态。',
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -82,7 +90,8 @@ export class AiResumeImportController {
     type: ResumeImportJobDto,
   })
   @ApiBadRequestResponse({
-    description: '文件缺失、类型不支持、文本过短或过长',
+    description:
+      '请求层错误，例如文件缺失或超过 1MB 上传限制；内容识别错误请查看 job 状态',
   })
   @ApiForbiddenResponse({
     description: '当前角色没有触发 AI 分析权限',
@@ -152,7 +161,8 @@ export class AiResumeImportController {
   @RequireCapability('canEditResume')
   @ApiOperation({
     summary: '按模块回填候选草稿',
-    description: '只把用户选择的模块写回当前 draft；发布态仍需用户手动发布。',
+    description:
+      '只把用户选择的模块写回当前 draft；发布态仍需用户手动发布。MVP 中同一个 resultId 只允许成功回填一次。',
   })
   @ApiEnvelopeResponse({
     description: '简历导入结果回填成功',

@@ -202,6 +202,26 @@ export class ResumeImportResultDto {
   createdAt!: string
 
   @ApiProperty({
+    description: '该识别结果是否仍允许回填。MVP 中成功回填一次后会变为 false。',
+    example: true,
+  })
+  canApply!: boolean
+
+  @ApiProperty({
+    description: '已通过该识别结果写回过的模块',
+    enum: RESUME_IMPORT_MODULE_ENUM,
+    isArray: true,
+  })
+  appliedModules!: ResumeImportModule[]
+
+  @ApiProperty({
+    description: '该识别结果成功写回草稿的时间',
+    example: '2026-04-28T12:10:00.000Z',
+    required: false,
+  })
+  appliedAt?: string
+
+  @ApiProperty({
     description: 'Provider 摘要',
     type: Object,
   })

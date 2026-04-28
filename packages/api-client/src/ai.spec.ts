@@ -317,6 +317,8 @@ describe('ai api client methods', () => {
               highlights: 5,
             },
             createdAt: '2026-04-28T12:00:00.000Z',
+            canApply: true,
+            appliedModules: [],
             providerSummary: {
               provider: 'mock',
               model: 'mock-resume-import',
@@ -346,6 +348,8 @@ describe('ai api client methods', () => {
     })
 
     expect(result.warnings).toEqual(['联系方式不完整'])
+    expect(result.canApply).toBe(true)
+    expect(result.appliedModules).toEqual([])
     expect(applied.status).toBe('draft')
     expect(fetch).toHaveBeenLastCalledWith(
       'http://localhost:5577/api/ai/resume-import/apply',

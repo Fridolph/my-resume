@@ -81,6 +81,9 @@ export interface ResumeImportResultDetail {
     highlights: number
   }
   createdAt: string
+  canApply: boolean
+  appliedModules: ResumeImportModule[]
+  appliedAt?: string
   providerSummary: {
     provider: string
     model: string
@@ -1065,6 +1068,8 @@ export class ResumeImportRecognitionService {
         highlights: candidateResume.highlights.length,
       },
       createdAt,
+      canApply: true,
+      appliedModules: [],
       providerSummary,
     }
     this.updateJobStep(jobId, 'diff_building', {
@@ -1095,6 +1100,11 @@ export class ResumeImportRecognitionService {
   async apply(input: ApplyResumeImportInput) {
     const selectedModules = normalizeModules(input.modules)
     const cachedResult = this.getResultOrThrow(input.resultId)
+
+    if (!cachedResult.detail.canApply) {
+      throw new ConflictException('该识别结果已写回过草稿，请重新上传识别后再回填')
+    }
+
     const draft = await this.resumePublicationService.getDraft()
 
     if (draft.updatedAt !== cachedResult.draftUpdatedAt) {
@@ -1125,7 +1135,13 @@ export class ResumeImportRecognitionService {
       )
     }
 
-    return this.resumePublicationService.updateDraft(nextResume)
+    const updatedDraft = await this.resumePublicationService.updateDraft(nextResume)
+
+    cachedResult.detail.canApply = false
+    cachedResult.detail.appliedModules = appliedModules
+    cachedResult.detail.appliedAt = new Date().toISOString()
+
+    return updatedDraft
   }
 
   private async generateProviderRecognition(

@@ -321,6 +321,9 @@ export interface AiResumeImportResult {
   moduleDiffs: AiResumeImportModuleDiff[]
   moduleStats: AiResumeImportModuleStats
   createdAt: string
+  canApply: boolean
+  appliedModules: AiResumeImportModule[]
+  appliedAt?: string
   providerSummary: {
     provider: string
     model: string

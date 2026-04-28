@@ -66,8 +66,14 @@ export function ResumeImportResultShell({
   const [selectedModules, setSelectedModules] = useState<AiResumeImportModule[]>([])
   const [appliedModules, setAppliedModules] = useState<AiResumeImportModule[]>([])
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null)
+  const [hasAppliedResult, setHasAppliedResult] = useState(false)
   const requestKeyRef = useRef<string | null>(null)
-  const { data, error, loading, send: fetchResult } = useRequest(
+  const {
+    data,
+    error,
+    loading,
+    send: fetchResult,
+  } = useRequest(
     () =>
       createFetchAiResumeImportResultMethod({
         apiBaseUrl: DEFAULT_API_BASE_URL,
@@ -93,7 +99,10 @@ export function ResumeImportResultShell({
     },
   )
   const result = (data ?? null) as AiResumeImportResult | null
-  const canApply = Boolean(currentUser?.capabilities.canEditResume)
+  const canApply =
+    Boolean(currentUser?.capabilities.canEditResume) &&
+    (result?.canApply ?? true) &&
+    !hasAppliedResult
   const applyableModules = useMemo(
     () => selectedModules.filter((module) => !appliedModules.includes(module)),
     [appliedModules, selectedModules],
@@ -120,7 +129,8 @@ export function ResumeImportResultShell({
     }
 
     setSelectedModules(result.changedModules)
-    setAppliedModules([])
+    setAppliedModules(result.appliedModules)
+    setHasAppliedResult(!result.canApply)
     setFeedbackMessage(null)
   }, [result])
 
@@ -155,12 +165,11 @@ export function ResumeImportResultShell({
 
     try {
       await applyImportResult(normalizedModules)
-      setAppliedModules((currentModules) => [...currentModules, ...normalizedModules])
-      setSelectedModules((currentModules) =>
-        currentModules.filter((module) => !normalizedModules.includes(module)),
-      )
+      setAppliedModules(normalizedModules)
+      setSelectedModules([])
+      setHasAppliedResult(true)
       setFeedbackMessage(
-        `已将 ${normalizedModules.map(moduleLabel).join('、')} 写回草稿，公开站仍需手动发布。`,
+        `已将 ${normalizedModules.map(moduleLabel).join('、')} 写回草稿，公开站仍需手动发布。该识别结果已写回草稿；如需继续导入，请重新上传识别。`,
       )
     } catch (applyError) {
       setFeedbackMessage(
@@ -179,7 +188,8 @@ export function ResumeImportResultShell({
               候选草稿 Diff 看台
             </h1>
             <p className="max-w-3xl text-sm leading-6 text-zinc-500 dark:text-zinc-400">
-              这里展示上传简历识别出的候选草稿。你可以按模块确认后写回 draft；公开站不会自动变化。
+              这里展示上传简历识别出的候选草稿。你可以按模块确认后写回
+              draft；公开站不会自动变化。
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -187,13 +197,22 @@ export function ResumeImportResultShell({
             {result ? (
               <>
                 <Chip size="sm">{result.fileName}</Chip>
-                <Chip size="sm">生成于：{formatGeneratedAt(result.createdAt, locale)}</Chip>
+                <Chip size="sm">
+                  生成于：{formatGeneratedAt(result.createdAt, locale)}
+                </Chip>
               </>
             ) : null}
           </div>
         </div>
 
-        {feedbackMessage ? <div className="dashboard-inline-note">{feedbackMessage}</div> : null}
+        {feedbackMessage ? (
+          <div className="dashboard-inline-note">{feedbackMessage}</div>
+        ) : null}
+        {result && (!result.canApply || hasAppliedResult) ? (
+          <div className="dashboard-inline-note">
+            该识别结果已写回草稿；如需继续导入，请重新上传识别。
+          </div>
+        ) : null}
 
         {loading ? (
           <div className="grid gap-3" data-testid="resume-import-result-loading">
@@ -209,7 +228,10 @@ export function ResumeImportResultShell({
               {error.message}
             </strong>
             <div className="dashboard-entry-actions">
-              <Button onPress={() => router.push('/dashboard/ai')} size="md" variant="outline">
+              <Button
+                onPress={() => router.push('/dashboard/ai')}
+                size="md"
+                variant="outline">
                 返回 AI 工作台
               </Button>
             </div>
@@ -225,7 +247,8 @@ export function ResumeImportResultShell({
                   {result.summary}
                 </h2>
                 <p className="text-sm leading-6 text-zinc-500 dark:text-zinc-400">
-                  字符数：{result.charCount}，Provider：{result.providerSummary.provider} / {result.providerSummary.model}
+                  字符数：{result.charCount}，Provider：{result.providerSummary.provider}{' '}
+                  / {result.providerSummary.model}
                 </p>
               </article>
 
@@ -244,7 +267,9 @@ export function ResumeImportResultShell({
               <section className="grid gap-2 rounded-[1.5rem] border border-amber-200/70 bg-amber-50/80 p-5 dark:border-amber-300/25 dark:bg-amber-500/10">
                 <p className="eyebrow">质量提醒</p>
                 {result.warnings.map((warning) => (
-                  <p className="text-sm leading-6 text-amber-800 dark:text-amber-100" key={warning}>
+                  <p
+                    className="text-sm leading-6 text-amber-800 dark:text-amber-100"
+                    key={warning}>
                     {warning}
                   </p>
                 ))}
@@ -263,10 +288,18 @@ export function ResumeImportResultShell({
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div className="grid gap-2">
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="eyebrow">模块：{moduleLabel(moduleDiff.module)}</p>
+                          <p className="eyebrow">
+                            模块：{moduleLabel(moduleDiff.module)}
+                          </p>
                           <Chip size="sm">{statusLabel(moduleDiff.status)}</Chip>
-                          {isApplied ? <Chip color="success" size="sm">已写回</Chip> : null}
-                          {!isApplied && isSelected ? <Chip size="sm">待写回</Chip> : null}
+                          {isApplied ? (
+                            <Chip color="success" size="sm">
+                              已写回
+                            </Chip>
+                          ) : null}
+                          {!isApplied && isSelected ? (
+                            <Chip size="sm">待写回</Chip>
+                          ) : null}
                         </div>
                         <h3 className="text-lg font-semibold text-zinc-950 dark:text-white">
                           {moduleDiff.title}
@@ -277,7 +310,9 @@ export function ResumeImportResultShell({
                       </div>
                       <div className="dashboard-entry-actions">
                         <Button
-                          isDisabled={isApplied || moduleDiff.status === 'unchanged'}
+                          isDisabled={
+                            isApplied || !canApply || moduleDiff.status === 'unchanged'
+                          }
                           onPress={() => toggleSelectedModule(moduleDiff.module)}
                           size="sm"
                           type="button"
@@ -286,17 +321,11 @@ export function ResumeImportResultShell({
                         </Button>
                         <Button
                           className={adminPrimaryButtonClass}
-                          isDisabled={
-                            applyPending ||
-                            isApplied ||
-                            !canApply ||
-                            moduleDiff.status === 'unchanged'
-                          }
-                          onPress={() => void handleApplyModules([moduleDiff.module])}
+                          isDisabled
                           size="sm"
                           type="button"
                           variant="primary">
-                          只写回当前模块
+                          仅支持一次性回填
                         </Button>
                       </div>
                     </div>
@@ -315,7 +344,9 @@ export function ResumeImportResultShell({
                             </span>
                           ) : null}
                         </div>
-                        <div className="grid gap-3 md:grid-cols-2" data-testid="resume-import-diff-grid">
+                        <div
+                          className="grid gap-3 md:grid-cols-2"
+                          data-testid="resume-import-diff-grid">
                           <Card className="border border-zinc-200/80 bg-white/92 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/72">
                             <CardHeader>
                               <span className="text-sm font-bold text-zinc-800 dark:text-zinc-100">
@@ -323,7 +354,9 @@ export function ResumeImportResultShell({
                               </span>
                             </CardHeader>
                             <CardContent className="text-sm leading-6 text-zinc-700 dark:text-zinc-200">
-                              <span className="whitespace-pre-wrap">{entry.currentValue}</span>
+                              <span className="whitespace-pre-wrap">
+                                {entry.currentValue}
+                              </span>
                             </CardContent>
                           </Card>
                           <Card className="border !border-emerald-200/80 !bg-emerald-50/80 shadow-[0_14px_32px_rgba(16,185,129,0.08)] dark:!border-emerald-400/25 dark:!bg-emerald-500/12">
@@ -333,7 +366,9 @@ export function ResumeImportResultShell({
                               </span>
                             </CardHeader>
                             <CardContent className="text-sm leading-6 text-zinc-700 dark:text-zinc-200">
-                              <span className="whitespace-pre-wrap">{entry.suggestedValue}</span>
+                              <span className="whitespace-pre-wrap">
+                                {entry.suggestedValue}
+                              </span>
                             </CardContent>
                           </Card>
                         </div>
