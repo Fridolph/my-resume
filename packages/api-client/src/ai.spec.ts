@@ -259,6 +259,40 @@ describe('ai api client methods', () => {
     expect(result.resultId).toBe('resume-import-001')
   })
 
+  it('keeps resume import job step summaries and details from the API response', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        createJsonResponse(200, {
+          jobId: 'resume-import-job-001',
+          status: 'running',
+          currentStage: 'schema_validating',
+          steps: [
+            {
+              stage: 'schema_validating',
+              label: '正在校验 StandardResume 结构',
+              status: 'running',
+              summary: '结构校验通过，自动修复 2 处 AI 输出形状。',
+              details: ['已自动修复 education[0].schoolName'],
+            },
+          ],
+          createdAt: '2026-04-28T12:00:00.000Z',
+          updatedAt: '2026-04-28T12:00:05.000Z',
+          elapsedMs: 5000,
+        }),
+      ),
+    )
+
+    const result = await createFetchAiResumeImportJobMethod({
+      apiBaseUrl: 'http://localhost:5577',
+      accessToken: 'admin-token',
+      jobId: 'resume-import-job-001',
+    })
+
+    expect(result.steps[0]?.summary).toContain('自动修复')
+    expect(result.steps[0]?.details).toEqual(['已自动修复 education[0].schoolName'])
+  })
+
   it('fetches and applies resume import results', async () => {
     vi.stubGlobal(
       'fetch',

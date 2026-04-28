@@ -337,6 +337,8 @@ export interface AiResumeImportJobStep {
   startedAt?: string
   completedAt?: string
   message?: string
+  summary?: string
+  details?: string[]
 }
 
 export interface AiResumeImportJob {

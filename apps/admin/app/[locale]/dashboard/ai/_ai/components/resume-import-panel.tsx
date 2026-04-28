@@ -20,7 +20,10 @@ interface ResumeImportPanelProps {
   createFetchResumeImportJobMethod?: typeof createFetchAiResumeImportJobMethod
   createRecognizeResumeImportMethod?: typeof createRecognizeAiResumeImportMethod
   onRecognized?: (job: AiResumeImportJob) => void
-  pollIntervalMs?: number
+  elapsedTickMs?: number
+  initialPollIntervalMs?: number
+  slowPollAfterMs?: number
+  slowPollIntervalMs?: number
 }
 
 function formatFileSize(size: number): string {
@@ -66,12 +69,17 @@ export function ResumeImportPanel({
   createFetchResumeImportJobMethod = createFetchAiResumeImportJobMethod,
   createRecognizeResumeImportMethod = createRecognizeAiResumeImportMethod,
   onRecognized,
-  pollIntervalMs = 1200,
+  elapsedTickMs = 1000,
+  initialPollIntervalMs = 10_000,
+  slowPollAfterMs = 40_000,
+  slowPollIntervalMs = 5000,
 }: ResumeImportPanelProps) {
   const router = useRouter()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [job, setJob] = useState<AiResumeImportJob | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [displayElapsedMs, setDisplayElapsedMs] = useState(0)
+  const [refreshingJob, setRefreshingJob] = useState(false)
   const completedJobIdRef = useRef<string | null>(null)
   const { loading: recognizing, send: triggerRecognize } = useRequest(
     (file: File) =>
@@ -97,6 +105,71 @@ export function ResumeImportPanel({
       immediate: false,
     },
   )
+  const fetchJobRef = useRef(fetchJob)
+
+  function handleJobUpdate(nextJob: AiResumeImportJob) {
+    setJob(nextJob)
+
+    if (nextJob.status !== 'running') {
+      setDisplayElapsedMs(nextJob.elapsedMs)
+    }
+
+    if (nextJob.status === 'completed' && nextJob.resultId) {
+      if (completedJobIdRef.current === nextJob.jobId) {
+        return
+      }
+
+      completedJobIdRef.current = nextJob.jobId
+      onRecognized?.(nextJob)
+      router.push(`/dashboard/ai/resume-import/results/${nextJob.resultId}`)
+    }
+  }
+  const handleJobUpdateRef = useRef(handleJobUpdate)
+
+  useEffect(() => {
+    fetchJobRef.current = fetchJob
+    handleJobUpdateRef.current = handleJobUpdate
+  })
+
+  async function refreshJobStatus() {
+    if (!job) {
+      return
+    }
+
+    setRefreshingJob(true)
+    setErrorMessage(null)
+
+    try {
+      const nextJob = await fetchJobRef.current(job.jobId)
+      handleJobUpdate(nextJob)
+    } catch (error) {
+      setErrorMessage(normalizeClientError(error))
+    } finally {
+      setRefreshingJob(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!job) {
+      setDisplayElapsedMs(0)
+      return
+    }
+
+    if (job.status !== 'running') {
+      setDisplayElapsedMs(job.elapsedMs)
+      return
+    }
+
+    const createdAtTime = new Date(job.createdAt).getTime()
+    const updateElapsed = () => {
+      setDisplayElapsedMs(Math.max(0, Date.now() - createdAtTime))
+    }
+
+    updateElapsed()
+    const intervalId = window.setInterval(updateElapsed, elapsedTickMs)
+
+    return () => window.clearInterval(intervalId)
+  }, [elapsedTickMs, job])
 
   useEffect(() => {
     if (!job || job.status !== 'running') {
@@ -104,39 +177,43 @@ export function ResumeImportPanel({
     }
 
     let cancelled = false
-    const timeoutId = window.setTimeout(() => {
-      void fetchJob(job.jobId)
-        .then((nextJob: AiResumeImportJob) => {
-          if (cancelled) {
-            return
-          }
+    let timeoutId: number | undefined
+    const createdAtTime = new Date(job.createdAt).getTime()
 
-          setJob(nextJob)
+    const scheduleNextPoll = () => {
+      const elapsed = Math.max(0, Date.now() - createdAtTime)
+      const pollDelay =
+        elapsed >= slowPollAfterMs ? slowPollIntervalMs : initialPollIntervalMs
 
-          if (nextJob.status === 'completed' && nextJob.resultId) {
-            if (completedJobIdRef.current === nextJob.jobId) {
-              return
+      timeoutId = window.setTimeout(() => {
+        void fetchJobRef
+          .current(job.jobId)
+          .then((nextJob: AiResumeImportJob) => {
+            if (!cancelled) {
+              handleJobUpdateRef.current(nextJob)
+
+              if (nextJob.status === 'running') {
+                scheduleNextPoll()
+              }
             }
+          })
+          .catch((error: unknown) => {
+            if (!cancelled) {
+              setErrorMessage(normalizeClientError(error))
+            }
+          })
+      }, pollDelay)
+    }
 
-            completedJobIdRef.current = nextJob.jobId
-            onRecognized?.(nextJob)
-            router.push(`/dashboard/ai/resume-import/results/${nextJob.resultId}`)
-          }
-        })
-        .catch((error: unknown) => {
-          if (cancelled) {
-            return
-          }
-
-          setErrorMessage(normalizeClientError(error))
-        })
-    }, pollIntervalMs)
+    scheduleNextPoll()
 
     return () => {
       cancelled = true
-      window.clearTimeout(timeoutId)
+      if (typeof timeoutId !== 'undefined') {
+        window.clearTimeout(timeoutId)
+      }
     }
-  }, [fetchJob, job, onRecognized, pollIntervalMs, router])
+  }, [initialPollIntervalMs, job, slowPollAfterMs, slowPollIntervalMs])
 
   if (!canUpload) {
     return (
@@ -167,7 +244,7 @@ export function ResumeImportPanel({
     try {
       const nextJob = await triggerRecognize(selectedFile)
 
-      setJob(nextJob)
+      handleJobUpdate(nextJob)
     } catch (error) {
       setJob(null)
       setErrorMessage(normalizeClientError(error))
@@ -238,6 +315,12 @@ export function ResumeImportPanel({
 
       {job ? (
         <div className="stack" data-testid="resume-import-job-panel">
+          {job.status === 'running' && job.currentStage === 'ai_generating' ? (
+            <div className="dashboard-inline-note">
+              模型正在生成候选草稿，页面会自动低频刷新；耗时计时由本地实时更新。
+            </div>
+          ) : null}
+
           <div className="grid gap-3 md:grid-cols-3">
             <div className="status-box">
               <strong>任务状态</strong>
@@ -252,15 +335,36 @@ export function ResumeImportPanel({
             </div>
             <div className="status-box">
               <strong>已耗时</strong>
-              <span>{formatElapsed(job.elapsedMs)}</span>
+              <span>{formatElapsed(displayElapsedMs)}</span>
             </div>
           </div>
+
+          {job.status === 'running' ? (
+            <div className="dashboard-entry-actions">
+              <Button
+                isDisabled={refreshingJob}
+                onPress={() => void refreshJobStatus()}
+                size="sm"
+                type="button"
+                variant="outline">
+                {refreshingJob ? '正在刷新...' : '手动刷新状态'}
+              </Button>
+            </div>
+          ) : null}
 
           <ol className="grid gap-2" data-testid="resume-import-job-steps">
             {job.steps.map((step) => (
               <li className="status-box" key={step.stage}>
                 <strong>{step.label}</strong>
                 <span>{step.status}</span>
+                {step.summary ? <span>{step.summary}</span> : null}
+                {step.details && step.details.length > 0 ? (
+                  <ul className="grid gap-1 text-sm text-zinc-500 dark:text-zinc-400">
+                    {step.details.map((detail) => (
+                      <li key={detail}>{detail}</li>
+                    ))}
+                  </ul>
+                ) : null}
                 {step.message ? <span className="error-text">{step.message}</span> : null}
               </li>
             ))}

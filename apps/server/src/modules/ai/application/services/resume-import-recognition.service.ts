@@ -12,6 +12,7 @@ import { ResumePublicationService } from '../../../resume/resume-publication.ser
 import {
   createEmptyStandardResume,
   createLocalizedText,
+  isLocalizedText,
   normalizeStandardResume,
   validateStandardResume,
   type LocalizedText,
@@ -109,6 +110,8 @@ export interface ResumeImportJobStep {
   startedAt?: string
   completedAt?: string
   message?: string
+  summary?: string
+  details?: string[]
 }
 
 export interface ResumeImportJobError {
@@ -141,7 +144,7 @@ interface CachedResumeImportJob {
 }
 
 interface ProviderResumeImportPayload {
-  resume: StandardResume
+  resume: unknown
   summary?: string
   warnings?: string[]
 }
@@ -205,6 +208,14 @@ function cloneResume(resume: StandardResume): StandardResume {
 
 function localizedZh(value: string): LocalizedText {
   return createLocalizedText(value.trim(), '')
+}
+
+function formatFileSize(size: number): string {
+  if (size < 1024) {
+    return `${size} B`
+  }
+
+  return `${(size / 1024).toFixed(1)} KB`
 }
 
 function sectionBetween(text: string, startTitle: string, endTitles: string[]): string {
@@ -535,6 +546,282 @@ function collectWarnings(resume: StandardResume): string[] {
   return warnings
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+function readString(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+function repairLocalizedText(
+  value: unknown,
+  path: string,
+  repairs: string[],
+): LocalizedText {
+  if (isLocalizedText(value)) {
+    return value
+  }
+
+  if (typeof value === 'string') {
+    repairs.push(`已自动修复 ${path}：string -> { zh, en }`)
+    return localizedZh(value)
+  }
+
+  if (isRecord(value)) {
+    const zh = readString(value.zh)
+    const en = readString(value.en)
+
+    if (zh || en) {
+      repairs.push(`已自动补齐 ${path} 的 zh/en 字段`)
+      return createLocalizedText(zh, en)
+    }
+  }
+
+  repairs.push(`已将 ${path} 兜底为空 LocalizedText`)
+  return localizedZh('')
+}
+
+function repairLocalizedTextArray(
+  value: unknown,
+  path: string,
+  repairs: string[],
+): LocalizedText[] {
+  if (!Array.isArray(value)) {
+    if (typeof value !== 'undefined') {
+      repairs.push(`已将 ${path} 非数组内容按空数组处理`)
+    }
+
+    return []
+  }
+
+  return value.map((item, index) =>
+    repairLocalizedText(item, `${path}[${index}]`, repairs),
+  )
+}
+
+function repairStringArray(value: unknown, path: string, repairs: string[]): string[] {
+  if (!Array.isArray(value)) {
+    if (typeof value !== 'undefined') {
+      repairs.push(`已将 ${path} 非数组内容按空数组处理`)
+    }
+
+    return []
+  }
+
+  return value
+    .map((item) => (typeof item === 'string' ? item.trim() : ''))
+    .filter(Boolean)
+}
+
+function readRecordArray(
+  value: unknown,
+  path: string,
+  repairs: string[],
+): Record<string, unknown>[] {
+  if (!Array.isArray(value)) {
+    if (typeof value !== 'undefined') {
+      repairs.push(`已将 ${path} 非数组内容按空数组处理`)
+    }
+
+    return []
+  }
+
+  return value.filter((item, index): item is Record<string, unknown> => {
+    if (isRecord(item)) {
+      return true
+    }
+
+    repairs.push(`已忽略 ${path}[${index}]：不是对象`)
+    return false
+  })
+}
+
+function repairProviderResume(value: unknown): {
+  resume: StandardResume
+  repairMessages: string[]
+} {
+  const repairs: string[] = []
+  const defaults = createEmptyStandardResume()
+  const source = isRecord(value) ? value : {}
+  const profile = isRecord(source.profile) ? source.profile : {}
+  const hero = isRecord(profile.hero) ? profile.hero : {}
+  const defaultHero = defaults.profile.hero
+
+  if (!isRecord(value)) {
+    repairs.push('AI 返回的 resume 不是对象，已按空简历结构兜底')
+  }
+
+  if (!isRecord(source.meta)) {
+    repairs.push('已补齐缺失的 meta 标准字段')
+  }
+
+  const resume: StandardResume = {
+    meta: defaults.meta,
+    profile: {
+      fullName: repairLocalizedText(profile.fullName, 'profile.fullName', repairs),
+      headline: repairLocalizedText(profile.headline, 'profile.headline', repairs),
+      summary: repairLocalizedText(profile.summary, 'profile.summary', repairs),
+      location: repairLocalizedText(profile.location, 'profile.location', repairs),
+      email: readString(profile.email),
+      phone: readString(profile.phone),
+      website: readString(profile.website),
+      hero: {
+        frontImageUrl: readString(hero.frontImageUrl) || defaultHero.frontImageUrl,
+        backImageUrl: readString(hero.backImageUrl) || defaultHero.backImageUrl,
+        linkUrl: readString(hero.linkUrl) || defaultHero.linkUrl,
+        slogans:
+          Array.isArray(hero.slogans) && hero.slogans.length > 0
+            ? repairLocalizedTextArray(hero.slogans, 'profile.hero.slogans', repairs)
+            : defaultHero.slogans,
+      },
+      links: [],
+      interests: [],
+    },
+    education: readRecordArray(source.education, 'education', repairs).map(
+      (item, index) => ({
+        schoolName: repairLocalizedText(
+          item.schoolName,
+          `education[${index}].schoolName`,
+          repairs,
+        ),
+        degree: repairLocalizedText(item.degree, `education[${index}].degree`, repairs),
+        fieldOfStudy: repairLocalizedText(
+          item.fieldOfStudy,
+          `education[${index}].fieldOfStudy`,
+          repairs,
+        ),
+        startDate: readString(item.startDate),
+        endDate: readString(item.endDate),
+        location: repairLocalizedText(
+          item.location,
+          `education[${index}].location`,
+          repairs,
+        ),
+        highlights: repairLocalizedTextArray(
+          item.highlights,
+          `education[${index}].highlights`,
+          repairs,
+        ),
+      }),
+    ),
+    experiences: readRecordArray(source.experiences, 'experiences', repairs).map(
+      (item, index) => ({
+        companyName: repairLocalizedText(
+          item.companyName,
+          `experiences[${index}].companyName`,
+          repairs,
+        ),
+        role: repairLocalizedText(item.role, `experiences[${index}].role`, repairs),
+        employmentType: repairLocalizedText(
+          item.employmentType,
+          `experiences[${index}].employmentType`,
+          repairs,
+        ),
+        startDate: readString(item.startDate),
+        endDate: readString(item.endDate),
+        location: repairLocalizedText(
+          item.location,
+          `experiences[${index}].location`,
+          repairs,
+        ),
+        summary: repairLocalizedText(
+          item.summary,
+          `experiences[${index}].summary`,
+          repairs,
+        ),
+        highlights: repairLocalizedTextArray(
+          item.highlights,
+          `experiences[${index}].highlights`,
+          repairs,
+        ),
+        technologies: repairStringArray(
+          item.technologies,
+          `experiences[${index}].technologies`,
+          repairs,
+        ),
+      }),
+    ),
+    projects: readRecordArray(source.projects, 'projects', repairs).map(
+      (item, index) => ({
+        name: repairLocalizedText(item.name, `projects[${index}].name`, repairs),
+        role: repairLocalizedText(item.role, `projects[${index}].role`, repairs),
+        startDate: readString(item.startDate),
+        endDate: readString(item.endDate),
+        summary: repairLocalizedText(item.summary, `projects[${index}].summary`, repairs),
+        coreFunctions: repairLocalizedText(
+          item.coreFunctions,
+          `projects[${index}].coreFunctions`,
+          repairs,
+        ),
+        highlights: repairLocalizedTextArray(
+          item.highlights,
+          `projects[${index}].highlights`,
+          repairs,
+        ),
+        technologies: repairStringArray(
+          item.technologies,
+          `projects[${index}].technologies`,
+          repairs,
+        ),
+        links: [],
+      }),
+    ),
+    skills: readRecordArray(source.skills, 'skills', repairs).map((item, index) => ({
+      name: repairLocalizedText(item.name, `skills[${index}].name`, repairs),
+      keywords: repairLocalizedTextArray(
+        item.keywords,
+        `skills[${index}].keywords`,
+        repairs,
+      ),
+      ...(typeof item.proficiency === 'number' && Number.isFinite(item.proficiency)
+        ? { proficiency: item.proficiency }
+        : {}),
+    })),
+    highlights: readRecordArray(source.highlights, 'highlights', repairs).map(
+      (item, index) => ({
+        title: repairLocalizedText(item.title, `highlights[${index}].title`, repairs),
+        description: repairLocalizedText(
+          item.description,
+          `highlights[${index}].description`,
+          repairs,
+        ),
+      }),
+    ),
+  }
+
+  return {
+    resume,
+    repairMessages: repairs,
+  }
+}
+
+function formatValidationError(error: string): string {
+  const localizedTextMatch = error.match(
+    /^(profile|education|experiences|projects|skills|highlights)(?:\[(\d+)])?\.?(.+?) must be a localized text object$/,
+  )
+
+  if (!localizedTextMatch) {
+    return error
+  }
+
+  const [, module, index, field] = localizedTextMatch
+  const moduleLabels: Record<string, string> = {
+    profile: '基本信息',
+    education: '教育经历',
+    experiences: '工作经历',
+    projects: '项目经历',
+    skills: '专业技能',
+    highlights: '核心竞争力',
+  }
+  const prefix =
+    typeof index === 'string'
+      ? `${moduleLabels[module] ?? module}第 ${Number(index) + 1} 条`
+      : (moduleLabels[module] ?? module)
+
+  return `${prefix}：${field} 必须是 { zh, en } 结构`
+}
+
 function normalizeModules(modules: unknown): ResumeImportModule[] {
   if (!Array.isArray(modules)) {
     throw new BadRequestException('请选择要回填的简历模块')
@@ -569,11 +856,29 @@ function createInitialJobDetail(jobId: string): Omit<ResumeImportJobDetail, 'ela
 }
 
 function cloneJobDetail(job: CachedResumeImportJob): ResumeImportJobDetail {
+  const createdAtTime = new Date(job.createdAt).getTime()
+  const endTime =
+    job.detail.status === 'running'
+      ? Date.now()
+      : new Date(job.detail.updatedAt).getTime()
+
   return {
     ...job.detail,
-    steps: job.detail.steps.map((step) => ({ ...step })),
+    steps: job.detail.steps.map((step) => ({
+      ...step,
+      details: step.details ? [...step.details] : undefined,
+    })),
     error: job.detail.error ? { ...job.detail.error } : undefined,
-    elapsedMs: Date.now() - new Date(job.createdAt).getTime(),
+    elapsedMs: Math.max(0, endTime - createdAtTime),
+  }
+}
+
+class ResumeImportJobFailure extends Error {
+  constructor(
+    message: string,
+    readonly details: string[] = [],
+  ) {
+    super(message)
   }
 }
 
@@ -583,6 +888,10 @@ function normalizeErrorMessage(error: unknown): string {
   }
 
   return '简历导入识别失败，请稍后重试'
+}
+
+function normalizeErrorDetails(error: unknown): string[] {
+  return error instanceof ResumeImportJobFailure ? error.details : []
 }
 
 @Injectable()
@@ -610,6 +919,10 @@ export class ResumeImportRecognitionService {
     }
 
     this.storeJob(job)
+    this.updateJobStep(jobId, 'accepted', {
+      summary: `${input.originalname} · ${formatFileSize(input.size)}`,
+      details: ['上传请求已进入后台识别队列。'],
+    })
     void this.runRecognitionJob(jobId, input)
 
     return cloneJobDetail(job)
@@ -624,7 +937,12 @@ export class ResumeImportRecognitionService {
       const detail = await this.createRecognitionResult(jobId, input)
       this.completeJob(jobId, detail.resultId)
     } catch (error) {
-      this.failJob(jobId, normalizeErrorMessage(error), input.traceId)
+      this.failJob(
+        jobId,
+        normalizeErrorMessage(error),
+        input.traceId,
+        normalizeErrorDetails(error),
+      )
     }
   }
 
@@ -644,6 +962,10 @@ export class ResumeImportRecognitionService {
     }
 
     const extracted = await this.fileExtractionService.extractText(input)
+    this.updateJobStep(jobId, 'extracting', {
+      summary: `${extracted.fileType.toUpperCase()} 文本提取完成，共 ${extracted.charCount} 字符。`,
+      details: [`文件名：${extracted.fileName}`, `MIME：${extracted.mimeType}`],
+    })
 
     this.startJobStage(jobId, 'text_validating')
     if (extracted.charCount < MIN_TEXT_CHARS) {
@@ -653,31 +975,73 @@ export class ResumeImportRecognitionService {
     if (extracted.charCount > MAX_TEXT_CHARS) {
       throw new BadRequestException('简历文本过长，请精简到 50000 字以内后再上传')
     }
+    this.updateJobStep(jobId, 'text_validating', {
+      summary: `文本边界校验通过：${extracted.charCount} 字符。`,
+      details: [`允许范围：${MIN_TEXT_CHARS} - ${MAX_TEXT_CHARS} 字符。`],
+    })
 
     const draft = await this.resumePublicationService.getDraft()
     const providerSummary = this.aiService.getProviderSummary()
 
     this.startJobStage(jobId, 'ai_generating')
+    const aiStartedAt = Date.now()
     const payload =
       providerSummary.mode === 'mock'
         ? {
             resume: parseMockResumeFromMarkdown(extracted.text),
             summary: '已从上传简历中识别出结构化候选草稿。',
           }
-        : await this.generateProviderRecognition(extracted.text, jobId)
+        : await this.generateProviderRecognition(extracted.text, jobId, aiStartedAt)
+
+    if (providerSummary.mode === 'mock') {
+      this.updateJobStep(jobId, 'ai_generating', {
+        summary: `Mock 识别完成，用时 ${Date.now() - aiStartedAt} ms。`,
+        details: [
+          `Provider：${providerSummary.provider}`,
+          `模型：${providerSummary.model}`,
+        ],
+      })
+      this.startJobStage(jobId, 'json_parsing')
+      this.updateJobStep(jobId, 'json_parsing', {
+        summary: 'Mock 模式已生成结构化对象，跳过 AI JSON 文本解析。',
+        details: ['测试模式仍会继续执行 repair、normalize 和 schema validation。'],
+      })
+    }
 
     this.startJobStage(jobId, 'schema_validating')
-    const candidateResume = normalizeStandardResume(payload.resume)
+    const repairResult = repairProviderResume(payload.resume)
+    const candidateResume = normalizeStandardResume(repairResult.resume)
     const validationResult = validateStandardResume(candidateResume)
 
     if (!validationResult.valid) {
-      throw new BadGatewayException(
-        validationResult.errors[0] ?? 'AI 识别结果未通过简历结构校验',
+      const readableErrors = validationResult.errors.map(formatValidationError)
+      const firstError = readableErrors[0] ?? 'AI 识别结果未通过简历结构校验'
+
+      this.updateJobStep(jobId, 'schema_validating', {
+        summary: '自动修复后仍未通过 StandardResume 结构校验。',
+        details: [...readableErrors.slice(0, 5), ...validationResult.errors.slice(0, 5)],
+      })
+      throw new ResumeImportJobFailure(
+        `AI 识别结果修复后仍未通过结构校验：${firstError}`,
+        [...readableErrors.slice(0, 5), ...validationResult.errors.slice(0, 5)],
       )
     }
+    this.updateJobStep(jobId, 'schema_validating', {
+      summary:
+        repairResult.repairMessages.length > 0
+          ? `结构校验通过，自动修复 ${repairResult.repairMessages.length} 处 AI 输出形状。`
+          : '结构校验通过，AI 输出已符合 StandardResume。',
+      details: repairResult.repairMessages.slice(0, 8),
+    })
 
     this.startJobStage(jobId, 'diff_building')
-    const warnings = [...collectWarnings(candidateResume), ...(payload.warnings ?? [])]
+    const warnings = [
+      ...collectWarnings(candidateResume),
+      ...repairResult.repairMessages
+        .slice(0, 5)
+        .map((message) => `AI 输出已自动修正：${message}`),
+      ...(payload.warnings ?? []),
+    ]
     const changedModules = RESUME_IMPORT_MODULES.filter((module) =>
       isModuleChanged(draft.resume, candidateResume, module),
     )
@@ -703,6 +1067,16 @@ export class ResumeImportRecognitionService {
       createdAt,
       providerSummary,
     }
+    this.updateJobStep(jobId, 'diff_building', {
+      summary: `模块 diff 已生成：${changedModules.length} 个模块存在变化。`,
+      details: [
+        `教育 ${detail.moduleStats.education} 条`,
+        `工作 ${detail.moduleStats.experiences} 条`,
+        `项目 ${detail.moduleStats.projects} 条`,
+        `技能 ${detail.moduleStats.skills} 组`,
+        `亮点 ${detail.moduleStats.highlights} 条`,
+      ],
+    })
 
     this.storeResult({
       candidateResume,
@@ -757,6 +1131,7 @@ export class ResumeImportRecognitionService {
   private async generateProviderRecognition(
     text: string,
     jobId: string,
+    aiStartedAt: number,
   ): Promise<ProviderResumeImportPayload> {
     const result = await this.aiService.generateText({
       systemPrompt:
@@ -768,6 +1143,10 @@ export class ResumeImportRecognitionService {
       },
       prompt: this.buildPrompt(text),
     })
+    this.updateJobStep(jobId, 'ai_generating', {
+      summary: `AI 候选草稿生成完成，用时 ${Date.now() - aiStartedAt} ms。`,
+      details: ['已收到模型输出，准备提取 JSON。'],
+    })
 
     this.startJobStage(jobId, 'json_parsing')
     const jsonText = extractJsonObject(result.text)
@@ -778,6 +1157,13 @@ export class ResumeImportRecognitionService {
       if (!payload.resume || typeof payload.resume !== 'object') {
         throw new BadGatewayException('AI 识别结果缺少 resume 字段')
       }
+      this.updateJobStep(jobId, 'json_parsing', {
+        summary: 'AI JSON 输出解析成功。',
+        details: [
+          `JSON 字符数：${jsonText.length}`,
+          `顶层字段：${Object.keys(payload).join(', ') || '无'}`,
+        ],
+      })
 
       return payload
     } catch (error) {
@@ -875,6 +1261,24 @@ export class ResumeImportRecognitionService {
     })
   }
 
+  private updateJobStep(
+    jobId: string,
+    stage: ResumeImportJobStage,
+    update: Pick<ResumeImportJobStep, 'summary' | 'details' | 'message'>,
+  ) {
+    const job = this.getJobOrThrow(jobId)
+
+    job.detail.updatedAt = new Date().toISOString()
+    job.detail.steps = job.detail.steps.map((step) =>
+      step.stage === stage
+        ? {
+            ...step,
+            ...update,
+          }
+        : step,
+    )
+  }
+
   private completeJob(jobId: string, resultId: string) {
     const job = this.getJobOrThrow(jobId)
     const now = new Date().toISOString()
@@ -891,7 +1295,12 @@ export class ResumeImportRecognitionService {
     }))
   }
 
-  private failJob(jobId: string, message: string, traceId?: string) {
+  private failJob(
+    jobId: string,
+    message: string,
+    traceId?: string,
+    details: string[] = [],
+  ) {
     const job = this.getJobOrThrow(jobId)
     const now = new Date().toISOString()
 
@@ -909,6 +1318,7 @@ export class ResumeImportRecognitionService {
           status: 'failed',
           completedAt: now,
           message,
+          details: details.length > 0 ? details : step.details,
         }
       }
 

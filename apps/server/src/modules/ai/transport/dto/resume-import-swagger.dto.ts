@@ -90,6 +90,8 @@ export class ResumeImportJobDto {
     startedAt?: string
     completedAt?: string
     message?: string
+    summary?: string
+    details?: string[]
   }>
 
   @ApiProperty({

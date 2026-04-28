@@ -169,6 +169,121 @@ describe('ResumeImportRecognitionService', () => {
     expect(failedJob.error?.message).toContain('AI 未返回可解析的 JSON')
   })
 
+  it('repairs common AI shorthand fields before validating the candidate draft', async () => {
+    const aiService = createMockAiService({
+      getProviderSummary: () => ({
+        provider: 'deepseek',
+        model: 'deepseek-v4-flash',
+        mode: 'openai-compatible',
+      }),
+      generateText: vi.fn().mockResolvedValue({
+        text: JSON.stringify({
+          summary: '已识别候选草稿',
+          resume: {
+            profile: {
+              fullName: '厉飞雨',
+              headline: { zh: 'AI 全栈工程师' },
+              summary: '具备 AI 工程化经验',
+              location: '杭州',
+              email: 'lifeiyu@example.com',
+              phone: '13800000000',
+            },
+            education: [
+              {
+                schoolName: '四川大学',
+                degree: '本科',
+                fieldOfStudy: '软件工程',
+                startDate: '2014-09',
+                endDate: '2018-06',
+                location: '成都',
+                highlights: ['主修软件工程'],
+              },
+            ],
+            experiences: [],
+            projects: [],
+            skills: [
+              {
+                name: 'AI 工程化',
+                keywords: ['RAG', 'Milvus'],
+              },
+            ],
+            highlights: [
+              {
+                title: 'AI 应用落地',
+                description: '能够把实验能力工程化。',
+              },
+            ],
+          },
+        }),
+      }),
+    } as Partial<AiService>)
+    const service = createService({ aiService })
+
+    const job = service.recognize(
+      createUploadInput('resume.md', '有效简历内容'.repeat(100)),
+    )
+    const completedJob = await waitForJob(service, job.jobId)
+    const result = service.getResult(completedJob.resultId!)
+
+    expect(completedJob.status).toBe('completed')
+    expect(result.moduleStats.education).toBe(1)
+    expect(result.warnings.some((warning) => warning.includes('AI 输出已自动修正'))).toBe(
+      true,
+    )
+    expect(
+      completedJob.steps.find((step) => step.stage === 'schema_validating')?.summary,
+    ).toContain('自动修复')
+    expect(
+      completedJob.steps.find((step) => step.stage === 'diff_building')?.details,
+    ).toEqual(expect.arrayContaining(['教育 1 条', '技能 1 组']))
+  })
+
+  it('fails schema validation with readable details when repaired output is still invalid', async () => {
+    const aiService = createMockAiService({
+      getProviderSummary: () => ({
+        provider: 'deepseek',
+        model: 'deepseek-v4-flash',
+        mode: 'openai-compatible',
+      }),
+      generateText: vi.fn().mockResolvedValue({
+        text: JSON.stringify({
+          resume: {
+            profile: {
+              fullName: '厉飞雨',
+              headline: 'AI 全栈工程师',
+              summary: '具备 AI 工程化经验',
+              location: '杭州',
+            },
+            education: [],
+            experiences: [],
+            projects: [],
+            skills: [
+              {
+                name: 'AI 工程化',
+                keywords: ['RAG'],
+                proficiency: 999,
+              },
+            ],
+            highlights: [],
+          },
+        }),
+      }),
+    } as Partial<AiService>)
+    const service = createService({ aiService })
+
+    const job = service.recognize(
+      createUploadInput('resume.md', '有效简历内容'.repeat(100)),
+    )
+    const failedJob = await waitForJob(service, job.jobId)
+    const schemaStep = failedJob.steps.find((step) => step.stage === 'schema_validating')
+
+    expect(failedJob.status).toBe('failed')
+    expect(failedJob.error?.message).toContain('修复后仍未通过结构校验')
+    expect(schemaStep?.status).toBe('failed')
+    expect(schemaStep?.summary).toContain('自动修复后仍未通过')
+    expect(schemaStep?.details?.[0]).toContain('proficiency')
+  })
+
   it('applies only selected modules back to draft', async () => {
     const resumePublicationService = createResumePublicationService()
     const service = createService({
