@@ -1,12 +1,11 @@
 'use client'
 
-import { Button, Chip, Modal, Pagination, Table, Tooltip } from '@heroui/react'
+import { Chip, Pagination, Table, Tooltip } from '@heroui/react'
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 
 import {
   AdminActionIconButton,
-  AdminModalShell,
   adminActionIconTriggerClassName,
 } from '../../../../../_shared/ui/components/heroui'
 import {
@@ -47,7 +46,7 @@ function formatLinkedScenarioLabel(scenario: AiWorkbenchScenario): string {
 function HistoryActionIcon({
   type,
 }: {
-  type: 'detail' | 'open' | 'source'
+  type: 'detail' | 'open'
 }) {
   if (type === 'detail') {
     return (
@@ -64,84 +63,22 @@ function HistoryActionIcon({
     )
   }
 
-  if (type === 'open') {
-    return (
-      <svg aria-hidden="true" fill="none" height="16" viewBox="0 0 24 24" width="16">
-        <path
-          d="M14 5h5v5M13 11l6-6"
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="1.8"
-        />
-        <path
-          d="M19 13.5v4A1.5 1.5 0 0 1 17.5 19h-11A1.5 1.5 0 0 1 5 17.5v-11A1.5 1.5 0 0 1 6.5 5h4"
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeWidth="1.8"
-        />
-      </svg>
-    )
-  }
-
   return (
     <svg aria-hidden="true" fill="none" height="16" viewBox="0 0 24 24" width="16">
       <path
-        d="M7 4.5h7l3 3v12H7v-15Z"
+        d="M14 5h5v5M13 11l6-6"
         stroke="currentColor"
+        strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth="1.8"
       />
-      <path d="M14 4.5v3h3" stroke="currentColor" strokeWidth="1.8" />
       <path
-        d="M9.5 11h5M9.5 14h5M9.5 17h3"
+        d="M19 13.5v4A1.5 1.5 0 0 1 17.5 19h-11A1.5 1.5 0 0 1 5 17.5v-11A1.5 1.5 0 0 1 6.5 5h4"
         stroke="currentColor"
         strokeLinecap="round"
         strokeWidth="1.8"
       />
     </svg>
-  )
-}
-
-function InstructionContentModal({
-  summary,
-  title,
-}: {
-  summary: string
-  title: string
-}) {
-  const [isOpen, setIsOpen] = useState(false)
-  const displaySummary = summary.trim() || '这条记录暂无可展示的摘要信息。'
-
-  return (
-    <>
-      <AdminActionIconButton
-        icon={<HistoryActionIcon type="source" />}
-        label="查看原文"
-        onPress={() => setIsOpen(true)}
-      />
-      <AdminModalShell
-        dialogClassName="sm:max-w-180"
-        isOpen={isOpen}
-        onOpenChange={setIsOpen}>
-        <Modal.CloseTrigger aria-label="关闭原始指令内容" />
-        <Modal.Header>
-          <Modal.Heading>{title}</Modal.Heading>
-        </Modal.Header>
-        <Modal.Body>
-          <div
-            className="max-h-[62vh] overflow-auto rounded-[1.25rem] border border-zinc-200/80 bg-zinc-50/90 p-4 text-sm leading-7 text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-200"
-            data-testid="optimization-history-summary-modal-body">
-            <pre className="whitespace-pre-wrap wrap-break-word font-sans">{displaySummary}</pre>
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button slot="close" type="button" variant="secondary">
-            关闭
-          </Button>
-        </Modal.Footer>
-      </AdminModalShell>
-    </>
   )
 }
 
@@ -228,19 +165,24 @@ export function ResumeOptimizationHistoryPanel({
                         </div>
                       </Table.Cell>
                       <Table.Cell>
-                        <div className="flex min-w-0 items-start justify-between gap-3">
-                          <div className="min-w-0 grid gap-1.5">
-                            <strong className="line-clamp-1 text-sm leading-6 text-zinc-950 dark:text-white">
-                              {instructionTitle}
-                            </strong>
-                            <span className="line-clamp-1 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
-                              {entry.summary}
-                            </span>
-                          </div>
-                          <InstructionContentModal
-                            summary={entry.summary}
-                            title={instructionTitle}
-                          />
+                        <div className="min-w-0 grid gap-1.5">
+                          <strong className="line-clamp-1 text-sm leading-6 text-zinc-950 dark:text-white">
+                            {instructionTitle}
+                          </strong>
+                          <Tooltip delay={250}>
+                            <Tooltip.Trigger>
+                              <span className="line-clamp-1 cursor-help text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+                                {entry.summary || '暂无摘要'}
+                              </span>
+                            </Tooltip.Trigger>
+                            <Tooltip.Content
+                              className="max-w-md whitespace-normal leading-6"
+                              showArrow>
+                              <Tooltip.Arrow />
+                              {(entry.summary || '暂无摘要').trim() ||
+                                '这条记录暂无可展示的摘要信息。'}
+                            </Tooltip.Content>
+                          </Tooltip>
                         </div>
                       </Table.Cell>
                       <Table.Cell>
@@ -279,7 +221,7 @@ export function ResumeOptimizationHistoryPanel({
                         </div>
                       </Table.Cell>
                       <Table.Cell>
-                        <div className="flex justify-end gap-2">
+                        <div className="flex items-center justify-end gap-2">
                           <AdminActionIconButton
                             icon={<HistoryActionIcon type="detail" />}
                             label="查看详情"

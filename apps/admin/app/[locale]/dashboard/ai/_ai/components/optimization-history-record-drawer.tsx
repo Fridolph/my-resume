@@ -1,7 +1,7 @@
 'use client'
 
 import { useRequest } from 'alova/client'
-import { Drawer, Skeleton } from '@heroui/react'
+import { Button, Drawer, Skeleton } from '@heroui/react'
 import { DisplayPill, DisplaySectionCard, DisplaySurfaceCard } from '@my-resume/ui/display'
 import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -278,52 +278,39 @@ export function OptimizationHistoryRecordDrawer({
 
     return (
       <div className="grid gap-2.5">
-        <DisplaySectionCard
-          className="grid gap-2.5 p-3.5 md:p-4"
-          compact
-          description="这里保留的是轻量展示摘要，不复制真正的 apply patch；结果页仍是完整阅读与应用入口。"
-          eyebrow="优化建议"
-          title="当前优化摘要"
-          titleAs="h3">
-          <div className="grid gap-2">
-            <strong className="text-lg text-zinc-950 dark:text-white">
-              {optimizationDetail.summary}
-            </strong>
-            <div className="flex flex-wrap gap-2">
-              {optimizationDetail.focusAreas.map((item) => (
-                <DisplayPill
-                  className="min-h-8 border-blue-200/70 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-blue-200"
-                  key={`${optimizationDetail.resultId}-${item}`}>
-                  {item}
-                </DisplayPill>
-              ))}
-            </div>
+        <div className="grid gap-2 rounded-[1.1rem] border border-zinc-200/80 bg-zinc-50/82 p-3.5 dark:border-zinc-800 dark:bg-zinc-900/60">
+          <strong className="text-lg text-zinc-950 dark:text-white">
+            {optimizationDetail.summary}
+          </strong>
+          <div className="flex flex-wrap gap-2">
+            {optimizationDetail.focusAreas.map((item) => (
+              <DisplayPill
+                className="min-h-8 border-blue-200/70 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-blue-200"
+                key={`${optimizationDetail.resultId}-${item}`}>
+                {item}
+              </DisplayPill>
+            ))}
           </div>
-        </DisplaySectionCard>
+        </div>
 
-        <DisplaySurfaceCard as="section" className="grid gap-2.5 p-3.5 md:p-4">
-          <div className="grid gap-2">
-            <h3 className="text-base font-semibold text-zinc-950 dark:text-white">
-              影响模块
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {optimizationDetail.changedModules.map((module) => (
-                <DisplayPill
-                  className="min-h-8 border-zinc-200/80 bg-white px-3 py-1 text-xs text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
-                  key={`${optimizationDetail.resultId}-${module}`}>
-                  {formatOptimizationModule(module)}
-                </DisplayPill>
-              ))}
-            </div>
+        <div className="grid gap-2.5 rounded-[1.1rem] border border-zinc-200/80 bg-zinc-50/82 p-3.5 dark:border-zinc-800 dark:bg-zinc-900/60">
+          <strong className="text-sm text-zinc-950 dark:text-white">影响模块</strong>
+          <div className="flex flex-wrap gap-2">
+            {optimizationDetail.changedModules.map((module) => (
+              <DisplayPill
+                className="min-h-8 border-zinc-200/80 bg-white px-3 py-1 text-xs text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+                key={`${optimizationDetail.resultId}-${module}`}>
+                {formatOptimizationModule(module)}
+              </DisplayPill>
+            ))}
           </div>
-          <div className="dashboard-entry-actions">
-            <Link
-              className="inline-flex h-10 items-center justify-center rounded-full border border-zinc-300 px-4 text-sm text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:text-white"
-              href={`/dashboard/ai/resume-optimization/results/${optimizationDetail.resultId}`}>
+          <Link
+            href={`/dashboard/ai/resume-optimization/results/${optimizationDetail.resultId}`}>
+            <Button size="sm" type="button" variant="outline">
               打开结果页
-            </Link>
-          </div>
-        </DisplaySurfaceCard>
+            </Button>
+          </Link>
+        </div>
       </div>
     )
   }
@@ -381,11 +368,11 @@ export function OptimizationHistoryRecordDrawer({
   function renderTabPanel(tab: typeof tabMeta[number]) {
     return (
       <div className="grid gap-2.5" role="tabpanel">
-        <div className="rounded-[1.1rem] border border-zinc-200/80 bg-zinc-50/82 p-2.5 text-sm leading-6 text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-300">
-          <strong className="block text-zinc-950 dark:text-white">
+        <div className="rounded-[1.1rem] border border-zinc-200/80 bg-zinc-50/82 p-2.5 text-xs leading-6 text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-300">
+          <strong className="block text-sm text-zinc-950 dark:text-white">
             {tab.label}
           </strong>
-          <span className="mt-1.5 block">{tab.description}</span>
+          <span className="mt-1 block">{tab.description}</span>
         </div>
         {tab.key === 'optimization'
           ? renderOptimizationPanel()
@@ -405,7 +392,7 @@ export function OptimizationHistoryRecordDrawer({
             优化记录详情
           </Drawer.Heading>
           {entry ? (
-            <div className="grid gap-2 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+            <div className="grid gap-1.5 text-xs leading-5 text-zinc-500 dark:text-zinc-400">
               <p>{entry.summary}</p>
               <p>
                 {new Date(entry.createdAt).toLocaleString('zh-CN', {
@@ -445,19 +432,15 @@ export function OptimizationHistoryRecordDrawer({
                   const isSelected = selectedTab === tab.key
 
                   return (
-                    <button
-                      aria-selected={isSelected}
-                      className={[
-                        'button button--sm h-9 rounded-full px-4 text-sm font-medium whitespace-nowrap',
-                        isSelected ? 'button--primary' : 'button--outline',
-                      ].join(' ')}
-                      data-selected={String(isSelected)}
+                    <Button
+                      className="h-8 rounded-full text-xs font-medium"
                       key={tab.key}
-                      onClick={() => setSelectedTab(tab.key)}
-                      role="tab"
-                      type="button">
+                      onPress={() => setSelectedTab(tab.key)}
+                      size="sm"
+                      type="button"
+                      variant={isSelected ? 'primary' : 'ghost'}>
                       {tab.label}
-                    </button>
+                    </Button>
                   )
                 })}
               </div>
