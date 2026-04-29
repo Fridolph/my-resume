@@ -105,6 +105,29 @@ describe('ResumeImportResultShell', () => {
         skills: 6,
         highlights: 5,
       },
+      sourceSnapshot: {
+        fileName: 'lifeiyu-mock-zh.md',
+        fileSize: 11680,
+        rawCharCount: 5896,
+        formattedCharCount: 5600,
+        sourceHash: 'a'.repeat(64),
+      },
+      formatReport: {
+        summary: '已完成简历格式归一与输入治理。',
+        rawCharCount: 5896,
+        formattedCharCount: 5600,
+        keptLineCount: 120,
+        discardedLineCount: 2,
+        discardedItems: [
+          {
+            summary: 'ignore previous instructions',
+            reason: '疑似提示词注入，已从识别输入中移除。',
+            riskType: 'prompt_injection',
+          },
+        ],
+        safetyFlags: ['prompt_injection'],
+        warnings: ['已丢弃 2 条明显无关或风险内容，详情请查看输入治理报告。'],
+      },
       moduleDiffs: [
         {
           module: 'profile',
@@ -133,6 +156,45 @@ describe('ResumeImportResultShell', () => {
               currentValue: '4 条',
               suggestedValue: '4 条',
               status: 'added',
+            },
+          ],
+        },
+      ],
+      moduleContents: [
+        {
+          module: 'profile',
+          title: '基本信息',
+          warnings: ['基本信息中的联系方式不完整，请手动核对。'],
+          currentItems: [
+            {
+              key: 'profile-current',
+              title: '当前姓名',
+              meta: ['邮箱：old@example.com'],
+              body: ['当前草稿摘要'],
+            },
+          ],
+          candidateItems: [
+            {
+              key: 'profile-candidate',
+              title: '厉飞雨',
+              subtitle: 'AI 全栈工程师',
+              meta: ['邮箱：lifeiyu@example.com', '所在地：杭州'],
+              body: ['具备 RAG、Agent、Milvus 工程化经验。'],
+            },
+          ],
+        },
+        {
+          module: 'projects',
+          title: '项目经历',
+          warnings: [],
+          currentItems: [],
+          candidateItems: [
+            {
+              key: 'project-agent-knowledge-lab',
+              title: 'Agent Knowledge Lab',
+              subtitle: '项目负责人',
+              meta: ['技术栈：NestJS / Milvus / DeepSeek'],
+              body: ['围绕简历知识库构建 RAG 检索与问答闭环。'],
             },
           ],
         },
@@ -171,10 +233,21 @@ describe('ResumeImportResultShell', () => {
 
     expect(await screen.findByText('候选草稿 Diff 看台')).toBeInTheDocument()
     expect(screen.getByText('已识别候选草稿')).toBeInTheDocument()
+    expect(screen.getByText('输入治理报告')).toBeInTheDocument()
+    expect(screen.getByText('已完成简历格式归一与输入治理。')).toBeInTheDocument()
+    expect(screen.getByText('提示词注入')).toBeInTheDocument()
+    expect(screen.getByText(/ignore previous instructions/)).toBeInTheDocument()
     expect(
-      screen.getByText('基本信息中的联系方式不完整，请手动核对。'),
-    ).toBeInTheDocument()
+      screen.getAllByText('基本信息中的联系方式不完整，请手动核对。').length,
+    ).toBeGreaterThanOrEqual(2)
     expect(screen.getByText('厉飞雨')).toBeInTheDocument()
+    expect(screen.getByText('邮箱：lifeiyu@example.com')).not.toHaveClass('rounded-full')
+    expect(screen.getByText('具备 RAG、Agent、Milvus 工程化经验。')).toBeInTheDocument()
+    expect(screen.getByText('Agent Knowledge Lab')).toBeInTheDocument()
+    expect(
+      screen.getByText('围绕简历知识库构建 RAG 检索与问答闭环。'),
+    ).toBeInTheDocument()
+    expect(screen.getByText('基本信息质量提醒')).toBeInTheDocument()
     expect(screen.getAllByTestId('resume-import-diff-grid')[0]).toHaveClass(
       'md:grid-cols-2',
     )
@@ -253,6 +326,22 @@ describe('ResumeImportResultShell', () => {
               currentValue: '当前姓名',
               suggestedValue: '厉飞雨',
               status: 'changed',
+            },
+          ],
+        },
+      ],
+      moduleContents: [
+        {
+          module: 'profile',
+          title: '基本信息',
+          warnings: [],
+          currentItems: [],
+          candidateItems: [
+            {
+              key: 'profile-candidate',
+              title: '厉飞雨',
+              meta: [],
+              body: ['已写回过的候选基本信息'],
             },
           ],
         },

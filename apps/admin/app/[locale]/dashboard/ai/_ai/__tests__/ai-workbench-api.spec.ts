@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   createApplyAiResumeOptimizationMethod,
+  createDeleteAiUsageRecordMethod,
   createFetchAiResumeOptimizationResultMethod,
   createFetchAiUsageHistoryMethod,
   createFetchAiUsageRecordDetailMethod,
@@ -382,6 +383,53 @@ describe('ai workbench api client', () => {
     expect(response[0]?.id).toBe('usage-report-001')
   })
 
+  it('should fetch resume import usage history records', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        createJsonResponse(200, {
+          records: [
+            {
+              id: 'usage-resume-import-001',
+              operationType: 'resume-import',
+              scenario: 'resume-import',
+              locale: 'zh',
+              inputPreview: 'lifeiyu-mock-zh.md · 5896 字符',
+              summary: '已识别候选草稿',
+              provider: 'deepseek',
+              model: 'deepseek-v4-flash',
+              mode: 'openai-compatible',
+              generator: 'ai-provider',
+              status: 'succeeded',
+              relatedReportId: null,
+              relatedResultId: 'result-import-001',
+              errorMessage: null,
+              durationMs: 240000,
+              createdAt: '2026-04-29T03:18:26.394Z',
+            },
+          ],
+        }),
+      ),
+    )
+
+    const response = await createFetchAiUsageHistoryMethod({
+      apiBaseUrl: 'http://localhost:5577',
+      accessToken: 'demo-token',
+      type: 'resume-import',
+      limit: 20,
+    })
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5577/api/ai/reports/history?limit=20&type=resume-import',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer demo-token',
+        }),
+      }),
+    )
+    expect(response[0]?.operationType).toBe('resume-import')
+  })
+
   it('should fetch ai usage history detail by record id', async () => {
     vi.stubGlobal(
       'fetch',
@@ -429,6 +477,38 @@ describe('ai workbench api client', () => {
     expect(response.detail).toEqual({
       reportId: 'report-001',
       summary: '匹配摘要',
+    })
+  })
+
+  it('should delete ai usage history records with bearer token', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        createJsonResponse(200, {
+          deleted: true,
+          recordId: 'usage-report-001',
+        }),
+      ),
+    )
+
+    const response = await createDeleteAiUsageRecordMethod({
+      apiBaseUrl: 'http://localhost:5577',
+      accessToken: 'demo-token',
+      recordId: 'usage-report-001',
+    })
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5577/api/ai/reports/history/usage-report-001',
+      expect.objectContaining({
+        method: 'DELETE',
+        headers: expect.objectContaining({
+          Authorization: 'Bearer demo-token',
+        }),
+      }),
+    )
+    expect(response).toEqual({
+      deleted: true,
+      recordId: 'usage-report-001',
     })
   })
 

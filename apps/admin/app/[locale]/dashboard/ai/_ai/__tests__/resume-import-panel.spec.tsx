@@ -45,6 +45,7 @@ vi.mock('alova/client', async () => {
 
 afterEach(() => {
   cleanup()
+  window.localStorage.clear()
   vi.clearAllMocks()
   vi.useRealTimers()
 })
@@ -87,7 +88,7 @@ describe('ResumeImportPanel', () => {
       updatedAt: '2026-04-28T12:00:00.000Z',
       elapsedMs: 0,
     })
-    const fetchJob = vi.fn().mockResolvedValue({
+    const completedJob = {
       jobId: 'resume-import-job-001',
       status: 'completed',
       currentStage: 'completed',
@@ -110,6 +111,10 @@ describe('ResumeImportPanel', () => {
       updatedAt: '2026-04-28T12:00:04.000Z',
       elapsedMs: 4000,
       resultId: 'resume-import-001',
+    }
+    const fetchJob = vi.fn().mockResolvedValue(completedJob)
+    const streamJob = vi.fn(async (_input, handlers) => {
+      handlers.onCompleted?.(completedJob)
     })
     const createRecognizeResumeImportMethod = vi.fn((input) => ({
       send: () => recognizeResume(input),
@@ -126,6 +131,7 @@ describe('ResumeImportPanel', () => {
         createFetchResumeImportJobMethod={createFetchResumeImportJobMethod as any}
         createRecognizeResumeImportMethod={createRecognizeResumeImportMethod as any}
         onRecognized={onRecognized}
+        streamResumeImportJobMethod={streamJob as any}
         elapsedTickMs={1}
         initialPollIntervalMs={1}
         slowPollAfterMs={40}
@@ -145,11 +151,14 @@ describe('ResumeImportPanel', () => {
     expect(screen.getByText('lifeiyu-mock-zh.md · 11.4 KB')).toBeInTheDocument()
 
     await waitFor(() => {
-      expect(fetchJob).toHaveBeenCalledWith({
-        accessToken: 'admin-token',
-        apiBaseUrl: 'http://localhost:5577',
-        jobId: 'resume-import-job-001',
-      })
+      expect(streamJob).toHaveBeenCalledWith(
+        expect.objectContaining({
+          accessToken: 'admin-token',
+          apiBaseUrl: 'http://localhost:5577',
+          jobId: 'resume-import-job-001',
+        }),
+        expect.any(Object),
+      )
     })
     await waitFor(() => {
       expect(onRecognized).toHaveBeenCalledWith(
@@ -165,7 +174,129 @@ describe('ResumeImportPanel', () => {
     expect(screen.getByText('AI 候选草稿生成完成，用时 3200 ms。')).toBeInTheDocument()
   })
 
-  it('updates elapsed time locally and backs off polling after 40 seconds', async () => {
+  it('keeps the page usable when a job snapshot has no steps yet', async () => {
+    const user = userEvent.setup()
+    const recognizeResume = vi.fn().mockResolvedValue({
+      jobId: 'resume-import-job-no-steps',
+      status: 'running',
+      currentStage: 'accepted',
+      createdAt: '2026-04-28T12:00:00.000Z',
+      updatedAt: '2026-04-28T12:00:00.000Z',
+      elapsedMs: 0,
+    })
+    const streamJob = vi.fn(() => new Promise<void>(() => undefined))
+
+    render(
+      <ResumeImportPanel
+        accessToken="admin-token"
+        apiBaseUrl="http://localhost:5577"
+        canUpload
+        createRecognizeResumeImportMethod={
+          (() => ({ send: () => recognizeResume() })) as any
+        }
+        streamResumeImportJobMethod={streamJob as any}
+      />,
+    )
+
+    const file = new File(['# 厉飞雨'], 'lifeiyu-mock-zh.md', {
+      type: 'text/markdown',
+    })
+
+    await user.upload(screen.getByLabelText('选择简历导入文件'), file)
+    await user.click(screen.getByRole('button', { name: '上传并启动识别' }))
+
+    expect(await screen.findByTestId('resume-import-job-panel')).toBeInTheDocument()
+    expect(screen.getByText('任务已创建，正在等待服务端返回阶段时间线。你可以保持页面打开，或稍后手动刷新状态。')).toBeInTheDocument()
+    expect(screen.getByText('accepted')).toBeInTheDocument()
+  })
+
+  it('restores a running job from local storage after page refresh', async () => {
+    window.localStorage.setItem(
+      'my-resume:ai:resume-import:active-job-id',
+      'resume-import-job-restored',
+    )
+    const restoredJob = {
+      jobId: 'resume-import-job-restored',
+      status: 'running',
+      currentStage: 'ai_generating',
+      steps: [
+        {
+          stage: 'ai_generating',
+          label: '正在调用 AI 生成候选草稿',
+          status: 'running',
+          summary: '模型正在生成候选草稿。',
+        },
+      ],
+      createdAt: '2026-04-28T12:00:00.000Z',
+      updatedAt: '2026-04-28T12:00:00.000Z',
+      elapsedMs: 0,
+    }
+    const fetchJob = vi.fn().mockResolvedValue(restoredJob)
+    const streamJob = vi.fn(() => new Promise<void>(() => undefined))
+
+    render(
+      <ResumeImportPanel
+        accessToken="admin-token"
+        apiBaseUrl="http://localhost:5577"
+        canUpload
+        createFetchResumeImportJobMethod={(() => ({ send: () => fetchJob() })) as any}
+        streamResumeImportJobMethod={streamJob as any}
+      />,
+    )
+
+    expect(
+      (await screen.findAllByText('正在调用 AI 生成候选草稿')).length,
+    ).toBeGreaterThanOrEqual(1)
+    expect(fetchJob).toHaveBeenCalledTimes(1)
+    expect(streamJob).toHaveBeenCalledWith(
+      expect.objectContaining({
+        jobId: 'resume-import-job-restored',
+      }),
+      expect.any(Object),
+    )
+  })
+
+  it('keeps elapsed time readable when a running snapshot misses timestamps', async () => {
+    const user = userEvent.setup()
+    const recognizeResume = vi.fn().mockResolvedValue({
+      jobId: 'resume-import-job-missing-time',
+      status: 'running',
+      currentStage: 'ai_generating',
+      steps: [
+        {
+          stage: 'ai_generating',
+          label: '正在调用 AI 生成候选草稿',
+          status: 'running',
+        },
+      ],
+    })
+    const streamJob = vi.fn(() => new Promise<void>(() => undefined))
+
+    render(
+      <ResumeImportPanel
+        accessToken="admin-token"
+        apiBaseUrl="http://localhost:5577"
+        canUpload
+        createRecognizeResumeImportMethod={
+          (() => ({ send: () => recognizeResume() })) as any
+        }
+        streamResumeImportJobMethod={streamJob as any}
+      />,
+    )
+
+    const file = new File(['# 厉飞雨'], 'lifeiyu-mock-zh.md', {
+      type: 'text/markdown',
+    })
+
+    await user.upload(screen.getByLabelText('选择简历导入文件'), file)
+    await user.click(screen.getByRole('button', { name: '上传并启动识别' }))
+
+    expect(await screen.findByTestId('resume-import-job-panel')).toBeInTheDocument()
+    expect(screen.getByText('0 秒')).toBeInTheDocument()
+    expect(screen.queryByText(/NaN 秒/)).not.toBeInTheDocument()
+  })
+
+  it('updates elapsed time locally without automatic polling', async () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-04-28T12:00:00.000Z'))
     const runningJob = {
@@ -186,6 +317,19 @@ describe('ResumeImportPanel', () => {
     }
     const recognizeResume = vi.fn().mockResolvedValue(runningJob)
     const fetchJob = vi.fn().mockResolvedValue(runningJob)
+    const streamJob = vi.fn((_input, handlers) => {
+      handlers.onHeartbeat?.({
+        jobId: 'resume-import-job-003',
+        timestamp: '2026-04-28T12:00:00.000Z',
+      })
+      handlers.onProgressHint?.({
+        jobId: 'resume-import-job-003',
+        message: '正在梳理教育经历',
+        timestamp: '2026-04-28T12:00:08.000Z',
+      })
+
+      return new Promise<void>(() => undefined)
+    })
 
     render(
       <ResumeImportPanel
@@ -196,6 +340,7 @@ describe('ResumeImportPanel', () => {
         createRecognizeResumeImportMethod={
           (() => ({ send: () => recognizeResume() })) as any
         }
+        streamResumeImportJobMethod={streamJob as any}
       />,
     )
 
@@ -213,31 +358,23 @@ describe('ResumeImportPanel', () => {
     })
 
     expect(screen.getByText('模型正在生成候选草稿。')).toBeInTheDocument()
+    expect(
+      screen.getByText(/单次调用生成候选草稿和输入治理报告，通常需要 3-5 分钟/),
+    ).toBeInTheDocument()
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(9999)
+      await vi.advanceTimersByTimeAsync(10_000)
+    })
+
+    expect(fetchJob).not.toHaveBeenCalled()
+    expect(streamJob).toHaveBeenCalledTimes(1)
+    expect(screen.getByText('10 秒')).toBeInTheDocument()
+    expect(screen.getByText(/实时连接正常，最近心跳 10 秒前/)).toBeInTheDocument()
+    expect(screen.getByText(/正在梳理教育经历/)).toBeInTheDocument()
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(50_000)
     })
     expect(fetchJob).not.toHaveBeenCalled()
-
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(1)
-    })
-    expect(fetchJob).toHaveBeenCalledTimes(1)
-    expect(screen.getByText('10.0 秒')).toBeInTheDocument()
-
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(30_000)
-    })
-    expect(fetchJob).toHaveBeenCalledTimes(4)
-
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(4999)
-    })
-    expect(fetchJob).toHaveBeenCalledTimes(4)
-
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(1)
-    })
-    expect(fetchJob).toHaveBeenCalledTimes(5)
   })
 
   it('renders failed job details and allows retrying', async () => {
@@ -257,7 +394,7 @@ describe('ResumeImportPanel', () => {
       updatedAt: '2026-04-28T12:00:00.000Z',
       elapsedMs: 0,
     })
-    const fetchJob = vi.fn().mockResolvedValue({
+    const failedJob = {
       jobId: 'resume-import-job-002',
       status: 'failed',
       currentStage: 'failed',
@@ -277,6 +414,10 @@ describe('ResumeImportPanel', () => {
         message: 'DeepSeek chat completions request failed with status 401',
         traceId: 'trace-resume-import',
       },
+    }
+    const fetchJob = vi.fn().mockResolvedValue(failedJob)
+    const streamJob = vi.fn(async (_input, handlers) => {
+      handlers.onFailed?.(failedJob)
     })
 
     render(
@@ -288,6 +429,7 @@ describe('ResumeImportPanel', () => {
         createRecognizeResumeImportMethod={
           (() => ({ send: () => recognizeResume() })) as any
         }
+        streamResumeImportJobMethod={streamJob as any}
         elapsedTickMs={1}
         initialPollIntervalMs={1}
         slowPollAfterMs={40}
