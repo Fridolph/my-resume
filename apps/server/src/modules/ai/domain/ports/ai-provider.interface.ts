@@ -10,6 +10,21 @@ export interface GenerateTextInput {
   thinkingEnabled?: boolean
 }
 
+export interface GenerateStructuredObjectInput {
+  method: 'functionCalling' | 'jsonMode'
+  prompt: string
+  schema: unknown
+  schemaDescription?: string
+  schemaName: string
+  systemPrompt?: string
+  temperature?: number
+}
+
+export interface GenerateStructuredObjectStreamInput
+  extends GenerateStructuredObjectInput {
+  onPartialObject?: (partialObject: unknown) => void
+}
+
 export interface EmbedTextsInput {
   texts: string[]
 }
@@ -19,6 +34,13 @@ export interface GenerateTextResult {
   model: string
   text: string
   raw?: unknown
+}
+
+export interface GenerateStructuredObjectResult<T = unknown> {
+  method: 'functionCalling' | 'jsonMode'
+  model: string
+  provider: string
+  value: T
 }
 
 export interface EmbedTextsResult {
@@ -39,5 +61,11 @@ export interface AiProviderSummary {
 export interface AiProvider {
   getSummary(): AiProviderSummary
   generateText(input: GenerateTextInput): Promise<GenerateTextResult>
+  generateStructuredObject?(
+    input: GenerateStructuredObjectInput,
+  ): Promise<GenerateStructuredObjectResult>
+  generateStructuredObjectStream?(
+    input: GenerateStructuredObjectStreamInput,
+  ): Promise<GenerateStructuredObjectResult>
   embedTexts(input: EmbedTextsInput): Promise<EmbedTextsResult>
 }
