@@ -163,7 +163,7 @@ if [[ -f "$REPO_ROOT/.env.stack.local" ]]; then
 fi
 
 log "Building images and deploying..."
-run "$SCRIPT_DIR/../ecs/release-from-local.sh" "${RELEASE_ARGS[@]}"
+run "$REPO_ROOT/deploy/ecs/release-from-local.sh" "${RELEASE_ARGS[@]}"
 
 # ── 5) GitHub Release ─────────────────────────────────────────────────
 if [[ "$SKIP_GITHUB" != '1' ]]; then
