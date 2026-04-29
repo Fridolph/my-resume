@@ -184,7 +184,7 @@ export function ResumeImportHistoryTable({
               <Table.Column>模型</Table.Column>
               <Table.Column>耗时</Table.Column>
               <Table.Column>创建时间</Table.Column>
-              <Table.Column>操作</Table.Column>
+              <Table.Column className="w-28 text-right">操作</Table.Column>
             </Table.Header>
             <Table.Body items={visibleRecords}>
               {(record) => (
@@ -207,7 +207,7 @@ export function ResumeImportHistoryTable({
                     <Chip
                       color={record.status === 'succeeded' ? 'success' : 'danger'}
                       size="sm"
-                      variant="flat">
+                      variant="soft">
                       <Chip.Label>
                         {record.status === 'succeeded' ? 'OK' : 'FAIL'}
                       </Chip.Label>
@@ -280,60 +280,6 @@ export function ResumeImportHistoryTable({
                           删除
                         </Tooltip.Content>
                       </Tooltip>
-                    </div>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <Chip
-                      color={record.status === 'succeeded' ? 'success' : 'danger'}
-                      size="sm"
-                      variant="soft">
-                      <Chip.Label>{statusLabel(record)}</Chip.Label>
-                    </Chip>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <div className="grid gap-1">
-                      <Chip size="sm" variant="secondary">
-                        <Chip.Label>{record.model}</Chip.Label>
-                      </Chip>
-                      <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                        {record.provider}
-                      </span>
-                    </div>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <span className="text-sm text-zinc-700 dark:text-zinc-200">
-                      {formatDuration(record.durationMs)}
-                    </span>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <span className="text-sm text-zinc-600 dark:text-zinc-300">
-                      {formatCreatedAt(record.createdAt)}
-                    </span>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {record.status === 'succeeded' && record.relatedResultId ? (
-                        <Link href={`/dashboard/ai/resume-import/results/${record.relatedResultId}`}>
-                          <Button size="sm" type="button" variant="outline">
-                            查看结果
-                          </Button>
-                        </Link>
-                      ) : null}
-                      <Button
-                        onPress={() => onViewRecord?.(record)}
-                        size="sm"
-                        type="button"
-                        variant="secondary">
-                        查看详情
-                      </Button>
-                      <Button
-                        isPending={deletingRecordId === record.id}
-                        onPress={() => onDeleteRecord?.(record)}
-                        size="sm"
-                        type="button"
-                        variant="danger-soft">
-                        删除
-                      </Button>
                     </div>
                   </Table.Cell>
                 </Table.Row>

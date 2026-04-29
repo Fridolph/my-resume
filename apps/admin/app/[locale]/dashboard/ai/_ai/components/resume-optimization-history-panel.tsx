@@ -147,7 +147,7 @@ export function ResumeOptimizationHistoryPanel({
                 <Table.Column>优化摘要</Table.Column>
                 <Table.Column>影响模块</Table.Column>
                 <Table.Column>关联状态</Table.Column>
-                <Table.Column>操作</Table.Column>
+                <Table.Column className="w-20 text-right">操作</Table.Column>
               </Table.Header>
               <Table.Body items={paginatedEntries}>
                 {(entry) => {
