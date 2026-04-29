@@ -8,6 +8,20 @@
 
 ## [v2.2.23](https://github.com/Fridolph/my-resume/compare/v2.2.22...v2.2.23) - 2026-04-29
 
-### 其他变更
+### 新增
 
-- 本次发布没有识别到可归类的用户可见变更。
+- **AI 简历导入识别**：上传 md/txt 简历文件，经 AI 识别生成候选草稿，支持模块级 diff 对照与选择性回填
+- **SSE 任务事件推送**：简历导入识别任务支持 Server-Sent Events 实时推送阶段状态与进度提示
+- **AI 结构化输出**：服务端接入 LangChain tool-call structured stream，提升 AI 输出稳定性
+- **历史识别记录**：Admin 简历导入页新增分页历史表格，支持查看详情与删除记录
+- **CHANGELOG 与发布脚本**：建立 CHANGELOG.md 与 tag diff 驱动的 release notes 生成工具
+
+### 变更
+
+- Admin AI 工作台拆分为独立模块卡片入口（简历导入、针对性分析、RAG 入库、文件提取、诊断工具）
+- API Client 新增 SSE 流式、历史删除、resume-import 类型支持
+- `packages/utils` 新增 `formatFileSize` 共享函数
+
+### 移除
+
+- 删除 Admin AI 区域 12 个纯 UI 渲染测试文件，保留 API 契约测试
