@@ -42,73 +42,75 @@ export function AiAnalysisHistoryTable({
   }
 
   return (
-    <div className="rounded-[1.5rem] border border-zinc-200/80 bg-white/82 p-3 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/70">
-      <Table aria-label="AI 辅助分析记录表格">
-        <Table.Header>
-          <Table.Column isRowHeader>场景</Table.Column>
-          <Table.Column>语言 / 来源</Table.Column>
-          <Table.Column>评分 / 摘要</Table.Column>
-          <Table.Column>Provider</Table.Column>
-          <Table.Column>生成时间</Table.Column>
-          <Table.Column>操作</Table.Column>
-        </Table.Header>
-        <Table.Body items={records}>
-          {(record) => (
-            <Table.Row id={record.id} key={record.id}>
-              <Table.Cell>
-                <div className="grid gap-1">
-                  <strong className="text-sm text-zinc-950 dark:text-white">
-                    {formatScenario(record.scenario)}
-                  </strong>
-                  <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                    {record.status === 'failed' ? '失败记录' : '成功记录'}
-                  </span>
-                </div>
-              </Table.Cell>
-              <Table.Cell>
-                <div className="grid gap-1 text-sm text-zinc-600 dark:text-zinc-300">
-                  <span>{formatLocale(record.locale)}</span>
-                  <span>{formatGeneratorLabel(record.generator)}</span>
-                </div>
-              </Table.Cell>
-              <Table.Cell>
-                <div className="grid gap-1">
-                  {typeof record.scoreValue === 'number' ? (
+    <div className="rounded-[1.5rem] border border-zinc-200/80 bg-white/82 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/70">
+      <Table>
+        <Table.Content aria-label="AI 辅助分析记录表格">
+          <Table.Header>
+            <Table.Column isRowHeader>场景</Table.Column>
+            <Table.Column>语言 / 来源</Table.Column>
+            <Table.Column>评分 / 摘要</Table.Column>
+            <Table.Column>Provider</Table.Column>
+            <Table.Column>生成时间</Table.Column>
+            <Table.Column>操作</Table.Column>
+          </Table.Header>
+          <Table.Body items={records}>
+            {(record) => (
+              <Table.Row id={record.id} key={record.id}>
+                <Table.Cell>
+                  <div className="grid gap-1">
                     <strong className="text-sm text-zinc-950 dark:text-white">
-                      {record.scoreValue} / 100
+                      {formatScenario(record.scenario)}
                     </strong>
-                  ) : null}
-                  <span className="line-clamp-2 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
-                    {record.status === 'failed'
-                      ? record.errorMessage ?? '本次分析失败'
-                      : record.summary ?? '本次调用未返回摘要'}
-                  </span>
-                </div>
-              </Table.Cell>
-              <Table.Cell>
-                <div className="grid gap-1 text-sm text-zinc-600 dark:text-zinc-300">
-                  <span>{record.provider}</span>
-                  <span className="text-xs">{record.model}</span>
-                </div>
-              </Table.Cell>
-              <Table.Cell>
-                <div className="grid gap-1 text-sm text-zinc-600 dark:text-zinc-300">
-                  <span>{formatCreatedAt(record.createdAt)}</span>
-                  <span className="text-xs">{record.durationMs}ms</span>
-                </div>
-              </Table.Cell>
-              <Table.Cell>
-                <Button
-                  onPress={() => onOpenDetail(record.id)}
-                  size="sm"
-                  type="button"
-                  variant="outline">
-                  查看详情
-                </Button>
-              </Table.Cell>
-            </Table.Row>
-          )}
-        </Table.Body>
+                    <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                      {record.status === 'failed' ? '失败记录' : '成功记录'}
+                    </span>
+                  </div>
+                </Table.Cell>
+                <Table.Cell>
+                  <div className="grid gap-1 text-sm text-zinc-600 dark:text-zinc-300">
+                    <span>{formatLocale(record.locale)}</span>
+                    <span>{formatGeneratorLabel(record.generator)}</span>
+                  </div>
+                </Table.Cell>
+                <Table.Cell>
+                  <div className="grid gap-1">
+                    {typeof record.scoreValue === 'number' ? (
+                      <strong className="text-sm text-zinc-950 dark:text-white">
+                        {record.scoreValue} / 100
+                      </strong>
+                    ) : null}
+                    <span className="line-clamp-2 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+                      {record.status === 'failed'
+                        ? record.errorMessage ?? '本次分析失败'
+                        : record.summary ?? '本次调用未返回摘要'}
+                    </span>
+                  </div>
+                </Table.Cell>
+                <Table.Cell>
+                  <div className="grid gap-1 text-sm text-zinc-600 dark:text-zinc-300">
+                    <span>{record.provider}</span>
+                    <span className="text-xs">{record.model}</span>
+                  </div>
+                </Table.Cell>
+                <Table.Cell>
+                  <div className="grid gap-1 text-sm text-zinc-600 dark:text-zinc-300">
+                    <span>{formatCreatedAt(record.createdAt)}</span>
+                    <span className="text-xs">{record.durationMs}ms</span>
+                  </div>
+                </Table.Cell>
+                <Table.Cell>
+                  <Button
+                    onPress={() => onOpenDetail(record.id)}
+                    size="sm"
+                    type="button"
+                    variant="outline">
+                    查看详情
+                  </Button>
+                </Table.Cell>
+              </Table.Row>
+            )}
+          </Table.Body>
+        </Table.Content>
       </Table>
     </div>
   )

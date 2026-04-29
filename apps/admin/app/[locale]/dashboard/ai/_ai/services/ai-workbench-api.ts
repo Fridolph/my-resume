@@ -6,10 +6,12 @@ export {
   createFetchAiResumeOptimizationResultMethod,
   createFetchAiUsageHistoryMethod,
   createFetchAiUsageRecordDetailMethod,
+  createDeleteAiUsageRecordMethod,
   createFetchAiWorkbenchRuntimeMethod,
   createFetchCachedAiWorkbenchReportMethod,
   createFetchCachedAiWorkbenchReportsMethod,
   createGenerateAiResumeOptimizationMethod,
   createRecognizeAiResumeImportMethod,
   createTriggerAiWorkbenchAnalysisMethod,
+  streamAiResumeImportJob,
 } from '@my-resume/api-client'
