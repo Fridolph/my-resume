@@ -25,3 +25,17 @@
 ### 移除
 
 - 删除 Admin AI 区域 12 个纯 UI 渲染测试文件，保留 API 契约测试
+
+## [v2.2.24](https://github.com/Fridolph/my-resume/compare/v2.2.23...v2.2.24) - 2026-04-29
+
+### 新功能
+
+- **release:** add one-click full-release.sh and npm release script ([`191519c`](https://github.com/Fridolph/my-resume/commit/191519c190396af46d2acb0189d854f0f388fc01))
+
+### 文档
+
+- update CHANGELOG v2.2.23 release notes ([`cd5470e`](https://github.com/Fridolph/my-resume/commit/cd5470e82627ed9ad18e00b450167248e6e33ab0))
+
+### 工程与维护
+
+- auto-create .env from .env.stack.local before dev/docker:up ([`f71d35c`](https://github.com/Fridolph/my-resume/commit/f71d35cd81d09ddad2ec4be12d60ac1f5cc07224))
