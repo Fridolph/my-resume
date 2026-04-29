@@ -120,7 +120,7 @@ export function SkillsSection({
                           }
                           type="number"
                           value={String(skill.proficiency ?? '')}
-                          variant="secondary"
+                         
                         />
                       </label>
                     ) : null}

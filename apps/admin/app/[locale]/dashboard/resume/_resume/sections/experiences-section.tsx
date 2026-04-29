@@ -158,7 +158,7 @@ export function ExperiencesSection({
                                 )
                               }
                               value={experience.startDate}
-                              variant="secondary"
+                             
                             />
                           </label>
                           <label className="field">
@@ -173,7 +173,7 @@ export function ExperiencesSection({
                                 )
                               }
                               value={experience.endDate}
-                              variant="secondary"
+                             
                             />
                           </label>
                         </>
@@ -245,7 +245,7 @@ export function ExperiencesSection({
                               buildDraftFieldKey('experience', index, 'technologies')
                             ] ?? formatCommaSeparatedValues(experience.technologies)
                           }
-                          variant="secondary"
+                         
                         />
                       </label>
                     ) : null}

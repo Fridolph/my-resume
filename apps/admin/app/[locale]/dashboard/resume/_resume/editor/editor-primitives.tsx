@@ -281,14 +281,12 @@ export function LocalizedEditorField({
           onChange={(event) => onChange(event.target.value)}
           rows={rows}
           value={value}
-          variant="secondary"
         />
       ) : (
         <Input
           fullWidth
           onChange={(event) => onChange(event.target.value)}
           value={value}
-          variant="secondary"
         />
       )}
     </label>
@@ -372,7 +370,7 @@ export function EditorSection({
       data-slot="editor-section">
       <div ref={sectionRef}>
         <div
-          className="relative flex flex-col gap-2.5 border-b border-zinc-200/70 px-4 py-4 dark:border-zinc-800 md:flex-row md:items-center md:justify-between md:gap-3 md:px-6 md:py-5"
+          className="relative flex flex-col gap-2.5 border-b border-zinc-200/70 px-3 py-3 dark:border-zinc-800 md:flex-row md:items-center md:justify-between md:gap-3 md:px-4 md:py-4"
           data-slot="editor-section-header">
           <div className="flex min-w-0 flex-1 items-start gap-3 md:items-center">
             <button
@@ -409,7 +407,7 @@ export function EditorSection({
         </div>
         <Disclosure.Content>
           <Disclosure.Body
-            className="stack px-4 py-4 md:px-6 md:py-5"
+            className="stack px-3 py-3 md:px-4 md:py-4"
             data-slot="editor-section-body">
             {children}
           </Disclosure.Body>
@@ -436,10 +434,10 @@ export function EditorEntry({
       : 'overflow-hidden rounded-[18px] border border-zinc-200/50 bg-white/72 shadow-none dark:border-zinc-800/70 dark:bg-zinc-950/60 md:rounded-[24px] md:border-zinc-200/70 md:bg-white md:dark:bg-zinc-950/80'
 
   const entryHeaderClassName =
-    'group relative flex flex-col gap-2.5 px-3.5 py-3 md:flex-row md:items-center md:justify-between md:gap-3 md:px-5 md:py-4'
+    'group relative flex flex-col gap-2.5 px-3 py-2.5 md:flex-row md:items-center md:justify-between md:gap-3 md:px-4 md:py-3'
 
   const entryBodyClassName =
-    'stack border-t border-zinc-200/50 px-3.5 py-3 dark:border-zinc-800/70 md:border-zinc-200/60 md:px-5 md:py-4 md:dark:border-zinc-800/80'
+    'stack border-t border-zinc-200/50 px-3 py-2.5 dark:border-zinc-800/70 md:border-zinc-200/60 md:px-4 md:py-3 md:dark:border-zinc-800/80'
 
   return (
     <Disclosure.Root

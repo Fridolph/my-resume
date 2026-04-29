@@ -78,7 +78,7 @@ export function AdminResumeShell({ locale: _locale }: { locale: AppLocale }) {
   return (
     <div className="stack">
       <Card className="border border-zinc-200/70 dark:border-zinc-800">
-        <CardHeader className="flex flex-col items-start gap-2.5 px-4 py-4 sm:px-5 md:gap-3">
+        <CardHeader className="flex flex-col items-start gap-2.5 px-3 py-3 sm:px-4 md:gap-3">
           <div className="flex flex-wrap gap-2">
             <Chip size="sm">当前账号：{currentUser.username}</Chip>
             <Chip size="sm">
@@ -94,7 +94,7 @@ export function AdminResumeShell({ locale: _locale }: { locale: AppLocale }) {
             </CardDescription>
           </div>
         </CardHeader>
-        <CardContent className="grid gap-3 px-4 pb-4 sm:px-5 md:gap-4">
+        <CardContent className="grid gap-3 px-3 pb-3 sm:px-4 md:gap-4">
           {currentUser.capabilities.canEditResume ? (
             <div className="dashboard-inline-note">
               当前已接通标准简历主模块编辑，并切到“中文主编辑 +
