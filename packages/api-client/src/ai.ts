@@ -1,10 +1,13 @@
-import { defaultApiClient as Alova } from './client'
+import { defaultApiClient as Alova, joinApiUrl } from './client'
 import type {
+  AiResumeImportJobHeartbeat,
+  AiResumeImportJobProgressHint,
   AiResumeOptimizationResultDetail,
   AiResumeOptimizationResult,
   AiUsageRecordDetail,
   AiUsageRecordSummary,
   AiResumeImportJob,
+  AiResumeImportJobStreamEvent,
   AiResumeImportResult,
   AiWorkbenchCachedReportSummary,
   AiWorkbenchReport,
@@ -14,6 +17,8 @@ import type {
   ApplyAiResumeImportResult,
   ApplyAiResumeOptimizationInput,
   ApplyAiResumeOptimizationResult,
+  DeleteAiUsageRecordInput,
+  DeleteAiUsageRecordResult,
   ExtractTextFromFileInput,
   FetchAiResumeImportJobInput,
   FetchAiResumeImportResultInput,
@@ -26,6 +31,8 @@ import type {
   ResumeOptimizationInput,
   RecognizeAiResumeImportInput,
   RuntimeInput,
+  StreamAiResumeImportJobHandlers,
+  StreamAiResumeImportJobInput,
   TriggerAiWorkbenchAnalysisResult,
 } from './types/ai.types'
 
@@ -42,18 +49,26 @@ export type {
   AiResumeOptimizationResult,
   AiResumeImportDiffEntry,
   AiResumeImportDiffStatus,
+  AiResumeImportDiscardedItem,
+  AiResumeImportFormatReport,
   AiResumeImportJob,
   AiResumeImportJobStage,
   AiResumeImportJobStatus,
+  AiResumeImportJobStreamEvent,
+  AiResumeImportJobProgressHint,
   AiResumeImportJobStep,
   AiResumeImportJobStepStatus,
   AiResumeImportModule,
+  AiResumeImportModuleContent,
+  AiResumeImportModuleContentItem,
   AiResumeImportModuleDiff,
   AiResumeImportModuleStats,
   AiResumeImportResult,
+  AiResumeImportSourceSnapshot,
   AiUsageRecordDetail,
   AiUsageRecordFilterType,
   AiUsageRecordOperationType,
+  AiUsageRecordScenario,
   AiUsageRecordStatus,
   AiUsageRecordSummary,
   AiWorkbenchCachedReportSummary,
@@ -70,6 +85,8 @@ export type {
   ApplyAiResumeImportResult,
   ApplyAiResumeOptimizationInput,
   ApplyAiResumeOptimizationResult,
+  DeleteAiUsageRecordInput,
+  DeleteAiUsageRecordResult,
   ExtractedFileType,
   ExtractTextFromFileInput,
   FetchAiResumeImportJobInput,
@@ -84,6 +101,8 @@ export type {
   RecognizeAiResumeImportInput,
   ResumeOptimizationInput,
   RuntimeInput,
+  StreamAiResumeImportJobHandlers,
+  StreamAiResumeImportJobInput,
   TriggerAiWorkbenchAnalysisResult,
 } from './types/ai.types'
 
@@ -126,6 +145,16 @@ export function createFetchAiUsageRecordDetailMethod(
     pathname: `/ai/reports/history/${input.recordId}`,
     accessToken: input.accessToken,
     fallbackErrorMessage: 'AI 调用记录详情加载失败',
+  })
+}
+
+export function createDeleteAiUsageRecordMethod(input: DeleteAiUsageRecordInput) {
+  return Alova.createMethod<DeleteAiUsageRecordResult>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: `/ai/reports/history/${input.recordId}`,
+    method: 'DELETE',
+    accessToken: input.accessToken,
+    fallbackErrorMessage: 'AI 调用记录删除失败，请稍后重试',
   })
 }
 
@@ -256,6 +285,172 @@ export function createFetchAiResumeImportJobMethod(input: FetchAiResumeImportJob
     accessToken: input.accessToken,
     fallbackErrorMessage: '简历导入识别任务加载失败，请稍后重试',
   })
+}
+
+interface ParsedSseMessage {
+  event: AiResumeImportJobStreamEvent
+  data: unknown
+}
+
+function parseSseMessage(rawMessage: string): ParsedSseMessage | null {
+  const lines = rawMessage.split(/\r?\n/)
+  let event: AiResumeImportJobStreamEvent = 'job.snapshot'
+  const dataLines: string[] = []
+
+  for (const line of lines) {
+    if (line.startsWith('event:')) {
+      event = line.slice('event:'.length).trim() as AiResumeImportJobStreamEvent
+      continue
+    }
+
+    if (line.startsWith('data:')) {
+      dataLines.push(line.slice('data:'.length).trim())
+    }
+  }
+
+  if (dataLines.length === 0) {
+    return null
+  }
+
+  return {
+    event,
+    data: JSON.parse(dataLines.join('\n')) as unknown,
+  }
+}
+
+function dispatchResumeImportJobStreamMessage(
+  message: ParsedSseMessage,
+  handlers: StreamAiResumeImportJobHandlers,
+): boolean {
+  if (message.event === 'job.heartbeat') {
+    handlers.onHeartbeat?.(message.data as AiResumeImportJobHeartbeat)
+    return false
+  }
+
+  if (message.event === 'job.progress_hint') {
+    handlers.onProgressHint?.(message.data as AiResumeImportJobProgressHint)
+    return false
+  }
+
+  const job = message.data as AiResumeImportJob
+
+  if (message.event === 'job.completed') {
+    handlers.onCompleted?.(job)
+    return true
+  }
+
+  if (message.event === 'job.failed') {
+    handlers.onFailed?.(job)
+    return true
+  }
+
+  handlers.onSnapshot?.(job)
+  return false
+}
+
+async function resolveStreamErrorMessage(response: Response): Promise<string> {
+  try {
+    const contentType = response.headers.get('content-type') ?? ''
+
+    if (contentType.includes('application/json')) {
+      const payload = (await response.json()) as { message?: string; traceId?: string }
+      const message = payload.message?.trim()
+
+      if (message) {
+        return payload.traceId ? `${message} (traceId: ${payload.traceId})` : message
+      }
+    }
+
+    const text = await response.text()
+
+    if (text.trim()) {
+      return text
+    }
+  } catch {}
+
+  return '简历导入识别实时连接失败，请手动刷新状态'
+}
+
+/**
+ * 使用 fetch + ReadableStream 订阅简历导入识别任务 SSE。
+ *
+ * 这里不用原生 EventSource，是因为 admin 需要通过 Authorization header 传递 Bearer Token。
+ */
+export function streamAiResumeImportJob(
+  input: StreamAiResumeImportJobInput,
+  handlers: StreamAiResumeImportJobHandlers,
+): Promise<void> {
+  return streamAiResumeImportJobInternal(input, handlers)
+}
+
+async function streamAiResumeImportJobInternal(
+  input: StreamAiResumeImportJobInput,
+  handlers: StreamAiResumeImportJobHandlers,
+): Promise<void> {
+  const headers: Record<string, string> = {
+    Accept: 'text/event-stream',
+  }
+
+  if (input.accessToken) {
+    headers.Authorization = `Bearer ${input.accessToken}`
+  }
+
+  const response = await fetch(
+    joinApiUrl(input.apiBaseUrl, `/ai/resume-import/jobs/${input.jobId}/events`),
+    {
+      headers,
+      method: 'GET',
+      signal: input.signal,
+    },
+  )
+
+  if (!response.ok) {
+    throw new Error(await resolveStreamErrorMessage(response.clone()))
+  }
+
+  if (!response.body) {
+    throw new Error('当前浏览器不支持读取简历导入识别实时事件')
+  }
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+
+      if (done) {
+        break
+      }
+
+      buffer += decoder.decode(value, { stream: true })
+      const messages = buffer.split(/\n\n/)
+      buffer = messages.pop() ?? ''
+
+      for (const rawMessage of messages) {
+        const parsedMessage = parseSseMessage(rawMessage.trim())
+
+        if (!parsedMessage) {
+          continue
+        }
+
+        const shouldStop = dispatchResumeImportJobStreamMessage(parsedMessage, handlers)
+
+        if (shouldStop) {
+          return
+        }
+      }
+    }
+
+    const finalMessage = parseSseMessage(buffer.trim())
+
+    if (finalMessage) {
+      dispatchResumeImportJobStreamMessage(finalMessage, handlers)
+    }
+  } finally {
+    reader.releaseLock()
+  }
 }
 
 /**
