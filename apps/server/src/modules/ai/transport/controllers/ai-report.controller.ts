@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -126,7 +127,12 @@ export class AiReportController {
   @ApiQuery({
     name: 'type',
     required: false,
-    enum: ['all', 'analysis-report', 'resume-optimization'] satisfies AiUsageRecordFilterType[],
+    enum: [
+      'all',
+      'analysis-report',
+      'resume-optimization',
+      'resume-import',
+    ] satisfies AiUsageRecordFilterType[],
     description: '历史类型筛选',
   })
   @ApiEnvelopeResponse({
@@ -160,6 +166,31 @@ export class AiReportController {
   })
   async getUsageHistoryDetail(@Param('recordId') recordId: string) {
     return this.aiUsageRecordService.getDetail(recordId)
+  }
+
+  @Delete('history/:recordId')
+  @UseGuards(RoleCapabilitiesGuard)
+  @RequireCapability('canTriggerAiAnalysis')
+  @ApiOperation({
+    summary: '删除 AI 调用历史记录',
+    description: '根据记录 ID 删除一条 AI 使用历史记录。该操作只删除审计记录，不影响已发布简历。',
+  })
+  @ApiParam({
+    name: 'recordId',
+    description: '历史记录 ID',
+    example: 'usage-record-123',
+  })
+  @ApiEnvelopeResponse({
+    description: '删除 AI 调用历史记录成功',
+  })
+  @ApiForbiddenResponse({
+    description: '当前角色没有触发 AI 分析权限',
+  })
+  @ApiNotFoundResponse({
+    description: '历史记录不存在',
+  })
+  async deleteUsageHistoryRecord(@Param('recordId') recordId: string) {
+    return this.aiUsageRecordService.deleteHistoryRecord(recordId)
   }
 
   @Post('cache')

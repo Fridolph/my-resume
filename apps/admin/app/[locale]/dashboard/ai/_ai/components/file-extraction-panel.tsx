@@ -2,6 +2,7 @@
 
 import { useRequest } from 'alova/client'
 import { Button, Form, Input, TextArea } from '@heroui/react'
+import { formatFileSize } from '@my-resume/utils'
 
 import { adminPrimaryButtonClass } from '@core/button-styles'
 import { useState } from 'react'
@@ -15,14 +16,6 @@ interface AiFileExtractionPanelProps {
   canUpload: boolean
   createExtractFileTextMethod?: typeof createExtractTextFromFileMethod
   onExtractedText?: (result: FileExtractionResult) => void
-}
-
-function formatFileSize(size: number): string {
-  if (size < 1024) {
-    return `${size} B`
-  }
-
-  return `${(size / 1024).toFixed(1)} KB`
 }
 
 export function AiFileExtractionPanel({
@@ -51,14 +44,11 @@ export function AiFileExtractionPanel({
 
   if (!canUpload) {
     return (
-      <section className="card stack">
-        <div>
-          <p className="eyebrow">文件提取</p>
-          <h2>当前角色只读</h2>
-          <p className="muted">只有管理员可上传文件并触发文本提取。</p>
-        </div>
+      <section className="stack pt-4">
         <div className="readonly-box">
-          viewer 当前只保留缓存结果与预设体验，文件上传入口会在管理员链路中继续推进。
+          <strong>当前角色只读</strong>
+          <span>只有管理员可上传文件并触发文本提取。</span>
+          <span>viewer 当前只保留缓存结果与预设体验，文件上传入口会在管理员链路中继续推进。</span>
         </div>
       </section>
     )
@@ -85,15 +75,7 @@ export function AiFileExtractionPanel({
   }
 
   return (
-    <section className="card stack">
-      <div>
-        <p className="eyebrow">文件提取</p>
-        <h2>上传并预览提取结果</h2>
-        <p className="muted">
-          当前先接通单文件上传与文本预览，为后续真实分析闭环提供稳定输入。
-        </p>
-      </div>
-
+    <section className="stack pt-4">
       <Form className="stack" onSubmit={(event) => void handleSubmit(event)}>
         <label className="field">
           <span>选择文件</span>
@@ -113,12 +95,12 @@ export function AiFileExtractionPanel({
           />
         </label>
 
-        <div className="dashboard-inline-note">
+        <div className="dashboard-inline-note rounded-[20px] border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-300">
           当前支持：TXT、Markdown、PDF、DOCX。结果仅做预览，不会自动保存成附件历史。
         </div>
 
         {selectedFile ? (
-          <div className="status-box">
+          <div className="status-box bg-white dark:bg-zinc-900">
             <strong>待提取文件</strong>
             <span>
               {selectedFile.name} · {formatFileSize(selectedFile.size)}
@@ -143,11 +125,11 @@ export function AiFileExtractionPanel({
       {result ? (
         <div className="preview-stack">
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="status-box">
+            <div className="status-box bg-white dark:bg-zinc-900">
               <strong>文件类型</strong>
               <span>{result.fileType}</span>
             </div>
-            <div className="status-box">
+            <div className="status-box bg-white dark:bg-zinc-900">
               <strong>字符数</strong>
               <span>{result.charCount}</span>
             </div>

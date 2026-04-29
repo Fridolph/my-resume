@@ -4,6 +4,7 @@ import {
   appLocales,
   createIndexedRenderKey,
   createRenderKey,
+  formatFileSize,
   formatDateRange,
   formatDateTimeByLocale,
   isAppLocale,
@@ -93,5 +94,10 @@ describe('@my-resume/utils', () => {
         'zh',
       ),
     ).toBe('2024-01 - 至今')
+  })
+
+  it('should format upload file sizes for UI summaries', () => {
+    expect(formatFileSize(128)).toBe('128 B')
+    expect(formatFileSize(1536)).toBe('1.5 KB')
   })
 })

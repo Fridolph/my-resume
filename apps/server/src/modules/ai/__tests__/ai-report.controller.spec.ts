@@ -8,6 +8,7 @@ describe('AiReportController', () => {
   const getProviderSummaryMock = vi.fn()
   const recordSuccessMock = vi.fn()
   const recordFailureMock = vi.fn()
+  const deleteHistoryRecordMock = vi.fn()
   const storeGeneratedReportMock = vi.fn()
   const generateSuggestionMock = vi.fn()
   const getSuggestionSnapshotForPersistenceMock = vi.fn()
@@ -17,6 +18,7 @@ describe('AiReportController', () => {
     getProviderSummary: getProviderSummaryMock,
   }
   const aiUsageRecordService = {
+    deleteHistoryRecord: deleteHistoryRecordMock,
     recordSuccess: recordSuccessMock,
     recordFailure: recordFailureMock,
   }
@@ -178,5 +180,24 @@ describe('AiReportController', () => {
         }),
       }),
     )
+  })
+
+  it('should delete a usage history record', async () => {
+    const controller = new AiReportController(
+      aiService as never,
+      aiUsageRecordService as never,
+      aiResumeOptimizationService as never,
+      analysisReportCacheService as never,
+    )
+    deleteHistoryRecordMock.mockResolvedValue({
+      deleted: true,
+      recordId: 'usage-record-001',
+    })
+
+    await expect(controller.deleteUsageHistoryRecord('usage-record-001')).resolves.toEqual({
+      deleted: true,
+      recordId: 'usage-record-001',
+    })
+    expect(deleteHistoryRecordMock).toHaveBeenCalledWith('usage-record-001')
   })
 })

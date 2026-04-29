@@ -1,10 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  createApplyAiResumeImportMethod,
+  createDeleteAiUsageRecordMethod,
+  createFetchAiResumeImportJobMethod,
+  createFetchAiResumeImportResultMethod,
   createFetchAiUsageHistoryMethod,
   createFetchAiUsageRecordDetailMethod,
   createFetchCachedAiWorkbenchReportsMethod,
   createIngestRagUserDocMethod,
+  createRecognizeAiResumeImportMethod,
+  streamAiResumeImportJob,
 } from './ai'
 
 function createJsonResponse(status: number, payload: unknown): Response {
@@ -14,6 +20,25 @@ function createJsonResponse(status: number, payload: unknown): Response {
       'Content-Type': 'application/json',
     },
   })
+}
+
+function createSseResponse(messages: string): Response {
+  const encoder = new TextEncoder()
+
+  return new Response(
+    new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoder.encode(messages))
+        controller.close()
+      },
+    }),
+    {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/event-stream',
+      },
+    },
+  )
 }
 
 describe('ai api client methods', () => {
@@ -88,6 +113,53 @@ describe('ai api client methods', () => {
     expect(records[0]?.id).toBe('usage-report-001')
   })
 
+  it('supports filtering resume import usage history', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        createJsonResponse(200, {
+          records: [
+            {
+              id: 'usage-resume-import-001',
+              operationType: 'resume-import',
+              scenario: 'resume-import',
+              locale: 'zh',
+              inputPreview: 'lifeiyu-mock-zh.md · 5896 字符',
+              summary: '已识别候选草稿',
+              provider: 'deepseek',
+              model: 'deepseek-v4-flash',
+              mode: 'openai-compatible',
+              generator: 'ai-provider',
+              status: 'succeeded',
+              relatedReportId: null,
+              relatedResultId: 'result-import-001',
+              errorMessage: null,
+              durationMs: 240000,
+              createdAt: '2026-04-29T03:18:26.394Z',
+            },
+          ],
+        }),
+      ),
+    )
+
+    const records = await createFetchAiUsageHistoryMethod({
+      apiBaseUrl: 'http://localhost:5577',
+      accessToken: 'admin-token',
+      type: 'resume-import',
+      limit: 20,
+    }).send()
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5577/api/ai/reports/history?limit=20&type=resume-import',
+      expect.any(Object),
+    )
+    expect(records[0]).toMatchObject({
+      operationType: 'resume-import',
+      scenario: 'resume-import',
+      relatedResultId: 'result-import-001',
+    })
+  })
+
   it('returns ai usage history detail directly from method.send()', async () => {
     vi.stubGlobal(
       'fetch',
@@ -124,6 +196,38 @@ describe('ai api client methods', () => {
 
     expect(detail.detail).toEqual({
       reportId: 'report-001',
+    })
+  })
+
+  it('deletes ai usage history records with bearer token', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        createJsonResponse(200, {
+          deleted: true,
+          recordId: 'usage-report-001',
+        }),
+      ),
+    )
+
+    const result = await createDeleteAiUsageRecordMethod({
+      apiBaseUrl: 'http://localhost:5577',
+      accessToken: 'admin-token',
+      recordId: 'usage-report-001',
+    }).send()
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5577/api/ai/reports/history/usage-report-001',
+      expect.objectContaining({
+        method: 'DELETE',
+        headers: expect.objectContaining({
+          Authorization: 'Bearer admin-token',
+        }),
+      }),
+    )
+    expect(result).toEqual({
+      deleted: true,
+      recordId: 'usage-report-001',
     })
   })
 
@@ -172,5 +276,277 @@ describe('ai api client methods', () => {
 
     expect(result.sourceScope).toBe('published')
     expect(result.chunkCount).toBe(2)
+  })
+
+  it('starts a resume import recognition job for an uploaded resume file', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        createJsonResponse(202, {
+          jobId: 'resume-import-job-001',
+          status: 'running',
+          currentStage: 'accepted',
+          steps: [
+            {
+              stage: 'accepted',
+              label: '已接收上传请求',
+              status: 'running',
+            },
+          ],
+          createdAt: '2026-04-28T12:00:00.000Z',
+          updatedAt: '2026-04-28T12:00:00.000Z',
+          elapsedMs: 0,
+        }),
+      ),
+    )
+
+    const file = new File(['# 厉飞雨'], 'lifeiyu-mock-zh.md', {
+      type: 'text/markdown',
+    })
+
+    const result = await createRecognizeAiResumeImportMethod({
+      apiBaseUrl: 'http://localhost:5577',
+      accessToken: 'admin-token',
+      file,
+    })
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5577/api/ai/resume-import/recognize',
+      expect.objectContaining({
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer admin-token',
+        },
+        body: expect.any(FormData),
+      }),
+    )
+    expect(result.jobId).toBe('resume-import-job-001')
+    expect(result.currentStage).toBe('accepted')
+  })
+
+  it('fetches resume import recognition job state', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        createJsonResponse(200, {
+          jobId: 'resume-import-job-001',
+          status: 'completed',
+          currentStage: 'completed',
+          steps: [],
+          createdAt: '2026-04-28T12:00:00.000Z',
+          updatedAt: '2026-04-28T12:00:05.000Z',
+          elapsedMs: 5000,
+          resultId: 'resume-import-001',
+        }),
+      ),
+    )
+
+    const result = await createFetchAiResumeImportJobMethod({
+      apiBaseUrl: 'http://localhost:5577',
+      accessToken: 'admin-token',
+      jobId: 'resume-import-job-001',
+    })
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5577/api/ai/resume-import/jobs/resume-import-job-001',
+      expect.objectContaining({
+        method: 'GET',
+        headers: expect.objectContaining({
+          Authorization: 'Bearer admin-token',
+        }),
+      }),
+    )
+    expect(result.resultId).toBe('resume-import-001')
+  })
+
+  it('streams resume import job events with bearer token headers', async () => {
+    const onSnapshot = vi.fn()
+    const onCompleted = vi.fn()
+    const onProgressHint = vi.fn()
+
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValue(
+          createSseResponse(
+            [
+              'event: job.snapshot',
+              'data: {\"jobId\":\"resume-import-job-001\",\"status\":\"running\",\"currentStage\":\"ai_generating\",\"steps\":[],\"createdAt\":\"2026-04-28T12:00:00.000Z\",\"updatedAt\":\"2026-04-28T12:00:00.000Z\",\"elapsedMs\":1000}',
+              '',
+              'event: job.progress_hint',
+              'data: {\"jobId\":\"resume-import-job-001\",\"message\":\"正在梳理教育经历\",\"timestamp\":\"2026-04-28T12:00:02.000Z\"}',
+              '',
+              'event: job.completed',
+              'data: {\"jobId\":\"resume-import-job-001\",\"status\":\"completed\",\"currentStage\":\"completed\",\"steps\":[],\"createdAt\":\"2026-04-28T12:00:00.000Z\",\"updatedAt\":\"2026-04-28T12:00:05.000Z\",\"elapsedMs\":5000,\"resultId\":\"resume-import-001\"}',
+              '',
+              '',
+            ].join('\n'),
+          ),
+        ),
+    )
+
+    await streamAiResumeImportJob(
+      {
+        apiBaseUrl: 'http://localhost:5577',
+        accessToken: 'admin-token',
+        jobId: 'resume-import-job-001',
+      },
+      {
+        onSnapshot,
+        onCompleted,
+        onProgressHint,
+      },
+    )
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5577/api/ai/resume-import/jobs/resume-import-job-001/events',
+      expect.objectContaining({
+        method: 'GET',
+        headers: {
+          Accept: 'text/event-stream',
+          Authorization: 'Bearer admin-token',
+        },
+      }),
+    )
+    expect(onSnapshot).toHaveBeenCalledWith(
+      expect.objectContaining({
+        currentStage: 'ai_generating',
+      }),
+    )
+    expect(onCompleted).toHaveBeenCalledWith(
+      expect.objectContaining({
+        resultId: 'resume-import-001',
+      }),
+    )
+    expect(onProgressHint).toHaveBeenCalledWith({
+      jobId: 'resume-import-job-001',
+      message: '正在梳理教育经历',
+      timestamp: '2026-04-28T12:00:02.000Z',
+    })
+  })
+
+  it('keeps resume import job step summaries and details from the API response', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        createJsonResponse(200, {
+          jobId: 'resume-import-job-001',
+          status: 'running',
+          currentStage: 'schema_validating',
+          steps: [
+            {
+              stage: 'schema_validating',
+              label: '正在校验 StandardResume 结构',
+              status: 'running',
+              summary: '结构校验通过，自动修复 2 处 AI 输出形状。',
+              details: ['已自动修复 education[0].schoolName'],
+            },
+          ],
+          createdAt: '2026-04-28T12:00:00.000Z',
+          updatedAt: '2026-04-28T12:00:05.000Z',
+          elapsedMs: 5000,
+        }),
+      ),
+    )
+
+    const result = await createFetchAiResumeImportJobMethod({
+      apiBaseUrl: 'http://localhost:5577',
+      accessToken: 'admin-token',
+      jobId: 'resume-import-job-001',
+    })
+
+    expect(result.steps[0]?.summary).toContain('自动修复')
+    expect(result.steps[0]?.details).toEqual(['已自动修复 education[0].schoolName'])
+  })
+
+  it('fetches and applies resume import results', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce(
+          createJsonResponse(200, {
+            resultId: 'resume-import-001',
+            locale: 'zh',
+            fileName: 'lifeiyu-mock-zh.md',
+            fileType: 'md',
+            charCount: 12000,
+            summary: '已识别候选草稿',
+            warnings: ['联系方式不完整'],
+            changedModules: ['profile'],
+            moduleDiffs: [],
+            moduleContents: [
+              {
+                module: 'profile',
+                title: '基本信息',
+                currentItems: [],
+                candidateItems: [
+                  {
+                    key: 'profile',
+                    title: '厉飞雨',
+                    meta: ['邮箱：lifeiyu@example.com'],
+                    body: ['AI 工程化候选草稿'],
+                  },
+                ],
+                warnings: ['联系方式不完整'],
+              },
+            ],
+            moduleStats: {
+              education: 1,
+              experiences: 4,
+              projects: 4,
+              skills: 6,
+              highlights: 5,
+            },
+            createdAt: '2026-04-28T12:00:00.000Z',
+            canApply: true,
+            appliedModules: [],
+            providerSummary: {
+              provider: 'mock',
+              model: 'mock-resume-import',
+              mode: 'mock',
+            },
+          }),
+        )
+        .mockResolvedValueOnce(
+          createJsonResponse(200, {
+            status: 'draft',
+            resume: {},
+            updatedAt: '2026-04-28T12:10:00.000Z',
+          }),
+        ),
+    )
+
+    const result = await createFetchAiResumeImportResultMethod({
+      apiBaseUrl: 'http://localhost:5577',
+      accessToken: 'admin-token',
+      resultId: 'resume-import-001',
+    })
+    const applied = await createApplyAiResumeImportMethod({
+      apiBaseUrl: 'http://localhost:5577',
+      accessToken: 'admin-token',
+      resultId: 'resume-import-001',
+      modules: ['profile'],
+    })
+
+    expect(result.warnings).toEqual(['联系方式不完整'])
+    expect(result.canApply).toBe(true)
+    expect(result.appliedModules).toEqual([])
+    expect(applied.status).toBe('draft')
+    expect(fetch).toHaveBeenLastCalledWith(
+      'http://localhost:5577/api/ai/resume-import/apply',
+      expect.objectContaining({
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer admin-token',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          resultId: 'resume-import-001',
+          modules: ['profile'],
+        }),
+      }),
+    )
   })
 })

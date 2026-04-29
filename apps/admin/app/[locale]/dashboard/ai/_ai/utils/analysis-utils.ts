@@ -1,5 +1,6 @@
 import type {
   AiResumeOptimizationChangedModule,
+  AiUsageRecordScenario,
   AiWorkbenchLocale,
   AiWorkbenchReport,
   AiWorkbenchScenario,
@@ -37,7 +38,11 @@ export const localeOptions: Array<{
   },
 ]
 
-export function formatScenario(scenario: AiWorkbenchScenario): string {
+export function formatScenario(scenario: AiUsageRecordScenario): string {
+  if (scenario === 'resume-import') {
+    return '简历导入识别'
+  }
+
   return scenarioOptions.find((item) => item.value === scenario)?.label ?? scenario
 }
 

@@ -157,7 +157,7 @@ export function EducationSection({
                                   )
                                 }
                                 value={education.startDate}
-                                variant="secondary"
+                               
                               />
                             </label>
                             <label className="field">
@@ -172,7 +172,7 @@ export function EducationSection({
                                   )
                                 }
                                 value={education.endDate}
-                                variant="secondary"
+                               
                               />
                             </label>
                           </>

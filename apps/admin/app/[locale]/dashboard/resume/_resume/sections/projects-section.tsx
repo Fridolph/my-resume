@@ -143,7 +143,7 @@ export function ProjectsSection({
                                 )
                               }
                               value={project.startDate}
-                              variant="secondary"
+                             
                             />
                           </label>
                           <label className="field">
@@ -158,7 +158,7 @@ export function ProjectsSection({
                                 )
                               }
                               value={project.endDate}
-                              variant="secondary"
+                             
                             />
                           </label>
                         </>
@@ -233,7 +233,7 @@ export function ProjectsSection({
                               buildDraftFieldKey('project', index, 'technologies')
                             ] ?? formatCommaSeparatedValues(project.technologies)
                           }
-                          variant="secondary"
+                         
                         />
                       </label>
                     ) : null}
@@ -319,7 +319,7 @@ export function ProjectsSection({
                                   )
                                 }
                                 value={link.url}
-                                variant="secondary"
+                               
                               />
                             </label>
                           ) : null}

@@ -9,7 +9,7 @@ import type {
 } from '../types/ai-workbench.types'
 
 const analysisTextBlockClass =
-  'whitespace-pre-wrap leading-7 text-zinc-900 dark:text-zinc-100'
+  'whitespace-pre-wrap text-sm leading-6 text-zinc-900 dark:text-zinc-100'
 const analysisSectionCardClass = 'grid gap-3 p-4 md:p-5'
 
 interface AnalysisReportDetailsProps {

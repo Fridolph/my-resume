@@ -204,7 +204,7 @@ export function ResumeDraftEditorPanel({
 
   return (
     <Card className="border border-zinc-200/70 dark:border-zinc-800">
-      <CardHeader className="flex flex-col items-start gap-1.5 px-4 py-4 sm:px-5 md:gap-2">
+      <CardHeader className="flex flex-col items-start gap-1.5 px-3 py-3 sm:px-4 md:gap-2">
         <p className="eyebrow">草稿编辑</p>
         <CardTitle className="text-[1.2rem] sm:text-[1.35rem]">
           完整标准简历模块编辑
@@ -214,7 +214,7 @@ export function ResumeDraftEditorPanel({
           + 英文翻译工作区”的维护方式，保存后仍需手动发布。
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-3 px-4 pb-4 sm:px-5 md:gap-4">
+      <CardContent className="grid gap-3 px-3 pb-3 sm:px-4 md:gap-4">
         {status === 'loading' ? (
           <div className="grid gap-2" data-testid="resume-draft-loading-skeleton">
             <Skeleton className="h-4 rounded-md bg-zinc-200/80 dark:bg-zinc-800/80" />
@@ -240,7 +240,7 @@ export function ResumeDraftEditorPanel({
           <form
             className="grid gap-3 md:gap-4"
             onSubmit={(event) => void handleSubmit(event)}>
-            <div className="flex flex-col gap-2.5 rounded-[20px] border border-zinc-200/70 bg-zinc-50/90 px-4 py-3.5 dark:border-zinc-800 dark:bg-zinc-900/60 md:flex-row md:items-center md:justify-between md:gap-3 md:rounded-[24px] md:px-5 md:py-4">
+            <div className="flex flex-col gap-2.5 rounded-[20px] border border-zinc-200/70 bg-zinc-50/90 px-3 py-3 dark:border-zinc-800 dark:bg-zinc-900/60 md:flex-row md:items-center md:justify-between md:gap-3 md:rounded-[24px] md:px-4 md:py-3">
               <div className="space-y-0.5 md:space-y-1">
                 <strong className="block text-sm text-zinc-950 dark:text-white">
                   草稿态与发布态分离
@@ -257,7 +257,7 @@ export function ResumeDraftEditorPanel({
               ) : null}
             </div>
 
-            <div className="flex flex-col gap-3 rounded-[20px] border border-zinc-200/70 bg-white/90 px-4 py-3.5 dark:border-zinc-800 dark:bg-zinc-950/70 md:flex-row md:items-center md:justify-between md:gap-4 md:rounded-[24px] md:px-5 md:py-4">
+            <div className="flex flex-col gap-3 rounded-[20px] border border-zinc-200/70 bg-white/90 px-3 py-3 dark:border-zinc-800 dark:bg-zinc-950/70 md:flex-row md:items-center md:justify-between md:gap-4 md:rounded-[24px] md:px-4 md:py-3">
               <div className="space-y-0.5 md:space-y-1">
                 <strong className="block text-sm text-zinc-950 dark:text-white">
                   {isTranslationMode ? '英文翻译工作区' : '中文主编辑'}

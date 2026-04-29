@@ -147,9 +147,9 @@ export function AdminProtectedLayoutWithLocale({
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-100 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
+      <div className="min-h-screen bg-[#ebebee] text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
         <div
-          className="grid min-h-screen w-full grid-cols-1 md:gap-4 md:[grid-template-columns:var(--admin-sidebar-width)_minmax(0,1fr)] xl:gap-5"
+          className="grid min-h-screen w-full grid-cols-1 md:[grid-template-columns:var(--admin-sidebar-width)_minmax(0,1fr)]"
           style={
             {
               '--admin-sidebar-width': sidebarCollapsed ? '104px' : '220px',
@@ -162,7 +162,7 @@ export function AdminProtectedLayoutWithLocale({
             sidebarCollapsed={sidebarCollapsed}
           />
 
-          <div className="flex min-h-screen flex-col">
+          <div className="flex min-h-screen flex-col bg-[#ebebee] dark:bg-zinc-950">
             <AdminHeader
               actions={
                 <AdminHeaderActions
@@ -177,8 +177,8 @@ export function AdminProtectedLayoutWithLocale({
               pageMeta={pageMeta}
             />
 
-            <main className="flex-1 py-5 md:py-6">
-              <div className="flex w-full flex-col gap-6">{children}</div>
+            <main className="flex-1 p-3">
+              <div className="flex w-full flex-col">{children}</div>
             </main>
           </div>
         </div>

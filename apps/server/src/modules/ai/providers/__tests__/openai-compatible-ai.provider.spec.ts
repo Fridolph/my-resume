@@ -110,4 +110,88 @@ describe('OpenAiCompatibleAiProvider', () => {
       embeddingModel: 'text-embedding-v1',
     })
   })
+
+  it('should send deepseek v4 json and reasoning options when configured', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [
+          {
+            message: {
+              content: '{"summary":"ok","resume":{}}',
+            },
+          },
+        ],
+      }),
+    } as Response)
+
+    const provider = new OpenAiCompatibleAiProvider(
+      {
+        provider: 'deepseek',
+        mode: 'openai-compatible',
+        apiKey: 'sk-deepseek-demo',
+        baseUrl: 'https://api.deepseek.com',
+        model: 'deepseek-v4-pro',
+        chatModel: 'deepseek-v4-pro',
+        embeddingModel: 'deepseek-v4-pro',
+        maxTokens: 8192,
+        providerLabel: 'DeepSeek',
+        reasoningEffort: 'high',
+        thinkingEnabled: true,
+      },
+      fetchMock,
+    )
+
+    await provider.generateText({
+      prompt: '请输出 JSON',
+      responseFormat: {
+        type: 'json_object',
+      },
+    })
+
+    const requestInit = fetchMock.mock.calls[0]?.[1] as RequestInit
+    expect(JSON.parse(String(requestInit.body))).toEqual(
+      expect.objectContaining({
+        model: 'deepseek-v4-pro',
+        max_tokens: 8192,
+        reasoning_effort: 'high',
+        response_format: {
+          type: 'json_object',
+        },
+        thinking: {
+          type: 'enabled',
+        },
+      }),
+    )
+  })
+
+  it('should include provider error body when chat completions fails', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue({
+      ok: false,
+      status: 401,
+      text: async () => '{"error":{"message":"Authentication Fails"}}',
+    } as Response)
+
+    const provider = new OpenAiCompatibleAiProvider(
+      {
+        provider: 'deepseek',
+        mode: 'openai-compatible',
+        apiKey: 'sk-deepseek-demo',
+        baseUrl: 'https://api.deepseek.com',
+        model: 'deepseek-v4-flash',
+        chatModel: 'deepseek-v4-flash',
+        embeddingModel: 'deepseek-v4-flash',
+        providerLabel: 'DeepSeek',
+      },
+      fetchMock,
+    )
+
+    await expect(
+      provider.generateText({
+        prompt: '请识别简历',
+      }),
+    ).rejects.toThrow(
+      'DeepSeek chat completions request failed with status 401: {"error":{"message":"Authentication Fails"}}',
+    )
+  })
 })

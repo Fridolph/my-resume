@@ -1,3 +1,4 @@
+export * from './file-size'
 export * from './date'
 export * from './locale'
 export * from './localized-text'

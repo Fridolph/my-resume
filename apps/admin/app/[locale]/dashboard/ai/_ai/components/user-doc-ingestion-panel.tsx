@@ -4,25 +4,23 @@ import { useRequest } from 'alova/client'
 import { Button, Form, Input } from '@heroui/react'
 import { useState } from 'react'
 
+import { formatFileSize } from '@my-resume/utils'
 import { adminPrimaryButtonClass } from '@core/button-styles'
 
 import { createIngestRagUserDocMethod } from '../services/ai-file-api'
 import type { UserDocIngestResult, UserDocIngestScope } from '../types/ai-file.types'
 
 interface AiUserDocIngestionPanelProps {
+  /** Server API 根地址，用于构造上传入库请求。 */
   apiBaseUrl: string
+  /** 当前管理员访问令牌；viewer 角色不能触发入库。 */
   accessToken: string
+  /** 当前角色是否允许上传并写入 user_docs 检索态。 */
   canUpload: boolean
+  /** 测试注入点：替换默认 user_docs 入库 API method。 */
   createIngestUserDocMethod?: typeof createIngestRagUserDocMethod
+  /** 入库成功后的回调，通常用于刷新父级看台。 */
   onIngested?: (result: UserDocIngestResult) => void
-}
-
-function formatFileSize(size: number): string {
-  if (size < 1024) {
-    return `${size} B`
-  }
-
-  return `${(size / 1024).toFixed(1)} KB`
 }
 
 export function AiUserDocIngestionPanel({
@@ -52,14 +50,11 @@ export function AiUserDocIngestionPanel({
 
   if (!canUpload) {
     return (
-      <section className="card stack">
-        <div>
-          <p className="eyebrow">资料入库</p>
-          <h2>当前角色只读</h2>
-          <p className="muted">只有管理员可上传 user_docs 并写入 RAG 检索态。</p>
-        </div>
+      <section className="stack pt-4">
         <div className="readonly-box">
-          viewer 当前只允许读取缓存与预设体验，不允许触发 user_docs 入库。
+          <strong>当前角色只读</strong>
+          <span>只有管理员可上传 user_docs 并写入 RAG 检索态。</span>
+          <span>viewer 当前只允许读取缓存与预设体验，不允许触发 user_docs 入库。</span>
         </div>
       </section>
     )
@@ -89,15 +84,7 @@ export function AiUserDocIngestionPanel({
   }
 
   return (
-    <section className="card stack">
-      <div>
-        <p className="eyebrow">资料入库</p>
-        <h2>上传并写入 user_docs 检索态</h2>
-        <p className="muted">
-          这是最小入口：上传单个文件并选择 `draft/published` 作用域，写入检索态文档与切块。
-        </p>
-      </div>
-
+    <section className="stack pt-4">
       <Form className="stack" onSubmit={(event) => void handleSubmit(event)}>
         <label className="field">
           <span>选择文件</span>
@@ -128,12 +115,12 @@ export function AiUserDocIngestionPanel({
           </select>
         </label>
 
-        <div className="dashboard-inline-note">
+        <div className="dashboard-inline-note rounded-[20px] border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-300">
           当前只做最小上传入库，不包含历史文件管理与批量操作。
         </div>
 
         {selectedFile ? (
-          <div className="status-box">
+          <div className="status-box bg-white dark:bg-zinc-900">
             <strong>待入库文件</strong>
             <span>
               {selectedFile.name} · {formatFileSize(selectedFile.size)}
@@ -158,15 +145,15 @@ export function AiUserDocIngestionPanel({
 
       {result ? (
         <div className="grid gap-3 md:grid-cols-3">
-          <div className="status-box">
+          <div className="status-box bg-white dark:bg-zinc-900">
             <strong>作用域</strong>
             <span>{result.sourceScope}</span>
           </div>
-          <div className="status-box">
+          <div className="status-box bg-white dark:bg-zinc-900">
             <strong>切块数量</strong>
             <span>{result.chunkCount}</span>
           </div>
-          <div className="status-box">
+          <div className="status-box bg-white dark:bg-zinc-900">
             <strong>文件类型</strong>
             <span>{result.fileType}</span>
           </div>

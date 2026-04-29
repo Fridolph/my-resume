@@ -40,7 +40,7 @@ describe('LoginForm', () => {
     await user.click(screen.getByRole('button', { name: '填入管理员演示账号' }))
 
     expect(screen.getByLabelText('用户名')).toHaveValue('admin')
-    expect(screen.getByLabelText('密码')).toHaveValue('admin123456')
+    expect(screen.getByLabelText('密码')).toHaveValue('')
     expect(onSubmit).not.toHaveBeenCalled()
   })
 
