@@ -5,7 +5,7 @@
   "type": "module",
   "packageManager": "pnpm@10.8.0",
   "scripts": {
-    "dev": "pnpm dev:all",
+    "dev": "[ -f .env ] || cp .env.stack.local .env; pnpm dev:all",
     "dev:all": "pnpm build:shared && turbo run dev --filter=@my-resume/server --filter=@my-resume/web --filter=@my-resume/admin --parallel",
     "dev:server": "pnpm --filter @my-resume/server dev",
     "dev:web": "pnpm build:shared && pnpm --filter @my-resume/web dev",
@@ -24,7 +24,7 @@
     "format": "oxfmt --config .oxfmtrc.json --ignore-path .prettierignore .",
     "format:check": "oxfmt --config .oxfmtrc.json --ignore-path .prettierignore --check .",
     "typecheck": "pnpm typecheck:all",
-    "docker:up": "docker compose up --build",
+    "docker:up": "[ -f .env ] || cp .env.stack.local .env; docker compose up --build",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
     "deploy:ecs:one-click": "./deploy/ecs/release-from-local.sh",

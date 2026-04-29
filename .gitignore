@@ -29,6 +29,8 @@ dist-ssr
 
 .nuxt
 .local
+.env
+.env.local
 .data
 .tmp
 /.deploy-runtime/
