@@ -32,10 +32,9 @@ run_cmd() {
 sudo_cmd() {
   if [[ "$(id -u)" -eq 0 ]]; then
     run_cmd "$@"
-    return 0
+  else
+    run_cmd sudo "$@"
   fi
-
-  run_cmd sudo "$@"
 }
 
 require_commands() {
