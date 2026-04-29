@@ -82,7 +82,7 @@ sudo_cmd systemctl reload nginx
 verify_acme_challenge "$CERTBOT_WEBROOT" "$RESUME_DOMAIN" "$ADMIN_DOMAIN" "$API_DOMAIN"
 
 log "Ensuring TLS certificate via certbot webroot"
-sudo_cmd certbot certonly --webroot \
+if sudo_cmd certbot certonly --webroot \
   --non-interactive \
   --agree-tos \
   --keep-until-expiring \
@@ -93,7 +93,11 @@ sudo_cmd certbot certonly --webroot \
   -m "$LETSENCRYPT_EMAIL" \
   -d "$RESUME_DOMAIN" \
   -d "$ADMIN_DOMAIN" \
-  -d "$API_DOMAIN"
+  -d "$API_DOMAIN"; then
+  log "TLS certificate renewed: $CERTBOT_CERT_NAME"
+else
+  log "WARNING: certbot renewal skipped (network or lock issue). Existing certificate will continue to serve."
+fi
 
 run_cmd "$SCRIPT_DIR/render-config.sh" --tag "$TAG" --release-dir "$RELEASE_DIR"
 
