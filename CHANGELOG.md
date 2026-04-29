@@ -39,3 +39,10 @@
 ### 工程与维护
 
 - auto-create .env from .env.stack.local before dev/docker:up ([`f71d35c`](https://github.com/Fridolph/my-resume/commit/f71d35cd81d09ddad2ec4be12d60ac1f5cc07224))
+
+## [v2.2.25](https://github.com/Fridolph/my-resume/compare/v2.2.24...v2.2.25) - 2026-04-29
+
+### 问题修复
+
+- **release:** use raw git commands for tag check in full-release.sh ([`5186d33`](https://github.com/Fridolph/my-resume/commit/5186d33cbb07215244fe53a21b1eeb31c574e07b))
+- **release:** make certbot renewal non-fatal in release.sh ([`8441ffd`](https://github.com/Fridolph/my-resume/commit/8441ffd355b5cc542901f1415f9d6d465d990ea8))
