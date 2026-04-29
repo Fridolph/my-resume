@@ -76,7 +76,7 @@ describe('AiResumeImportController', () => {
       status: 'completed',
       resultId: 'resume-import-001',
     })
-    expect(controller.getResult('resume-import-001')).toEqual({
+    await expect(controller.getResult('resume-import-001')).resolves.toEqual({
       resultId: 'resume-import-001',
     })
     await expect(
@@ -91,5 +91,59 @@ describe('AiResumeImportController', () => {
       resultId: 'resume-import-001',
       modules: ['profile'],
     })
+  })
+
+  it('streams job snapshots and terminal events as SSE', () => {
+    const subscribeToJob = vi.fn((jobId, listener) => {
+      listener('job.completed', {
+        jobId,
+        status: 'completed',
+        currentStage: 'completed',
+        steps: [],
+        createdAt: '2026-04-28T12:00:00.000Z',
+        updatedAt: '2026-04-28T12:00:05.000Z',
+        elapsedMs: 5000,
+        resultId: 'resume-import-001',
+      })
+
+      return vi.fn()
+    })
+    const controller = new AiResumeImportController({
+      recognize: vi.fn(),
+      getJob: vi.fn().mockReturnValue({
+        jobId: 'resume-import-job-001',
+        status: 'running',
+        currentStage: 'ai_generating',
+        steps: [],
+        createdAt: '2026-04-28T12:00:00.000Z',
+        updatedAt: '2026-04-28T12:00:00.000Z',
+        elapsedMs: 0,
+      }),
+      getResult: vi.fn(),
+      apply: vi.fn(),
+      subscribeToJob,
+    } as never)
+    const writes: string[] = []
+    const response = {
+      status: vi.fn().mockReturnThis(),
+      setHeader: vi.fn(),
+      flushHeaders: vi.fn(),
+      write: vi.fn((chunk: string) => {
+        writes.push(chunk)
+      }),
+      end: vi.fn(),
+      on: vi.fn(),
+      writableEnded: false,
+    }
+
+    controller.streamJobEvents('resume-import-job-001', response as never)
+
+    expect(response.setHeader).toHaveBeenCalledWith(
+      'Content-Type',
+      'text/event-stream; charset=utf-8',
+    )
+    expect(writes.join('')).toContain('event: job.snapshot')
+    expect(writes.join('')).toContain('event: job.completed')
+    expect(response.end).toHaveBeenCalled()
   })
 })

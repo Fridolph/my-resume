@@ -16,6 +16,7 @@ const USAGE_RECORD_TYPE_ENUM: AiUsageRecordFilterType[] = [
   'all',
   'analysis-report',
   'resume-optimization',
+  'resume-import',
 ]
 
 const RESUME_OPTIMIZATION_MODULE_ENUM: ResumeOptimizationModule[] = [

@@ -9,6 +9,7 @@ import {
   Param,
   Post,
   Req,
+  Res,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -27,7 +28,9 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger'
+import type { Response } from 'express'
 
+import { SkipResponseEnvelope } from '../../../../common/decorators/skip-response-envelope.decorator'
 import { ApiEnvelopeResponse } from '../../../../common/swagger/api-envelope-response.decorator'
 import type { RequestWithTraceId } from '../../../../common/http/trace-id'
 import { RequireCapability } from '../../../auth/decorators/require-capability.decorator'
@@ -41,6 +44,18 @@ import {
 } from '../dto/resume-import-swagger.dto'
 
 export const RESUME_IMPORT_UPLOAD_MAX_BYTES = 1024 * 1024
+const RESUME_IMPORT_PROGRESS_HINTS = [
+  '正在梳理教育经历',
+  '正在提取工作经历',
+  '正在识别核心项目',
+  '正在核对技能关键词',
+  '正在生成输入治理报告',
+  '正在校验候选草稿结构',
+]
+
+function randomProgressHintDelayMs() {
+  return 8000 + Math.floor(Math.random() * 5000)
+}
 
 @Controller('ai/resume-import')
 @UseGuards(JwtAuthGuard)
@@ -134,6 +149,130 @@ export class AiResumeImportController {
     return this.resumeImportRecognitionService.getJob(jobId)
   }
 
+  @Get('jobs/:jobId/events')
+  @SkipResponseEnvelope()
+  @UseGuards(RoleCapabilitiesGuard)
+  @RequireCapability('canTriggerAiAnalysis')
+  @ApiOperation({
+    summary: '订阅简历导入识别任务事件',
+    description:
+      '通过 text/event-stream 推送 job.snapshot / job.completed / job.failed / job.heartbeat。该接口不走统一响应 envelope。',
+  })
+  @ApiParam({
+    name: 'jobId',
+    description: '识别任务 ID',
+    example: 'job-123456',
+  })
+  @ApiForbiddenResponse({
+    description: '当前角色没有触发 AI 分析权限',
+  })
+  @ApiNotFoundResponse({
+    description: '识别任务不存在或已过期',
+  })
+  streamJobEvents(@Param('jobId') jobId: string, @Res() response: Response) {
+    const initialJob = this.resumeImportRecognitionService.getJob(jobId)
+    let closed = false
+    let unsubscribe: (() => void) | undefined
+    let heartbeatTimer: NodeJS.Timeout | undefined
+    let progressHintTimer: NodeJS.Timeout | undefined
+    let progressHintIndex = 0
+
+    const writeEvent = (event: string, payload: unknown) => {
+      if (closed || response.writableEnded) {
+        return
+      }
+
+      response.write(`event: ${event}\n`)
+      response.write(`data: ${JSON.stringify(payload)}\n\n`)
+    }
+
+    const closeStream = () => {
+      if (closed) {
+        return
+      }
+
+      closed = true
+      unsubscribe?.()
+
+      if (heartbeatTimer) {
+        clearInterval(heartbeatTimer)
+      }
+
+      if (progressHintTimer) {
+        clearTimeout(progressHintTimer)
+      }
+    }
+
+    response.status(HttpStatus.OK)
+    response.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
+    response.setHeader('Cache-Control', 'no-cache, no-transform')
+    response.setHeader('Connection', 'keep-alive')
+    response.flushHeaders?.()
+
+    const initialEvent =
+      initialJob.status === 'completed'
+        ? 'job.completed'
+        : initialJob.status === 'failed'
+          ? 'job.failed'
+          : 'job.snapshot'
+
+    writeEvent(initialEvent, initialJob)
+
+    if (initialJob.status !== 'running') {
+      closeStream()
+      response.end()
+      return
+    }
+
+    unsubscribe = this.resumeImportRecognitionService.subscribeToJob(
+      jobId,
+      (event, job) => {
+        writeEvent(event, job)
+
+        if (event === 'job.completed' || event === 'job.failed') {
+          closeStream()
+          response.end()
+        }
+      },
+    )
+    heartbeatTimer = setInterval(() => {
+      writeEvent('job.heartbeat', {
+        jobId,
+        timestamp: new Date().toISOString(),
+      })
+    }, 15_000)
+
+    const scheduleProgressHint = () => {
+      progressHintTimer = setTimeout(() => {
+        if (closed) {
+          return
+        }
+
+        const job = this.resumeImportRecognitionService.getJob(jobId)
+
+        if (job.status === 'running' && job.currentStage === 'ai_generating') {
+          const message =
+            RESUME_IMPORT_PROGRESS_HINTS[
+              progressHintIndex % RESUME_IMPORT_PROGRESS_HINTS.length
+            ] ?? '正在生成候选草稿'
+          progressHintIndex += 1
+          writeEvent('job.progress_hint', {
+            jobId,
+            message,
+            timestamp: new Date().toISOString(),
+          })
+        }
+
+        if (!closed && job.status === 'running') {
+          scheduleProgressHint()
+        }
+      }, randomProgressHintDelayMs())
+    }
+
+    scheduleProgressHint()
+    response.on('close', closeStream)
+  }
+
   @Get('results/:resultId')
   @ApiOperation({
     summary: '获取简历导入识别结果',
@@ -151,7 +290,7 @@ export class AiResumeImportController {
   @ApiNotFoundResponse({
     description: '识别结果不存在或已过期',
   })
-  getResult(@Param('resultId') resultId: string) {
+  async getResult(@Param('resultId') resultId: string) {
     return this.resumeImportRecognitionService.getResult(resultId)
   }
 

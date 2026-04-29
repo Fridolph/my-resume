@@ -190,6 +190,13 @@ export class ResumeImportResultDto {
   moduleDiffs!: Record<string, unknown>[]
 
   @ApiProperty({
+    description: '模块完整可读内容，用于结果看台展示当前草稿与候选草稿',
+    isArray: true,
+    type: Object,
+  })
+  moduleContents!: Record<string, unknown>[]
+
+  @ApiProperty({
     description: '模块统计',
     type: Object,
   })
