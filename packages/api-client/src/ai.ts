@@ -1,16 +1,27 @@
-import { defaultApiClient as Alova } from './client'
+import { defaultApiClient as Alova, joinApiUrl } from './client'
 import type {
+  AiResumeImportJobHeartbeat,
+  AiResumeImportJobProgressHint,
   AiResumeOptimizationResultDetail,
   AiResumeOptimizationResult,
   AiUsageRecordDetail,
   AiUsageRecordSummary,
+  AiResumeImportJob,
+  AiResumeImportJobStreamEvent,
+  AiResumeImportResult,
   AiWorkbenchCachedReportSummary,
   AiWorkbenchReport,
   AiWorkbenchRuntimeSummary,
   AnalysisInput,
+  ApplyAiResumeImportInput,
+  ApplyAiResumeImportResult,
   ApplyAiResumeOptimizationInput,
   ApplyAiResumeOptimizationResult,
+  DeleteAiUsageRecordInput,
+  DeleteAiUsageRecordResult,
   ExtractTextFromFileInput,
+  FetchAiResumeImportJobInput,
+  FetchAiResumeImportResultInput,
   FetchAiResumeOptimizationResultInput,
   FetchAiUsageHistoryInput,
   FetchAiUsageRecordDetailInput,
@@ -18,7 +29,10 @@ import type {
   IngestRagUserDocInput,
   RagUserDocIngestResult,
   ResumeOptimizationInput,
+  RecognizeAiResumeImportInput,
   RuntimeInput,
+  StreamAiResumeImportJobHandlers,
+  StreamAiResumeImportJobInput,
   TriggerAiWorkbenchAnalysisResult,
 } from './types/ai.types'
 
@@ -33,9 +47,28 @@ export type {
   AiResumeOptimizationProjectPatch,
   AiResumeOptimizationResultDetail,
   AiResumeOptimizationResult,
+  AiResumeImportDiffEntry,
+  AiResumeImportDiffStatus,
+  AiResumeImportDiscardedItem,
+  AiResumeImportFormatReport,
+  AiResumeImportJob,
+  AiResumeImportJobStage,
+  AiResumeImportJobStatus,
+  AiResumeImportJobStreamEvent,
+  AiResumeImportJobProgressHint,
+  AiResumeImportJobStep,
+  AiResumeImportJobStepStatus,
+  AiResumeImportModule,
+  AiResumeImportModuleContent,
+  AiResumeImportModuleContentItem,
+  AiResumeImportModuleDiff,
+  AiResumeImportModuleStats,
+  AiResumeImportResult,
+  AiResumeImportSourceSnapshot,
   AiUsageRecordDetail,
   AiUsageRecordFilterType,
   AiUsageRecordOperationType,
+  AiUsageRecordScenario,
   AiUsageRecordStatus,
   AiUsageRecordSummary,
   AiWorkbenchCachedReportSummary,
@@ -48,10 +81,16 @@ export type {
   AiWorkbenchScore,
   AiWorkbenchSuggestion,
   AnalysisInput,
+  ApplyAiResumeImportInput,
+  ApplyAiResumeImportResult,
   ApplyAiResumeOptimizationInput,
   ApplyAiResumeOptimizationResult,
+  DeleteAiUsageRecordInput,
+  DeleteAiUsageRecordResult,
   ExtractedFileType,
   ExtractTextFromFileInput,
+  FetchAiResumeImportJobInput,
+  FetchAiResumeImportResultInput,
   FetchAiResumeOptimizationResultInput,
   FetchAiUsageHistoryInput,
   FetchAiUsageRecordDetailInput,
@@ -59,8 +98,11 @@ export type {
   IngestRagUserDocInput,
   RagUserDocIngestResult,
   RagUserDocIngestScope,
+  RecognizeAiResumeImportInput,
   ResumeOptimizationInput,
   RuntimeInput,
+  StreamAiResumeImportJobHandlers,
+  StreamAiResumeImportJobInput,
   TriggerAiWorkbenchAnalysisResult,
 } from './types/ai.types'
 
@@ -90,16 +132,29 @@ export function createFetchAiUsageHistoryMethod(input: FetchAiUsageHistoryInput)
     },
     fallbackErrorMessage: 'AI 调用记录加载失败',
     transform: (payload) =>
-      ((payload as { records?: AiUsageRecordSummary[] }).records ?? []) as AiUsageRecordSummary[],
+      ((payload as { records?: AiUsageRecordSummary[] }).records ??
+        []) as AiUsageRecordSummary[],
   })
 }
 
-export function createFetchAiUsageRecordDetailMethod(input: FetchAiUsageRecordDetailInput) {
+export function createFetchAiUsageRecordDetailMethod(
+  input: FetchAiUsageRecordDetailInput,
+) {
   return Alova.createMethod<AiUsageRecordDetail>({
     apiBaseUrl: input.apiBaseUrl,
     pathname: `/ai/reports/history/${input.recordId}`,
     accessToken: input.accessToken,
     fallbackErrorMessage: 'AI 调用记录详情加载失败',
+  })
+}
+
+export function createDeleteAiUsageRecordMethod(input: DeleteAiUsageRecordInput) {
+  return Alova.createMethod<DeleteAiUsageRecordResult>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: `/ai/reports/history/${input.recordId}`,
+    method: 'DELETE',
+    accessToken: input.accessToken,
+    fallbackErrorMessage: 'AI 调用记录删除失败，请稍后重试',
   })
 }
 
@@ -177,7 +232,9 @@ export function createFetchAiResumeOptimizationResultMethod(
  * @param input 请求参数
  * @returns 应用建议请求 Method
  */
-export function createApplyAiResumeOptimizationMethod(input: ApplyAiResumeOptimizationInput) {
+export function createApplyAiResumeOptimizationMethod(
+  input: ApplyAiResumeOptimizationInput,
+) {
   return Alova.createMethod<ApplyAiResumeOptimizationResult>({
     apiBaseUrl: input.apiBaseUrl,
     pathname: '/ai/reports/resume-optimize/apply',
@@ -195,6 +252,248 @@ export function createApplyAiResumeOptimizationMethod(input: ApplyAiResumeOptimi
 }
 
 /**
+ * 构造上传简历并识别为候选草稿 Method
+ *
+ * @param input 请求参数
+ * @returns 简历导入识别请求 Method
+ */
+export function createRecognizeAiResumeImportMethod(input: RecognizeAiResumeImportInput) {
+  const formData = new FormData()
+  formData.append('file', input.file)
+
+  return Alova.createMethod<AiResumeImportJob>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: '/ai/resume-import/recognize',
+    method: 'POST',
+    accessToken: input.accessToken,
+    body: formData,
+    requestInit: input.requestInit,
+    fallbackErrorMessage: '简历导入识别失败，请稍后重试',
+  })
+}
+
+/**
+ * 构造读取简历导入识别任务 Method
+ *
+ * @param input 请求参数
+ * @returns 简历导入识别任务请求 Method
+ */
+export function createFetchAiResumeImportJobMethod(input: FetchAiResumeImportJobInput) {
+  return Alova.createMethod<AiResumeImportJob>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: `/ai/resume-import/jobs/${input.jobId}`,
+    accessToken: input.accessToken,
+    fallbackErrorMessage: '简历导入识别任务加载失败，请稍后重试',
+  })
+}
+
+interface ParsedSseMessage {
+  event: AiResumeImportJobStreamEvent
+  data: unknown
+}
+
+function parseSseMessage(rawMessage: string): ParsedSseMessage | null {
+  const lines = rawMessage.split(/\r?\n/)
+  let event: AiResumeImportJobStreamEvent = 'job.snapshot'
+  const dataLines: string[] = []
+
+  for (const line of lines) {
+    if (line.startsWith('event:')) {
+      event = line.slice('event:'.length).trim() as AiResumeImportJobStreamEvent
+      continue
+    }
+
+    if (line.startsWith('data:')) {
+      dataLines.push(line.slice('data:'.length).trim())
+    }
+  }
+
+  if (dataLines.length === 0) {
+    return null
+  }
+
+  return {
+    event,
+    data: JSON.parse(dataLines.join('\n')) as unknown,
+  }
+}
+
+function dispatchResumeImportJobStreamMessage(
+  message: ParsedSseMessage,
+  handlers: StreamAiResumeImportJobHandlers,
+): boolean {
+  if (message.event === 'job.heartbeat') {
+    handlers.onHeartbeat?.(message.data as AiResumeImportJobHeartbeat)
+    return false
+  }
+
+  if (message.event === 'job.progress_hint') {
+    handlers.onProgressHint?.(message.data as AiResumeImportJobProgressHint)
+    return false
+  }
+
+  const job = message.data as AiResumeImportJob
+
+  if (message.event === 'job.completed') {
+    handlers.onCompleted?.(job)
+    return true
+  }
+
+  if (message.event === 'job.failed') {
+    handlers.onFailed?.(job)
+    return true
+  }
+
+  handlers.onSnapshot?.(job)
+  return false
+}
+
+async function resolveStreamErrorMessage(response: Response): Promise<string> {
+  try {
+    const contentType = response.headers.get('content-type') ?? ''
+
+    if (contentType.includes('application/json')) {
+      const payload = (await response.json()) as { message?: string; traceId?: string }
+      const message = payload.message?.trim()
+
+      if (message) {
+        return payload.traceId ? `${message} (traceId: ${payload.traceId})` : message
+      }
+    }
+
+    const text = await response.text()
+
+    if (text.trim()) {
+      return text
+    }
+  } catch {}
+
+  return '简历导入识别实时连接失败，请手动刷新状态'
+}
+
+/**
+ * 使用 fetch + ReadableStream 订阅简历导入识别任务 SSE。
+ *
+ * 这里不用原生 EventSource，是因为 admin 需要通过 Authorization header 传递 Bearer Token。
+ */
+export function streamAiResumeImportJob(
+  input: StreamAiResumeImportJobInput,
+  handlers: StreamAiResumeImportJobHandlers,
+): Promise<void> {
+  return streamAiResumeImportJobInternal(input, handlers)
+}
+
+async function streamAiResumeImportJobInternal(
+  input: StreamAiResumeImportJobInput,
+  handlers: StreamAiResumeImportJobHandlers,
+): Promise<void> {
+  const headers: Record<string, string> = {
+    Accept: 'text/event-stream',
+  }
+
+  if (input.accessToken) {
+    headers.Authorization = `Bearer ${input.accessToken}`
+  }
+
+  const response = await fetch(
+    joinApiUrl(input.apiBaseUrl, `/ai/resume-import/jobs/${input.jobId}/events`),
+    {
+      headers,
+      method: 'GET',
+      signal: input.signal,
+    },
+  )
+
+  if (!response.ok) {
+    throw new Error(await resolveStreamErrorMessage(response.clone()))
+  }
+
+  if (!response.body) {
+    throw new Error('当前浏览器不支持读取简历导入识别实时事件')
+  }
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+
+      if (done) {
+        break
+      }
+
+      buffer += decoder.decode(value, { stream: true })
+      const messages = buffer.split(/\n\n/)
+      buffer = messages.pop() ?? ''
+
+      for (const rawMessage of messages) {
+        const parsedMessage = parseSseMessage(rawMessage.trim())
+
+        if (!parsedMessage) {
+          continue
+        }
+
+        const shouldStop = dispatchResumeImportJobStreamMessage(parsedMessage, handlers)
+
+        if (shouldStop) {
+          return
+        }
+      }
+    }
+
+    const finalMessage = parseSseMessage(buffer.trim())
+
+    if (finalMessage) {
+      dispatchResumeImportJobStreamMessage(finalMessage, handlers)
+    }
+  } finally {
+    reader.releaseLock()
+  }
+}
+
+/**
+ * 构造读取简历导入识别结果 Method
+ *
+ * @param input 请求参数
+ * @returns 简历导入识别结果请求 Method
+ */
+export function createFetchAiResumeImportResultMethod(
+  input: FetchAiResumeImportResultInput,
+) {
+  return Alova.createMethod<AiResumeImportResult>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: `/ai/resume-import/results/${input.resultId}`,
+    accessToken: input.accessToken,
+    fallbackErrorMessage: '简历导入识别结果加载失败，请稍后重试',
+  })
+}
+
+/**
+ * 构造按模块回填简历导入结果 Method
+ *
+ * @param input 请求参数
+ * @returns 回填请求 Method
+ */
+export function createApplyAiResumeImportMethod(input: ApplyAiResumeImportInput) {
+  return Alova.createMethod<ApplyAiResumeImportResult>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: '/ai/resume-import/apply',
+    method: 'POST',
+    accessToken: input.accessToken,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      resultId: input.resultId,
+      modules: input.modules,
+    }),
+    fallbackErrorMessage: '简历导入结果回填失败，请稍后重试',
+  })
+}
+
+/**
  * 构造读取缓存报告列表 Method
  *
  * @param input 请求参数
@@ -207,8 +506,8 @@ export function createFetchCachedAiWorkbenchReportsMethod(input: RuntimeInput) {
     accessToken: input.accessToken,
     fallbackErrorMessage: '缓存报告列表加载失败',
     transform: (payload) =>
-      ((payload as { reports?: AiWorkbenchCachedReportSummary[] }).reports ?? []) as
-        AiWorkbenchCachedReportSummary[],
+      ((payload as { reports?: AiWorkbenchCachedReportSummary[] }).reports ??
+        []) as AiWorkbenchCachedReportSummary[],
   })
 }
 

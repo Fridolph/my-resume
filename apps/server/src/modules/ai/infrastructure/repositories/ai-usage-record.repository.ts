@@ -55,6 +55,10 @@ export class AiUsageRecordRepository {
     return record ?? null
   }
 
+  async deleteById(id: string) {
+    await this.database.delete(aiUsageRecords).where(eq(aiUsageRecords.id, id))
+  }
+
   async listAll() {
     return this.database.select().from(aiUsageRecords).orderBy(desc(aiUsageRecords.createdAt))
   }
@@ -74,5 +78,44 @@ export class AiUsageRecordRepository {
       .limit(1)
 
     return record ?? null
+  }
+
+  async findLatestSucceededResumeImportByResultId(resultId: string) {
+    const [record] = await this.database
+      .select()
+      .from(aiUsageRecords)
+      .where(
+        and(
+          eq(aiUsageRecords.relatedResultId, resultId),
+          eq(aiUsageRecords.operationType, 'resume-import'),
+          eq(aiUsageRecords.status, 'succeeded'),
+        ),
+      )
+      .orderBy(desc(aiUsageRecords.createdAt))
+      .limit(1)
+
+    return record ?? null
+  }
+
+  async updateDetailById(id: string, detailJson: unknown) {
+    await this.database
+      .update(aiUsageRecords)
+      .set({ detailJson })
+      .where(eq(aiUsageRecords.id, id))
+
+    return this.findById(id)
+  }
+
+  async updateLatestSucceededResumeImportDetailByResultId(
+    resultId: string,
+    detailJson: unknown,
+  ) {
+    const record = await this.findLatestSucceededResumeImportByResultId(resultId)
+
+    if (!record) {
+      return null
+    }
+
+    return this.updateDetailById(record.id, detailJson)
   }
 }

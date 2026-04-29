@@ -89,7 +89,7 @@ export function ProfileSection({
                 fullWidth
                 onChange={(event) => updateProfilePlainField('email', event.target.value)}
                 value={resumeDraft.profile.email}
-                variant="secondary"
+
               />
             </label>
             <label className="field">
@@ -98,7 +98,7 @@ export function ProfileSection({
                 fullWidth
                 onChange={(event) => updateProfilePlainField('phone', event.target.value)}
                 value={resumeDraft.profile.phone}
-                variant="secondary"
+
               />
             </label>
           </>
@@ -112,7 +112,7 @@ export function ProfileSection({
             fullWidth
             onChange={(event) => updateProfilePlainField('website', event.target.value)}
             value={resumeDraft.profile.website}
-            variant="secondary"
+
           />
         </label>
       ) : null}
@@ -139,7 +139,7 @@ export function ProfileSection({
                   updateProfileHeroField('frontImageUrl', event.target.value)
                 }
                 value={resumeDraft.profile.hero.frontImageUrl}
-                variant="secondary"
+
               />
             </label>
             <label className="field">
@@ -150,7 +150,7 @@ export function ProfileSection({
                   updateProfileHeroField('backImageUrl', event.target.value)
                 }
                 value={resumeDraft.profile.hero.backImageUrl}
-                variant="secondary"
+
               />
             </label>
             <label className="field">
@@ -161,7 +161,7 @@ export function ProfileSection({
                   updateProfileHeroField('linkUrl', event.target.value)
                 }
                 value={resumeDraft.profile.hero.linkUrl}
-                variant="secondary"
+
               />
             </label>
           </div>
@@ -277,7 +277,7 @@ export function ProfileSection({
                                 updateProfileLinkField(index, 'url', event.target.value)
                               }
                               value={link.url}
-                              variant="secondary"
+
                             />
                           </label>
                           <label className="field min-w-0">
@@ -290,7 +290,7 @@ export function ProfileSection({
                               }
                               placeholder="ri:github-fill"
                               value={link.icon ?? ''}
-                              variant="secondary"
+
                             />
                           </label>
                         </>
@@ -427,7 +427,7 @@ export function ProfileSection({
                             }
                             placeholder="ri:rocket-line"
                             value={interest.icon ?? ''}
-                            variant="secondary"
+
                           />
                         </label>
                       ) : null}

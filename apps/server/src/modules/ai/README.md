@@ -9,6 +9,7 @@
 
 - `domain/ports/`：AI provider 端口契约
 - `application/services/`：AI 用例与业务编排服务
+- `application/resume-import/`：AI 简历导入识别子域，集中管理类型、常量、Prompt 与纯函数规则
 - `infrastructure/config/`：运行时配置解析
 - `infrastructure/providers/`：模型供应商适配
 - `infrastructure/repositories/`：AI 记录仓储

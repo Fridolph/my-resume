@@ -43,12 +43,34 @@ describe('resolveAiRuntimeConfig', () => {
       provider: 'deepseek',
       mode: 'openai-compatible',
       apiKey: 'sk-deepseek-demo',
-      baseUrl: 'https://api.deepseek.com/v1',
-      model: 'deepseek-chat',
-      chatModel: 'deepseek-chat',
-      embeddingModel: 'deepseek-chat',
+      baseUrl: 'https://api.deepseek.com',
+      model: 'deepseek-v4-flash',
+      chatModel: 'deepseek-v4-flash',
+      embeddingModel: 'deepseek-v4-flash',
       providerLabel: 'DeepSeek',
     })
+  })
+
+  it('should resolve deepseek v4 reasoning options from environment variables', () => {
+    const env: EnvironmentVariables = {
+      AI_PROVIDER: 'deepseek',
+      DEEPSEEK_API_KEY: 'sk-deepseek-demo',
+      DEEPSEEK_MODEL: 'deepseek-v4-pro',
+      DEEPSEEK_THINKING_ENABLED: 'true',
+      DEEPSEEK_REASONING_EFFORT: 'high',
+      DEEPSEEK_MAX_TOKENS: '8192',
+    }
+
+    expect(resolveAiRuntimeConfig(env)).toEqual(
+      expect.objectContaining({
+        provider: 'deepseek',
+        model: 'deepseek-v4-pro',
+        chatModel: 'deepseek-v4-pro',
+        thinkingEnabled: true,
+        reasoningEffort: 'high',
+        maxTokens: 8192,
+      }),
+    )
   })
 
   it('should allow chat and embedding models to be configured separately', () => {
@@ -79,5 +101,14 @@ describe('resolveAiRuntimeConfig', () => {
         AI_PROVIDER: 'qiniu',
       }),
     ).toThrow('QINIU_AI_API_KEY is required')
+  })
+
+  it('should reject placeholder provider credentials before making real requests', () => {
+    expect(() =>
+      resolveAiRuntimeConfig({
+        AI_PROVIDER: 'deepseek',
+        DEEPSEEK_API_KEY: 'replace-with-your-own-key',
+      }),
+    ).toThrow('DEEPSEEK_API_KEY is still a placeholder')
   })
 })

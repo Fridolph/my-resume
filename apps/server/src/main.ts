@@ -3,10 +3,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { randomUUID } from 'node:crypto'
 import type { Express, NextFunction, Request, Response } from 'express'
 import { AppModule } from './app.module'
-import {
-  TRACE_ID_HEADER,
-  type RequestWithTraceId,
-} from './common/http/trace-id'
+import { TRACE_ID_HEADER, type RequestWithTraceId } from './common/http/trace-id'
+import { configureApiGlobalPrefix } from './server-api-prefix'
 
 /**
  * 启动 Nest server 并挂载基础运行时能力
@@ -15,7 +13,7 @@ import {
 async function bootstrap() {
   // 启动入口保持薄层：只做容器启动与基础能力挂载，不承载业务初始化逻辑。
   const app = await NestFactory.create(AppModule)
-  app.setGlobalPrefix('api')
+  configureApiGlobalPrefix(app)
   const swaggerConfig = new DocumentBuilder()
     .setTitle('My Resume API')
     .setDescription('NestJS server API docs for admin/web/client integration')

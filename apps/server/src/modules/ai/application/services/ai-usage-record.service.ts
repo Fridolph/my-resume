@@ -3,8 +3,13 @@ import { randomUUID } from 'node:crypto'
 
 import { type AnalysisLocale, type AnalysisScenario } from './analysis-report-cache.service'
 import { AiUsageRecordRepository } from '../../infrastructure/repositories/ai-usage-record.repository'
+import type { CachedResumeImportResult, ResumeImportResultDetail } from '../resume-import/types/resume-import.types'
 
-export type AiUsageRecordOperationType = 'analysis-report' | 'resume-optimization'
+export type AiUsageRecordOperationType =
+  | 'analysis-report'
+  | 'resume-optimization'
+  | 'resume-import'
+export type AiUsageRecordScenario = AnalysisScenario | 'resume-import'
 export type AiUsageRecordStatus = 'succeeded' | 'failed'
 export type AiUsageRecordGenerator = 'mock-cache' | 'ai-provider'
 export type AiUsageRecordFilterType = 'all' | AiUsageRecordOperationType
@@ -23,7 +28,7 @@ interface RecordUsageBaseInput {
   locale: AnalysisLocale
   operationType: AiUsageRecordOperationType
   providerSummary: ProviderSummary
-  scenario: AnalysisScenario
+  scenario: AiUsageRecordScenario
 }
 
 export interface RecordAiUsageSuccessInput extends RecordUsageBaseInput {
@@ -41,7 +46,7 @@ export interface RecordAiUsageFailureInput extends RecordUsageBaseInput {
 export interface AiUsageRecordSummary {
   id: string
   operationType: AiUsageRecordOperationType
-  scenario: AnalysisScenario
+  scenario: AiUsageRecordScenario
   locale: AnalysisLocale
   inputPreview: string
   summary: string | null
@@ -83,6 +88,8 @@ export interface PersistedResumeOptimizationSnapshot {
   resultId: string
   summary: string
 }
+
+export type PersistedResumeImportSnapshot = CachedResumeImportResult
 
 @Injectable()
 export class AiUsageRecordService {
@@ -172,6 +179,21 @@ export class AiUsageRecordService {
     return this.mapDetail(record)
   }
 
+  async deleteHistoryRecord(recordId: string): Promise<{ deleted: true; recordId: string }> {
+    const record = await this.repository.findById(recordId)
+
+    if (!record) {
+      throw new NotFoundException('AI usage record not found')
+    }
+
+    await this.repository.deleteById(recordId)
+
+    return {
+      deleted: true,
+      recordId,
+    }
+  }
+
   async findResumeOptimizationSnapshotByResultId(
     resultId: string,
   ): Promise<PersistedResumeOptimizationSnapshot | null> {
@@ -184,13 +206,35 @@ export class AiUsageRecordService {
     return mapResumeOptimizationSnapshot(record, resultId)
   }
 
+  async findResumeImportSnapshotByResultId(
+    resultId: string,
+  ): Promise<PersistedResumeImportSnapshot | null> {
+    const record = await this.repository.findLatestSucceededResumeImportByResultId(resultId)
+
+    if (!record) {
+      return null
+    }
+
+    return mapResumeImportSnapshot(record, resultId)
+  }
+
+  async updateResumeImportSnapshot(
+    resultId: string,
+    snapshot: PersistedResumeImportSnapshot,
+  ): Promise<void> {
+    await this.repository.updateLatestSucceededResumeImportDetailByResultId(
+      resultId,
+      serializeResumeImportSnapshot(snapshot),
+    )
+  }
+
   private mapSummary(record: AiUsageRecordRow) {
     const scoreMeta = extractScoreMeta(record.detailJson)
 
     return {
       id: record.id,
       operationType: record.operationType as AiUsageRecordOperationType,
-      scenario: record.scenario as AnalysisScenario,
+      scenario: record.scenario as AiUsageRecordScenario,
       locale: record.locale as AnalysisLocale,
       inputPreview: record.inputPreview,
       summary: record.summary ?? null,
@@ -323,6 +367,83 @@ function mapResumeOptimizationSnapshot(
   }
 }
 
+function mapResumeImportSnapshot(
+  record: AiUsageRecordRow,
+  resultId: string,
+): PersistedResumeImportSnapshot | null {
+  const detail = toObjectRecord(record.detailJson)
+  const candidateResume = detail.candidateResume
+  const resultDetail = toObjectRecord(detail.resultDetail)
+  const draftUpdatedAt = typeof detail.draftUpdatedAt === 'string' ? detail.draftUpdatedAt : ''
+
+  if (!isObjectRecord(candidateResume) || !draftUpdatedAt) {
+    return null
+  }
+
+  const fallbackProviderSummary = toObjectRecord(resultDetail.providerSummary)
+  const normalizedDetail: ResumeImportResultDetail = {
+    resultId: readString(resultDetail.resultId) || record.relatedResultId || resultId,
+    locale: readString(resultDetail.locale) === 'en' ? 'en' : 'zh',
+    fileName: readString(resultDetail.fileName) || record.inputPreview,
+    fileType: readString(resultDetail.fileType) === 'txt' ? 'txt' : 'md',
+    charCount: readNumber(resultDetail.charCount),
+    summary: readString(resultDetail.summary) || record.summary || '该条导入记录暂无摘要。',
+    warnings: normalizeStringArray(resultDetail.warnings),
+    changedModules: normalizeResumeImportModules(resultDetail.changedModules),
+    moduleDiffs: Array.isArray(resultDetail.moduleDiffs) ? resultDetail.moduleDiffs : [],
+    moduleContents: Array.isArray(resultDetail.moduleContents) ? resultDetail.moduleContents : [],
+    moduleStats: normalizeResumeImportStats(resultDetail.moduleStats),
+    ...(isObjectRecord(resultDetail.sourceSnapshot)
+      ? {
+          sourceSnapshot:
+            resultDetail.sourceSnapshot as unknown as ResumeImportResultDetail['sourceSnapshot'],
+        }
+      : {}),
+    ...(isObjectRecord(resultDetail.formatReport)
+      ? {
+          formatReport:
+            resultDetail.formatReport as unknown as ResumeImportResultDetail['formatReport'],
+        }
+      : {}),
+    createdAt: readString(resultDetail.createdAt) || record.createdAt.toISOString(),
+    canApply: resultDetail.canApply !== false,
+    appliedModules: normalizeResumeImportModules(resultDetail.appliedModules),
+    ...(typeof resultDetail.appliedAt === 'string'
+      ? { appliedAt: resultDetail.appliedAt }
+      : {}),
+    providerSummary: {
+      provider: readString(fallbackProviderSummary.provider) || record.provider,
+      model: readString(fallbackProviderSummary.model) || record.model,
+      mode: readString(fallbackProviderSummary.mode) || record.mode,
+    },
+  }
+
+  return {
+    candidateResume: candidateResume as unknown as PersistedResumeImportSnapshot['candidateResume'],
+    createdAt: readString(detail.createdAt) || normalizedDetail.createdAt,
+    detail: normalizedDetail,
+    draftUpdatedAt,
+    formattedText: readString(detail.formattedText),
+    rawText: readString(detail.rawText),
+    sourceHash: readString(detail.sourceHash),
+    usageRecordId: record.id,
+  }
+}
+
+function serializeResumeImportSnapshot(snapshot: PersistedResumeImportSnapshot) {
+  return {
+    resultId: snapshot.detail.resultId,
+    jobId: undefined,
+    candidateResume: snapshot.candidateResume,
+    draftUpdatedAt: snapshot.draftUpdatedAt,
+    formattedText: snapshot.formattedText,
+    rawText: snapshot.rawText,
+    createdAt: snapshot.createdAt,
+    resultDetail: snapshot.detail,
+    sourceHash: snapshot.sourceHash,
+  }
+}
+
 function normalizeChangedModules(value: unknown): ResumeOptimizationModule[] {
   if (!Array.isArray(value)) {
     return []
@@ -338,6 +459,45 @@ function normalizeChangedModules(value: unknown): ResumeOptimizationModule[] {
   return value.filter((item): item is ResumeOptimizationModule =>
     typeof item === 'string' && validModules.includes(item as ResumeOptimizationModule),
   )
+}
+
+function normalizeResumeImportModules(value: unknown): ResumeImportResultDetail['changedModules'] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  const validModules: ResumeImportResultDetail['changedModules'] = [
+    'profile',
+    'education',
+    'experiences',
+    'projects',
+    'skills',
+    'highlights',
+  ]
+
+  return value.filter((item): item is ResumeImportResultDetail['changedModules'][number] =>
+    typeof item === 'string' && validModules.includes(item as never),
+  )
+}
+
+function normalizeResumeImportStats(value: unknown): ResumeImportResultDetail['moduleStats'] {
+  const stats = toObjectRecord(value)
+
+  return {
+    education: readNumber(stats.education),
+    experiences: readNumber(stats.experiences),
+    projects: readNumber(stats.projects),
+    skills: readNumber(stats.skills),
+    highlights: readNumber(stats.highlights),
+  }
+}
+
+function readString(value: unknown): string {
+  return typeof value === 'string' && value.trim() ? value : ''
+}
+
+function readNumber(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : 0
 }
 
 function normalizeStringArray(value: unknown): string[] {

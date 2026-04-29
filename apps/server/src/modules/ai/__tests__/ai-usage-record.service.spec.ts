@@ -1,18 +1,27 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AiUsageRecordService } from '../ai-usage-record.service'
+import { createExampleStandardResume } from '../../resume/domain/standard-resume'
 
 describe('AiUsageRecordService', () => {
   const createMock = vi.fn()
   const findByIdMock = vi.fn()
   const listAllMock = vi.fn()
   const findLatestSucceededResumeOptimizationByResultIdMock = vi.fn()
+  const findLatestSucceededResumeImportByResultIdMock = vi.fn()
+  const updateLatestSucceededResumeImportDetailByResultIdMock = vi.fn()
+  const deleteByIdMock = vi.fn()
   const repository = {
     create: createMock,
+    deleteById: deleteByIdMock,
     findById: findByIdMock,
     listAll: listAllMock,
     findLatestSucceededResumeOptimizationByResultId:
       findLatestSucceededResumeOptimizationByResultIdMock,
+    findLatestSucceededResumeImportByResultId:
+      findLatestSucceededResumeImportByResultIdMock,
+    updateLatestSucceededResumeImportDetailByResultId:
+      updateLatestSucceededResumeImportDetailByResultIdMock,
   }
 
   beforeEach(() => {
@@ -134,6 +143,25 @@ describe('AiUsageRecordService', () => {
         createdAt: new Date('2026-04-15T10:00:00.000Z'),
       },
       {
+        id: 'record-004',
+        operationType: 'resume-import',
+        scenario: 'resume-import',
+        locale: 'zh',
+        inputPreview: 'lifeiyu-mock-zh.md · 5896 字符',
+        summary: '已识别候选草稿',
+        provider: 'deepseek',
+        model: 'deepseek-v4-flash',
+        mode: 'openai-compatible',
+        generator: 'ai-provider',
+        status: 'succeeded',
+        relatedReportId: null,
+        relatedResultId: 'result-import-001',
+        detailJson: null,
+        errorMessage: null,
+        durationMs: 240000,
+        createdAt: new Date('2026-04-15T11:00:00.000Z'),
+      },
+      {
         id: 'record-002',
         operationType: 'analysis-report',
         scenario: 'offer-compare',
@@ -174,6 +202,59 @@ describe('AiUsageRecordService', () => {
     })
   })
 
+  it('should filter resume import records from usage history', async () => {
+    listAllMock.mockResolvedValue([
+      {
+        id: 'record-import-001',
+        operationType: 'resume-import',
+        scenario: 'resume-import',
+        locale: 'zh',
+        inputPreview: 'lifeiyu-mock-zh.md · 5896 字符',
+        summary: '已识别候选草稿',
+        provider: 'deepseek',
+        model: 'deepseek-v4-flash',
+        mode: 'openai-compatible',
+        generator: 'ai-provider',
+        status: 'succeeded',
+        relatedReportId: null,
+        relatedResultId: 'result-import-001',
+        detailJson: null,
+        errorMessage: null,
+        durationMs: 240000,
+        createdAt: new Date('2026-04-15T11:00:00.000Z'),
+      },
+      {
+        id: 'record-analysis-001',
+        operationType: 'analysis-report',
+        scenario: 'jd-match',
+        locale: 'zh',
+        inputPreview: 'JD 分析',
+        summary: '分析结果',
+        provider: 'mock',
+        model: 'mock',
+        mode: 'mock',
+        generator: 'mock-cache',
+        status: 'succeeded',
+        relatedReportId: 'report-001',
+        relatedResultId: null,
+        detailJson: null,
+        errorMessage: null,
+        durationMs: 1000,
+        createdAt: new Date('2026-04-15T10:00:00.000Z'),
+      },
+    ])
+
+    const service = new AiUsageRecordService(repository as never)
+    const records = await service.listHistory({ type: 'resume-import' })
+
+    expect(records).toHaveLength(1)
+    expect(records[0]).toMatchObject({
+      operationType: 'resume-import',
+      scenario: 'resume-import',
+      relatedResultId: 'result-import-001',
+    })
+  })
+
   it('should read a persisted detail record by id', async () => {
     findByIdMock.mockResolvedValue({
       id: 'record-009',
@@ -204,6 +285,37 @@ describe('AiUsageRecordService', () => {
     expect(detail.id).toBe('record-009')
     expect(detail.detail).toEqual({
       summary: '匹配概览',
+    })
+  })
+
+  it('should delete a persisted usage record by id', async () => {
+    findByIdMock.mockResolvedValue({
+      id: 'record-delete-001',
+      operationType: 'resume-import',
+      scenario: 'resume-import',
+      locale: 'zh',
+      inputPreview: 'resume.md',
+      summary: '已识别候选草稿',
+      provider: 'deepseek',
+      model: 'deepseek-v4-flash',
+      mode: 'openai-compatible',
+      generator: 'ai-provider',
+      status: 'succeeded',
+      relatedReportId: null,
+      relatedResultId: 'result-import-001',
+      detailJson: null,
+      errorMessage: null,
+      durationMs: 1000,
+      createdAt: new Date('2026-04-15T12:00:00.000Z'),
+    })
+
+    const service = new AiUsageRecordService(repository as never)
+    const result = await service.deleteHistoryRecord('record-delete-001')
+
+    expect(deleteByIdMock).toHaveBeenCalledWith('record-delete-001')
+    expect(result).toEqual({
+      deleted: true,
+      recordId: 'record-delete-001',
     })
   })
 
@@ -264,5 +376,72 @@ describe('AiUsageRecordService', () => {
         draftUpdatedAt: '2026-04-15T11:59:00.000Z',
       }),
     )
+  })
+
+  it('should resolve resume import snapshot by resultId', async () => {
+    const resume = createExampleStandardResume()
+    findLatestSucceededResumeImportByResultIdMock.mockResolvedValue({
+      id: 'record-import-001',
+      operationType: 'resume-import',
+      scenario: 'resume-import',
+      locale: 'zh',
+      inputPreview: 'lifeiyu-mock-zh.md · 5896 字符',
+      summary: '已识别候选草稿',
+      provider: 'deepseek',
+      model: 'deepseek-v4-flash',
+      mode: 'openai-compatible',
+      generator: 'ai-provider',
+      status: 'succeeded',
+      relatedReportId: null,
+      relatedResultId: 'result-import-001',
+      detailJson: {
+        candidateResume: resume,
+        draftUpdatedAt: '2026-04-15T10:59:00.000Z',
+        createdAt: '2026-04-15T11:00:00.000Z',
+        resultDetail: {
+          resultId: 'result-import-001',
+          locale: 'zh',
+          fileName: 'lifeiyu-mock-zh.md',
+          fileType: 'md',
+          charCount: 5896,
+          summary: '已识别候选草稿',
+          warnings: [],
+          changedModules: ['profile'],
+          moduleDiffs: [],
+          moduleContents: [],
+          moduleStats: {
+            education: 1,
+            experiences: 4,
+            projects: 4,
+            skills: 6,
+            highlights: 5,
+          },
+          createdAt: '2026-04-15T11:00:00.000Z',
+          canApply: true,
+          appliedModules: [],
+          providerSummary: {
+            provider: 'deepseek',
+            model: 'deepseek-v4-flash',
+            mode: 'openai-compatible',
+          },
+        },
+      },
+      errorMessage: null,
+      durationMs: 240000,
+      createdAt: new Date('2026-04-15T11:00:00.000Z'),
+    })
+
+    const service = new AiUsageRecordService(repository as never)
+    const snapshot = await service.findResumeImportSnapshotByResultId('result-import-001')
+
+    expect(findLatestSucceededResumeImportByResultIdMock).toHaveBeenCalledWith(
+      'result-import-001',
+    )
+    expect(snapshot?.detail).toMatchObject({
+      resultId: 'result-import-001',
+      fileName: 'lifeiyu-mock-zh.md',
+      canApply: true,
+    })
+    expect(snapshot?.candidateResume.profile.fullName.zh).toBeTruthy()
   })
 })
