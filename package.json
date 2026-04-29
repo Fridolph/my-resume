@@ -38,6 +38,8 @@
     "test:workspace": "node scripts/check-workspace.mjs && pnpm check:tsx-types",
     "changelog:preview": "node scripts/release/changelog.mjs preview",
     "changelog:write": "node scripts/release/changelog.mjs write",
+    "release": "./scripts/release/full-release.sh",
+    "release:dry": "./scripts/release/full-release.sh --dry-run",
     "release:notes": "node scripts/release/changelog.mjs notes",
     "release:github": "node scripts/release/github-release.mjs",
     "perf:dev:web": "node scripts/perf-dev-route.mjs --target web --base-url http://127.0.0.1:5555 --routes /zh,/zh/profile --output .tmp/perf/dev-web.json",

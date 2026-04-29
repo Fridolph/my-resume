@@ -129,20 +129,66 @@ pnpm release:github -- --tag v2.2.23 --draft --title "v2.2.23"
 
 ## 推荐发布顺序
 
-### 标准手工发布
+### 一键发布（推荐）
+
+确保已完成 `development` 合并后，在 `main` 分支上执行：
+
+```bash
+pnpm release -- --tag v2.2.24 --ecs-host 1.2.3.4
+```
+
+这个命令自动完成：
+1. 从上一个 tag 差异生成 CHANGELOG 并自动 commit
+2. 创建 tag（如不存在）
+3. 推送 `main` 和 tag 到远端
+4. 构建并推送 Docker 镜像到镜像仓库
+5. SSH 远程执行 `release.sh` 部署到 ECS
+6. 创建 GitHub Release
+
+常用变体：
+
+```bash
+# 预览模式（不实际执行）
+pnpm release:dry -- --tag v2.2.24
+
+# 仅构建推送镜像，不部署
+pnpm release -- --tag v2.2.24 --skip-deploy
+
+# 仅部署已存在的 tag（跳过构建）
+pnpm release -- --tag v2.2.24 --skip-build --skip-changelog
+
+# 跳过 GitHub Release
+pnpm release -- --tag v2.2.24 --ecs-host 1.2.3.4 --skip-github
+```
+
+### 手工分步发布
+
+如果需要更细粒度的控制：
 
 ```bash
 git checkout main
 git pull --ff-only origin main
 
+# 1) 预览 CHANGELOG
+pnpm changelog:preview -- --tag v2.2.23
+
+# 2) 写入 CHANGELOG
 pnpm changelog:write -- --tag v2.2.23
 git add CHANGELOG.md
 git commit -m "docs(changelog): prepare v2.2.23"
 
+# 3) 打 tag 并推送
 git tag -a v2.2.23 -m "release: v2.2.23"
 git push origin main
 git push origin v2.2.23
 
+# 4) 构建并推送 Docker 镜像
+./deploy/ecs/build-and-push-images.sh --tag v2.2.23 --image-prefix <registry>/<ns>/my-resume
+
+# 5) 部署到 ECS
+./deploy/ecs/release-from-local.sh --tag v2.2.23 --ecs-host 1.2.3.4 --skip-build
+
+# 6) 创建 GitHub Release
 pnpm release:github -- --tag v2.2.23 --draft --title "v2.2.23"
 ```
 
