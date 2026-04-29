@@ -2,7 +2,7 @@
 
 import { useRequest } from 'alova/client'
 import { Button, Drawer, Skeleton } from '@heroui/react'
-import { DisplayPill, DisplaySectionCard, DisplaySurfaceCard } from '@my-resume/ui/display'
+import { DisplayPill, DisplaySurfaceCard } from '@my-resume/ui/display'
 import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
@@ -414,12 +414,14 @@ export function OptimizationHistoryRecordDrawer({
           <>
             <div className="flex flex-wrap items-center gap-1.5">
               {entry.changedModules.map((module) => (
-                <button
-                  className="button button--sm button--outline h-8 rounded-full border-zinc-200/80 bg-zinc-50 px-3 text-xs font-medium text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+                <Button
+                  className="h-7 rounded-full text-xs"
                   key={`${entry.resultId}-${module}`}
-                  type="button">
+                  size="sm"
+                  type="button"
+                  variant="ghost">
                   {formatOptimizationModule(module)}
-                </button>
+                </Button>
               ))}
             </div>
 
