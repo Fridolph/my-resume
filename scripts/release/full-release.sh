@@ -128,15 +128,20 @@ if [[ "$SKIP_CHANGELOG" != '1' ]]; then
 fi
 
 # ── 2) Create tag if missing ──────────────────────────────────────────
-if ! run_safe git rev-parse --verify "${TAG}^{tag}" >/dev/null 2>&1; then
+TAG_EXISTS='0'
+git rev-parse --verify "${TAG}^{tag}" >/dev/null 2>&1 && TAG_EXISTS='1' || true
+if [[ "$TAG_EXISTS" == '0' ]]; then
   log "Creating tag: $TAG"
-  run git tag -a "$TAG" -m "release: $TAG"
+  git tag -a "$TAG" -m "release: $TAG"
+  log "Tag created: $TAG"
+else
+  log "Tag already exists: $TAG"
 fi
 
 # ── 3) Push main + tag ────────────────────────────────────────────────
 log "Pushing main and tag to origin"
-run git push origin main
-run git push origin "$TAG"
+git push origin main
+git push origin "$TAG"
 
 # ── 4) Build & push Docker images + deploy ────────────────────────────
 RELEASE_ARGS=(--tag "$TAG")
