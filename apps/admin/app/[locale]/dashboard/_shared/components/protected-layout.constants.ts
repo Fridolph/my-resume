@@ -9,8 +9,8 @@ export const navBadgeBaseClass =
 export const navBadgeCollapsedClass =
   '!h-11 !w-11 self-center justify-center rounded-[14px] bg-white/82 shadow-none group-hover:bg-blue-50/95 dark:bg-white/[0.08] dark:group-hover:bg-blue-400/12'
 export const sidebarShellClass =
-  'sticky top-0 hidden h-screen self-start md:block md:px-2 md:py-3'
-export const sidebarHeaderClass = 'flex flex-col items-stretch gap-3 px-3 py-3 pb-2.5'
+  'sticky top-0 hidden h-screen self-start md:block'
+export const sidebarHeaderClass = 'flex flex-col items-stretch gap-3 px-4 py-4 pb-3'
 export const sidebarHeaderCollapsedClass = 'items-center px-2'
 export const sidebarBrandClass = 'flex w-full items-center justify-between gap-2'
 export const sidebarBrandCollapsedClass = 'flex-col justify-start gap-2.5'
@@ -19,10 +19,10 @@ export const sidebarToggleButtonClass =
 export const sidebarLogoClass =
   'flex h-12 w-12 items-center justify-center rounded-[18px] bg-zinc-900 text-[1.15rem] font-extrabold tracking-[-0.04em] text-white dark:bg-white dark:text-zinc-950'
 export const sidebarContentClass =
-  'flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto px-3 pb-4'
+  'flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto px-4 pb-4'
 export const sidebarContentCollapsedClass = 'items-center px-0'
 export const sidebarPanelClass =
-  'flex h-full flex-col rounded-[24px] border border-zinc-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(244,247,251,0.9))] p-1 shadow-[0_18px_40px_rgba(15,23,42,0.06)] dark:border-zinc-800 dark:bg-[linear-gradient(180deg,rgba(2,6,23,0.92),rgba(15,23,42,0.9))] dark:shadow-none'
+  'flex h-full flex-col border-r border-zinc-200/80 bg-white shadow-none dark:border-zinc-800 dark:bg-zinc-950'
 export const headerPageMetaRowClass =
   'flex min-w-0 flex-wrap items-center gap-2 sm:gap-2.5 md:overflow-x-auto md:flex-nowrap md:gap-3 md:whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
 export const headerPageBadgeClass =
@@ -31,7 +31,7 @@ export const headerPageDescriptionClass =
   'm-0 text-[0.82rem] leading-[1.5] text-[#999] sm:text-[0.88rem] md:text-xs md:leading-[1.4]'
 export const headerActionsClass = 'flex shrink-0 items-center justify-end gap-2 sm:gap-2.5'
 export const headerShellClass =
-  'sticky top-0 z-20 border-b border-zinc-200/70 bg-white/78 px-3 py-2.5 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/78 sm:px-4 sm:py-3 md:rounded-[28px] md:border md:px-5 lg:px-6'
+  'sticky top-0 z-20 border-b border-zinc-200/70 bg-white px-3 py-2.5 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950 sm:px-4 sm:py-3 md:px-5 lg:px-6'
 export const headerBodyClass = 'flex items-start justify-between gap-3 sm:gap-4'
 export const headerPrimaryContentClass = 'flex min-w-0 flex-1 items-start gap-2.5 sm:gap-3'
 export const headerTextStackClass = 'min-w-0 flex-1 space-y-1.5 sm:space-y-2'

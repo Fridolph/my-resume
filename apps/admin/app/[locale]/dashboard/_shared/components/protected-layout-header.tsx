@@ -49,9 +49,9 @@ export function AdminHeader({
             <div className={headerPageMetaRowClass}>
               <h1 className={headerTitleClass}>{pageMeta.title}</h1>
               <span className={headerPageBadgeClass}>{pageMeta.eyebrow}</span>
+              <span className={headerPageDescriptionClass}>{pageMeta.description}</span>
             </div>
             <div className={headerSecondaryMetaClass} data-testid="admin-mobile-header-secondary">
-              <p className={headerPageDescriptionClass}>{pageMeta.description}</p>
               <Breadcrumbs
                 className="inline-flex max-w-full flex-nowrap items-center overflow-x-auto whitespace-nowrap text-sm text-zinc-500 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden dark:text-zinc-400"
                 separator="/">
