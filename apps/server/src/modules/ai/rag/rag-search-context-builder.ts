@@ -1,5 +1,4 @@
 import { RagIndexedChunk, RagSearchMatch } from './rag.types'
-import { applyRagSearchRerank } from './rag-search-rerank'
 
 function buildSearchTokens(text: string): string[] {
   const normalized = text.trim().toLowerCase()
@@ -73,16 +72,15 @@ export function cosineSimilarity(vectorA: number[], vectorB: number[]): number {
 }
 
 /**
- * 基于本地索引构建检索上下文（评分 + 排序 + rerank）。
+ * 基于本地索引构建检索上下文（仅评分 + 排序，不负责重排和截断）。
  *
  * @param input 构建参数
- * @returns 本地检索命中列表
+ * @returns 按混合分数降序排列的全部匹配
  */
 export function buildLocalRagSearchContext(input: {
   query: string
   queryVector: number[]
   chunks: RagIndexedChunk[]
-  limit: number
 }): RagSearchMatch[] {
   const scoredMatches = input.chunks
     .map((chunk) => ({
@@ -101,5 +99,5 @@ export function buildLocalRagSearchContext(input: {
     }))
     .sort((left, right) => right.score - left.score)
 
-  return applyRagSearchRerank(scoredMatches, input.query, input.limit)
+  return scoredMatches
 }

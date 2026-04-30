@@ -14,7 +14,7 @@ import type { RagVectorStore } from '../vector-store/types'
 
 function createMockRetrievalRepository() {
   return {
-    listUserDocChunksWithDocuments: vi.fn().mockResolvedValue([]),
+    listAllChunksWithDocuments: vi.fn().mockResolvedValue([]),
   } as unknown as RagRetrievalRepository
 }
 

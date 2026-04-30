@@ -22,6 +22,7 @@ import {
   buildLocalRagSearchContext,
   cosineSimilarity,
 } from './rag-search-context-builder'
+import { applyRagSearchRerank, applyRagSearchRerankAndSelect, rerankRagSearchMatches } from './rag-search-rerank'
 import { RagIndexFile, RagSearchMatch } from './rag.types'
 import { RAG_VECTOR_STORE } from './vector-store/tokens'
 import type { RagVectorSearchMatch, RagVectorStore } from './vector-store/types'
@@ -198,17 +199,15 @@ export class RagService {
       query,
       queryVector,
       chunks: index.chunks,
-      limit,
     })
 
     // 本地模式也纳入 user_docs：从 SQLite 读取预存的 embedding，
-    // 在应用层计算余弦相似度，与 resume_core/knowledge 结果合并排序。
-    const userDocMatches = await this.searchUserDocsFromDatabase(queryVector, limit)
+    // 在应用层计算余弦相似度，与 resume_core/knowledge 结果合并。
+    const userDocMatches = await this.searchChunksFromDatabase(queryVector)
     const merged = [...localMatches, ...userDocMatches]
       .sort((a, b) => b.score - a.score)
-      .slice(0, limit)
 
-    return merged
+    return applyRagSearchRerank(merged, query, limit)
   }
 
   /**
@@ -218,18 +217,16 @@ export class RagService {
    * 余弦相似度计算。适用于 ECS 等无法运行向量数据库的生产环境。
    *
    * @param queryVector 查询向量
-   * @param limit 返回数量上限
    */
-  private async searchUserDocsFromDatabase(
+  private async searchChunksFromDatabase(
     queryVector: number[],
-    limit: number,
   ): Promise<RagSearchMatch[]> {
     if (queryVector.length === 0) {
       return []
     }
 
     try {
-      const rows = await this.ragRetrievalRepository.listUserDocChunksWithDocuments()
+      const rows = await this.ragRetrievalRepository.listAllChunksWithDocuments()
 
       return rows
         .map((row) => {
@@ -254,7 +251,6 @@ export class RagService {
         })
         .filter((match) => match.score > 0)
         .sort((a, b) => b.score - a.score)
-        .slice(0, limit)
     } catch {
       // user_docs 检索失败时不影响 resume_core/knowledge 结果
       return []

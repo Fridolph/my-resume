@@ -300,3 +300,139 @@ export function applyRagSearchRerank(
     .slice(0, Math.max(Math.floor(limit), 0))
     .map((item) => item.match)
 }
+
+/**
+ * 对重排明细做去噪过滤，保证返回结果数量不低于 minKeep。
+ *
+ * 去噪规则：
+ * - 噪音原因 ≤ 2 条 → 保留
+ * - 命中过 keyword hints → 保留
+ * - 在优先 section 且重排分 ≥ preferredSectionKeepScore → 保留
+ * - 否则丢弃
+ *
+ * 来自 rag7 denoiseMatchesV7 的设计思路。
+ */
+export function denoiseRerankDetails(
+  details: RagSearchRerankDetail[],
+  strategy: RagSearchQuestionStrategy,
+  config: RagSearchRerankConfig = DEFAULT_RAG_SEARCH_RERANK_CONFIG,
+  minKeep = 4,
+): RagSearchRerankDetail[] {
+  if (details.length === 0) {
+    return []
+  }
+
+  const preferredSections = getPreferredSections(strategy, config)
+
+  const kept = details.filter((item) => {
+    const noiseCount = item.noiseReasons.length
+    const hasHints = item.matchedHints.length > 0
+    const isPreferred = preferredSections.includes(item.match.section ?? '')
+    const aboveThreshold = isPreferred && item.rerankScore >= config.thresholds.rerankScoreNoiseThreshold
+
+    return noiseCount <= 2 || hasHints || aboveThreshold
+  })
+
+  if (kept.length < minKeep) {
+    // 去噪后过少时回退到重排头部结果，保证最小信息量
+    return details.slice(0, Math.max(minKeep, 1)).map((item) => ({
+      ...item,
+      noiseReasons: [...item.noiseReasons, '去噪后剩余结果过少，回退到重排头部'],
+    }))
+  }
+
+  return kept
+}
+
+/**
+ * 对重排 + 去噪后的结果做证据分层。
+ *
+ * 分为两层：
+ * - primary：优先 section + topic 命中 + 重排分 ≥ 阈值 + 噪音原因 < 硬丢弃阈值
+ * - support：优先 section + 重排分 ≥ 阈值 + 噪音原因 < 硬丢弃阈值
+ * - reserve：剩余满足最低重排分的条目
+ *
+ * 每层有数量上限（primaryCount / supportCount），超出的降级到下一层。
+ *
+ * 来自 rag7 selectFinalMatchesV7 的简化版（暂不实现 cross_support）。
+ */
+export function selectFinalMatches(
+  details: RagSearchRerankDetail[],
+  strategy: RagSearchQuestionStrategy,
+  config: RagSearchRerankConfig = DEFAULT_RAG_SEARCH_RERANK_CONFIG,
+): { primary: RagSearchRerankDetail[]; support: RagSearchRerankDetail[]; reserve: RagSearchRerankDetail[]; kept: RagSearchRerankDetail[] } {
+  const sel = config.selection[strategy] ?? config.selection.general
+  const preferredSections = getPreferredSections(strategy, config)
+
+  const primary: RagSearchRerankDetail[] = []
+  const support: RagSearchRerankDetail[] = []
+  const reserve: RagSearchRerankDetail[] = []
+  const usedIds = new Set<number>()
+
+  for (let i = 0; i < details.length; i++) {
+    const item = details[i]
+    const isPreferred = preferredSections.includes(item.match.section ?? '')
+    const noiseCount = item.noiseReasons.length
+    const belowHardDrop = noiseCount < sel.hardDropMinNoiseReasons
+
+    if (
+      primary.length < sel.maxPrimaryCount &&
+      isPreferred &&
+      (item.topicHit || item.matchedHints.length > 0) &&
+      item.rerankScore >= sel.primaryMinRerankScore &&
+      belowHardDrop
+    ) {
+      primary.push(item)
+      usedIds.add(i)
+      continue
+    }
+
+    if (
+      support.length < sel.maxPreferredSupportCount &&
+      isPreferred &&
+      item.rerankScore >= sel.supportMinRerankScore &&
+      belowHardDrop
+    ) {
+      support.push(item)
+      usedIds.add(i)
+    }
+  }
+
+  for (let i = 0; i < details.length; i++) {
+    if (usedIds.has(i)) continue
+    const item = details[i]
+    if (item.rerankScore >= sel.reserveMinRerankScore) {
+      reserve.push(item)
+    }
+  }
+
+  return {
+    primary,
+    support,
+    reserve,
+    kept: [...primary, ...support, ...reserve],
+  }
+}
+
+/**
+ * 完整的检索后处理管线：重排 → 去噪 → 分层 → 返回 match 列表。
+ *
+ * 这是本地搜索路径的统一出口，替代原来的 applyRagSearchRerank 单一步骤。
+ */
+export function applyRagSearchRerankAndSelect(
+  matches: RagSearchMatch[],
+  query: string,
+  limit: number,
+  strategy?: RagSearchQuestionStrategy,
+  config: RagSearchRerankConfig = DEFAULT_RAG_SEARCH_RERANK_CONFIG,
+): RagSearchMatch[] {
+  const resolvedStrategy = strategy ?? detectRagSearchQuestionStrategy(query)
+  const reranked = rerankRagSearchMatches(matches, query, resolvedStrategy, config)
+  const denoised = denoiseRerankDetails(reranked, resolvedStrategy, config, Math.min(limit, 4))
+  const { primary, support, reserve } = selectFinalMatches(denoised, resolvedStrategy, config)
+
+  // 按 primary → support → reserve 优先级拼接，截断到 limit
+  return [...primary, ...support, ...reserve]
+    .slice(0, limit)
+    .map((item) => item.match)
+}

@@ -20,7 +20,7 @@ describe('rag search context builder', () => {
     expect(score).toBeLessThanOrEqual(1)
   })
 
-  it('should build local search context with rerank applied', () => {
+  it('should score and sort all local chunks by hybrid score without truncation', () => {
     const chunks: RagIndexedChunk[] = [
       {
         id: 'skills-1',
@@ -49,10 +49,11 @@ describe('rag search context builder', () => {
       query: '这个候选人有哪些 AI Agent 开发相关经验？',
       queryVector: [1, 0, 0],
       chunks,
-      limit: 2,
     })
 
-    expect(matches).toHaveLength(2)
-    expect(matches.map((item) => item.id)).toEqual(['project-1', 'skills-1'])
+    // 返回全部 3 条按混合分数排序，project-1 因关键词匹配"AI Agent 工作流"得分更高
+    expect(matches).toHaveLength(3)
+    expect(matches[0].score).toBeGreaterThan(0)
+    expect(matches[0].id).toBe('project-1')
   })
 })
