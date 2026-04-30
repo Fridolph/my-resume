@@ -19,14 +19,14 @@ export interface FileExtractionResult {
 
 const SUPPORTED_EXTENSIONS = new Set(['txt', 'md', 'pdf', 'docx'])
 
-function normalizeExtractedText(text: string): string {
+export function normalizeExtractedText(text: string): string {
   return text
     .replace(/\r\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
 }
 
-function readFileExtension(fileName: string): string {
+export function readFileExtension(fileName: string): string {
   const extension = fileName.split('.').pop()?.trim().toLowerCase()
 
   return extension ?? ''

@@ -46,3 +46,10 @@
 
 - **release:** use raw git commands for tag check in full-release.sh ([`5186d33`](https://github.com/Fridolph/my-resume/commit/5186d33cbb07215244fe53a21b1eeb31c574e07b))
 - **release:** make certbot renewal non-fatal in release.sh ([`8441ffd`](https://github.com/Fridolph/my-resume/commit/8441ffd355b5cc542901f1415f9d6d465d990ea8))
+
+## [v2.2.26](https://github.com/Fridolph/my-resume/compare/v2.2.25...v2.2.26) - 2026-04-29
+
+### 问题修复
+
+- **release:** use REPO_ROOT/deploy/ecs for release-from-local.sh path ([`1a353e1`](https://github.com/Fridolph/my-resume/commit/1a353e12b9abff09ba95a5f720a3819255d11c17))
+- **deploy:** remove unconditional return 0 from sudo_cmd root branch ([`23191a5`](https://github.com/Fridolph/my-resume/commit/23191a567c9cd4a75351ba8aa49942c700247dc6))

@@ -4,8 +4,12 @@ import type { StandardResume } from '../../../../resume/domain/standard-resume'
 import { RESUME_IMPORT_MODULES } from '../constants/resume-import.constants'
 import type { ResumeImportModule } from '../types/resume-import.types'
 
+export { readFileExtension } from '../../../application/services/file-extraction.service'
+
 /**
  * 格式化上传文件大小，用于 Job 阶段摘要。
+ *
+ * TODO: 当 apps/server 引入 @my-resume/utils 依赖后，可替换为 formatFileSize。
  */
 export function formatResumeImportFileSize(size: number): string {
   if (size < 1024) {
@@ -13,13 +17,6 @@ export function formatResumeImportFileSize(size: number): string {
   }
 
   return `${(size / 1024).toFixed(1)} KB`
-}
-
-/**
- * 读取上传文件扩展名，用于导入识别第一层文件类型边界。
- */
-export function readFileExtension(fileName: string): string {
-  return fileName.split('.').pop()?.trim().toLowerCase() ?? ''
 }
 
 /**
