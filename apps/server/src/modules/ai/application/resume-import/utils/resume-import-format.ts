@@ -129,8 +129,8 @@ export function filterResumeImportTextByRules(text: string): RuleFilterResult {
 /**
  * 合并本地规则层报告与 AI 在单次识别调用中返回的治理报告。
  *
- * 本地规则层已经真正影响了入模文本，因此它的 discardedItems / safetyFlags
- * 永远保留；AI 报告只作为补充诊断，不能覆盖本地审计结果。
+ * 本地规则层已经真正影响了入模文本，因此它的 discardedItems / safetyFlags 永远保留；
+ * AI 报告只作为补充诊断，不能覆盖本地审计结果。
  */
 export function mergeResumeImportFormatReports(
   localReport: ResumeImportFormatReport,
