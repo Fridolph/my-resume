@@ -7,6 +7,7 @@ import { AiService } from '../ai.service'
 import { RagChunkService } from './rag-chunk.service'
 import { RagIndexRepository } from './rag-index.repository'
 import { RagKnowledgeService } from './rag-knowledge.service'
+import { RagRetrievalRepository } from './rag-retrieval.repository'
 import {
   mergeRagSearchRoutingConfig,
   RagSearchRoutingOverride,
@@ -17,7 +18,10 @@ import {
   RagSearchQualityGate,
   resolveRagSearchQualityGate,
 } from './rag-search-quality'
-import { buildLocalRagSearchContext } from './rag-search-context-builder'
+import {
+  buildLocalRagSearchContext,
+  cosineSimilarity,
+} from './rag-search-context-builder'
 import { RagIndexFile, RagSearchMatch } from './rag.types'
 import { RAG_VECTOR_STORE } from './vector-store/tokens'
 import type { RagVectorSearchMatch, RagVectorStore } from './vector-store/types'
@@ -61,6 +65,8 @@ export class RagService {
     private readonly ragKnowledgeService: RagKnowledgeService,
     @Inject(RagIndexRepository)
     private readonly ragIndexRepository: RagIndexRepository,
+    @Inject(RagRetrievalRepository)
+    private readonly ragRetrievalRepository: RagRetrievalRepository,
     @Inject(RAG_VECTOR_STORE)
     private readonly ragVectorStore: RagVectorStore,
   ) {}
@@ -188,13 +194,71 @@ export class RagService {
     limit: number,
   ): Promise<RagSearchMatch[]> {
     const index = await this.ensureIndex()
-
-    return buildLocalRagSearchContext({
+    const localMatches = buildLocalRagSearchContext({
       query,
       queryVector,
       chunks: index.chunks,
       limit,
     })
+
+    // 本地模式也纳入 user_docs：从 SQLite 读取预存的 embedding，
+    // 在应用层计算余弦相似度，与 resume_core/knowledge 结果合并排序。
+    const userDocMatches = await this.searchUserDocsFromDatabase(queryVector, limit)
+    const merged = [...localMatches, ...userDocMatches]
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit)
+
+    return merged
+  }
+
+  /**
+   * 从 SQLite rag_chunks 表中检索 user_docs 匹配项。
+   *
+   * 不依赖 Milvus：直接读取 ingest 时预存的 embedding，在内存中做
+   * 余弦相似度计算。适用于 ECS 等无法运行向量数据库的生产环境。
+   *
+   * @param queryVector 查询向量
+   * @param limit 返回数量上限
+   */
+  private async searchUserDocsFromDatabase(
+    queryVector: number[],
+    limit: number,
+  ): Promise<RagSearchMatch[]> {
+    if (queryVector.length === 0) {
+      return []
+    }
+
+    try {
+      const rows = await this.ragRetrievalRepository.listUserDocChunksWithDocuments()
+
+      return rows
+        .map((row) => {
+          const embedding = row.embeddingJson ?? []
+          const score = embedding.length > 0
+            ? Number(cosineSimilarity(queryVector, embedding).toFixed(6))
+            : 0
+          const metadata =
+            row.metadataJson && typeof row.metadataJson === 'object' ? row.metadataJson : null
+          const fileName =
+            metadata && typeof metadata.fileName === 'string' ? metadata.fileName : undefined
+
+          return {
+            id: row.chunkId,
+            title: fileName ?? row.documentTitle ?? 'user_docs',
+            section: row.section,
+            content: row.content,
+            sourceType: 'user_docs' as const,
+            sourcePath: fileName,
+            score,
+          }
+        })
+        .filter((match) => match.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, limit)
+    } catch {
+      // user_docs 检索失败时不影响 resume_core/knowledge 结果
+      return []
+    }
   }
 
   /**
