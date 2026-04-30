@@ -266,4 +266,32 @@ export class RagRetrievalRepository {
       .orderBy(desc(ragIndexRuns.createdAt))
       .limit(limit)
   }
+
+  /**
+   * 查询所有 user_docs 类型的 chunk 及其关联文档信息。
+   *
+   * 用于本地搜索模式：不依赖 Milvus，直接从 SQLite 读取 chunk 和预存的
+   * embedding 向量，在应用层计算余弦相似度。
+   *
+   * @returns chunk 列表（含文档级元数据，按 chunkIndex 排序以保证稳定顺序）
+   */
+  async listUserDocChunksWithDocuments() {
+    return this.database
+      .select({
+        chunkId: ragChunks.id,
+        documentId: ragChunks.documentId,
+        chunkIndex: ragChunks.chunkIndex,
+        section: ragChunks.section,
+        content: ragChunks.content,
+        embeddingJson: ragChunks.embeddingJson,
+        metadataJson: ragChunks.metadataJson,
+        documentSourceScope: ragDocuments.sourceScope,
+        documentTitle: ragDocuments.title,
+        documentSourceVersion: ragDocuments.sourceVersion,
+      })
+      .from(ragChunks)
+      .innerJoin(ragDocuments, eq(ragChunks.documentId, ragDocuments.id))
+      .where(eq(ragDocuments.sourceType, 'user_docs'))
+      .orderBy(ragChunks.chunkIndex)
+  }
 }

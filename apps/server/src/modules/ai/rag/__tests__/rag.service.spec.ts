@@ -8,8 +8,15 @@ import { createAiProvider } from '../../providers/ai-provider.factory'
 import { RagChunkService } from '../rag-chunk.service'
 import { RagIndexRepository } from '../rag-index.repository'
 import { RagKnowledgeService } from '../rag-knowledge.service'
+import { RagRetrievalRepository } from '../rag-retrieval.repository'
 import { RagService } from '../rag.service'
 import type { RagVectorStore } from '../vector-store/types'
+
+function createMockRetrievalRepository() {
+  return {
+    listUserDocChunksWithDocuments: vi.fn().mockResolvedValue([]),
+  } as unknown as RagRetrievalRepository
+}
 
 const source = `
 profile:
@@ -125,6 +132,7 @@ describe('RagService', () => {
       new RagChunkService(),
       new RagKnowledgeService(),
       new RagIndexRepository(),
+      createMockRetrievalRepository(),
       {
         backend: 'local',
         upsertChunks: vi.fn(),
@@ -164,6 +172,7 @@ describe('RagService', () => {
       new RagChunkService(),
       new RagKnowledgeService(),
       new RagIndexRepository(),
+      createMockRetrievalRepository(),
       {
         backend: 'local',
         upsertChunks: vi.fn(),
@@ -201,6 +210,7 @@ describe('RagService', () => {
       new RagChunkService(),
       new RagKnowledgeService(),
       new RagIndexRepository(),
+      createMockRetrievalRepository(),
       {
         backend: 'local',
         upsertChunks: vi.fn(),
@@ -238,6 +248,7 @@ describe('RagService', () => {
       new RagChunkService(),
       new RagKnowledgeService(),
       new RagIndexRepository(),
+      createMockRetrievalRepository(),
       {
         backend: 'local',
         upsertChunks: vi.fn(),
@@ -279,6 +290,7 @@ describe('RagService', () => {
       new RagChunkService(),
       new RagKnowledgeService(),
       new RagIndexRepository(),
+      createMockRetrievalRepository(),
       {
         backend: 'milvus',
         upsertChunks: vi.fn(),
@@ -332,6 +344,7 @@ describe('RagService', () => {
       new RagChunkService(),
       new RagKnowledgeService(),
       new RagIndexRepository(),
+      createMockRetrievalRepository(),
       {
         backend: 'local',
         upsertChunks: vi.fn(),
@@ -364,6 +377,7 @@ describe('RagService', () => {
       new RagChunkService(),
       new RagKnowledgeService(),
       new RagIndexRepository(),
+      createMockRetrievalRepository(),
       {
         backend: 'local',
         upsertChunks: vi.fn(),
@@ -417,6 +431,7 @@ describe('RagService', () => {
       new RagChunkService(),
       new RagKnowledgeService(),
       new RagIndexRepository(),
+      createMockRetrievalRepository(),
       {
         backend: 'milvus',
         upsertChunks: vi.fn(),
@@ -458,6 +473,7 @@ describe('RagService', () => {
       new RagChunkService(),
       new RagKnowledgeService(),
       new RagIndexRepository(),
+      createMockRetrievalRepository(),
       {
         backend: 'milvus',
         upsertChunks: vi.fn(),
@@ -494,6 +510,7 @@ describe('RagService', () => {
       new RagChunkService(),
       new RagKnowledgeService(),
       new RagIndexRepository(),
+      createMockRetrievalRepository(),
       {
         backend: 'milvus',
         upsertChunks: vi.fn(),
@@ -539,6 +556,7 @@ describe('RagService', () => {
       new RagChunkService(),
       new RagKnowledgeService(),
       new RagIndexRepository(),
+      createMockRetrievalRepository(),
       {
         backend: 'milvus',
         upsertChunks: vi.fn(),
