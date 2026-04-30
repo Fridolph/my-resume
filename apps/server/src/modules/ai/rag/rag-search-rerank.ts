@@ -20,6 +20,7 @@ export interface RagSearchRerankDetail {
   sectionBoost: number
   keywordBoost: number
   matchedHints: string[]
+  topicHit: boolean
   noiseReasons: string[]
 }
 
@@ -73,10 +74,52 @@ function getPreferredSections(
   return config.preferredSections[strategy] ?? config.preferredSections.general
 }
 
+/**
+ * 提取问题中的主题关键词，用于判断 chunk 是否与问题主题直接相关。
+ *
+ * 从 rag7 学习：先展开 keyword hints，再从问题中提取触发词和扩展词，
+ * 组成"问题主题关键词集合"。后续用这个集合判断每条 chunk 的 haystack
+ * 是否包含问题核心主题——这是区分"真相关"和"只沾边"的关键。
+ */
+function extractQuestionKeywords(query: string, config: RagSearchRerankConfig): string[] {
+  const normalized = normalizeText(query)
+  const keywords = new Set<string>()
+
+  for (const [trigger, expansions] of Object.entries(config.keywordHints)) {
+    const normalizedTrigger = normalizeText(trigger)
+
+    if (!normalized.includes(normalizedTrigger)) {
+      continue
+    }
+
+    keywords.add(normalizedTrigger)
+    expansions.forEach((item) => keywords.add(normalizeText(item)))
+  }
+
+  return [...keywords]
+}
+
+/**
+ * 判断 chunk 是否命中问题主题（至少一个问题关键词出现在 chunk 内容中）。
+ *
+ * 这是 rag7 的 computeTopicAlignment 简化版：不做多字段拼接，
+ * 只检查 chunk 内容是否包含问题主题关键词。
+ */
+function isTopicAligned(match: RagSearchMatch, questionKeywords: string[]): boolean {
+  if (questionKeywords.length === 0) {
+    return true
+  }
+
+  const haystack = normalizeText([match.title, match.section, match.content].join('\n'))
+
+  return questionKeywords.some((keyword) => haystack.includes(keyword))
+}
+
 function scoreSectionBoost(
   match: RagSearchMatch,
   strategy: RagSearchQuestionStrategy,
   config: RagSearchRerankConfig,
+  topicHit: boolean,
 ): number {
   const section = normalizeText(match.section)
   const content = normalizeText(match.content)
@@ -89,12 +132,20 @@ function scoreSectionBoost(
 
   const summaryHints = config.summaryHintsBySection[section] ?? []
   const summaryMatched = summaryHints.some((hint) => content.includes(normalizeText(hint)))
+  const base = summaryMatched && typeof rule.summary === 'number' ? rule.summary : rule.default
 
-  if (summaryMatched && typeof rule.summary === 'number') {
-    return rule.summary
+  // 经验/项目类问题下，没命中主题时衰减 section boost，防止
+  // 技能描述块因为"AI"等泛化关键词被误排到前面。
+  // 来自 rag7 scoreSectionBoost 的设计思路。
+  if (
+    (strategy === 'experience' || strategy === 'project') &&
+    (section === 'projects' || section === 'work_experience' || section === 'experiences') &&
+    !topicHit
+  ) {
+    return base * config.thresholds.sectionBoostAttenuationWithoutTopicHit
   }
 
-  return rule.default
+  return base
 }
 
 function getMatchedHints(match: RagSearchMatch, hints: readonly string[]): string[] {
@@ -130,6 +181,8 @@ function buildNoiseReasons(input: {
   baseScore: number
   rerankScore: number
   leaderRerankScore: number
+  topicHit: boolean
+  questionKeywords: readonly string[]
   config: RagSearchRerankConfig
 }): string[] {
   const reasons: string[] = []
@@ -144,6 +197,10 @@ function buildNoiseReasons(input: {
     reasons.push('未命中问题主题 hints')
   }
 
+  if (!input.topicHit && input.questionKeywords.length > 0) {
+    reasons.push('与问题主题缺少直接文本关联')
+  }
+
   if (input.leaderRerankScore - input.rerankScore > input.config.thresholds.rerankGapNoiseThreshold) {
     reasons.push('与头部结果分差过大')
   }
@@ -154,6 +211,14 @@ function buildNoiseReasons(input: {
 
   if (input.rerankScore < input.config.thresholds.rerankScoreNoiseThreshold) {
     reasons.push('重排后分数偏低')
+  }
+
+  if (
+    (input.strategy === 'experience' || input.strategy === 'project') &&
+    input.matchedHints.length === 0 &&
+    !preferredSections.includes(section)
+  ) {
+    reasons.push('经验/项目类问题下缺少主题证据')
   }
 
   return reasons
@@ -174,11 +239,13 @@ export function rerankRagSearchMatches(
   config: RagSearchRerankConfig = DEFAULT_RAG_SEARCH_RERANK_CONFIG,
 ): RagSearchRerankDetail[] {
   const hints = getQuestionHints(query, config)
+  const questionKeywords = extractQuestionKeywords(query, config)
 
   const reranked = matches
     .map((match) => {
       const baseScore = Number(match.score || 0)
-      const sectionBoost = scoreSectionBoost(match, strategy, config)
+      const topicHit = isTopicAligned(match, questionKeywords)
+      const sectionBoost = scoreSectionBoost(match, strategy, config, topicHit)
       const matchedHints = getMatchedHints(match, hints)
       const keywordBoost = scoreKeywordBoost(matchedHints, config)
       const rerankScore = Number((baseScore + sectionBoost + keywordBoost).toFixed(6))
@@ -190,6 +257,7 @@ export function rerankRagSearchMatches(
         sectionBoost: Number(sectionBoost.toFixed(6)),
         keywordBoost: Number(keywordBoost.toFixed(6)),
         matchedHints,
+        topicHit,
       }
     })
     .sort((left, right) => right.rerankScore - left.rerankScore)
@@ -205,6 +273,8 @@ export function rerankRagSearchMatches(
       baseScore: item.baseScore,
       rerankScore: item.rerankScore,
       leaderRerankScore,
+      topicHit: item.topicHit,
+      questionKeywords,
       config,
     }),
   }))
