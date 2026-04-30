@@ -22,7 +22,7 @@
     "rag:chunk:compare": "ts-node -P tsconfig.json ./scripts/compare-user-doc-chunking.ts",
     "rag:retrieval:compare": "ts-node -P tsconfig.json ./scripts/compare-user-doc-retrieval.ts",
     "rag:milvus:verify": "ts-node -P tsconfig.json ./scripts/verify-rag-milvus-integration.ts",
-    "rag:import:resume": "node ./scripts/import-resume-chunks.mjs",
+    "rag:import:resume": "python3 ./scripts/import-resume-chunks.py",
     "lint": "oxlint --config ../../.oxlintrc.json --ignore-path ../../.eslintignore .",
     "lint:eslint": "eslint \"{src,test}/**/*.ts\"",
     "typecheck": "tsc --noEmit -p tsconfig.build.json",
