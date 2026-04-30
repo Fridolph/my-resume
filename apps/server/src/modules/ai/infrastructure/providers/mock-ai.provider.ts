@@ -7,7 +7,7 @@ import {
   GenerateTextResult,
 } from '../../domain/ports/ai-provider.interface'
 
-function buildMockEmbedding(text: string, dimensions = 24): number[] {
+function buildMockEmbedding(text: string, dimensions = 1536): number[] {
   const vector = Array.from({ length: dimensions }, () => 0)
   const normalized = text.trim().toLowerCase()
 
