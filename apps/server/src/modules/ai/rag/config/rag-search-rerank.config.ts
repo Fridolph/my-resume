@@ -20,6 +20,7 @@ export interface RagSearchRerankThresholdConfig {
   rerankGapNoiseThreshold: number
   rawScoreNoiseThreshold: number
   rerankScoreNoiseThreshold: number
+  sectionBoostAttenuationWithoutTopicHit: number
 }
 
 /**
@@ -111,5 +112,6 @@ export const DEFAULT_RAG_SEARCH_RERANK_CONFIG: RagSearchRerankConfig = {
     rerankGapNoiseThreshold: 0.14,
     rawScoreNoiseThreshold: 0.48,
     rerankScoreNoiseThreshold: 0.6,
+    sectionBoostAttenuationWithoutTopicHit: 0.35,
   },
 }

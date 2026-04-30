@@ -112,4 +112,40 @@ describe('rag search rerank', () => {
 
     expect(topMatches.map((item) => item.id)).toEqual(['skills-1', 'project-1'])
   })
+
+  it('should attenuate section boost when experience query has no topic hit on projects chunk', () => {
+    // 经验类问题下，projects chunk 不含 AI/Agent 关键词时，section boost 应衰减
+    const mismatchedProject: RagSearchMatch = {
+      id: 'project-no-ai',
+      title: '某内部工具项目',
+      section: 'projects',
+      content: '主导公司内部 CRM 系统的前端重构与性能优化',
+      score: 0.6,
+    }
+
+    const skillChunk: RagSearchMatch = {
+      id: 'skills-ai',
+      title: 'AI 全栈技能',
+      section: 'skills',
+      content: '具备 AI Agent 开发经验，熟悉多 Agent 工作流编排与流式 SSE 推送',
+      score: 0.6,
+    }
+
+    const reranked = rerankRagSearchMatches(
+      [mismatchedProject, skillChunk],
+      '这个候选人有哪些 AI Agent 开发相关经验？',
+    )
+
+    const projectResult = reranked.find((item) => item.match.id === 'project-no-ai')
+    const skillsResult = reranked.find((item) => item.match.id === 'skills-ai')
+
+    expect(projectResult?.topicHit).toBe(false)
+    expect(skillsResult?.topicHit).toBe(true)
+    // project boost 衰减后应低于 0.1（原值 0.1 × 0.35 = 0.035）
+    expect(projectResult!.sectionBoost).toBeLessThan(0.1)
+    expect(projectResult!.sectionBoost).toBeGreaterThan(0)
+    expect(projectResult?.noiseReasons).toContain('与问题主题缺少直接文本关联')
+    // skills 虽被 section 惩罚(-0.02)但命中主题 + keyword hit，最终排名靠前
+    expect(reranked[0]?.match.id).toBe('skills-ai')
+  })
 })
