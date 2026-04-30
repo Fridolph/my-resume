@@ -24,6 +24,28 @@ export interface RagSearchRerankThresholdConfig {
 }
 
 /**
+ * 单策略下的选择配置（证据分层阈值）。
+ */
+export interface RagSearchSelectionConfig {
+  minFinalCount: number
+  maxPrimaryCount: number
+  maxPreferredSupportCount: number
+  primaryMinRerankScore: number
+  supportMinRerankScore: number
+  hardDropMinNoiseReasons: number
+  reserveMinRerankScore: number
+}
+
+/**
+ * 单策略下的精确度配置。
+ */
+export interface RagSearchPrecisionConfig {
+  primaryMinRerankScore: number
+  supportMinRerankScore: number
+  hardDropMinNoiseReasons: number
+}
+
+/**
  * RAG 重排配置。
  */
 export interface RagSearchRerankConfig {
@@ -37,6 +59,7 @@ export interface RagSearchRerankConfig {
   >
   summaryHintsBySection: Record<string, string[]>
   thresholds: RagSearchRerankThresholdConfig
+  selection: Record<RagSearchRerankStrategy, RagSearchSelectionConfig>
 }
 
 /**
@@ -113,5 +136,43 @@ export const DEFAULT_RAG_SEARCH_RERANK_CONFIG: RagSearchRerankConfig = {
     rawScoreNoiseThreshold: 0.48,
     rerankScoreNoiseThreshold: 0.6,
     sectionBoostAttenuationWithoutTopicHit: 0.35,
+  },
+  selection: {
+    experience: {
+      minFinalCount: 6,
+      maxPrimaryCount: 4,
+      maxPreferredSupportCount: 2,
+      primaryMinRerankScore: 0.66,
+      supportMinRerankScore: 0.61,
+      hardDropMinNoiseReasons: 4,
+      reserveMinRerankScore: 0.58,
+    },
+    project: {
+      minFinalCount: 6,
+      maxPrimaryCount: 3,
+      maxPreferredSupportCount: 2,
+      primaryMinRerankScore: 0.66,
+      supportMinRerankScore: 0.61,
+      hardDropMinNoiseReasons: 4,
+      reserveMinRerankScore: 0.58,
+    },
+    skill: {
+      minFinalCount: 5,
+      maxPrimaryCount: 3,
+      maxPreferredSupportCount: 2,
+      primaryMinRerankScore: 0.66,
+      supportMinRerankScore: 0.61,
+      hardDropMinNoiseReasons: 4,
+      reserveMinRerankScore: 0.58,
+    },
+    general: {
+      minFinalCount: 5,
+      maxPrimaryCount: 4,
+      maxPreferredSupportCount: 3,
+      primaryMinRerankScore: 0.5,
+      supportMinRerankScore: 0.45,
+      hardDropMinNoiseReasons: 5,
+      reserveMinRerankScore: 0.35,
+    },
   },
 }

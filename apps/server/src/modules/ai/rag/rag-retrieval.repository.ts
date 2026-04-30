@@ -268,14 +268,14 @@ export class RagRetrievalRepository {
   }
 
   /**
-   * 查询所有 user_docs 类型的 chunk 及其关联文档信息。
+   * 查询所有 chunk（不限 source_type）及其关联文档信息。
    *
-   * 用于本地搜索模式：不依赖 Milvus，直接从 SQLite 读取 chunk 和预存的
-   * embedding 向量，在应用层计算余弦相似度。
+   * 替代原先仅查 user_docs 的 listUserDocChunksWithDocuments，
+   * 让本地搜索覆盖 resume_core、user_docs 等全部来源。
    *
-   * @returns chunk 列表（含文档级元数据，按 chunkIndex 排序以保证稳定顺序）
+   * @returns chunk 列表（含文档级元数据，按 chunkIndex 排序）
    */
-  async listUserDocChunksWithDocuments() {
+  async listAllChunksWithDocuments() {
     return this.database
       .select({
         chunkId: ragChunks.id,
@@ -285,13 +285,20 @@ export class RagRetrievalRepository {
         content: ragChunks.content,
         embeddingJson: ragChunks.embeddingJson,
         metadataJson: ragChunks.metadataJson,
+        documentSourceType: ragDocuments.sourceType,
         documentSourceScope: ragDocuments.sourceScope,
         documentTitle: ragDocuments.title,
         documentSourceVersion: ragDocuments.sourceVersion,
       })
       .from(ragChunks)
       .innerJoin(ragDocuments, eq(ragChunks.documentId, ragDocuments.id))
-      .where(eq(ragDocuments.sourceType, 'user_docs'))
       .orderBy(ragChunks.chunkIndex)
+  }
+
+  /**
+   * @deprecated 使用 listAllChunksWithDocuments 代替，后者覆盖全部 source_type
+   */
+  async listUserDocChunksWithDocuments() {
+    return this.listAllChunksWithDocuments()
   }
 }
