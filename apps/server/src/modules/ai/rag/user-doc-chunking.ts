@@ -75,15 +75,15 @@ export interface UserDocChunkingSummary {
   redundancyRatio: number
 }
 
+import { normalizeExtractedText } from '../application/services/file-extraction.service'
+
 /**
  * 规范化原始文本，保证切块输入稳定。
  *
  * @param text 原始文本
  * @returns 规范化后的文本
  */
-export function normalizeUserDocText(text: string): string {
-  return text.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim()
-}
+export const normalizeUserDocText = normalizeExtractedText
 
 /**
  * 将提取后的文本按固定窗口切块，并保留 overlap。
