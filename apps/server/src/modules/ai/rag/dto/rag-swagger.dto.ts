@@ -142,6 +142,22 @@ export class RagUserDocIngestBodyDto {
     example: 'balanced',
   })
   chunkingProfile?: 'balanced' | 'contextual'
+
+  @ApiPropertyOptional({
+    description: '自定义切片大小（字符），优先级高于 profile 默认值',
+    example: 1000,
+    maximum: 6666,
+    minimum: 4,
+  })
+  chunkSize?: number
+
+  @ApiPropertyOptional({
+    description: '自定义切片重叠（字符），必须小于 chunkSize',
+    example: 100,
+    maximum: 300,
+    minimum: 0,
+  })
+  chunkOverlap?: number
 }
 
 export class RagUserDocIngestResultDto {

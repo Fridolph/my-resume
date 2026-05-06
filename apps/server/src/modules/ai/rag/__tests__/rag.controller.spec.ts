@@ -51,6 +51,8 @@ describe('RagController', () => {
     const result = await controller.ingestUserDoc(file, {
       scope: 'published',
       chunkingProfile: 'contextual',
+      chunkSize: 800,
+      chunkOverlap: 120,
     })
 
     expect(vi.mocked(userDocsIngestionService.ingest)).toHaveBeenCalledWith({
@@ -60,6 +62,8 @@ describe('RagController', () => {
       size: 3,
       sourceScope: 'published',
       chunkingProfile: 'contextual',
+      chunkSize: 800,
+      chunkOverlap: 120,
     })
     expect(result).toMatchObject({
       sourceScope: 'published',
@@ -120,6 +124,51 @@ describe('RagController', () => {
         chunkingProfile: 'aggressive' as never,
       }),
     ).toThrow('Unsupported ingest chunkingProfile: aggressive')
+  })
+
+  it('should reject invalid user_docs chunking numbers', async () => {
+    const controller = new RagController(
+      ragService as never,
+      resumeRagSyncService as never,
+      userDocsIngestionService as never,
+    )
+    const file = {
+      buffer: Buffer.from('doc'),
+      originalname: 'rag-notes.md',
+      mimetype: 'text/markdown',
+      size: 3,
+    } as Express.Multer.File
+
+    expect(() =>
+      controller.ingestUserDoc(file, {
+        chunkSize: 3,
+      }),
+    ).toThrow('chunkSize must be between 4 and 6666')
+
+    expect(() =>
+      controller.ingestUserDoc(file, {
+        chunkSize: 6667,
+      }),
+    ).toThrow('chunkSize must be between 4 and 6666')
+
+    expect(() =>
+      controller.ingestUserDoc(file, {
+        chunkSize: 80,
+        chunkOverlap: 80,
+      }),
+    ).toThrow('chunkOverlap must be less than chunkSize')
+
+    expect(() =>
+      controller.ingestUserDoc(file, {
+        chunkOverlap: 301,
+      }),
+    ).toThrow('chunkOverlap must be between 0 and 300')
+
+    expect(() =>
+      controller.ingestUserDoc(file, {
+        chunkSize: '80.5' as never,
+      }),
+    ).toThrow('chunkSize must be an integer')
   })
 
   it('should pass search quality and routing options to rag service', async () => {

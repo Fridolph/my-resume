@@ -3,19 +3,19 @@
 import { useRequest } from 'alova/client'
 import { Accordion, Button, Form, Input } from '@heroui/react'
 import { formatFileSize } from '@my-resume/utils'
-import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { adminPrimaryButtonClass } from '@core/button-styles'
+import {
+  AiTaskStatusChip,
+  formatAiTaskElapsed,
+  useAiTaskProgress,
+} from '../../../_shared/components/ai-task-progress'
 
 import {
-  createFetchAiResumeImportJobMethod,
   createRecognizeAiResumeImportMethod,
-  streamAiResumeImportJob,
 } from '../services/ai-workbench-api'
-import type { AiResumeImportJob } from '../types/ai-workbench.types'
-
-const ACTIVE_RESUME_IMPORT_JOB_STORAGE_KEY = 'my-resume:ai:resume-import:active-job-id'
+import type { AiResumeImportJob, AiResumeImportJobStep } from '../types/ai-workbench.types'
 
 interface ResumeImportPanelProps {
   /** API 服务根地址。 */
@@ -24,16 +24,10 @@ interface ResumeImportPanelProps {
   accessToken: string
   /** 当前角色是否允许上传并触发简历导入识别。 */
   canUpload: boolean
-  /** 测试注入点：构造读取 Job 状态的 API method。 */
-  createFetchResumeImportJobMethod?: typeof createFetchAiResumeImportJobMethod
   /** 测试注入点：构造启动识别任务的 API method。 */
   createRecognizeResumeImportMethod?: typeof createRecognizeAiResumeImportMethod
-  /** 测试注入点：订阅 Job SSE 事件。 */
-  streamResumeImportJobMethod?: typeof streamAiResumeImportJob
   /** 识别完成后的回调，通常用于记录或跳转前的扩展。 */
   onRecognized?: (job: AiResumeImportJob) => void
-  /** 本地已耗时计时刷新间隔。 */
-  elapsedTickMs?: number
   /** 兼容旧测试参数：SSE 版不再自动轮询。 */
   initialPollIntervalMs?: number
   /** 兼容旧测试参数：SSE 版不再自动轮询。 */
@@ -42,36 +36,12 @@ interface ResumeImportPanelProps {
   slowPollIntervalMs?: number
 }
 
-function formatElapsed(ms: number): string {
-  if (!Number.isFinite(ms) || ms < 1000) {
-    return '0 秒'
-  }
-
-  return `${Math.floor(ms / 1000)} 秒`
-}
-
-function resolveFiniteElapsedMs(value: unknown, fallback = 0): number {
-  return typeof value === 'number' && Number.isFinite(value) && value >= 0
-    ? value
-    : fallback
-}
-
-function resolveTimestampMs(value: unknown): number | null {
-  if (typeof value !== 'string' || !value.trim()) {
-    return null
-  }
-
-  const timestamp = new Date(value).getTime()
-
-  return Number.isFinite(timestamp) ? timestamp : null
-}
-
 function formatHeartbeatDistance(timestamp: string | null): string {
   if (!timestamp) {
     return '正在建立实时连接'
   }
 
-  return `实时连接正常，最近心跳 ${formatElapsed(
+  return `实时连接正常，最近心跳 ${formatAiTaskElapsed(
     Math.max(0, Date.now() - new Date(timestamp).getTime()),
   )}前`
 }
@@ -90,16 +60,6 @@ function normalizeClientError(error: unknown): string {
   return message || '简历导入识别失败，请稍后重试'
 }
 
-function statusLabel(status: AiResumeImportJob['status']): string {
-  const labels: Record<AiResumeImportJob['status'], string> = {
-    running: '识别中',
-    completed: '已完成',
-    failed: '失败',
-  }
-
-  return labels[status]
-}
-
 function stepStatusLabel(status: AiResumeImportJob['steps'][number]['status']): string {
   const labels: Record<AiResumeImportJob['steps'][number]['status'], string> = {
     pending: '等待中',
@@ -109,17 +69,6 @@ function stepStatusLabel(status: AiResumeImportJob['steps'][number]['status']): 
   }
 
   return labels[status]
-}
-
-function statusDotClass(status: AiResumeImportJob['steps'][number]['status']): string {
-  const classMap: Record<AiResumeImportJob['steps'][number]['status'], string> = {
-    pending: 'bg-zinc-300 dark:bg-zinc-700',
-    running: 'bg-blue-500 shadow-[0_0_0_6px_rgba(59,130,246,0.12)]',
-    completed: 'bg-emerald-500',
-    failed: 'bg-red-500 shadow-[0_0_0_6px_rgba(239,68,68,0.12)]',
-  }
-
-  return classMap[status]
 }
 
 function runningStepHint(stage: AiResumeImportJob['currentStage']): string {
@@ -138,77 +87,75 @@ function runningStepHint(stage: AiResumeImportJob['currentStage']): string {
   return '任务正在推进中，实时事件会在阶段变化时自动更新。'
 }
 
-function resolveAutoExpandedStepKeys(job: AiResumeImportJob | null): Set<string> {
-  if (!job) {
-    return new Set()
-  }
-
-  return new Set(
-    resolveJobSteps(job)
-      .filter((step) => step.status === 'running' || step.status === 'failed')
-      .map((step) => step.stage),
-  )
-}
-
 function resolveJobSteps(job: AiResumeImportJob | null): AiResumeImportJob['steps'] {
   return Array.isArray(job?.steps) ? job.steps : []
 }
 
-function readActiveResumeImportJobId(): string | null {
-  if (typeof window === 'undefined') {
-    return null
+const PERCEIVED_STEP_INTERVAL_MS = 5_000
+const PERCEIVED_STEP_DURATION_MS = 30_000
+
+export function buildPerceivedResumeImportSteps(
+  job: AiResumeImportJob | null,
+  elapsedMs: number,
+): AiResumeImportJobStep[] {
+  const steps = resolveJobSteps(job)
+
+  if (!job || job.status !== 'running' || job.currentStage !== 'ai_generating') {
+    return steps
   }
 
-  return window.localStorage.getItem(ACTIVE_RESUME_IMPORT_JOB_STORAGE_KEY)
-}
-
-function writeActiveResumeImportJobId(jobId: string) {
-  if (typeof window === 'undefined') {
-    return
+  if (elapsedMs >= PERCEIVED_STEP_DURATION_MS) {
+    return steps
   }
 
-  window.localStorage.setItem(ACTIVE_RESUME_IMPORT_JOB_STORAGE_KEY, jobId)
-}
+  const aiGeneratingIndex = steps.findIndex((step) => step.stage === 'ai_generating')
 
-function clearActiveResumeImportJobId(jobId?: string) {
-  if (typeof window === 'undefined') {
-    return
+  if (aiGeneratingIndex <= 0) {
+    return steps
   }
 
-  const currentJobId = readActiveResumeImportJobId()
+  const visibleCompletedCount = Math.min(
+    aiGeneratingIndex,
+    Math.max(1, Math.floor(elapsedMs / PERCEIVED_STEP_INTERVAL_MS) + 1),
+  )
 
-  if (jobId && currentJobId && currentJobId !== jobId) {
-    return
-  }
+  return steps.map((step, index) => {
+    if (index < visibleCompletedCount || step.status === 'failed') {
+      return step
+    }
 
-  window.localStorage.removeItem(ACTIVE_RESUME_IMPORT_JOB_STORAGE_KEY)
+    return {
+      stage: step.stage,
+      label: step.label,
+      status: 'pending',
+    }
+  })
 }
 
 export function ResumeImportPanel({
   apiBaseUrl,
   accessToken,
   canUpload,
-  createFetchResumeImportJobMethod = createFetchAiResumeImportJobMethod,
   createRecognizeResumeImportMethod = createRecognizeAiResumeImportMethod,
-  streamResumeImportJobMethod = streamAiResumeImportJob,
   onRecognized,
-  elapsedTickMs = 1000,
 }: ResumeImportPanelProps) {
-  const router = useRouter()
+  const {
+    resumeImportJob: job,
+    displayElapsedMs,
+    lastHeartbeatAt,
+    progressHint,
+    connectionError,
+    restoringJobId,
+    registerResumeImportJob,
+    refreshResumeImportJob,
+  } = useAiTaskProgress()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [job, setJob] = useState<AiResumeImportJob | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [displayElapsedMs, setDisplayElapsedMs] = useState(0)
   const [refreshingJob, setRefreshingJob] = useState(false)
-  const [lastHeartbeatAt, setLastHeartbeatAt] = useState<string | null>(null)
-  const [progressHint, setProgressHint] = useState<string | null>(null)
-  const [recoveringJobId, setRecoveringJobId] = useState<string | null>(null)
-  const [restorableJobId, setRestorableJobId] = useState<string | null>(null)
   const [manualExpandedStepKeys, setManualExpandedStepKeys] = useState<Set<string>>(
     new Set(),
   )
   const completedJobIdRef = useRef<string | null>(null)
-  const restoredJobIdRef = useRef<string | null>(null)
   const { loading: recognizing, send: triggerRecognize } = useRequest(
     (file: File) =>
       createRecognizeResumeImportMethod({
@@ -221,97 +168,6 @@ export function ResumeImportPanel({
       immediate: false,
     },
   )
-  const { send: fetchJob } = useRequest(
-    (jobId: string) =>
-      createFetchResumeImportJobMethod({
-        apiBaseUrl,
-        accessToken,
-        jobId,
-      }),
-    {
-      force: true,
-      immediate: false,
-    },
-  )
-  const fetchJobRef = useRef(fetchJob)
-  const streamJobRef = useRef(streamResumeImportJobMethod)
-
-  function handleJobUpdate(nextJob: AiResumeImportJob) {
-    setJob(nextJob)
-
-    if (nextJob.status === 'running') {
-      writeActiveResumeImportJobId(nextJob.jobId)
-      setRestorableJobId(null)
-    } else {
-      clearActiveResumeImportJobId(nextJob.jobId)
-      setRestorableJobId(null)
-      setDisplayElapsedMs((current) =>
-        resolveFiniteElapsedMs(nextJob.elapsedMs, current),
-      )
-      setLastHeartbeatAt(null)
-      setProgressHint(null)
-    }
-
-    if (nextJob.status === 'completed' && nextJob.resultId) {
-      if (completedJobIdRef.current === nextJob.jobId) {
-        return
-      }
-
-      completedJobIdRef.current = nextJob.jobId
-      onRecognized?.(nextJob)
-      router.push(`/dashboard/ai/resume-import/results/${nextJob.resultId}`)
-    }
-  }
-  const handleJobUpdateRef = useRef(handleJobUpdate)
-
-  useEffect(() => {
-    fetchJobRef.current = fetchJob
-    streamJobRef.current = streamResumeImportJobMethod
-    handleJobUpdateRef.current = handleJobUpdate
-  })
-
-  async function recoverActiveJob(activeJobId: string) {
-    setRecoveringJobId(activeJobId)
-    setErrorMessage(null)
-
-    try {
-      const nextJob = await fetchJobRef.current(activeJobId)
-
-      setRestorableJobId(null)
-      handleJobUpdateRef.current(nextJob)
-    } catch (error: unknown) {
-      const message = normalizeClientError(error)
-      const shouldForgetJob = /404|not found|不存在|未找到/i.test(message)
-
-      if (shouldForgetJob) {
-        clearActiveResumeImportJobId(activeJobId)
-        setRestorableJobId(null)
-      } else {
-        setRestorableJobId(activeJobId)
-      }
-
-      if (message) {
-        setErrorMessage(`未能恢复上一次识别任务：${message}`)
-      }
-    } finally {
-      setRecoveringJobId(null)
-    }
-  }
-
-  useEffect(() => {
-    if (job) {
-      return
-    }
-
-    const activeJobId = readActiveResumeImportJobId()
-
-    if (!activeJobId || restoredJobIdRef.current === activeJobId) {
-      return
-    }
-
-    restoredJobIdRef.current = activeJobId
-    void recoverActiveJob(activeJobId)
-  }, [accessToken, apiBaseUrl, job])
 
   async function refreshJobStatus() {
     if (!job) {
@@ -322,8 +178,7 @@ export function ResumeImportPanel({
     setErrorMessage(null)
 
     try {
-      const nextJob = await fetchJobRef.current(job.jobId)
-      handleJobUpdate(nextJob)
+      await refreshResumeImportJob()
     } catch (error) {
       setErrorMessage(normalizeClientError(error))
     } finally {
@@ -331,83 +186,17 @@ export function ResumeImportPanel({
     }
   }
 
-  useEffect(() => {
-    if (!job) {
-      setDisplayElapsedMs(0)
-      return
-    }
-
-    if (job.status !== 'running') {
-      setDisplayElapsedMs((current) => resolveFiniteElapsedMs(job.elapsedMs, current))
-      return
-    }
-
-    const createdAtTime = resolveTimestampMs(job.createdAt)
-    const fallbackElapsedMs = resolveFiniteElapsedMs(job.elapsedMs)
-
-    if (createdAtTime === null) {
-      setDisplayElapsedMs(fallbackElapsedMs)
-      return
-    }
-
-    const updateElapsed = () => {
-      setDisplayElapsedMs(Math.max(0, Date.now() - createdAtTime))
-    }
-
-    updateElapsed()
-    const intervalId = window.setInterval(updateElapsed, elapsedTickMs)
-
-    return () => window.clearInterval(intervalId)
-  }, [elapsedTickMs, job])
-
-  useEffect(() => {
-    if (!job || job.status !== 'running') {
-      return
-    }
-
-    const abortController = new AbortController()
-
-    void streamJobRef
-      .current(
-        {
-          apiBaseUrl,
-          accessToken,
-          jobId: job.jobId,
-          signal: abortController.signal,
-        },
-        {
-          onSnapshot: handleJobUpdateRef.current,
-          onCompleted: handleJobUpdateRef.current,
-          onFailed: handleJobUpdateRef.current,
-          onHeartbeat: (heartbeat) => {
-            setLastHeartbeatAt(heartbeat.timestamp)
-          },
-          onProgressHint: (hint) => {
-            setProgressHint(hint.message)
-          },
-        },
-      )
-      .catch((error: unknown) => {
-        if (abortController.signal.aborted) {
-          return
-        }
-
-        const message = normalizeClientError(error)
-
-        if (message) {
-          setErrorMessage(`实时连接中断，可手动刷新状态：${message}`)
-        }
-      })
-
-    return () => abortController.abort()
-  }, [accessToken, apiBaseUrl, job?.jobId, job?.status])
-
+  const jobSteps = buildPerceivedResumeImportSteps(job, displayElapsedMs)
   const expandedStepKeys = useMemo(() => {
-    const autoExpandedKeys = resolveAutoExpandedStepKeys(job)
+    const autoExpandedKeys = new Set(
+      jobSteps
+        .filter((step) => step.status === 'running' || step.status === 'failed')
+        .map((step) => step.stage),
+    )
     const nextKeys = new Set<string>(autoExpandedKeys)
 
     for (const key of manualExpandedStepKeys) {
-      const step = resolveJobSteps(job).find((item) => item.stage === key)
+      const step = jobSteps.find((item) => item.stage === key)
 
       if (step && step.status !== 'pending') {
         nextKeys.add(key)
@@ -415,8 +204,24 @@ export function ResumeImportPanel({
     }
 
     return nextKeys
-  }, [job, manualExpandedStepKeys])
-  const jobSteps = resolveJobSteps(job)
+  }, [jobSteps, manualExpandedStepKeys])
+  const displayCurrentStep =
+    jobSteps.find((step) => step.status === 'running') ??
+    [...jobSteps].reverse().find((step) => step.status !== 'pending') ??
+    resolveJobSteps(job).find((step) => step.stage === job?.currentStage)
+
+  useEffect(() => {
+    if (job?.status !== 'completed') {
+      return
+    }
+
+    if (completedJobIdRef.current === job.jobId) {
+      return
+    }
+
+    completedJobIdRef.current = job.jobId
+    onRecognized?.(job)
+  }, [job, onRecognized])
 
   if (!canUpload) {
     return (
@@ -438,20 +243,14 @@ export function ResumeImportPanel({
     }
 
     setErrorMessage(null)
-    setJob(null)
-    setLastHeartbeatAt(null)
-    setProgressHint(null)
-    setRestorableJobId(null)
     setManualExpandedStepKeys(new Set())
     completedJobIdRef.current = null
 
     try {
       const nextJob = await triggerRecognize(selectedFile)
 
-      writeActiveResumeImportJobId(nextJob.jobId)
-      handleJobUpdate(nextJob)
+      registerResumeImportJob(nextJob)
     } catch (error) {
-      setJob(null)
       setErrorMessage(normalizeClientError(error))
     }
   }
@@ -469,16 +268,8 @@ export function ResumeImportPanel({
               const file = event.target.files?.[0] ?? null
               setSelectedFile(file)
               setErrorMessage(null)
-              setLastHeartbeatAt(null)
-              setProgressHint(null)
               setManualExpandedStepKeys(new Set())
-              if (job?.status !== 'running') {
-                setJob(null)
-                setRestorableJobId(null)
-                clearActiveResumeImportJobId()
-                completedJobIdRef.current = null
-                restoredJobIdRef.current = null
-              }
+              completedJobIdRef.current = null
             }}
             type="file"
             variant="secondary"
@@ -500,24 +291,9 @@ export function ResumeImportPanel({
 
         {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
 
-        {!job && recoveringJobId ? (
+        {!job && restoringJobId ? (
           <div className="dashboard-inline-note rounded-[20px] border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-300">
-            正在恢复上一次简历识别任务：{recoveringJobId}
-          </div>
-        ) : null}
-
-        {!job && restorableJobId && !recoveringJobId ? (
-          <div className="dashboard-inline-note rounded-[20px] border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-300">
-            检测到上一次未结束的识别任务：{restorableJobId}。如果服务端仍保留该
-            Job，可以继续查询并恢复实时进度。
-            <Button
-              className="mt-3"
-              onPress={() => void recoverActiveJob(restorableJobId)}
-              size="sm"
-              type="button"
-              variant="outline">
-              继续查询上一次任务
-            </Button>
+            正在恢复上一次简历识别任务：{restoringJobId}
           </div>
         ) : null}
 
@@ -540,32 +316,52 @@ export function ResumeImportPanel({
 
       {job ? (
         <div className="stack" data-testid="resume-import-job-panel">
-          {job.status === 'running' && job.currentStage === 'ai_generating' ? (
-            <div className="dashboard-inline-note rounded-[20px] border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-300">
-              模型正在通过单次调用生成候选草稿和输入治理报告，通常需要 3-5
-              分钟。你可以保持页面打开，完成后会自动跳转；
-              {formatHeartbeatDistance(lastHeartbeatAt)}。
-              {progressHint ? ` ${progressHint}。` : ''}
-            </div>
-          ) : null}
-
           <div className="grid gap-3 md:grid-cols-3">
-            <div className="status-box bg-white dark:bg-zinc-900">
-              <strong>任务状态</strong>
-              <span>{statusLabel(job.status)}</span>
+            <div className="rounded-[24px] border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+              <div className="flex items-center justify-between gap-3">
+                <strong className="text-sm text-zinc-500 dark:text-zinc-400">
+                  任务状态
+                </strong>
+                <AiTaskStatusChip status={job.status} />
+              </div>
+              <p className="mt-3 text-lg font-semibold text-zinc-950 dark:text-white">
+                {job.jobId}
+              </p>
             </div>
-            <div className="status-box bg-white dark:bg-zinc-900">
-              <strong>当前阶段</strong>
-              <span>
-                {jobSteps.find((step) => step.stage === job.currentStage)?.label ??
-                  job.currentStage}
-              </span>
+            <div className="rounded-[24px] border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+              <strong className="text-sm text-zinc-500 dark:text-zinc-400">
+                当前阶段
+              </strong>
+              <p className="mt-3 text-lg font-semibold text-zinc-950 dark:text-white">
+                {displayCurrentStep?.label ?? job.currentStage}
+              </p>
+              {progressHint ? (
+                <p className="mt-1 truncate text-sm text-blue-600 dark:text-blue-300">
+                  {progressHint}
+                </p>
+              ) : null}
             </div>
-            <div className="status-box bg-white dark:bg-zinc-900">
-              <strong>已耗时</strong>
-              <span>{formatElapsed(displayElapsedMs)}</span>
+            <div className="rounded-[24px] border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+              <strong className="text-sm text-zinc-500 dark:text-zinc-400">
+                已耗时
+              </strong>
+              <p
+                className={`mt-2 text-3xl font-semibold tabular-nums ${
+                  job.status === 'failed'
+                    ? 'text-red-600 dark:text-red-300'
+                    : job.status === 'completed'
+                      ? 'text-emerald-600 dark:text-emerald-300'
+                      : 'text-blue-600 dark:text-blue-300'
+                }`}>
+                {formatAiTaskElapsed(displayElapsedMs)}
+              </p>
+              <p className="mt-1 text-xs text-zinc-400">
+                {formatHeartbeatDistance(lastHeartbeatAt)}
+              </p>
             </div>
           </div>
+
+          {connectionError ? <p className="error-text">{connectionError}</p> : null}
 
           <div className="dashboard-entry-actions">
             <Button
@@ -593,32 +389,24 @@ export function ResumeImportPanel({
                 isDisabled={step.status === 'pending'}
                 key={step.stage}>
                 <Accordion.Heading>
-                  <Accordion.Trigger className="grid w-full grid-cols-[1rem_minmax(0,1fr)_1rem] items-center gap-3 py-3 text-left">
-                    <span className="relative flex size-3 items-center justify-center">
-                      {step.status === 'running' ? (
-                        <span className="absolute inline-flex size-3 animate-ping rounded-full bg-blue-400 opacity-35" />
-                      ) : null}
-                      <span
-                        className={`relative inline-flex size-2.5 rounded-full ${statusDotClass(
-                          step.status,
-                        )} ${step.status === 'running' ? 'animate-pulse' : ''}`}
-                      />
-                    </span>
-                    <span className="grid min-w-0 gap-1">
-                      <span className="font-semibold text-zinc-950 dark:text-white">
+                  <Accordion.Trigger className="grid w-full grid-cols-[minmax(0,1fr)_auto_1rem] items-center gap-3 py-3 text-left">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span className="truncate font-semibold text-zinc-950 dark:text-white">
                         {step.label}
                       </span>
-                      <span className="truncate text-sm text-zinc-500 dark:text-zinc-400">
-                        {stepStatusLabel(step.status)}
-                        {step.summary ? ` · ${step.summary}` : ''}
-                      </span>
+                      {step.summary ? (
+                        <span className="hidden min-w-0 truncate text-sm text-zinc-500 dark:text-zinc-400 md:inline">
+                          {step.summary}
+                        </span>
+                      ) : null}
                     </span>
+                    <AiTaskStatusChip status={step.status} />
                     <Accordion.Indicator className="size-4 text-zinc-400" />
                   </Accordion.Trigger>
                 </Accordion.Heading>
                 <Accordion.Panel>
-                  <Accordion.Body className="grid grid-cols-[1rem_minmax(0,1fr)_1rem] gap-3 pb-3 text-sm text-zinc-600 dark:text-zinc-300">
-                    <div className="col-start-2 grid gap-2">
+                  <Accordion.Body className="pb-3 text-sm text-zinc-600 dark:text-zinc-300">
+                    <div className="grid gap-2">
                       <span>{stepStatusLabel(step.status)}</span>
                       {step.status === 'running' ? (
                         <span className="text-blue-600 dark:text-blue-300">

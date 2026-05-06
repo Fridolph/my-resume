@@ -38,7 +38,10 @@ import {
   RagUserDocIngestResultDto,
 } from './dto/rag-swagger.dto'
 import { RagService } from './rag.service'
-import { UserDocsIngestionService } from './user-docs-ingestion.service'
+import {
+  resolveUserDocChunkingConfig,
+  UserDocsIngestionService,
+} from './user-docs-ingestion.service'
 
 @Controller('ai/rag')
 @UseGuards(JwtAuthGuard)
@@ -164,6 +167,18 @@ export class RagController {
           enum: ['balanced', 'contextual'],
           type: 'string',
         },
+        chunkSize: {
+          description: '自定义切片大小，范围 4-6666，优先级高于 profile',
+          maximum: 6666,
+          minimum: 4,
+          type: 'number',
+        },
+        chunkOverlap: {
+          description: '自定义重叠字符数，范围 0-300，且必须小于 chunkSize',
+          maximum: 300,
+          minimum: 0,
+          type: 'number',
+        },
       },
       required: ['file'],
       type: 'object',
@@ -203,6 +218,20 @@ export class RagController {
       )
     }
 
+    let chunkingConfig: { chunkSize: number; chunkOverlap: number }
+
+    try {
+      chunkingConfig = resolveUserDocChunkingConfig({
+        profile: body.chunkingProfile,
+        chunkSize: body.chunkSize,
+        chunkOverlap: body.chunkOverlap,
+      })
+    } catch (error) {
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Invalid user_docs chunking config',
+      )
+    }
+
     return this.userDocsIngestionService.ingest({
       buffer: file.buffer,
       originalname: file.originalname,
@@ -210,6 +239,8 @@ export class RagController {
       size: file.size,
       sourceScope,
       chunkingProfile: body.chunkingProfile,
+      chunkSize: chunkingConfig.chunkSize,
+      chunkOverlap: chunkingConfig.chunkOverlap,
     })
   }
 

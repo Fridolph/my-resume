@@ -18,12 +18,45 @@ export const DEFAULT_CHUNK_SIZE = 500
 export const DEFAULT_CHUNK_OVERLAP = 50
 
 /**
+ * user_docs 自定义切块大小下限（字符）。
+ *
+ * 说明：
+ * - 简历/资料结构化片段可能很短，允许小到 4 字符用于教学和实验；
+ * - 过小会增加 chunk 数量，Admin 会提示用户谨慎使用。
+ */
+export const MIN_CHUNK_SIZE = 4
+
+/**
+ * user_docs 自定义切块大小上限（字符）。
+ */
+export const MAX_CHUNK_SIZE = 6666
+
+/**
+ * user_docs 自定义重叠长度下限（字符）。
+ */
+export const MIN_CHUNK_OVERLAP = 0
+
+/**
+ * user_docs 自定义重叠长度上限（字符）。
+ */
+export const MAX_CHUNK_OVERLAP = 300
+
+/**
  * user_docs 切块策略定义。
  */
 export interface UserDocChunkingStrategy {
   label: string
   chunkSize: number
   chunkOverlap: number
+}
+
+/**
+ * 解析 user_docs 切块配置所需的输入。
+ */
+export interface ResolveUserDocChunkingConfigInput {
+  profile?: UserDocChunkingProfile
+  chunkSize?: unknown
+  chunkOverlap?: unknown
 }
 
 /**
@@ -190,4 +223,74 @@ export function resolveUserDocChunkingStrategy(
   profile: UserDocChunkingProfile = 'balanced',
 ): UserDocChunkingStrategy {
   return USER_DOC_CHUNKING_PROFILE_MAP[profile]
+}
+
+/**
+ * 解析一个可选的正整数切块参数。
+ *
+ * @param value 原始输入，可能来自 multipart form-data 字符串
+ * @param fieldName 字段名，用于生成可读错误
+ * @param min 允许下限
+ * @param max 允许上限
+ * @returns 解析后的整数，未传则返回 undefined
+ */
+export function parseOptionalUserDocChunkingNumber(
+  value: unknown,
+  fieldName: 'chunkSize' | 'chunkOverlap',
+  min: number,
+  max: number,
+): number | undefined {
+  if (value === undefined || value === null || value === '') {
+    return undefined
+  }
+
+  const parsed = typeof value === 'number' ? value : Number(value)
+
+  if (!Number.isInteger(parsed)) {
+    throw new Error(`${fieldName} must be an integer`)
+  }
+
+  if (parsed < min || parsed > max) {
+    throw new Error(`${fieldName} must be between ${min} and ${max}`)
+  }
+
+  return parsed
+}
+
+/**
+ * 解析最终生效的 user_docs 切块配置。
+ *
+ * profile 提供默认值；若传入 chunkSize/chunkOverlap，则以自定义值覆盖。
+ *
+ * @param input profile 与可选自定义参数
+ * @returns 最终用于切块和 metadata 记录的配置
+ */
+export function resolveUserDocChunkingConfig(
+  input: ResolveUserDocChunkingConfigInput = {},
+): UserDocChunkingStrategy {
+  const baseStrategy = resolveUserDocChunkingStrategy(input.profile)
+  const chunkSize =
+    parseOptionalUserDocChunkingNumber(
+      input.chunkSize,
+      'chunkSize',
+      MIN_CHUNK_SIZE,
+      MAX_CHUNK_SIZE,
+    ) ?? baseStrategy.chunkSize
+  const chunkOverlap =
+    parseOptionalUserDocChunkingNumber(
+      input.chunkOverlap,
+      'chunkOverlap',
+      MIN_CHUNK_OVERLAP,
+      MAX_CHUNK_OVERLAP,
+    ) ?? baseStrategy.chunkOverlap
+
+  if (chunkOverlap >= chunkSize) {
+    throw new Error('chunkOverlap must be less than chunkSize')
+  }
+
+  return {
+    label: `${chunkSize}/${chunkOverlap}`,
+    chunkSize,
+    chunkOverlap,
+  }
 }

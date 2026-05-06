@@ -96,6 +96,7 @@ export type {
   FetchAiUsageRecordDetailInput,
   FileExtractionResult,
   IngestRagUserDocInput,
+  RagUserDocChunkingProfile,
   RagUserDocIngestResult,
   RagUserDocIngestScope,
   RecognizeAiResumeImportInput,
@@ -562,6 +563,18 @@ export function createIngestRagUserDocMethod(input: IngestRagUserDocInput) {
 
   if (input.scope) {
     formData.append('scope', input.scope)
+  }
+
+  if (input.chunkingProfile) {
+    formData.append('chunkingProfile', input.chunkingProfile)
+  }
+
+  if (input.chunkSize !== undefined) {
+    formData.append('chunkSize', String(input.chunkSize))
+  }
+
+  if (input.chunkOverlap !== undefined) {
+    formData.append('chunkOverlap', String(input.chunkOverlap))
   }
 
   return Alova.createMethod<RagUserDocIngestResult>({
