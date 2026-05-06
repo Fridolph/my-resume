@@ -207,6 +207,56 @@ describe('UserDocsIngestionService', () => {
     expect(result.chunkCount).toBe(3)
   })
 
+  it('should use custom chunking numbers when provided', async () => {
+    const { service, fileExtractionService, aiService, ragRetrievalRepository, ragVectorStore } =
+      createHarness()
+
+    vi.mocked(fileExtractionService.extractText).mockResolvedValue({
+      fileName: 'structured-resume.md',
+      fileType: 'md',
+      mimeType: 'text/markdown',
+      text: 'A'.repeat(240),
+      charCount: 240,
+    })
+    vi.mocked(aiService.embedTexts).mockImplementation(async ({ texts }) => ({
+      provider: 'mock',
+      model: 'mock-resume-advisor-embedding',
+      embeddings: texts.map(() => [0.1, 0.2]),
+      raw: null,
+    }))
+
+    const result = await service.ingest({
+      buffer: Buffer.from('fake'),
+      originalname: 'structured-resume.md',
+      mimetype: 'text/markdown',
+      size: 4,
+      chunkingProfile: 'balanced',
+      chunkSize: 80,
+      chunkOverlap: 10,
+    })
+
+    expect(result.chunkingProfile).toBe('balanced')
+    expect(result.chunkSize).toBe(80)
+    expect(result.chunkOverlap).toBe(10)
+    expect(result.chunkCount).toBe(4)
+    expect(
+      vi.mocked(ragRetrievalRepository.upsertDocument).mock.calls[0]?.[0],
+    ).toMatchObject({
+      metadataJson: {
+        chunkingProfile: 'balanced',
+        chunkSize: 80,
+        chunkOverlap: 10,
+      },
+    })
+    expect(vi.mocked(ragVectorStore.upsertChunks).mock.calls[0]?.[0][0]).toMatchObject({
+      metadataJson: {
+        chunkingProfile: 'balanced',
+        chunkSize: 80,
+        chunkOverlap: 10,
+      },
+    })
+  })
+
   it('should mark run failed when embedding throws', async () => {
     const { service, fileExtractionService, aiService, ragRetrievalRepository, ragVectorStore } =
       createHarness()

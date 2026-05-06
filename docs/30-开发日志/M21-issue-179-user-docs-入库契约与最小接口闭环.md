@@ -475,3 +475,86 @@ pnpm --filter @my-resume/server rag:chunk:compare \
 - 测试通过：
   - `pnpm --filter @my-resume/server exec vitest run --config ./vitest.config.mts src/modules/ai/rag/__tests__/rag-search-context-builder.spec.ts src/modules/ai/rag/__tests__/rag-search-rerank.spec.ts src/modules/ai/rag/__tests__/rag.service.spec.ts`
   - `pnpm --filter @my-resume/server typecheck`
+
+### Step 4-12：#179 状态对齐与验收收口
+
+- 背景：
+  - M22 简历导入识别临时插队后，重新回到 M21 / #179。
+  - `development` 已同步 `main@4e7edad`，并从 `development` 开出 `fys-dev/feat-m21-issue-179-status-acceptance`。
+  - GitHub #179 的 canonical 范围是 `user_docs` 上传资料入库，不是早期本地草稿里提到的 JD 匹配分析。
+- 对齐结论：
+  - Server 侧已具备 `POST /api/ai/rag/ingest/user-doc`、`UserDocsIngestionService`、`balanced/contextual` 切片 profile、metadata 追溯、检索态落库与 vector store 写入。
+  - Admin 已有最小上传面板，但缺少组件测试，且 UI/API client 未完整展示和透传 server 已返回的 `sourceVersion/chunkingProfile/chunkSize/chunkOverlap`。
+- 本次补齐：
+  - `packages/api-client/src/types/ai.types.ts`
+    - 新增 `RagUserDocChunkingProfile`。
+    - `IngestRagUserDocInput` 支持 `chunkingProfile`。
+    - `RagUserDocIngestResult` 补齐 `chunkingProfile/chunkSize/chunkOverlap` 字段注释。
+  - `packages/api-client/src/ai.ts`
+    - `createIngestRagUserDocMethod` 透传 `chunkingProfile` 到 multipart form data。
+  - `apps/admin/app/[locale]/dashboard/ai/_ai/types/ai-file.types.ts`
+    - 同步 admin 侧 user_docs 入库类型与字段注释。
+  - `apps/admin/app/[locale]/dashboard/ai/_ai/components/user-doc-ingestion-panel.tsx`
+    - 增加切片策略选择。
+    - 成功摘要展示 `sourceVersion`、实际切片策略和切片配置。
+  - `apps/admin/app/[locale]/dashboard/ai/_ai/__tests__/user-doc-ingestion-panel.spec.tsx`
+    - 新增只读态、成功入库、失败文案组件测试。
+  - `apps/admin/app/[locale]/dashboard/ai/_ai/__tests__/ai-file-api.spec.ts`
+    - 补充 `chunkingProfile` form data 断言。
+  - `packages/api-client/src/ai.spec.ts`
+    - 补充 `chunkingProfile` form data 与返回字段断言。
+- Review 记录：
+  - 这次只修 #179 验收缺口，不把 #180 citations API 提前带入。
+  - `@my-resume/api-client` 的 package export 在 admin 测试中走 `dist/index.js`，本地直接跑 admin 测试前需要先构建 api-client，避免测试读取旧 dist。后续如要减少这种摩擦，可单独开 chore 调整 Vitest alias 到源码入口。
+- 验证：
+  - `pnpm --filter @my-resume/server test -- src/modules/ai/rag/__tests__/user-docs-ingestion.service.spec.ts src/modules/ai/rag/__tests__/rag.controller.spec.ts src/modules/ai/rag/__tests__/rag.service.spec.ts`
+    - 当前 server vitest 配置会顺带执行完整 server 套件，结果：55 files / 220 tests passed。
+  - `pnpm --filter @my-resume/api-client build`
+  - `pnpm --filter @my-resume/api-client test -- src/ai.spec.ts`
+    - 3 files / 26 tests passed。
+  - `pnpm --dir apps/admin exec vitest run 'app/[locale]/dashboard/ai/_ai/__tests__/user-doc-ingestion-panel.spec.tsx' 'app/[locale]/dashboard/ai/_ai/__tests__/ai-file-api.spec.ts'`
+    - 2 files / 6 tests passed。
+- 后续：
+  - #179 可以进入最后的类型检查与 issue checklist 对齐。
+  - #180 再开始“检索与可解释问答 API（强制 citations）”，不要在 #179 里继续扩展问答能力。
+
+### Step 4-13：user_docs 自定义切片参数
+
+- 背景：
+  - Step 4-12 只把 server 已支持的 `balanced/contextual` profile 暴露到 Admin。
+  - 实际资料可能包含简历结构化小片段，固定 `500/50` 或 `1000/100` 不够灵活。
+- 目标：
+  - 保留 profile 作为教学预设；
+  - 允许管理员自定义 `chunkSize/chunkOverlap`；
+  - 自定义参数优先级高于 profile 默认值，并写入 metadata 方便追溯。
+- 范围选择：
+  - `chunkSize`：`4-6666`
+    - 下限允许到 4，是为了兼容简历结构拆分后的极短片段；
+    - 上限 6666 避免单块过大导致检索解释性下降。
+  - `chunkOverlap`：`0-300`
+  - `chunkOverlap < chunkSize`
+- 本次补齐：
+  - Server：
+    - `user-doc-chunking.ts` 新增自定义参数范围常量、数字解析与最终配置解析 helper。
+    - `UserDocsIngestionService` 支持 `chunkSize/chunkOverlap` 覆盖 profile 默认值。
+    - `RagController` 与 Swagger DTO 支持 multipart form-data 中的 `chunkSize/chunkOverlap`，并返回可读参数错误。
+  - API Client：
+    - `IngestRagUserDocInput` 新增 `chunkSize/chunkOverlap`。
+    - `createIngestRagUserDocMethod` 透传两个字段到 form data。
+  - Admin：
+    - 切片策略下拉保留；
+    - 选择 profile 会自动填入预设数值；
+    - 新增 `切片大小` 与 `重叠字符数` 两个 number input；
+    - 提交前做前端校验，避免明显非法请求打到 server。
+- 测试：
+  - `rag.controller.spec.ts`
+    - 覆盖自定义参数透传、越界、非整数、overlap 不小于 size 的拒绝。
+  - `user-docs-ingestion.service.spec.ts`
+    - 覆盖 `80/10` 自定义参数实际参与切片并写入 metadata。
+  - `packages/api-client/src/ai.spec.ts`
+    - 覆盖 `chunkSize/chunkOverlap` form data。
+  - `user-doc-ingestion-panel.spec.tsx`
+    - 覆盖 profile 自动填值、手动改值提交、非法值前端拦截。
+- 边界：
+  - 本轮仍只做 #179 上传入库体验与契约收口；
+  - 不进入 #180 问答 API、citations 或检索质量策略扩展。

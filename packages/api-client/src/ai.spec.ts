@@ -243,6 +243,9 @@ describe('ai api client methods', () => {
           chunkCount: 2,
           fileName: 'rag-notes.md',
           fileType: 'md',
+          chunkingProfile: 'contextual',
+          chunkSize: 1000,
+          chunkOverlap: 100,
           uploadedAt: '2026-04-22T03:45:00.000Z',
         }),
       ),
@@ -257,6 +260,9 @@ describe('ai api client methods', () => {
       accessToken: 'admin-token',
       file,
       scope: 'published',
+      chunkingProfile: 'contextual',
+      chunkSize: 80,
+      chunkOverlap: 10,
     })
 
     expect(fetch).toHaveBeenCalledWith(
@@ -273,8 +279,14 @@ describe('ai api client methods', () => {
     const requestInit = vi.mocked(fetch).mock.calls[0]?.[1] as RequestInit | undefined
     const formData = requestInit?.body as FormData | undefined
     expect(formData?.get('scope')).toBe('published')
+    expect(formData?.get('chunkingProfile')).toBe('contextual')
+    expect(formData?.get('chunkSize')).toBe('80')
+    expect(formData?.get('chunkOverlap')).toBe('10')
 
     expect(result.sourceScope).toBe('published')
+    expect(result.sourceVersion).toBe('upload:1776839100000')
+    expect(result.chunkingProfile).toBe('contextual')
+    expect(result.chunkSize).toBe(1000)
     expect(result.chunkCount).toBe(2)
   })
 

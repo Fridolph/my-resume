@@ -740,25 +740,56 @@ export interface ExtractTextFromFileInput {
 export type RagUserDocIngestScope = 'draft' | 'published'
 
 /**
+ * RAG user_docs 切片策略。
+ *
+ * `balanced` 用于默认教学闭环，`contextual` 用于保留更长上下文的检索实验。
+ */
+export type RagUserDocChunkingProfile = 'balanced' | 'contextual'
+
+/**
  * RAG user_docs 入库参数。
  */
 export interface IngestRagUserDocInput {
+  /** API 服务根地址。 */
   apiBaseUrl: string
+  /** 当前管理员访问令牌。 */
   accessToken: string
+  /** 需要提取并写入 user_docs 检索态的文件。 */
   file: File
+  /** 入库作用域，默认由服务端按 draft 处理。 */
   scope?: RagUserDocIngestScope
+  /** 切片策略，未传时服务端使用 balanced。 */
+  chunkingProfile?: RagUserDocChunkingProfile
+  /** 自定义切片大小，范围 4-6666，优先级高于 profile 默认值。 */
+  chunkSize?: number
+  /** 自定义重叠字符数，范围 0-300，且必须小于 chunkSize。 */
+  chunkOverlap?: number
 }
 
 /**
  * RAG user_docs 入库结果。
  */
 export interface RagUserDocIngestResult {
+  /** 检索态文档 ID，可用于追溯整份上传资料。 */
   documentId: string
+  /** 来源 ID，同一文件版本的 chunks 会共享该来源键。 */
   sourceId: string
+  /** 写入的资料作用域。 */
   sourceScope: RagUserDocIngestScope
+  /** 上传版本键，用于区分同一资料的不同入库版本。 */
   sourceVersion: string
+  /** 本次入库生成的 chunk 数量。 */
   chunkCount: number
+  /** 上传文件名。 */
   fileName: string
+  /** 解析后的文件类型。 */
   fileType: ExtractedFileType
+  /** 实际使用的切片策略。 */
+  chunkingProfile: RagUserDocChunkingProfile
+  /** 实际切片大小，单位为字符。 */
+  chunkSize: number
+  /** 相邻 chunk 的重叠字符数。 */
+  chunkOverlap: number
+  /** 文件上传并入库完成的时间。 */
   uploadedAt: string
 }

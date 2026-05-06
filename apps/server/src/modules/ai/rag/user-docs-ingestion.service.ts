@@ -8,7 +8,7 @@ import { RagRetrievalRepository } from './rag-retrieval.repository'
 import { RAG_VECTOR_STORE } from './vector-store/tokens'
 import type { RagVectorChunkPayload, RagVectorStore } from './vector-store/types'
 import {
-  resolveUserDocChunkingStrategy,
+  resolveUserDocChunkingConfig,
   splitUserDocTextIntoChunks,
   type UserDocChunkingProfile,
 } from './user-doc-chunking'
@@ -17,7 +17,13 @@ export {
   compareUserDocChunkingStrategies,
   DEFAULT_CHUNK_OVERLAP,
   DEFAULT_CHUNK_SIZE,
+  MAX_CHUNK_OVERLAP,
+  MAX_CHUNK_SIZE,
+  MIN_CHUNK_OVERLAP,
+  MIN_CHUNK_SIZE,
   normalizeUserDocText,
+  parseOptionalUserDocChunkingNumber,
+  resolveUserDocChunkingConfig,
   resolveUserDocChunkingStrategy,
   splitUserDocTextIntoChunks,
   summarizeUserDocChunking,
@@ -26,6 +32,7 @@ export {
 } from './user-doc-chunking'
 export type {
   UserDocChunkingProfile,
+  ResolveUserDocChunkingConfigInput,
   UserDocChunkingStrategy,
   UserDocChunkingSummary,
 } from './user-doc-chunking'
@@ -40,6 +47,8 @@ export interface IngestUserDocInput {
   size: number
   sourceScope?: RagSourceScope
   chunkingProfile?: UserDocChunkingProfile
+  chunkSize?: number
+  chunkOverlap?: number
   uploadedAt?: Date
 }
 
@@ -139,7 +148,11 @@ export class UserDocsIngestionService {
     const uploadedAt = input.uploadedAt ?? startedAt
     const sourceScope = input.sourceScope ?? 'draft'
     const chunkingProfile = input.chunkingProfile ?? 'balanced'
-    const chunkingStrategy = resolveUserDocChunkingStrategy(chunkingProfile)
+    const chunkingStrategy = resolveUserDocChunkingConfig({
+      profile: chunkingProfile,
+      chunkSize: input.chunkSize,
+      chunkOverlap: input.chunkOverlap,
+    })
     const sourceVersion = buildUserDocSourceVersion(uploadedAt)
     const runId = randomUUID()
 
