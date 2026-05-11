@@ -263,10 +263,10 @@ export class RagSearchMatchDto {
 
   @ApiPropertyOptional({
     description: '来源类型',
-    enum: ['resume', 'knowledge'],
-    example: 'resume',
+    enum: ['resume', 'knowledge', 'resume_core', 'user_docs'],
+    example: 'resume_core',
   })
-  sourceType?: 'resume' | 'knowledge'
+  sourceType?: 'resume' | 'knowledge' | 'resume_core' | 'user_docs'
 
   @ApiPropertyOptional({
     description: '来源文件路径',
@@ -275,12 +275,70 @@ export class RagSearchMatchDto {
   sourcePath?: string
 }
 
+export class RagAskCitationDto {
+  @ApiProperty({
+    description: '回答引用序号',
+    example: '#1',
+  })
+  ref!: string
+
+  @ApiProperty({
+    description: '命中 chunk ID',
+    example: 'experience-1',
+  })
+  id!: string
+
+  @ApiProperty({
+    description: '引用来源标题',
+    example: 'XX 公司中后台重构项目',
+  })
+  title!: string
+
+  @ApiProperty({
+    description: '引用来源分区',
+    example: 'experiences',
+  })
+  section!: string
+
+  @ApiProperty({
+    description: '统一后的引用来源类型',
+    enum: ['resume_core', 'user_docs'],
+    example: 'resume_core',
+  })
+  sourceType!: 'resume_core' | 'user_docs'
+
+  @ApiPropertyOptional({
+    description: '来源文件路径或文件名',
+    example: 'rag-notes.md',
+  })
+  sourcePath?: string
+
+  @ApiProperty({
+    description: '检索分数',
+    example: 0.876543,
+  })
+  score!: number
+
+  @ApiProperty({
+    description: '引用片段短摘录',
+    example: '负责 ToB 安全平台的前端架构与交付...',
+  })
+  snippet!: string
+}
+
 export class RagAskResultDto {
   @ApiProperty({
     description: '问答结果文本',
     example: '你在 XX 项目中主导了架构重构并提升了交付效率',
   })
   answer!: string
+
+  @ApiProperty({
+    description: '回答引用列表；为空时表示上下文不足，回答不得编造。',
+    isArray: true,
+    type: () => RagAskCitationDto,
+  })
+  citations!: RagAskCitationDto[]
 
   @ApiProperty({
     description: '命中的上下文片段',

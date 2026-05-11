@@ -167,3 +167,38 @@ export interface RagIndexFile {
 export interface RagSearchMatch extends RagChunk {
   score: number
 }
+
+/**
+ * RAG 问答引用条目。
+ *
+ * citations 是 #180 的核心返回契约：即使模型回答文本不可完全信任，
+ * 前端也能用它展示“这句话来自哪些检索片段”。
+ */
+export interface RagAskCitation {
+  /** 面向回答文本的引用序号，例如 #1。 */
+  ref: string
+  /** 命中 chunk ID，用于追溯具体片段。 */
+  id: string
+  /** 来源标题或文件名。 */
+  title: string
+  /** 来源分区，如 experiences / projects / user_docs。 */
+  section: string
+  /** 统一后的来源类型。 */
+  sourceType: RagRetrievalSourceType
+  /** 可选来源路径或文件名。 */
+  sourcePath?: string
+  /** 检索分数。 */
+  score: number
+  /** 短摘录，供前端引用卡片展示。 */
+  snippet: string
+}
+
+/**
+ * RAG 问答返回结构。
+ */
+export interface RagAskResult {
+  answer: string
+  citations: RagAskCitation[]
+  matches: RagSearchMatch[]
+  providerSummary: RagIndexFile['providerSummary']
+}

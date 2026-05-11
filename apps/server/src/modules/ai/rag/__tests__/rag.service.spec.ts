@@ -264,6 +264,14 @@ describe('RagService', () => {
     )
 
     expect(result.answer).toContain('prompt=')
+    expect(result.citations.length).toBeGreaterThan(0)
+    expect(result.citations[0]).toEqual(
+      expect.objectContaining({
+        ref: expect.stringMatching(/^#\d+$/),
+        sourceType: expect.stringMatching(/^(resume_core|user_docs)$/),
+        score: expect.any(Number),
+      }),
+    )
     expect(result.matches.length).toBeGreaterThan(0)
     expect(
       result.matches.some(
@@ -272,6 +280,95 @@ describe('RagService', () => {
           item.content.includes('成都网思科平科技有限公司'),
       ),
     ).toBe(true)
+  })
+
+  it('should return an insufficient-context answer without calling the provider when no citation is available', async () => {
+    const aiService = new AiService(
+      createAiProvider(
+        {
+          provider: 'mock',
+          mode: 'mock',
+          model: 'mock-resume-advisor',
+        },
+        vi.fn<typeof fetch>(),
+      ),
+    )
+    const service = new RagService(
+      aiService,
+      new RagChunkService(),
+      new RagKnowledgeService(),
+      new RagIndexRepository(),
+      createMockRetrievalRepository(),
+      {
+        backend: 'local',
+        upsertChunks: vi.fn(),
+        deleteChunksByDocument: vi.fn(),
+        search: vi.fn().mockResolvedValue([]),
+      } as unknown as RagVectorStore,
+    )
+    const searchSpy = vi.spyOn(service, 'search').mockResolvedValue([])
+    const generateSpy = vi.spyOn(aiService, 'generateText')
+
+    const result = await service.ask('他是否获得过诺贝尔奖？', 3, 'zh')
+
+    expect(searchSpy).toHaveBeenCalled()
+    expect(generateSpy).not.toHaveBeenCalled()
+    expect(result.answer).toContain('检索到的上下文不足')
+    expect(result.citations).toEqual([])
+    expect(result.matches).toEqual([])
+  })
+
+  it('should order ask citations by source priority before user docs', async () => {
+    const aiService = new AiService(
+      createAiProvider(
+        {
+          provider: 'mock',
+          mode: 'mock',
+          model: 'mock-resume-advisor',
+        },
+        vi.fn<typeof fetch>(),
+      ),
+    )
+    const service = new RagService(
+      aiService,
+      new RagChunkService(),
+      new RagKnowledgeService(),
+      new RagIndexRepository(),
+      createMockRetrievalRepository(),
+      {
+        backend: 'local',
+        upsertChunks: vi.fn(),
+        deleteChunksByDocument: vi.fn(),
+        search: vi.fn().mockResolvedValue([]),
+      } as unknown as RagVectorStore,
+    )
+    vi.spyOn(service, 'search').mockResolvedValue([
+      {
+        id: 'user-doc:1',
+        title: '补充资料',
+        section: 'user_docs',
+        content: '用户资料中的补充说明',
+        sourceType: 'user_docs',
+        sourcePath: 'notes.md',
+        score: 0.99,
+      },
+      {
+        id: 'resume:1',
+        title: '核心简历',
+        section: 'experiences',
+        content: '简历核心经历',
+        sourceType: 'resume_core',
+        score: 0.88,
+      },
+    ])
+
+    const result = await service.ask('请总结经历', 2, 'zh')
+
+    expect(result.citations.map((item) => item.sourceType)).toEqual([
+      'resume_core',
+      'user_docs',
+    ])
+    expect(result.matches[0]?.id).toBe('resume:1')
   })
 
   it('should pass request-level routing override through ask to search', async () => {

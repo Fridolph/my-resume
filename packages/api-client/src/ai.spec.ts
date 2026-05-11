@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  createAskRagMethod,
   createApplyAiResumeImportMethod,
   createDeleteAiUsageRecordMethod,
   createFetchAiResumeImportJobMethod,
@@ -288,6 +289,80 @@ describe('ai api client methods', () => {
     expect(result.chunkingProfile).toBe('contextual')
     expect(result.chunkSize).toBe(1000)
     expect(result.chunkCount).toBe(2)
+  })
+
+  it('asks rag endpoint and returns citations', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        createJsonResponse(200, {
+          answer: '候选人做过 RAG 检索问答 [#1]',
+          citations: [
+            {
+              ref: '#1',
+              id: 'project-rag',
+              title: 'RAG 项目',
+              section: 'projects',
+              sourceType: 'resume_core',
+              score: 0.92,
+              snippet: '实现 RAG 检索问答能力',
+            },
+          ],
+          matches: [
+            {
+              id: 'project-rag',
+              title: 'RAG 项目',
+              section: 'projects',
+              content: '实现 RAG 检索问答能力',
+              sourceType: 'resume_core',
+              score: 0.92,
+            },
+          ],
+          providerSummary: {
+            provider: 'mock',
+            model: 'mock-resume-advisor',
+            mode: 'mock',
+          },
+        }),
+      ),
+    )
+
+    const result = await createAskRagMethod({
+      apiBaseUrl: 'http://localhost:5577',
+      accessToken: 'admin-token',
+      question: '候选人做过 RAG 吗？',
+      limit: 4,
+      locale: 'zh',
+      useVectorStore: true,
+      vectorScope: 'published',
+      vectorFallbackToLocal: false,
+    })
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5577/api/ai/rag/ask',
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({
+          Authorization: 'Bearer admin-token',
+          'Content-Type': 'application/json',
+        }),
+        body: JSON.stringify({
+          question: '候选人做过 RAG 吗？',
+          limit: 4,
+          locale: 'zh',
+          useVectorStore: true,
+          vectorScope: 'published',
+          vectorFallbackToLocal: false,
+        }),
+      }),
+    )
+    expect(result.citations[0]).toEqual(
+      expect.objectContaining({
+        ref: '#1',
+        sourceType: 'resume_core',
+        snippet: expect.stringContaining('RAG'),
+      }),
+    )
   })
 
   it('starts a resume import recognition job for an uploaded resume file', async () => {

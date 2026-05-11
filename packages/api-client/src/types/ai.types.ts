@@ -793,3 +793,86 @@ export interface RagUserDocIngestResult {
   /** 文件上传并入库完成的时间。 */
   uploadedAt: string
 }
+
+/**
+ * RAG 检索统一来源类型。
+ */
+export type RagRetrievalSourceType = 'resume_core' | 'user_docs'
+
+/**
+ * RAG 检索命中片段。
+ */
+export interface RagSearchMatch {
+  /** 命中 chunk ID。 */
+  id: string
+  /** 命中来源标题。 */
+  title: string
+  /** 命中来源分区。 */
+  section: string
+  /** 命中正文片段。 */
+  content: string
+  /** 检索分数。 */
+  score: number
+  /** 来源类型，兼容历史本地索引返回值。 */
+  sourceType?: 'resume' | 'knowledge' | RagRetrievalSourceType
+  /** 来源路径或文件名。 */
+  sourcePath?: string
+}
+
+/**
+ * RAG 问答引用条目。
+ */
+export interface RagAskCitation {
+  /** 回答引用序号，例如 #1。 */
+  ref: string
+  /** 命中 chunk ID。 */
+  id: string
+  /** 来源标题。 */
+  title: string
+  /** 来源分区。 */
+  section: string
+  /** 统一后的来源类型。 */
+  sourceType: RagRetrievalSourceType
+  /** 来源路径或文件名。 */
+  sourcePath?: string
+  /** 检索分数。 */
+  score: number
+  /** 引用片段短摘录。 */
+  snippet: string
+}
+
+/**
+ * RAG 问答参数。
+ */
+export interface AskRagInput {
+  /** API 服务根地址。 */
+  apiBaseUrl: string
+  /** 当前管理员访问令牌。 */
+  accessToken: string
+  /** 用户问题。 */
+  question: string
+  /** 用于拼接上下文的检索数量。 */
+  limit?: number
+  /** 回答语言。 */
+  locale?: AiWorkbenchLocale
+  /** 是否强制走向量存储检索。 */
+  useVectorStore?: boolean
+  /** 向量检索作用域。 */
+  vectorScope?: 'draft' | 'published' | 'all'
+  /** 向量检索为空或异常时是否回退本地检索。 */
+  vectorFallbackToLocal?: boolean
+}
+
+/**
+ * RAG 问答结果。
+ */
+export interface RagAskResult {
+  /** 模型回答；无引用时应为信息不足说明。 */
+  answer: string
+  /** 强制引用列表；为空表示上下文不足。 */
+  citations: RagAskCitation[]
+  /** 原始检索命中片段。 */
+  matches: RagSearchMatch[]
+  /** 本次问答使用的 provider 摘要。 */
+  providerSummary: Record<string, unknown>
+}

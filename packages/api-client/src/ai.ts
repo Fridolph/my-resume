@@ -17,6 +17,7 @@ import type {
   ApplyAiResumeImportResult,
   ApplyAiResumeOptimizationInput,
   ApplyAiResumeOptimizationResult,
+  AskRagInput,
   DeleteAiUsageRecordInput,
   DeleteAiUsageRecordResult,
   ExtractTextFromFileInput,
@@ -27,6 +28,7 @@ import type {
   FetchAiUsageRecordDetailInput,
   FileExtractionResult,
   IngestRagUserDocInput,
+  RagAskResult,
   RagUserDocIngestResult,
   ResumeOptimizationInput,
   RecognizeAiResumeImportInput,
@@ -85,6 +87,7 @@ export type {
   ApplyAiResumeImportResult,
   ApplyAiResumeOptimizationInput,
   ApplyAiResumeOptimizationResult,
+  AskRagInput,
   DeleteAiUsageRecordInput,
   DeleteAiUsageRecordResult,
   ExtractedFileType,
@@ -96,6 +99,10 @@ export type {
   FetchAiUsageRecordDetailInput,
   FileExtractionResult,
   IngestRagUserDocInput,
+  RagAskCitation,
+  RagAskResult,
+  RagRetrievalSourceType,
+  RagSearchMatch,
   RagUserDocChunkingProfile,
   RagUserDocIngestResult,
   RagUserDocIngestScope,
@@ -584,5 +591,32 @@ export function createIngestRagUserDocMethod(input: IngestRagUserDocInput) {
     accessToken: input.accessToken,
     body: formData,
     fallbackErrorMessage: 'user_docs 入库失败，请稍后重试',
+  })
+}
+
+/**
+ * 构造 RAG 可解释问答 Method
+ *
+ * @param input 请求参数
+ * @returns RAG 问答请求 Method
+ */
+export function createAskRagMethod(input: AskRagInput) {
+  return Alova.createMethod<RagAskResult>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: '/ai/rag/ask',
+    method: 'POST',
+    accessToken: input.accessToken,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      question: input.question,
+      limit: input.limit,
+      locale: input.locale,
+      useVectorStore: input.useVectorStore,
+      vectorScope: input.vectorScope,
+      vectorFallbackToLocal: input.vectorFallbackToLocal,
+    }),
+    fallbackErrorMessage: 'RAG 问答失败，请稍后重试',
   })
 }

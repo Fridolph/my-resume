@@ -12,8 +12,8 @@ export interface BuildRagAskPromptInput {
  */
 export function buildRagAskSystemPrompt(locale: 'zh' | 'en'): string {
   return locale === 'en'
-    ? 'You are a resume knowledge assistant. Answer only from the retrieved resume context and mention uncertainty when context is insufficient.'
-    : '你是一个简历知识库助手。只能根据检索到的简历上下文回答；如果上下文不足，请明确说明。'
+    ? 'You are a resume knowledge assistant. Answer only from the retrieved resume context, cite supporting chunks with [#n], and mention uncertainty when context is insufficient.'
+    : '你是一个简历知识库助手。只能根据检索到的简历上下文回答；回答中用 [#n] 标注支撑片段；如果上下文不足，请明确说明。'
 }
 
 /**
@@ -29,12 +29,12 @@ export function buildRagAskPrompt({
         `Question: ${question}`,
         'Retrieved context:',
         context,
-        'Return a concise answer and keep it grounded in the context.',
+        'Return a concise answer, cite supporting chunks with [#n], and keep it grounded in the context.',
       ].join('\n\n')
     : [
         `问题：${question}`,
         '检索到的上下文：',
         context,
-        '请基于这些上下文给出简洁回答，并保持结论可追溯。',
+        '请基于这些上下文给出简洁回答，用 [#n] 标注支撑片段，并保持结论可追溯。',
       ].join('\n\n')
 }
