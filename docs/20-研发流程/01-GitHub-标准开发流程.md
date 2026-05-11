@@ -9,6 +9,9 @@
 - `main`：稳定、可展示、可对外说明
 - `development`：日常开发主线
 
+> 说明：其他项目若使用 `dev` 作为开发主线，可以把本文中的 `development`
+> 替换为 `dev`，但同一个仓库内必须固定一个名称，禁止混用。
+
 ### 短期分支
 
 - `feat/*`：功能开发
@@ -24,7 +27,7 @@
 - 每个里程碑拆出多个 Issue
 - 单个 Issue 保持可在 1~2 次提交内清晰说明
 
-### 2. 先建 Issue
+### 2. 先建 Issue，再写代码
 
 Issue 必须包含：
 
@@ -36,13 +39,30 @@ Issue 必须包含：
 - 测试计划
 - 日志输出要求
 
-### 3. 从 `development` 开分支
+如果任务执行中发现新的问题：
+
+- 阻塞当前验收：先更新当前 Issue 的范围或拆分子任务
+- 不阻塞当前验收：记录为新 Issue，不混入当前分支
+
+### 3. 同步基线，从 `development` 开分支
+
+开始前先确认工作区和远端状态：
 
 ```bash
-git checkout development
-git pull origin development
-git checkout -b feat/m1-issue-01-workspace-bootstrap
+git status
+git switch development
+git pull --ff-only origin development
+git switch -c feat/m1-issue-01-workspace-bootstrap
 ```
+
+分支命名建议包含类型、里程碑、Issue 号和短描述：
+
+- `feat/m22-issue-215-ai-prompts-management`
+- `fix/m21-issue-179-user-docs-ingestion`
+- `docs/m20-issue-213-changelog-release-flow`
+- `chore/m16-issue-166-workspace-build-output`
+
+避免只用 `dev`、`fix`、`test` 这类不可追踪名称。
 
 ### 3.1 AI 功能开发（边做边学）补充流程
 
@@ -59,7 +79,8 @@ git checkout -b feat/m1-issue-01-workspace-bootstrap
 ### 4. 先 Plan，再做 TDD
 
 - 开始任务前先梳理需求和边界
-- 明确要先写哪些测试
+- 明确目标、非目标、验收标准、影响模块和预计改动文件
+- 明确要先写哪些测试，以及哪些测试可以后补
 - 没有测试策略，不进入实现
 
 ### 5. TDD 完成后开始开发
@@ -67,6 +88,8 @@ git checkout -b feat/m1-issue-01-workspace-bootstrap
 - 实现必须严格围绕当前 Issue
 - 不扩展到下一阶段
 - 如发现新问题，记录为新 Issue
+- 涉及数据库、环境变量、依赖、Docker、CI/CD 或发布脚本时，同步记录影响范围、验证方式和回滚思路
+- API server 遵循 NestJS module / service / controller / provider 分层；前端遵循当前项目约定的页面、组件、composable / service 分层
 
 ### 6. 开发完成后先 Review，再自测
 
@@ -74,12 +97,16 @@ Review 阶段必须回答两个问题：
 
 - 是否已经完成并符合当前 Issue 与里程碑目标
 - 是否存在可抽离的组件、通用函数、skills 或其他可复用能力
+- 是否存在无关文件、顺手改动或越界扩张
+- API / 类型 / Swagger / README / 开发文档是否需要同步
+- 是否引入数据库、环境、依赖或发布层面的兼容风险
 
 如果当前任务涉及展示层，还必须补充检查：
 
 - 是否支持或至少不阻碍 `light / dark`
 - 是否复用 design tokens / 语义化样式，而不是写死颜色与布局
 - 是否为后续模板、主题、布局扩展保留了清晰钩子
+- 是否完成桌面和移动端关键路径验证，必要时附截图或浏览器验证记录
 
 如果 Review 发现问题，先回到实现阶段修改，不直接进入自测。
 
@@ -88,9 +115,9 @@ Review 阶段必须回答两个问题：
 至少完成：
 
 - 类型检查
-- 当前任务相关测试
-- 构建验证
-- 必要的手工验证
+- 当前任务影响范围内测试
+- 必要的构建验证
+- 必要的手工或浏览器验证
 
 如果当前任务涉及 UI / 展示，还需要补充：
 
@@ -98,19 +125,53 @@ Review 阶段必须回答两个问题：
 - 样式在默认模板下无明显耦合或硬编码扩散
 - 为后续主题扩展预留的配置点没有被本次实现绕开
 
+验证范围按风险扩大：
+
+- 小范围服务端纯函数：相关单测 + typecheck
+- API / DTO / client 契约：server 测试 + api-client 测试 + typecheck
+- 共享模块 / 跨端功能：影响范围测试 + 构建或更大范围回归
+- 里程碑收口 / 发布前：全量或接近全量的测试、构建、CI 验证
+
 如果自测失败，回到前面的实现或 Review 阶段继续修正，直到通过。
 
 ### 8. 自测通过后写开发日志
 
 每个 Issue 完成后都要写日志，便于后续博客、教程和分享输出。
 
-### 9. 提交 PR
+开发日志默认放在 `docs/30-开发日志/`，至少记录：
 
+- 背景与本次目标
+- 实际改动
+- Review 记录
+- 遇到的问题
+- 测试与验证
+- 遗留风险与后续可写成教程 / 博客的切入点
+
+### 9. 提交、推送与合并
+
+- 使用清晰 commit message，例如 `feat(m22): add AI prompt builders`
 - 分支推送到远端
-- 创建 PR 到 `development`
-- 等 CI 通过
-- Review 后合并
-- 关闭对应 Issue
+- 优先创建 PR 到 `development`
+- 等 CI 通过并完成 Review 后合并
+- 小团队阶段可以本地 merge 回 `development`，但必须 push 远端并保留可追踪 commit
+
+合并后确认：
+
+```bash
+git status
+git log --oneline --decorate -5
+```
+
+### 9.1 关闭 Issue
+
+合并完成后，在 Issue 中回填：
+
+- 实际改动摘要
+- 测试与验证结果
+- PR / commit / 开发日志链接
+- 遗留风险或后续 Issue
+
+确认验收标准满足后再关闭 Issue。
 
 ### 10. 里程碑收束
 
