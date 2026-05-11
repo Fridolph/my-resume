@@ -36,6 +36,7 @@
   - 验收标准
   - 测试计划
   - 日志/教程输出要求
+- 若临时发现当前 Issue 之外的问题，只记录到新 Issue 或待办，不顺手混入当前分支。
 
 ### 3. 分支规范
 
@@ -47,6 +48,8 @@
   - `fix/m3-issue-08-publish-status`
   - `docs/m1-issue-02-architecture-notes`
   - `chore/m1-issue-04-ci-bootstrap`
+- 分支名必须能看出类型、里程碑 / Issue 和短描述；避免只用 `dev`、`fix`、`test` 这类不可追踪名称。
+- 其他项目若使用 `dev` 作为开发主线，应在该项目的 `AGENTS.md` 中明确写死，避免 `dev` / `development` 混用。
 
 ### 4. 先 Plan，再 TDD，再实现
 
@@ -59,12 +62,17 @@
 - 只处理当前任务相关内容。
 - 不主动修 unrelated bug。
 - 如发现更大问题，记录到新 Issue，不在当前任务里扩张。
+- 涉及数据库、环境变量、依赖、Docker、CI/CD 或发布脚本时，必须同步记录影响范围、验证方式和回滚思路。
 
 ### 6. 开发完成后先 Review
 
 - Review 必须检查：
   - 是否符合当前 Issue 与里程碑目标
   - 是否存在可抽离的组件、公共函数、skills 或其他复用能力
+- Review 还必须检查：
+  - 是否有无关文件或顺手改动
+  - API / 类型 / Swagger / 文档是否需要同步
+  - 是否引入了隐藏的兼容性或迁移风险
 - 若 Review 未通过，先回到实现阶段继续修改。
 
 ### 7. Review 通过后进行自测
@@ -74,6 +82,8 @@
   - 单元测试
   - 构建验证
   - 关键人工验证
+- 小范围任务至少跑影响范围内测试和类型检查；共享模块、跨端契约、里程碑收口或发布前必须扩大验证范围。
+- 涉及 UI / 交互时，必须补充桌面与移动端关键路径验证；必要时附截图或浏览器验证记录。
 - 若自测未通过，回到前面的实现或 Review 阶段继续修改。
 
 ### 8. 必须写开发日志
@@ -97,8 +107,18 @@
   - `docs(m1): add monorepo rationale`
   - `test(m3): cover publish flow`
 - PR 合并到 `development` 前必须通过 CI。
+- 小团队阶段允许本地 merge 回 `development`，但必须保证本地与远端 `development` 同步，并在 Issue / 日志中留下 commit 或 PR 链接。
 - 一个里程碑内的多个任务完成后，再按顺序合并到 `development`。
 - `main` 只接受阶段性稳定内容。
+
+### 10. 关闭 Issue
+
+- 合并完成后，必须在 Issue 中回填：
+  - 实际改动摘要
+  - 测试与验证结果
+  - commit / PR / 开发日志链接
+  - 遗留风险或后续 Issue
+- 确认验收标准满足后再关闭 Issue。
 
 ## Git Flow 约定
 
