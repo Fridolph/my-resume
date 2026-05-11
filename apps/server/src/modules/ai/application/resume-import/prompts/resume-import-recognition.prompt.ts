@@ -1,6 +1,12 @@
 import { createEmptyStandardResume } from '../../../../resume/domain/standard-resume'
 
 /**
+ * 简历导入结构化识别系统 Prompt。
+ */
+export const RESUME_IMPORT_RECOGNITION_SYSTEM_PROMPT =
+  '你是一个简历结构化识别助手。必须通过工具调用返回结构化对象，不要输出自由文本，不要虚构原文没有的信息。'
+
+/**
  * 构建简历导入识别 Prompt。
  *
  * 当前 MVP 使用完整 StandardResume 示例换取输出稳定性；后续可在独立 Issue 中压缩为更轻的 schema 描述。

@@ -10,6 +10,10 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger'
 import { SkipResponseEnvelope } from './common/decorators/skip-response-envelope.decorator'
 import { ApiEnvelopeResponse } from './common/swagger/api-envelope-response.decorator'
 import { AppService, type HealthCheckResponse } from './app.service'
+import {
+  AI_CONNECTIVITY_SYSTEM_PROMPT,
+  AI_CONNECTIVITY_USER_PROMPT,
+} from './modules/ai/application/prompts/ai-connectivity.prompt'
 import { AiService } from './modules/ai/ai.service'
 import { API_HEALTH_PATH } from './server-api-prefix'
 
@@ -104,9 +108,8 @@ export class AppController {
 
     try {
       const result = await this.aiService.generateText({
-        systemPrompt:
-          'You are a production health-check endpoint. Reply with a very short confirmation.',
-        prompt: 'Reply with OK only if this AI model is reachable.',
+        systemPrompt: AI_CONNECTIVITY_SYSTEM_PROMPT,
+        prompt: AI_CONNECTIVITY_USER_PROMPT,
         temperature: 0,
       })
 

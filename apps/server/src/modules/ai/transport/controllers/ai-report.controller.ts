@@ -39,6 +39,10 @@ import {
   AiUsageRecordFilterType,
   AiUsageRecordService,
 } from '../../application/services/ai-usage-record.service'
+import {
+  buildAnalysisReportPrompt,
+  buildAnalysisReportSystemPrompt,
+} from '../../application/prompts/analysis-report.prompt'
 import type { AnalysisLocale } from '../../application/services/analysis-report-cache.service'
 import {
   AnalyzeReportResultDto,
@@ -260,8 +264,12 @@ export class AiReportController {
 
     try {
       const result = await this.aiService.generateText({
-        systemPrompt: this.buildAnalysisSystemPrompt(locale),
-        prompt: this.buildAnalysisPrompt(body),
+        systemPrompt: buildAnalysisReportSystemPrompt(locale),
+        prompt: buildAnalysisReportPrompt({
+          scenario: body.scenario,
+          content: body.content,
+          locale,
+        }),
       })
       const report = this.analysisReportCacheService.storeGeneratedReport({
         ...body,
@@ -432,90 +440,4 @@ export class AiReportController {
     return this.aiResumeOptimizationService.applySuggestion(body)
   }
 
-  /**
-   * 构建分析提示词
-   * @param body 分析请求体
-   * @returns 提示词文本
-   */
-  private buildAnalysisPrompt(body: CacheReportBodyDto): string {
-    if (body.locale === 'en') {
-      return [
-        `Scenario: ${body.scenario}`,
-        'Task: analyze the current input for interview readiness and job-fit communication.',
-        'Return JSON only. Do not wrap it in markdown.',
-        'JSON shape:',
-        JSON.stringify(
-          {
-            summary: 'string',
-            score: {
-              value: 78,
-              label: 'string',
-              reason: 'string',
-            },
-            strengths: ['string'],
-            gaps: ['string'],
-            risks: ['string'],
-            suggestions: [
-              {
-                key: 'string',
-                title: 'string',
-                module: 'profile | experiences | projects | highlights | null',
-                reason: 'string',
-                actions: ['string'],
-              },
-            ],
-          },
-          null,
-          2,
-        ),
-        'Keep the output concise and product-friendly.',
-        `Input:\n${body.content}`,
-      ].join('\n')
-    }
-
-    return [
-      `分析场景：${body.scenario}`,
-      '任务：从“更好投递、面试更有说服力、拿到 offer 更稳”这三个角度分析当前输入。',
-      '请只返回 JSON，不要输出 markdown，不要输出代码块。',
-      'JSON 结构：',
-      JSON.stringify(
-        {
-          summary: 'string',
-          score: {
-            value: 78,
-            label: 'string',
-            reason: 'string',
-          },
-          strengths: ['string'],
-          gaps: ['string'],
-          risks: ['string'],
-          suggestions: [
-            {
-              key: 'string',
-              title: 'string',
-              module: 'profile | experiences | projects | highlights | null',
-              reason: 'string',
-              actions: ['string'],
-            },
-          ],
-        },
-        null,
-        2,
-      ),
-      '要求：strengths 说明已有优势，gaps 说明当前缺口，risks 说明不修改会带来的投递或面试风险，suggestions 给出可执行动作。',
-      `输入内容：\n${body.content}`,
-    ].join('\n')
-  }
-
-  /**
-   * 构建分析系统提示词
-   * @param locale 输出语言
-   * @returns 系统提示词
-   */
-  private buildAnalysisSystemPrompt(locale: AnalysisLocale): string {
-    // analyze 会成为“分析 -> 建议稿 -> diff -> apply”的上游，所以强制返回结构化 JSON。
-    return locale === 'en'
-      ? 'You are a resume analysis assistant. Output valid JSON only.'
-      : '你是一个简历分析助手。只输出合法 JSON。'
-  }
 }

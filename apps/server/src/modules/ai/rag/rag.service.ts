@@ -24,6 +24,7 @@ import {
 } from './rag-search-context-builder'
 import { applyRagSearchRerank, applyRagSearchRerankAndSelect, rerankRagSearchMatches } from './rag-search-rerank'
 import { RagIndexFile, RagSearchMatch } from './rag.types'
+import { buildRagAskPrompt, buildRagAskSystemPrompt } from './prompts/rag-ask.prompt'
 import { RAG_VECTOR_STORE } from './vector-store/tokens'
 import type { RagVectorSearchMatch, RagVectorStore } from './vector-store/types'
 
@@ -335,24 +336,12 @@ export class RagService {
       .join('\n\n')
 
     const answer = await this.aiService.generateText({
-      systemPrompt:
-        locale === 'en'
-          ? 'You are a resume knowledge assistant. Answer only from the retrieved resume context and mention uncertainty when context is insufficient.'
-          : '你是一个简历知识库助手。只能根据检索到的简历上下文回答；如果上下文不足，请明确说明。',
-      prompt:
-        locale === 'en'
-          ? [
-              `Question: ${question}`,
-              'Retrieved context:',
-              context,
-              'Return a concise answer and keep it grounded in the context.',
-            ].join('\n\n')
-          : [
-              `问题：${question}`,
-              '检索到的上下文：',
-              context,
-              '请基于这些上下文给出简洁回答，并保持结论可追溯。',
-            ].join('\n\n'),
+      systemPrompt: buildRagAskSystemPrompt(locale),
+      prompt: buildRagAskPrompt({
+        question,
+        context,
+        locale,
+      }),
     })
 
     return {

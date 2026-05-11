@@ -1,5 +1,6 @@
 import { BadGatewayException } from '@nestjs/common'
 
+export { buildResumeImportJsonRepairPrompt } from '../prompts/resume-import-json-repair.prompt'
 import type { ProviderResumeImportPayload } from '../types/resume-import.types'
 
 interface ParseResumeImportJsonResult {
@@ -66,23 +67,6 @@ export function repairResumeImportJsonSyntaxLocally(jsonText: string): string | 
   } catch {
     return null
   }
-}
-
-/** 构造“只修 JSON 语法”的二次修复 prompt。 */
-export function buildResumeImportJsonRepairPrompt(input: {
-  jsonText: string
-  parseError: string
-}): string {
-  return [
-    '下面是一段 AI 简历识别结果 JSON，但它存在语法错误。',
-    '请只修复 JSON 语法，不要改写字段语义，不要新增解释，不要输出 Markdown。',
-    '输出必须是一个合法 JSON object，且保留 resume / summary / warnings 等原字段。',
-    '',
-    `解析错误：${input.parseError}`,
-    '',
-    '待修复 JSON：',
-    input.jsonText,
-  ].join('\n')
 }
 
 /** 根据 JSON.parse 的错误位置截取附近片段，方便定位真实模型输出问题。 */
