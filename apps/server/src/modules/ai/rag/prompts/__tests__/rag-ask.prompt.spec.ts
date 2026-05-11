@@ -14,6 +14,7 @@ describe('RAG ask prompts', () => {
     expect(prompt).toContain('问题：候选人是否做过 RAG？')
     expect(prompt).toContain('检索到的上下文')
     expect(prompt).toContain('做过 RAG 检索问答')
+    expect(prompt).toContain('[#n]')
   })
 
   it('builds English grounded-answer prompts', () => {
@@ -27,5 +28,6 @@ describe('RAG ask prompts', () => {
     expect(prompt).toContain('Question: Did the candidate build RAG features?')
     expect(prompt).toContain('Retrieved context')
     expect(prompt).toContain('Built retrieval QA.')
+    expect(prompt).toContain('[#n]')
   })
 })

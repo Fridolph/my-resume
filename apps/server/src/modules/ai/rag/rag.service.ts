@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, Logger } from '@nestjs/common'
 import { createHash } from 'crypto'
 import { existsSync, readFileSync, readdirSync } from 'fs'
 import { join } from 'path'
@@ -23,7 +23,14 @@ import {
   cosineSimilarity,
 } from './rag-search-context-builder'
 import { applyRagSearchRerank, applyRagSearchRerankAndSelect, rerankRagSearchMatches } from './rag-search-rerank'
-import { RagIndexFile, RagSearchMatch } from './rag.types'
+import {
+  mapLegacySourceTypeToRetrievalSourceType,
+  RagAskCitation,
+  RagAskResult,
+  RagIndexFile,
+  RagRetrievalSourceType,
+  RagSearchMatch,
+} from './rag.types'
 import { buildRagAskPrompt, buildRagAskSystemPrompt } from './prompts/rag-ask.prompt'
 import { RAG_VECTOR_STORE } from './vector-store/tokens'
 import type { RagVectorSearchMatch, RagVectorStore } from './vector-store/types'
@@ -52,8 +59,61 @@ function computeKnowledgeDirectoryHash(directoryPath: string): string {
   return computeContentHash(fingerprint)
 }
 
+function getRagSourcePriority(sourceType: RagRetrievalSourceType): number {
+  return sourceType === 'resume_core' ? 0 : 1
+}
+
+function normalizeRagCitationSourceType(
+  sourceType: RagSearchMatch['sourceType'],
+): RagRetrievalSourceType {
+  return mapLegacySourceTypeToRetrievalSourceType(sourceType ?? 'resume')
+}
+
+function buildCitationSnippet(content: string): string {
+  const normalized = content.replace(/\s+/g, ' ').trim()
+
+  return normalized.length > 180 ? `${normalized.slice(0, 180)}...` : normalized
+}
+
+function sortMatchesForAnswer(matches: RagSearchMatch[]): RagSearchMatch[] {
+  return [...matches].sort((left, right) => {
+    const leftPriority = getRagSourcePriority(
+      normalizeRagCitationSourceType(left.sourceType),
+    )
+    const rightPriority = getRagSourcePriority(
+      normalizeRagCitationSourceType(right.sourceType),
+    )
+
+    if (leftPriority !== rightPriority) {
+      return leftPriority - rightPriority
+    }
+
+    return right.score - left.score
+  })
+}
+
+function buildRagAskCitations(matches: RagSearchMatch[]): RagAskCitation[] {
+  return matches.map((item, index) => ({
+    ref: `#${index + 1}`,
+    id: item.id,
+    title: item.title,
+    section: item.section,
+    sourceType: normalizeRagCitationSourceType(item.sourceType),
+    sourcePath: item.sourcePath,
+    score: item.score,
+    snippet: buildCitationSnippet(item.content),
+  }))
+}
+
+function buildInsufficientContextAnswer(locale: 'zh' | 'en'): string {
+  return locale === 'en'
+    ? 'The retrieved context is insufficient to answer this question reliably. Please add more resume or user document context and try again.'
+    : '检索到的上下文不足，无法可靠回答这个问题。请补充更多简历或资料上下文后再试。'
+}
+
 @Injectable()
 export class RagService {
+  private readonly logger = new Logger(RagService.name)
   private readonly defaultSearchQualityGate: RagSearchQualityGate =
     resolveRagSearchQualityGate(process.env)
   private readonly searchRoutingConfig = resolveRagSearchRoutingConfig(process.env)
@@ -325,10 +385,35 @@ export class RagService {
     limit = 4,
     locale: 'zh' | 'en' = 'zh',
     routingOverride: RagSearchRoutingOverride = {},
-  ) {
+  ): Promise<RagAskResult> {
     // ask = search + context assembly + generateText。
+    const startedAt = Date.now()
     const matches = await this.search(question, limit, this.defaultSearchQualityGate, routingOverride)
-    const context = matches
+    const prioritizedMatches = sortMatchesForAnswer(matches)
+    const citations = buildRagAskCitations(prioritizedMatches)
+    const providerSummary = this.aiService.getProviderSummary()
+
+    if (citations.length === 0) {
+      this.logger.log({
+        event: 'rag.ask.completed',
+        status: 'insufficient_context',
+        question,
+        matchCount: 0,
+        citationCount: 0,
+        durationMs: Date.now() - startedAt,
+        provider: providerSummary.provider,
+        model: providerSummary.model,
+      })
+
+      return {
+        answer: buildInsufficientContextAnswer(locale),
+        citations,
+        matches: prioritizedMatches,
+        providerSummary,
+      }
+    }
+
+    const context = prioritizedMatches
       .map(
         (item, index) =>
           `[#${index + 1}] ${item.title}\nsection=${item.section}\nsource=${item.sourceType ?? 'resume'}\n${item.content}`,
@@ -344,10 +429,28 @@ export class RagService {
       }),
     })
 
+    this.logger.log({
+      event: 'rag.ask.completed',
+      status: 'answered',
+      question,
+      matchCount: prioritizedMatches.length,
+      citationCount: citations.length,
+      sources: citations.map((item) => ({
+        ref: item.ref,
+        sourceType: item.sourceType,
+        title: item.title,
+        score: item.score,
+      })),
+      durationMs: Date.now() - startedAt,
+      provider: providerSummary.provider,
+      model: providerSummary.model,
+    })
+
     return {
       answer: answer.text,
-      matches,
-      providerSummary: this.aiService.getProviderSummary(),
+      citations,
+      matches: prioritizedMatches,
+      providerSummary,
     }
   }
 

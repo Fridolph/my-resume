@@ -227,6 +227,7 @@ describe('RagController', () => {
     )
     vi.mocked(ragService.ask).mockResolvedValue({
       answer: 'ok',
+      citations: [],
       matches: [],
       providerSummary: {},
     })
