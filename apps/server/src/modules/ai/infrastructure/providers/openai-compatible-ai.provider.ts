@@ -127,6 +127,28 @@ export class OpenAiCompatibleAiProvider implements AiProvider {
     return this.config.embeddingModel?.trim() || this.config.model
   }
 
+  /** 读取 embeddings base URL，允许与 chat base URL 分离配置。 */
+  private getEmbeddingBaseUrl(): string {
+    return this.config.embeddingBaseUrl?.trim() || this.config.baseUrl
+  }
+
+  /** 读取 embeddings API Key，允许与 chat API Key 分离配置。 */
+  private getEmbeddingApiKey(): string | undefined {
+    const embeddingApiKey = this.config.embeddingApiKey?.trim()
+
+    if (embeddingApiKey) {
+      return embeddingApiKey
+    }
+
+    const embeddingBaseUrl = this.getEmbeddingBaseUrl()
+
+    if (embeddingBaseUrl !== this.config.baseUrl) {
+      return undefined
+    }
+
+    return this.config.apiKey
+  }
+
   /**
    * 构造 Chat Completions 请求体。
    *
@@ -358,12 +380,21 @@ export class OpenAiCompatibleAiProvider implements AiProvider {
    */
   async embedTexts(input: EmbedTextsInput): Promise<EmbedTextsResult> {
     const embeddingModel = this.getEmbeddingModel()
+    const embeddingBaseUrl = this.getEmbeddingBaseUrl()
+    const embeddingApiKey = this.getEmbeddingApiKey()
+
+    if (!embeddingApiKey) {
+      throw new Error(
+        `Embeddings API key is required for ${this.config.providerLabel} embeddings. Configure EMBEDDINGS_API_KEY when using a dedicated embeddings backend.`,
+      )
+    }
+
     // 1. 按 OpenAI-compatible 协议请求 embeddings endpoint。
-    const response = await this.fetchFn(joinEmbeddingsUrl(this.config.baseUrl), {
+    const response = await this.fetchFn(joinEmbeddingsUrl(embeddingBaseUrl), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.config.apiKey}`,
+        Authorization: `Bearer ${embeddingApiKey}`,
       },
       body: JSON.stringify({
         model: embeddingModel,

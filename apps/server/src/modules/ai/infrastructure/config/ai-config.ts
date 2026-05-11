@@ -13,6 +13,8 @@ export type AiRuntimeConfig =
       mode: 'openai-compatible'
       apiKey: string
       baseUrl: string
+      embeddingApiKey?: string
+      embeddingBaseUrl?: string
       model: string
       chatModel?: string
       embeddingModel?: string
@@ -46,6 +48,25 @@ function readRequiredSecret(
   if (value === 'replace-with-your-own-key') {
     throw new Error(
       `${key} is still a placeholder; set a real API key or use AI_PROVIDER=mock`,
+    )
+  }
+
+  return value
+}
+
+function readOptionalSecret(
+  env: EnvironmentVariables,
+  key: string,
+): string | undefined {
+  const value = readOptionalValue(env, key)
+
+  if (!value) {
+    return undefined
+  }
+
+  if (value === 'replace-with-your-own-key') {
+    throw new Error(
+      `${key} is still a placeholder; set a real API key or remove this override`,
     )
   }
 
@@ -95,8 +116,49 @@ function readOptionalReasoningEffort(
   return value === 'low' || value === 'medium' || value === 'high' ? value : undefined
 }
 
+function resolveSharedEmbeddingOverride(env: EnvironmentVariables): {
+  embeddingApiKey?: string
+  embeddingBaseUrl?: string
+  embeddingModel?: string
+} {
+  const embeddingBaseUrl =
+    readOptionalValue(env, 'EMBEDDINGS_BASE_URL') ??
+    readOptionalValue(env, 'EMBEDDINGS_URL')
+  const embeddingApiKey = readOptionalSecret(env, 'EMBEDDINGS_API_KEY')
+  const embeddingModel =
+    readOptionalValue(env, 'EMBEDDINGS_MODEL_NAME') ??
+    readOptionalValue(env, 'EMBEDDINGS_MODEL')
+
+  return {
+    embeddingApiKey,
+    embeddingBaseUrl,
+    embeddingModel,
+  }
+}
+
+function resolveDefaultDeepseekEmbeddingOverride(
+  sharedEmbeddingOverride: {
+    embeddingApiKey?: string
+    embeddingBaseUrl?: string
+    embeddingModel?: string
+  },
+): {
+  embeddingApiKey?: string
+  embeddingBaseUrl: string
+  embeddingModel: string
+} {
+  return {
+    embeddingApiKey: sharedEmbeddingOverride.embeddingApiKey,
+    embeddingBaseUrl:
+      sharedEmbeddingOverride.embeddingBaseUrl ??
+      'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    embeddingModel: sharedEmbeddingOverride.embeddingModel ?? 'text-embedding-v3',
+  }
+}
+
 export function resolveAiRuntimeConfig(env: EnvironmentVariables): AiRuntimeConfig {
   const provider = env.AI_PROVIDER?.trim().toLowerCase()
+  const sharedEmbeddingOverride = resolveSharedEmbeddingOverride(env)
 
   if (!provider || provider === 'mock') {
     return {
@@ -111,15 +173,25 @@ export function resolveAiRuntimeConfig(env: EnvironmentVariables): AiRuntimeConf
   if (provider === 'qiniu') {
     const chatModel =
       readOptionalValue(env, 'QINIU_AI_CHAT_MODEL') ??
+      readOptionalValue(env, 'QINIU_AI_MODEL_NAME') ??
       readOptionalValue(env, 'QINIU_AI_MODEL') ??
       'deepseek-v3'
-    const embeddingModel = readOptionalValue(env, 'QINIU_AI_EMBEDDING_MODEL') ?? chatModel
+    const embeddingModel =
+      sharedEmbeddingOverride.embeddingModel ??
+      readOptionalValue(env, 'QINIU_AI_EMBEDDING_MODEL') ??
+      chatModel
 
     return {
       provider: 'qiniu',
       mode: 'openai-compatible',
       apiKey: readRequiredSecret(env, 'QINIU_AI_API_KEY', 'QINIU_AI_API_KEY is required'),
       baseUrl: env.QINIU_AI_BASE_URL?.trim() || 'https://api.qnaigc.com/v1',
+      ...(sharedEmbeddingOverride.embeddingApiKey
+        ? { embeddingApiKey: sharedEmbeddingOverride.embeddingApiKey }
+        : {}),
+      ...(sharedEmbeddingOverride.embeddingBaseUrl
+        ? { embeddingBaseUrl: sharedEmbeddingOverride.embeddingBaseUrl }
+        : {}),
       model: chatModel,
       chatModel,
       embeddingModel,
@@ -128,21 +200,36 @@ export function resolveAiRuntimeConfig(env: EnvironmentVariables): AiRuntimeConf
   }
 
   if (provider === 'deepseek') {
+    const deepseekEmbeddingOverride = resolveDefaultDeepseekEmbeddingOverride(
+      sharedEmbeddingOverride,
+    )
     const chatModel =
       readOptionalValue(env, 'DEEPSEEK_CHAT_MODEL') ??
+      readOptionalValue(env, 'DEEPSEEK_MODEL_NAME') ??
       readOptionalValue(env, 'DEEPSEEK_MODEL') ??
+      readOptionalValue(env, 'MODEL_NAME') ??
       'deepseek-v4-flash'
-    const embeddingModel = readOptionalValue(env, 'DEEPSEEK_EMBEDDING_MODEL') ?? chatModel
 
     return {
       provider: 'deepseek',
       mode: 'openai-compatible',
-      apiKey: readRequiredSecret(env, 'DEEPSEEK_API_KEY', 'DEEPSEEK_API_KEY is required'),
-      baseUrl: env.DEEPSEEK_BASE_URL?.trim() || 'https://api.deepseek.com',
+      apiKey: readRequiredSecret(
+        env,
+        'DEEPSEEK_API_KEY',
+        'DEEPSEEK_API_KEY is required',
+      ),
+      baseUrl:
+        readOptionalValue(env, 'DEEPSEEK_BASE_URL') ??
+        readOptionalValue(env, 'OPENAI_BASE_URL') ??
+        'https://api.deepseek.com',
+      embeddingApiKey: deepseekEmbeddingOverride.embeddingApiKey,
+      embeddingBaseUrl: deepseekEmbeddingOverride.embeddingBaseUrl,
       maxTokens: readOptionalPositiveInteger(env, 'DEEPSEEK_MAX_TOKENS'),
       model: chatModel,
       chatModel,
-      embeddingModel,
+      embeddingModel:
+        readOptionalValue(env, 'DEEPSEEK_EMBEDDING_MODEL') ??
+        deepseekEmbeddingOverride.embeddingModel,
       providerLabel: 'DeepSeek',
       reasoningEffort: readOptionalReasoningEffort(env, 'DEEPSEEK_REASONING_EFFORT'),
       thinkingEnabled: readOptionalBoolean(env, 'DEEPSEEK_THINKING_ENABLED'),
@@ -152,27 +239,40 @@ export function resolveAiRuntimeConfig(env: EnvironmentVariables): AiRuntimeConf
   if (provider === 'openai-compatible') {
     const chatModel =
       readOptionalValue(env, 'OPENAI_COMPATIBLE_CHAT_MODEL') ??
+      readOptionalValue(env, 'MODEL_NAME') ??
       readRequiredValue(
         env,
         'OPENAI_COMPATIBLE_MODEL',
         'OPENAI_COMPATIBLE_MODEL is required',
       )
     const embeddingModel =
-      readOptionalValue(env, 'OPENAI_COMPATIBLE_EMBEDDING_MODEL') ?? chatModel
+      sharedEmbeddingOverride.embeddingModel ??
+      readOptionalValue(env, 'OPENAI_COMPATIBLE_EMBEDDING_MODEL') ??
+      chatModel
 
     return {
       provider: 'openai-compatible',
       mode: 'openai-compatible',
-      apiKey: readRequiredSecret(
-        env,
-        'OPENAI_COMPATIBLE_API_KEY',
-        'OPENAI_COMPATIBLE_API_KEY is required',
-      ),
-      baseUrl: readRequiredValue(
-        env,
-        'OPENAI_COMPATIBLE_BASE_URL',
-        'OPENAI_COMPATIBLE_BASE_URL is required',
-      ),
+      apiKey:
+        readOptionalSecret(env, 'OPENAI_COMPATIBLE_API_KEY') ??
+        readRequiredSecret(
+          env,
+          'OPENAI_API_KEY',
+          'OPENAI_COMPATIBLE_API_KEY or OPENAI_API_KEY is required',
+        ),
+      baseUrl:
+        readOptionalValue(env, 'OPENAI_COMPATIBLE_BASE_URL') ??
+        readRequiredValue(
+          env,
+          'OPENAI_BASE_URL',
+          'OPENAI_COMPATIBLE_BASE_URL or OPENAI_BASE_URL is required',
+        ),
+      ...(sharedEmbeddingOverride.embeddingApiKey
+        ? { embeddingApiKey: sharedEmbeddingOverride.embeddingApiKey }
+        : {}),
+      ...(sharedEmbeddingOverride.embeddingBaseUrl
+        ? { embeddingBaseUrl: sharedEmbeddingOverride.embeddingBaseUrl }
+        : {}),
       model: chatModel,
       chatModel,
       embeddingModel,
