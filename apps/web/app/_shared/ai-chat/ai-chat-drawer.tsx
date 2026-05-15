@@ -1,6 +1,6 @@
 'use client'
 
-import { Chip, Spinner } from '@heroui/react'
+import { Button, Chip, CloseButton, Spinner } from '@heroui/react'
 import { useMemo, useState } from 'react'
 
 import type { AiChatMessage, AiChatSession } from '@my-resume/api-client'
@@ -109,6 +109,7 @@ export function AiChatDrawer({ locale }: { locale: 'zh' | 'en' }) {
     view,
   } = useAiChat()
   const [chatMessage, setChatMessage] = useState('')
+  const [dismissedSummaryStage, setDismissedSummaryStage] = useState<string | null>(null)
   const visibleMessages = useMemo(
     () => buildVisibleMessages(session, draftAssistantMessage),
     [draftAssistantMessage, session],
@@ -161,9 +162,9 @@ export function AiChatDrawer({ locale }: { locale: 'zh' | 'en' }) {
         </div>
       ) : null}
 
-      {summaryPreview ? (
+      {summaryPreview && summaryPreview.stage !== dismissedSummaryStage ? (
         <div className="rounded-[1.25rem] border border-emerald-200/80 bg-emerald-50/70 px-4 py-3 dark:border-emerald-500/20 dark:bg-emerald-500/10">
-          <div className="mb-2 flex flex-wrap items-center gap-2">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <Chip variant="soft">
               {summaryPreview.stage === 'turn-20'
                 ? locale === 'en'
@@ -172,7 +173,11 @@ export function AiChatDrawer({ locale }: { locale: 'zh' | 'en' }) {
                 : locale === 'en'
                   ? 'Stage summary'
                   : '阶段总结'}
-            </Chip>
+              </Chip>
+              <CloseButton
+                aria-label={locale === 'en' ? 'Close summary' : '关闭总结'}
+                onPress={() => setDismissedSummaryStage(summaryPreview.stage)}
+              />
           </div>
           <p className="text-sm leading-6 text-emerald-950 dark:text-emerald-100">
             {summaryPreview.summary}

@@ -99,7 +99,7 @@ export function AiChatWindowShell({
           </Drawer.Header>
           <Drawer.Body className="!mt-0 !grid min-h-0 gap-4 px-4 py-4">{children}</Drawer.Body>
           {footer ? (
-            <Drawer.Footer className="!mt-0 !grid border-t border-zinc-200/80 px-4 py-3 dark:border-zinc-800">
+            <Drawer.Footer className="!mt-0 !block w-full border-t border-zinc-200/80 px-4 py-3 dark:border-zinc-800">
               {footer}
             </Drawer.Footer>
           ) : null}

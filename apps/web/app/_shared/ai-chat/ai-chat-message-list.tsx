@@ -122,7 +122,7 @@ function ChatAvatar({
           {variant === 'assistant' ? buildInitials(label) : <VisitorGlyph />}
         </Avatar.Fallback>
       </Avatar.Root>
-      <span className="absolute top-full mt-1 whitespace-nowrap text-[0.68rem] font-medium uppercase tracking-[0.14em] text-zinc-400 dark:text-zinc-500">
+      <span className="absolute top-9 whitespace-nowrap text-[0.68rem] font-medium uppercase tracking-[0.14em] text-zinc-400 dark:text-zinc-500">
         {label}
       </span>
     </div>
