@@ -286,4 +286,15 @@ export class AiChatController {
   clearMessages(@Param('sessionId') sessionId: string) {
     return this.aiChatService.adminClearMessages(sessionId)
   }
+
+  @Post('admin/usekeys/:useKey/delete')
+  @UseGuards(JwtAuthGuard, RoleCapabilitiesGuard)
+  @RequireCapability('canTriggerAiAnalysis')
+  @ApiBearerAuth('bearer')
+  @ApiUnauthorizedResponse({ description: '未提供有效 Bearer Token' })
+  @ApiOperation({ summary: '删除 useKey（级联清除 session + messages）' })
+  @ApiEnvelopeResponse({ description: 'useKey 删除成功' })
+  deleteUseKey(@Param('useKey') useKey: string) {
+    return this.aiChatService.adminDeleteUseKey(useKey)
+  }
 }

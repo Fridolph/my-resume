@@ -3,14 +3,14 @@
 import { useRequest } from 'alova/client'
 import {
   createClearAiChatSessionMessagesMethod,
+  createDeleteAiChatUseKeyMethod,
   createFetchAiChatLeadsMethod,
   createFetchAiChatSessionDetailMethod,
   createFetchAiChatSessionsMethod,
   createFetchAiChatUseKeysMethod,
   createResetAiChatSessionMethod,
-  createRevokeAiChatUseKeyMethod,
 } from '@my-resume/api-client'
-import { Button, Card, CardContent, CardHeader, CardTitle, Chip, Table, Tooltip } from '@heroui/react'
+import { Button, Card, CardContent, CardHeader, CardTitle, Chip, CloseButton, Modal, Table, Tooltip } from '@heroui/react'
 import { useMemo, useState } from 'react'
 
 import { useAdminSession } from '@core/admin-session'
@@ -109,6 +109,8 @@ export function ChatGovernanceShell() {
   const [resettingSessionId, setResettingSessionId] = useState<string | null>(null)
   const [clearingSessionId, setClearingSessionId] = useState<string | null>(null)
   const [revokingUseKey, setRevokingUseKey] = useState<string | null>(null)
+  const [deletingUseKey, setDeletingUseKey] = useState<string | null>(null)
+  const [deleteConfirmKey, setDeleteConfirmKey] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
 
   const leadsRequest = useRequest(
@@ -210,12 +212,26 @@ export function ChatGovernanceShell() {
     setRevokingUseKey(useKey)
     setActionError(null)
     try {
-      await createRevokeAiChatUseKeyMethod({ apiBaseUrl: DEFAULT_API_BASE_URL, accessToken: accessToken ?? '', useKey }).send()
+      await createDeleteAiChatUseKeyMethod({ apiBaseUrl: DEFAULT_API_BASE_URL, accessToken: accessToken ?? '', useKey }).send()
       await refreshAll()
     } catch {
       setActionError('useKey 作废失败')
     } finally {
       setRevokingUseKey(null)
+    }
+  }
+
+  async function deleteUseKey(useKey: string) {
+    setDeletingUseKey(useKey)
+    setActionError(null)
+    try {
+      await createDeleteAiChatUseKeyMethod({ apiBaseUrl: DEFAULT_API_BASE_URL, accessToken: accessToken ?? '', useKey }).send()
+      await refreshAll()
+    } catch {
+      setActionError('useKey 删除失败')
+    } finally {
+      setDeletingUseKey(null)
+      setDeleteConfirmKey(null)
     }
   }
 
@@ -353,18 +369,18 @@ export function ChatGovernanceShell() {
                             <Tooltip delay={180}>
                               <Tooltip.Trigger>
                                 <Button
-                                  aria-label="作废 useKey"
+                                  aria-label="删除 useKey"
                                   className={actionIconClass}
-                                  isDisabled={revokingUseKey === row.useKeyValue}
+                                  isDisabled={deletingUseKey === row.useKeyValue}
                                   isIconOnly
-                                  onPress={() => void revokeUseKey(row.useKeyValue!)}
+                                  onPress={() => setDeleteConfirmKey(row.useKeyValue)}
                                   size="sm"
                                   type="button"
                                   variant="ghost">
                                   <BanIcon />
                                 </Button>
                               </Tooltip.Trigger>
-                              <Tooltip.Content offset={10} placement="top">作废 useKey</Tooltip.Content>
+                              <Tooltip.Content offset={10} placement="top">删除 useKey</Tooltip.Content>
                             </Tooltip>
                           ) : null}
                         </div>
@@ -380,8 +396,9 @@ export function ChatGovernanceShell() {
 
       <AdminDrawerShell dialogClassName="w-full max-w-3xl" isOpen={Boolean(sessionDetailId)} onClose={() => setSessionDetailId(null)}>
         <div className="grid min-h-[20rem] gap-3">
-          <div className="border-b border-zinc-200/80 px-4 py-3 dark:border-zinc-800">
+          <div className="flex items-center justify-between border-b border-zinc-200/80 px-4 py-3 dark:border-zinc-800">
             <h2 className="text-lg font-semibold text-zinc-950 dark:text-white">会话详情</h2>
+            <CloseButton aria-label="关闭会话详情" onPress={() => setSessionDetailId(null)} />
           </div>
           <div className="grid gap-4 px-4 py-3">
             {sessionDetailRequest.loading ? <p className="text-sm text-zinc-500">加载中...</p> : null}
@@ -407,6 +424,37 @@ export function ChatGovernanceShell() {
           </div>
         </div>
       </AdminDrawerShell>
+
+      <Modal.Backdrop
+        isDismissable={!deletingUseKey}
+        isOpen={Boolean(deleteConfirmKey)}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen && !deletingUseKey) setDeleteConfirmKey(null)
+        }}>
+        <Modal.Container placement="center">
+          <Modal.Dialog className="rounded-[2rem] border border-zinc-200/80 bg-white/96 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.16)] dark:border-zinc-800 dark:bg-zinc-950/96">
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <h3 className="text-lg font-semibold text-zinc-950 dark:text-white">确认删除 useKey？</h3>
+                <p className="text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+                  将删除此 useKey 及其关联的所有会话记录和聊天消息，该访客再次进入 AI 对话需重新认领 IP。
+                </p>
+              </div>
+              <div className="flex justify-end gap-3">
+                <Button isDisabled={Boolean(deletingUseKey)} onPress={() => setDeleteConfirmKey(null)} variant="ghost">
+                  取消
+                </Button>
+                <Button
+                  isDisabled={Boolean(deletingUseKey)}
+                  onPress={() => void deleteUseKey(deleteConfirmKey!)}
+                  variant="danger">
+                  {deletingUseKey ? '删除中...' : '确认删除'}
+                </Button>
+              </div>
+            </div>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
     </div>
   )
 }

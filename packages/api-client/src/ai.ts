@@ -989,3 +989,18 @@ export function createClearAiChatSessionMessagesMethod(
     fallbackErrorMessage: 'AI Chat 聊天记录清空失败',
   })
 }
+
+/**
+ * 删除 useKey（级联清除 session + messages）。
+ */
+export function createDeleteAiChatUseKeyMethod(
+  input: AiChatAdminListInput & { useKey: string },
+) {
+  return Alova.createMethod<{ deleted: boolean }>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: `/ai/chat/admin/usekeys/${input.useKey}/delete`,
+    method: 'POST',
+    accessToken: input.accessToken,
+    fallbackErrorMessage: 'AI Chat useKey 删除失败',
+  })
+}

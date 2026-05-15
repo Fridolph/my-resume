@@ -447,10 +447,18 @@ export class AiChatService {
 
   async adminClearMessages(sessionId: string) {
     const bundle = await this.requireSessionBundle(sessionId)
-
     await this.aiChatRepository.deleteMessagesBySessionId(sessionId)
-
     return this.getAdminSessionSnapshot(sessionId)
+  }
+
+  async adminDeleteUseKey(useKeyValue: string) {
+    const useKey = await this.aiChatRepository.findUseKeyByValue(useKeyValue)
+    if (!useKey) {
+      throw new NotFoundException('useKey 不存在')
+    }
+    // 级联删除：useKey → session → messages（通过 FK ON DELETE CASCADE）
+    await this.aiChatRepository.deleteUseKey(useKeyValue)
+    return { deleted: true, useKey: useKeyValue }
   }
 
   async createAssistantReply(

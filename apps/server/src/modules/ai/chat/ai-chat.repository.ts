@@ -500,6 +500,10 @@ export class AiChatRepository {
       )
   }
 
+  async deleteUseKey(useKeyValue: string) {
+    await this.database.delete(aiChatUseKeys).where(eq(aiChatUseKeys.useKey, useKeyValue))
+  }
+
   private async ensureLeadColumns() {
     const result = await this.databaseClient.execute(`PRAGMA table_info('ai_chat_visitor_leads');`)
     const columnNames = new Set(result.rows.map((row) => String(row.column ?? row.name ?? '')))
