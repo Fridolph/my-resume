@@ -443,13 +443,12 @@ export function ResumeDraftEditorPanel({
     </Card>
 
     {status === 'ready' && resumeDraft && draftSnapshot ? (
-      <div className="sticky bottom-0 z-10 flex h-14 items-center justify-center border-t border-zinc-200/80 bg-white/95 px-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/95">
+      <div className="sticky bottom-0 z-10 flex h-12 items-center justify-end border-t border-zinc-200/80 bg-white/95 px-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/95">
         <Button
-          className="h-10 min-w-[200px]"
+          className="h-8 px-4 py-0 text-sm text-white"
           data-testid="resume-draft-sticky-save"
           form="resume-draft-editor-form"
           isDisabled={pendingSave}
-          size="md"
           type="submit"
           variant="primary">
           {pendingSave ? '保存中...' : '保存当前草稿'}
