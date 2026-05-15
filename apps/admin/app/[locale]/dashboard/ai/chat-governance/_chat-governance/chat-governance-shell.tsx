@@ -83,6 +83,8 @@ const actionIconClass = [
 ].join(' ')
 
 interface MergedRow {
+  /** HeroUI v3 Table 要求每个 item 有 id */
+  id: string
   /** 会话 ID，用于查看详情 */
   sessionId: string | null
   /** 访客 IP hash */
@@ -147,6 +149,7 @@ export function ChatGovernanceShell() {
       const lead = leadMap.get(relatedKey?.leadId ?? s.id)
 
       return {
+        id: s.id,
         sessionId: s.id,
         sourceKey: extractSourceKey(lead),
         sessionStatus: s.status,
