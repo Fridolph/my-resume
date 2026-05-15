@@ -365,6 +365,12 @@ export class AiChatService {
       throw new Error('Failed to create public AI chat lead')
     }
 
+    // 孤儿清理：删除该 lead 下已失效的 useKey 引用（历史数据库可能未开 FK cascade）
+    const existingUseKey = await this.aiChatRepository.findLatestUseKeyByLeadId(lead.id)
+    if (existingUseKey && existingUseKey.status === 'revoked') {
+      await this.aiChatRepository.deleteUseKey(existingUseKey.useKey)
+    }
+
     const useKeyRecord =
       (await this.aiChatRepository.findLatestUseKeyByLeadId(lead.id)) ??
       (await this.aiChatRepository.createUseKey({
