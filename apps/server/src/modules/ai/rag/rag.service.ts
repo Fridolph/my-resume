@@ -107,6 +107,14 @@ function buildRagAskCitations(matches: RagSearchMatch[]): RagAskCitation[] {
   }))
 }
 
+/**
+ * RAG 问答最低匹配分阈值。
+ *
+ * 最高 citation 分低于该值时不调用 LLM，直接返回"上下文不足"。
+ * 避免"测试一下"等无关输入因低分噪音进入 AI 回答链路。
+ */
+const CHAT_MIN_CITATION_SCORE = 0.1
+
 function buildInsufficientContextAnswer(locale: 'zh' | 'en'): string {
   return locale === 'en'
     ? "I don't have enough information in my resume to answer this question accurately. Feel free to ask about my projects, work experience, or technical skills!"
@@ -497,6 +505,28 @@ export class RagService {
         durationMs: Date.now() - startedAt,
         provider: providerSummary.provider,
         model: providerSummary.model,
+      })
+
+      return {
+        answer: buildInsufficientContextAnswer(locale),
+        citations,
+        matches: prioritizedMatches,
+        providerSummary,
+      }
+    }
+
+    // 硬门控：最高匹配分低于阈值时不调用 LLM，避免低分噪音触发无关回答
+    const topScore = citations[0]?.score ?? 0
+    if (topScore < CHAT_MIN_CITATION_SCORE) {
+      this.logger.log({
+        event: 'rag.ask.completed',
+        status: 'low_relevance',
+        question,
+        topScore,
+        threshold: CHAT_MIN_CITATION_SCORE,
+        matchCount: prioritizedMatches.length,
+        citationCount: citations.length,
+        durationMs: Date.now() - startedAt,
       })
 
       return {
