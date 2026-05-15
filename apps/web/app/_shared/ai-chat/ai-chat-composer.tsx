@@ -42,9 +42,9 @@ export function AiChatComposer({
   }, [value])
 
   return (
-    <div className="grid gap-3">
+    <div className="grid w-full gap-3">
       <textarea
-        className="min-h-[5.5rem] w-full resize-none rounded-[1.35rem] border border-zinc-200/80 bg-zinc-50/90 px-4 py-3 text-sm leading-6 text-zinc-900 outline-none transition focus:border-sky-300 focus:bg-white focus:ring-2 focus:ring-sky-200/70 dark:border-zinc-800 dark:bg-zinc-900/90 dark:text-zinc-100 dark:focus:border-sky-400/40 dark:focus:bg-zinc-950 dark:focus:ring-sky-400/20"
+        className="min-h-[5.5rem] w-full resize-none rounded-xl border border-zinc-200/80 bg-zinc-50/90 px-4 py-3 text-sm leading-6 text-zinc-900 outline-none transition focus:border-sky-300 focus:bg-white focus:ring-2 focus:ring-sky-200/70 dark:border-zinc-800 dark:bg-zinc-900/90 dark:text-zinc-100 dark:focus:border-sky-400/40 dark:focus:bg-zinc-950 dark:focus:ring-sky-400/20"
         onChange={(event) => onChange(event.target.value)}
         onInput={(event) => resizeTextarea(event.currentTarget)}
         placeholder={
@@ -56,13 +56,14 @@ export function AiChatComposer({
         rows={2}
         value={value}
       />
-      <div className="flex items-end justify-between gap-3">
+      <div className="flex w-full items-end justify-between gap-3">
         <p className="text-xs leading-5 text-zinc-500 dark:text-zinc-400">
           {locale === 'en'
             ? 'Resume-only chat. A summary is generated after 20 questions.'
             : '仅限简历相关问答。提问满 20 次后会自动生成总结。'}
         </p>
         <Button
+          className="shrink-0"
           isDisabled={!value.trim() || isStreaming}
           onPress={() => void onSend()}
           variant="primary">
