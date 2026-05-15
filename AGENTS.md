@@ -135,10 +135,25 @@ Review 必须检查：
 
 ### 10. 提交与合并（覆盖全局 Commit 规范）
 
-- Commit 格式：`<type>(m<n>): <description>`
+**日常分支提交**（Issue 内小步提交）：
+- 格式：`<type>(m<n>): <description>`
   - `feat(m1): bootstrap workspace docs`
   - `docs(m1): add monorepo rationale`
   - `test(m3): cover publish flow`
+
+**里程碑 Squash Merge / main 分支合并**（阶段性交付）：
+- 使用 **Dao Commit** 格式（按 `~/.config/opencode/skills/dao-commit` 约定）：
+  ```
+  [上卦下卦][卦名] type(scope): subject
+  
+  背景：…
+  判断：…
+  停点：…
+  Ref: …
+  ```
+- 每次里程碑 Squash Merge 前复用 `dao-commit` skill 辅助起草，由人确认定锚。
+- `main` 只接受阶段性稳定内容，合并到 `main` 时同样使用 Dao Commit 格式。
+
 - PR 合并到 `development` 前必须通过 CI。
 - 一个里程碑内的多个任务完成后，再按顺序合并到 `development`。
 - `main` 只接受阶段性稳定内容。
@@ -163,6 +178,7 @@ Review 必须检查：
   - 确保对应 Issue 全部关闭
   - 整理教程或技术博客（至少产出大纲）
   - 合并到 `development`，稳定后进入 `main`
+- **Squash Merge 到 `development` / `main` 时**，必须使用 `dao-commit` skill 生成 Dao Commit 格式的提交信息，由人确认后执行合并。
 
 ---
 
@@ -208,3 +224,4 @@ Review 必须检查：
 - 每次任务默认先输出：当前目标 / 当前只做什么 / 当前明确不做什么。
 - 如果任务开始偏离教学节奏，主动提醒并建议拆分。
 - 修改尽量小而清晰，不做与当前任务无关的改动。
+- **里程碑 Squash Merge / main 分支合并时**，必须加载 `dao-commit` skill 辅助起草提交信息，由人确认定锚。禁止跳过 Dao Commit 直接合并。
