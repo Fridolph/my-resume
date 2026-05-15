@@ -114,9 +114,9 @@ function buildRagAskCitations(matches: RagSearchMatch[]): RagAskCitation[] {
  */
 function resolveChatMinCitationScore(env: NodeJS.ProcessEnv): number {
   const raw = env.RAG_CHAT_MIN_SCORE
-  if (!raw) return 0.1
+  if (!raw) return 0.05
   const parsed = Number(raw)
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0.1
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0.05
 }
 
 function buildInsufficientContextAnswer(locale: 'zh' | 'en'): string {

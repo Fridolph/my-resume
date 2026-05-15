@@ -106,7 +106,7 @@ function ChatAvatar({
   variant: 'assistant' | 'visitor'
 }) {
   return (
-    <div className={`relative grid justify-items-center ${align === 'right' ? 'justify-items-end' : 'justify-items-start'}`}>
+    <div className={`relative shrink-0 ${align === 'right' ? 'items-end' : 'items-start'}`}>
       <Avatar.Root
         aria-hidden="true"
         className={[
