@@ -117,8 +117,8 @@ function chunkAnswerText(answer: string): string[] {
 function buildIrrelevantAnswer(locale: AiChatLocale): AiChatAnswerGenerationResult {
   const text =
     locale === 'en'
-      ? 'I can only answer questions related to this resume, project history, work experience, skills, and role fit.'
-      : '我目前只回答和这份简历、项目经历、工作经历、专业技能以及候选人匹配度相关的问题。'
+      ? "I can only answer questions about my background, projects, work experience, technical skills, and related interests. Feel free to ask about those!"
+      : '我只能回答关于我的背景、项目经历、工作经历、技术技能和相关兴趣的问题。欢迎问我这些方面！'
 
   return {
     answer: text,
@@ -717,7 +717,7 @@ export class AiChatService {
     return {
       answer: ragResult.answer,
       citations: ragResult.citations,
-      blocks: cardBlocks.length > 0 ? cardBlocks : [{ type: 'text', text: ragResult.answer }],
+      blocks: cardBlocks,
     }
   }
 

@@ -313,7 +313,7 @@ describe('RagService', () => {
 
     expect(searchSpy).toHaveBeenCalled()
     expect(generateSpy).not.toHaveBeenCalled()
-    expect(result.answer).toContain('检索到的上下文不足')
+    expect(result.answer).toContain('我的简历中暂时没有足够的信息')
     expect(result.citations).toEqual([])
     expect(result.matches).toEqual([])
   })

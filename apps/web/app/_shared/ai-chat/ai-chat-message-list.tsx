@@ -61,11 +61,8 @@ function renderMessageBlocks(blocks: AiChatMessageBlock[]) {
       )
     }
 
-    return (
-      <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-200" key={`${block.type}-${index}`}>
-        {block.text}
-      </p>
-    )
+    // text 类型 block 不重复渲染——消息正文已在气泡中展示
+    return null
   })
 }
 

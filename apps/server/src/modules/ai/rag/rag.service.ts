@@ -109,8 +109,8 @@ function buildRagAskCitations(matches: RagSearchMatch[]): RagAskCitation[] {
 
 function buildInsufficientContextAnswer(locale: 'zh' | 'en'): string {
   return locale === 'en'
-    ? 'The retrieved context is insufficient to answer this question reliably. Please add more resume or user document context and try again.'
-    : '检索到的上下文不足，无法可靠回答这个问题。请补充更多简历或资料上下文后再试。'
+    ? "I don't have enough information in my resume to answer this question accurately. Feel free to ask about my projects, work experience, or technical skills!"
+    : '我的简历中暂时没有足够的信息来准确回答这个问题。欢迎问我关于项目经历、工作经历或技术技能的问题！'
 }
 
 function normalizeUnknownErrorMessage(
