@@ -445,7 +445,7 @@ export function ResumeDraftEditorPanel({
     {status === 'ready' && resumeDraft && draftSnapshot ? (
       <div className="sticky bottom-0 z-10 flex h-12 items-center justify-end border-t border-zinc-200/80 bg-white/95 px-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/95">
         <Button
-          className="h-8 px-4 py-0 text-sm text-white"
+          className="h-7 px-4 py-0 text-sm! text-white!"
           data-testid="resume-draft-sticky-save"
           form="resume-draft-editor-form"
           isDisabled={pendingSave}
