@@ -264,4 +264,26 @@ export class AiChatController {
   getSessionDetail(@Param('sessionId') sessionId: string) {
     return this.aiChatService.getAdminSessionSnapshot(sessionId)
   }
+
+  @Post('admin/sessions/:sessionId/reset')
+  @UseGuards(JwtAuthGuard, RoleCapabilitiesGuard)
+  @RequireCapability('canTriggerAiAnalysis')
+  @ApiBearerAuth('bearer')
+  @ApiUnauthorizedResponse({ description: '未提供有效 Bearer Token' })
+  @ApiOperation({ summary: '重置会话进度（清空消息 + 归零轮次）' })
+  @ApiEnvelopeResponse({ description: '会话重置成功' })
+  resetSession(@Param('sessionId') sessionId: string) {
+    return this.aiChatService.adminResetSession(sessionId)
+  }
+
+  @Post('admin/sessions/:sessionId/messages/clear')
+  @UseGuards(JwtAuthGuard, RoleCapabilitiesGuard)
+  @RequireCapability('canTriggerAiAnalysis')
+  @ApiBearerAuth('bearer')
+  @ApiUnauthorizedResponse({ description: '未提供有效 Bearer Token' })
+  @ApiOperation({ summary: '清空会话聊天记录（保留轮次进度）' })
+  @ApiEnvelopeResponse({ description: '聊天记录清空成功' })
+  clearMessages(@Param('sessionId') sessionId: string) {
+    return this.aiChatService.adminClearMessages(sessionId)
+  }
 }

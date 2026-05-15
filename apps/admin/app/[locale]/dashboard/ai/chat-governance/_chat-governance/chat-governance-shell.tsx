@@ -7,6 +7,8 @@ import {
   createFetchAiChatSessionsMethod,
   createFetchAiChatUseKeysMethod,
   createIssueAiChatUseKeyMethod,
+  createResetAiChatSessionMethod,
+  createClearAiChatSessionMessagesMethod,
   createRevokeAiChatUseKeyMethod,
 } from '@my-resume/api-client'
 import { Button, Card, CardContent, CardHeader, CardTitle, Chip, Table } from '@heroui/react'
@@ -33,6 +35,8 @@ export function ChatGovernanceShell() {
   const [sessionDetailId, setSessionDetailId] = useState<string | null>(null)
   const [issuingLeadId, setIssuingLeadId] = useState<string | null>(null)
   const [revokingUseKey, setRevokingUseKey] = useState<string | null>(null)
+  const [resettingSessionId, setResettingSessionId] = useState<string | null>(null)
+  const [clearingSessionId, setClearingSessionId] = useState<string | null>(null)
   const leadsRequest = useRequest(
     () =>
       createFetchAiChatLeadsMethod({
@@ -112,6 +116,38 @@ export function ChatGovernanceShell() {
   async function openSessionDetail(sessionId: string) {
     setSessionDetailId(sessionId)
     await sessionDetailRequest.send()
+  }
+
+  async function resetSession(sessionId: string) {
+    if (!window.confirm('确认重置此会话？将清空所有聊天记录并将轮次归零。')) return
+    setResettingSessionId(sessionId)
+
+    try {
+      await createResetAiChatSessionMethod({
+        apiBaseUrl: DEFAULT_API_BASE_URL,
+        accessToken: accessToken ?? '',
+        sessionId,
+      }).send()
+      await refreshAll()
+    } finally {
+      setResettingSessionId(null)
+    }
+  }
+
+  async function clearMessages(sessionId: string) {
+    if (!window.confirm('确认清空此会话的聊天记录？（轮次进度保留）')) return
+    setClearingSessionId(sessionId)
+
+    try {
+      await createClearAiChatSessionMessagesMethod({
+        apiBaseUrl: DEFAULT_API_BASE_URL,
+        accessToken: accessToken ?? '',
+        sessionId,
+      }).send()
+      await refreshAll()
+    } finally {
+      setClearingSessionId(null)
+    }
   }
 
   return (
@@ -229,10 +265,18 @@ export function ChatGovernanceShell() {
                   <Table.Cell><Chip size="sm" variant="soft">{session.status}</Chip></Table.Cell>
                   <Table.Cell>{session.turnCount} / 20</Table.Cell>
                   <Table.Cell>{formatDateTime(session.updatedAt)}</Table.Cell>
-                  <Table.Cell>
-                    <Button size="sm" variant="ghost" onPress={() => void openSessionDetail(session.id)}>
-                      查看详情
-                    </Button>
+                   <Table.Cell>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button size="sm" variant="ghost" onPress={() => void openSessionDetail(session.id)}>
+                        查看详情
+                      </Button>
+                      <Button isDisabled={resettingSessionId === session.id} size="sm" variant="primary" onPress={() => void resetSession(session.id)}>
+                        {resettingSessionId === session.id ? '重置中...' : '重置进度'}
+                      </Button>
+                      <Button isDisabled={clearingSessionId === session.id} size="sm" variant="ghost" onPress={() => void clearMessages(session.id)}>
+                        {clearingSessionId === session.id ? '清空中...' : '清空消息'}
+                      </Button>
+                    </div>
                   </Table.Cell>
                 </Table.Row>
               )}

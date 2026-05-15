@@ -959,3 +959,33 @@ export function createFetchAiChatSessionDetailMethod(
     fallbackErrorMessage: 'AI Chat 会话详情加载失败',
   })
 }
+
+/**
+ * 重置 AI Chat 会话进度：清空所有消息并将轮次归零。
+ */
+export function createResetAiChatSessionMethod(
+  input: AiChatAdminListInput & { sessionId: string },
+) {
+  return Alova.createMethod<AiChatSession>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: `/ai/chat/admin/sessions/${input.sessionId}/reset`,
+    method: 'POST',
+    accessToken: input.accessToken,
+    fallbackErrorMessage: 'AI Chat 会话重置失败',
+  })
+}
+
+/**
+ * 清空 AI Chat 会话聊天记录（保留轮次进度）。
+ */
+export function createClearAiChatSessionMessagesMethod(
+  input: AiChatAdminListInput & { sessionId: string },
+) {
+  return Alova.createMethod<AiChatSession>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: `/ai/chat/admin/sessions/${input.sessionId}/messages/clear`,
+    method: 'POST',
+    accessToken: input.accessToken,
+    fallbackErrorMessage: 'AI Chat 聊天记录清空失败',
+  })
+}

@@ -431,6 +431,28 @@ export class AiChatService {
     return this.getPublicSessionSnapshot(bundle.session.id, input.useKey)
   }
 
+  async adminResetSession(sessionId: string) {
+    const bundle = await this.requireSessionBundle(sessionId)
+    const now = new Date()
+
+    await this.aiChatRepository.deleteMessagesBySessionId(sessionId)
+    await this.aiChatRepository.resetSessionTurns({
+      sessionId,
+      useKeyId: bundle.useKey.id,
+      now,
+    })
+
+    return this.getAdminSessionSnapshot(sessionId)
+  }
+
+  async adminClearMessages(sessionId: string) {
+    const bundle = await this.requireSessionBundle(sessionId)
+
+    await this.aiChatRepository.deleteMessagesBySessionId(sessionId)
+
+    return this.getAdminSessionSnapshot(sessionId)
+  }
+
   async createAssistantReply(
     input: AiChatAskMessageInput,
     streamCallbacks?: {

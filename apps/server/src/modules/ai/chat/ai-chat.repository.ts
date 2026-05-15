@@ -409,6 +409,38 @@ export class AiChatRepository {
       .orderBy(aiChatMessages.createdAt)
   }
 
+  async deleteMessagesBySessionId(sessionId: string) {
+    await this.database.delete(aiChatMessages).where(eq(aiChatMessages.sessionId, sessionId))
+  }
+
+  async resetSessionTurns(input: {
+    sessionId: string
+    useKeyId: string
+    now: Date
+  }) {
+    await this.database
+      .update(aiChatSessions)
+      .set({
+        turnCount: 0,
+        interimSummary: null,
+        finalSummary: null,
+        focusKeywordsJson: null,
+        status: 'open',
+        closedAt: null,
+        updatedAt: input.now,
+      })
+      .where(eq(aiChatSessions.id, input.sessionId))
+
+    await this.database
+      .update(aiChatUseKeys)
+      .set({
+        usedTurns: 0,
+        status: 'claimed',
+        updatedAt: input.now,
+      })
+      .where(eq(aiChatUseKeys.id, input.useKeyId))
+  }
+
   async findLeadByUseKey(useKey: string) {
     const rows = await this.database
       .select({
