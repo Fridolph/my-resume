@@ -6,12 +6,14 @@ export default async function AiTalkChatPage({
 }: {
   params: Promise<{ locale: string }>
 }) {
-  const { apiBaseUrl, locale, publishedResume } = await loadAiTalkPageData(params)
+  const { apiBaseUrl, initialLoadError, locale, publishedResume } =
+    await loadAiTalkPageData(params)
 
   return (
     <AiTalkChatEntryShell
       apiBaseUrl={apiBaseUrl}
       enableClientSync
+      initialLoadError={initialLoadError}
       locale={locale}
       publishedResume={publishedResume}
     />

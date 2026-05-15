@@ -8,10 +8,14 @@ import { AiUsageRecordService } from './application/services/ai-usage-record.ser
 import { FileExtractionService } from './application/services/file-extraction.service'
 import { ResumeImportRecognitionService } from './application/services/resume-import-recognition.service'
 import { ResumeOptimizationResultCacheService } from './application/services/resume-optimization-result-cache.service'
+import { AiChatBootstrapService } from './chat/ai-chat-bootstrap.service'
+import { AiChatRepository } from './chat/ai-chat.repository'
+import { AiChatService } from './chat/ai-chat.service'
 import { AI_FETCH, AI_PROVIDER_INSTANCE, AI_RUNTIME_CONFIG } from './ai.tokens'
 import { resolveAiRuntimeConfig } from './infrastructure/config/ai-config'
 import { createAiProvider } from './infrastructure/providers/ai-provider.factory'
 import { AiUsageRecordRepository } from './infrastructure/repositories/ai-usage-record.repository'
+import { AiChatController } from './transport/controllers/ai-chat.controller'
 import { RagController } from './rag/rag.controller'
 import { RagChunkService } from './rag/rag-chunk.service'
 import { RagIndexRepository } from './rag/rag-index.repository'
@@ -31,7 +35,13 @@ import { AiResumeImportController } from './transport/controllers/ai-resume-impo
 
 @Module({
   imports: [AuthModule, ResumeModule],
-  controllers: [AiFileController, AiReportController, AiResumeImportController, RagController],
+  controllers: [
+    AiFileController,
+    AiReportController,
+    AiResumeImportController,
+    AiChatController,
+    RagController,
+  ],
   providers: [
     {
       // 先解析统一 AI 运行时配置，再根据配置创建 provider。
@@ -62,6 +72,9 @@ import { AiResumeImportController } from './transport/controllers/ai-resume-impo
     AiService,
     AiUsageRecordRepository,
     AiUsageRecordService,
+    AiChatRepository,
+    AiChatBootstrapService,
+    AiChatService,
     AiResumeOptimizationService,
     AnalysisReportCacheService,
     ResumeOptimizationResultCacheService,
@@ -77,6 +90,7 @@ import { AiResumeImportController } from './transport/controllers/ai-resume-impo
   exports: [
     AiService,
     AiUsageRecordService,
+    AiChatService,
     AiResumeOptimizationService,
     AnalysisReportCacheService,
     ResumeOptimizationResultCacheService,

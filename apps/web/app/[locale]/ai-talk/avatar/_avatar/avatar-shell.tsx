@@ -25,6 +25,7 @@ import { AiTalkPageFrame } from '../../_ai-talk/page-frame'
 interface AiTalkAvatarShellProps {
   apiBaseUrl?: string
   enableClientSync?: boolean
+  initialLoadError?: string | null
   locale?: ResumeLocale
   publishedResume: ResumePublishedSnapshot | null
 }
@@ -32,6 +33,7 @@ interface AiTalkAvatarShellProps {
 export function AiTalkAvatarShell({
   apiBaseUrl,
   enableClientSync = false,
+  initialLoadError = null,
   locale = 'zh',
   publishedResume,
 }: AiTalkAvatarShellProps) {
@@ -41,6 +43,7 @@ export function AiTalkAvatarShell({
     <AiTalkPageFrame
       apiBaseUrl={apiBaseUrl}
       enableClientSync={enableClientSync}
+      initialLoadError={initialLoadError}
       locale={locale}
       publishedResume={publishedResume}>
       {({ publishedResume: snapshot }) => {

@@ -792,6 +792,12 @@ export interface RagUserDocIngestResult {
   chunkOverlap: number
   /** 文件上传并入库完成的时间。 */
   uploadedAt: string
+  /** 当前 user_docs 同步使用的向量存储后端。 */
+  vectorStoreBackend: 'local' | 'milvus'
+  /** 向量存储是否同步成功；false 表示已降级，仅 SQLite 入库成功。 */
+  vectorStoreSynced: boolean
+  /** 向量存储降级提示。 */
+  vectorStoreWarning: string | null
 }
 
 /**
@@ -875,4 +881,228 @@ export interface RagAskResult {
   matches: RagSearchMatch[]
   /** 本次问答使用的 provider 摘要。 */
   providerSummary: Record<string, unknown>
+}
+
+export type AiChatLocale = 'zh' | 'en'
+export type AiChatLeadStatus = 'submitted' | 'issued' | 'closed'
+export type AiChatUseKeyStatus = 'issued' | 'claimed' | 'revoked' | 'expired'
+export type AiChatSessionStatus = 'open' | 'closed'
+export type AiChatMessageRole = 'user' | 'assistant' | 'system'
+export type AiChatSummaryStage = 'turn-10' | 'turn-20'
+export type AiChatMessageBlockType =
+  | 'text'
+  | 'project_card'
+  | 'experience_card'
+  | 'system_notice'
+  | 'summary'
+
+export interface AiChatLeadInput {
+  apiBaseUrl: string
+  displayName: string
+  companyName?: string
+  contact?: string
+  message: string
+  locale?: AiChatLocale
+}
+
+export interface AiChatLeadSummary {
+  id: string
+  locale: AiChatLocale
+  displayName: string
+  companyName: string
+  contact: string
+  message: string
+  status: AiChatLeadStatus
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ClaimAiChatUseKeyInput {
+  apiBaseUrl: string
+  useKey: string
+  locale?: AiChatLocale
+}
+
+export interface ClaimPublicAiChatSessionInput {
+  apiBaseUrl: string
+  consentAccepted: boolean
+  locale?: AiChatLocale
+}
+
+export interface FetchAiChatSessionInput {
+  apiBaseUrl: string
+  sessionId: string
+  useKey: string
+}
+
+export interface CloseAiChatSessionInput {
+  apiBaseUrl: string
+  sessionId: string
+  useKey: string
+}
+
+export interface AiChatUseKeySummary {
+  id: string
+  useKey: string
+  leadId: string
+  sessionId: string | null
+  status: AiChatUseKeyStatus
+  maxTurns: number
+  usedTurns: number
+  expiresAt: string | null
+  claimedAt: string | null
+  revokedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AiChatTextBlock {
+  type: 'text'
+  text: string
+}
+
+export interface AiChatProjectCardBlock {
+  type: 'project_card'
+  title: string
+  subtitle: string
+  period: string
+  summary: string
+  technologies: string[]
+  highlights: string[]
+}
+
+export interface AiChatExperienceCardBlock {
+  type: 'experience_card'
+  title: string
+  subtitle: string
+  period: string
+  summary: string
+  technologies: string[]
+  highlights: string[]
+}
+
+export interface AiChatSystemNoticeBlock {
+  type: 'system_notice'
+  tone: 'info' | 'warning' | 'success'
+  text: string
+}
+
+export interface AiChatSummaryBlock {
+  type: 'summary'
+  stage: AiChatSummaryStage
+  title: string
+  summary: string
+  keywords: string[]
+}
+
+export type AiChatMessageBlock =
+  | AiChatTextBlock
+  | AiChatProjectCardBlock
+  | AiChatExperienceCardBlock
+  | AiChatSystemNoticeBlock
+  | AiChatSummaryBlock
+
+export interface AiChatMessage {
+  id: string
+  role: AiChatMessageRole
+  content: string
+  turnIndex: number
+  answerBlocks: AiChatMessageBlock[]
+  citations: RagAskCitation[]
+  createdAt: string
+}
+
+export interface AiChatSummarySnapshot {
+  generatedAt: string
+  keywords: string[]
+  stage: AiChatSummaryStage
+  summary: string
+}
+
+export interface AiChatSession {
+  sessionId: string
+  lead: AiChatLeadSummary
+  locale: AiChatLocale
+  status: AiChatSessionStatus
+  turnCount: number
+  remainingTurns: number
+  useKeyStatus: AiChatUseKeyStatus
+  messages: AiChatMessage[]
+  interimSummary: AiChatSummarySnapshot | null
+  finalSummary: AiChatSummarySnapshot | null
+  createdAt: string
+  updatedAt: string
+  closedAt: string | null
+}
+
+export interface AiChatPublicSessionClaimResult {
+  consentRecordedAt: string
+  policyVersion: string
+  session: AiChatSession
+  turnsPerDay: number
+  useKey: string
+}
+
+export interface AskAiChatMessageInput {
+  apiBaseUrl: string
+  sessionId: string
+  useKey: string
+  content: string
+  locale?: AiChatLocale
+  signal?: AbortSignal
+}
+
+export type AiChatStreamEventType =
+  | 'start'
+  | 'token'
+  | 'citation'
+  | 'block'
+  | 'summary'
+  | 'done'
+  | 'error'
+
+export interface StreamAiChatMessageHandlers {
+  onStart?: (payload: {
+    assistantMessageId: string
+    remainingTurns: number
+    sessionId: string
+    turnCount: number
+  }) => void
+  onToken?: (payload: { text: string }) => void
+  onCitation?: (payload: RagAskCitation) => void
+  onBlock?: (payload: AiChatMessageBlock) => void
+  onSummary?: (payload: AiChatSummarySnapshot) => void
+  onDone?: (payload: { session: AiChatSession }) => void
+  onError?: (payload: { message: string }) => void
+}
+
+export interface AiChatAdminListInput {
+  apiBaseUrl: string
+  accessToken: string
+}
+
+export interface AiChatIssueUseKeyInput {
+  apiBaseUrl: string
+  accessToken: string
+  leadId: string
+  expiresAt?: string
+  locale?: AiChatLocale
+}
+
+export interface AiChatRevokeUseKeyInput {
+  apiBaseUrl: string
+  accessToken: string
+  useKey: string
+}
+
+export interface AiChatSessionListItem {
+  id: string
+  leadDisplayName: string
+  companyName: string
+  status: AiChatSessionStatus
+  turnCount: number
+  locale: AiChatLocale
+  updatedAt: string
+  createdAt: string
+  hasFinalSummary: boolean
 }

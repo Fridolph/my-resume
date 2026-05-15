@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, Logger } from '@nestjs/common'
 import { createHash, randomUUID } from 'node:crypto'
 
 import { RagSourceScope } from '../../../database/schema'
@@ -67,6 +67,9 @@ export interface IngestUserDocResult {
   chunkSize: number
   chunkOverlap: number
   uploadedAt: string
+  vectorStoreBackend: RagVectorStore['backend']
+  vectorStoreSynced: boolean
+  vectorStoreWarning: string | null
 }
 
 interface BuildVectorChunksInput {
@@ -126,6 +129,8 @@ function buildUserDocSourceId(fileName: string, uploadedAt: Date, text: string):
 
 @Injectable()
 export class UserDocsIngestionService {
+  private readonly logger = new Logger(UserDocsIngestionService.name)
+
   constructor(
     @Inject(FileExtractionService)
     private readonly fileExtractionService: FileExtractionService,
@@ -235,22 +240,43 @@ export class UserDocsIngestionService {
           updatedAt: now,
         })),
       )
-      await this.ragVectorStore.deleteChunksByDocument(documentId)
-      await this.ragVectorStore.upsertChunks(
-        this.buildVectorChunks({
-          chunks,
-          embeddings: embeddingResult.embeddings,
-          sourceId,
+      let vectorStoreSynced = true
+      let vectorStoreWarning: string | null = null
+
+      try {
+        await this.ragVectorStore.deleteChunksByDocument(documentId)
+        await this.ragVectorStore.upsertChunks(
+          this.buildVectorChunks({
+            chunks,
+            embeddings: embeddingResult.embeddings,
+            sourceId,
+            documentId,
+            fileName: extracted.fileName,
+            sourceScope,
+            sourceVersion,
+            chunkingProfile,
+            chunkSize: chunkingStrategy.chunkSize,
+            chunkOverlap: chunkingStrategy.chunkOverlap,
+            uploadedAt,
+          }),
+        )
+      } catch (error) {
+        vectorStoreSynced = false
+        vectorStoreWarning =
+          error instanceof Error && error.message.trim()
+            ? error.message
+            : 'Vector store sync skipped because the backend is unavailable.'
+
+        this.logger.warn({
+          event: 'rag.user_docs.vector_sync_skipped',
+          backend: this.ragVectorStore.backend,
           documentId,
           fileName: extracted.fileName,
           sourceScope,
           sourceVersion,
-          chunkingProfile,
-          chunkSize: chunkingStrategy.chunkSize,
-          chunkOverlap: chunkingStrategy.chunkOverlap,
-          uploadedAt,
-        }),
-      )
+          warning: vectorStoreWarning,
+        })
+      }
 
       await this.ragRetrievalRepository.updateIndexRunStatus({
         id: runId,
@@ -273,6 +299,9 @@ export class UserDocsIngestionService {
         chunkSize: chunkingStrategy.chunkSize,
         chunkOverlap: chunkingStrategy.chunkOverlap,
         uploadedAt: uploadedAt.toISOString(),
+        vectorStoreBackend: this.ragVectorStore.backend,
+        vectorStoreSynced,
+        vectorStoreWarning,
       }
     } catch (error) {
       await this.ragRetrievalRepository.updateIndexRunStatus({

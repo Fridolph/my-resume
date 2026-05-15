@@ -229,6 +229,26 @@ export class RagUserDocIngestResultDto {
     example: '2026-04-22T03:45:00.000Z',
   })
   uploadedAt!: string
+
+  @ApiProperty({
+    description: '本次 user_docs 同步使用的向量存储后端',
+    enum: ['local', 'milvus'],
+    example: 'local',
+  })
+  vectorStoreBackend!: 'local' | 'milvus'
+
+  @ApiProperty({
+    description: '向量存储是否同步成功；false 表示已降级，仅 SQLite 检索态成功',
+    example: false,
+  })
+  vectorStoreSynced!: boolean
+
+  @ApiPropertyOptional({
+    description: '向量存储降级提示；为 null 表示未发生降级',
+    nullable: true,
+    example: 'Milvus search unavailable at http://127.0.0.1:19530: connect ECONNREFUSED',
+  })
+  vectorStoreWarning!: string | null
 }
 
 export class RagSearchMatchDto {
@@ -441,6 +461,40 @@ export class RagStatusDto {
     type: Object,
   })
   providerSummary!: Record<string, unknown>
+
+  @ApiProperty({
+    description: '当前配置的向量后端',
+    enum: ['local', 'milvus'],
+    example: 'local',
+  })
+  configuredVectorBackend!: 'local' | 'milvus'
+
+  @ApiProperty({
+    description: '当前是否启用了向量检索链路',
+    example: false,
+  })
+  vectorStoreEnabled!: boolean
+
+  @ApiPropertyOptional({
+    description: '向量存储可用性；local 模式返回 null',
+    nullable: true,
+    example: false,
+  })
+  vectorStoreAvailable!: boolean | null
+
+  @ApiProperty({
+    description: '当前生效的检索模式',
+    enum: ['local', 'vector', 'vector_with_local_fallback'],
+    example: 'vector_with_local_fallback',
+  })
+  effectiveSearchMode!: 'local' | 'vector' | 'vector_with_local_fallback'
+
+  @ApiPropertyOptional({
+    description: '最近一次向量存储错误；无错误时返回 null',
+    nullable: true,
+    example: 'Milvus search unavailable at http://127.0.0.1:19530: connect ECONNREFUSED',
+  })
+  lastVectorStoreError!: string | null
 
   @ApiPropertyOptional({
     description: '索引构建时 provider 摘要',

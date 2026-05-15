@@ -16,6 +16,7 @@ import styles from './entry-shell.module.css'
 interface AiTalkEntryShellProps {
   apiBaseUrl?: string
   enableClientSync?: boolean
+  initialLoadError?: string | null
   locale?: ResumeLocale
   publishedResume: ResumePublishedSnapshot | null
 }
@@ -23,6 +24,7 @@ interface AiTalkEntryShellProps {
 export function AiTalkEntryShell({
   apiBaseUrl,
   enableClientSync = false,
+  initialLoadError = null,
   locale = 'zh',
   publishedResume,
 }: AiTalkEntryShellProps) {
@@ -32,6 +34,7 @@ export function AiTalkEntryShell({
     <AiTalkPageFrame
       apiBaseUrl={apiBaseUrl}
       enableClientSync={enableClientSync}
+      initialLoadError={initialLoadError}
       locale={locale}
       publishedResume={publishedResume}>
       {({ publishedResume: snapshot }) => {

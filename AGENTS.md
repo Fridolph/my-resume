@@ -1,6 +1,10 @@
-# AGENTS.md
+# AGENTS.md · 个人简历 Monorepo
 
-本文件定义本仓库后续协作与开发的默认规则，作用域为整个仓库。
+> 本文件在 **全局 `~/.codex/AGENTS.md`** 基础上扩展。
+> 以下规则与全局冲突时，**本文件优先**。
+> 全局规则中未被覆盖的部分（Stop & Ask、Review、自测等）继续生效。
+
+---
 
 ## 项目当前阶段
 
@@ -9,13 +13,41 @@
 - 后续开发必须按**里程碑 → Issue → 分支 → Plan → TDD → 实现 → Review → 自测 → 日志 → PR/CI → 合并**推进。
 - **禁止**一次性把整个目标架构全部铺满，避免失去教程节奏与过程感。
 
+---
+
 ## 核心协作原则
 
 - 所有改动必须围绕**当前 Issue**，禁止顺手扩展多个里程碑范围。
 - 每次任务开始前，先梳理目标、边界、风险和验收标准。
 - 优先小步提交、可验证、可回滚、可写教程。
-- 若存在多种方案，优先选择更适合教学、更容易解释的方案，而不是一次性最“完整”的方案。
+- 若存在多种方案，优先选择更适合教学、更容易解释的方案，而不是一次性最"完整"的方案。
 - 若发现当前 Issue 过大，应先拆分，而不是硬做。
+
+---
+
+## Stop & Ask 原则（覆盖全局，本项目强化版）
+
+遇到以下任何情况，必须**暂停并告知 Owner**，不得自行决定：
+
+- 实际文件结构 / 调用关系与 Plan 描述不符
+- 改动范围超出 Plan 预期（影响到计划外的文件）
+- 发现潜在破坏性改动（类型变更影响其他模块、依赖升级等）
+- 有多种实现方案，各有取舍，无法判断优先级
+- 涉及数据库、环境变量、CI/CD、发布脚本、Docker 的改动
+- **本项目特有：** 发现当前任务偏离教学节奏（如一次改动跨越多个里程碑）
+- **本项目特有：** 里程碑 / Issue 边界模糊，无法确认当前任务归属
+
+---
+
+## 代码风格约束（新增）
+
+- 复用现有 composable / hooks 写法，不引入新的设计模式
+- 命名风格与现有文件保持一致（composable 用 `useXxx`，工具函数用动词开头）
+- 类型定义风格与现有模块保持一致，优先 `interface` 而非 `type`（除联合类型外）
+- 不引入计划外的新 npm 依赖
+- 新增代码优先放在对应模块目录下，不污染全局
+
+---
 
 ## 标准开发流程
 
@@ -38,18 +70,18 @@
   - 日志/教程输出要求
 - 若临时发现当前 Issue 之外的问题，只记录到新 Issue 或待办，不顺手混入当前分支。
 
-### 3. 分支规范
+### 3. 分支规范（覆盖全局）
 
 - 永远从 `development` 开分支。
 - 禁止直接在 `main` 上开发。
-- 分支命名建议：
-  - `feat/m1-issue-01-workspace-bootstrap`
-  - `feat/m2-issue-03-auth-login`
-  - `fix/m3-issue-08-publish-status`
-  - `docs/m1-issue-02-architecture-notes`
-  - `chore/m1-issue-04-ci-bootstrap`
-- 分支名必须能看出类型、里程碑 / Issue 和短描述；避免只用 `dev`、`fix`、`test` 这类不可追踪名称。
-- 其他项目若使用 `dev` 作为开发主线，应在该项目的 `AGENTS.md` 中明确写死，避免 `dev` / `development` 混用。
+- 分支命名：
+  - `[type]/[milestone]_[issue_index]__desc`
+  - `feat/m1_1__workspace-bootstrap`
+  - `feat/m2_3__auth-login`
+  - `fix/m3_8__publish-status`
+  - `docs/m1-2__architecture-notes`
+  - `chore/m1-4__ci-bootstrap`
+- 分支名必须能看出类型、里程碑 / Issue 和短描述。
 
 ### 4. 先 Plan，再 TDD，再实现
 
@@ -66,125 +98,113 @@
 
 ### 6. 开发完成后先 Review
 
-- Review 必须检查：
-  - 是否符合当前 Issue 与里程碑目标
-  - 是否存在可抽离的组件、公共函数、skills 或其他复用能力
-- Review 还必须检查：
-  - 是否有无关文件或顺手改动
-  - API / 类型 / Swagger / 文档是否需要同步
-  - 是否引入了隐藏的兼容性或迁移风险
-- 若 Review 未通过，先回到实现阶段继续修改。
+Review 必须检查：
+- 是否符合当前 Issue 与里程碑目标
+- 是否存在可抽离的组件、公共函数、skills 或其他复用能力
+- 是否有无关文件或顺手改动
+- API / 类型 / Swagger / 文档是否需要同步
+- 是否引入了隐藏的兼容性或迁移风险
+
+若 Review 未通过，先回到实现阶段继续修改。
 
 ### 7. Review 通过后进行自测
 
-- 至少执行当前任务涉及的：
-  - 类型检查
-  - 单元测试
-  - 构建验证
-  - 关键人工验证
-- 小范围任务至少跑影响范围内测试和类型检查；共享模块、跨端契约、里程碑收口或发布前必须扩大验证范围。
-- 涉及 UI / 交互时，必须补充桌面与移动端关键路径验证；必要时附截图或浏览器验证记录。
+- 至少执行当前任务涉及的：类型检查、单元测试、构建验证、关键人工验证。
+- 涉及 UI / 交互时，必须补充桌面与移动端关键路径验证。
 - 若自测未通过，回到前面的实现或 Review 阶段继续修改。
 
-### 8. 必须写开发日志
+### 8. Done Checklist（实现完成后必须自检，新增）
 
-- 每完成一个 Issue，都要补一份开发日志。
-- 日志至少包含：
-  - 背景
-  - 本次目标
-  - 实际改动
-  - Review 记录
-  - 遇到的问题
-  - 测试与验证
-  - 后续可写成教程/博客的切入点
+每次 implement 完成后，逐项确认：
 
-### 9. 提交与合并
+- [ ] 改动范围在 Plan / Issue 约定内，无计划外文件被修改
+- [ ] lint / type check 通过，无新增 warning
+- [ ] 没有引入计划外的 npm 依赖或新设计模式
+- [ ] 测试覆盖当前任务的核心路径（含边界情况）
+- [ ] `drafts/` 或 `docs/30-开发日志/` 下的开发日志已更新
+- [ ] 本次改动不影响其他里程碑 / 模块的现有功能
 
-- Commit 使用清晰、可追踪的 message。
-- 推荐格式：
+### 9. 必须写开发日志
+
+每完成一个 Issue，都要补一份开发日志，至少包含：
+- 背景 / 本次目标 / 实际改动
+- Review 记录
+- 遇到的问题与排查过程
+- 测试与验证结果
+- 后续可写成教程 / 博客的切入点
+
+### 10. 提交与合并（覆盖全局 Commit 规范）
+
+- Commit 格式：`<type>(m<n>): <description>`
   - `feat(m1): bootstrap workspace docs`
-  - `feat(m2): add auth role model`
   - `docs(m1): add monorepo rationale`
   - `test(m3): cover publish flow`
 - PR 合并到 `development` 前必须通过 CI。
-- 小团队阶段允许本地 merge 回 `development`，但必须保证本地与远端 `development` 同步，并在 Issue / 日志中留下 commit 或 PR 链接。
 - 一个里程碑内的多个任务完成后，再按顺序合并到 `development`。
 - `main` 只接受阶段性稳定内容。
 
-### 10. 关闭 Issue
+### 11. 关闭 Issue
 
-- 合并完成后，必须在 Issue 中回填：
-  - 实际改动摘要
-  - 测试与验证结果
-  - commit / PR / 开发日志链接
-  - 遗留风险或后续 Issue
-- 确认验收标准满足后再关闭 Issue。
+合并完成后，必须在 Issue 中回填：
+- 实际改动摘要
+- 测试与验证结果
+- commit / PR / 开发日志链接
+- 遗留风险或后续 Issue
 
-## Git Flow 约定
+---
+
+## Git Flow 约定（覆盖全局）
 
 - 长期分支：
   - `main`：稳定、可展示、可对外说明
   - `development`：当前开发主线
-- 短期分支：
-  - `feat/*`
-  - `fix/*`
-  - `docs/*`
-  - `chore/*`
+- 短期分支：`feat/*` / `fix/*` / `docs/*` / `chore/*`
 - 里程碑结束时：
-  - 先确保对应 Issue 全部关闭
-  - 结合该里程碑的提交、开发日志与关键设计决策，整理教程或技术博客
-  - 如果内容暂时还不够完整，至少先产出教程 / 博客大纲，避免后续重构时结构散乱
-  - 再把该里程碑分支内容整理合并到 `development`
-  - 稳定后再从 `development` 进入 `main`
+  - 确保对应 Issue 全部关闭
+  - 整理教程或技术博客（至少产出大纲）
+  - 合并到 `development`，稳定后进入 `main`
+
+---
 
 ## 文档要求
 
-- 文档导航记录在 `docs/00-文档导航.md`
-- 总方案记录在 `docs/10-架构设计/01-个人简历-monorepo-重构总方案-v1学习版.md`
-- GitHub 开发流程记录在 `docs/20-研发流程/01-GitHub-标准开发流程.md`
-- 里程碑与 Issue 拆解记录在 `docs/20-研发流程/02-里程碑与-Issue-拆解建议.md`
-- 开发日志模板记录在 `docs/20-研发流程/03-开发日志模板.md`
-- 每个任务的开发日志放在 `docs/30-开发日志/`
-- 里程碑级教程 / 博客正文或大纲放在 `docs/40-教程与博客/`
+- 文档导航：`docs/00-文档导航.md`
+- 总方案：`docs/10-架构设计/01-个人简历-monorepo-重构总方案-v1学习版.md`
+- GitHub 开发流程：`docs/20-研发流程/01-GitHub-标准开发流程.md`
+- 里程碑与 Issue 拆解：`docs/20-研发流程/02-里程碑与-Issue-拆解建议.md`
+- 开发日志模板：`docs/20-研发流程/03-开发日志模板.md`
+- 每个任务的开发日志：`docs/30-开发日志/`
+- 里程碑级教程 / 博客：`docs/40-教程与博客/`
+
+---
 
 ## 测试文件约定
 
-- 新增测试文件时，优先放在对应目录下的 `__tests__/` 子目录中。
-- 页面 / 组件测试示例：
-  - `apps/admin/modules/<feature>/__tests__/xxx.spec.tsx`
-  - `apps/web/modules/<feature>/__tests__/xxx.spec.tsx`
-- 公共模块、客户端请求层、领域函数等测试示例：
-  - `apps/admin/modules/<feature>/__tests__/xxx.spec.ts`
-  - `apps/admin/core/**/__tests__/xxx.spec.ts`
-  - `apps/server/src/**/__tests__/xxx.spec.ts`
-- 避免再把 `.spec.ts` / `.spec.tsx` 直接散落在实现文件同级目录，除非当前目录结构确实无法自然承载 `__tests__/`。
+- 新增测试文件优先放在 `__tests__/` 子目录中。
+- 页面 / 组件：`apps/admin/modules/<feature>/__tests__/xxx.spec.tsx`
+- 公共模块：`apps/admin/core/**/__tests__/xxx.spec.ts`
+- 服务端：`apps/server/src/**/__tests__/xxx.spec.ts`
+
+---
 
 ## TSX 类型拆分约定
 
-- `apps/admin` 继续按模块自治推进，优先落在 `apps/admin/modules/<feature>/` 下，每个模块至少维护自己的 `README.md`、`__tests__/` 与 `types/`。
-- `apps/web` 的新 feature 也优先落在 `apps/web/modules/<feature>/` 下，按模块维护自己的 `README.md`、`__tests__/` 与 `types/`。
-- 当一个 `tsx` 文件**超过 200 行**，且文件内显式声明的 `interface` / `type` **超过 2 个**时，必须把这些类型抽到对应模块的 `types/` 目录中。
-- `import type { ... }` 不计入这个阈值，只统计文件内真实声明的类型。
-- `types` 文件命名统一使用 `.types.ts` / `.types.tsx`，不再新增 `-types.ts` / `-types.tsx`。
-- 若本轮任务会显著修改该 `tsx` 文件，应顺手完成类型拆分，而不是继续把类型堆回组件文件中。
-- `apps/admin/modules/**` 与 `apps/web/modules/**` 下的实现文件不再把业务专属类型放回全局收纳箱，优先从当前模块的 `types/` 引用。
-- 根目录 `pnpm check:tsx-types` 会对当前改动中的 `tsx` 文件执行这条规则检查；对 `apps/admin/modules/**` 与 `apps/web/modules/**` 会优先校验模块内 `types/` 文件。
+- `tsx` 文件**超过 200 行** 且显式声明 `interface` / `type` **超过 2 个**时，必须抽到 `types/` 目录。
+- 类型文件命名统一使用 `.types.ts` / `.types.tsx`。
+- 业务专属类型不放回全局，优先从当前模块的 `types/` 引用。
+
+---
 
 ## 后续实现方向约束
 
-- 目标架构是：
-  - `apps/web`
-  - `apps/admin`
-  - `apps/server`
-  - `packages/ui`
-  - `packages/api-client`
-  - `packages/config`
-- 但必须**按里程碑渐进落地**，不能一步到位。
+目标架构（必须按里程碑渐进落地，不能一步到位）：
+- `apps/web` / `apps/admin` / `apps/server`
+- `packages/ui` / `packages/api-client` / `packages/config`
+
+---
 
 ## AI 协作约束
 
-- 每次任务默认先说明：
-  - 当前目标
-  - 当前只做什么
-  - 当前明确不做什么
-- 如果任务开始偏离教学节奏，应主动提醒并建议拆分。
+- 每次任务默认先输出：当前目标 / 当前只做什么 / 当前明确不做什么。
+- 如果任务开始偏离教学节奏，主动提醒并建议拆分。
+- 修改尽量小而清晰，不做与当前任务无关的改动。

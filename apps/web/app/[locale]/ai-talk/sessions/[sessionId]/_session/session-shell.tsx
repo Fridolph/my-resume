@@ -21,6 +21,7 @@ import { AiTalkPageFrame } from '../../../_ai-talk/page-frame'
 interface AiTalkSessionShellProps {
   apiBaseUrl?: string
   enableClientSync?: boolean
+  initialLoadError?: string | null
   locale?: ResumeLocale
   publishedResume: ResumePublishedSnapshot | null
   sessionId: string
@@ -29,6 +30,7 @@ interface AiTalkSessionShellProps {
 export function AiTalkSessionShell({
   apiBaseUrl,
   enableClientSync = false,
+  initialLoadError = null,
   locale = 'zh',
   publishedResume,
   sessionId,
@@ -39,6 +41,7 @@ export function AiTalkSessionShell({
     <AiTalkPageFrame
       apiBaseUrl={apiBaseUrl}
       enableClientSync={enableClientSync}
+      initialLoadError={initialLoadError}
       locale={locale}
       publishedResume={publishedResume}>
       {() => (

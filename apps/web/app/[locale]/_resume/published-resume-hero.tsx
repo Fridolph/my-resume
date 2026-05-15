@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic'
 import { useTranslations } from 'next-intl'
 import { memo, useEffect, useState } from 'react'
 
+import { Link } from '@i18n/navigation'
 import type {
   ResumeLocale,
   ResumePublishedSnapshot,
@@ -14,6 +15,7 @@ import {
   formatPublishedAt,
   readLocalizedText,
 } from '@shared/published-resume/published-resume-utils'
+import { emitGlobalAiChatOpen, useOptionalAiChat } from '@shared/ai-chat/ai-chat-context'
 import { PublishedResumeProfileIcon } from './published-resume-profile-icon'
 import styles from './hero.module.css'
 
@@ -110,6 +112,8 @@ function PublishedResumeHeroComponent({
   publishedResume,
 }: PublishedResumeHeroProps) {
   const t = useTranslations('publishedResume')
+  const siteT = useTranslations('site')
+  const aiChat = useOptionalAiChat()
   const isJsdom = typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent)
   const [shouldLoadTooltip, setShouldLoadTooltip] = useState(() => isJsdom)
   const [tooltipReady, setTooltipReady] = useState(() => isJsdom)
@@ -188,7 +192,24 @@ function PublishedResumeHeroComponent({
       <CardHeader className="grid gap-5 border-b border-slate-200/80 pb-5 dark:border-white/10">
         <div className="grid gap-4">
           <div className="mx-auto flex w-full max-w-[17rem] flex-col items-center gap-4 text-center">
-            <div className={`${styles.avatarFlip} w-full max-w-40`}>
+            <Link
+              aria-label={siteT('aiChatDrawerAriaLabel')}
+              className={`${styles.avatarChatTrigger} ${styles.avatarFlip} w-full max-w-40`}
+              data-testid="published-resume-ai-chat-trigger"
+              href="/ai-talk"
+              onClick={(event) => {
+                event.preventDefault()
+                if (aiChat) {
+                  aiChat.openDrawer()
+                  return
+                }
+
+                emitGlobalAiChatOpen()
+              }}>
+              <span aria-hidden="true" className={styles.avatarChatBadge}>
+                talk with me ...
+              </span>
+              <span aria-hidden="true" className={styles.avatarChatHalo} />
               <div className={styles.avatarFlipInner}>
                 <div className={styles.avatarFace}>
                   <img
@@ -211,7 +232,7 @@ function PublishedResumeHeroComponent({
                   />
                 </div>
               </div>
-            </div>
+            </Link>
 
             <div className="grid gap-2">
               {localizedHeroSlogans.map((line) => (

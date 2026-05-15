@@ -10,9 +10,16 @@ function readWebCss() {
 }
 
 describe('heroui-web.css', () => {
-  it('should include Skeleton styles for the current web runtime usage', () => {
+  it('should use the consolidated HeroUI components entry for web overlays', () => {
     const css = readWebCss()
 
-    expect(css).toContain("@import '@heroui/styles/components/skeleton.css' layer(components);")
+    expect(css).toContain("@import '@heroui/styles/components/index.css' layer(components);")
+    expect(css).not.toMatch(/@import '@heroui\/styles\/components\/(?!index\.css)[^']+\.css'/)
+  })
+
+  it('should include tw-animate-css for overlay animations', () => {
+    const css = readWebCss()
+
+    expect(css).toContain("@import 'tw-animate-css';")
   })
 })

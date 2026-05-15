@@ -85,6 +85,15 @@ const moduleCards = [
     status: '记录中心',
     tone: 'from-rose-50 via-white to-stone-50 dark:from-rose-950/20 dark:via-zinc-950 dark:to-slate-950',
   },
+  {
+    eyebrow: '治理',
+    title: 'AI Chat 治理台',
+    description:
+      '查看公开站访客线索、发放 useKey、回看多轮问答会话，以及第 10 / 20 轮总结沉淀。',
+    href: '/dashboard/ai/chat-governance',
+    status: '最小闭环',
+    tone: 'from-violet-50 via-white to-indigo-50 dark:from-violet-950/20 dark:via-zinc-950 dark:to-slate-950',
+  },
 ] as const
 
 function ModuleCard({

@@ -3,6 +3,7 @@ import { createHash } from 'crypto'
 import { existsSync, readFileSync, readdirSync } from 'fs'
 import { join } from 'path'
 
+import { RagSourceScope } from '../../../database/schema'
 import { AiService } from '../ai.service'
 import { RagChunkService } from './rag-chunk.service'
 import { RagIndexRepository } from './rag-index.repository'
@@ -20,6 +21,7 @@ import {
 } from './rag-search-quality'
 import {
   buildLocalRagSearchContext,
+  calculateKeywordScore,
   cosineSimilarity,
 } from './rag-search-context-builder'
 import { applyRagSearchRerank, applyRagSearchRerankAndSelect, rerankRagSearchMatches } from './rag-search-rerank'
@@ -111,12 +113,25 @@ function buildInsufficientContextAnswer(locale: 'zh' | 'en'): string {
     : '检索到的上下文不足，无法可靠回答这个问题。请补充更多简历或资料上下文后再试。'
 }
 
+function normalizeUnknownErrorMessage(
+  error: unknown,
+  fallback: string,
+): string {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message
+  }
+
+  return fallback
+}
+
 @Injectable()
 export class RagService {
   private readonly logger = new Logger(RagService.name)
   private readonly defaultSearchQualityGate: RagSearchQualityGate =
     resolveRagSearchQualityGate(process.env)
   private readonly searchRoutingConfig = resolveRagSearchRoutingConfig(process.env)
+  private vectorStoreAvailable: boolean | null = null
+  private lastVectorStoreError: string | null = null
 
   constructor(
     @Inject(AiService)
@@ -149,6 +164,14 @@ export class RagService {
       ? true
       : index.sourceHash !== currentSourceHash ||
         index.knowledgeHash !== currentKnowledgeHash
+    const vectorStoreEnabled =
+      this.ragVectorStore.backend !== 'local' && this.searchRoutingConfig.useVectorStore
+    const effectiveSearchMode =
+      !vectorStoreEnabled
+        ? 'local'
+        : this.searchRoutingConfig.fallbackToLocal
+          ? 'vector_with_local_fallback'
+          : 'vector'
 
     return {
       sourcePath,
@@ -165,6 +188,12 @@ export class RagService {
       generatedAt: index?.generatedAt ?? null,
       currentSourceHash,
       currentKnowledgeHash,
+      configuredVectorBackend: this.ragVectorStore.backend,
+      vectorStoreEnabled,
+      vectorStoreAvailable:
+        this.ragVectorStore.backend === 'local' ? null : this.vectorStoreAvailable,
+      effectiveSearchMode,
+      lastVectorStoreError: this.lastVectorStoreError,
       indexedSourceHash: index?.sourceHash ?? null,
       indexedKnowledgeHash: index?.knowledgeHash ?? null,
       indexedProviderSummary: index?.providerSummary ?? null,
@@ -245,7 +274,12 @@ export class RagService {
       }
     }
 
-    const topMatches = await this.searchFromLocalIndex(query, queryVector ?? [], limit)
+    const topMatches = await this.searchFromLocalIndex(
+      query,
+      queryVector ?? [],
+      limit,
+      routingConfig.vectorScope === 'all' ? undefined : routingConfig.vectorScope,
+    )
 
     return applyRagSearchQualityGate(topMatches, qualityGate)
   }
@@ -254,6 +288,7 @@ export class RagService {
     query: string,
     queryVector: number[],
     limit: number,
+    sourceScope?: RagSourceScope,
   ): Promise<RagSearchMatch[]> {
     const index = await this.ensureIndex()
     const localMatches = buildLocalRagSearchContext({
@@ -262,11 +297,30 @@ export class RagService {
       chunks: index.chunks,
     })
 
-    // 本地模式也纳入 user_docs：从 SQLite 读取预存的 embedding，
-    // 在应用层计算余弦相似度，与 resume_core/knowledge 结果合并。
-    const userDocMatches = await this.searchChunksFromDatabase(queryVector)
-    const merged = [...localMatches, ...userDocMatches]
-      .sort((a, b) => b.score - a.score)
+    const databaseMatches = await this.searchChunksFromDatabase(
+      query,
+      queryVector,
+      sourceScope,
+    )
+    const staticKnowledgeMatches = localMatches.filter(
+      (item) => item.section === 'knowledge' || item.sourceType === 'knowledge',
+    )
+    if (databaseMatches.hasScopedResumeCore) {
+      const scopedReranked = sortMatchesForAnswer(
+        applyRagSearchRerank(databaseMatches.matches, query, limit),
+      )
+      const knowledgeReranked = applyRagSearchRerank(
+        staticKnowledgeMatches,
+        query,
+        limit,
+      )
+
+      return [...scopedReranked, ...knowledgeReranked].slice(0, limit)
+    }
+
+    const merged = [...localMatches, ...databaseMatches.matches].sort(
+      (a, b) => b.score - a.score,
+    )
 
     return applyRagSearchRerank(merged, query, limit)
   }
@@ -280,21 +334,40 @@ export class RagService {
    * @param queryVector 查询向量
    */
   private async searchChunksFromDatabase(
+    query: string,
     queryVector: number[],
-  ): Promise<RagSearchMatch[]> {
+    sourceScope?: RagSourceScope,
+  ): Promise<{
+    hasScopedResumeCore: boolean
+    matches: RagSearchMatch[]
+  }> {
     if (queryVector.length === 0) {
-      return []
+      return {
+        hasScopedResumeCore: false,
+        matches: [],
+      }
     }
 
     try {
       const rows = await this.ragRetrievalRepository.listAllChunksWithDocuments()
+      const scopedRows =
+        sourceScope
+          ? rows.filter((row) => row.documentSourceScope === sourceScope)
+          : rows
+      const hasScopedResumeCore = scopedRows.some(
+        (row) => row.documentSourceType === 'resume_core',
+      )
+      const candidateRows = hasScopedResumeCore ? scopedRows : rows
 
-      return rows
+      const matches = candidateRows
         .map((row) => {
           const embedding = row.embeddingJson ?? []
-          const score = embedding.length > 0
-            ? Number(cosineSimilarity(queryVector, embedding).toFixed(6))
-            : 0
+          const semanticScore =
+            embedding.length > 0 ? cosineSimilarity(queryVector, embedding) : 0
+          const keywordScore = calculateKeywordScore(query, row.content)
+          const score = Number(
+            (semanticScore * 0.7 + keywordScore * 0.3).toFixed(6),
+          )
           const metadata =
             row.metadataJson && typeof row.metadataJson === 'object' ? row.metadataJson : null
           const fileName =
@@ -302,19 +375,31 @@ export class RagService {
 
           return {
             id: row.chunkId,
-            title: fileName ?? row.documentTitle ?? 'user_docs',
+            title: fileName ?? row.documentTitle ?? row.documentSourceType,
             section: row.section,
             content: row.content,
-            sourceType: 'user_docs' as const,
+            sourceType: row.documentSourceType,
             sourcePath: fileName,
             score,
           }
         })
-        .filter((match) => match.score > 0)
+        .filter(
+          (match) =>
+            match.score > 0 ||
+            (hasScopedResumeCore && match.sourceType === 'user_docs'),
+        )
         .sort((a, b) => b.score - a.score)
+
+      return {
+        hasScopedResumeCore,
+        matches,
+      }
     } catch {
       // user_docs 检索失败时不影响 resume_core/knowledge 结果
-      return []
+      return {
+        hasScopedResumeCore: false,
+        matches: [],
+      }
     }
   }
 
@@ -344,14 +429,22 @@ export class RagService {
         limit,
         sourceScope,
       })
+      this.markVectorStoreHealthy()
 
       return matches.map((item) => this.mapVectorMatchToSearchMatch(item))
     } catch (error) {
+      this.markVectorStoreUnavailable(error, routingConfig)
+
       if (routingConfig.fallbackToLocal) {
         return null
       }
 
-      throw error
+      throw new Error(
+        normalizeUnknownErrorMessage(
+          error,
+          'Vector store search failed and local fallback is disabled.',
+        ),
+      )
     }
   }
 
@@ -474,5 +567,38 @@ export class RagService {
     }
 
     return rebuiltIndex
+  }
+
+  private markVectorStoreHealthy() {
+    if (this.ragVectorStore.backend === 'local') {
+      return
+    }
+
+    this.vectorStoreAvailable = true
+    this.lastVectorStoreError = null
+  }
+
+  private markVectorStoreUnavailable(
+    error: unknown,
+    routingConfig: ReturnType<typeof mergeRagSearchRoutingConfig>,
+  ) {
+    if (this.ragVectorStore.backend === 'local') {
+      return
+    }
+
+    const message = normalizeUnknownErrorMessage(
+      error,
+      'Vector store is unavailable.',
+    )
+
+    this.vectorStoreAvailable = false
+    this.lastVectorStoreError = message
+    this.logger.warn({
+      event: 'rag.vector_store.degraded',
+      backend: this.ragVectorStore.backend,
+      vectorScope: routingConfig.vectorScope,
+      fallbackToLocal: routingConfig.fallbackToLocal,
+      message,
+    })
   }
 }

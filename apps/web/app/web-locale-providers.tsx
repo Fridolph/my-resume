@@ -6,6 +6,7 @@ import { useEffect, type ReactNode } from 'react'
 
 import { APP_VERSION, DEFAULT_PUBLIC_API_BASE_URL } from '@core/env'
 import type { AppLocale } from '@i18n/types'
+import { AiChatProvider } from './_shared/ai-chat/ai-chat-context'
 
 declare global {
   interface Window {
@@ -57,7 +58,11 @@ export function WebLocaleProviders({
 
   return (
     <I18nProvider locale={heroLocale}>
-      <ThemeModeProvider>{children}</ThemeModeProvider>
+      <ThemeModeProvider>
+        <AiChatProvider apiBaseUrl={DEFAULT_PUBLIC_API_BASE_URL} locale={locale}>
+          {children}
+        </AiChatProvider>
+      </ThemeModeProvider>
     </I18nProvider>
   )
 }

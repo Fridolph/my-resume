@@ -8,6 +8,7 @@ import { useThemeMode } from '@my-resume/ui/theme'
 import { useTranslations } from 'next-intl'
 import type { Key } from 'react'
 
+import { useOptionalAiChat } from '../ai-chat/ai-chat-context'
 import { usePathname, useRouter } from '@i18n/navigation'
 import { normalizeLocalePathname } from '@i18n/types'
 import type { ResumeLocale } from '../published-resume/types/published-resume.types'
@@ -26,6 +27,7 @@ export function PublicSiteHeaderMobileMenu({
 }: PublicSiteHeaderMobileMenuProps) {
   const t = useTranslations('site')
   const { theme, setTheme } = useThemeMode()
+  const aiChat = useOptionalAiChat()
   const pathname = usePathname()
   const router = useRouter()
   const normalizedPathname = normalizeLocalePathname(pathname)
@@ -66,6 +68,11 @@ export function PublicSiteHeaderMobileMenu({
       return
     }
 
+    if (action === 'open-ai-chat') {
+      aiChat?.openDrawer()
+      return
+    }
+
     if (action === 'theme-toggle') {
       setTheme(theme === 'dark' ? 'light' : 'dark')
     }
@@ -88,6 +95,7 @@ export function PublicSiteHeaderMobileMenu({
             <Dropdown.Item id="nav-resume">{t('resumeNav')}</Dropdown.Item>
             <Dropdown.Item id="nav-profile">{t('profileNav')}</Dropdown.Item>
             <Dropdown.Item id="nav-ai-talk">{t('aiTalkNav')}</Dropdown.Item>
+            <Dropdown.Item id="open-ai-chat">{t('openAiChatAction')}</Dropdown.Item>
           </Dropdown.Section>
           <Separator className="my-1" />
           <Dropdown.Section aria-label={t('mobileMenuSections.toggles')}>

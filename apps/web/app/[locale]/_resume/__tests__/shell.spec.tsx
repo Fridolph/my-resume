@@ -113,6 +113,10 @@ vi.mock('next-intl', async () => {
   }
 })
 
+vi.mock('@shared/ai-chat/ai-chat-presentation-sync', () => ({
+  AiChatPresentationSync: () => null,
+}))
+
 import { PublishedResumeShell } from '../shell'
 import { publishedResumeFixture } from '@shared/published-resume/__tests__/fixture'
 
@@ -456,6 +460,24 @@ describe('PublishedResumeShell', () => {
     )
 
     expect(screen.getByText('当前还没有已发布的公开简历内容。')).toBeInTheDocument()
+  })
+
+  it('should keep the public shell and show unavailable state when initial SSR load fails', () => {
+    render(
+      <ThemeModeProvider>
+        <PublishedResumeShell
+          initialLoadError="公开简历读取失败"
+          locale="zh"
+          publishedResume={null}
+        />
+      </ThemeModeProvider>,
+    )
+
+    expect(screen.getByRole('link', { name: '简历' })).toBeInTheDocument()
+    expect(screen.getByText('公开简历服务暂时不可用')).toBeInTheDocument()
+    expect(screen.getByTestId('published-resume-unavailable-message')).toHaveTextContent(
+      '公开简历读取失败',
+    )
   })
 
   it('should sync to newer snapshot after mount when client sync is enabled', async () => {
