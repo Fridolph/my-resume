@@ -271,12 +271,11 @@ describe('ResumeDraftEditorPanel', () => {
     )
 
     expect(await screen.findByLabelText('姓名')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '保存当前草稿' })).toHaveClass(
-      'sticky',
-      'bottom-3',
-      '!bg-[var(--admin-primary)]',
-      '!text-white',
-    )
+    const saveButton = screen.getByRole('button', { name: '保存当前草稿' })
+    expect(saveButton).toBeInTheDocument()
+    expect(saveButton).toHaveClass('!bg-[var(--admin-primary)]', '!text-white')
+    // sticky 移到外层 wrapper，按钮通过 form 属性关联表单
+    expect(saveButton.closest('[class*="sticky"]')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '中文主编辑' })).toHaveClass(
       '!bg-[var(--admin-primary)]',
       '!text-white',

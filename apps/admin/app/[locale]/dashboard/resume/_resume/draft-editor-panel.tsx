@@ -34,7 +34,7 @@ const editorModeTabActiveClass =
 const editorModeTabIdleClass =
   'border-transparent bg-transparent text-zinc-700 hover:bg-white hover:text-zinc-950 dark:text-zinc-200 dark:hover:bg-zinc-800/80 dark:hover:text-white'
 const stickySaveButtonClass =
-  'sticky bottom-3 z-10 mt-2 !border-[color:var(--admin-primary)] !bg-[var(--admin-primary)] !text-white hover:!bg-[color:color-mix(in_srgb,var(--admin-primary)_88%,black)]'
+  'h-11 w-full !border-[color:var(--admin-primary)] !bg-[var(--admin-primary)] !text-white hover:!bg-[color:color-mix(in_srgb,var(--admin-primary)_88%,black)]'
 
 /**
  * 草稿编辑器主容器负责串起加载、编辑、翻译工作区、排序与保存提交流程
@@ -237,9 +237,11 @@ export function ResumeDraftEditorPanel({
         ) : null}
 
         {status === 'ready' && resumeDraft && draftSnapshot ? (
-          <form
-            className="grid gap-3 md:gap-4"
-            onSubmit={(event) => void handleSubmit(event)}>
+          <>
+            <form
+              className="grid gap-3 md:gap-4"
+              id="resume-draft-editor-form"
+              onSubmit={(event) => void handleSubmit(event)}>
             <div className="flex flex-col gap-2.5 rounded-[20px] border border-zinc-200/70 bg-zinc-50/90 px-3 py-3 dark:border-zinc-800 dark:bg-zinc-900/60 md:flex-row md:items-center md:justify-between md:gap-3 md:rounded-[24px] md:px-4 md:py-3">
               <div className="space-y-0.5 md:space-y-1">
                 <strong className="block text-sm text-zinc-950 dark:text-white">
@@ -437,17 +439,23 @@ export function ResumeDraftEditorPanel({
             {feedbackMessage ? (
               <div className="dashboard-inline-note">{feedbackMessage}</div>
             ) : null}
-            <Button
-              className={stickySaveButtonClass}
-              data-testid="resume-draft-sticky-save"
-              fullWidth
-              isDisabled={pendingSave}
-              size="md"
-              type="submit"
-              variant="primary">
-              {pendingSave ? '保存中...' : '保存当前草稿'}
-            </Button>
           </form>
+          <div className="sticky bottom-0 z-10 -mx-3 -mb-3 px-3 pb-3 sm:-mx-4 sm:px-4 sm:pb-3">
+            <div className="rounded-2xl border border-zinc-200/80 bg-white/92 p-3 shadow-[0_-8px_30px_rgba(15,23,42,0.08)] backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/92">
+              <Button
+                className={stickySaveButtonClass}
+                data-testid="resume-draft-sticky-save"
+                form="resume-draft-editor-form"
+                fullWidth
+                isDisabled={pendingSave}
+                size="md"
+                type="submit"
+                variant="primary">
+                {pendingSave ? '保存中...' : '保存当前草稿'}
+              </Button>
+            </div>
+          </div>
+        </>
         ) : null}
       </CardContent>
     </Card>
