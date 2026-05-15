@@ -217,13 +217,36 @@ export function AiChatProvider({
       return
     }
 
-    if (!session) {
+    if (!session || !activeUseKey) {
       void claimPublicSession()
       return
     }
 
+    // 有既有会话时先验证是否仍然有效，避免 admin 端删 key 后闪一下就关
     setDrawerState('open')
-  }, [claimPublicSession, consentDay, isBootstrappingSession, session])
+    setIsBootstrappingSession(true)
+
+    createFetchAiChatSessionMethod({
+      apiBaseUrl,
+      sessionId: session.sessionId,
+      useKey: activeUseKey,
+    })
+      .send()
+      .then((nextSession) => {
+        setSession(nextSession)
+        setUseKeyStatus(nextSession.useKeyStatus)
+        setSummaryPreview(nextSession.finalSummary ?? nextSession.interimSummary)
+        setIsBootstrappingSession(false)
+      })
+      .catch(() => {
+        // 会话失效（被 admin 删除等），清空状态后走新会话认领
+        setSession(null)
+        setUseKeyStatus(null)
+        setActiveUseKey(null)
+        setIsBootstrappingSession(false)
+        void claimPublicSession()
+      })
+  }, [apiBaseUrl, claimPublicSession, consentDay, isBootstrappingSession, session, activeUseKey])
 
   useEffect(() => {
     void refreshSession().catch(() => undefined).finally(() => setRestoreReady(true))
