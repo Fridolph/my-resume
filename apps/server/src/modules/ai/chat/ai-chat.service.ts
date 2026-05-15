@@ -870,23 +870,6 @@ export class AiChatService {
         }
       : null
 
-    // 第10轮后压缩：前10轮对话替换为一条系统摘要消息，节省上下文
-    const mappedMessages = messages.map((item) => this.mapMessage(item))
-    const compressedMessages = interimSummary
-      ? [
-          {
-            id: `summary-turn-10`,
-            role: 'assistant' as const,
-            content: `会话中期总结：${interimSummary.summary}`,
-            turnIndex: 0,
-            answerBlocks: [],
-            citations: [],
-            createdAt: interimSummary.generatedAt,
-          },
-          ...mappedMessages.filter((msg) => msg.turnIndex > 10),
-        ]
-      : mappedMessages
-
     return {
       sessionId: bundle.session.id,
       lead: mapLead(bundle.lead),
@@ -895,7 +878,7 @@ export class AiChatService {
       turnCount: bundle.session.turnCount,
       remainingTurns: Math.max(0, bundle.useKey.maxTurns - bundle.session.turnCount),
       useKeyStatus: bundle.useKey.status as AiChatSessionSnapshot['useKeyStatus'],
-      messages: compressedMessages,
+      messages: messages.map((item) => this.mapMessage(item)),
       interimSummary,
       finalSummary,
       createdAt: bundle.session.createdAt.toISOString(),
