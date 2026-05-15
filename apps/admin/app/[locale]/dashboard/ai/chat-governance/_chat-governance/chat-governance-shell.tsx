@@ -174,36 +174,38 @@ export function ChatGovernanceShell() {
           <CardTitle className="text-xl font-semibold text-zinc-950 dark:text-white">访客线索</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table variant="secondary">
-            <Table.Header>
-              <Table.Column isRowHeader>访客</Table.Column>
-              <Table.Column>留言</Table.Column>
-              <Table.Column>状态</Table.Column>
-              <Table.Column>时间</Table.Column>
-              <Table.Column>操作</Table.Column>
-            </Table.Header>
-            <Table.Body items={leads}>
-              {(lead) => (
-                <Table.Row id={lead.id} key={lead.id}>
-                  <Table.Cell>
-                    <div className="grid gap-1">
-                      <strong>{lead.displayName}</strong>
-                      <span className="text-xs text-zinc-500 dark:text-zinc-400">{lead.companyName || lead.contact || '未提供额外信息'}</span>
-                    </div>
-                  </Table.Cell>
-                  <Table.Cell>{lead.message}</Table.Cell>
-                  <Table.Cell>
-                    <Chip size="sm" variant="soft">{lead.status}</Chip>
-                  </Table.Cell>
-                  <Table.Cell>{formatDateTime(lead.createdAt)}</Table.Cell>
-                  <Table.Cell>
-                    <Button isDisabled={issuingLeadId === lead.id} size="sm" onPress={() => void issueUseKey(lead.id)} variant="primary">
-                      {issuingLeadId === lead.id ? '发放中...' : '发放 useKey'}
-                    </Button>
-                  </Table.Cell>
-                </Table.Row>
-              )}
-            </Table.Body>
+          <Table>
+            <Table.Content aria-label="访客线索列表">
+              <Table.Header>
+                <Table.Column isRowHeader>访客</Table.Column>
+                <Table.Column>留言</Table.Column>
+                <Table.Column>状态</Table.Column>
+                <Table.Column>时间</Table.Column>
+                <Table.Column>操作</Table.Column>
+              </Table.Header>
+              <Table.Body items={leads}>
+                {(lead) => (
+                  <Table.Row id={lead.id} key={lead.id}>
+                    <Table.Cell>
+                      <div className="grid gap-1">
+                        <strong>{lead.displayName}</strong>
+                        <span className="text-xs text-zinc-500 dark:text-zinc-400">{lead.companyName || lead.contact || '未提供额外信息'}</span>
+                      </div>
+                    </Table.Cell>
+                    <Table.Cell>{lead.message}</Table.Cell>
+                    <Table.Cell>
+                      <Chip size="sm" variant="soft">{lead.status}</Chip>
+                    </Table.Cell>
+                    <Table.Cell>{formatDateTime(lead.createdAt)}</Table.Cell>
+                    <Table.Cell>
+                      <Button isDisabled={issuingLeadId === lead.id} size="sm" onPress={() => void issueUseKey(lead.id)} variant="primary">
+                        {issuingLeadId === lead.id ? '发放中...' : '发放 useKey'}
+                      </Button>
+                    </Table.Cell>
+                  </Table.Row>
+                )}
+              </Table.Body>
+            </Table.Content>
           </Table>
         </CardContent>
       </Card>
@@ -213,29 +215,31 @@ export function ChatGovernanceShell() {
           <CardTitle className="text-xl font-semibold text-zinc-950 dark:text-white">useKey 列表</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table variant="secondary">
-            <Table.Header>
-              <Table.Column isRowHeader>useKey</Table.Column>
-              <Table.Column>状态</Table.Column>
-              <Table.Column>已用轮次</Table.Column>
-              <Table.Column>创建时间</Table.Column>
-              <Table.Column>操作</Table.Column>
-            </Table.Header>
-            <Table.Body items={useKeys}>
-              {(useKey) => (
-                <Table.Row id={useKey.id} key={useKey.id}>
-                  <Table.Cell><strong>{useKey.useKey}</strong></Table.Cell>
-                  <Table.Cell><Chip size="sm" variant="soft">{useKey.status}</Chip></Table.Cell>
-                  <Table.Cell>{useKey.usedTurns} / {useKey.maxTurns}</Table.Cell>
-                  <Table.Cell>{formatDateTime(useKey.createdAt)}</Table.Cell>
-                  <Table.Cell>
-                    <Button isDisabled={revokingUseKey === useKey.useKey} size="sm" variant="danger-soft" onPress={() => void revokeUseKey(useKey.useKey)}>
-                      {revokingUseKey === useKey.useKey ? '作废中...' : '作废'}
-                    </Button>
-                  </Table.Cell>
-                </Table.Row>
-              )}
-            </Table.Body>
+          <Table>
+            <Table.Content aria-label="useKey 列表">
+              <Table.Header>
+                <Table.Column isRowHeader>useKey</Table.Column>
+                <Table.Column>状态</Table.Column>
+                <Table.Column>已用轮次</Table.Column>
+                <Table.Column>创建时间</Table.Column>
+                <Table.Column>操作</Table.Column>
+              </Table.Header>
+              <Table.Body items={useKeys}>
+                {(useKey) => (
+                  <Table.Row id={useKey.id} key={useKey.id}>
+                    <Table.Cell><strong>{useKey.useKey}</strong></Table.Cell>
+                    <Table.Cell><Chip size="sm" variant="soft">{useKey.status}</Chip></Table.Cell>
+                    <Table.Cell>{useKey.usedTurns} / {useKey.maxTurns}</Table.Cell>
+                    <Table.Cell>{formatDateTime(useKey.createdAt)}</Table.Cell>
+                    <Table.Cell>
+                      <Button isDisabled={revokingUseKey === useKey.useKey} size="sm" variant="danger-soft" onPress={() => void revokeUseKey(useKey.useKey)}>
+                        {revokingUseKey === useKey.useKey ? '作废中...' : '作废'}
+                      </Button>
+                    </Table.Cell>
+                  </Table.Row>
+                )}
+              </Table.Body>
+            </Table.Content>
           </Table>
         </CardContent>
       </Card>
@@ -245,42 +249,44 @@ export function ChatGovernanceShell() {
           <CardTitle className="text-xl font-semibold text-zinc-950 dark:text-white">会话列表</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table variant="secondary">
-            <Table.Header>
-              <Table.Column isRowHeader>访客</Table.Column>
-              <Table.Column>状态</Table.Column>
-              <Table.Column>轮次</Table.Column>
-              <Table.Column>最后更新时间</Table.Column>
-              <Table.Column>操作</Table.Column>
-            </Table.Header>
-            <Table.Body items={sessions}>
-              {(session) => (
-                <Table.Row id={session.id} key={session.id}>
-                  <Table.Cell>
-                    <div className="grid gap-1">
-                      <strong>{session.leadDisplayName}</strong>
-                      <span className="text-xs text-zinc-500 dark:text-zinc-400">{session.companyName || session.locale}</span>
-                    </div>
-                  </Table.Cell>
-                  <Table.Cell><Chip size="sm" variant="soft">{session.status}</Chip></Table.Cell>
-                  <Table.Cell>{session.turnCount} / 20</Table.Cell>
-                  <Table.Cell>{formatDateTime(session.updatedAt)}</Table.Cell>
-                   <Table.Cell>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Button size="sm" variant="ghost" onPress={() => void openSessionDetail(session.id)}>
-                        查看详情
-                      </Button>
-                      <Button isDisabled={resettingSessionId === session.id} size="sm" variant="primary" onPress={() => void resetSession(session.id)}>
-                        {resettingSessionId === session.id ? '重置中...' : '重置进度'}
-                      </Button>
-                      <Button isDisabled={clearingSessionId === session.id} size="sm" variant="ghost" onPress={() => void clearMessages(session.id)}>
-                        {clearingSessionId === session.id ? '清空中...' : '清空消息'}
-                      </Button>
-                    </div>
-                  </Table.Cell>
-                </Table.Row>
-              )}
-            </Table.Body>
+          <Table>
+            <Table.Content aria-label="会话列表">
+              <Table.Header>
+                <Table.Column isRowHeader>访客</Table.Column>
+                <Table.Column>状态</Table.Column>
+                <Table.Column>轮次</Table.Column>
+                <Table.Column>最后更新时间</Table.Column>
+                <Table.Column>操作</Table.Column>
+              </Table.Header>
+              <Table.Body items={sessions}>
+                {(session) => (
+                  <Table.Row id={session.id} key={session.id}>
+                    <Table.Cell>
+                      <div className="grid gap-1">
+                        <strong>{session.leadDisplayName}</strong>
+                        <span className="text-xs text-zinc-500 dark:text-zinc-400">{session.companyName || session.locale}</span>
+                      </div>
+                    </Table.Cell>
+                    <Table.Cell><Chip size="sm" variant="soft">{session.status}</Chip></Table.Cell>
+                    <Table.Cell>{session.turnCount} / 20</Table.Cell>
+                    <Table.Cell>{formatDateTime(session.updatedAt)}</Table.Cell>
+                    <Table.Cell>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button size="sm" variant="ghost" onPress={() => void openSessionDetail(session.id)}>
+                          查看详情
+                        </Button>
+                        <Button isDisabled={resettingSessionId === session.id} size="sm" variant="primary" onPress={() => void resetSession(session.id)}>
+                          {resettingSessionId === session.id ? '重置中...' : '重置进度'}
+                        </Button>
+                        <Button isDisabled={clearingSessionId === session.id} size="sm" variant="ghost" onPress={() => void clearMessages(session.id)}>
+                          {clearingSessionId === session.id ? '清空中...' : '清空消息'}
+                        </Button>
+                      </div>
+                    </Table.Cell>
+                  </Table.Row>
+                )}
+              </Table.Body>
+            </Table.Content>
           </Table>
         </CardContent>
       </Card>
