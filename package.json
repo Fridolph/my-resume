@@ -5,8 +5,9 @@
   "type": "module",
   "packageManager": "pnpm@10.8.0",
   "scripts": {
-    "dev": "[ -f .env ] || cp .env.stack.local .env; pnpm dev:all",
+    "dev": "[ -f .env ] || cp .env.stack.local .env; pnpm dev:clean && pnpm dev:all",
     "dev:all": "pnpm build:shared && turbo run dev --filter=@my-resume/server --filter=@my-resume/web --filter=@my-resume/admin --parallel",
+    "dev:clean": "rm -rf .turbo apps/web/.next apps/admin/.next apps/server/dist packages/*/dist apps/server/.turbo apps/web/.turbo apps/admin/.turbo; echo 'cache cleared'",
     "dev:server": "pnpm --filter @my-resume/server dev",
     "dev:web": "pnpm build:shared && pnpm --filter @my-resume/web dev",
     "dev:admin": "pnpm build:shared && pnpm --filter @my-resume/admin dev",
