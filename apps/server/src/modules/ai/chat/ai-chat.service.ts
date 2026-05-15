@@ -115,20 +115,129 @@ function chunkAnswerText(answer: string): string[] {
 }
 
 function buildIrrelevantAnswer(locale: AiChatLocale): AiChatAnswerGenerationResult {
-  const text =
-    locale === 'en'
-      ? "I can only answer questions about my background, projects, work experience, technical skills, and related interests. Feel free to ask about those!"
-      : '我只能回答关于我的背景、项目经历、工作经历、技术技能和相关兴趣的问题。欢迎问我这些方面！'
+  return {
+    answer:
+      locale === 'en'
+        ? "I can only answer questions about my background, projects, work experience, technical skills, and related interests. Feel free to ask about those!"
+        : '我只能回答关于我的背景、项目经历、工作经历、技术技能和相关兴趣的问题。欢迎问我这些方面！',
+    blocks: [],
+    citations: [],
+  }
+}
+
+function buildLowRelevanceAnswer(
+  question: string,
+  topScore: number,
+  locale: AiChatLocale,
+): AiChatAnswerGenerationResult {
+  const isShort = question.trim().length <= 6
+
+  // 分数极低（< 0.05）：无任何关联
+  if (topScore < 0.05) {
+    if (isShort) {
+      return buildShortAnswer(question, locale)
+    }
+    return buildIrrelevantAnswer(locale)
+  }
+
+  // 低分但有点关联（0.05~0.1）：模糊提示，鼓励更具体的提问
+  if (topScore < 0.1) {
+    return {
+      answer:
+        locale === 'en'
+          ? `Hmm, I'm not sure I caught that clearly. Try asking about something specific — like my projects, skills, or work experience!`
+          : '嗯，这个问题我不太确定怎么回答。可以试试问我具体一些的事情——比如项目经历、技能或者工作经历？',
+      blocks: [],
+      citations: [],
+    }
+  }
+
+  // 接近阈值：礼貌告知检索不足
+  if (isShort) {
+    return buildShortAnswer(question, locale)
+  }
+
+  return buildIrrelevantAnswer(locale)
+}
+
+type QuestionClass = 'greeting' | 'short' | 'negative' | 'normal'
+
+/**
+ * 快速问题分类（纯规则，不调 LLM）。
+ */
+function classifyQuestion(question: string): QuestionClass {
+  const trimmed = question.trim()
+  const lower = trimmed.toLowerCase()
+
+  // 中英文打招呼/简单招呼（≤10 字且匹配关键词）
+  const greetingPatterns = [
+    'hello', 'hi', 'hey', 'yo', 'hola', 'good morning', 'good afternoon',
+    '你好', '哈喽', '嗨', '在吗', '有人在吗', '早', '晚上好', '下午好',
+    'who are you', 'what can you do', 'what can you',
+  ]
+  if (trimmed.length <= 10 && greetingPatterns.some((p) => lower.includes(p))) {
+    return 'greeting'
+  }
+
+  // 纯否定/消极情绪（无具体提问内容）
+  const negativePatterns = [
+    '好烦', '不开心', '难过', '伤心', '郁闷', '无聊', '累了',
+    'sad', 'upset', 'tired', 'boring', 'frustrated',
+  ]
+  if (trimmed.length <= 15 && negativePatterns.some((p) => lower.includes(p))) {
+    return 'negative'
+  }
+
+  // 极短无意义输入（非问题、非招呼）
+  if (trimmed.length <= 4 && !/[?？]/.test(trimmed)) {
+    return 'short'
+  }
+
+  return 'normal'
+}
+
+function buildGreetingAnswer(locale: AiChatLocale): AiChatAnswerGenerationResult {
+  return {
+    answer:
+      locale === 'en'
+        ? "Hi there! I'm FYS (Fridolph), a full-stack engineer. This is my personal resume site — feel free to ask me about my projects, work experience, technical skills, or career journey. I'd love to share!"
+        : '你好！我是 FYS（Fridolph），一位全栈工程师。这里是我的个人简历站，你可以问我关于项目经历、工作经历、技术技能或职业发展的问题，我很乐意分享！',
+    blocks: [],
+    citations: [],
+  }
+}
+
+function buildShortAnswer(
+  question: string,
+  locale: AiChatLocale,
+): AiChatAnswerGenerationResult {
+  if (locale === 'en') {
+    // 检测到疑问词当成基础问题用 LLM 回答，只在无意义短输入时才用模板
+    if (/what|how|why|when|where|who|can you|tell me|do you/i.test(question)) {
+      return { answer: '', blocks: [], citations: [] } // fallthrough to RAG
+    }
+  }
+  if (/为什么|什么|怎么|如何|哪里|是谁|能不能|可以/.test(question)) {
+    return { answer: '', blocks: [], citations: [] } // fallthrough to RAG
+  }
 
   return {
-    answer: text,
-    blocks: [
-      {
-        type: 'system_notice',
-        tone: 'warning',
-        text,
-      },
-    ],
+    answer:
+      locale === 'en'
+        ? "Ask me anything about my resume — my projects, skills, or work experience. I'm happy to share!"
+        : '可以问我任何简历相关的问题——项目经历、技能、工作经历都可以，我很乐意分享！',
+    blocks: [],
+    citations: [],
+  }
+}
+
+function buildNegativeAnswer(locale: AiChatLocale): AiChatAnswerGenerationResult {
+  return {
+    answer:
+      locale === 'en'
+        ? "I hear you — we all have tough moments. Want to talk about something inspiring, like the projects I've worked on or the skills I've picked up along the way?"
+        : '我理解，每个人都会有情绪低落的时候。要不要聊聊一些有意思的事情，比如我做过的项目或者学到的技能？',
+    blocks: [],
     citations: [],
   }
 }
@@ -750,6 +859,25 @@ export class AiChatService {
       onToken?: (token: string) => void
     },
   ): Promise<AiChatAnswerGenerationResult> {
+    const classification = classifyQuestion(input.question)
+
+    // 打招呼 → 友好自我介绍（纯模板，不调 LLM）
+    if (classification === 'greeting') {
+      return buildGreetingAnswer(input.locale)
+    }
+
+    // 消极情绪 → 共情引导（纯模板，不调 LLM）
+    if (classification === 'negative') {
+      return buildNegativeAnswer(input.locale)
+    }
+
+    // 短句无意义 → 引导提问，但含疑问词则 fallthrough 到 RAG
+    if (classification === 'short') {
+      const shortAnswer = buildShortAnswer(input.question, input.locale)
+      if (shortAnswer.answer) return shortAnswer
+    }
+
+    // 正常问题：RAG 检索 + LLM 回答
     const ragResult = await this.ragService.ask(
       input.question,
       DEFAULT_CHAT_LIMIT,
@@ -758,8 +886,10 @@ export class AiChatService {
       input.onToken ? { onToken: input.onToken } : undefined,
     )
 
+    // 无有效匹配或低分：根据分数动态调整回复
     if (ragResult.citations.length === 0) {
-      return buildIrrelevantAnswer(input.locale)
+      const topScore = ragResult.matches[0]?.score ?? 0
+      return buildLowRelevanceAnswer(input.question, topScore, input.locale)
     }
 
     const snapshot = await this.resumePublicationService.getPublished()
