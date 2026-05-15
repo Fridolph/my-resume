@@ -289,27 +289,26 @@ export function ChatGovernanceShell() {
         </CardContent>
       </Card>
 
-      <AdminDrawerShell dialogClassName="w-full max-w-3xl" isOpen={Boolean(sessionDetailId)} onClose={() => setSessionDetailId(null)}>
-        <div className="grid min-h-[20rem] gap-3">
-          <div className="flex items-center justify-between border-b border-zinc-200/80 px-4 py-3 dark:border-zinc-800">
-            <h2 className="text-lg font-semibold text-zinc-950 dark:text-white">会话详情</h2>
+      <AdminDrawerShell dialogClassName="!p-0 w-full max-w-3xl" isOpen={Boolean(sessionDetailId)} onClose={() => setSessionDetailId(null)}>
+        <div className="grid min-h-[20rem]">
+          <div className="flex items-center justify-between border-b border-zinc-200/80 px-4 py-2.5 dark:border-zinc-800">
+            <h2 className="text-base font-semibold text-zinc-950 dark:text-white">会话详情</h2>
             <CloseButton aria-label="关闭会话详情" onPress={() => setSessionDetailId(null)} />
           </div>
-          <div className="grid gap-4 px-4 py-3">
+          <div className="grid gap-3 overflow-y-auto px-4 py-3">
             {sessionDetailRequest.loading ? <p className="text-sm text-zinc-500">加载中...</p> : null}
             {sessionDetail ? (
               <>
-                <div className="grid gap-2 rounded-2xl border border-zinc-200/80 bg-zinc-50/80 p-4 text-sm dark:border-zinc-800 dark:bg-zinc-900/60">
+                <div className="grid gap-1.5 rounded-xl border border-zinc-200/80 bg-zinc-50/80 p-3 text-sm dark:border-zinc-800 dark:bg-zinc-900/60">
                   <strong>{sessionDetail?.lead?.displayName ?? '未知访客'}</strong>
-                  <span>状态：{sessionDetail.status}</span>
-                  <span>轮次：{sessionDetail.turnCount} / 20</span>
-                  {sessionDetail.interimSummary ? <span>第 10 轮总结：{sessionDetail.interimSummary.summary}</span> : null}
-                  {sessionDetail.finalSummary ? <span>第 20 轮总结：{sessionDetail.finalSummary.summary}</span> : null}
+                  <span>状态：{sessionDetail.status} · 轮次：{sessionDetail.turnCount} / 20</span>
+                  {sessionDetail.interimSummary ? <span className="text-xs text-zinc-500">第 10 轮总结：{sessionDetail.interimSummary.summary}</span> : null}
+                  {sessionDetail.finalSummary ? <span className="text-xs text-zinc-500">第 20 轮总结：{sessionDetail.finalSummary.summary}</span> : null}
                 </div>
-                <div className="grid gap-3">
+                <div className="grid gap-2">
                   {(sessionDetail.messages ?? []).map((message) => (
-                    <div className="rounded-2xl border border-zinc-200/80 p-3 text-sm leading-6 dark:border-zinc-800" key={message.id}>
-                      <strong className="block text-zinc-950 dark:text-white">{message.role}</strong>
+                    <div className="rounded-xl border border-zinc-200/80 p-2.5 text-sm leading-6 dark:border-zinc-800" key={message.id}>
+                      <strong className="block text-xs text-zinc-500 dark:text-zinc-400">{message.role}</strong>
                       <p className="whitespace-pre-wrap text-zinc-700 dark:text-zinc-200">{message.content}</p>
                     </div>
                   ))}
