@@ -546,27 +546,6 @@ export class RagService {
       }
     }
 
-    // 低分门控：极低分（< 0.03）视为无关输入，其他交给 LLM 结合简历自行判断
-    const topScore = citations[0]?.score ?? 0
-    if (topScore < 0.03) {
-      this.logger.log({
-        event: 'rag.ask.completed',
-        status: 'low_relevance',
-        question,
-        topScore,
-        matchCount: prioritizedMatches.length,
-        citationCount: citations.length,
-        durationMs: Date.now() - startedAt,
-      })
-
-      return {
-        answer: buildInsufficientContextAnswer(locale),
-        citations,
-        matches: prioritizedMatches,
-        providerSummary,
-      }
-    }
-
     const context = prioritizedMatches
       .map(
         (item, index) =>

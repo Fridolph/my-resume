@@ -291,9 +291,9 @@ export function ChatGovernanceShell() {
 
       <AdminDrawerShell dialogClassName="!p-0 w-full max-w-3xl" isOpen={Boolean(sessionDetailId)} onClose={() => setSessionDetailId(null)}>
         <div className="grid min-h-[20rem]">
-          <div className="flex items-center justify-between border-b border-zinc-200/80 px-4 py-2.5 dark:border-zinc-800">
-            <h2 className="text-base font-semibold text-zinc-950 dark:text-white">会话详情</h2>
-            <CloseButton aria-label="关闭会话详情" onPress={() => setSessionDetailId(null)} />
+          <div className="flex items-center justify-between border-b border-zinc-200/80 px-3 py-1.5 dark:border-zinc-800">
+            <h2 className="text-sm font-semibold text-zinc-950 dark:text-white">会话详情</h2>
+            <CloseButton aria-label="关闭会话详情" className="h-6 w-6" onPress={() => setSessionDetailId(null)} />
           </div>
           <div className="grid gap-3 overflow-y-auto px-4 py-3">
             {sessionDetailRequest.loading ? <p className="text-sm text-zinc-500">加载中...</p> : null}

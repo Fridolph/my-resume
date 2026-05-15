@@ -935,7 +935,17 @@ export class AiChatService {
       onToken?: (token: string) => void
     },
   ): Promise<AiChatAnswerGenerationResult> {
+    const startedAt = Date.now()
     const classification = classifyQuestion(input.question)
+
+    if (classification !== 'normal') {
+      this.logger.log({
+        event: 'ai-chat.generateAnswer.routed',
+        classification,
+        question: input.question,
+        durationMs: Date.now() - startedAt,
+      })
+    }
 
     if (classification === 'greeting') {
       return buildGreetingAnswer(input.locale)
@@ -967,6 +977,13 @@ export class AiChatService {
 
     // 无有效匹配 + 无简历摘要 → 低相关度模板
     if (ragResult.citations.length === 0 && !resumeSummary) {
+      this.logger.log({
+        event: 'ai-chat.generateAnswer.low_relevance',
+        question: input.question,
+        matchCount: ragResult.matches.length,
+        hasResumeSummary: false,
+        durationMs: Date.now() - startedAt,
+      })
       const topScore = ragResult.matches[0]?.score ?? 0
       return buildLowRelevanceAnswer(input.question, topScore, input.locale)
     }
@@ -978,6 +995,13 @@ export class AiChatService {
 
     // 有 RAG 结果 → LLM 基于上下文 + 简历摘要回答
     if (ragResult.answer && ragResult.citations.length > 0) {
+      this.logger.log({
+        event: 'ai-chat.generateAnswer.rag_answered',
+        question: input.question,
+        citationCount: ragResult.citations.length,
+        hasResumeSummary: Boolean(resumeSummary),
+        durationMs: Date.now() - startedAt,
+      })
       return {
         answer: ragResult.answer,
         citations: ragResult.citations,
@@ -986,6 +1010,12 @@ export class AiChatService {
     }
 
     // 无 RAG 但简历存在 → 用简历摘要作为上下文调 LLM
+    this.logger.log({
+      event: 'ai-chat.generateAnswer.resume_fallback',
+      question: input.question,
+      hasResumeSummary: Boolean(resumeSummary),
+      durationMs: Date.now() - startedAt,
+    })
     const systemPrompt = buildRagAskSystemPrompt(input.locale)
     const prompt = input.locale === 'en'
       ? [`Question: ${input.question}`, 'Resume summary:', resumeSummary, 'Answer based on the resume summary above. Keep it concise and natural.'].join('\n\n')
