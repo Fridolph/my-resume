@@ -126,24 +126,42 @@ function buildInsufficientContextAnswer(locale: 'zh' | 'en'): string {
 }
 
 /**
- * 检测是否为打招呼 / 简单字词 / 测试输入。
+ * 输入语气与安全检测。
  *
- * 返回引导文案时跳过 RAG 检索；返回 null 时走正常检索流程。
+ * 三层判定：打招呼引导 / 辱骂恶意拒绝 / 允许通过。
+ * 返回 redirect 文案时跳过 RAG 检索；返回 null 时走正常问答流程。
  */
-function detectGreetingRedirect(
+function detectRedirect(
   question: string,
   locale: 'zh' | 'en',
 ): string | null {
   const trimmed = question.trim()
+  const lower = trimmed.toLowerCase()
 
-  // 1-3 个字的极短输入大概率是测试或打招呼
+  // ── 第 1 层：辱骂 / 恶意 / 纯负面发泄 ──
+  const abusePatterns = [
+    // 中文辱骂
+    '傻逼', 'sb', '傻狗', '废物', '垃圾', '滚', '去死', 'cnm', '操你', '草你',
+    '你妈', '他妈', '日你', '脑残', '弱智', '白痴',
+    // 英文辱骂
+    'fuck', 'shit', 'damn', 'bitch', 'asshole', 'stupid', 'idiot', 'moron',
+    // 纯抱怨/发泄（不带具体问题）
+    '烦死了', '太烂了', '什么垃圾', '真没用', '一点用没有',
+  ]
+
+  if (abusePatterns.some((pattern) => lower.includes(pattern))) {
+    return locale === 'en'
+      ? "I'm here to talk about my professional background, skills, and projects. If you have a question about my resume, feel free to ask in a constructive way — I'd love to share!"
+      : '我是来分享专业经历的。如果你对我的简历、项目或技能有问题，欢迎以建设性的方式提问——我很乐意交流！'
+  }
+
+  // ── 第 2 层：极短输入 / 打招呼 ──
   if (trimmed.length <= 3) {
     return locale === 'en'
       ? "Hi there! I'm FYS, a full-stack engineer. Feel free to ask me about my projects, work experience, or technical skills — I'll answer based on my resume!"
       : '你好！我是 FYS，一位全栈工程师。你可以问我关于我的项目经历、工作经历或技术技能的问题，我会基于简历内容回答！'
   }
 
-  // 中英文打招呼/测试关键词（忽略大小写）
   const greetingPatterns = [
     'hello', 'hi', 'hey', 'yo', 'hola',
     '你好', '哈喽', '嗨', '在吗', '有人在吗',
@@ -153,7 +171,6 @@ function detectGreetingRedirect(
     'who are you', 'what can you',
   ]
 
-  const lower = trimmed.toLowerCase()
   if (greetingPatterns.some((pattern) => lower.includes(pattern) || lower === pattern)) {
     return locale === 'en'
       ? "Hi! I'm FYS. Ask me anything about my resume — projects I've built, companies I've worked for, technologies I use, or my career highlights. I'm here to share my professional story!"
@@ -533,11 +550,11 @@ export class RagService {
     // ask = search + context assembly + generateText。
     const startedAt = Date.now()
 
-    // 打招呼 / 简单字词 / 测试输入：跳过 RAG 检索，直接返回引导回答
-    const greeting = detectGreetingRedirect(question, locale)
-    if (greeting) {
+    // 打招呼 / 辱骂 / 简单字词：跳过 RAG 检索，直接返回引导回答
+    const redirect = detectRedirect(question, locale)
+    if (redirect) {
       return {
-        answer: greeting,
+        answer: redirect,
         citations: [],
         matches: [],
         providerSummary: this.aiService.getProviderSummary(),
