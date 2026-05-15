@@ -2,13 +2,11 @@
 
 import { useRequest } from 'alova/client'
 import {
-  createClearAiChatSessionMessagesMethod,
   createDeleteAiChatUseKeyMethod,
   createFetchAiChatLeadsMethod,
   createFetchAiChatSessionDetailMethod,
   createFetchAiChatSessionsMethod,
   createFetchAiChatUseKeysMethod,
-  createResetAiChatSessionMethod,
 } from '@my-resume/api-client'
 import { Button, Card, CardContent, CardHeader, CardTitle, Chip, CloseButton, Modal, Table, Tooltip } from '@heroui/react'
 import { useMemo, useState } from 'react'
@@ -32,9 +30,12 @@ function formatDateTime(value: string) {
 function extractSourceKey(lead: AiChatLeadSummary | undefined): string {
   const raw = (lead as any)?.sourceKey ?? ''
   if (typeof raw !== 'string' || !raw) return '—'
-  // sourceKey 格式: public-ip:2026-05-15:abc123...
   const parts = raw.split(':')
   return parts[2] ? `${parts[2].slice(0, 10)}...` : raw
+}
+
+function shortId(id: string) {
+  return id.slice(0, 8)
 }
 
 function ViewIcon() {
@@ -42,15 +43,6 @@ function ViewIcon() {
     <svg aria-hidden="true" fill="none" height="16" viewBox="0 0 24 24" width="16">
       <path d="M4 12s2.8-5 8-5 8 5 8 5-2.8 5-8 5-8-5-8-5Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
       <circle cx="12" cy="12" r="2.4" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  )
-}
-
-function ResetIcon() {
-  return (
-    <svg aria-hidden="true" fill="none" height="16" viewBox="0 0 24 24" width="16">
-      <path d="M3 12a9 9 0 1 1 3 6.9" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
-      <path d="M3 8v4h4" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
     </svg>
   )
 }
@@ -65,15 +57,6 @@ function TrashIcon() {
   )
 }
 
-function BanIcon() {
-  return (
-    <svg aria-hidden="true" fill="none" height="16" viewBox="0 0 24 24" width="16">
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M5.5 5.5l13 13" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
-    </svg>
-  )
-}
-
 const actionIconClass = [
   'inline-flex h-8 w-8 min-w-8 items-center justify-center rounded-full p-0 text-zinc-500',
   'transition-colors focus-visible:ring-2 focus-visible:ring-blue-500/20',
@@ -83,34 +66,22 @@ const actionIconClass = [
 ].join(' ')
 
 interface MergedRow {
-  /** HeroUI v3 Table 要求每个 item 有 id */
   id: string
-  /** 会话 ID，用于查看详情 */
   sessionId: string | null
-  /** 访客 IP hash */
   sourceKey: string
-  /** 会话状态 */
   sessionStatus: string
-  /** 当前/最大轮次 */
   turns: string
-  /** useKey 值（用于作废） */
   useKeyValue: string | null
-  /** useKey 状态 */
   useKeyStatus: string
-  /** 创建时间 */
   createdAt: string
-  /** 最后更新时间 */
   updatedAt: string
 }
 
 export function ChatGovernanceShell() {
   const { accessToken, status } = useAdminSession()
   const [sessionDetailId, setSessionDetailId] = useState<string | null>(null)
-  const [resettingSessionId, setResettingSessionId] = useState<string | null>(null)
-  const [clearingSessionId, setClearingSessionId] = useState<string | null>(null)
-  const [revokingUseKey, setRevokingUseKey] = useState<string | null>(null)
-  const [deletingUseKey, setDeletingUseKey] = useState<string | null>(null)
   const [deleteConfirmKey, setDeleteConfirmKey] = useState<string | null>(null)
+  const [deletingUseKey, setDeletingUseKey] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
 
   const leadsRequest = useRequest(
@@ -140,14 +111,12 @@ export function ChatGovernanceShell() {
   const sessions = (sessionsRequest.data ?? []) as AiChatSessionListItem[]
   const sessionDetail = (sessionDetailRequest.data ?? null) as AiChatSession | null
 
-  // 合并三张表为统一行：以 session 为主，join useKey + lead
   const mergedRows = useMemo<MergedRow[]>(() => {
     const leadMap = new Map(leads.map((l) => [l.id, l]))
-    const keyMap = new Map(useKeys.map((k) => [k.leadId, k]))
 
     return sessions.map((s) => {
       const relatedKeys = useKeys.filter((k) => k.sessionId === s.id || k.leadId === s.id)
-      const relatedKey = relatedKeys[0] ?? keyMap.get(s.id) ?? null
+      const relatedKey = relatedKeys[0] ?? null
       const lead = leadMap.get(relatedKey?.leadId ?? s.id)
 
       return {
@@ -179,48 +148,6 @@ export function ChatGovernanceShell() {
     }
   }
 
-  async function resetSession(sessionId: string) {
-    if (!window.confirm('确认重置此会话？将清空所有聊天记录并将轮次归零。')) return
-    setResettingSessionId(sessionId)
-    setActionError(null)
-    try {
-      await createResetAiChatSessionMethod({ apiBaseUrl: DEFAULT_API_BASE_URL, accessToken: accessToken ?? '', sessionId }).send()
-      await refreshAll()
-    } catch {
-      setActionError('会话重置失败')
-    } finally {
-      setResettingSessionId(null)
-    }
-  }
-
-  async function clearMessages(sessionId: string) {
-    if (!window.confirm('确认清空此会话的聊天记录？（轮次进度保留）')) return
-    setClearingSessionId(sessionId)
-    setActionError(null)
-    try {
-      await createClearAiChatSessionMessagesMethod({ apiBaseUrl: DEFAULT_API_BASE_URL, accessToken: accessToken ?? '', sessionId }).send()
-      await refreshAll()
-    } catch {
-      setActionError('聊天记录清空失败')
-    } finally {
-      setClearingSessionId(null)
-    }
-  }
-
-  async function revokeUseKey(useKey: string) {
-    if (!window.confirm('确认作废此 useKey？该访客将无法继续 AI 对话。')) return
-    setRevokingUseKey(useKey)
-    setActionError(null)
-    try {
-      await createDeleteAiChatUseKeyMethod({ apiBaseUrl: DEFAULT_API_BASE_URL, accessToken: accessToken ?? '', useKey }).send()
-      await refreshAll()
-    } catch {
-      setActionError('useKey 作废失败')
-    } finally {
-      setRevokingUseKey(null)
-    }
-  }
-
   async function deleteUseKey(useKey: string) {
     setDeletingUseKey(useKey)
     setActionError(null)
@@ -241,14 +168,14 @@ export function ChatGovernanceShell() {
         <CardHeader className="grid gap-3">
           <div className="flex flex-wrap gap-2">
             <Chip size="sm" variant="soft">公开站 AI Chat</Chip>
-            <Chip size="sm" variant="soft">按 IP 维度管理</Chip>
+            <Chip size="sm" variant="soft">1 IP = 1 会话 = 20 轮/日</Chip>
           </div>
           <div className="grid gap-2">
             <CardTitle className="text-3xl font-semibold tracking-tight text-zinc-950 dark:text-white">
               AI Chat 治理台
             </CardTitle>
             <p className="max-w-4xl text-sm leading-7 text-zinc-500 dark:text-zinc-400">
-              公开站按访客 IP 维度发放 useKey（1 IP = 1 会话 = 20 轮/日）。可重置进度、清空记录或作废 key。
+              公开站按访客 IP 维度发放 useKey。可查看对话详情或删除会话（清空所有记录 + key），删除后访客再次进入需重新认领。
             </p>
           </div>
         </CardHeader>
@@ -278,16 +205,20 @@ export function ChatGovernanceShell() {
             <Table>
               <Table.Content aria-label="AI Chat 会话治理列表">
                 <Table.Header>
-                  <Table.Column isRowHeader>访客 IP</Table.Column>
+                  <Table.Column isRowHeader>会话 ID</Table.Column>
+                  <Table.Column>访客 IP</Table.Column>
                   <Table.Column>会话状态</Table.Column>
-                  <Table.Column>已用轮次</Table.Column>
+                  <Table.Column>轮次</Table.Column>
                   <Table.Column>useKey</Table.Column>
                   <Table.Column>更新时间</Table.Column>
-                  <Table.Column className="w-32 text-right">操作</Table.Column>
+                  <Table.Column className="w-16 text-right">操作</Table.Column>
                 </Table.Header>
                 <Table.Body items={mergedRows}>
                   {(row) => (
-                    <Table.Row key={row.sessionId ?? row.sourceKey}>
+                    <Table.Row key={row.id}>
+                      <Table.Cell>
+                        <span className="font-mono text-xs text-zinc-500 dark:text-zinc-400">{row.sessionId ? shortId(row.sessionId) : '—'}</span>
+                      </Table.Cell>
                       <Table.Cell>
                         <span className="font-mono text-xs text-zinc-700 dark:text-zinc-300">{row.sourceKey}</span>
                       </Table.Cell>
@@ -329,47 +260,11 @@ export function ChatGovernanceShell() {
                               <Tooltip.Content offset={10} placement="top">查看详情</Tooltip.Content>
                             </Tooltip>
                           ) : null}
-                          {row.sessionId ? (
+                          {row.useKeyValue ? (
                             <Tooltip delay={180}>
                               <Tooltip.Trigger>
                                 <Button
-                                  aria-label="重置会话进度"
-                                  className={actionIconClass}
-                                  isDisabled={resettingSessionId === row.sessionId}
-                                  isIconOnly
-                                  onPress={() => void resetSession(row.sessionId!)}
-                                  size="sm"
-                                  type="button"
-                                  variant="ghost">
-                                  <ResetIcon />
-                                </Button>
-                              </Tooltip.Trigger>
-                              <Tooltip.Content offset={10} placement="top">重置进度</Tooltip.Content>
-                            </Tooltip>
-                          ) : null}
-                          {row.sessionId ? (
-                            <Tooltip delay={180}>
-                              <Tooltip.Trigger>
-                                <Button
-                                  aria-label="清空聊天记录"
-                                  className={actionIconClass}
-                                  isDisabled={clearingSessionId === row.sessionId}
-                                  isIconOnly
-                                  onPress={() => void clearMessages(row.sessionId!)}
-                                  size="sm"
-                                  type="button"
-                                  variant="ghost">
-                                  <TrashIcon />
-                                </Button>
-                              </Tooltip.Trigger>
-                              <Tooltip.Content offset={10} placement="top">清空记录</Tooltip.Content>
-                            </Tooltip>
-                          ) : null}
-                          {row.useKeyValue && row.useKeyStatus !== 'revoked' ? (
-                            <Tooltip delay={180}>
-                              <Tooltip.Trigger>
-                                <Button
-                                  aria-label="删除 useKey"
+                                  aria-label="删除会话"
                                   className={actionIconClass}
                                   isDisabled={deletingUseKey === row.useKeyValue}
                                   isIconOnly
@@ -377,10 +272,10 @@ export function ChatGovernanceShell() {
                                   size="sm"
                                   type="button"
                                   variant="ghost">
-                                  <BanIcon />
+                                  <TrashIcon />
                                 </Button>
                               </Tooltip.Trigger>
-                              <Tooltip.Content offset={10} placement="top">删除 useKey</Tooltip.Content>
+                              <Tooltip.Content offset={10} placement="top">删除会话</Tooltip.Content>
                             </Tooltip>
                           ) : null}
                         </div>
@@ -435,9 +330,9 @@ export function ChatGovernanceShell() {
           <Modal.Dialog className="rounded-[2rem] border border-zinc-200/80 bg-white/96 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.16)] dark:border-zinc-800 dark:bg-zinc-950/96">
             <div className="grid gap-4">
               <div className="grid gap-2">
-                <h3 className="text-lg font-semibold text-zinc-950 dark:text-white">确认删除 useKey？</h3>
+                <h3 className="text-lg font-semibold text-zinc-950 dark:text-white">确认删除会话？</h3>
                 <p className="text-sm leading-6 text-zinc-500 dark:text-zinc-400">
-                  将删除此 useKey 及其关联的所有会话记录和聊天消息，该访客再次进入 AI 对话需重新认领 IP。
+                  将删除该 useKey 及其关联的所有会话记录和聊天消息。该访客再次进入 AI 对话时需重新认领 IP，自动获得新的 useKey 和 20 轮对话额度。
                 </p>
               </div>
               <div className="flex justify-end gap-3">
