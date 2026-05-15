@@ -108,12 +108,16 @@ function buildRagAskCitations(matches: RagSearchMatch[]): RagAskCitation[] {
 }
 
 /**
- * RAG 问答最低匹配分阈值。
+ * RAG 问答最低匹配分阈值（可通过 RAG_CHAT_MIN_SCORE 环境变量覆盖）。
  *
  * 最高 citation 分低于该值时不调用 LLM，直接返回"上下文不足"。
- * 避免"测试一下"等无关输入因低分噪音进入 AI 回答链路。
  */
-const CHAT_MIN_CITATION_SCORE = 0.1
+function resolveChatMinCitationScore(env: NodeJS.ProcessEnv): number {
+  const raw = env.RAG_CHAT_MIN_SCORE
+  if (!raw) return 0.1
+  const parsed = Number(raw)
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0.1
+}
 
 function buildInsufficientContextAnswer(locale: 'zh' | 'en'): string {
   return locale === 'en'
@@ -516,14 +520,15 @@ export class RagService {
     }
 
     // 硬门控：最高匹配分低于阈值时不调用 LLM，避免低分噪音触发无关回答
+    const minScore = resolveChatMinCitationScore(process.env)
     const topScore = citations[0]?.score ?? 0
-    if (topScore < CHAT_MIN_CITATION_SCORE) {
+    if (topScore < minScore) {
       this.logger.log({
         event: 'rag.ask.completed',
         status: 'low_relevance',
         question,
         topScore,
-        threshold: CHAT_MIN_CITATION_SCORE,
+        threshold: minScore,
         matchCount: prioritizedMatches.length,
         citationCount: citations.length,
         durationMs: Date.now() - startedAt,
