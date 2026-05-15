@@ -20,6 +20,7 @@ import type {
 import { RagService } from '../rag/rag.service'
 import type { RagAskCitation } from '../rag/rag.types'
 import { buildAiChatSummaryPrompt, AI_CHAT_SUMMARY_SYSTEM_PROMPT } from './prompts/ai-chat-summary.prompt'
+import { buildRagAskSystemPrompt } from '../rag/prompts/rag-ask.prompt'
 import { AiChatRepository } from './ai-chat.repository'
 import type {
   AiChatAnswerGenerationResult,
@@ -54,6 +55,81 @@ const AI_CHAT_SUMMARY_SCHEMA = z.object({
 
 function readLocalizedText(value: LocalizedText, locale: AiChatLocale): string {
   return (locale === 'en' ? value.en : value.zh || value.en || value.zh).trim()
+}
+
+/**
+ * 将已发布简历转化为 LLM 可直接使用的简洁结构化摘要。
+ *
+ * 注入到 system prompt 中，让 LLM 不必完全依赖 RAG 检索即可回答基础事实性问题。
+ */
+function buildResumeSummary(
+  resume: StandardResume,
+  locale: AiChatLocale,
+): string {
+  const l = (v: LocalizedText) => readLocalizedText(v, locale)
+  const lines: string[] = []
+
+  // 基本信息
+  lines.push(`姓名：${l(resume.profile.fullName)}`)
+  lines.push(`角色：${l(resume.profile.headline)}`)
+  lines.push(`所在地：${l(resume.profile.location)}`)
+  if (resume.profile.email) lines.push(`邮箱：${resume.profile.email}`)
+  if (resume.profile.website) lines.push(`网站：${resume.profile.website}`)
+
+  // 工作经历
+  if (resume.experiences.length > 0) {
+    lines.push('')
+    lines.push('工作经历：')
+    for (const exp of resume.experiences) {
+      const period = [exp.startDate, exp.endDate || '至今'].filter(Boolean).join(' - ')
+      lines.push(`  · ${l(exp.companyName)} | ${l(exp.role)} | ${period}`)
+      const summary = l(exp.summary)
+      if (summary) lines.push(`    ${summary}`)
+      if (exp.technologies.length > 0) lines.push(`    技术栈：${exp.technologies.join('、')}`)
+    }
+  }
+
+  // 教育
+  if (resume.education.length > 0) {
+    lines.push('')
+    lines.push('教育背景：')
+    for (const edu of resume.education) {
+      const period = [edu.startDate, edu.endDate].filter(Boolean).join(' - ')
+      lines.push(`  · ${l(edu.schoolName)} | ${l(edu.degree)} ${l(edu.fieldOfStudy)} | ${period}`)
+    }
+  }
+
+  // 项目
+  if (resume.projects.length > 0) {
+    lines.push('')
+    lines.push('项目经历：')
+    for (const proj of resume.projects.slice(0, 5)) {
+      const period = [proj.startDate, proj.endDate || '至今'].filter(Boolean).join(' - ')
+      lines.push(`  · ${l(proj.name)} | ${l(proj.role)} | ${period}`)
+    }
+  }
+
+  // 技能
+  if (resume.skills.length > 0) {
+    lines.push('')
+    lines.push('技能：')
+    for (const sk of resume.skills) {
+      if (sk.keywords.length > 0) {
+        lines.push(`  · ${l(sk.name)}：${sk.keywords.map((k) => l(k)).join('、')}`)
+      }
+    }
+  }
+
+  // 亮点/优势
+  if (resume.highlights.length > 0) {
+    lines.push('')
+    lines.push('核心竞争力/亮点：')
+    for (const hl of resume.highlights) {
+      lines.push(`  · ${l(hl.title)} — ${l(hl.description)}`)
+    }
+  }
+
+  return lines.join('\n')
 }
 
 function formatPeriod(startDate: string, endDate: string): string {
@@ -861,23 +937,26 @@ export class AiChatService {
   ): Promise<AiChatAnswerGenerationResult> {
     const classification = classifyQuestion(input.question)
 
-    // 打招呼 → 友好自我介绍（纯模板，不调 LLM）
     if (classification === 'greeting') {
       return buildGreetingAnswer(input.locale)
     }
 
-    // 消极情绪 → 共情引导（纯模板，不调 LLM）
     if (classification === 'negative') {
       return buildNegativeAnswer(input.locale)
     }
 
-    // 短句无意义 → 引导提问，但含疑问词则 fallthrough 到 RAG
     if (classification === 'short') {
       const shortAnswer = buildShortAnswer(input.question, input.locale)
       if (shortAnswer.answer) return shortAnswer
     }
 
-    // 正常问题：RAG 检索 + LLM 回答
+    // 获取已发布简历的结构化摘要
+    const snapshot = await this.resumePublicationService.getPublished()
+    const resumeSummary = snapshot?.resume
+      ? buildResumeSummary(snapshot.resume, input.locale)
+      : ''
+
+    // RAG 检索
     const ragResult = await this.ragService.ask(
       input.question,
       DEFAULT_CHAT_LIMIT,
@@ -886,20 +965,39 @@ export class AiChatService {
       input.onToken ? { onToken: input.onToken } : undefined,
     )
 
-    // 无有效匹配或低分：根据分数动态调整回复
-    if (ragResult.citations.length === 0) {
+    // 无有效匹配 + 无简历摘要 → 低相关度模板
+    if (ragResult.citations.length === 0 && !resumeSummary) {
       const topScore = ragResult.matches[0]?.score ?? 0
       return buildLowRelevanceAnswer(input.question, topScore, input.locale)
     }
 
-    const snapshot = await this.resumePublicationService.getPublished()
-    const cardBlocks = snapshot
+    // 构建 card blocks
+    const cardBlocks = snapshot?.resume
       ? this.buildAnswerBlocksFromResume(snapshot.resume, ragResult.citations, input.locale)
       : []
 
+    // 有 RAG 结果 → LLM 基于上下文 + 简历摘要回答
+    if (ragResult.answer && ragResult.citations.length > 0) {
+      return {
+        answer: ragResult.answer,
+        citations: ragResult.citations,
+        blocks: cardBlocks,
+      }
+    }
+
+    // 无 RAG 但简历存在 → 用简历摘要作为上下文调 LLM
+    const systemPrompt = buildRagAskSystemPrompt(input.locale)
+    const prompt = input.locale === 'en'
+      ? [`Question: ${input.question}`, 'Resume summary:', resumeSummary, 'Answer based on the resume summary above. Keep it concise and natural.'].join('\n\n')
+      : [`问题：${input.question}`, '简历摘要：', resumeSummary, '请根据以上简历摘要，用自然的第一人称回答。简洁真诚，不确定的地方可以诚实说明。'].join('\n\n')
+
+    const result = input.onToken
+      ? await this.aiService.generateTextStream({ systemPrompt, prompt, onToken: input.onToken })
+      : await this.aiService.generateText({ systemPrompt, prompt })
+
     return {
-      answer: ragResult.answer,
-      citations: ragResult.citations,
+      answer: result.text,
+      citations: [],
       blocks: cardBlocks,
     }
   }
