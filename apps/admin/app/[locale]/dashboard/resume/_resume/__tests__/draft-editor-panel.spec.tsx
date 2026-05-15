@@ -273,9 +273,9 @@ describe('ResumeDraftEditorPanel', () => {
     expect(await screen.findByLabelText('姓名')).toBeInTheDocument()
     const saveButton = screen.getByRole('button', { name: '保存当前草稿' })
     expect(saveButton).toBeInTheDocument()
-    expect(saveButton).toHaveClass('!bg-[var(--admin-primary)]', '!text-white')
-    // sticky 移到外层 wrapper，按钮通过 form 属性关联表单
-    expect(saveButton.closest('[class*="sticky"]')).toBeInTheDocument()
+    expect(saveButton).toHaveAttribute('form', 'resume-draft-editor-form')
+    // sticky footer 在 Card 外部，滚动时固定于视口底部
+    expect(saveButton.closest('.sticky')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '中文主编辑' })).toHaveClass(
       '!bg-[var(--admin-primary)]',
       '!text-white',
