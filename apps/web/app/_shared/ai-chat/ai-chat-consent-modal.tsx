@@ -44,13 +44,13 @@ export function AiChatConsentModal({ locale }: { locale: 'zh' | 'en' }) {
             <div className="grid gap-3 rounded-[1.5rem] border border-zinc-200/80 bg-zinc-50/80 p-4 dark:border-zinc-800 dark:bg-zinc-900/70">
               <p className="text-sm leading-7 text-zinc-700 dark:text-zinc-200">
                 {locale === 'en'
-                  ? 'We will record your current IP address only for access control, abuse prevention, and the daily turn limit. Overseas IP restriction is not enforced in this MVP, but the entry is still resume-only.'
-                  : '我们会记录你当前的 IP 地址，仅用于访问控制、滥用防护和每日轮次限制。本次 MVP 暂不严格执行海外 IP 拦截，但该入口依然只用于围绕当前简历展开对话。'}
+                  ? 'We record your IP address to issue a daily useKey (1 IP = 1 session = 20 turns). This is used only for access control, abuse prevention, and enforcing the daily limit.'
+                  : '我们会记录你的 IP 地址，用于按天发放 useKey（1 个 IP = 1 个会话 = 20 轮对话），仅用于访问控制、滥用防护和每日轮次限制。'}
               </p>
               <ul className="grid gap-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
                 <li>{locale === 'en' ? 'Only resume-related questions are supported.' : '只支持与当前简历、项目、经历和技能相关的问题。'}</li>
                 <li>{locale === 'en' ? 'Each IP can ask up to 20 questions per day.' : '每个 IP 每天最多可提问 20 次。'}</li>
-                <li>{locale === 'en' ? 'Your IP will not be used for unrelated purposes.' : '记录到的 IP 不会用于与本功能无关的其他用途。'}</li>
+                <li>{locale === 'en' ? 'Your IP hash is stored, not the raw address.' : '仅存储 IP 哈希值，不保存原始地址。'}</li>
               </ul>
             </div>
 
