@@ -478,6 +478,7 @@ export class RagService {
     limit = 4,
     locale: 'zh' | 'en' = 'zh',
     routingOverride: RagSearchRoutingOverride = {},
+    streamOptions?: { onToken?: (token: string) => void },
   ): Promise<RagAskResult> {
     // ask = search + context assembly + generateText。
     const startedAt = Date.now()
@@ -513,14 +514,25 @@ export class RagService {
       )
       .join('\n\n')
 
-    const answer = await this.aiService.generateText({
-      systemPrompt: buildRagAskSystemPrompt(locale),
-      prompt: buildRagAskPrompt({
-        question,
-        context,
-        locale,
-      }),
+    const systemPrompt = buildRagAskSystemPrompt(locale)
+    const prompt = buildRagAskPrompt({
+      question,
+      context,
+      locale,
     })
+
+    const onToken = streamOptions?.onToken
+
+    const result = onToken
+      ? await this.aiService.generateTextStream({
+          systemPrompt,
+          prompt,
+          onToken,
+        })
+      : await this.aiService.generateText({
+          systemPrompt,
+          prompt,
+        })
 
     this.logger.log({
       event: 'rag.ask.completed',
@@ -540,7 +552,7 @@ export class RagService {
     })
 
     return {
-      answer: answer.text,
+      answer: result.text,
       citations,
       matches: prioritizedMatches,
       providerSummary,

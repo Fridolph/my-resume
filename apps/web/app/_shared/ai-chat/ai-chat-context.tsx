@@ -286,6 +286,29 @@ export function AiChatProvider({
         content: '',
       })
 
+      // 乐观添加用户消息，实现"发送即见"的即时反馈
+      const optimisticId = `optimistic-${Date.now()}`
+      setSession((current) =>
+        current
+          ? {
+              ...current,
+              messages: [
+                ...current.messages,
+                {
+                  id: optimisticId,
+                  role: 'user' as const,
+                  content: input.content,
+                  turnIndex: (current.turnCount ?? 0) + 1,
+                  answerBlocks: [],
+                  citations: [],
+                  createdAt: new Date().toISOString(),
+                },
+              ],
+              turnCount: (current.turnCount ?? 0) + 1,
+            }
+          : current,
+      )
+
       try {
         await streamAiChatMessage(
           {
@@ -336,11 +359,15 @@ export function AiChatProvider({
             },
             onSummary: (payload) => setSummaryPreview(payload),
             onDone: (payload) => {
+              setDraftAssistantMessage(null)
               setSession(payload.session)
               setUseKeyStatus(payload.session.useKeyStatus)
               setSummaryPreview(payload.session.finalSummary ?? payload.session.interimSummary)
             },
-            onError: (payload) => setErrorMessage(payload.message),
+            onError: (payload) => {
+              setDraftAssistantMessage(null)
+              setErrorMessage(payload.message)
+            },
           },
         )
         return true
@@ -348,7 +375,6 @@ export function AiChatProvider({
         setErrorMessage(normalizeAiChatErrorMessage(error, locale, 'message'))
         return false
       } finally {
-        setDraftAssistantMessage(null)
         setIsStreaming(false)
       }
     },

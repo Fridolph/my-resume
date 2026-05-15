@@ -155,31 +155,20 @@ export class AiChatController {
     response.flushHeaders?.()
 
     try {
-      const result = await this.aiChatService.createAssistantReply({
-        sessionId,
-        useKey: body.useKey,
-        content: body.content,
-        locale: body.locale,
-      })
-
-      writeSseEvent(response, 'start', {
-        assistantMessageId: result.assistantMessage.id,
-        remainingTurns: result.remainingTurns,
-        sessionId,
-        turnCount: result.session.turnCount,
-      })
-
-      for (const citation of result.assistantMessage.citations) {
-        writeSseEvent(response, 'citation', citation)
-      }
-
-      for (const block of result.assistantMessage.answerBlocks) {
-        writeSseEvent(response, 'block', block)
-      }
-
-      for (const chunk of this.aiChatService.buildStreamTextChunks(result.assistantMessage.content)) {
-        writeSseEvent(response, 'token', { text: chunk })
-      }
+      const result = await this.aiChatService.createAssistantReply(
+        {
+          sessionId,
+          useKey: body.useKey,
+          content: body.content,
+          locale: body.locale,
+        },
+        {
+          onStart: (payload) => writeSseEvent(response, 'start', payload),
+          onToken: (token) => writeSseEvent(response, 'token', { text: token }),
+          onCitation: (citation) => writeSseEvent(response, 'citation', citation),
+          onBlock: (block) => writeSseEvent(response, 'block', block),
+        },
+      )
 
       if (result.summary) {
         writeSseEvent(response, 'summary', result.summary)

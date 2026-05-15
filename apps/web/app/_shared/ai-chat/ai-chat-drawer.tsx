@@ -19,6 +19,15 @@ function buildVisibleMessages(
     return base
   }
 
+  // 去重：onDone 已将真实消息写入 session.messages，不再追加 draft 避免重复
+  const alreadyInSession = draft.assistantMessageId
+    ? base.some((message) => message.id === draft.assistantMessageId)
+    : false
+
+  if (alreadyInSession) {
+    return base
+  }
+
   return [
     ...base,
     {

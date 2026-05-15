@@ -24,7 +24,7 @@ describe('RAG ask prompts', () => {
       locale: 'en',
     })
 
-    expect(buildRagAskSystemPrompt('en')).toContain('Answer only from the retrieved resume context')
+    expect(buildRagAskSystemPrompt('en')).toContain('Answer all resume-related questions in the first person')
     expect(prompt).toContain('Question: Did the candidate build RAG features?')
     expect(prompt).toContain('Retrieved context')
     expect(prompt).toContain('Built retrieval QA.')

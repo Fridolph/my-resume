@@ -156,10 +156,10 @@ function AiChatMessageItem({
       <div className={`grid max-w-[82%] gap-2 ${isUser ? 'justify-items-end' : 'justify-items-start'}`}>
         <div
           className={[
-            'w-full rounded-[1.5rem] px-4 py-3 text-sm leading-6 shadow-sm',
+            'w-full rounded-lg px-4 py-3 text-sm leading-6 shadow-sm',
             isUser
-              ? 'rounded-br-md bg-slate-950 text-white dark:bg-white dark:text-slate-950'
-              : 'rounded-bl-md border border-zinc-200/80 bg-white text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100',
+              ? 'rounded-br bg-slate-950 text-white dark:bg-white dark:text-slate-950'
+              : 'rounded-bl border border-zinc-200/80 bg-white text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100',
           ].join(' ')}>
           <p className="whitespace-pre-wrap">{message.content}</p>
         </div>

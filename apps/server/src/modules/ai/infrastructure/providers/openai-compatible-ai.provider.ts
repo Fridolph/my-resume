@@ -11,6 +11,7 @@ import {
   GenerateStructuredObjectStreamInput,
   GenerateTextInput,
   GenerateTextResult,
+  GenerateTextStreamInput,
 } from '../../domain/ports/ai-provider.interface'
 
 type FetchLike = typeof fetch
@@ -239,6 +240,88 @@ export class OpenAiCompatibleAiProvider implements AiProvider {
       model: chatModel,
       text: extractMessageContent(payload),
       raw: payload,
+    }
+  }
+
+  /**
+   * 执行流式文本生成（Chat Completions streaming）。
+   *
+   * 通过 `stream: true` 启用 SSE 流式响应，每收到一个 content delta 即回调 onToken，
+   * 适用于 AI Chat 对话等需要逐字展示的场景。
+   */
+  async generateTextStream(
+    input: GenerateTextStreamInput,
+  ): Promise<GenerateTextResult> {
+    const chatModel = this.getChatModel()
+    const body = JSON.stringify({
+      ...this.buildChatRequestBody(input),
+      stream: true,
+      stream_options: { include_usage: true },
+    })
+
+    const response = await this.fetchFn(joinChatCompletionsUrl(this.config.baseUrl), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.config.apiKey}`,
+      },
+      body,
+    })
+
+    if (!response.ok) {
+      throw new Error(
+        formatProviderError(
+          this.config.providerLabel,
+          'chat completions stream',
+          response,
+          await readErrorBody(response),
+        ),
+      )
+    }
+
+    const reader = response.body?.getReader()
+    if (!reader) {
+      throw new Error('Provider streaming response body is not readable')
+    }
+
+    const decoder = new TextDecoder()
+    let fullContent = ''
+    let buffer = ''
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() ?? ''
+
+      for (const line of lines) {
+        const trimmed = line.trim()
+        if (!trimmed || !trimmed.startsWith('data:')) continue
+
+        const raw = trimmed.slice(5).trim()
+        if (raw === '[DONE]') continue
+
+        try {
+          const parsed = JSON.parse(raw) as {
+            choices?: Array<{ delta?: { content?: string } }>
+          }
+          const token = parsed.choices?.[0]?.delta?.content
+          if (token) {
+            fullContent += token
+            input.onToken(token)
+          }
+        } catch {
+          // 忽略非 JSON 行（如 comment 行）
+        }
+      }
+    }
+
+    return {
+      provider: this.config.provider,
+      model: chatModel,
+      text: fullContent,
     }
   }
 

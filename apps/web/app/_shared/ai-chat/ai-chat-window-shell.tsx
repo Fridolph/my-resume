@@ -54,6 +54,7 @@ export function AiChatWindowShell({
 }) {
   return (
     <Drawer.Backdrop
+      className="pointer-events-none"
       isDismissable={false}
       isOpen={isOpen}
       onOpenChange={(nextOpen) => {
@@ -62,7 +63,7 @@ export function AiChatWindowShell({
         }
       }}
       variant="transparent">
-      <Drawer.Content placement="right">
+      <Drawer.Content className="pointer-events-auto" placement="right">
         <Drawer.Dialog className="!p-0 h-full w-full max-w-[min(100vw,34rem)] rounded-none border-l border-zinc-200/80 bg-white/94 shadow-[-24px_0_80px_rgba(15,23,42,0.14)] backdrop-blur-xl dark:border-zinc-800 dark:bg-zinc-950/92">
           <Drawer.Header className="!mt-0 border-b border-zinc-200/80 px-4 py-3 dark:border-zinc-800">
             <div className="flex items-start justify-between gap-3">
@@ -98,7 +99,7 @@ export function AiChatWindowShell({
           </Drawer.Header>
           <Drawer.Body className="!mt-0 !grid min-h-0 gap-4 px-4 py-4">{children}</Drawer.Body>
           {footer ? (
-            <Drawer.Footer className="!mt-0 border-t border-zinc-200/80 px-4 py-3 dark:border-zinc-800">
+            <Drawer.Footer className="!mt-0 !grid border-t border-zinc-200/80 px-4 py-3 dark:border-zinc-800">
               {footer}
             </Drawer.Footer>
           ) : null}

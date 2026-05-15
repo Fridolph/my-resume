@@ -431,7 +431,20 @@ export class AiChatService {
     return this.getPublicSessionSnapshot(bundle.session.id, input.useKey)
   }
 
-  async createAssistantReply(input: AiChatAskMessageInput): Promise<{
+  async createAssistantReply(
+    input: AiChatAskMessageInput,
+    streamCallbacks?: {
+      onStart?: (payload: {
+        assistantMessageId: string
+        remainingTurns: number
+        sessionId: string
+        turnCount: number
+      }) => void
+      onToken?: (token: string) => void
+      onCitation?: (citation: RagAskCitation) => void
+      onBlock?: (block: AiChatMessageBlock) => void
+    },
+  ): Promise<{
     remainingTurns: number
     session: AiChatSessionSnapshot
     summary: AiChatSummarySnapshot | null
@@ -469,13 +482,33 @@ export class AiChatService {
       throw new Error('Failed to persist AI chat user message')
     }
 
+    const assistantMessageId = randomUUID()
+    const remainingTurns = bundle.useKey.maxTurns - nextTurnCount
+
+    streamCallbacks?.onStart?.({
+      assistantMessageId,
+      remainingTurns,
+      sessionId: bundle.session.id,
+      turnCount: nextTurnCount,
+    })
+
     const answerResult = await this.generateAnswer({
       locale,
       question: input.content.trim(),
+      onToken: streamCallbacks?.onToken,
     })
 
+    // 流式回调：答案生成完成后推送 citations 和 blocks
+    for (const citation of answerResult.citations) {
+      streamCallbacks?.onCitation?.(citation)
+    }
+
+    for (const block of answerResult.blocks) {
+      streamCallbacks?.onBlock?.(block)
+    }
+
     const assistantMessageRecord = await this.aiChatRepository.createMessage({
-      id: randomUUID(),
+      id: assistantMessageId,
       sessionId: bundle.session.id,
       role: 'assistant',
       content: answerResult.answer,
@@ -657,13 +690,20 @@ export class AiChatService {
     }
   }
 
-  private async generateAnswer(input: {
-    locale: AiChatLocale
-    question: string
-  }): Promise<AiChatAnswerGenerationResult> {
-    const ragResult = await this.ragService.ask(input.question, DEFAULT_CHAT_LIMIT, input.locale, {
-      vectorScope: 'published',
-    })
+  private async generateAnswer(
+    input: {
+      locale: AiChatLocale
+      question: string
+      onToken?: (token: string) => void
+    },
+  ): Promise<AiChatAnswerGenerationResult> {
+    const ragResult = await this.ragService.ask(
+      input.question,
+      DEFAULT_CHAT_LIMIT,
+      input.locale,
+      { vectorScope: 'published' },
+      input.onToken ? { onToken: input.onToken } : undefined,
+    )
 
     if (ragResult.citations.length === 0) {
       return buildIrrelevantAnswer(input.locale)
