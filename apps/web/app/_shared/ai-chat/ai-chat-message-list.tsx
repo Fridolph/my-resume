@@ -3,6 +3,8 @@
 import { Chip, Spinner } from '@heroui/react'
 import { Avatar } from '@heroui/react/avatar'
 import { Fragment } from 'react'
+import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 import type { AiChatMessage, AiChatMessageBlock, RagAskCitation } from '@my-resume/api-client'
 
@@ -10,12 +12,62 @@ import { RagCitationTooltip } from './rag-citation-tooltip'
 import type { AiChatPresentation } from './ai-chat.types'
 
 /**
+ * AI 聊天中使用的轻量 Markdown 组件。
+ *
+ * 默认禁用 h1/h2（避免在对话中出现过大标题），链接新窗口打开。
+ */
+function ChatMarkdown({ children }: { children: string }) {
+  return (
+    <Markdown
+      remarkPlugins={[remarkGfm]}
+      components={{
+        h1: ({ children: headingChildren }) => <h3 className="mb-1 mt-3 text-sm font-semibold text-zinc-900 first:mt-0 dark:text-zinc-100">{headingChildren}</h3>,
+        h2: ({ children: headingChildren }) => <h3 className="mb-1 mt-3 text-sm font-semibold text-zinc-900 first:mt-0 dark:text-zinc-100">{headingChildren}</h3>,
+        h3: ({ children: headingChildren }) => <h4 className="mb-1 mt-2 text-sm font-semibold text-zinc-900 first:mt-0 dark:text-zinc-100">{headingChildren}</h4>,
+        a: (props) => (
+          <a
+            className="text-blue-600 underline decoration-blue-300 underline-offset-2 hover:text-blue-700 dark:text-blue-400 dark:decoration-blue-500/30"
+            rel="noreferrer"
+            target="_blank"
+            {...props}
+          />
+        ),
+        img: (props) => (
+          <img
+            alt={props.alt ?? ''}
+            className="my-2 max-h-48 max-w-full rounded-xl object-contain"
+            src={props.src}
+          />
+        ),
+        ul: ({ children: listChildren }) => <ul className="my-1 list-disc pl-4 text-sm">{listChildren}</ul>,
+        ol: ({ children: listChildren }) => <ol className="my-1 list-decimal pl-4 text-sm">{listChildren}</ol>,
+        code: (props) => {
+          const isInline = !props.className
+          return isInline ? (
+            <code className="rounded-md bg-zinc-100 px-1.5 py-px font-mono text-[0.82rem] text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">{props.children}</code>
+          ) : (
+            <pre className="my-2 overflow-x-auto rounded-xl bg-zinc-100 p-3 font-mono text-[0.8rem] leading-5 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
+              <code {...props} />
+            </pre>
+          )
+        },
+        p: ({ children: paraChildren }) => <p className="text-sm leading-6">{paraChildren}</p>,
+        blockquote: ({ children: quoteChildren }) => (
+          <blockquote className="my-1 border-l-2 border-zinc-300 pl-3 italic text-zinc-500 dark:border-zinc-600 dark:text-zinc-400">{quoteChildren}</blockquote>
+        ),
+      }}>
+      {children}
+    </Markdown>
+  )
+}
+
+/**
  * 解析 LLM 回答中的 [#n] 引用标记，替换为可交互 Tooltip。
  *
  * 说明：
  * - 匹配 [#1]、[#12] 等格式；
  * - 如果 messages.citations 中有对应 ref 的 citation，则渲染 Tooltip；
- * - 如果找不到对应 citation（例如模型产生幻觉 ID），则保留原文标记。
+ * - 非引用部分的文本用 react-markdown 渲染（支持 **粗体** / 列表 / 链接等）。
  */
 function renderContentWithCitations(
   content: string,
@@ -33,14 +85,22 @@ function renderContentWithCitations(
     const match = part.match(/^\[#(\d{1,3})\]$/)
 
     if (!match) {
-      return <Fragment key={index}>{part}</Fragment>
+      return (
+        <span key={index}>
+          <ChatMarkdown>{part}</ChatMarkdown>
+        </span>
+      )
     }
 
     const ref = `#${match[1]}`
     const citation = citationByIdx.get(ref)
 
     if (!citation) {
-      return <Fragment key={index}>{part}</Fragment>
+      return (
+        <span key={index}>
+          <ChatMarkdown>{part}</ChatMarkdown>
+        </span>
+      )
     }
 
     return <RagCitationTooltip citation={citation} key={index} />
