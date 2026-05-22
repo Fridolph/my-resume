@@ -3,6 +3,8 @@ import './globals.css'
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 
+import { ScrollToTopButton } from './_shared/site/scroll-to-top-button'
+
 export const metadata: Metadata = {
   title: 'my-resume web',
   description: 'Public resume web shell',
@@ -50,7 +52,10 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <ScrollToTopButton />
+      </body>
     </html>
   )
 }

@@ -14,9 +14,28 @@ import type { AiChatPresentation } from './ai-chat.types'
 /**
  * AI 聊天中使用的轻量 Markdown 组件。
  *
- * 默认禁用 h1/h2（避免在对话中出现过大标题），链接新窗口打开。
+ * [#1] 引用标记被 markdown 解析为链接引用而非文本，因此先预处理替换为
+ * 安全 sentinel 字符串，再在 text handler 中反向替换为 tooltip 组件。
  */
-function ChatMarkdown({ children }: { children: string }) {
+function ChatMarkdown({
+  children,
+  citations,
+}: {
+  children: string
+  citations: RagAskCitation[]
+}) {
+  const citationByIdx = new Map<string, RagAskCitation>()
+
+  for (const citation of citations) {
+    citationByIdx.set(citation.ref, citation)
+  }
+
+  // 预处理：替换 [#1] → CITATION_1_N 避免被 markdown 解析吃掉
+  const processed = children.replace(
+    /\[#(\d{1,3})\]/g,
+    (_match, num) => `CITATION_${num}_N`,
+  )
+
   return (
     <Markdown
       remarkPlugins={[remarkGfm]}
@@ -55,56 +74,47 @@ function ChatMarkdown({ children }: { children: string }) {
         blockquote: ({ children: quoteChildren }) => (
           <blockquote className="my-1 border-l-2 border-zinc-300 pl-3 italic text-zinc-500 dark:border-zinc-600 dark:text-zinc-400">{quoteChildren}</blockquote>
         ),
+        // 文本节点中检测 CITATION_n_N sentinel，替换为 tooltip
+        text: ({ children: textChildren, key }) => {
+          const text = String(textChildren)
+          const sentinelRegex = /CITATION_(\d{1,3})_N/g
+          const segments: Array<{ type: 'text' | 'citation'; value: string; citation?: RagAskCitation }> = []
+          let lastIndex = 0
+          let m: RegExpExecArray | null
+
+          while ((m = sentinelRegex.exec(text)) !== null) {
+            if (m.index > lastIndex) {
+              segments.push({ type: 'text', value: text.slice(lastIndex, m.index) })
+            }
+            const ref = `#${m[1]}`
+            const citation = citationByIdx.get(ref)
+            segments.push({ type: 'citation', value: ref, citation })
+            lastIndex = m.index + m[0].length
+          }
+
+          if (lastIndex < text.length) {
+            segments.push({ type: 'text', value: text.slice(lastIndex) })
+          }
+
+          if (segments.length === 0) {
+            return <>{text}</>
+          }
+
+          return (
+            <Fragment key={key}>
+              {segments.map((seg, i) => {
+                if (seg.type === 'citation' && seg.citation) {
+                  return <RagCitationTooltip citation={seg.citation} key={i} />
+                }
+                return <Fragment key={i}>{seg.value}</Fragment>
+              })}
+            </Fragment>
+          )
+        },
       }}>
-      {children}
+      {processed}
     </Markdown>
   )
-}
-
-/**
- * 解析 LLM 回答中的 [#n] 引用标记，替换为可交互 Tooltip。
- *
- * 说明：
- * - 匹配 [#1]、[#12] 等格式；
- * - 如果 messages.citations 中有对应 ref 的 citation，则渲染 Tooltip；
- * - 非引用部分的文本用 react-markdown 渲染（支持 **粗体** / 列表 / 链接等）。
- */
-function renderContentWithCitations(
-  content: string,
-  citations: RagAskCitation[],
-) {
-  const citationByIdx = new Map<string, RagAskCitation>()
-
-  for (const citation of citations) {
-    citationByIdx.set(citation.ref, citation)
-  }
-
-  const parts = content.split(/(\[#\d{1,3}\])/g)
-
-  return parts.map((part, index) => {
-    const match = part.match(/^\[#(\d{1,3})\]$/)
-
-    if (!match) {
-      return (
-        <span key={index}>
-          <ChatMarkdown>{part}</ChatMarkdown>
-        </span>
-      )
-    }
-
-    const ref = `#${match[1]}`
-    const citation = citationByIdx.get(ref)
-
-    if (!citation) {
-      return (
-        <span key={index}>
-          <ChatMarkdown>{part}</ChatMarkdown>
-        </span>
-      )
-    }
-
-    return <RagCitationTooltip citation={citation} key={index} />
-  })
 }
 
 function renderMessageBlocks(blocks: AiChatMessageBlock[]) {
@@ -260,7 +270,9 @@ function AiChatMessageItem({
               : 'rounded-bl border border-zinc-200/80 bg-white text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100',
           ].join(' ')}>
           <p className="whitespace-pre-wrap">
-            {renderContentWithCitations(message.content, message.citations)}
+            <ChatMarkdown citations={message.citations}>
+              {message.content}
+            </ChatMarkdown>
           </p>
         </div>
         {!isUser && message.answerBlocks.length > 0 ? (
