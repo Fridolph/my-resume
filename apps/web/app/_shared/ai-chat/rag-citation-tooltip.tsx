@@ -1,5 +1,6 @@
 'use client'
 
+import { Tooltip } from '@heroui/react'
 import type { RagAskCitation } from '@my-resume/api-client'
 
 /**
@@ -38,26 +39,23 @@ export function RagCitationTooltip({ citation }: RagCitationTooltipProps) {
   const sourceLabel = SOURCE_LABELS[citation.sourceType] ?? citation.sourceType
 
   return (
-    <span className="group relative inline-flex">
-      {/* 触发标记 */}
-      <span
-        className={[
-          'cursor-pointer rounded-md px-1 py-px text-[0.7rem] font-medium transition-colors',
-          colorClass,
-        ].join(' ')}>
-        {citation.ref}
-      </span>
-      {/* hover 浮窗 */}
-      <span
-        className={[
-          'pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 rounded-xl',
-          'border border-zinc-200/80 bg-white px-3 py-2 shadow-lg',
-          'dark:border-zinc-700 dark:bg-zinc-900',
-          'opacity-0 transition-opacity duration-150 group-hover:pointer-events-auto group-hover:opacity-100',
-        ].join(' ')}>
-        <div className="grid w-56 gap-1.5">
-          {/* 来源标签 */}
-          <div className="inline-flex items-center gap-1">
+    <Tooltip delay={400}>
+      <Tooltip.Trigger>
+        <span
+          className={[
+            'inline-flex cursor-pointer rounded-md px-1 py-px text-[0.7rem] font-medium transition-colors',
+            colorClass,
+          ].join(' ')}>
+          {citation.ref}
+        </span>
+      </Tooltip.Trigger>
+      <Tooltip.Content
+        className="max-w-72 rounded-xl border border-zinc-200/80 bg-white px-3 py-2 shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
+        offset={8}
+        placement="top">
+        <div className="grid gap-1.5">
+          {/* 来源标签行 */}
+          <div className="inline-flex flex-wrap items-center gap-1">
             <span className="rounded-full bg-zinc-100 px-1.5 py-px text-[0.6rem] font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
               {sourceLabel}
             </span>
@@ -76,12 +74,12 @@ export function RagCitationTooltip({ citation }: RagCitationTooltipProps) {
           </strong>
           {/* 正文摘要 */}
           {citation.snippet ? (
-            <p className="line-clamp-4 text-[0.7rem] leading-[1.15rem] text-zinc-500 dark:text-zinc-400">
+            <p className="line-clamp-6 whitespace-pre-wrap text-[0.7rem] leading-[1.15rem] text-zinc-500 dark:text-zinc-400">
               {citation.snippet}
             </p>
           ) : null}
         </div>
-      </span>
-    </span>
+      </Tooltip.Content>
+    </Tooltip>
   )
 }

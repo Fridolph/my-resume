@@ -356,10 +356,10 @@ export function ChatGovernanceShell() {
 
               <div className="grid gap-0.5">
                 <span className="px-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                  聊天记录（{sessionDetail.messages.length} 条消息）
-                </span>
-                <div className="grid min-h-0 gap-2 overflow-y-auto rounded-2xl border border-zinc-200/80 bg-zinc-50/40 p-3 dark:border-zinc-800 dark:bg-zinc-950/60">
-                  {sessionDetail.messages.length === 0 ? (
+              聊天记录（{sessionDetail.messages?.length ?? 0} 条消息）
+            </span>
+            <div className="grid min-h-0 gap-2 overflow-y-auto rounded-2xl border border-zinc-200/80 bg-zinc-50/40 p-3 dark:border-zinc-800 dark:bg-zinc-950/60">
+              {!sessionDetail.messages || sessionDetail.messages.length === 0 ? (
                     <div className="grid place-items-center py-10 text-sm text-zinc-400 dark:text-zinc-500">
                       暂无聊天消息
                     </div>
