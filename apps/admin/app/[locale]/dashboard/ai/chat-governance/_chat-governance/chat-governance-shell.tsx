@@ -294,10 +294,11 @@ export function ChatGovernanceShell() {
           <Drawer.Heading>会话详情</Drawer.Heading>
           <Drawer.CloseTrigger aria-label="关闭会话详情" />
         </Drawer.Header>
-        <Drawer.Body className="grid min-h-0 gap-4">
-          {sessionDetailRequest.loading ? <p className="text-sm text-zinc-500">加载中...</p> : null}
+        <Drawer.Body>
+          {sessionDetailRequest.loading ? <p className="py-10 text-center text-sm text-zinc-500">加载中...</p> : null}
           {sessionDetail ? (
-            <>
+            <div className="grid gap-4">
+              {/* 会话信息卡片 */}
               <div className="grid gap-2 rounded-2xl border border-zinc-200/80 bg-zinc-50/80 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div className="grid gap-0.5">
@@ -319,54 +320,25 @@ export function ChatGovernanceShell() {
                     <span className="font-mono text-sm text-zinc-700 dark:text-zinc-300">{sessionDetail.turnCount} / 20</span>
                   </div>
                 </div>
-                {sessionDetail.lead?.companyName ? (
-                  <div className="grid gap-0.5 border-t border-zinc-200/60 pt-2 dark:border-zinc-800">
-                    <span className="text-xs text-zinc-400 dark:text-zinc-500">公司</span>
-                    <span className="text-sm text-zinc-700 dark:text-zinc-300">{sessionDetail.lead.companyName}</span>
-                  </div>
-                ) : null}
-                {sessionDetail.lead?.contact ? (
-                  <div className="grid gap-0.5 border-t border-zinc-200/60 pt-2 dark:border-zinc-800">
-                    <span className="text-xs text-zinc-400 dark:text-zinc-500">联系信息</span>
-                    <span className="text-sm text-zinc-700 dark:text-zinc-300">{sessionDetail.lead.contact}</span>
-                  </div>
-                ) : null}
-                {sessionDetail.lead?.message ? (
-                  <div className="grid gap-0.5 border-t border-zinc-200/60 pt-2 dark:border-zinc-800">
-                    <span className="text-xs text-zinc-400 dark:text-zinc-500">访客留言</span>
-                    <span className="text-sm text-zinc-700 dark:text-zinc-300">{sessionDetail.lead.message}</span>
-                  </div>
-                ) : null}
-                {sessionDetail.interimSummary ? (
-                  <details className="mt-1 rounded-xl border border-emerald-200/60 bg-emerald-50/60 p-2.5 dark:border-emerald-500/15 dark:bg-emerald-500/8">
-                    <summary className="cursor-pointer text-xs font-medium text-emerald-700 dark:text-emerald-300">第 10 轮摘要</summary>
-                    <p className="mt-1 text-xs leading-5 text-emerald-800 dark:text-emerald-200">{sessionDetail.interimSummary.summary}</p>
-                  </details>
-                ) : null}
-                {sessionDetail.finalSummary ? (
-                  <details className="rounded-xl border border-emerald-200/60 bg-emerald-50/60 p-2.5 dark:border-emerald-500/15 dark:bg-emerald-500/8">
-                    <summary className="cursor-pointer text-xs font-medium text-emerald-700 dark:text-emerald-300">第 20 轮摘要</summary>
-                    <p className="mt-1 text-xs leading-5 text-emerald-800 dark:text-emerald-200">{sessionDetail.finalSummary.summary}</p>
-                  </details>
-                ) : null}
                 <span className="text-xs text-zinc-400 dark:text-zinc-500">
                   创建：{formatDateTime(sessionDetail.createdAt)} · 更新：{formatDateTime(sessionDetail.updatedAt)}
                 </span>
               </div>
 
-              <div className="grid gap-0.5">
+              {/* 聊天记录 */}
+              <div className="grid gap-2">
                 <span className="px-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">
-              聊天记录（{sessionDetail.messages?.length ?? 0} 条消息）
-            </span>
-            <div className="grid min-h-0 gap-2 overflow-y-auto rounded-2xl border border-zinc-200/80 bg-zinc-50/40 p-3 dark:border-zinc-800 dark:bg-zinc-950/60">
-              {!sessionDetail.messages || sessionDetail.messages.length === 0 ? (
+                  聊天记录（{sessionDetail.messages?.length ?? 0} 条消息）
+                </span>
+                <div className="grid min-h-0 gap-3 overflow-y-auto rounded-2xl border border-zinc-200/80 bg-zinc-50/40 p-3 dark:border-zinc-800 dark:bg-zinc-950/60">
+                  {!sessionDetail.messages || sessionDetail.messages.length === 0 ? (
                     <div className="grid place-items-center py-10 text-sm text-zinc-400 dark:text-zinc-500">
                       暂无聊天消息
                     </div>
                   ) : (
                     sessionDetail.messages.map((message, index) => {
                       const isUser = message.role === 'user'
-                      const prevMessage = index > 0 ? sessionDetail.messages[index - 1] : null
+                      const prevMessage = index > 0 ? sessionDetail.messages![index - 1] : null
                       const showRoleLabel = !prevMessage || prevMessage.role !== message.role
 
                       return (
@@ -417,7 +389,7 @@ export function ChatGovernanceShell() {
                   )}
                 </div>
               </div>
-            </>
+            </div>
           ) : null}
         </Drawer.Body>
       </AdminDrawerShell>
