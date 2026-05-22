@@ -2,7 +2,7 @@
 
 import { Chip, Spinner } from '@heroui/react'
 import { Avatar } from '@heroui/react/avatar'
-import { Fragment } from 'react'
+import { Fragment, type ReactElement, type ReactNode } from 'react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
@@ -12,109 +12,93 @@ import { RagCitationTooltip } from './rag-citation-tooltip'
 import type { AiChatPresentation } from './ai-chat.types'
 
 /**
- * AI 聊天中使用的轻量 Markdown 组件。
+ * 渲染带引用 Tooltip 的消息正文。
  *
- * [#1] 引用标记被 markdown 解析为链接引用而非文本，因此先预处理替换为
- * 安全 sentinel 字符串，再在 text handler 中反向替换为 tooltip 组件。
+ * 先用正则把 [#n] 替换为 「#n」避免被 markdown 吃掉，再用 react-markdown
+ * 渲染段落/列表/粗体等，最后把 「#n」 替换为可交互的 RagCitationTooltip。
  */
-function ChatMarkdown({
-  children,
-  citations,
-}: {
-  children: string
-  citations: RagAskCitation[]
-}) {
+function renderContentWithCitations(
+  content: string,
+  citations: RagAskCitation[],
+) {
   const citationByIdx = new Map<string, RagAskCitation>()
 
   for (const citation of citations) {
     citationByIdx.set(citation.ref, citation)
   }
 
-  // 预处理：替换 [#1] → CITATION_1_N 避免被 markdown 解析吃掉
-  const processed = children.replace(
-    /\[#(\d{1,3})\]/g,
-    (_match, num) => `CITATION_${num}_N`,
-  )
+  // 先分成 markdown-safe 片段：把 [#n] 替换为占位符
+  const safeContent = content.replace(/\[#(\d{1,3})\]/g, (_m, n) => `CITE_${n}_N`)
 
-  return (
+  // 用 markdown 渲染整个内容（此时 CITE_n_N 是纯文本不会冲突）
+  const md = (
     <Markdown
       remarkPlugins={[remarkGfm]}
       components={{
-        h1: ({ children: headingChildren }) => <h3 className="mb-1 mt-3 text-sm font-semibold text-zinc-900 first:mt-0 dark:text-zinc-100">{headingChildren}</h3>,
-        h2: ({ children: headingChildren }) => <h3 className="mb-1 mt-3 text-sm font-semibold text-zinc-900 first:mt-0 dark:text-zinc-100">{headingChildren}</h3>,
-        h3: ({ children: headingChildren }) => <h4 className="mb-1 mt-2 text-sm font-semibold text-zinc-900 first:mt-0 dark:text-zinc-100">{headingChildren}</h4>,
-        a: (props) => (
-          <a
-            className="text-blue-600 underline decoration-blue-300 underline-offset-2 hover:text-blue-700 dark:text-blue-400 dark:decoration-blue-500/30"
-            rel="noreferrer"
-            target="_blank"
-            {...props}
-          />
-        ),
-        img: (props) => (
-          <img
-            alt={props.alt ?? ''}
-            className="my-2 max-h-48 max-w-full rounded-xl object-contain"
-            src={props.src}
-          />
-        ),
+        h1: ({ children: hChildren }) => <h3 className="mb-1 mt-3 text-sm font-semibold text-zinc-900 first:mt-0 dark:text-zinc-100">{hChildren}</h3>,
+        a: (props) => <a className="text-blue-600 underline decoration-blue-300 underline-offset-2 hover:text-blue-700 dark:text-blue-400 dark:decoration-blue-500/30" rel="noreferrer" target="_blank" {...props} />,
+        img: (props) => <img alt={props.alt ?? ''} className="my-2 max-h-48 max-w-full rounded-xl object-contain" src={props.src} />,
         ul: ({ children: listChildren }) => <ul className="my-1 list-disc pl-4 text-sm">{listChildren}</ul>,
         ol: ({ children: listChildren }) => <ol className="my-1 list-decimal pl-4 text-sm">{listChildren}</ol>,
-        code: (props) => {
-          const isInline = !props.className
-          return isInline ? (
-            <code className="rounded-md bg-zinc-100 px-1.5 py-px font-mono text-[0.82rem] text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">{props.children}</code>
-          ) : (
-            <pre className="my-2 overflow-x-auto rounded-xl bg-zinc-100 p-3 font-mono text-[0.8rem] leading-5 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
-              <code {...props} />
-            </pre>
-          )
-        },
-        p: ({ children: paraChildren }) => <p className="text-sm leading-6">{paraChildren}</p>,
-        blockquote: ({ children: quoteChildren }) => (
-          <blockquote className="my-1 border-l-2 border-zinc-300 pl-3 italic text-zinc-500 dark:border-zinc-600 dark:text-zinc-400">{quoteChildren}</blockquote>
+        code: (props) => props.className ? (
+          <pre className="my-2 overflow-x-auto rounded-xl bg-zinc-100 p-3 font-mono text-[0.8rem] leading-5 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200"><code {...props} /></pre>
+        ) : (
+          <code className="rounded-md bg-zinc-100 px-1.5 py-px font-mono text-[0.82rem] text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">{props.children}</code>
         ),
-        // 文本节点中检测 CITATION_n_N sentinel，替换为 tooltip
-        text: ({ children: textChildren, key }) => {
-          const text = String(textChildren)
-          const sentinelRegex = /CITATION_(\d{1,3})_N/g
-          const segments: Array<{ type: 'text' | 'citation'; value: string; citation?: RagAskCitation }> = []
-          let lastIndex = 0
-          let m: RegExpExecArray | null
-
-          while ((m = sentinelRegex.exec(text)) !== null) {
-            if (m.index > lastIndex) {
-              segments.push({ type: 'text', value: text.slice(lastIndex, m.index) })
-            }
-            const ref = `#${m[1]}`
-            const citation = citationByIdx.get(ref)
-            segments.push({ type: 'citation', value: ref, citation })
-            lastIndex = m.index + m[0].length
-          }
-
-          if (lastIndex < text.length) {
-            segments.push({ type: 'text', value: text.slice(lastIndex) })
-          }
-
-          if (segments.length === 0) {
-            return <>{text}</>
-          }
-
-          return (
-            <Fragment key={key}>
-              {segments.map((seg, i) => {
-                if (seg.type === 'citation' && seg.citation) {
-                  return <RagCitationTooltip citation={seg.citation} key={i} />
-                }
-                return <Fragment key={i}>{seg.value}</Fragment>
-              })}
-            </Fragment>
-          )
-        },
+        p: ({ children: pChildren }) => <p className="text-sm leading-6">{pChildren}</p>,
+        blockquote: ({ children: qChildren }) => <blockquote className="my-1 border-l-2 border-zinc-300 pl-3 italic text-zinc-500 dark:border-zinc-600 dark:text-zinc-400">{qChildren}</blockquote>,
       }}>
-      {processed}
+      {safeContent}
     </Markdown>
   )
+
+  // 在渲染后的 JSX 中递归查找和替换 CITE_n_N 文本节点
+  return renderJsxWithCitations(md, citationByIdx)
+}
+
+/**
+ * 递归遍历 JSX 树，把纯文本中的 CITE_n_N 替换为 RagCitationTooltip 组件。
+ */
+function renderJsxWithCitations(
+  node: ReactNode,
+  citationByIdx: Map<string, RagAskCitation>,
+): ReactNode {
+  if (node == null || typeof node === 'boolean') {
+    return null
+  }
+
+  if (typeof node === 'string') {
+    const parts = node.split(/(CITE_\d{1,3}_N)/g)
+    if (parts.length === 1) return node
+    return parts.map((part, i) => {
+      const m = part.match(/^CITE_(\d{1,3})_N$/)
+      if (!m) return <Fragment key={i}>{part}</Fragment>
+      const citation = citationByIdx.get(`#${m[1]}`)
+      if (!citation) return <Fragment key={i}>{`[#${m[1]}]`}</Fragment>
+      return <RagCitationTooltip citation={citation} key={i} />
+    })
+  }
+
+  if (typeof node === 'number') {
+    return String(node)
+  }
+
+  if (Array.isArray(node)) {
+    return node.map((child, i) => (
+      <Fragment key={i}>{renderJsxWithCitations(child, citationByIdx)}</Fragment>
+    ))
+  }
+
+  // React element
+  const element = node as ReactElement<{ children?: ReactNode }>
+  if (!element.props?.children) return node
+
+  const newChildren = renderJsxWithCitations(element.props.children, citationByIdx)
+
+  if (newChildren === element.props.children) return node
+
+  const { children: _c, ...rest } = element.props
+  return { ...element, props: { ...rest, children: newChildren } } as ReactElement
 }
 
 function renderMessageBlocks(blocks: AiChatMessageBlock[]) {
@@ -270,9 +254,7 @@ function AiChatMessageItem({
               : 'rounded-bl border border-zinc-200/80 bg-white text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100',
           ].join(' ')}>
           <p className="whitespace-pre-wrap">
-            <ChatMarkdown citations={message.citations}>
-              {message.content}
-            </ChatMarkdown>
+            {renderContentWithCitations(message.content, message.citations)}
           </p>
         </div>
         {!isUser && message.answerBlocks.length > 0 ? (
