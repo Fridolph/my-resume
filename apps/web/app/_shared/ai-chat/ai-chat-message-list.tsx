@@ -253,9 +253,9 @@ function AiChatMessageItem({
               ? 'rounded-br bg-slate-950 text-white dark:bg-white dark:text-slate-950'
               : 'rounded-bl border border-zinc-200/80 bg-white text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100',
           ].join(' ')}>
-          <p className="whitespace-pre-wrap">
+          <div className="text-sm leading-6">
             {renderContentWithCitations(message.content, message.citations)}
-          </p>
+          </div>
         </div>
         {!isUser && message.answerBlocks.length > 0 ? (
           <div className="grid w-full gap-2">{renderMessageBlocks(message.answerBlocks)}</div>
