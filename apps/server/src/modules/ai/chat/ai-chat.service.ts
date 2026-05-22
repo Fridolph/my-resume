@@ -240,18 +240,28 @@ type QuestionClass = 'greeting' | 'short' | 'negative' | 'normal'
 
 /**
  * 快速问题分类（纯规则，不调 LLM）。
+ *
+ * 设计思路：
+ * - greeting/测试/打招呼类 → 直接返回自我介绍引导词，不消耗 AI 调用
+ * - 否定/消极情绪 → 共情引导
+ * - 极短无意义输入 → 通用引导，但有疑问词时 fallthrough 到 RAG
+ * - 其余 → 走完整 RAG + LLM
  */
 function classifyQuestion(question: string): QuestionClass {
   const trimmed = question.trim()
   const lower = trimmed.toLowerCase()
 
-  // 中英文打招呼/简单招呼（≤10 字且匹配关键词）
+  // 中英文打招呼/简单招呼（≤15 字且匹配关键词）
   const greetingPatterns = [
     'hello', 'hi', 'hey', 'yo', 'hola', 'good morning', 'good afternoon',
     '你好', '哈喽', '嗨', '在吗', '有人在吗', '早', '晚上好', '下午好',
     'who are you', 'what can you do', 'what can you',
+    // 测试/调试类输入，不走 AI
+    'test', 'testing', '测试', '测试一下', '试一下', '试下',
+    'ping', 'pong', 'help',
+    '123', '1234', '12345',
   ]
-  if (trimmed.length <= 10 && greetingPatterns.some((p) => lower.includes(p))) {
+  if (trimmed.length <= 15 && greetingPatterns.some((p) => lower.includes(p))) {
     return 'greeting'
   }
 

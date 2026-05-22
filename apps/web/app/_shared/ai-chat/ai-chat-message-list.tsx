@@ -2,9 +2,50 @@
 
 import { Chip, Spinner } from '@heroui/react'
 import { Avatar } from '@heroui/react/avatar'
+import { Fragment } from 'react'
 
-import type { AiChatMessage, AiChatMessageBlock } from '@my-resume/api-client'
+import type { AiChatMessage, AiChatMessageBlock, RagAskCitation } from '@my-resume/api-client'
+
+import { RagCitationTooltip } from './rag-citation-tooltip'
 import type { AiChatPresentation } from './ai-chat.types'
+
+/**
+ * 解析 LLM 回答中的 [#n] 引用标记，替换为可交互 Tooltip。
+ *
+ * 说明：
+ * - 匹配 [#1]、[#12] 等格式；
+ * - 如果 messages.citations 中有对应 ref 的 citation，则渲染 Tooltip；
+ * - 如果找不到对应 citation（例如模型产生幻觉 ID），则保留原文标记。
+ */
+function renderContentWithCitations(
+  content: string,
+  citations: RagAskCitation[],
+) {
+  const citationByIdx = new Map<string, RagAskCitation>()
+
+  for (const citation of citations) {
+    citationByIdx.set(citation.ref, citation)
+  }
+
+  const parts = content.split(/(\[#\d{1,3}\])/g)
+
+  return parts.map((part, index) => {
+    const match = part.match(/^\[#(\d{1,3})\]$/)
+
+    if (!match) {
+      return <Fragment key={index}>{part}</Fragment>
+    }
+
+    const ref = `#${match[1]}`
+    const citation = citationByIdx.get(ref)
+
+    if (!citation) {
+      return <Fragment key={index}>{part}</Fragment>
+    }
+
+    return <RagCitationTooltip citation={citation} key={index} />
+  })
+}
 
 function renderMessageBlocks(blocks: AiChatMessageBlock[]) {
   return blocks.map((block, index) => {
@@ -158,7 +199,9 @@ function AiChatMessageItem({
               ? 'rounded-br bg-slate-950 text-white dark:bg-white dark:text-slate-950'
               : 'rounded-bl border border-zinc-200/80 bg-white text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100',
           ].join(' ')}>
-          <p className="whitespace-pre-wrap">{message.content}</p>
+          <p className="whitespace-pre-wrap">
+            {renderContentWithCitations(message.content, message.citations)}
+          </p>
         </div>
         {!isUser && message.answerBlocks.length > 0 ? (
           <div className="grid w-full gap-2">{renderMessageBlocks(message.answerBlocks)}</div>
