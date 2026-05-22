@@ -110,7 +110,7 @@ function ChatAvatar({
       <Avatar.Root
         aria-hidden="true"
         className={[
-          'size-9 overflow-hidden rounded-2xl border text-sm font-semibold shadow-sm',
+          'size-7 overflow-hidden rounded-xl border text-xs font-semibold',
           variant === 'assistant'
             ? 'border-sky-200/80 bg-white text-zinc-700 dark:border-sky-400/20 dark:bg-zinc-950 dark:text-zinc-200'
             : 'border-zinc-200/80 bg-slate-950 text-white dark:border-zinc-700 dark:bg-white dark:text-slate-950',
@@ -122,7 +122,7 @@ function ChatAvatar({
           {variant === 'assistant' ? buildInitials(label) : <VisitorGlyph />}
         </Avatar.Fallback>
       </Avatar.Root>
-      <span className="absolute top-9 whitespace-nowrap text-[0.68rem] font-medium uppercase tracking-[0.14em] text-zinc-400 dark:text-zinc-500">
+      <span className="absolute top-7 whitespace-nowrap text-[0.62rem] font-medium uppercase tracking-[0.12em] text-zinc-400 dark:text-zinc-500">
         {label}
       </span>
     </div>
@@ -141,7 +141,7 @@ function AiChatMessageItem({
   const visitorLabel = presentation.visitorLabel
 
   return (
-    <div className={`flex gap-3 ${isUser ? 'justify-end' : 'justify-start'}`}>
+    <div className={`flex gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}>
       {!isUser ? (
         <ChatAvatar
           align="left"
@@ -150,10 +150,10 @@ function AiChatMessageItem({
           variant="assistant"
         />
       ) : null}
-      <div className={`grid max-w-[82%] gap-2 ${isUser ? 'justify-items-end' : 'justify-items-start'}`}>
+      <div className={`grid max-w-[82%] gap-1.5 ${isUser ? 'justify-items-end' : 'justify-items-start'}`}>
         <div
           className={[
-            'w-full rounded-lg px-4 py-3 text-sm leading-6 shadow-sm',
+            'w-full rounded-lg px-3 py-2 text-sm leading-6',
             isUser
               ? 'rounded-br bg-slate-950 text-white dark:bg-white dark:text-slate-950'
               : 'rounded-bl border border-zinc-200/80 bg-white text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100',
@@ -183,7 +183,7 @@ export function AiChatMessageList({
   presentation: AiChatPresentation
 }) {
   return (
-    <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto pr-1">
+    <div className="grid min-h-0 flex-1 content-start gap-3 overflow-y-auto pr-1">
       {messages.map((message) => (
         <AiChatMessageItem key={message.id} message={message} presentation={presentation} />
       ))}
