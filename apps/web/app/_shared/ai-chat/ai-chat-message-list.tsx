@@ -2,8 +2,9 @@
 
 import { Chip, Spinner } from '@heroui/react'
 import { Avatar } from '@heroui/react/avatar'
-import { Fragment, type ReactElement, type ReactNode } from 'react'
+import { Fragment } from 'react'
 import Markdown from 'react-markdown'
+import rehypeRaw from 'rehype-raw'
 import remarkGfm from 'remark-gfm'
 
 import type { AiChatMessage, AiChatMessageBlock, RagAskCitation } from '@my-resume/api-client'
@@ -27,13 +28,17 @@ function renderContentWithCitations(
     citationByIdx.set(citation.ref, citation)
   }
 
-  // 先分成 markdown-safe 片段：把 [#n] 替换为占位符
-  const safeContent = content.replace(/\[#(\d{1,3})\]/g, (_m, n) => `CITE_${n}_N`)
+  // 预处理：把 [#n] 替换为 <cite data-ref="n"></cite>，
+  // rehype-raw 允许 markdown 中混入 HTML 标签
+  const safeContent = content.replace(
+    /\[#(\d{1,3})\]/g,
+    (_m, n) => `<cite data-ref="${n}"></cite>`,
+  )
 
-  // 用 markdown 渲染整个内容（此时 CITE_n_N 是纯文本不会冲突）
-  const md = (
+  return (
     <Markdown
       remarkPlugins={[remarkGfm]}
+      rehypePlugins={[rehypeRaw]}
       components={{
         h1: ({ children: hChildren }) => <h3 className="mb-1 mt-3 text-sm font-semibold text-zinc-900 first:mt-0 dark:text-zinc-100">{hChildren}</h3>,
         a: (props) => <a className="text-blue-600 underline decoration-blue-300 underline-offset-2 hover:text-blue-700 dark:text-blue-400 dark:decoration-blue-500/30" rel="noreferrer" target="_blank" {...props} />,
@@ -47,58 +52,19 @@ function renderContentWithCitations(
         ),
         p: ({ children: pChildren }) => <p className="text-sm leading-6">{pChildren}</p>,
         blockquote: ({ children: qChildren }) => <blockquote className="my-1 border-l-2 border-zinc-300 pl-3 italic text-zinc-500 dark:border-zinc-600 dark:text-zinc-400">{qChildren}</blockquote>,
+        // 自定义 cite 标签渲染为 tooltip
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        cite: (props: any) => {
+          const refNum = props['data-ref']
+          if (typeof refNum !== 'string' || !refNum) return null
+          const citation = citationByIdx.get(`#${refNum}`)
+          if (!citation) return <>{`[#${refNum}]`}</>
+          return <RagCitationTooltip citation={citation} />
+        },
       }}>
       {safeContent}
     </Markdown>
   )
-
-  // 在渲染后的 JSX 中递归查找和替换 CITE_n_N 文本节点
-  return renderJsxWithCitations(md, citationByIdx)
-}
-
-/**
- * 递归遍历 JSX 树，把纯文本中的 CITE_n_N 替换为 RagCitationTooltip 组件。
- */
-function renderJsxWithCitations(
-  node: ReactNode,
-  citationByIdx: Map<string, RagAskCitation>,
-): ReactNode {
-  if (node == null || typeof node === 'boolean') {
-    return null
-  }
-
-  if (typeof node === 'string') {
-    const parts = node.split(/(CITE_\d{1,3}_N)/g)
-    if (parts.length === 1) return node
-    return parts.map((part, i) => {
-      const m = part.match(/^CITE_(\d{1,3})_N$/)
-      if (!m) return <Fragment key={i}>{part}</Fragment>
-      const citation = citationByIdx.get(`#${m[1]}`)
-      if (!citation) return <Fragment key={i}>{`[#${m[1]}]`}</Fragment>
-      return <RagCitationTooltip citation={citation} key={i} />
-    })
-  }
-
-  if (typeof node === 'number') {
-    return String(node)
-  }
-
-  if (Array.isArray(node)) {
-    return node.map((child, i) => (
-      <Fragment key={i}>{renderJsxWithCitations(child, citationByIdx)}</Fragment>
-    ))
-  }
-
-  // React element
-  const element = node as ReactElement<{ children?: ReactNode }>
-  if (!element.props?.children) return node
-
-  const newChildren = renderJsxWithCitations(element.props.children, citationByIdx)
-
-  if (newChildren === element.props.children) return node
-
-  const { children: _c, ...rest } = element.props
-  return { ...element, props: { ...rest, children: newChildren } } as ReactElement
 }
 
 function renderMessageBlocks(blocks: AiChatMessageBlock[]) {
