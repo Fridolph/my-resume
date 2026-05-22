@@ -40,7 +40,7 @@ export function RagCitationTooltip({ citation }: RagCitationTooltipProps) {
 
   return (
     <Tooltip delay={400}>
-      <Tooltip.Trigger>
+      <Tooltip.Trigger className="inline-flex">
         <span
           className={[
             'inline-flex cursor-pointer rounded-md px-1 py-px text-[0.7rem] font-medium transition-colors',
