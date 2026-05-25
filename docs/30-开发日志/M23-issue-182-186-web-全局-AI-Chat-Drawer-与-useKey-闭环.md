@@ -131,6 +131,40 @@
 - web Drawer 的交互测试
 - admin 治理台的列表与 Drawer 测试
 
+## 本轮收口补充（#182-#185）
+
+- 为 `AiChatController` 新增了 SSE 行为单测，明确校验事件顺序：
+  - `start -> token -> citation -> block -> summary -> done`
+  - 异常路径统一落成 `error` 事件并结束响应
+- 为 `AiChatService` 新增了最小持久化单测，覆盖：
+  - useKey 首次认领会创建主会话
+  - 刷新恢复时能重新读出历史消息与阶段总结
+  - 第 10 轮会写入 interim summary 和 system summary message
+  - 第 20 轮会写入 final summary、focus keywords，并自动关闭会话
+- web 侧补了“发送中取消 / 失败后重试 / 错误后状态收敛”：
+  - 发送消息时先乐观渲染用户消息
+  - 若 transport 级失败，会优先重新拉取当前 session snapshot
+  - 若服务端没有持久化该轮消息，则回滚乐观消息
+  - 若是客户端主动取消，则不展示错误文案，回到可继续提问状态
+- `AiChatPresentationSync` 改为使用可选上下文：
+  - 避免说明页 / 占位页 / 非 provider 场景下直接抛出 `useAiChat must be used within AiChatProvider`
+  - 这属于 chat 全局化之后必须补的一层 CSR 壳边界保护
+
+### 当前验收口径说明
+
+- `#182` 的“取消语义”本轮采用 **客户端 abort + session snapshot 收敛**：
+  - 已支持前端显式取消当前 SSE 请求
+  - 当前不会额外下发独立 `cancelled` SSE 事件
+  - 服务端也没有单独写入数据库级 `cancelled` 消息状态
+- `#183` 原 issue 中提到的消息状态 `streaming / done / error / cancelled`，本轮没有继续扩展数据库字段：
+  - 当前最小模型仍以 `role/content/turnIndex/answerBlocks/citations` 为主
+  - “失败 / 取消”通过前端错误态和重新拉取 snapshot 收敛
+  - 这是有意保持最小持久化边界，避免在当前分支把 schema 再次扩大
+- `#185` 相关的 SSR/CSR 边界本轮确认如下：
+  - 全局 `AiChatProvider` 只在 client provider 层挂载，不把会话状态塞进 SSR
+  - 公开简历内容继续由 SSR 首屏读取，chat 会话靠 CSR + localStorage 恢复
+  - 非 provider 壳组件必须容忍 chat 上下文缺席，不能再硬依赖 `useAiChat`
+
 ## 后续可写成教程 / 博客的切入点
 
 - 如何把“说明页 AI 入口”升级为“真正可跨页面访问的全局 Drawer 产品入口”

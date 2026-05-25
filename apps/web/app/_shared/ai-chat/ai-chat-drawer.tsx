@@ -95,6 +95,8 @@ function buildSubtitle({
 
 export function AiChatDrawer({ locale }: { locale: 'zh' | 'en' }) {
   const {
+    canRetryLastMessage,
+    cancelStreaming,
     draftAssistantMessage,
     errorMessage,
     hideDrawer,
@@ -103,6 +105,7 @@ export function AiChatDrawer({ locale }: { locale: 'zh' | 'en' }) {
     isStreaming,
     minimizeDrawer,
     presentation,
+    retryLastMessage,
     sendMessage,
     session,
     summaryPreview,
@@ -145,8 +148,10 @@ export function AiChatDrawer({ locale }: { locale: 'zh' | 'en' }) {
   const footerContent =
     view === 'chat' ? (
       <AiChatComposer
+        isRetryAvailable={canRetryLastMessage}
         isStreaming={isStreaming}
         locale={locale}
+        onCancel={cancelStreaming}
         onChange={setChatMessage}
         onSend={async () => {
           const success = await sendMessage({ content: chatMessage })
@@ -170,8 +175,16 @@ export function AiChatDrawer({ locale }: { locale: 'zh' | 'en' }) {
       subtitle={buildSubtitle({ locale, session, view })}
       title={locale === 'en' ? 'AI Chat' : 'AI 对话'}>
       {errorMessage ? (
-        <div className="rounded-2xl border border-rose-200/80 bg-rose-50/80 px-3 py-2 text-sm text-rose-900 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-100">
-          {errorMessage}
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-200/80 bg-rose-50/80 px-3 py-2 text-sm text-rose-900 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-100">
+          <span>{errorMessage}</span>
+          {canRetryLastMessage ? (
+            <Button
+              onPress={() => void retryLastMessage()}
+              size="sm"
+              variant="outline">
+              {locale === 'en' ? 'Retry last message' : '重试上一条'}
+            </Button>
+          ) : null}
         </div>
       ) : null}
 

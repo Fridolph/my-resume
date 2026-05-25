@@ -17,6 +17,8 @@ export interface AiChatDraftAssistantMessage {
 
 export interface AiChatContextValue {
   acceptConsent: () => Promise<void>
+  canRetryLastMessage: boolean
+  cancelStreaming: () => Promise<void>
   clearPresentation: () => void
   closeSession: () => Promise<void>
   draftAssistantMessage: AiChatDraftAssistantMessage | null
@@ -37,6 +39,7 @@ export interface AiChatContextValue {
   registerPresentation: (input: AiChatPresentation) => void
   restoreDrawer: () => void
   restoreReady: boolean
+  retryLastMessage: () => Promise<boolean>
   sendMessage: (input: { content: string }) => Promise<boolean>
   session: AiChatSession | null
   summaryPreview: AiChatSummarySnapshot | null

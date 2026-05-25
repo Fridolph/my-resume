@@ -23,14 +23,18 @@ function resizeTextarea(element: HTMLTextAreaElement | null) {
 }
 
 export function AiChatComposer({
+  isRetryAvailable,
   isStreaming,
   locale,
+  onCancel,
   onChange,
   onSend,
   value,
 }: {
+  isRetryAvailable?: boolean
   isStreaming: boolean
   locale: 'zh' | 'en'
+  onCancel?: () => void | Promise<void>
   onChange: (value: string) => void
   onSend: () => void | Promise<void>
   value: string
@@ -45,6 +49,7 @@ export function AiChatComposer({
     <div className="grid w-full gap-3">
       <textarea
         className="min-h-[5.5rem] w-full resize-none rounded-xl border border-zinc-200/80 bg-zinc-50/90 px-4 py-3 text-sm leading-6 text-zinc-900 outline-none transition focus:border-sky-300 focus:bg-white focus:ring-2 focus:ring-sky-200/70 dark:border-zinc-800 dark:bg-zinc-900/90 dark:text-zinc-100 dark:focus:border-sky-400/40 dark:focus:bg-zinc-950 dark:focus:ring-sky-400/20"
+        disabled={isStreaming}
         onChange={(event) => onChange(event.target.value)}
         onInput={(event) => resizeTextarea(event.currentTarget)}
         onKeyDown={(event) => {
@@ -67,23 +72,34 @@ export function AiChatComposer({
       />
       <div className="flex w-full items-end justify-between gap-3">
         <p className="text-xs leading-5 text-zinc-500 dark:text-zinc-400">
-          {locale === 'en'
-            ? 'Enter to send, Ctrl+Enter to break line. 20 questions per day.'
-            : 'Enter 发送，Ctrl+Enter 换行。每日 20 次提问。'}
-        </p>
-        <Button
-          className="shrink-0"
-          isDisabled={!value.trim() || isStreaming}
-          onPress={() => void onSend()}
-          variant="primary">
           {isStreaming
             ? locale === 'en'
-              ? 'Sending...'
-              : '发送中...'
+              ? 'Generating now. You can stop and retry after the stream settles.'
+              : '正在生成中，可先停止本次流式回答，收敛后再重试。'
             : locale === 'en'
-              ? 'Send'
-              : '发送'}
-        </Button>
+              ? `Enter to send, Ctrl+Enter to break line. 20 questions per day${isRetryAvailable ? ', retry available.' : '.'}`
+              : `Enter 发送，Ctrl+Enter 换行。每日 20 次提问${isRetryAvailable ? '，可重试上一条。' : '。'}`}
+        </p>
+        <div className="flex shrink-0 items-center gap-2">
+          {isStreaming ? (
+            <Button onPress={() => void onCancel?.()} variant="outline">
+              {locale === 'en' ? 'Stop' : '停止'}
+            </Button>
+          ) : null}
+          <Button
+            className="shrink-0"
+            isDisabled={!value.trim() || isStreaming}
+            onPress={() => void onSend()}
+            variant="primary">
+            {isStreaming
+              ? locale === 'en'
+                ? 'Sending...'
+                : '发送中...'
+              : locale === 'en'
+                ? 'Send'
+                : '发送'}
+          </Button>
+        </div>
       </div>
     </div>
   )

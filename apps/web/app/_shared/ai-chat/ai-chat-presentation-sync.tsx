@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 
 import type { ResumeLocale, ResumePublishedSnapshot } from '@shared/published-resume/types/published-resume.types'
 import { readLocalizedText } from '@shared/published-resume/published-resume-utils'
-import { useAiChat } from './ai-chat-context'
+import { useOptionalAiChat } from './ai-chat-context'
 import type { AiChatPresentation } from './ai-chat.types'
 
 function buildPresentationFromResume(
@@ -29,20 +29,24 @@ export function AiChatPresentationSync({
   locale: ResumeLocale
   publishedResume: ResumePublishedSnapshot | null
 }) {
-  const { clearPresentation, registerPresentation } = useAiChat()
+  const aiChat = useOptionalAiChat()
 
   useEffect(() => {
-    if (!publishedResume) {
-      clearPresentation()
+    if (!aiChat) {
       return
     }
 
-    registerPresentation(buildPresentationFromResume(locale, publishedResume))
+    if (!publishedResume) {
+      aiChat.clearPresentation()
+      return
+    }
+
+    aiChat.registerPresentation(buildPresentationFromResume(locale, publishedResume))
 
     return () => {
-      clearPresentation()
+      aiChat.clearPresentation()
     }
-  }, [clearPresentation, locale, publishedResume, registerPresentation])
+  }, [aiChat, locale, publishedResume])
 
   return null
 }

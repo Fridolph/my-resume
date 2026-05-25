@@ -283,7 +283,7 @@ describe('ai api client methods', () => {
     expect(result.session.sessionId).toBe('session-public-001')
   })
 
-  it('streams ai chat message events with fetch readable stream', async () => {
+  it('streams ai chat message events with the full SSE protocol order', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(
@@ -294,6 +294,15 @@ describe('ai api client methods', () => {
           'event: token',
           'data: {"text":"你好"}',
           '',
+          'event: citation',
+          'data: {"ref":"#1","title":"EDR - 终端威胁侦测与响应平台","snippet":"终端威胁侦测平台","section":"project"}',
+          '',
+          'event: block',
+          'data: {"type":"project_card","title":"EDR - 终端威胁侦测与响应平台","subtitle":"负责人","period":"2024-01 - 2024-12","summary":"负责公开简历与 AI 对话整合","technologies":["RAG"],"highlights":["接入 SSE 流式回答"]}',
+          '',
+          'event: summary',
+          'data: {"generatedAt":"2026-05-12T00:00:01.000Z","keywords":["RAG","SSE"],"stage":"turn-10","summary":"阶段总结"}',
+          '',
           'event: done',
           'data: {"session":{"sessionId":"session-001","locale":"zh","status":"open","turnCount":1,"remainingTurns":19,"useKeyStatus":"claimed","lead":{"id":"lead-001","locale":"zh","displayName":"李飞宇","companyName":"","contact":"","message":"想了解项目经历","status":"issued","createdAt":"2026-05-12T00:00:00.000Z","updatedAt":"2026-05-12T00:00:00.000Z"},"messages":[],"interimSummary":null,"finalSummary":null,"createdAt":"2026-05-12T00:00:00.000Z","updatedAt":"2026-05-12T00:00:00.000Z","closedAt":null}}',
           '',
@@ -303,7 +312,65 @@ describe('ai api client methods', () => {
 
     const startSpy = vi.fn()
     const tokenSpy = vi.fn()
+    const citationSpy = vi.fn()
+    const blockSpy = vi.fn()
+    const summarySpy = vi.fn()
     const doneSpy = vi.fn()
+
+    await streamAiChatMessage(
+      {
+        apiBaseUrl: 'http://localhost:5577',
+        sessionId: 'session-001',
+        useKey: 'FY-1A2B3C4D',
+        content: '你好',
+        },
+        {
+          onStart: startSpy,
+          onToken: tokenSpy,
+          onCitation: citationSpy,
+          onBlock: blockSpy,
+          onSummary: summarySpy,
+          onDone: doneSpy,
+        },
+      )
+
+    expect(startSpy).toHaveBeenCalled()
+    expect(tokenSpy).toHaveBeenCalledWith({ text: '你好' })
+    expect(citationSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ref: '#1',
+        section: 'project',
+      }),
+    )
+    expect(blockSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'project_card',
+      }),
+    )
+    expect(summarySpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stage: 'turn-10',
+      }),
+    )
+    expect(doneSpy).toHaveBeenCalled()
+  })
+
+  it('surfaces AI chat stream error events without throwing transport errors', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        createSseResponse([
+          'event: start',
+          'data: {"assistantMessageId":"assistant-001","remainingTurns":19,"sessionId":"session-001","turnCount":1}',
+          '',
+          'event: error',
+          'data: {"message":"stream failed"}',
+          '',
+        ].join('\n')),
+      ),
+    )
+
+    const errorSpy = vi.fn()
 
     await streamAiChatMessage(
       {
@@ -313,15 +380,40 @@ describe('ai api client methods', () => {
         content: '你好',
       },
       {
-        onStart: startSpy,
-        onToken: tokenSpy,
-        onDone: doneSpy,
+        onError: errorSpy,
       },
     )
 
-    expect(startSpy).toHaveBeenCalled()
-    expect(tokenSpy).toHaveBeenCalledWith({ text: '你好' })
-    expect(doneSpy).toHaveBeenCalled()
+    expect(errorSpy).toHaveBeenCalledWith({ message: 'stream failed' })
+  })
+
+  it('passes AbortSignal through to the AI chat stream request', async () => {
+    const abortError = new DOMException('The operation was aborted.', 'AbortError')
+
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(abortError))
+
+    const controller = new AbortController()
+    controller.abort()
+
+    await expect(
+      streamAiChatMessage(
+        {
+          apiBaseUrl: 'http://localhost:5577',
+          sessionId: 'session-001',
+          useKey: 'FY-1A2B3C4D',
+          content: '你好',
+          signal: controller.signal,
+        },
+        {},
+      ),
+    ).rejects.toThrow('The operation was aborted.')
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5577/api/ai/chat/sessions/session-001/messages',
+      expect.objectContaining({
+        signal: controller.signal,
+      }),
+    )
   })
 
   it('returns ai usage history detail directly from method.send()', async () => {

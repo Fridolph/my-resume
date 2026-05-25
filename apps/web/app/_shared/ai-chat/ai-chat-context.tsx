@@ -6,7 +6,16 @@ import {
   createFetchAiChatSessionMethod,
   streamAiChatMessage,
 } from '@my-resume/api-client'
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 
 import { AiChatConsentModal } from './ai-chat-consent-modal'
 import { AiChatDock } from './ai-chat-dock'
@@ -131,9 +140,11 @@ export function AiChatProvider({
   const [summaryPreview, setSummaryPreview] = useState<AiChatContextValue['summaryPreview']>(null)
   const [draftAssistantMessage, setDraftAssistantMessage] = useState<AiChatDraftAssistantMessage | null>(null)
   const [consentDay, setConsentDay] = useState<string | null>(null)
+  const [lastSubmittedMessage, setLastSubmittedMessage] = useState<string | null>(null)
   const [presentation, setPresentation] = useState<AiChatPresentation>(() =>
     buildDefaultPresentation(locale),
   )
+  const streamAbortControllerRef = useRef<AbortController | null>(null)
 
   const clearPresentation = useCallback(() => {
     setPresentation(buildDefaultPresentation(locale))
@@ -172,6 +183,39 @@ export function AiChatProvider({
     setUseKeyStatus(nextSession.useKeyStatus)
     setSummaryPreview(nextSession.finalSummary ?? nextSession.interimSummary)
   }, [apiBaseUrl])
+
+  const syncCurrentSessionSnapshot = useCallback(async () => {
+    if (!session || !activeUseKey) {
+      return false
+    }
+
+    const nextSession = await createFetchAiChatSessionMethod({
+      apiBaseUrl,
+      sessionId: session.sessionId,
+      useKey: activeUseKey,
+    }).send()
+
+    setSession(nextSession)
+    setUseKeyStatus(nextSession.useKeyStatus)
+    setSummaryPreview(nextSession.finalSummary ?? nextSession.interimSummary)
+
+    return true
+  }, [activeUseKey, apiBaseUrl, session])
+
+  const rollbackOptimisticUserMessage = useCallback((optimisticId: string) => {
+    setSession((current) => {
+      if (!current || !current.messages.some((message) => message.id === optimisticId)) {
+        return current
+      }
+
+      return {
+        ...current,
+        messages: current.messages.filter((message) => message.id !== optimisticId),
+        turnCount: Math.max(0, current.turnCount - 1),
+        remainingTurns: Math.min(20, current.remainingTurns + 1),
+      }
+    })
+  }, [])
 
   const claimPublicSession = useCallback(async () => {
     // Open the global drawer immediately so repeated clicks after today's
@@ -300,14 +344,23 @@ export function AiChatProvider({
         return false
       }
 
+      const content = input.content.trim()
+
+      if (!content) {
+        return false
+      }
+
       setIsStreaming(true)
       setErrorMessage(null)
+      setLastSubmittedMessage(content)
       setDraftAssistantMessage({
         assistantMessageId: null,
         answerBlocks: [],
         citations: [],
         content: '',
       })
+      const abortController = new AbortController()
+      streamAbortControllerRef.current = abortController
 
       // 乐观添加用户消息，实现"发送即见"的即时反馈
       const optimisticId = `optimistic-${Date.now()}`
@@ -320,7 +373,7 @@ export function AiChatProvider({
                 {
                   id: optimisticId,
                   role: 'user' as const,
-                  content: input.content,
+                  content,
                   turnIndex: (current.turnCount ?? 0) + 1,
                   answerBlocks: [],
                   citations: [],
@@ -328,6 +381,7 @@ export function AiChatProvider({
                 },
               ],
               turnCount: (current.turnCount ?? 0) + 1,
+              remainingTurns: Math.max(0, (current.remainingTurns ?? 20) - 1),
             }
           : current,
       )
@@ -338,8 +392,9 @@ export function AiChatProvider({
             apiBaseUrl,
             sessionId: session.sessionId,
             useKey: activeUseKey,
-            content: input.content,
+            content,
             locale,
+            signal: abortController.signal,
           },
           {
             onStart: (payload) => {
@@ -395,14 +450,56 @@ export function AiChatProvider({
         )
         return true
       } catch (error) {
-        setErrorMessage(normalizeAiChatErrorMessage(error, locale, 'message'))
+        const isAbortError =
+          error instanceof DOMException
+            ? error.name === 'AbortError'
+            : error instanceof Error
+              ? error.name === 'AbortError'
+              : false
+
+        const synced = await syncCurrentSessionSnapshot().catch(() => false)
+
+        if (!synced) {
+          rollbackOptimisticUserMessage(optimisticId)
+        }
+
+        setDraftAssistantMessage(null)
+        setErrorMessage(
+          isAbortError ? null : normalizeAiChatErrorMessage(error, locale, 'message'),
+        )
         return false
       } finally {
+        if (streamAbortControllerRef.current === abortController) {
+          streamAbortControllerRef.current = null
+        }
         setIsStreaming(false)
       }
     },
-    [activeUseKey, apiBaseUrl, locale, session],
+    [
+      activeUseKey,
+      apiBaseUrl,
+      locale,
+      rollbackOptimisticUserMessage,
+      session,
+      syncCurrentSessionSnapshot,
+    ],
   )
+
+  const cancelStreaming = useCallback(async () => {
+    if (!streamAbortControllerRef.current) {
+      return
+    }
+
+    streamAbortControllerRef.current.abort()
+  }, [])
+
+  const retryLastMessage = useCallback(async () => {
+    if (!lastSubmittedMessage || isStreaming) {
+      return false
+    }
+
+    return sendMessage({ content: lastSubmittedMessage })
+  }, [isStreaming, lastSubmittedMessage, sendMessage])
 
   const closeSession = useCallback(async () => {
     if (!session || !activeUseKey) {
@@ -425,6 +522,8 @@ export function AiChatProvider({
       acceptConsent: async () => {
         await claimPublicSession()
       },
+      canRetryLastMessage: Boolean(lastSubmittedMessage && !isStreaming && session),
+      cancelStreaming,
       clearPresentation,
       closeSession,
       dismissConsentModal: () => setIsConsentModalOpen(false),
@@ -445,6 +544,7 @@ export function AiChatProvider({
       registerPresentation,
       restoreDrawer: () => setDrawerState('open'),
       restoreReady,
+      retryLastMessage,
       sendMessage,
       session,
       summaryPreview,
@@ -459,6 +559,7 @@ export function AiChatProvider({
             : 'loading',
     }),
     [
+      cancelStreaming,
       claimPublicSession,
       clearPresentation,
       closeSession,
@@ -469,11 +570,13 @@ export function AiChatProvider({
       isBootstrappingSession,
       isConsentModalOpen,
       isStreaming,
+      lastSubmittedMessage,
       openDrawer,
       presentation,
       refreshSession,
       registerPresentation,
       restoreReady,
+      retryLastMessage,
       sendMessage,
       session,
       summaryPreview,
