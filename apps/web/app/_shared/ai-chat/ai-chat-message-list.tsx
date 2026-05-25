@@ -78,7 +78,7 @@ function renderContentWithCitations(
           }
 
           return (
-            <Fragment key={key}>
+            <Fragment key={props.key}>
               {parts.map((seg, i) => {
                 if (seg.type === 'citation' && seg.citation) {
                   return <RagCitationTooltip citation={seg.citation} key={i} />
