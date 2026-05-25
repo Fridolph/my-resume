@@ -45,11 +45,14 @@ function renderContentWithCitations(
         ul: ({ children: listChildren }) => <ul className="my-1 list-disc pl-4 text-sm">{listChildren}</ul>,
         ol: ({ children: listChildren }) => <ol className="my-1 list-decimal pl-4 text-sm">{listChildren}</ol>,
         code: (props) => {
-          const text = String(props.children ?? '')
-          const m = text.match(/^@(\d{1,3})@$/)
+          const text = String(props.children ?? '').trim()
+          // 检测 @n@ 引用标记（支持行内代码 `@5@` 和纯文本 @5@）
+          const m = text.match(/@(\d{1,3})@/)
           if (m) {
             const citation = citationByIdx.get(`#${m[1]}`)
             if (citation) return <RagCitationTooltip citation={citation} />
+            // citation 找不到时显示原文
+            return <span className="text-[0.7rem] text-zinc-400">[{m[1]}]</span>
           }
           return props.className ? (
             <pre className="my-2 overflow-x-auto rounded-xl bg-zinc-100 p-3 font-mono text-[0.8rem] leading-5 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200"><code {...props} /></pre>
