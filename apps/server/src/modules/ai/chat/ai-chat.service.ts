@@ -158,16 +158,9 @@ function normalizeIpAddress(ipAddress: string) {
   return trimmed
 }
 
-function buildLocalDateKey(date = new Date()) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-function buildPublicLeadSourceKey(ipAddress: string, date = new Date()) {
+function buildPublicLeadSourceKey(ipAddress: string) {
   const ipHash = createHash('sha256').update(ipAddress).digest('hex').slice(0, 16)
-  return `${PUBLIC_CHAT_SOURCE_TAG}:${buildLocalDateKey(date)}:${ipHash}`
+  return `${PUBLIC_CHAT_SOURCE_TAG}:${ipHash}`
 }
 
 function chooseStructuredMethod(provider: { provider: string; model: string }) {
@@ -530,7 +523,7 @@ export class AiChatService {
     }
 
     const now = new Date()
-    const sourceKey = buildPublicLeadSourceKey(normalizedIp, now)
+    const sourceKey = buildPublicLeadSourceKey(normalizedIp)
     const lead =
       (await this.aiChatRepository.findLatestLeadBySourceKey(sourceKey)) ??
       (await this.aiChatRepository.createLead({
@@ -560,25 +553,41 @@ export class AiChatService {
       throw new Error('Failed to create public AI chat lead')
     }
 
-    // 孤儿清理：删除该 lead 下已失效的 useKey 引用（历史数据库可能未开 FK cascade）
+    // 查找已有 useKey：如果 session 已关闭或轮次已用完，发新 key
     const existingUseKey = await this.aiChatRepository.findLatestUseKeyByLeadId(lead.id)
-    if (existingUseKey && existingUseKey.status === 'revoked') {
-      await this.aiChatRepository.deleteUseKey(existingUseKey.useKey)
+
+    if (existingUseKey) {
+      if (existingUseKey.status === 'revoked') {
+        await this.aiChatRepository.deleteUseKey(existingUseKey.useKey)
+      } else if (existingUseKey.sessionId) {
+        const bundle = await this.aiChatRepository.getSessionBundle(existingUseKey.sessionId)
+        if (bundle && (bundle.session.status === 'closed' || bundle.session.turnCount >= bundle.useKey.maxTurns)) {
+          // 会话已结束或轮次用尽，标记旧 useKey 为 expired，走新 key 分支
+          await this.aiChatRepository.updateUseKey({
+            id: existingUseKey.id,
+            status: 'expired',
+            updatedAt: now,
+          })
+        }
+      }
     }
 
-    const useKeyRecord =
-      (await this.aiChatRepository.findLatestUseKeyByLeadId(lead.id)) ??
-      (await this.aiChatRepository.createUseKey({
-        id: randomUUID(),
-        useKey: buildUseKeyValue(),
-        leadId: lead.id,
-        issuedByUserId: PUBLIC_CHAT_ISSUER,
-        status: 'issued',
-        maxTurns: MAX_CHAT_TURNS,
-        usedTurns: 0,
-        createdAt: now,
-        updatedAt: now,
-      }))
+    const latestUseKey = await this.aiChatRepository.findLatestUseKeyByLeadId(lead.id)
+    const useKeyIsValid = latestUseKey && latestUseKey.status !== 'revoked' && latestUseKey.status !== 'expired'
+
+    const useKeyRecord = useKeyIsValid
+      ? latestUseKey!
+      : (await this.aiChatRepository.createUseKey({
+          id: randomUUID(),
+          useKey: buildUseKeyValue(),
+          leadId: lead.id,
+          issuedByUserId: PUBLIC_CHAT_ISSUER,
+          status: 'issued',
+          maxTurns: MAX_CHAT_TURNS,
+          usedTurns: 0,
+          createdAt: now,
+          updatedAt: now,
+        }))
 
     if (!useKeyRecord) {
       throw new Error('Failed to create public AI chat useKey')
