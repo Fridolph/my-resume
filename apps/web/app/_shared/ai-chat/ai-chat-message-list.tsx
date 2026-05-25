@@ -2,11 +2,11 @@
 
 import { Chip, Spinner } from '@heroui/react'
 import { Avatar } from '@heroui/react/avatar'
-import { forwardRef, Fragment } from 'react'
+import { forwardRef } from 'react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
-import type { AiChatMessage, AiChatMessageBlock, RagAskCitation } from '@my-resume/api-client'
+import type { AiChatMessage, AiChatMessageBlock } from '@my-resume/api-client'
 
 import { RagCitationTooltip } from './rag-citation-tooltip'
 import type { AiChatPresentation } from './ai-chat.types'
@@ -17,59 +17,6 @@ import type { AiChatPresentation } from './ai-chat.types'
  * 先用正则把 [#n] 替换为 「#n」避免被 markdown 吃掉，再用 react-markdown
  * 渲染段落/列表/粗体等，最后把 「#n」 替换为可交互的 RagCitationTooltip。
  */
-function renderContentWithCitations(
-  content: string,
-  citations: RagAskCitation[],
-) {
-  const citationByIdx = new Map<string, RagAskCitation>()
-
-  for (const citation of citations) {
-    citationByIdx.set(citation.ref, citation)
-  }
-
-  // 统一把 [#n]、#n、@n@ 归一为 `@n@`（反引号行内代码）
-  // markdown 可靠渲染 <code>，code handler 再替换为 tooltip
-  const safeContent = content
-    .replace(/\[#(\d{1,3})\]/g, (_m, n) => `\`@${n}@\``)
-    .replace(/(?<!\w)#(\d{1,3})(?!\w)/g, (_m, n) => `\`@${n}@\``)
-    .replace(/(?<!\w)REF(\d{1,3})(?!\w)/g, (_m, n) => `\`@${n}@\``)
-    .replace(/@(\d{1,3})@/g, (_m, n) => `\`@${n}@\``)
-
-  return (
-    <Markdown
-      remarkPlugins={[remarkGfm]}
-      components={{
-        h1: ({ children: hChildren }) => <h3 className="mb-1 mt-3 text-sm font-semibold text-zinc-900 first:mt-0 dark:text-zinc-100">{hChildren}</h3>,
-        a: (props) => <a className="text-blue-600 underline decoration-blue-300 underline-offset-2 hover:text-blue-700 dark:text-blue-400 dark:decoration-blue-500/30" rel="noreferrer" target="_blank" {...props} />,
-        img: (props) => <img alt={props.alt ?? ''} className="my-2 max-h-48 max-w-full rounded-xl object-contain" src={props.src} />,
-        ul: ({ children: listChildren }) => <ul className="my-1 list-disc pl-4 text-sm">{listChildren}</ul>,
-        ol: ({ children: listChildren }) => <ol className="my-1 list-decimal pl-4 text-sm">{listChildren}</ol>,
-        code: (props) => {
-          // react-markdown v10 children 可能是 string 或 ReactNode[]
-          const raw = Array.isArray(props.children)
-            ? props.children.map((c) => String(c ?? '')).join('')
-            : String(props.children ?? '')
-          const text = raw.trim()
-          const m = text.match(/@(\d{1,3})@/)
-          if (m) {
-            const citation = citationByIdx.get(`#${m[1]}`)
-            if (citation) return <RagCitationTooltip citation={citation} />
-            return <span className="text-[0.7rem] text-zinc-400">[{m[1]}]</span>
-          }
-          return props.className ? (
-            <pre className="my-2 overflow-x-auto rounded-xl bg-zinc-100 p-3 font-mono text-[0.8rem] leading-5 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200"><code {...props} /></pre>
-          ) : (
-            <code className="rounded-md bg-zinc-100 px-1.5 py-px font-mono text-[0.82rem] text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">{text}</code>
-          )
-        },
-        p: ({ children: pChildren }) => <p className="text-sm leading-6">{pChildren}</p>,
-        blockquote: ({ children: qChildren }) => <blockquote className="my-1 border-l-2 border-zinc-300 pl-3 italic text-zinc-500 dark:border-zinc-600 dark:text-zinc-400">{qChildren}</blockquote>,
-      }}>
-      {safeContent}
-    </Markdown>
-  )
-}
-
 function renderMessageBlocks(blocks: AiChatMessageBlock[]) {
   return blocks.map((block, index) => {
     if (block.type === 'project_card' || block.type === 'experience_card') {
@@ -223,9 +170,32 @@ function AiChatMessageItem({
               : 'rounded-bl border border-zinc-200/80 bg-white text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100',
           ].join(' ')}>
           <div className="text-sm leading-6">
-            {renderContentWithCitations(message.content, message.citations)}
+            <Markdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                a: (props) => <a className="text-blue-600 underline decoration-blue-300 underline-offset-2 hover:text-blue-700 dark:text-blue-400 dark:decoration-blue-500/30" rel="noreferrer" target="_blank" {...props} />,
+                img: (props) => <img alt={props.alt ?? ''} className="my-2 max-h-48 max-w-full rounded-xl object-contain" src={props.src} />,
+                code: (props) => props.className ? (
+                  <pre className="my-2 overflow-x-auto rounded-xl bg-zinc-100 p-3 font-mono text-[0.8rem] leading-5 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200"><code {...props} /></pre>
+                ) : (
+                  <code className="rounded-md bg-zinc-100 px-1.5 py-px font-mono text-[0.82rem] text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">{props.children}</code>
+                ),
+                p: ({ children: pChildren }) => <p className="text-sm leading-6">{pChildren}</p>,
+                blockquote: ({ children: qChildren }) => <blockquote className="my-1 border-l-2 border-zinc-300 pl-3 italic text-zinc-500 dark:border-zinc-600 dark:text-zinc-400">{qChildren}</blockquote>,
+              }}>
+              {message.content}
+            </Markdown>
           </div>
         </div>
+        {/* AI 引用来源 — 独立行展示，不与 markdown 抢占位 */}
+        {!isUser && message.citations.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-1 px-1">
+            <span className="text-[0.62rem] text-zinc-400 dark:text-zinc-500">引用：</span>
+            {message.citations.map((citation) => (
+              <RagCitationTooltip citation={citation} key={citation.ref} />
+            ))}
+          </div>
+        ) : null}
         {!isUser && message.answerBlocks.length > 0 ? (
           <div className="grid w-full gap-2">{renderMessageBlocks(message.answerBlocks)}</div>
         ) : null}
