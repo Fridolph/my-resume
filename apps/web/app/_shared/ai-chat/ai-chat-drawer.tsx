@@ -116,22 +116,38 @@ export function AiChatDrawer({ locale }: { locale: 'zh' | 'en' }) {
     () => localStorage.getItem('my-resume:ai-chat:summary-dismissed') ?? null,
   )
   const messageListRef = useRef<HTMLDivElement | null>(null)
+  const prevMessageCountRef = useRef(0)
+  const visibleMessages = useMemo(
+    () => buildVisibleMessages(session, draftAssistantMessage),
+    [draftAssistantMessage, session],
+  )
 
-  // AI 回答完成后延迟 500ms 滚动到底部
+  // 消息列表滚动控制：
+  // - 用户发送消息后立即滚动到底部
+  // - SSE 流式输出期间不强制滚动（用户可能正在阅读）
+  // - 流式结束后延迟 600ms 滚动到底部
+  useEffect(() => {
+    const count = visibleMessages.length
+
+    if (count > prevMessageCountRef.current) {
+      if (messageListRef.current) {
+        messageListRef.current.scrollTop = messageListRef.current.scrollHeight
+      }
+    }
+
+    prevMessageCountRef.current = count
+  }, [visibleMessages.length])
+
   useEffect(() => {
     if (!isStreaming && messageListRef.current) {
       const timer = setTimeout(() => {
         if (messageListRef.current) {
           messageListRef.current.scrollTop = messageListRef.current.scrollHeight
         }
-      }, 500)
+      }, 600)
       return () => clearTimeout(timer)
     }
   }, [isStreaming])
-  const visibleMessages = useMemo(
-    () => buildVisibleMessages(session, draftAssistantMessage),
-    [draftAssistantMessage, session],
-  )
   const statusContent = (
     <DrawerStatusPill tone={view === 'closed' ? 'success' : 'accent'}>
       {view === 'loading'
