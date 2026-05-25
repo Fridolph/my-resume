@@ -115,6 +115,7 @@ export function AiChatDrawer({ locale }: { locale: 'zh' | 'en' }) {
   const [dismissedSummaryStage, setDismissedSummaryStage] = useState<string | null>(
     () => localStorage.getItem('my-resume:ai-chat:summary-dismissed') ?? null,
   )
+  const [dismissedClosedBanner, setDismissedClosedBanner] = useState(false)
   const messageListRef = useRef<HTMLDivElement | null>(null)
   const prevMessageCountRef = useRef(0)
   const visibleMessages = useMemo(
@@ -248,13 +249,21 @@ export function AiChatDrawer({ locale }: { locale: 'zh' | 'en' }) {
             </p>
           </div>
         </div>
-      ) : view === 'closed' ? (
-        <div className="rounded-[1.5rem] border border-emerald-200/80 bg-emerald-50/70 px-4 py-4 text-sm leading-6 text-emerald-900 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-100">
-          {locale === 'en'
-            ? 'Today’s session has ended. You can reopen the window later to review the summary, and a new quota will be available tomorrow.'
-            : '今天的会话已经结束。你之后仍可再次打开窗口查看总结，明天会恢复新的提问额度。'}
+      ) : view === 'closed' && !dismissedClosedBanner ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.25rem] border border-emerald-200/80 bg-emerald-50/70 px-4 py-3 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+          <p className="text-sm leading-6 text-emerald-900 dark:text-emerald-100">
+            {locale === 'en'
+              ? 'Today\'s session has ended. You can review previous messages below, and a new quota will be available tomorrow.'
+              : '今天的会话已经结束。你仍可浏览下方的历史消息，明天会恢复新的提问额度。'}
+          </p>
+          <CloseButton
+            aria-label={locale === 'en' ? 'Dismiss' : '关闭'}
+            onPress={() => setDismissedClosedBanner(true)}
+          />
         </div>
-      ) : (
+      ) : null}
+      {/* 非 loading 状态始终展示消息列表 */}
+      {view !== 'loading' ? (
         <AiChatMessageList
           isStreaming={isStreaming}
           locale={locale}
@@ -262,7 +271,7 @@ export function AiChatDrawer({ locale }: { locale: 'zh' | 'en' }) {
           presentation={presentation}
           ref={messageListRef}
         />
-      )}
+      ) : null}
     </AiChatWindowShell>
   )
 }
