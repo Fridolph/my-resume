@@ -27,11 +27,11 @@ function renderContentWithCitations(
     citationByIdx.set(citation.ref, citation)
   }
 
-  // 预处理：把 [#1] 替换为 REF1（纯单词不会被 markdown 解释为链接）
-  // 然后在 text handler 中检测 REF\d+ 还原为 tooltip
+  // 预处理：把 [#1] 替换为 `REF1`（反引号让 markdown 生成 <code> 元素，
+  // markdown 不会吃掉反引号里的内容，code handler 再还原为 tooltip）
   const safeContent = content.replace(
     /\[#(\d{1,3})\]/g,
-    (_m, n) => `REF${n}`,
+    (_m, n) => `\`REF${n}\``,
   )
 
   return (
@@ -43,51 +43,23 @@ function renderContentWithCitations(
         img: (props) => <img alt={props.alt ?? ''} className="my-2 max-h-48 max-w-full rounded-xl object-contain" src={props.src} />,
         ul: ({ children: listChildren }) => <ul className="my-1 list-disc pl-4 text-sm">{listChildren}</ul>,
         ol: ({ children: listChildren }) => <ol className="my-1 list-decimal pl-4 text-sm">{listChildren}</ol>,
-        code: (props) => props.className ? (
-          <pre className="my-2 overflow-x-auto rounded-xl bg-zinc-100 p-3 font-mono text-[0.8rem] leading-5 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200"><code {...props} /></pre>
-        ) : (
-          <code className="rounded-md bg-zinc-100 px-1.5 py-px font-mono text-[0.82rem] text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">{props.children}</code>
-        ),
-        p: ({ children: pChildren }) => <p className="text-sm leading-6">{pChildren}</p>,
-        blockquote: ({ children: qChildren }) => <blockquote className="my-1 border-l-2 border-zinc-300 pl-3 italic text-zinc-500 dark:border-zinc-600 dark:text-zinc-400">{qChildren}</blockquote>,
-        // text 节点中检测 REF1 REF2... 替换为 tooltip
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        text: (props: any) => {
+        code: (props) => {
           const text = String(props.children ?? '')
-          const regex = /REF(\d{1,3})/g
-          const parts: Array<{ type: 'text' | 'citation'; value: string; citation?: RagAskCitation }> = []
-          let lastIndex = 0
-          let m: RegExpExecArray | null
-
-          while ((m = regex.exec(text)) !== null) {
-            if (m.index > lastIndex) {
-              parts.push({ type: 'text', value: text.slice(lastIndex, m.index) })
-            }
-            const ref = `#${m[1]}`
-            const citation = citationByIdx.get(ref)
-            parts.push({ type: 'citation', value: ref, citation })
-            lastIndex = m.index + m[0].length
+          const m = text.match(/^REF(\d{1,3})$/)
+          if (m) {
+            const citation = citationByIdx.get(`#${m[1]}`)
+            if (citation) return <RagCitationTooltip citation={citation} />
+            return <>{`[#${m[1]}]`}</>
           }
-
-          if (lastIndex < text.length) {
-            parts.push({ type: 'text', value: text.slice(lastIndex) })
-          }
-
-          if (parts.length === 0) {
-            return <>{text}</>
-          }
-
-          return (
-            <Fragment key={props.key}>
-              {parts.map((seg, i) => {
-                if (seg.type === 'citation' && seg.citation) {
-                  return <RagCitationTooltip citation={seg.citation} key={i} />
-                }
-                return <Fragment key={i}>{seg.value}</Fragment>
-              })}
-            </Fragment>
+          // 普通代码块
+          return props.className ? (
+            <pre className="my-2 overflow-x-auto rounded-xl bg-zinc-100 p-3 font-mono text-[0.8rem] leading-5 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200"><code {...props} /></pre>
+          ) : (
+            <code className="rounded-md bg-zinc-100 px-1.5 py-px font-mono text-[0.82rem] text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">{text}</code>
           )
         },
+        p: ({ children: pChildren }) => <p className="text-sm leading-6">{pChildren}</p>,
+        blockquote: ({ children: qChildren }) => <blockquote className="my-1 border-l-2 border-zinc-300 pl-3 italic text-zinc-500 dark:border-zinc-600 dark:text-zinc-400">{qChildren}</blockquote>,
       }}>
       {safeContent}
     </Markdown>
