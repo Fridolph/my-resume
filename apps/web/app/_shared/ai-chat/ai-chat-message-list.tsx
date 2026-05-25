@@ -4,7 +4,6 @@ import { Chip, Spinner } from '@heroui/react'
 import { Avatar } from '@heroui/react/avatar'
 import { Fragment } from 'react'
 import Markdown from 'react-markdown'
-import rehypeRaw from 'rehype-raw'
 import remarkGfm from 'remark-gfm'
 
 import type { AiChatMessage, AiChatMessageBlock, RagAskCitation } from '@my-resume/api-client'
@@ -28,17 +27,16 @@ function renderContentWithCitations(
     citationByIdx.set(citation.ref, citation)
   }
 
-  // 预处理：把 [#n] 替换为 <cite data-ref="n"></cite>，
-  // rehype-raw 允许 markdown 中混入 HTML 标签
+  // 预处理：把 [#1] 替换为 REF1（纯单词不会被 markdown 解释为链接）
+  // 然后在 text handler 中检测 REF\d+ 还原为 tooltip
   const safeContent = content.replace(
     /\[#(\d{1,3})\]/g,
-    (_m, n) => `<cite data-ref="${n}"></cite>`,
+    (_m, n) => `REF${n}`,
   )
 
   return (
     <Markdown
       remarkPlugins={[remarkGfm]}
-      rehypePlugins={[rehypeRaw]}
       components={{
         h1: ({ children: hChildren }) => <h3 className="mb-1 mt-3 text-sm font-semibold text-zinc-900 first:mt-0 dark:text-zinc-100">{hChildren}</h3>,
         a: (props) => <a className="text-blue-600 underline decoration-blue-300 underline-offset-2 hover:text-blue-700 dark:text-blue-400 dark:decoration-blue-500/30" rel="noreferrer" target="_blank" {...props} />,
@@ -52,14 +50,43 @@ function renderContentWithCitations(
         ),
         p: ({ children: pChildren }) => <p className="text-sm leading-6">{pChildren}</p>,
         blockquote: ({ children: qChildren }) => <blockquote className="my-1 border-l-2 border-zinc-300 pl-3 italic text-zinc-500 dark:border-zinc-600 dark:text-zinc-400">{qChildren}</blockquote>,
-        // 自定义 cite 标签渲染为 tooltip
+        // text 节点中检测 REF1 REF2... 替换为 tooltip
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        cite: (props: any) => {
-          const refNum = props['data-ref']
-          if (typeof refNum !== 'string' || !refNum) return null
-          const citation = citationByIdx.get(`#${refNum}`)
-          if (!citation) return <>{`[#${refNum}]`}</>
-          return <RagCitationTooltip citation={citation} />
+        text: (props: any) => {
+          const text = String(props.children ?? '')
+          const regex = /REF(\d{1,3})/g
+          const parts: Array<{ type: 'text' | 'citation'; value: string; citation?: RagAskCitation }> = []
+          let lastIndex = 0
+          let m: RegExpExecArray | null
+
+          while ((m = regex.exec(text)) !== null) {
+            if (m.index > lastIndex) {
+              parts.push({ type: 'text', value: text.slice(lastIndex, m.index) })
+            }
+            const ref = `#${m[1]}`
+            const citation = citationByIdx.get(ref)
+            parts.push({ type: 'citation', value: ref, citation })
+            lastIndex = m.index + m[0].length
+          }
+
+          if (lastIndex < text.length) {
+            parts.push({ type: 'text', value: text.slice(lastIndex) })
+          }
+
+          if (parts.length === 0) {
+            return <>{text}</>
+          }
+
+          return (
+            <Fragment key={key}>
+              {parts.map((seg, i) => {
+                if (seg.type === 'citation' && seg.citation) {
+                  return <RagCitationTooltip citation={seg.citation} key={i} />
+                }
+                return <Fragment key={i}>{seg.value}</Fragment>
+              })}
+            </Fragment>
+          )
         },
       }}>
       {safeContent}

@@ -80,6 +80,7 @@ interface MergedRow {
 export function ChatGovernanceShell() {
   const { accessToken, status } = useAdminSession()
   const [sessionDetailId, setSessionDetailId] = useState<string | null>(null)
+  const [sessionDetail, setSessionDetail] = useState<AiChatSession | null>(null)
   const [deleteConfirmKey, setDeleteConfirmKey] = useState<string | null>(null)
   const [deletingUseKey, setDeletingUseKey] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -96,20 +97,10 @@ export function ChatGovernanceShell() {
     () => createFetchAiChatSessionsMethod({ apiBaseUrl: DEFAULT_API_BASE_URL, accessToken: accessToken ?? '' }),
     { immediate: status === 'ready' && Boolean(accessToken), force: true },
   )
-  const sessionDetailRequest = useRequest(
-    () =>
-      createFetchAiChatSessionDetailMethod({
-        apiBaseUrl: DEFAULT_API_BASE_URL,
-        accessToken: accessToken ?? '',
-        sessionId: sessionDetailId ?? '',
-      }),
-    { immediate: false, force: true },
-  )
 
   const leads = (leadsRequest.data ?? []) as AiChatLeadSummary[]
   const useKeys = (useKeysRequest.data ?? []) as AiChatUseKeySummary[]
   const sessions = (sessionsRequest.data ?? []) as AiChatSessionListItem[]
-  const sessionDetail = (sessionDetailRequest.data ?? null) as AiChatSession | null
 
   const mergedRows = useMemo<MergedRow[]>(() => {
     const leadMap = new Map(leads.map((l) => [l.id, l]))
@@ -142,7 +133,13 @@ export function ChatGovernanceShell() {
     setSessionDetailId(sessionId)
     setActionError(null)
     try {
-      await sessionDetailRequest.send()
+      // 直接调 API 避免 React setState 异步导致 sessionDetailId 仍为旧值
+      const result = await createFetchAiChatSessionDetailMethod({
+        apiBaseUrl: DEFAULT_API_BASE_URL,
+        accessToken: accessToken ?? '',
+        sessionId,
+      }).send()
+      setSessionDetail(result)
     } catch {
       setActionError('会话详情加载失败，请稍后重试')
     }
@@ -295,7 +292,6 @@ export function ChatGovernanceShell() {
           <Drawer.CloseTrigger aria-label="关闭会话详情" />
         </Drawer.Header>
         <Drawer.Body>
-          {sessionDetailRequest.loading ? <p className="py-10 text-center text-sm text-zinc-500">加载中...</p> : null}
           {sessionDetail ? (
             <div className="grid gap-4">
               {/* 会话信息卡片 */}
