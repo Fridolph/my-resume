@@ -154,11 +154,9 @@ export function AiChatDrawer({ locale }: { locale: 'zh' | 'en' }) {
         onCancel={cancelStreaming}
         onChange={setChatMessage}
         onSend={async () => {
-          const success = await sendMessage({ content: chatMessage })
-
-          if (success) {
-            setChatMessage('')
-          }
+          const message = chatMessage
+          setChatMessage('')
+          await sendMessage({ content: message })
         }}
         value={chatMessage}
       />

@@ -27,12 +27,13 @@ function renderContentWithCitations(
     citationByIdx.set(citation.ref, citation)
   }
 
-  // 统一把 [#n]、#n、REFn 等引用标记归一为 @n@ 占位符
-  // @n@ 不包含 markdown 语法字符（无 [] ` $），作为纯文本安全穿过解析器
+  // 统一把 [#n]、#n、@n@ 归一为 `@n@`（反引号行内代码）
+  // markdown 可靠渲染 <code>，code handler 再替换为 tooltip
   const safeContent = content
-    .replace(/\[#(\d{1,3})\]/g, (_m, n) => `@${n}@`)
-    .replace(/(?<!\w)#(\d{1,3})(?!\w)/g, (_m, n) => `@${n}@`)
-    .replace(/REF(\d{1,3})/g, (_m, n) => `@${n}@`)
+    .replace(/\[#(\d{1,3})\]/g, (_m, n) => `\`@${n}@\``)
+    .replace(/(?<!\w)#(\d{1,3})(?!\w)/g, (_m, n) => `\`@${n}@\``)
+    .replace(/(?<!\w)REF(\d{1,3})(?!\w)/g, (_m, n) => `\`@${n}@\``)
+    .replace(/@(\d{1,3})@/g, (_m, n) => `\`@${n}@\``)
 
   return (
     <Markdown
@@ -50,7 +51,6 @@ function renderContentWithCitations(
             const citation = citationByIdx.get(`#${m[1]}`)
             if (citation) return <RagCitationTooltip citation={citation} />
           }
-          // 普通代码块
           return props.className ? (
             <pre className="my-2 overflow-x-auto rounded-xl bg-zinc-100 p-3 font-mono text-[0.8rem] leading-5 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200"><code {...props} /></pre>
           ) : (
@@ -59,43 +59,6 @@ function renderContentWithCitations(
         },
         p: ({ children: pChildren }) => <p className="text-sm leading-6">{pChildren}</p>,
         blockquote: ({ children: qChildren }) => <blockquote className="my-1 border-l-2 border-zinc-300 pl-3 italic text-zinc-500 dark:border-zinc-600 dark:text-zinc-400">{qChildren}</blockquote>,
-        // 文本节点中检测 @n@ 占位符，替换为 tooltip
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        text: (props: any) => {
-          const text = String(props.children ?? '')
-          const regex = /@(\d{1,3})@/g
-          const segments: Array<{ type: 'text' | 'citation'; value: string; citation?: RagAskCitation }> = []
-          let lastIndex = 0
-          let m: RegExpExecArray | null
-
-          while ((m = regex.exec(text)) !== null) {
-            if (m.index > lastIndex) {
-              segments.push({ type: 'text', value: text.slice(lastIndex, m.index) })
-            }
-            const citation = citationByIdx.get(`#${m[1]}`)
-            segments.push({ type: 'citation', value: `#${m[1]}`, citation })
-            lastIndex = m.index + m[0].length
-          }
-
-          if (lastIndex < text.length) {
-            segments.push({ type: 'text', value: text.slice(lastIndex) })
-          }
-
-          if (segments.length === 0) {
-            return <>{text}</>
-          }
-
-          return (
-            <Fragment key={props.key}>
-              {segments.map((seg, i) => {
-                if (seg.type === 'citation' && seg.citation) {
-                  return <RagCitationTooltip citation={seg.citation} key={i} />
-                }
-                return <Fragment key={i}>{seg.value}</Fragment>
-              })}
-            </Fragment>
-          )
-        },
       }}>
       {safeContent}
     </Markdown>
