@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 const useAiChatMock = vi.fn()
@@ -57,8 +58,9 @@ describe('AiChatDrawer', () => {
     expect(screen.getByText('正在启动 AI 对话...')).toBeInTheDocument()
     expect(screen.getByLabelText('关闭 AI 对话')).toBeInTheDocument()
     expect(screen.getByLabelText('最小化 AI 对话')).toBeInTheDocument()
-    expect(document.querySelector('[data-slot="drawer-backdrop"]')?.className).toContain(
-      'drawer__backdrop--transparent',
+    expect(screen.getByRole('dialog', { name: 'AI 对话' })).toHaveAttribute(
+      'aria-modal',
+      'false',
     )
   })
 
@@ -219,5 +221,264 @@ describe('AiChatDrawer', () => {
 
     expect(screen.getByText('fetch failed')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '重试上一条' })).toBeInTheDocument()
+  })
+
+  it('should render citation references as hoverable tooltips', async () => {
+    const user = userEvent.setup()
+
+    useAiChatMock.mockReturnValue({
+      acceptConsent: vi.fn(),
+      canRetryLastMessage: false,
+      cancelStreaming: vi.fn(),
+      clearPresentation: vi.fn(),
+      closeSession: vi.fn(),
+      draftAssistantMessage: null,
+      drawerState: 'open',
+      dismissConsentModal: vi.fn(),
+      errorMessage: null,
+      hasConsentForToday: true,
+      hideDrawer: vi.fn(),
+      isBootstrappingSession: false,
+      isConsentModalOpen: false,
+      isDrawerOpen: true,
+      isDrawerVisible: true,
+      isStreaming: false,
+      minimizeDrawer: vi.fn(),
+      openDrawer: vi.fn(),
+      presentation: {
+        assistantAvatarSrc: '/img/avatar.jpg',
+        assistantLabel: '付寅生',
+        visitorLabel: '访客',
+      },
+      refreshSession: vi.fn(),
+      registerPresentation: vi.fn(),
+      restoreDrawer: vi.fn(),
+      restoreReady: true,
+      retryLastMessage: vi.fn(),
+      sendMessage: vi.fn(),
+      session: {
+        sessionId: 'session-public-001',
+        locale: 'zh',
+        status: 'open',
+        turnCount: 1,
+        remainingTurns: 19,
+        useKeyStatus: 'claimed',
+        lead: {
+          id: 'lead-public-001',
+          locale: 'zh',
+          displayName: '公开站访客',
+          companyName: '',
+          contact: '',
+          message: '',
+          status: 'issued',
+          createdAt: '2026-05-12T00:00:00.000Z',
+          updatedAt: '2026-05-12T00:00:00.000Z',
+        },
+        messages: [
+          {
+            id: 'assistant-1',
+            role: 'assistant',
+            content: '我最近在做一个叫 my-resume 的个人项目 [#1]。',
+            turnIndex: 1,
+            answerBlocks: [],
+            citations: [
+              {
+                ref: '#1',
+                sourceType: 'resume_core',
+                sourcePath: 'resume-core',
+                section: 'project',
+                title: 'my-resume',
+                score: 0.987,
+                snippet: '这是一个全栈个人项目。',
+              },
+            ],
+            createdAt: '2026-05-12T00:00:00.000Z',
+          },
+        ],
+        interimSummary: null,
+        finalSummary: null,
+        createdAt: '2026-05-12T00:00:00.000Z',
+        updatedAt: '2026-05-12T00:00:01.000Z',
+        closedAt: null,
+      },
+      summaryPreview: null,
+      useKeyStatus: 'claimed',
+      view: 'chat',
+    })
+
+    render(<AiChatDrawer locale="zh" />)
+
+    expect(screen.getByText('#1')).toBeInTheDocument()
+
+    await user.hover(screen.getByText('#1'))
+
+    expect(await screen.findByText('my-resume')).toBeInTheDocument()
+    expect(screen.getByText('简历核心')).toBeInTheDocument()
+    expect(screen.getByText('这是一个全栈个人项目。')).toBeInTheDocument()
+  })
+
+  it('should render plain #ref citations as hoverable tooltips too', async () => {
+    const user = userEvent.setup()
+
+    useAiChatMock.mockReturnValue({
+      acceptConsent: vi.fn(),
+      canRetryLastMessage: false,
+      cancelStreaming: vi.fn(),
+      clearPresentation: vi.fn(),
+      closeSession: vi.fn(),
+      draftAssistantMessage: null,
+      drawerState: 'open',
+      dismissConsentModal: vi.fn(),
+      errorMessage: null,
+      hasConsentForToday: true,
+      hideDrawer: vi.fn(),
+      isBootstrappingSession: false,
+      isConsentModalOpen: false,
+      isDrawerOpen: true,
+      isDrawerVisible: true,
+      isStreaming: false,
+      minimizeDrawer: vi.fn(),
+      openDrawer: vi.fn(),
+      presentation: {
+        assistantAvatarSrc: '/img/avatar.jpg',
+        assistantLabel: '付寅生',
+        visitorLabel: '访客',
+      },
+      refreshSession: vi.fn(),
+      registerPresentation: vi.fn(),
+      restoreDrawer: vi.fn(),
+      restoreReady: true,
+      retryLastMessage: vi.fn(),
+      sendMessage: vi.fn(),
+      session: {
+        sessionId: 'session-public-002',
+        locale: 'zh',
+        status: 'open',
+        turnCount: 1,
+        remainingTurns: 19,
+        useKeyStatus: 'claimed',
+        lead: {
+          id: 'lead-public-002',
+          locale: 'zh',
+          displayName: '公开站访客',
+          companyName: '',
+          contact: '',
+          message: '',
+          status: 'issued',
+          createdAt: '2026-05-12T00:00:00.000Z',
+          updatedAt: '2026-05-12T00:00:00.000Z',
+        },
+        messages: [
+          {
+            id: 'assistant-2',
+            role: 'assistant',
+            content: '这个简历站项目也顺手把 SSR 和 SEO 跑通了一遍 #2。',
+            turnIndex: 1,
+            answerBlocks: [],
+            citations: [
+              {
+                ref: '#2',
+                sourceType: 'resume_core',
+                sourcePath: 'resume-core',
+                section: 'project',
+                title: 'my-resume web',
+                score: 0.912,
+                snippet: '联当展示站使用，也顺手把 SSR、SEO 这些东西在真实场景里跑了一遍。',
+              },
+            ],
+            createdAt: '2026-05-12T00:00:00.000Z',
+          },
+        ],
+        interimSummary: null,
+        finalSummary: null,
+        createdAt: '2026-05-12T00:00:00.000Z',
+        updatedAt: '2026-05-12T00:00:01.000Z',
+        closedAt: null,
+      },
+      summaryPreview: null,
+      useKeyStatus: 'claimed',
+      view: 'chat',
+    })
+
+    render(<AiChatDrawer locale="zh" />)
+
+    expect(screen.getByText('#2')).toBeInTheDocument()
+
+    await user.hover(screen.getByText('#2'))
+
+    expect(await screen.findByText('my-resume web')).toBeInTheDocument()
+    expect(screen.getByText(/SSR、SEO/)).toBeInTheDocument()
+  })
+
+  it('should keep textarea editable while streaming but disable send action', async () => {
+    const onSend = vi.fn()
+
+    useAiChatMock.mockReturnValue({
+      acceptConsent: vi.fn(),
+      canRetryLastMessage: false,
+      cancelStreaming: vi.fn(),
+      clearPresentation: vi.fn(),
+      closeSession: vi.fn(),
+      draftAssistantMessage: null,
+      drawerState: 'open',
+      dismissConsentModal: vi.fn(),
+      errorMessage: null,
+      hasConsentForToday: true,
+      hideDrawer: vi.fn(),
+      isBootstrappingSession: false,
+      isConsentModalOpen: false,
+      isDrawerOpen: true,
+      isDrawerVisible: true,
+      isStreaming: true,
+      minimizeDrawer: vi.fn(),
+      openDrawer: vi.fn(),
+      presentation: {
+        assistantAvatarSrc: '/img/avatar.jpg',
+        assistantLabel: '付寅生',
+        visitorLabel: '访客',
+      },
+      refreshSession: vi.fn(),
+      registerPresentation: vi.fn(),
+      restoreDrawer: vi.fn(),
+      restoreReady: true,
+      retryLastMessage: vi.fn(),
+      sendMessage: onSend,
+      session: {
+        sessionId: 'session-public-003',
+        locale: 'zh',
+        status: 'open',
+        turnCount: 1,
+        remainingTurns: 19,
+        useKeyStatus: 'claimed',
+        lead: {
+          id: 'lead-public-003',
+          locale: 'zh',
+          displayName: '公开站访客',
+          companyName: '',
+          contact: '',
+          message: '',
+          status: 'issued',
+          createdAt: '2026-05-12T00:00:00.000Z',
+          updatedAt: '2026-05-12T00:00:00.000Z',
+        },
+        messages: [],
+        interimSummary: null,
+        finalSummary: null,
+        createdAt: '2026-05-12T00:00:00.000Z',
+        updatedAt: '2026-05-12T00:00:01.000Z',
+        closedAt: null,
+      },
+      summaryPreview: null,
+      useKeyStatus: 'claimed',
+      view: 'chat',
+    })
+
+    render(<AiChatDrawer locale="zh" />)
+
+    const textarea = screen.getByPlaceholderText('请提问项目经历、工作经历、技术栈或岗位匹配相关问题。')
+    const sendButton = screen.getByRole('button', { name: '发送中...' })
+
+    expect(textarea).not.toBeDisabled()
+    expect(sendButton).toBeDisabled()
   })
 })

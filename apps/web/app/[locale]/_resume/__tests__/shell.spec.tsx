@@ -141,21 +141,17 @@ describe('PublishedResumeShell', () => {
 
     renderShell()
 
-    expect(screen.getByRole('link', { name: '简历' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: '概览' })).toHaveAttribute('href', '/zh/profile')
-    expect(screen.getByRole('link', { name: 'AI Talk' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'FY Fridolph Resume' })).toHaveAttribute(
+      'href',
+      '/zh',
+    )
+    expect(screen.getByRole('link', { name: '打开 AI 对话抽屉' })).toHaveAttribute(
       'href',
       '/zh/ai-talk',
     )
     expect(screen.getByTestId('public-site-brand-text')).toHaveClass('hidden', 'md:flex')
-    expect(screen.getByTestId('public-site-nav-shell')).toHaveClass('hidden', 'sm:flex')
     expect(screen.getByTestId('public-site-mobile-menu')).toHaveClass('sm:hidden')
     expect(screen.getByTestId('public-site-desktop-actions')).toHaveClass('hidden', 'sm:flex')
-    expect(screen.getByTestId('public-site-nav')).toHaveClass(
-      'inline-flex',
-      'flex-nowrap',
-      'whitespace-nowrap',
-    )
     expect(screen.getByRole('heading', { name: '付寅生' })).toBeInTheDocument()
     expect(
       await screen.findByRole('heading', { name: '职业经历' }, { timeout: 10000 }),
@@ -229,11 +225,12 @@ describe('PublishedResumeShell', () => {
       </ThemeModeProvider>,
     )
 
-    await user.click(screen.getByRole('button', { name: '打开站点菜单' }))
+    await user.click(await screen.findByRole('button', { name: '打开站点菜单' }))
 
     expect(await screen.findByRole('menuitem', { name: '简历' })).toBeInTheDocument()
     expect(screen.getByRole('menuitem', { name: '概览' })).toBeInTheDocument()
     expect(screen.getByRole('menuitem', { name: 'AI Talk' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: '打开 AI 对话' })).toBeInTheDocument()
     expect(screen.queryByRole('menuitem', { name: '中' })).not.toBeInTheDocument()
     expect(screen.queryByRole('menuitem', { name: 'EN' })).not.toBeInTheDocument()
     expect(screen.getByRole('menuitem', { name: 'Select Lang: EN' })).toBeInTheDocument()
@@ -267,7 +264,7 @@ describe('PublishedResumeShell', () => {
     })
 
     replaceMock.mockClear()
-    await user.click(screen.getByRole('button', { name: '打开站点菜单' }))
+    await user.click(await screen.findByRole('button', { name: '打开站点菜单' }))
     await user.click(screen.getByRole('menuitem', { name: 'Select Lang: EN' }))
     expect(replaceMock).toHaveBeenCalledWith('/', { locale: 'en' })
     await waitFor(() => {
@@ -283,7 +280,7 @@ describe('PublishedResumeShell', () => {
         />
       </ThemeModeProvider>,
     )
-    await user.click(screen.getByRole('button', { name: '打开站点菜单' }))
+    await user.click(await screen.findByRole('button', { name: '打开站点菜单' }))
     expect(await screen.findByRole('menuitem', { name: '切换语言：中文' })).toBeInTheDocument()
 
     expect(document.documentElement.dataset.theme).toBe('light')
@@ -293,7 +290,7 @@ describe('PublishedResumeShell', () => {
       expect(screen.queryByRole('menuitem', { name: '简历' })).not.toBeInTheDocument()
     })
 
-    await user.click(screen.getByRole('button', { name: '打开站点菜单' }))
+    await user.click(await screen.findByRole('button', { name: '打开站点菜单' }))
     expect(await screen.findByRole('menuitem', { name: '切换主题：浅色' })).toBeInTheDocument()
     await user.click(screen.getByRole('menuitem', { name: '切换主题：浅色' }))
     expect(document.documentElement.dataset.theme).toBe('light')
@@ -473,7 +470,10 @@ describe('PublishedResumeShell', () => {
       </ThemeModeProvider>,
     )
 
-    expect(screen.getByRole('link', { name: '简历' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'FY Fridolph Resume' })).toHaveAttribute(
+      'href',
+      '/zh',
+    )
     expect(screen.getByText('公开简历服务暂时不可用')).toBeInTheDocument()
     expect(screen.getByTestId('published-resume-unavailable-message')).toHaveTextContent(
       '公开简历读取失败',

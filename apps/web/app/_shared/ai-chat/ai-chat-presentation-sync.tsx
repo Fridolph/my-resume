@@ -30,23 +30,25 @@ export function AiChatPresentationSync({
   publishedResume: ResumePublishedSnapshot | null
 }) {
   const aiChat = useOptionalAiChat()
+  const clearPresentation = aiChat?.clearPresentation
+  const registerPresentation = aiChat?.registerPresentation
 
   useEffect(() => {
-    if (!aiChat) {
+    if (!clearPresentation || !registerPresentation) {
       return
     }
 
     if (!publishedResume) {
-      aiChat.clearPresentation()
+      clearPresentation()
       return
     }
 
-    aiChat.registerPresentation(buildPresentationFromResume(locale, publishedResume))
+    registerPresentation(buildPresentationFromResume(locale, publishedResume))
 
     return () => {
-      aiChat.clearPresentation()
+      clearPresentation()
     }
-  }, [aiChat, locale, publishedResume])
+  }, [clearPresentation, locale, publishedResume, registerPresentation])
 
   return null
 }

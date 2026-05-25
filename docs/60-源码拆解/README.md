@@ -66,6 +66,13 @@
     - 点 3：配置驱动的重排策略（keywordHints / sectionBoost / selection）
     - 点 4：ask 问答管线（双源合并 → 两段门控 → 流式/非流式 LLM）
     - 点 5：ECS 本地搜索兼容方案与封装拆分评价
+- `09-M23-AI-Chat-流式对话与治理闭环源码梳理.md`
+  - 主题：M23 公开站 AI Chat 从流式接口到全局 Drawer、会话持久化与 Admin 治理的完整源码拆解
+  - 当前包含：
+    - 点 1：头像入口 -> consent -> public claim -> Drawer 打开的真实时序
+    - 点 2：SSE 事件流（start/token/citation/block/summary/done/error）与前端状态更新
+    - 点 3：`ai_chat_*` 持久化模型、summary 节点、Dock 恢复与治理台视角
+    - 点 4：分层验证清单（API Client / Server / Web / Admin）
 
 ## 后续计划
 

@@ -49,7 +49,6 @@ export function AiChatComposer({
     <div className="grid w-full gap-3">
       <textarea
         className="min-h-[5.5rem] w-full resize-none rounded-xl border border-zinc-200/80 bg-zinc-50/90 px-4 py-3 text-sm leading-6 text-zinc-900 outline-none transition focus:border-sky-300 focus:bg-white focus:ring-2 focus:ring-sky-200/70 dark:border-zinc-800 dark:bg-zinc-900/90 dark:text-zinc-100 dark:focus:border-sky-400/40 dark:focus:bg-zinc-950 dark:focus:ring-sky-400/20"
-        disabled={isStreaming}
         onChange={(event) => onChange(event.target.value)}
         onInput={(event) => resizeTextarea(event.currentTarget)}
         onKeyDown={(event) => {
