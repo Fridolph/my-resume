@@ -2,7 +2,7 @@
 
 import { Chip, Spinner } from '@heroui/react'
 import { Avatar } from '@heroui/react/avatar'
-import { Fragment } from 'react'
+import { forwardRef, Fragment } from 'react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
@@ -233,19 +233,19 @@ function AiChatMessageItem({
   )
 }
 
-export function AiChatMessageList({
-  isStreaming,
-  locale,
-  messages,
-  presentation,
-}: {
+export const AiChatMessageList = forwardRef<HTMLDivElement, {
   isStreaming: boolean
   locale: 'zh' | 'en'
   messages: AiChatMessage[]
   presentation: AiChatPresentation
-}) {
+}>(function AiChatMessageList({
+  isStreaming,
+  locale,
+  messages,
+  presentation,
+}, ref) {
   return (
-    <div className="grid min-h-0 flex-1 content-start gap-3 overflow-y-auto pr-1">
+    <div className="grid min-h-0 flex-1 content-start gap-3 overflow-y-auto pr-1" ref={ref}>
       {messages.map((message) => (
         <AiChatMessageItem key={message.id} message={message} presentation={presentation} />
       ))}
@@ -257,4 +257,4 @@ export function AiChatMessageList({
       ) : null}
     </div>
   )
-}
+})

@@ -47,6 +47,15 @@ export function AiChatComposer({
         className="min-h-[5.5rem] w-full resize-none rounded-xl border border-zinc-200/80 bg-zinc-50/90 px-4 py-3 text-sm leading-6 text-zinc-900 outline-none transition focus:border-sky-300 focus:bg-white focus:ring-2 focus:ring-sky-200/70 dark:border-zinc-800 dark:bg-zinc-900/90 dark:text-zinc-100 dark:focus:border-sky-400/40 dark:focus:bg-zinc-950 dark:focus:ring-sky-400/20"
         onChange={(event) => onChange(event.target.value)}
         onInput={(event) => resizeTextarea(event.currentTarget)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
+            event.preventDefault()
+            if (!isStreaming && value.trim()) {
+              void onSend()
+            }
+          }
+          // Ctrl+Enter / Shift+Enter 自然换行，不做拦截
+        }}
         placeholder={
           locale === 'en'
             ? 'Ask about projects, work experience, skills, or role fit.'
@@ -59,8 +68,8 @@ export function AiChatComposer({
       <div className="flex w-full items-end justify-between gap-3">
         <p className="text-xs leading-5 text-zinc-500 dark:text-zinc-400">
           {locale === 'en'
-            ? 'Resume-only chat. A summary is generated after 20 questions.'
-            : '仅限简历相关问答。提问满 20 次后会自动生成总结。'}
+            ? 'Enter to send, Ctrl+Enter to break line. 20 questions per day.'
+            : 'Enter 发送，Ctrl+Enter 换行。每日 20 次提问。'}
         </p>
         <Button
           className="shrink-0"

@@ -1,7 +1,7 @@
 'use client'
 
 import { Button, Chip, CloseButton, Spinner } from '@heroui/react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import type { AiChatMessage, AiChatSession } from '@my-resume/api-client'
 import { AiChatComposer } from './ai-chat-composer'
@@ -110,6 +110,19 @@ export function AiChatDrawer({ locale }: { locale: 'zh' | 'en' }) {
   } = useAiChat()
   const [chatMessage, setChatMessage] = useState('')
   const [dismissedSummaryStage, setDismissedSummaryStage] = useState<string | null>(null)
+  const messageListRef = useRef<HTMLDivElement | null>(null)
+
+  // AI 回答完成后延迟 500ms 滚动到底部
+  useEffect(() => {
+    if (!isStreaming && messageListRef.current) {
+      const timer = setTimeout(() => {
+        if (messageListRef.current) {
+          messageListRef.current.scrollTop = messageListRef.current.scrollHeight
+        }
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [isStreaming])
   const visibleMessages = useMemo(
     () => buildVisibleMessages(session, draftAssistantMessage),
     [draftAssistantMessage, session],
@@ -215,6 +228,7 @@ export function AiChatDrawer({ locale }: { locale: 'zh' | 'en' }) {
           locale={locale}
           messages={visibleMessages}
           presentation={presentation}
+          ref={messageListRef}
         />
       )}
     </AiChatWindowShell>
