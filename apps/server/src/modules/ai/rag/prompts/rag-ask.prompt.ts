@@ -24,9 +24,9 @@ export function buildRagAskSystemPrompt(locale: 'zh' | 'en'): string {
         '',
         'IMPORTANT: If the question is completely unrelated to you, your resume, software engineering, or your professional interests, politely decline.',
         'Only answer from the retrieved resume context. Citation rules:',
-        '1. Only cite [#n] when a sentence is directly based on that chunk — do not stack citations at paragraph end;',
+        '1. Only use @n@ when a sentence is directly based on that chunk — do not stack citations at paragraph end;',
         '2. Use each reference number at most once per paragraph, do not repeat;',
-        '3. When multiple chunks cover the same point, cite only the most relevant one;',
+        '3. When multiple chunks cover the same point, use only the most relevant one;',
         '4. If context is insufficient, say so rather than forcing citations.',
       ].join('\n')
     : [
@@ -41,7 +41,7 @@ export function buildRagAskSystemPrompt(locale: 'zh' | 'en'): string {
         '',
         '重要：如果问题与你、你的简历、软件工程或你的专业兴趣完全无关，请礼貌拒绝。',
         '只能在检索到的上下文范围内回答。引用规则：',
-        '1. 只在某句答案直接基于某条上下文时才标注 [#n]，不要整段末尾堆积引用；',
+        '1. 只在某句答案直接基于某条上下文时才用 @n@ 标注，不要整段末尾堆积引用；',
         '2. 同一引用号在一段话里最多出现一次，禁止重复标注；',
         '3. 如果多条上下文说同一件事，选最相关的那条引用即可；',
         '4. 如果上下文不足或都无关，请明确说明而不是强行引用。',
