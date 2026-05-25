@@ -45,13 +45,15 @@ function renderContentWithCitations(
         ul: ({ children: listChildren }) => <ul className="my-1 list-disc pl-4 text-sm">{listChildren}</ul>,
         ol: ({ children: listChildren }) => <ol className="my-1 list-decimal pl-4 text-sm">{listChildren}</ol>,
         code: (props) => {
-          const text = String(props.children ?? '').trim()
-          // 检测 @n@ 引用标记（支持行内代码 `@5@` 和纯文本 @5@）
+          // react-markdown v10 children 可能是 string 或 ReactNode[]
+          const raw = Array.isArray(props.children)
+            ? props.children.map((c) => String(c ?? '')).join('')
+            : String(props.children ?? '')
+          const text = raw.trim()
           const m = text.match(/@(\d{1,3})@/)
           if (m) {
             const citation = citationByIdx.get(`#${m[1]}`)
             if (citation) return <RagCitationTooltip citation={citation} />
-            // citation 找不到时显示原文
             return <span className="text-[0.7rem] text-zinc-400">[{m[1]}]</span>
           }
           return props.className ? (
