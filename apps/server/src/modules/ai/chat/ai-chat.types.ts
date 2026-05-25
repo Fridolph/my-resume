@@ -88,6 +88,8 @@ export interface AiChatSummarySnapshot {
   keywords: string[]
   stage: AiChatSummaryStage
   summary: string
+  visitorFocus?: string
+  aiClosing?: string
 }
 
 export interface AiChatProjectCardBlock {

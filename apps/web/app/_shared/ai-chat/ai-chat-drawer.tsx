@@ -225,9 +225,32 @@ export function AiChatDrawer({ locale }: { locale: 'zh' | 'en' }) {
                 }}
               />
           </div>
-          <p className="text-sm leading-6 text-emerald-950 dark:text-emerald-100">
-            {summaryPreview.summary}
-          </p>
+          {summaryPreview.visitorFocus ? (
+            <div className="grid gap-2">
+              <div className="grid gap-1">
+                <span className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                  {locale === 'en' ? 'Visitor interests' : '访客关注点'}
+                </span>
+                <p className="text-sm leading-6 text-emerald-950 dark:text-emerald-100">
+                  {summaryPreview.visitorFocus}
+                </p>
+              </div>
+              {summaryPreview.aiClosing ? (
+                <div className="grid gap-1 border-t border-emerald-200/60 pt-2 dark:border-emerald-500/20">
+                  <span className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                    {locale === 'en' ? 'Closing message' : '收束语'}
+                  </span>
+                  <p className="text-sm leading-6 text-emerald-950 dark:text-emerald-100">
+                    {summaryPreview.aiClosing}
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <p className="text-sm leading-6 text-emerald-950 dark:text-emerald-100">
+              {summaryPreview.summary}
+            </p>
+          )}
         </div>
       ) : null}
 

@@ -49,7 +49,8 @@ const PUBLIC_CHAT_POLICY_VERSION = 'm23-public-ip-v1'
 const PUBLIC_CHAT_SOURCE_TAG = 'public-ip'
 const PUBLIC_CHAT_ISSUER = 'system-public-chat'
 const AI_CHAT_SUMMARY_SCHEMA = z.object({
-  summary: z.string(),
+  visitorFocus: z.string(),
+  aiClosing: z.string(),
   keywords: z.array(z.string()).max(8),
 })
 
@@ -1134,7 +1135,9 @@ export class AiChatService {
         generatedAt: new Date().toISOString(),
         keywords: payload.keywords,
         stage: input.stage,
-        summary: payload.summary,
+        summary: `${payload.visitorFocus}\n\n${payload.aiClosing}`,
+        visitorFocus: payload.visitorFocus,
+        aiClosing: payload.aiClosing,
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
