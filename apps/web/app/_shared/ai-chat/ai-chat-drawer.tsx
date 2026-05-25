@@ -112,7 +112,9 @@ export function AiChatDrawer({ locale }: { locale: 'zh' | 'en' }) {
     view,
   } = useAiChat()
   const [chatMessage, setChatMessage] = useState('')
-  const [dismissedSummaryStage, setDismissedSummaryStage] = useState<string | null>(null)
+  const [dismissedSummaryStage, setDismissedSummaryStage] = useState<string | null>(
+    () => localStorage.getItem('my-resume:ai-chat:summary-dismissed') ?? null,
+  )
   const messageListRef = useRef<HTMLDivElement | null>(null)
 
   // AI 回答完成后延迟 500ms 滚动到底部
@@ -200,7 +202,10 @@ export function AiChatDrawer({ locale }: { locale: 'zh' | 'en' }) {
               </Chip>
               <CloseButton
                 aria-label={locale === 'en' ? 'Close summary' : '关闭总结'}
-                onPress={() => setDismissedSummaryStage(summaryPreview.stage)}
+                onPress={() => {
+                  localStorage.setItem('my-resume:ai-chat:summary-dismissed', summaryPreview.stage)
+                  setDismissedSummaryStage(summaryPreview.stage)
+                }}
               />
           </div>
           <p className="text-sm leading-6 text-emerald-950 dark:text-emerald-100">
