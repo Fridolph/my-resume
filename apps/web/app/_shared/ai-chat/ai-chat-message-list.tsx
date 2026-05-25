@@ -183,7 +183,11 @@ function AiChatMessageItem({
                 p: ({ children: pChildren }) => <p className="text-sm leading-6">{pChildren}</p>,
                 blockquote: ({ children: qChildren }) => <blockquote className="my-1 border-l-2 border-zinc-300 pl-3 italic text-zinc-500 dark:border-zinc-600 dark:text-zinc-400">{qChildren}</blockquote>,
               }}>
-              {message.content}
+              {message.content
+                // 清洗正文中的引用标记（已在下方独立行展示）
+                .replace(/\[#\d{1,3}\]/g, '')
+                .replace(/(?<!\w)#\d{1,3}(?!\w)/g, '')
+                .replace(/@\d{1,3}@/g, '')}
             </Markdown>
           </div>
         </div>
