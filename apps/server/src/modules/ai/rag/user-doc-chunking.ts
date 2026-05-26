@@ -354,6 +354,12 @@ export function resolveUserDocChunkingConfig(
   input: ResolveUserDocChunkingConfigInput = {},
 ): UserDocChunkingStrategy {
   const baseStrategy = resolveUserDocChunkingStrategy(input.profile)
+
+  // semantic 策略不需要 chunkSize/chunkOverlap，跳过所有固定窗口校验
+  if (baseStrategy.label === 'semantic') {
+    return baseStrategy
+  }
+
   const chunkSize =
     parseOptionalUserDocChunkingNumber(
       input.chunkSize,
@@ -369,9 +375,7 @@ export function resolveUserDocChunkingConfig(
       MAX_CHUNK_OVERLAP,
     ) ?? baseStrategy.chunkOverlap
 
-  // semantic 策略且未传自定义 chunkSize 时跳过固定窗口校验
-  const isDefaultSemantic = baseStrategy.label === 'semantic' && input.chunkSize === undefined && input.chunkOverlap === undefined
-  if (!isDefaultSemantic && chunkOverlap >= chunkSize) {
+  if (chunkOverlap >= chunkSize) {
     throw new Error('chunkOverlap must be less than chunkSize')
   }
 
