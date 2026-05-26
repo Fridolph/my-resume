@@ -132,6 +132,7 @@ export interface RagChunk {
   content: string
   sourceType?: 'resume' | 'knowledge' | RagRetrievalSourceType
   sourcePath?: string
+  tags?: string[]
 }
 
 /**
@@ -189,8 +190,10 @@ export interface RagAskCitation {
   sourcePath?: string
   /** 检索分数。 */
   score: number
-  /** 短摘录，供前端引用卡片展示。 */
+  /** 引用片段短摘录。 */
   snippet: string
+  /** 来源标签列表（如 ["简历","核心竞争力"]）。 */
+  tags?: string[]
 }
 
 /**

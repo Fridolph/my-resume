@@ -135,7 +135,7 @@ async function main() {
      locale, title, content_hash, metadata_json, created_at, updated_at)
     VALUES ('${docId}', 'resume_core', 'published', '${escapeSql(sourceId)}',
      'milvus-import:${new Date().toISOString().slice(0, 10)}', '${locale}',
-     '付寅生简历核心数据', '${contentHash}', '${metadataJson}', ${now}, ${now})`)
+     '${locale === "zh" ? "简历核心数据" : "Resume core data"} - ${escapeSql(sourceId)}', '${contentHash}', '${metadataJson}', ${now}, ${now})`)
 
   runSql(`DELETE FROM rag_chunks WHERE document_id = '${docId}'`)
 

@@ -101,6 +101,17 @@ export function RagCitationTooltip({ citation }: RagCitationTooltipProps) {
               <strong className="text-xs leading-5 text-zinc-900 dark:text-zinc-100">
                 {citation.title}
               </strong>
+              {citation.tags && citation.tags.length > 0 ? (
+                <div className="flex flex-wrap gap-1">
+                  {citation.tags.map((tag) => (
+                    <span
+                      className="rounded-full bg-zinc-100 px-1.5 py-px text-[0.55rem] font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
+                      key={tag}>
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
               {citation.snippet ? (
                 <p className="line-clamp-6 whitespace-pre-wrap text-[0.7rem] leading-[1.15rem] text-zinc-500 dark:text-zinc-400">
                   {citation.snippet}

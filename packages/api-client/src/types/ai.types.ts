@@ -845,6 +845,8 @@ export interface RagAskCitation {
   score: number
   /** 引用片段短摘录。 */
   snippet: string
+  /** 来源标签列表（如 ["简历","核心竞争力"]）。 */
+  tags?: string[]
 }
 
 /**
