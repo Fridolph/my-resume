@@ -118,7 +118,8 @@ function ChatAvatar({
     <Avatar.Root
       aria-hidden="true"
       className={[
-        'size-7 shrink-0 overflow-hidden rounded-xl border text-xs font-semibold',
+        'h-[34px] w-[34px] shrink-0 overflow-hidden border text-xs font-semibold',
+        'rounded-[24px]',
         variant === 'assistant'
           ? 'border-sky-200/80 bg-white text-zinc-700 dark:border-sky-400/20 dark:bg-zinc-950 dark:text-zinc-200'
           : 'border-zinc-200/80 bg-slate-950 text-white dark:border-zinc-700 dark:bg-white dark:text-slate-950',
@@ -165,7 +166,7 @@ function AiChatMessageItem({
           {!isUser ? (
             <span
               aria-hidden="true"
-              className="absolute -left-[6px] top-2.5 block size-0
+              className="absolute left-[-4px] top-3 block size-0
                 border-t-[5px] border-t-transparent
                 border-r-[6px] border-r-zinc-200/80
                 border-b-[5px] border-b-transparent
@@ -176,7 +177,7 @@ function AiChatMessageItem({
           {isUser ? (
             <span
               aria-hidden="true"
-              className="absolute -right-[6px] top-2.5 block size-0
+              className="absolute right-[-4px] top-3 block size-0
                 border-t-[5px] border-t-transparent
                 border-l-[6px] border-l-slate-950
                 border-b-[5px] border-b-transparent
