@@ -61,21 +61,12 @@ const moduleCards = [
   },
   {
     eyebrow: '入口三',
-    title: 'RAG 资料入库',
+    title: 'RAG 管理',
     description:
-      '上传 user_docs，选择 draft/published 作用域，写入检索态文档和切块，为知识库做准备。',
-    href: '/dashboard/ai/knowledge',
-    status: '实验中',
-    tone: 'from-amber-50 via-white to-orange-50 dark:from-amber-950/25 dark:via-zinc-950 dark:to-slate-950',
-  },
-  {
-    eyebrow: '入口四',
-    title: 'RAG 资料扩展',
-    description:
-      '添加个人博客、兴趣爱好、视频媒体等资料，系统自动分块向量化，AI 对话时按类型渲染不同卡片。',
-    href: '/dashboard/ai/rag-extension',
-    status: 'M25 新功能',
-    tone: 'from-teal-50 via-white to-emerald-50 dark:from-teal-950/25 dark:via-zinc-950 dark:to-emerald-950/25',
+      '统一管理简历之外的 RAG 知识库：自定义资料补充、文件上传入库、已入库内容增删查改。',
+    href: '/dashboard/ai/rag-manage',
+    status: 'M25',
+    tone: 'from-violet-50 via-white to-indigo-50 dark:from-violet-950/25 dark:via-zinc-950 dark:to-indigo-950/25',
   },
   {
     eyebrow: '工具',
