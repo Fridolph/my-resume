@@ -62,13 +62,24 @@ function renderMessageBlocks(blocks: AiChatMessageBlock[]) {
       )
     }
 
-    if (block.type === 'system_notice') {
+    if (block.type === 'hobby_card') {
       return (
-        <div
-          className="rounded-2xl border border-amber-200/70 bg-amber-50/70 px-3 py-2 text-sm leading-6 text-amber-900 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-100"
+        <article
+          className="grid gap-2 rounded-2xl border border-rose-200/70 bg-rose-50/70 p-3 dark:border-rose-500/20 dark:bg-rose-500/10"
           key={`${block.type}-${index}`}>
-          {block.text}
-        </div>
+          <div className="grid gap-1">
+            <strong className="text-sm text-zinc-950 dark:text-white">{block.title}</strong>
+            <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-200">{block.description}</p>
+          </div>
+          {block.keywords?.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {block.keywords.map((kw) => (
+                <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-700 dark:bg-rose-500/15 dark:text-rose-300" key={kw}>{kw}</span>
+              ))}
+            </div>
+          ) : null}
+          {block.url ? <a className="text-xs text-rose-600 underline underline-offset-2 dark:text-rose-400" href={block.url} rel="noreferrer" target="_blank">查看详情 →</a> : null}
+        </article>
       )
     }
 
@@ -77,26 +88,18 @@ function renderMessageBlocks(blocks: AiChatMessageBlock[]) {
         <article
           className="grid gap-2 rounded-2xl border border-violet-200/70 bg-violet-50/70 p-3 dark:border-violet-500/20 dark:bg-violet-500/10"
           key={`${block.type}-${index}`}>
-          <div className="inline-flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400">
-            <span aria-hidden="true">📄</span>
-            <span>技术博客</span>
+          <div className="grid gap-1">
+            <strong className="text-sm text-zinc-950 dark:text-white">{block.title}</strong>
+            <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-200">{block.summary}</p>
           </div>
-          <strong className="text-sm text-zinc-950 dark:text-white">{block.title}</strong>
-          <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-200">{block.summary}</p>
-          {block.url ? (
-            <a className="text-xs text-violet-600 underline decoration-violet-300 underline-offset-2 hover:text-violet-700 dark:text-violet-400" href={block.url} rel="noreferrer" target="_blank">
-              阅读原文 →
-            </a>
-          ) : null}
-          {block.keywords.length > 0 ? (
-            <div className="flex flex-wrap gap-1">
-              {block.keywords.map((item) => (
-                <span className="rounded-full bg-violet-100/70 px-1.5 py-px text-[0.65rem] text-violet-700 dark:bg-violet-500/15 dark:text-violet-300" key={item}>
-                  {item}
-                </span>
+          {block.keywords?.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {block.keywords.map((kw) => (
+                <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-500/15 dark:text-violet-300" key={kw}>{kw}</span>
               ))}
             </div>
           ) : null}
+          {block.url ? <a className="text-xs text-violet-600 underline underline-offset-2 dark:text-violet-400" href={block.url} rel="noreferrer" target="_blank">阅读全文 →</a> : null}
         </article>
       )
     }
@@ -104,50 +107,24 @@ function renderMessageBlocks(blocks: AiChatMessageBlock[]) {
     if (block.type === 'media_card') {
       return (
         <article
-          className="grid gap-2 rounded-2xl border border-rose-200/70 bg-rose-50/70 p-3 dark:border-rose-500/20 dark:bg-rose-500/10"
+          className="grid gap-2 rounded-2xl border border-cyan-200/70 bg-cyan-50/70 p-3 dark:border-cyan-500/20 dark:bg-cyan-500/10"
           key={`${block.type}-${index}`}>
-          <div className="inline-flex items-center gap-1.5 text-xs text-rose-600 dark:text-rose-400">
-            <span aria-hidden="true">🎬</span>
-            <span>媒体 / 视频</span>
+          <div className="grid gap-1">
+            <strong className="text-sm text-zinc-950 dark:text-white">{block.title}</strong>
+            <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-200">{block.description}</p>
           </div>
-          <strong className="text-sm text-zinc-950 dark:text-white">{block.title}</strong>
-          {block.thumbnailUrl ? (
-            <img alt={block.title} className="max-h-40 w-full rounded-xl object-cover" src={block.thumbnailUrl} />
-          ) : null}
-          <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-200">{block.description}</p>
-          <a className="text-xs text-rose-600 underline decoration-rose-300 underline-offset-2 hover:text-rose-700 dark:text-rose-400" href={block.url} rel="noreferrer" target="_blank">
-            查看原文 →
-          </a>
+          {block.url ? <a className="text-xs text-cyan-600 underline underline-offset-2 dark:text-cyan-400" href={block.url} rel="noreferrer" target="_blank">查看 →</a> : null}
         </article>
       )
     }
 
-    if (block.type === 'hobby_card') {
+    if (block.type === 'system_notice') {
       return (
-        <article
-          className="grid gap-2 rounded-2xl border border-amber-200/70 bg-amber-50/70 p-3 dark:border-amber-500/20 dark:bg-amber-500/10"
+        <div
+          className="rounded-2xl border border-amber-200/70 bg-amber-50/70 px-3 py-2 text-sm leading-6 text-amber-900 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-100"
           key={`${block.type}-${index}`}>
-          <div className="inline-flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
-            <span aria-hidden="true">🎯</span>
-            <span>兴趣爱好</span>
-          </div>
-          <strong className="text-sm text-zinc-950 dark:text-white">{block.title}</strong>
-          <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-200">{block.description}</p>
-          {block.url ? (
-            <a className="text-xs text-amber-600 underline decoration-amber-300 underline-offset-2 hover:text-amber-700 dark:text-amber-400" href={block.url} rel="noreferrer" target="_blank">
-              相关链接 →
-            </a>
-          ) : null}
-          {block.keywords.length > 0 ? (
-            <div className="flex flex-wrap gap-1">
-              {block.keywords.map((item) => (
-                <span className="rounded-full bg-amber-100/70 px-1.5 py-px text-[0.65rem] text-amber-700 dark:bg-amber-500/15 dark:text-amber-300" key={item}>
-                  {item}
-                </span>
-              ))}
-            </div>
-          ) : null}
-        </article>
+          {block.text}
+        </div>
       )
     }
 

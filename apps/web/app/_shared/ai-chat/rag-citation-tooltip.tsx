@@ -77,7 +77,7 @@ export function RagCitationTooltip({ citation }: RagCitationTooltipProps) {
       ? createPortal(
           <div
             aria-label={`${sourceLabel} ${citation.title}`}
-            className="pointer-events-none fixed z-[80] w-64 -translate-x-1/2 rounded-xl border border-zinc-200/80 bg-white px-3 py-2 text-left shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
+            className="pointer-events-none fixed z-[80] min-w-[340px] max-w-[min(calc(100vw-32px),480px)] -translate-x-1/2 rounded-xl border border-zinc-200/80 bg-white px-3 py-2 text-left shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
             role="tooltip"
             style={{
               left: `${position.left}px`,
