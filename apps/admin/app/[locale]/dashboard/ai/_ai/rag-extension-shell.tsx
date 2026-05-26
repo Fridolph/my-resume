@@ -40,7 +40,7 @@ export function RagExtensionShell({ locale: _locale }: { locale: AppLocale }) {
     if (!accessToken) return
     setDocumentsLoading(true)
     try {
-      const res = await fetch(`${DEFAULT_API_BASE_URL}/ai/rag/documents`, {
+      const res = await fetch(`${DEFAULT_API_BASE_URL}/api/ai/rag/documents`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       })
       const json = await res.json()
@@ -53,7 +53,7 @@ export function RagExtensionShell({ locale: _locale }: { locale: AppLocale }) {
   async function handleDelete(documentId: string) {
     if (!confirm('确定删除该资料及其所有关联数据？')) return
     try {
-      await fetch(`${DEFAULT_API_BASE_URL}/ai/rag/documents/${documentId}`, {
+      await fetch(`${DEFAULT_API_BASE_URL}/api/ai/rag/documents/${documentId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${accessToken ?? ''}` },
       })
@@ -113,7 +113,7 @@ export function RagExtensionShell({ locale: _locale }: { locale: AppLocale }) {
         contentType,
       }).send()
 
-      setResultMessage(`入库成功：${result.fileName}，切块 ${result.chunkCount} 条`)
+      setResultMessage(`入库成功：${title || '资料'}，切块 ${result.chunkCount} 条`)
       setTitle('')
       setContent('')
       setLinkUrl('')
