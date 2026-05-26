@@ -44,7 +44,8 @@ export function RagExtensionShell({ locale: _locale }: { locale: AppLocale }) {
         headers: { Authorization: `Bearer ${accessToken}` },
       })
       const json = await res.json()
-      setDocuments(json.data ?? json)
+      const list = Array.isArray(json.data) ? json.data : Array.isArray(json) ? json : []
+      setDocuments(list)
     } catch { /* ignore */ }
     finally { setDocumentsLoading(false) }
   }
@@ -249,7 +250,7 @@ export function RagExtensionShell({ locale: _locale }: { locale: AppLocale }) {
           <div className="inline-flex items-center gap-2 text-sm text-zinc-500">
             <Spinner size="sm" /> 加载中...
           </div>
-        ) : documents.length === 0 ? (
+        ) : documents.length === 0 || !Array.isArray(documents) ? (
           <p className="text-sm text-zinc-400 dark:text-zinc-500">暂无入库资料。</p>
         ) : (
           <div className="grid gap-2">
