@@ -118,8 +118,7 @@ function ChatAvatar({
     <Avatar.Root
       aria-hidden="true"
       className={[
-        'h-[34px] w-[34px] shrink-0 overflow-hidden border text-xs font-semibold',
-        'rounded-[24px]',
+        'size-10 shrink-0 overflow-hidden rounded-lg border text-xs font-semibold',
         variant === 'assistant'
           ? 'border-sky-200/80 bg-white text-zinc-700 dark:border-sky-400/20 dark:bg-zinc-950 dark:text-zinc-200'
           : 'border-zinc-200/80 bg-slate-950 text-white dark:border-zinc-700 dark:bg-white dark:text-slate-950',
@@ -156,7 +155,7 @@ function AiChatMessageItem({
       {/* 消息列：名字 + 气泡 */}
       <div className={`grid max-w-[82%] gap-0.5 ${isUser ? 'justify-items-end' : 'justify-items-start'}`}>
         {/* 名字 */}
-        <span className="px-1 text-[0.65rem] font-medium text-zinc-400 dark:text-zinc-500">
+        <span className="px-1 text-[0.72rem] font-medium text-zinc-400 dark:text-zinc-500">
           {name}
         </span>
 
