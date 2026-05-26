@@ -285,6 +285,7 @@ export class RagRetrievalRepository {
         content: ragChunks.content,
         embeddingJson: ragChunks.embeddingJson,
         metadataJson: ragChunks.metadataJson,
+        documentMetadataJson: ragDocuments.metadataJson,
         documentSourceType: ragDocuments.sourceType,
         documentSourceScope: ragDocuments.sourceScope,
         documentTitle: ragDocuments.title,

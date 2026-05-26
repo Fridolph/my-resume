@@ -744,7 +744,8 @@ export type RagUserDocIngestScope = 'draft' | 'published'
  *
  * `balanced` 用于默认教学闭环，`contextual` 用于保留更长上下文的检索实验。
  */
-export type RagUserDocChunkingProfile = 'balanced' | 'contextual'
+export type RagUserDocChunkingProfile = 'balanced' | 'contextual' | 'semantic'
+export type RagUserDocContentType = 'article' | 'hobby' | 'media' | 'general'
 
 /**
  * RAG user_docs 入库参数。
@@ -758,12 +759,14 @@ export interface IngestRagUserDocInput {
   file: File
   /** 入库作用域，默认由服务端按 draft 处理。 */
   scope?: RagUserDocIngestScope
-  /** 切片策略，未传时服务端使用 balanced。 */
+  /** 切片策略，未传时服务端使用 semantic。 */
   chunkingProfile?: RagUserDocChunkingProfile
   /** 自定义切片大小，范围 4-6666，优先级高于 profile 默认值。 */
   chunkSize?: number
   /** 自定义重叠字符数，范围 0-300，且必须小于 chunkSize。 */
   chunkOverlap?: number
+  /** 内容类型：article=文章，hobby=兴趣爱好，media=媒体/视频，general=通用 */
+  contentType?: RagUserDocContentType
 }
 
 /**

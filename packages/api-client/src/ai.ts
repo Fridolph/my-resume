@@ -632,6 +632,10 @@ export function createIngestRagUserDocMethod(input: IngestRagUserDocInput) {
     formData.append('chunkOverlap', String(input.chunkOverlap))
   }
 
+  if (input.contentType) {
+    formData.append('contentType', input.contentType)
+  }
+
   return Alova.createMethod<RagUserDocIngestResult>({
     apiBaseUrl: input.apiBaseUrl,
     pathname: '/ai/rag/ingest/user-doc',

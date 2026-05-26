@@ -179,9 +179,12 @@ export class RagController {
           minimum: 0,
           type: 'number',
         },
+        contentType: {
+          description: '内容类型：article=文章，hobby=兴趣爱好，media=媒体/视频，general=通用',
+          enum: ['article', 'hobby', 'media', 'general'],
+          type: 'string',
+        },
       },
-      required: ['file'],
-      type: 'object',
     },
   })
   @ApiEnvelopeResponse({
@@ -211,7 +214,8 @@ export class RagController {
     if (
       body.chunkingProfile &&
       body.chunkingProfile !== 'balanced' &&
-      body.chunkingProfile !== 'contextual'
+      body.chunkingProfile !== 'contextual' &&
+      body.chunkingProfile !== 'semantic'
     ) {
       throw new BadRequestException(
         `Unsupported ingest chunkingProfile: ${body.chunkingProfile}`,
@@ -241,6 +245,7 @@ export class RagController {
       chunkingProfile: body.chunkingProfile,
       chunkSize: chunkingConfig.chunkSize,
       chunkOverlap: chunkingConfig.chunkOverlap,
+      contentType: body.contentType,
     })
   }
 

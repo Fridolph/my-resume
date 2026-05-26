@@ -429,8 +429,14 @@ export class RagService {
           )
           const metadata =
             row.metadataJson && typeof row.metadataJson === 'object' ? row.metadataJson : null
+          const docMeta =
+            row.documentMetadataJson && typeof row.documentMetadataJson === 'object'
+              ? (row.documentMetadataJson as Record<string, unknown>)
+              : null
           const fileName =
             metadata && typeof metadata.fileName === 'string' ? metadata.fileName : undefined
+          const contentType =
+            (docMeta?.contentType as string) || (metadata && (metadata as Record<string, unknown>).contentType as string) || undefined
 
           return {
             id: row.chunkId,

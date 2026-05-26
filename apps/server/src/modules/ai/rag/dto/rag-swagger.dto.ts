@@ -137,11 +137,18 @@ export class RagUserDocIngestBodyDto {
   scope?: 'draft' | 'published'
 
   @ApiPropertyOptional({
-    description: '切片策略 profile（默认 balanced=500/50）',
-    enum: ['balanced', 'contextual'],
-    example: 'balanced',
+    description: '切片策略 profile（默认 semantic 按 ## 标题分段）',
+    enum: ['balanced', 'contextual', 'semantic'],
+    example: 'semantic',
   })
-  chunkingProfile?: 'balanced' | 'contextual'
+  chunkingProfile?: 'balanced' | 'contextual' | 'semantic'
+
+  @ApiPropertyOptional({
+    description: '内容类型：article=文章，hobby=兴趣爱好，media=媒体/视频，general=通用',
+    enum: ['article', 'hobby', 'media', 'general'],
+    example: 'article',
+  })
+  contentType?: 'article' | 'hobby' | 'media' | 'general'
 
   @ApiPropertyOptional({
     description: '自定义切片大小（字符），优先级高于 profile 默认值',

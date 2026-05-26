@@ -50,6 +50,7 @@ export interface IngestUserDocInput {
   chunkingProfile?: UserDocChunkingProfile
   chunkSize?: number
   chunkOverlap?: number
+  contentType?: string
   uploadedAt?: Date
 }
 
@@ -211,6 +212,7 @@ export class UserDocsIngestionService {
           fileName: extracted.fileName,
           fileType: extracted.fileType,
           mimeType: extracted.mimeType,
+          contentType: input.contentType ?? 'general',
           chunkingProfile,
           chunkSize: chunkingStrategy.chunkSize,
           chunkOverlap: chunkingStrategy.chunkOverlap,
