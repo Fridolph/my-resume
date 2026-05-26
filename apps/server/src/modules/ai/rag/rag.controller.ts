@@ -2,8 +2,10 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Inject,
+  Param,
   Post,
   UploadedFile,
   UseGuards,
@@ -247,6 +249,28 @@ export class RagController {
       chunkOverlap: chunkingConfig.chunkOverlap,
       contentType: body.contentType,
     })
+  }
+
+  @Get('documents')
+  @UseGuards(RoleCapabilitiesGuard)
+  @RequireCapability('canTriggerAiAnalysis')
+  @ApiOperation({
+    summary: '列出所有 RAG 文档',
+    description: '返回 rag_documents 列表，用于管理端查看已入库资料',
+  })
+  listDocuments() {
+    return this.userDocsIngestionService.listDocuments()
+  }
+
+  @Delete('documents/:documentId')
+  @UseGuards(RoleCapabilitiesGuard)
+  @RequireCapability('canTriggerAiAnalysis')
+  @ApiOperation({
+    summary: '删除 RAG 文档及其 chunk',
+    description: '删除指定文档及其关联的所有 chunk',
+  })
+  deleteDocument(@Param('documentId') documentId: string) {
+    return this.userDocsIngestionService.deleteDocument(documentId)
   }
 
   /**

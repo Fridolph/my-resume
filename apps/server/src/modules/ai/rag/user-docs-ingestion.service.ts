@@ -348,6 +348,28 @@ export class UserDocsIngestionService {
         chunkIndex,
         chunkCount: input.chunks.length,
       },
+      }))
+  }
+
+  async listDocuments() {
+    const rows = await this.ragRetrievalRepository.listAllDocuments()
+    return rows.map((row) => ({
+      id: row.id,
+      title: row.title,
+      sourceType: row.sourceType,
+      sourceScope: row.sourceScope,
+      locale: row.locale,
+      contentType: row.metadataJson && typeof row.metadataJson === 'object'
+        ? (row.metadataJson as Record<string, unknown>).contentType as string | undefined
+        : undefined,
+      chunkCount: 'chunkCount' in row ? (row as any).chunkCount : undefined,
+      createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : String(row.createdAt),
+      updatedAt: row.updatedAt instanceof Date ? row.updatedAt.toISOString() : String(row.updatedAt),
     }))
+  }
+
+  async deleteDocument(documentId: string) {
+    await this.ragRetrievalRepository.deleteDocument(documentId)
+    return { deleted: true, documentId }
   }
 }

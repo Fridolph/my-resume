@@ -2,7 +2,7 @@
 
 import { Button, Chip, Form, Spinner, TextArea } from '@heroui/react'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { useAdminSession } from '@core/admin-session'
 import { adminPrimaryButtonClass } from '@core/button-styles'
@@ -28,6 +28,43 @@ export function RagExtensionShell({ locale: _locale }: { locale: AppLocale }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [resultMessage, setResultMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [documents, setDocuments] = useState<Array<{
+    id: string
+    title: string
+    contentType?: string
+    createdAt: string
+  }>>([])
+  const [documentsLoading, setDocumentsLoading] = useState(false)
+
+  async function fetchDocuments() {
+    if (!accessToken) return
+    setDocumentsLoading(true)
+    try {
+      const res = await fetch(`${DEFAULT_API_BASE_URL}/ai/rag/documents`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      const json = await res.json()
+      setDocuments(json.data ?? json)
+    } catch { /* ignore */ }
+    finally { setDocumentsLoading(false) }
+  }
+
+  async function handleDelete(documentId: string) {
+    if (!confirm('确定删除该资料及其所有关联数据？')) return
+    try {
+      await fetch(`${DEFAULT_API_BASE_URL}/ai/rag/documents/${documentId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${accessToken ?? ''}` },
+      })
+      await fetchDocuments()
+    } catch {
+      setErrorMessage('删除失败')
+    }
+  }
+
+  useEffect(() => {
+    if (accessToken) fetchDocuments()
+  }, [accessToken])
 
   if (status !== 'ready' || !currentUser || !accessToken) {
     return null
@@ -79,6 +116,7 @@ export function RagExtensionShell({ locale: _locale }: { locale: AppLocale }) {
       setTitle('')
       setContent('')
       setLinkUrl('')
+      fetchDocuments()
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : '入库失败')
     } finally {
@@ -198,6 +236,51 @@ export function RagExtensionShell({ locale: _locale }: { locale: AppLocale }) {
             )}
           </Button>
         </Form>
+      </section>
+
+      <section className={shellClass}>
+        <div className="mb-4 grid gap-2">
+          <h2 className="text-[1.75rem] font-semibold tracking-tight text-zinc-950 dark:text-white">
+            已入库资料
+          </h2>
+        </div>
+
+        {documentsLoading ? (
+          <div className="inline-flex items-center gap-2 text-sm text-zinc-500">
+            <Spinner size="sm" /> 加载中...
+          </div>
+        ) : documents.length === 0 ? (
+          <p className="text-sm text-zinc-400 dark:text-zinc-500">暂无入库资料。</p>
+        ) : (
+          <div className="grid gap-2">
+            {documents.map((doc) => (
+              <div
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-zinc-200/80 bg-zinc-50/80 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/60"
+                key={doc.id}>
+                <div className="grid gap-1">
+                  <strong className="text-sm text-zinc-950 dark:text-white">{doc.title}</strong>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {doc.contentType ? (
+                      <Chip size="sm" variant="soft">
+                        {doc.contentType === 'article' ? '文章' : doc.contentType === 'hobby' ? '兴趣爱好' : doc.contentType === 'media' ? '媒体' : doc.contentType}
+                      </Chip>
+                    ) : null}
+                    <span className="text-xs text-zinc-400 dark:text-zinc-500">
+                      {new Date(doc.createdAt).toLocaleDateString('zh-CN')}
+                    </span>
+                  </div>
+                </div>
+                <Button
+                  className="text-xs"
+                  onPress={() => void handleDelete(doc.id)}
+                  size="sm"
+                  variant="danger">
+                  删除
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   )

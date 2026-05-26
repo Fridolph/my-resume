@@ -302,4 +302,17 @@ export class RagRetrievalRepository {
   async listUserDocChunksWithDocuments() {
     return this.listAllChunksWithDocuments()
   }
+
+  async listAllDocuments() {
+    return this.database
+      .select()
+      .from(ragDocuments)
+      .orderBy(desc(ragDocuments.createdAt))
+  }
+
+  async deleteDocument(documentId: string) {
+    await this.database.delete(ragChunks).where(eq(ragChunks.documentId, documentId))
+    await this.database.delete(ragDocuments).where(eq(ragDocuments.id, documentId))
+    return { deleted: true, documentId }
+  }
 }

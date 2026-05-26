@@ -369,7 +369,9 @@ export function resolveUserDocChunkingConfig(
       MAX_CHUNK_OVERLAP,
     ) ?? baseStrategy.chunkOverlap
 
-  if (chunkOverlap >= chunkSize) {
+  // semantic 策略且未传自定义 chunkSize 时跳过固定窗口校验
+  const isDefaultSemantic = baseStrategy.label === 'semantic' && input.chunkSize === undefined && input.chunkOverlap === undefined
+  if (!isDefaultSemantic && chunkOverlap >= chunkSize) {
     throw new Error('chunkOverlap must be less than chunkSize')
   }
 
