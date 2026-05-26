@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   compareUserDocChunkingStrategies,
   resolveUserDocChunkingStrategy,
+  splitUserDocByMarkdownSections,
   UserDocChunkingStrategy,
 } from '../user-doc-chunking'
 
@@ -78,5 +79,41 @@ describe('user docs chunking strategy baseline', () => {
     expect(largeStrategy?.sourceChars).toBe(0)
     expect(smallStrategy?.chunkCount).toBe(0)
     expect(largeStrategy?.chunkCount).toBe(0)
+  })
+
+  it('should split markdown by ## sections with semantic strategy', () => {
+    const md = `
+## 工作经历
+
+2024-至今 在成都澳昇能源担任全栈工程师
+
+## 项目经历
+
+### my-resume 在线简历
+
+从 0 到 1 搭建全栈应用
+    `.trim()
+
+    const chunks = splitUserDocByMarkdownSections(md)
+
+    expect(chunks.length).toBeGreaterThanOrEqual(2)
+    expect(chunks.some((c) => c.includes('工作经历'))).toBe(true)
+    expect(chunks.some((c) => c.includes('项目经历'))).toBe(true)
+    // 语义分块不会把两段合并
+    expect(chunks.filter((c) => c.includes('工作经历') && c.includes('项目经历')).length).toBe(0)
+  })
+
+  it('should fallback to paragraph split for plain text without ##', () => {
+    const text = '第一段内容\n\n第二段内容\n\n第三段内容'
+    const chunks = splitUserDocByMarkdownSections(text)
+
+    expect(chunks.length).toBeGreaterThanOrEqual(2)
+    expect(chunks.some((c) => c.includes('第一段'))).toBe(true)
+    expect(chunks.some((c) => c.includes('第二段'))).toBe(true)
+  })
+
+  it('should handle empty input', () => {
+    expect(splitUserDocByMarkdownSections('')).toEqual([])
+    expect(splitUserDocByMarkdownSections('   ')).toEqual([])
   })
 })

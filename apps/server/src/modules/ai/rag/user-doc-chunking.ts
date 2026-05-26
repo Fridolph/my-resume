@@ -62,7 +62,7 @@ export interface ResolveUserDocChunkingConfigInput {
 /**
  * user_docs 切片 profile（对外稳定键）。
  */
-export type UserDocChunkingProfile = 'balanced' | 'contextual'
+export type UserDocChunkingProfile = 'balanced' | 'contextual' | 'semantic'
 
 /**
  * 对比实验默认策略（本轮只关注两组参数）。
@@ -89,6 +89,11 @@ export const USER_DOC_CHUNKING_PROFILE_MAP: Record<
 > = {
   balanced: USER_DOC_CHUNKING_STRATEGIES[0],
   contextual: USER_DOC_CHUNKING_STRATEGIES[1],
+  semantic: {
+    label: 'semantic',
+    chunkSize: 0,
+    chunkOverlap: 0,
+  },
 }
 
 /**
@@ -158,6 +163,82 @@ export function splitUserDocTextIntoChunks(
 }
 
 /**
+ * 按 Markdown 结构语义分块：先按 ## 标题分段，段过长时按段落二次拆分。
+ *
+ * ## 标题是文档作者给出的天然语义边界。纯文本（无 ##）回退到按段落拆分。
+ * 段内超过 2000 字符时按 `\n\n` 继续拆，避免单 chunk 过长稀释检索精度。
+ *
+ * @param text 规范化后的 Markdown 文本
+ * @returns 语义分块结果
+ */
+export function splitUserDocByMarkdownSections(text: string): string[] {
+  const normalized = normalizeUserDocText(text)
+  if (!normalized) return []
+
+  const SECTION_RE = /^#{2,3}\s+.+$/gm
+  const headerPositions: Array<{ index: number; header: string }> = []
+  let m: RegExpExecArray | null
+
+  while ((m = SECTION_RE.exec(normalized)) !== null) {
+    headerPositions.push({ index: m.index, header: m[0] })
+  }
+
+  if (headerPositions.length === 0) {
+    return splitTextByParagraphs(normalized)
+  }
+
+  const sectionChunks: string[] = []
+
+  for (let i = 0; i < headerPositions.length; i++) {
+    const current = headerPositions[i]
+    const next = headerPositions[i + 1]
+    const end = next ? next.index : normalized.length
+    const section = normalized.slice(current.index, end).trim()
+    if (!section) continue
+
+    sectionChunks.push(
+      ...(section.length > 2000 ? splitTextByParagraphs(section) : [section]),
+    )
+  }
+
+  if (headerPositions[0].index > 0) {
+    const preamble = normalized.slice(0, headerPositions[0].index).trim()
+    if (preamble) {
+      sectionChunks.unshift(
+        ...(preamble.length > 2000 ? splitTextByParagraphs(preamble) : [preamble]),
+      )
+    }
+  }
+
+  return sectionChunks
+}
+
+function splitTextByParagraphs(text: string): string[] {
+  const paragraphs = text.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean)
+  const result: string[] = []
+
+  for (const para of paragraphs) {
+    if (para.length <= 2000) {
+      result.push(para)
+    } else {
+      const sentences = para.split(/(?<=[。！？])\s*/)
+      let buffer = ''
+      for (const sentence of sentences) {
+        if ((buffer + sentence).length > 2000 && buffer) {
+          result.push(buffer.trim())
+          buffer = sentence
+        } else {
+          buffer += sentence
+        }
+      }
+      if (buffer.trim()) result.push(buffer.trim())
+    }
+  }
+
+  return result
+}
+
+/**
  * 统计单个切块策略在当前文本上的结果。
  *
  * @param text 原始文本
@@ -169,11 +250,14 @@ export function summarizeUserDocChunking(
   strategy: UserDocChunkingStrategy,
 ): UserDocChunkingSummary {
   const normalizedText = normalizeUserDocText(text)
-  const chunks = splitUserDocTextIntoChunks(
-    normalizedText,
-    strategy.chunkSize,
-    strategy.chunkOverlap,
-  )
+  const chunks =
+    strategy.label === 'semantic'
+      ? splitUserDocByMarkdownSections(normalizedText)
+      : splitUserDocTextIntoChunks(
+          normalizedText,
+          strategy.chunkSize,
+          strategy.chunkOverlap,
+        )
   const sourceChars = normalizedText.length
   const totalChunkChars = chunks.reduce((sum, chunk) => sum + chunk.length, 0)
   const minChunkChars = chunks.length > 0 ? Math.min(...chunks.map((chunk) => chunk.length)) : 0

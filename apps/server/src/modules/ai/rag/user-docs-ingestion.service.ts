@@ -9,6 +9,7 @@ import { RAG_VECTOR_STORE } from './vector-store/tokens'
 import type { RagVectorChunkPayload, RagVectorStore } from './vector-store/types'
 import {
   resolveUserDocChunkingConfig,
+  splitUserDocByMarkdownSections,
   splitUserDocTextIntoChunks,
   type UserDocChunkingProfile,
 } from './user-doc-chunking'
@@ -180,11 +181,14 @@ export class UserDocsIngestionService {
         mimetype: input.mimetype,
         size: input.size,
       })
-      const chunks = splitUserDocTextIntoChunks(
-        extracted.text,
-        chunkingStrategy.chunkSize,
-        chunkingStrategy.chunkOverlap,
-      )
+      const chunks =
+        chunkingStrategy.label === 'semantic'
+          ? splitUserDocByMarkdownSections(extracted.text)
+          : splitUserDocTextIntoChunks(
+              extracted.text,
+              chunkingStrategy.chunkSize,
+              chunkingStrategy.chunkOverlap,
+            )
       const sourceId = buildUserDocSourceId(extracted.fileName, uploadedAt, extracted.text)
       const documentId = `user-doc:${sourceId}:und`
       const now = new Date()
