@@ -95,24 +95,16 @@ export function sortMatchesForAnswer(matches: RagSearchMatch[]): RagSearchMatch[
 }
 
 /**
- * 对问答场景的检索结果做质量控制：
- * - 过滤低分（< 0.3）的命中
- * - 过滤语言不匹配的命中（元数据 locale 与问题语言不一致时丢弃）
+ * 对问答场景的检索结果做语言对齐过滤。
  *
- * 保证进入 LLM 上下文的每一条 chunk 都具备最低相关性，且不会
- * 因为语言混淆浪费 token 和引用编号。
+ * chunk 元数据中 locale 与问题语言不一致时丢弃，避免英文 chunk
+ * 混入中文回答。分数交给 search 的 quality gate 统一处理。
  */
-function filterMatchesForAsk(matches: RagSearchMatch[], questionLocale: string): RagSearchMatch[] {
+function filterMatchesForAskByLocale(matches: RagSearchMatch[], questionLocale: string): RagSearchMatch[] {
   const filtered: RagSearchMatch[] = []
 
   for (const match of matches) {
-    if (match.score < 0.2) {
-      continue
-    }
-
-    // 检查 chunk 元数据中的 locale 字段（如有则对齐）
-    const mm = (match as unknown as Record<string, unknown>)
-    const metadata = mm.metadataJson ?? mm.metadata
+    const metadata = (match as unknown as Record<string, unknown>).metadataJson ?? (match as unknown as Record<string, unknown>).metadata
     if (metadata && typeof metadata === 'object') {
       const chunkLocale = (metadata as Record<string, unknown>).locale
       if (typeof chunkLocale === 'string' && chunkLocale && chunkLocale !== questionLocale) {
@@ -554,7 +546,7 @@ export class RagService {
     }
 
     const matches = await this.search(question, limit, this.defaultSearchQualityGate, routingOverride)
-    const filteredMatches = filterMatchesForAsk(matches, locale)
+    const filteredMatches = filterMatchesForAskByLocale(matches, locale)
     const prioritizedMatches = sortMatchesForAnswer(filteredMatches)
     const citations = buildRagAskCitations(prioritizedMatches)
     const providerSummary = this.aiService.getProviderSummary()
