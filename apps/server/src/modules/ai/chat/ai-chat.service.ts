@@ -51,7 +51,7 @@ const PUBLIC_CHAT_ISSUER = 'system-public-chat'
 const AI_CHAT_SUMMARY_SCHEMA = z.object({
   visitorFocus: z.string(),
   aiClosing: z.string(),
-  keywords: z.array(z.string()).max(8),
+  keywords: z.array(z.string()).max(15),
 })
 
 function readLocalizedText(value: LocalizedText, locale: AiChatLocale): string {
@@ -1187,16 +1187,38 @@ export class AiChatService {
         systemPrompt: AI_CHAT_SUMMARY_SYSTEM_PROMPT[input.locale],
         temperature: 0,
       })
-      const payload = AI_CHAT_SUMMARY_SCHEMA.parse(result.value)
+      const parsed = AI_CHAT_SUMMARY_SCHEMA.safeParse(result.value)
 
-      return {
-        generatedAt: new Date().toISOString(),
-        keywords: payload.keywords,
-        stage: input.stage,
-        summary: `${payload.visitorFocus}\n\n${payload.aiClosing}`,
-        visitorFocus: payload.visitorFocus,
-        aiClosing: payload.aiClosing,
+      if (parsed.success) {
+        return {
+          generatedAt: new Date().toISOString(),
+          keywords: parsed.data.keywords,
+          stage: input.stage,
+          summary: `${parsed.data.visitorFocus}\n\n${parsed.data.aiClosing}`,
+          visitorFocus: parsed.data.visitorFocus,
+          aiClosing: parsed.data.aiClosing,
+        }
       }
+
+      // Zod 校验失败时尝试宽松修复：截断 keywords、补全缺失字段
+      const raw = result.value as Record<string, unknown>
+      const keywords = Array.isArray(raw.keywords) ? (raw.keywords as string[]).slice(0, 15) : []
+      const visitorFocus = typeof raw.visitorFocus === 'string' && raw.visitorFocus ? raw.visitorFocus : ''
+      const aiClosing = typeof raw.aiClosing === 'string' && raw.aiClosing ? raw.aiClosing : ''
+      const summary = visitorFocus && aiClosing ? `${visitorFocus}\n\n${aiClosing}` : String(raw.summary ?? '')
+
+      if (summary) {
+        return {
+          generatedAt: new Date().toISOString(),
+          keywords,
+          stage: input.stage,
+          summary,
+          visitorFocus: visitorFocus || undefined,
+          aiClosing: aiClosing || undefined,
+        }
+      }
+
+      throw new Error(`Summary payload missing required fields: ${parsed.error.message}`)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       this.logger.warn(`ai chat summary fallback: ${message}`)
