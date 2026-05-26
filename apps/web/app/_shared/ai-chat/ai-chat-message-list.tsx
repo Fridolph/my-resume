@@ -106,37 +106,30 @@ function VisitorGlyph() {
 }
 
 function ChatAvatar({
-  align,
   imageSrc,
   label,
   variant,
 }: {
-  align: 'left' | 'right'
   imageSrc: string | null
   label: string
   variant: 'assistant' | 'visitor'
 }) {
   return (
-    <div className={`relative shrink-0 ${align === 'right' ? 'items-end' : 'items-start'}`}>
-      <Avatar.Root
-        aria-hidden="true"
-        className={[
-          'size-7 overflow-hidden rounded-xl border text-xs font-semibold',
-          variant === 'assistant'
-            ? 'border-sky-200/80 bg-white text-zinc-700 dark:border-sky-400/20 dark:bg-zinc-950 dark:text-zinc-200'
-            : 'border-zinc-200/80 bg-slate-950 text-white dark:border-zinc-700 dark:bg-white dark:text-slate-950',
-        ].join(' ')}>
-        {imageSrc ? (
-          <Avatar.Image alt={`${label} avatar`} className="h-full w-full object-cover" src={imageSrc} />
-        ) : null}
-        <Avatar.Fallback className="flex h-full w-full items-center justify-center">
-          {variant === 'assistant' ? buildInitials(label) : <VisitorGlyph />}
-        </Avatar.Fallback>
-      </Avatar.Root>
-      <span className="absolute top-7 whitespace-nowrap text-[0.62rem] font-medium uppercase tracking-[0.12em] text-zinc-400 dark:text-zinc-500">
-        {label}
-      </span>
-    </div>
+    <Avatar.Root
+      aria-hidden="true"
+      className={[
+        'size-7 shrink-0 overflow-hidden rounded-xl border text-xs font-semibold',
+        variant === 'assistant'
+          ? 'border-sky-200/80 bg-white text-zinc-700 dark:border-sky-400/20 dark:bg-zinc-950 dark:text-zinc-200'
+          : 'border-zinc-200/80 bg-slate-950 text-white dark:border-zinc-700 dark:bg-white dark:text-slate-950',
+      ].join(' ')}>
+      {imageSrc ? (
+        <Avatar.Image alt={`${label} avatar`} className="h-full w-full object-cover" src={imageSrc} />
+      ) : null}
+      <Avatar.Fallback className="flex h-full w-full items-center justify-center">
+        {variant === 'assistant' ? buildInitials(label) : <VisitorGlyph />}
+      </Avatar.Fallback>
+    </Avatar.Root>
   )
 }
 
@@ -148,27 +141,56 @@ function AiChatMessageItem({
   presentation: AiChatPresentation
 }) {
   const isUser = message.role === 'user'
-  const assistantLabel = presentation.assistantLabel
-  const visitorLabel = presentation.visitorLabel
+  const name = isUser ? presentation.visitorLabel : presentation.assistantLabel
 
   return (
-    <div className={`flex gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}>
-      {!isUser ? (
-        <ChatAvatar
-          align="left"
-          imageSrc={presentation.assistantAvatarSrc}
-          label={assistantLabel}
-          variant="assistant"
-        />
-      ) : null}
-      <div className={`grid max-w-[82%] gap-1.5 ${isUser ? 'justify-items-end' : 'justify-items-start'}`}>
-        <div
-          className={[
-            'w-full rounded-lg px-3 py-2 text-sm leading-6',
-            isUser
-              ? 'rounded-br bg-slate-950 text-white dark:bg-white dark:text-slate-950'
-              : 'rounded-bl border border-zinc-200/80 bg-white text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100',
-          ].join(' ')}>
+    <div className={`flex items-start gap-2 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+      {/* 头像 */}
+      <ChatAvatar
+        imageSrc={isUser ? null : presentation.assistantAvatarSrc}
+        label={name}
+        variant={isUser ? 'visitor' : 'assistant'}
+      />
+
+      {/* 消息列：名字 + 气泡 */}
+      <div className={`grid max-w-[82%] gap-0.5 ${isUser ? 'justify-items-end' : 'justify-items-start'}`}>
+        {/* 名字 */}
+        <span className="px-1 text-[0.65rem] font-medium text-zinc-400 dark:text-zinc-500">
+          {name}
+        </span>
+
+        {/* 气泡 + 箭头 */}
+        <div className="relative">
+          {/* 左箭头 (assistant) */}
+          {!isUser ? (
+            <span
+              aria-hidden="true"
+              className="absolute -left-[6px] top-2.5 block size-0
+                border-t-[5px] border-t-transparent
+                border-r-[6px] border-r-zinc-200/80
+                border-b-[5px] border-b-transparent
+                dark:border-r-zinc-800"
+            />
+          ) : null}
+          {/* 右箭头 (visitor) */}
+          {isUser ? (
+            <span
+              aria-hidden="true"
+              className="absolute -right-[6px] top-2.5 block size-0
+                border-t-[5px] border-t-transparent
+                border-l-[6px] border-l-slate-950
+                border-b-[5px] border-b-transparent
+                dark:border-l-white"
+            />
+          ) : null}
+
+          <div
+            className={[
+              'w-full rounded-lg px-3 py-2 text-sm leading-6',
+              isUser
+                ? 'rounded-br bg-slate-950 text-white dark:bg-white dark:text-slate-950'
+                : 'rounded-bl border border-zinc-200/80 bg-white text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100',
+            ].join(' ')}>
           <div className="text-sm leading-6">
             <Markdown
               remarkPlugins={[remarkGfm]}
@@ -191,7 +213,9 @@ function AiChatMessageItem({
             </Markdown>
           </div>
         </div>
-        {/* AI 引用来源 — 独立行展示，不与 markdown 抢占位 */}
+        </div>
+
+        {/* AI 引用来源 */}
         {!isUser && message.citations.length > 0 ? (
           <div className="flex flex-wrap items-center gap-1 px-1">
             <span className="text-[0.62rem] text-zinc-400 dark:text-zinc-500">引用：</span>
@@ -204,9 +228,6 @@ function AiChatMessageItem({
           <div className="grid w-full gap-2">{renderMessageBlocks(message.answerBlocks)}</div>
         ) : null}
       </div>
-      {isUser ? (
-        <ChatAvatar align="right" imageSrc={null} label={visitorLabel} variant="visitor" />
-      ) : null}
     </div>
   )
 }
