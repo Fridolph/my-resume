@@ -148,7 +148,13 @@ function buildUseKeyValue() {
 function normalizeIpAddress(ipAddress: string) {
   const trimmed = ipAddress.trim()
 
-  if (trimmed === '::1') {
+  // 本地开发环境 IP 归一：所有 localhost 变体统一为 127.0.0.1
+  if (
+    trimmed === '::1' ||
+    trimmed === 'localhost' ||
+    trimmed.startsWith('127.') ||
+    trimmed === '0:0:0:0:0:0:0:1'
+  ) {
     return '127.0.0.1'
   }
 
@@ -563,12 +569,16 @@ export class AiChatService {
       } else if (existingUseKey.sessionId) {
         const bundle = await this.aiChatRepository.getSessionBundle(existingUseKey.sessionId)
         if (bundle && (bundle.session.status === 'closed' || bundle.session.turnCount >= bundle.useKey.maxTurns)) {
-          // 会话已结束或轮次用尽，标记旧 useKey 为 expired，走新 key 分支
-          await this.aiChatRepository.updateUseKey({
-            id: existingUseKey.id,
-            status: 'expired',
-            updatedAt: now,
-          })
+          // 会话已结束或轮次用尽：直接返回已有会话供用户回顾，
+          // 不再自动创建新 key（避免丢失历史记录）
+          const session = await this.getPublicSessionSnapshot(existingUseKey.sessionId, existingUseKey.useKey)
+          return {
+            consentRecordedAt: now.toISOString(),
+            policyVersion: PUBLIC_CHAT_POLICY_VERSION,
+            session,
+            turnsPerDay: MAX_CHAT_TURNS,
+            useKey: existingUseKey.useKey,
+          }
         }
       }
     }
