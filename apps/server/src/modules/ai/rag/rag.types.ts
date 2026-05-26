@@ -194,6 +194,8 @@ export interface RagAskCitation {
   snippet: string
   /** 来源标签列表（如 ["简历","核心竞争力"]）。 */
   tags?: string[]
+  /** 内容类型（article/hobby/media/general），用于前端渲染不同卡片。 */
+  contentType?: string
 }
 
 /**

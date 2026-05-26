@@ -1001,10 +1001,12 @@ export class AiChatService {
       return buildLowRelevanceAnswer(input.question, topScore, input.locale)
     }
 
-    // 构建 card blocks
-    const cardBlocks = snapshot?.resume
+    // 构建 card blocks：简历卡片 + 自定义内容卡片
+    const resumeBlocks = snapshot?.resume
       ? this.buildAnswerBlocksFromResume(snapshot.resume, ragResult.citations, input.locale)
       : []
+    const customBlocks = this.buildCustomBlocksFromCitations(ragResult.citations)
+    const cardBlocks = [...resumeBlocks, ...customBlocks].slice(0, 4)
 
     // 有 RAG 结果 → LLM 基于上下文 + 简历摘要回答
     if (ragResult.answer && ragResult.citations.length > 0) {
@@ -1088,6 +1090,52 @@ export class AiChatService {
     }
 
     return [...projectBlocks.values(), ...experienceBlocks.values()].slice(0, 2)
+  }
+
+  /**
+   * 根据 RAG 引用的 contentType 构建自定义卡片（文章/媒体/兴趣爱好）。
+   *
+   * 当引用来自 user_docs 且 metadata 标注了 contentType 时，
+   * 生成对应类型的卡片 block，在前端按不同视觉样式渲染。
+   */
+  private buildCustomBlocksFromCitations(
+    citations: RagAskCitation[],
+  ): AiChatMessageBlock[] {
+    const blocks: AiChatMessageBlock[] = []
+    const seen = new Set<string>()
+
+    for (const citation of citations) {
+      if (citation.sourceType !== 'user_docs') continue
+      const ct = (citation as any)?.contentType as string | undefined
+      if (!ct || seen.has(`${ct}:${citation.title}`)) continue
+      seen.add(`${ct}:${citation.title}`)
+
+      if (ct === 'article') {
+        blocks.push({
+          type: 'article_card',
+          title: citation.title,
+          summary: citation.snippet,
+          url: undefined,
+          keywords: citation.tags ?? [],
+        })
+      } else if (ct === 'media') {
+        blocks.push({
+          type: 'media_card',
+          title: citation.title,
+          description: citation.snippet,
+          url: citation.sourcePath ?? '',
+        })
+      } else if (ct === 'hobby') {
+        blocks.push({
+          type: 'hobby_card',
+          title: citation.title,
+          description: citation.snippet,
+          keywords: citation.tags ?? [],
+        })
+      }
+    }
+
+    return blocks.slice(0, 3)
   }
 
   private findProjectByCitation(

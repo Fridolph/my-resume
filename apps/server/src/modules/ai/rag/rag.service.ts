@@ -129,6 +129,7 @@ function buildRagAskCitations(matches: RagSearchMatch[]): RagAskCitation[] {
     score: item.score,
     snippet: buildCitationSnippet(item.content),
     tags: item.tags,
+    contentType: (item as any)?.contentType as string | undefined,
   }))
 }
 
@@ -447,6 +448,7 @@ export class RagService {
             sourcePath: fileName,
             score,
             tags: Array.isArray(metadata?.tags) ? (metadata.tags as string[]) : undefined,
+            contentType,
           }
         })
         .filter(

@@ -72,6 +72,85 @@ function renderMessageBlocks(blocks: AiChatMessageBlock[]) {
       )
     }
 
+    if (block.type === 'article_card') {
+      return (
+        <article
+          className="grid gap-2 rounded-2xl border border-violet-200/70 bg-violet-50/70 p-3 dark:border-violet-500/20 dark:bg-violet-500/10"
+          key={`${block.type}-${index}`}>
+          <div className="inline-flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400">
+            <span aria-hidden="true">📄</span>
+            <span>技术博客</span>
+          </div>
+          <strong className="text-sm text-zinc-950 dark:text-white">{block.title}</strong>
+          <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-200">{block.summary}</p>
+          {block.url ? (
+            <a className="text-xs text-violet-600 underline decoration-violet-300 underline-offset-2 hover:text-violet-700 dark:text-violet-400" href={block.url} rel="noreferrer" target="_blank">
+              阅读原文 →
+            </a>
+          ) : null}
+          {block.keywords.length > 0 ? (
+            <div className="flex flex-wrap gap-1">
+              {block.keywords.map((item) => (
+                <span className="rounded-full bg-violet-100/70 px-1.5 py-px text-[0.65rem] text-violet-700 dark:bg-violet-500/15 dark:text-violet-300" key={item}>
+                  {item}
+                </span>
+              ))}
+            </div>
+          ) : null}
+        </article>
+      )
+    }
+
+    if (block.type === 'media_card') {
+      return (
+        <article
+          className="grid gap-2 rounded-2xl border border-rose-200/70 bg-rose-50/70 p-3 dark:border-rose-500/20 dark:bg-rose-500/10"
+          key={`${block.type}-${index}`}>
+          <div className="inline-flex items-center gap-1.5 text-xs text-rose-600 dark:text-rose-400">
+            <span aria-hidden="true">🎬</span>
+            <span>媒体 / 视频</span>
+          </div>
+          <strong className="text-sm text-zinc-950 dark:text-white">{block.title}</strong>
+          {block.thumbnailUrl ? (
+            <img alt={block.title} className="max-h-40 w-full rounded-xl object-cover" src={block.thumbnailUrl} />
+          ) : null}
+          <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-200">{block.description}</p>
+          <a className="text-xs text-rose-600 underline decoration-rose-300 underline-offset-2 hover:text-rose-700 dark:text-rose-400" href={block.url} rel="noreferrer" target="_blank">
+            查看原文 →
+          </a>
+        </article>
+      )
+    }
+
+    if (block.type === 'hobby_card') {
+      return (
+        <article
+          className="grid gap-2 rounded-2xl border border-amber-200/70 bg-amber-50/70 p-3 dark:border-amber-500/20 dark:bg-amber-500/10"
+          key={`${block.type}-${index}`}>
+          <div className="inline-flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
+            <span aria-hidden="true">🎯</span>
+            <span>兴趣爱好</span>
+          </div>
+          <strong className="text-sm text-zinc-950 dark:text-white">{block.title}</strong>
+          <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-200">{block.description}</p>
+          {block.url ? (
+            <a className="text-xs text-amber-600 underline decoration-amber-300 underline-offset-2 hover:text-amber-700 dark:text-amber-400" href={block.url} rel="noreferrer" target="_blank">
+              相关链接 →
+            </a>
+          ) : null}
+          {block.keywords.length > 0 ? (
+            <div className="flex flex-wrap gap-1">
+              {block.keywords.map((item) => (
+                <span className="rounded-full bg-amber-100/70 px-1.5 py-px text-[0.65rem] text-amber-700 dark:bg-amber-500/15 dark:text-amber-300" key={item}>
+                  {item}
+                </span>
+              ))}
+            </div>
+          ) : null}
+        </article>
+      )
+    }
+
     // text 类型 block 不重复渲染——消息正文已在气泡中展示
     return null
   })

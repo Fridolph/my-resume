@@ -898,6 +898,9 @@ export type AiChatMessageBlockType =
   | 'text'
   | 'project_card'
   | 'experience_card'
+  | 'article_card'
+  | 'media_card'
+  | 'hobby_card'
   | 'system_notice'
   | 'summary'
 
@@ -1000,10 +1003,37 @@ export interface AiChatSummaryBlock {
   keywords: string[]
 }
 
+export interface AiChatArticleCardBlock {
+  type: 'article_card'
+  title: string
+  summary: string
+  url?: string
+  keywords: string[]
+}
+
+export interface AiChatMediaCardBlock {
+  type: 'media_card'
+  title: string
+  description: string
+  url: string
+  thumbnailUrl?: string
+}
+
+export interface AiChatHobbyCardBlock {
+  type: 'hobby_card'
+  title: string
+  description: string
+  url?: string
+  keywords: string[]
+}
+
 export type AiChatMessageBlock =
   | AiChatTextBlock
   | AiChatProjectCardBlock
   | AiChatExperienceCardBlock
+  | AiChatArticleCardBlock
+  | AiChatMediaCardBlock
+  | AiChatHobbyCardBlock
   | AiChatSystemNoticeBlock
   | AiChatSummaryBlock
 
