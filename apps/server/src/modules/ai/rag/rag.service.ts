@@ -356,6 +356,10 @@ export class RagService {
     const staticKnowledgeMatches = localMatches.filter(
       (item) => item.section === 'knowledge' || item.sourceType === 'knowledge',
     )
+    // 文件索引的 resume section 是基本信息表格，无语义价值，排除
+    const fileResumeChunks = localMatches.filter(
+      (item) => item.sourceType !== 'knowledge' && item.section !== 'resume',
+    )
     if (databaseMatches.hasScopedResumeCore) {
       const scopedReranked = sortMatchesForAnswer(
         applyRagSearchRerank(databaseMatches.matches, query, limit),
@@ -369,7 +373,7 @@ export class RagService {
       return [...scopedReranked, ...knowledgeReranked].slice(0, limit)
     }
 
-    const merged = [...localMatches, ...databaseMatches.matches].sort(
+    const merged = [...fileResumeChunks, ...staticKnowledgeMatches, ...databaseMatches.matches].sort(
       (a, b) => b.score - a.score,
     )
 
@@ -411,6 +415,9 @@ export class RagService {
       const candidateRows = hasScopedResumeCore ? scopedRows : rows
 
       const matches = candidateRows
+        // 过滤："基本信息"表格 chunk（section=resume）对语义搜索无价值
+        // — 只保留 projects / work_experience / skills / core_strengths 等实质内容
+        .filter((row) => row.section !== 'resume')
         .map((row) => {
           const embedding = row.embeddingJson ?? []
           const semanticScore =
