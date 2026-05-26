@@ -1,0 +1,204 @@
+'use client'
+
+import { Button, Chip, Form, Spinner, TextArea } from '@heroui/react'
+import Link from 'next/link'
+import { useState } from 'react'
+
+import { useAdminSession } from '@core/admin-session'
+import { adminPrimaryButtonClass } from '@core/button-styles'
+import { DEFAULT_API_BASE_URL } from '@core/env'
+import type { AppLocale } from '@i18n/types'
+
+import { createIngestRagUserDocMethod } from './services/ai-file-api'
+import type { RagUserDocContentType } from './rag-extension.types'
+
+const CONTENT_TYPE_OPTIONS: Array<{ label: string; value: RagUserDocContentType }> = [
+  { label: '技术博客 / 文章', value: 'article' },
+  { label: '兴趣爱好', value: 'hobby' },
+  { label: '媒体 / 视频', value: 'media' },
+  { label: '通用', value: 'general' },
+]
+
+export function RagExtensionShell({ locale: _locale }: { locale: AppLocale }) {
+  const { accessToken, currentUser, status } = useAdminSession()
+  const [title, setTitle] = useState('')
+  const [content, setContent] = useState('')
+  const [contentType, setContentType] = useState<RagUserDocContentType>('article')
+  const [linkUrl, setLinkUrl] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [resultMessage, setResultMessage] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  if (status !== 'ready' || !currentUser || !accessToken) {
+    return null
+  }
+
+  const canUpload = Boolean(currentUser.capabilities.canTriggerAiAnalysis)
+
+  if (!canUpload) {
+    return (
+      <div className="bg-[#ebebee] dark:bg-zinc-950">
+        <section className="border-b border-zinc-200/80 bg-white px-4 py-5 dark:border-zinc-800 dark:bg-zinc-950">
+          <div className="readonly-box">
+            <strong>当前角色只读</strong>
+            <span>只有管理员可以扩展 RAG 个人资料库。</span>
+          </div>
+        </section>
+      </div>
+    )
+  }
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!content.trim()) return
+
+    setIsSubmitting(true)
+    setErrorMessage(null)
+    setResultMessage(null)
+
+    try {
+      // 拼接 Markdown 内容
+      const markdown = [
+        `# ${title || 'RAG 资料'}`,
+        '',
+        content,
+        linkUrl ? `\n\n链接：${linkUrl}` : '',
+      ].join('\n')
+      const file = new File([markdown], `${title || 'rag-entry'}.md`, { type: 'text/markdown' })
+
+      const result = await createIngestRagUserDocMethod({
+        apiBaseUrl: DEFAULT_API_BASE_URL,
+        accessToken: accessToken ?? '',
+        file,
+        scope: 'published',
+        chunkingProfile: 'semantic',
+        contentType,
+      }).send()
+
+      setResultMessage(`入库成功：${result.fileName}，切块 ${result.chunkCount} 条`)
+      setTitle('')
+      setContent('')
+      setLinkUrl('')
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : '入库失败')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const shellClass =
+    'border-b border-zinc-200/80 bg-white px-4 py-5 dark:border-zinc-800 dark:bg-zinc-950 sm:px-5 sm:py-6 lg:px-6'
+
+  return (
+    <div className="bg-[#ebebee] dark:bg-zinc-950">
+      <section className={shellClass}>
+        <div className="grid gap-4">
+          <div className="flex flex-wrap gap-2">
+            <Chip size="sm">当前账号：{currentUser.username}</Chip>
+            <Chip size="sm">RAG 资料扩展</Chip>
+          </div>
+          <h1 className="text-3xl font-semibold tracking-tight text-zinc-950 dark:text-white">
+            RAG 资料扩展
+          </h1>
+          <p className="max-w-3xl text-sm leading-7 text-zinc-500 dark:text-zinc-400">
+            这里可以扩展个人资料库，支持文章、兴趣爱好、媒体链接等类型。内容会自动分块向量化，在 AI 对话中被检索和引用。
+          </p>
+          <div className="dashboard-entry-actions">
+            <Link
+              className="inline-flex h-10 items-center justify-center rounded-full border border-zinc-300 px-4 text-sm text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:text-white"
+              href="/dashboard/ai">
+              返回 AI 工作台
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className={shellClass}>
+        <div className="mb-4 grid gap-2">
+          <h2 className="text-[1.75rem] font-semibold tracking-tight text-zinc-950 dark:text-white">
+            添加资料
+          </h2>
+          <p className="max-w-4xl text-sm leading-7 text-zinc-500 dark:text-zinc-400">
+            输入标题、正文和类型，系统会自动语义分块并写入 RAG 检索态。
+          </p>
+        </div>
+
+        <Form className="grid gap-4" onSubmit={(event) => void handleSubmit(event)}>
+          <label className="field">
+            <span>标题</span>
+            <TextArea
+              aria-label="资料标题"
+              className="min-h-[3rem]"
+              onChange={(event: any) => setTitle(event.target.value)}
+              placeholder="例如：我的易经学习心得"
+              value={title}
+              variant="secondary"
+            />
+          </label>
+
+          <label className="field">
+            <span>正文</span>
+            <TextArea
+              aria-label="资料内容"
+              className="min-h-[10rem]"
+              onChange={(event: any) => setContent(event.target.value)}
+              placeholder="输入资料正文内容，支持 Markdown 格式..."
+              value={content}
+              variant="secondary"
+            />
+          </label>
+
+          <label className="field">
+            <span>内容类型</span>
+            <select
+              aria-label="内容类型"
+              className="h-10 rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-700 outline-none transition focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200 dark:focus:border-zinc-600"
+              onChange={(event: any) => setContentType(event.target.value as RagUserDocContentType)}
+              value={contentType}>
+              {CONTENT_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="field">
+            <span>相关链接（可选）</span>
+            <TextArea
+              aria-label="相关链接"
+              className="min-h-[2.5rem]"
+              onChange={(event: any) => setLinkUrl(event.target.value)}
+              placeholder="https://..."
+              value={linkUrl}
+              variant="secondary"
+            />
+          </label>
+
+          {errorMessage ? <p className="error-text text-sm text-rose-600">{errorMessage}</p> : null}
+          {resultMessage ? (
+            <p className="rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+              {resultMessage}
+            </p>
+          ) : null}
+
+          <Button
+            className={adminPrimaryButtonClass}
+            isDisabled={!content.trim() || isSubmitting}
+            size="md"
+            type="submit"
+            variant="primary">
+            {isSubmitting ? (
+              <span className="inline-flex items-center gap-2">
+                <Spinner size="sm" />
+                正在写入...
+              </span>
+            ) : (
+              '提交并写入 RAG 检索态'
+            )}
+          </Button>
+        </Form>
+      </section>
+    </div>
+  )
+}

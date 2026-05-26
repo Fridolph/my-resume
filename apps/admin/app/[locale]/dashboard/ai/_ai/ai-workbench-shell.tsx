@@ -69,6 +69,15 @@ const moduleCards = [
     tone: 'from-amber-50 via-white to-orange-50 dark:from-amber-950/25 dark:via-zinc-950 dark:to-slate-950',
   },
   {
+    eyebrow: '入口四',
+    title: 'RAG 资料扩展',
+    description:
+      '添加个人博客、兴趣爱好、视频媒体等资料，系统自动分块向量化，AI 对话时按类型渲染不同卡片。',
+    href: '/dashboard/ai/rag-extension',
+    status: 'M25 新功能',
+    tone: 'from-teal-50 via-white to-emerald-50 dark:from-teal-950/25 dark:via-zinc-950 dark:to-emerald-950/25',
+  },
+  {
     eyebrow: '工具',
     title: '文件提取诊断',
     description:
