@@ -175,7 +175,8 @@ export function splitUserDocByMarkdownSections(text: string): string[] {
   const normalized = normalizeUserDocText(text)
   if (!normalized) return []
 
-  const SECTION_RE = /^#{2,3}\s+.+$/gm
+  // 1. 按 ## 标题拆分（只分二级标题，### 保留在父 section 内）
+  const SECTION_RE = /^##\s+.+$/gm
   const headerPositions: Array<{ index: number; header: string }> = []
   let m: RegExpExecArray | null
 
