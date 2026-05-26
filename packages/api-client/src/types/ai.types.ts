@@ -767,6 +767,8 @@ export interface IngestRagUserDocInput {
   chunkOverlap?: number
   /** 内容类型：article=文章，hobby=兴趣爱好，media=媒体/视频，general=通用 */
   contentType?: RagUserDocContentType
+  /** 资料标题（优先于文件名） */
+  title?: string
 }
 
 /**

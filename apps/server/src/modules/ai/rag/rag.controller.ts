@@ -244,6 +244,7 @@ export class RagController {
       mimetype: file.mimetype,
       size: file.size,
       sourceScope,
+      title: body.title ?? file.originalname,
       chunkingProfile: body.chunkingProfile,
       chunkSize: chunkingConfig.chunkSize,
       chunkOverlap: chunkingConfig.chunkOverlap,

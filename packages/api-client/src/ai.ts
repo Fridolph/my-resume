@@ -636,6 +636,10 @@ export function createIngestRagUserDocMethod(input: IngestRagUserDocInput) {
     formData.append('contentType', input.contentType)
   }
 
+  if (input.title) {
+    formData.append('title', input.title)
+  }
+
   return Alova.createMethod<RagUserDocIngestResult>({
     apiBaseUrl: input.apiBaseUrl,
     pathname: '/ai/rag/ingest/user-doc',

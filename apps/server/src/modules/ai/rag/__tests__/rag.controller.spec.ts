@@ -61,6 +61,7 @@ describe('RagController', () => {
       mimetype: 'text/markdown',
       size: 3,
       sourceScope: 'published',
+      title: 'rag-notes.md',
       chunkingProfile: 'contextual',
       chunkSize: 800,
       chunkOverlap: 120,

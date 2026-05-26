@@ -47,6 +47,7 @@ export interface IngestUserDocInput {
   mimetype: string
   size: number
   sourceScope?: RagSourceScope
+  title?: string
   chunkingProfile?: UserDocChunkingProfile
   chunkSize?: number
   chunkOverlap?: number
@@ -205,7 +206,7 @@ export class UserDocsIngestionService {
         sourceId,
         sourceVersion,
         locale: 'und',
-        title: extracted.fileName,
+        title: input.title ?? extracted.fileName,
         contentHash: computeContentHash(extracted.text),
         metadataJson: {
           sourceType: 'user_docs',

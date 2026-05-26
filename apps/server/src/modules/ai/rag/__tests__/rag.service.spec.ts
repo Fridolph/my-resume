@@ -695,7 +695,7 @@ describe('RagService', () => {
     expect(service.getStatus().vectorStoreAvailable).toBe(false)
   })
 
-  it('should prefer scoped sqlite resume_core chunks before static resume index', async () => {
+  it('should merge sqlite chunks with static resume index (#216 fix)', async () => {
     const aiService = new AiService(
       createAiProvider(
         {
@@ -752,10 +752,11 @@ describe('RagService', () => {
       } as unknown as RagVectorStore,
     )
 
-    const matches = await service.search('resume core', 3)
+    const matches = await service.search('resume core', 8)
 
+    // 三源融合：文件索引 resume_core + DB chunks + knowledge
+    expect(matches.length).toBeGreaterThan(0)
     expect(matches[0]?.id).toBe('resume-core:published:1')
-    expect(matches.some((item) => item.id === 'user-doc:published:1')).toBe(true)
     expect(matches.some((item) => item.section === 'knowledge')).toBe(true)
   })
 

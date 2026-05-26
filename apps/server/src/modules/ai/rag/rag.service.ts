@@ -362,22 +362,15 @@ export class RagService {
     const fileResumeChunks = localMatches.filter(
       (item) => item.sourceType !== 'knowledge' && item.section !== 'resume',
     )
-    if (databaseMatches.hasScopedResumeCore) {
-      const scopedReranked = sortMatchesForAnswer(
-        applyRagSearchRerank(databaseMatches.matches, query, limit),
-      )
-      const knowledgeReranked = applyRagSearchRerank(
-        staticKnowledgeMatches,
-        query,
-        limit,
-      )
-
-      return [...scopedReranked, ...knowledgeReranked].slice(0, limit)
-    }
-
-    const merged = [...fileResumeChunks, ...staticKnowledgeMatches, ...databaseMatches.matches].sort(
-      (a, b) => b.score - a.score,
-    )
+    // 统一融合三源。resume_core 优先于 user_docs，保证简历内容不会被
+    // 兴趣爱好等非核心资料挤出回答上下文。
+    const merged = [...fileResumeChunks, ...databaseMatches.matches, ...staticKnowledgeMatches]
+      .sort((a, b) => {
+        const aPriority = a.sourceType === 'resume_core' || a.sourceType === 'resume' ? 0 : 1
+        const bPriority = b.sourceType === 'resume_core' || b.sourceType === 'resume' ? 0 : 1
+        if (aPriority !== bPriority) return aPriority - bPriority
+        return b.score - a.score
+      })
 
     return applyRagSearchRerank(merged, query, limit)
   }

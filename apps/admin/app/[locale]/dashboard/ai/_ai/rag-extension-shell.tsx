@@ -111,6 +111,7 @@ export function RagExtensionShell({ locale: _locale }: { locale: AppLocale }) {
         scope: 'published',
         chunkingProfile: 'semantic',
         contentType,
+        title,
       }).send()
 
       setResultMessage(`入库成功：${title || '资料'}，切块 ${result.chunkCount} 条`)

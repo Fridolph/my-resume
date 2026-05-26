@@ -151,6 +151,12 @@ export class RagUserDocIngestBodyDto {
   contentType?: 'article' | 'hobby' | 'media' | 'general'
 
   @ApiPropertyOptional({
+    description: '资料标题（优先于文件名），支持 UTF-8 中文',
+    example: '我的易经学习心得',
+  })
+  title?: string
+
+  @ApiPropertyOptional({
     description: '自定义切片大小（字符），优先级高于 profile 默认值',
     example: 1000,
     maximum: 6666,
