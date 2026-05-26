@@ -305,7 +305,7 @@ export function compareUserDocChunkingStrategies(
  * @returns profile 对应切片策略
  */
 export function resolveUserDocChunkingStrategy(
-  profile: UserDocChunkingProfile = 'balanced',
+  profile: UserDocChunkingProfile = 'semantic',
 ): UserDocChunkingStrategy {
   return USER_DOC_CHUNKING_PROFILE_MAP[profile]
 }

@@ -21,13 +21,13 @@ const STRATEGIES: readonly UserDocChunkingStrategy[] = [
 ]
 
 describe('user docs chunking strategy baseline', () => {
-  it('should resolve balanced profile as safe default strategy', () => {
+  it('should resolve semantic as default strategy (#218)', () => {
     const strategy = resolveUserDocChunkingStrategy()
 
     expect(strategy).toMatchObject({
-      label: '500/50',
-      chunkSize: 500,
-      chunkOverlap: 50,
+      label: 'semantic',
+      chunkSize: 0,
+      chunkOverlap: 0,
     })
   })
 
@@ -115,5 +115,41 @@ describe('user docs chunking strategy baseline', () => {
   it('should handle empty input', () => {
     expect(splitUserDocByMarkdownSections('')).toEqual([])
     expect(splitUserDocByMarkdownSections('   ')).toEqual([])
+  })
+
+  it('should have no overlap between semantic chunks (#217)', () => {
+    const md = `
+## 项目一
+
+这是第一个项目的详细描述，包含多方面的技术细节。
+
+## 项目二
+
+这是第二个项目的详细描述，同样包含丰富的信息。
+    `.trim()
+    const chunks = splitUserDocByMarkdownSections(md)
+
+    expect(chunks.length).toBe(2)
+
+    // 验证无 overlap：任两个相邻 chunk 内容不重叠
+    for (let i = 1; i < chunks.length; i++) {
+      const prev = chunks[i - 1]
+      const curr = chunks[i]
+      // 语义分块不应有相同内容
+      expect(prev).not.toBe(curr)
+      // 前一个 chunk 的尾部和后一个 chunk 的头部不应相同
+      expect(prev.slice(-20)).not.toBe(curr.slice(0, 20))
+    }
+  })
+
+  it('should match chunk count to ## heading count (#217)', () => {
+    const md = ['## 经历', '内容A', '## 技能', '内容B', '## 项目', '内容C'].join('\n\n')
+    const chunks = splitUserDocByMarkdownSections(md)
+
+    // 3个 ## 标题 → 3个 chunk
+    expect(chunks.length).toBe(3)
+    expect(chunks[0]).toContain('经历')
+    expect(chunks[1]).toContain('技能')
+    expect(chunks[2]).toContain('项目')
   })
 })
