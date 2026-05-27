@@ -1,7 +1,6 @@
 'use client'
 
 import { Button, Card, CardContent, CardHeader, CardTitle, Chip, Form, Spinner, Table, Tabs, TextArea, Tooltip } from '@heroui/react'
-import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
 import { useAdminSession } from '@core/admin-session'
@@ -183,9 +182,9 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
       {/* Tabs */}
       <Tabs aria-label="RAG 管理模块">
         <Tabs.List>
-          <Tabs.Tab id="custom">自定义数据</Tabs.Tab>
-          <Tabs.Tab id="upload">文件上传</Tabs.Tab>
-          <Tabs.Tab id="manage">已入库管理</Tabs.Tab>
+          <Tabs.Tab className="data-[selected=true]:border-b-2 data-[selected=true]:border-[color:var(--admin-primary)]" id="custom">自定义数据</Tabs.Tab>
+          <Tabs.Tab className="data-[selected=true]:border-b-2 data-[selected=true]:border-[color:var(--admin-primary)]" id="upload">文件上传</Tabs.Tab>
+          <Tabs.Tab className="data-[selected=true]:border-b-2 data-[selected=true]:border-[color:var(--admin-primary)]" id="manage">已入库管理</Tabs.Tab>
         </Tabs.List>
 
         {/* Tab 1: 自定义数据添加 */}
@@ -357,14 +356,6 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
           </Card>
         </Tabs.Panel>
       </Tabs>
-
-      <div className="dashboard-entry-actions">
-        <Link
-          className="inline-flex h-10 items-center justify-center rounded-full border border-zinc-300 px-4 text-sm text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:text-white"
-          href="/dashboard/ai">
-          返回 AI 工作台
-        </Link>
-      </div>
     </div>
   )
 }
