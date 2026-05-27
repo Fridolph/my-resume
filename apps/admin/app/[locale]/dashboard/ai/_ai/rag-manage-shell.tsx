@@ -142,7 +142,6 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
           <Tabs.Tab id="upload">RAG 资料入库</Tabs.Tab>
           <Tabs.Tab id="manage">RAG 自定义管理</Tabs.Tab>
         </Tabs.List>
-        <Tabs.Indicator />
         <Tabs.Panel id="custom">
           <section className={shellClass}>
             <div className="mb-4 grid gap-2">
