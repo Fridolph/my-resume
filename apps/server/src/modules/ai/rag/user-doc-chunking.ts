@@ -216,27 +216,46 @@ export function splitUserDocByMarkdownSections(text: string): string[] {
 
 function splitTextByParagraphs(text: string): string[] {
   const paragraphs = text.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean)
+  const MIN_COMBINED_CHARS = 300
+
+  // 合并过短相邻段落，避免一句话自成一个 chunk
   const result: string[] = []
+  let buffer = ''
 
   for (const para of paragraphs) {
-    if (para.length <= 2000) {
-      result.push(para)
+    const candidate = buffer ? `${buffer}\n\n${para}` : para
+
+    if (candidate.length <= MIN_COMBINED_CHARS || para.length < 100) {
+      buffer = candidate
     } else {
-      const sentences = para.split(/(?<=[。！？])\s*/)
-      let buffer = ''
-      for (const sentence of sentences) {
-        if ((buffer + sentence).length > 2000 && buffer) {
-          result.push(buffer.trim())
-          buffer = sentence
-        } else {
-          buffer += sentence
-        }
-      }
-      if (buffer.trim()) result.push(buffer.trim())
+      if (buffer) result.push(buffer)
+      buffer = para
     }
   }
 
-  return result
+  if (buffer) result.push(buffer)
+
+  // 对合并后仍超长的做句子级保守拆分
+  const final: string[] = []
+  for (const chunk of result) {
+    if (chunk.length <= 2000) {
+      final.push(chunk)
+    } else {
+      const sentences = chunk.split(/(?<=[。！？])\s*/)
+      let sentenceBuffer = ''
+      for (const sentence of sentences) {
+        if ((sentenceBuffer + sentence).length > 2000 && sentenceBuffer) {
+          final.push(sentenceBuffer.trim())
+          sentenceBuffer = sentence
+        } else {
+          sentenceBuffer += sentence
+        }
+      }
+      if (sentenceBuffer.trim()) final.push(sentenceBuffer.trim())
+    }
+  }
+
+  return final
 }
 
 /**

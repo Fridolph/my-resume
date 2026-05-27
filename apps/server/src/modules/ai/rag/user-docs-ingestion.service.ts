@@ -300,7 +300,7 @@ export class UserDocsIngestionService {
         sourceScope,
         sourceVersion,
         chunkCount: chunks.length,
-        fileName: extracted.fileName,
+        fileName: input.title ?? extracted.fileName,
         fileType: extracted.fileType,
         chunkingProfile,
         chunkSize: chunkingStrategy.chunkSize,
