@@ -88,6 +88,8 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
   const [documents, setDocuments] = useState<RagDocument[]>([])
   const [documentsLoading, setDocumentsLoading] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [viewDetail, setViewDetail] = useState<RagDocument | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
 
   if (status !== 'ready' || !currentUser || !accessToken) return null
@@ -316,10 +318,11 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
                             <div className="flex items-center justify-end gap-1.5">
                               <Tooltip delay={180}>
                                 <Tooltip.Trigger>
-                                  <Button
+                                   <Button
                                     aria-label="查看详情"
                                     className={actionIconClass}
                                     isIconOnly
+                                    onPress={() => setViewDetail(doc)}
                                     size="sm"
                                     type="button"
                                     variant="ghost">
@@ -328,22 +331,29 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
                                 </Tooltip.Trigger>
                                 <Tooltip.Content offset={10} placement="top">查看详情</Tooltip.Content>
                               </Tooltip>
-                              <Tooltip delay={180}>
-                                <Tooltip.Trigger>
-                                  <Button
-                                    aria-label="删除资料"
-                                    className={actionIconClass}
-                                    isDisabled={deletingId === doc.id}
-                                    isIconOnly
-                                    onPress={() => handleDelete(doc.id)}
-                                    size="sm"
-                                    type="button"
-                                    variant="ghost">
-                                    <TrashIcon />
-                                  </Button>
-                                </Tooltip.Trigger>
-                                <Tooltip.Content offset={10} placement="top">删除</Tooltip.Content>
-                              </Tooltip>
+                               {deleteConfirmId === doc.id ? (
+                                 <div className="inline-flex items-center gap-1">
+                                   <Button className="h-7 rounded-lg text-[0.65rem]" onPress={() => { handleDelete(doc.id); setDeleteConfirmId(null) }} size="sm" variant="danger">确认删除</Button>
+                                   <Button className="h-7 rounded-lg text-[0.65rem]" onPress={() => setDeleteConfirmId(null)} size="sm" variant="ghost">取消</Button>
+                                 </div>
+                               ) : (
+                                 <Tooltip delay={180}>
+                                   <Tooltip.Trigger>
+                                     <Button
+                                       aria-label="删除资料"
+                                       className={actionIconClass}
+                                       isDisabled={deletingId === doc.id}
+                                       isIconOnly
+                                       onPress={() => setDeleteConfirmId(doc.id)}
+                                       size="sm"
+                                       type="button"
+                                       variant="ghost">
+                                       <TrashIcon />
+                                     </Button>
+                                   </Tooltip.Trigger>
+                                   <Tooltip.Content offset={10} placement="top">删除</Tooltip.Content>
+                                 </Tooltip>
+                               )}
                             </div>
                           </Table.Cell>
                         </Table.Row>
@@ -356,6 +366,44 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
           </Card>
         </Tabs.Panel>
       </Tabs>
+
+      {/* 查看详情 Dialog */}
+      {viewDetail ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setViewDetail(null)}>
+          <div className="mx-4 max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-zinc-200/80 bg-white p-6 shadow-2xl dark:border-zinc-700 dark:bg-zinc-950" onClick={(e) => e.stopPropagation()}>
+            <div className="grid gap-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="grid gap-1">
+                  <h3 className="text-lg font-semibold text-zinc-950 dark:text-white">{viewDetail.title || '未命名'}</h3>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Chip size="sm" variant="soft">{contentTypeLabel(viewDetail.contentType)}</Chip>
+                    <span className="text-xs text-zinc-400">{formatDateTime(viewDetail.createdAt)}</span>
+                  </div>
+                </div>
+                <Button aria-label="关闭" className={actionIconClass} isIconOnly onPress={() => setViewDetail(null)} size="sm" variant="ghost">✕</Button>
+              </div>
+              <div className="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-900">
+                <div className="grid gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+                  <div className="grid grid-cols-[6rem_1fr] gap-2">
+                    <span className="text-xs text-zinc-400">文档 ID</span>
+                    <span className="font-mono text-xs">{viewDetail.id.slice(0, 32)}...</span>
+                  </div>
+                  {viewDetail.fileName ? (
+                    <div className="grid grid-cols-[6rem_1fr] gap-2">
+                      <span className="text-xs text-zinc-400">文件名</span>
+                      <span className="text-xs">{viewDetail.fileName}</span>
+                    </div>
+                  ) : null}
+                  <div className="grid grid-cols-[6rem_1fr] gap-2">
+                    <span className="text-xs text-zinc-400">切块数</span>
+                    <span className="text-xs">{viewDetail.chunkCount ?? '—'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
