@@ -139,24 +139,31 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
     event.preventDefault()
     if (!content.trim()) return
     setIsSubmitting(true)
-    setFormError(null)
-    setFormResult(null)
+    setErrorMessage(null)
+    setResultMessage(null)
     try {
-      const markdown = [
-        `# ${title || 'RAG 资料'}`,
-        '', content,
-        linkUrl ? `\n\n链接：${linkUrl}` : '',
-      ].join('\n')
-      const file = new File([markdown], `${title || 'rag-entry'}.md`, { type: 'text/markdown' })
-      const result = await createIngestRagUserDocMethod({
-        apiBaseUrl: DEFAULT_API_BASE_URL, accessToken: accessToken ?? '', file,
-        scope: 'published', chunkingProfile: 'semantic', contentType, title,
-      }).send()
-      setFormResult(`${title || '资料'} 入库成功，切块 ${result.chunkCount} 条`)
+      const res = await fetch(`${DEFAULT_API_BASE_URL}/api/ai/rag/custom`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken ?? ''}`,
+        },
+        body: JSON.stringify({
+          title: title || undefined,
+          content,
+          contentType,
+          linkUrl: linkUrl || undefined,
+          scope: 'published',
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.message || '入库失败')
+      const data = json.data ?? json
+      setResultMessage(`入库成功：${title || '资料'}，切块 ${data.chunkCount} 条`)
       setTitle(''); setContent(''); setLinkUrl('')
       fetchDocuments()
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : '入库失败')
+      setErrorMessage(error instanceof Error ? error.message : '入库失败')
     } finally { setIsSubmitting(false) }
   }
 
