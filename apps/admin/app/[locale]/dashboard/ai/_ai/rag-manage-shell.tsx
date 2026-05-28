@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, Card, CardContent, CardHeader, CardTitle, Chip, Form, Popover, Spinner, Tabs, TextArea } from '@heroui/react'
+import { Button, Card, CardContent, CardHeader, CardTitle, Chip, Form, Popover, Spinner, Tabs, TextArea, Tooltip } from '@heroui/react'
 import { useEffect, useState } from 'react'
 
 import { useAdminSession } from '@core/admin-session'
@@ -319,26 +319,37 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
                         <span className="text-xs text-zinc-400 dark:text-zinc-500">{formatDateTime(doc.createdAt)}</span>
                       </div>
                        <div className="flex items-center justify-end gap-0.5">
-                         <button
-                           className={actionIconClass}
-                           onClick={() => setViewDetail(doc)}
-                           title="查看详情"
-                           type="button">
-                           <ViewIcon />
-                         </button>
+                         <Tooltip delay={180}>
+                           <Tooltip.Trigger>
+                             <Button
+                               aria-label="查看详情"
+                               className={actionIconClass}
+                               isIconOnly
+                               onPress={() => setViewDetail(doc)}
+                               size="sm"
+                               variant="ghost">
+                               <ViewIcon />
+                             </Button>
+                           </Tooltip.Trigger>
+                           <Tooltip.Content offset={10} placement="top">查看详情</Tooltip.Content>
+                         </Tooltip>
                          <Popover>
-                           <button
+                           <Button
+                             aria-label="删除"
                              className={actionIconClass}
-                             disabled={deletingId === doc.id}
-                             title="删除"
-                             type="button">
+                             isDisabled={deletingId === doc.id}
+                             isIconOnly
+                             size="sm"
+                             variant="ghost">
                              <TrashIcon />
-                           </button>
-                           <Popover.Content className="max-w-64">
-                             <Popover.Dialog>
-                               <Popover.Heading className="text-sm font-semibold">确认删除</Popover.Heading>
-                               <p className="mt-1 text-sm text-zinc-500">确定删除「{doc.title || '未命名'}」及其所有关联数据？</p>
-                               <div className="mt-3 flex justify-end gap-2">
+                           </Button>
+                           <Popover.Content
+                             className="max-w-64"
+                             render={(props) => <div {...props} className={`${props.className} rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-lg dark:border-zinc-700 dark:bg-zinc-900`} />}>
+                             <div className="grid gap-2">
+                               <strong className="text-sm text-zinc-950 dark:text-white">确认删除</strong>
+                               <p className="text-sm text-zinc-500 dark:text-zinc-400">确定删除「{doc.title || '未命名'}」及其所有关联数据？</p>
+                               <div className="flex justify-end gap-2">
                                  <Button slot="close" size="sm" variant="ghost">取消</Button>
                                  <Button
                                    isDisabled={deletingId === doc.id}
@@ -349,7 +360,7 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
                                    删除
                                  </Button>
                                </div>
-                             </Popover.Dialog>
+                             </div>
                            </Popover.Content>
                          </Popover>
                        </div>
