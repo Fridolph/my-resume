@@ -298,9 +298,9 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
                     <Table.Header>
                       <Table.Column isRowHeader>标题</Table.Column>
                       <Table.Column>类型</Table.Column>
-                      <Table.Column>切块</Table.Column>
+                      <Table.Column>内容预览</Table.Column>
                       <Table.Column>更新时间</Table.Column>
-                      <Table.Column className="w-20 text-right">操作</Table.Column>
+                      <Table.Column className="w-28 text-right">操作</Table.Column>
                     </Table.Header>
                     <Table.Body items={documents}>
                       {(doc) => (
@@ -317,61 +317,43 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
                             <Chip size="sm" variant="soft">{contentTypeLabel(doc.contentType)}</Chip>
                           </Table.Cell>
                           <Table.Cell>
-                            <span className="text-sm text-zinc-600 dark:text-zinc-300">{doc.chunkCount ?? '—'}</span>
+                            <span className="line-clamp-2 text-xs text-zinc-500 dark:text-zinc-400">
+                              {doc.preview ?? '—'}
+                            </span>
                           </Table.Cell>
                           <Table.Cell>
                             <span className="text-xs text-zinc-500 dark:text-zinc-400">{formatDateTime(doc.createdAt)}</span>
                           </Table.Cell>
                           <Table.Cell>
-                            <div className="flex items-center justify-end gap-1.5">
-                              <Tooltip delay={180}>
-                                <Tooltip.Trigger>
-                                   <Button
-                                    aria-label="查看详情"
-                                    className={actionIconClass}
-                                    isIconOnly
-                                    onPress={() => setViewDetail(doc)}
-                                    size="sm"
-                                    type="button"
-                                    variant="ghost">
-                                    <ViewIcon />
-                                  </Button>
-                                </Tooltip.Trigger>
-                                <Tooltip.Content offset={10} placement="top">查看详情</Tooltip.Content>
-                              </Tooltip>
-                               {deleteConfirmId === doc.id ? (
-                                 <div className="inline-flex items-center gap-1">
-                                   <button
-                                     className="rounded-lg bg-rose-600 px-2 py-1 text-[0.65rem] font-medium text-white hover:bg-rose-700"
-                                     onClick={() => { handleDelete(doc.id); setDeleteConfirmId(null) }}
-                                     type="button">
-                                     确认删除
-                                   </button>
-                                   <button
-                                     className="rounded-lg border border-zinc-300 px-2 py-1 text-[0.65rem] text-zinc-600 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800"
-                                     onClick={() => setDeleteConfirmId(null)}
-                                     type="button">
-                                     取消
-                                   </button>
-                                 </div>
-                               ) : (
-                                 <Tooltip delay={180}>
-                                   <Tooltip.Trigger>
-                                     <Button
-                                       aria-label="删除资料"
-                                       className={actionIconClass}
-                                       isDisabled={deletingId === doc.id}
-                                       isIconOnly
-                                       onPress={() => setDeleteConfirmId(doc.id)}
-                                       size="sm"
-                                       type="button"
-                                       variant="ghost">
-                                       <TrashIcon />
-                                     </Button>
-                                   </Tooltip.Trigger>
-                                   <Tooltip.Content offset={10} placement="top">删除</Tooltip.Content>
-                                 </Tooltip>
-                               )}
+                            <div className="flex items-center justify-end gap-1">
+                              <button
+                                aria-label="查看详情"
+                                className={actionIconClass}
+                                onClick={() => setViewDetail(doc)}
+                                type="button">
+                                <ViewIcon />
+                              </button>
+                              {deleteConfirmId === doc.id ? (
+                                <>
+                                  <button
+                                    className="rounded-lg bg-rose-600 px-2 py-1 text-[0.65rem] font-medium text-white hover:bg-rose-700"
+                                    onClick={() => { handleDelete(doc.id); setDeleteConfirmId(null) }}
+                                    type="button">确认</button>
+                                  <button
+                                    className="rounded-lg border border-zinc-300 px-2 py-1 text-[0.65rem] text-zinc-600 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                                    onClick={() => setDeleteConfirmId(null)}
+                                    type="button">取消</button>
+                                </>
+                              ) : (
+                                <button
+                                  aria-label="删除资料"
+                                  className={actionIconClass}
+                                  disabled={deletingId === doc.id}
+                                  onClick={() => setDeleteConfirmId(doc.id)}
+                                  type="button">
+                                  <TrashIcon />
+                                </button>
+                              )}
                             </div>
                           </Table.Cell>
                         </Table.Row>
