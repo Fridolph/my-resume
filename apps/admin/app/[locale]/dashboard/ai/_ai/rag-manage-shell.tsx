@@ -88,6 +88,8 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
   const [documents, setDocuments] = useState<RagDocument[]>([])
   const [documentsLoading, setDocumentsLoading] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deletePopoverId, setDeletePopoverId] = useState<string | null>(null)
+  const [rebuilding, setRebuilding] = useState(false)
   const [viewDetail, setViewDetail] = useState<RagDocument | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
 
@@ -121,6 +123,19 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
     finally { setDocumentsLoading(false) }
   }
 
+  async function handleRebuildIndex() {
+    setRebuilding(true)
+    setActionError(null)
+    try {
+      await fetch(`${DEFAULT_API_BASE_URL}/api/ai/rag/index/rebuild`, {
+        method: 'POST', headers: { Authorization: `Bearer ${accessToken ?? ''}` },
+      })
+      setActionError(null)
+    } catch {
+      setActionError('索引重建失败')
+    } finally { setRebuilding(false) }
+  }
+
   async function handleDelete(documentId: string) {
     setDeletingId(documentId)
     setActionError(null)
@@ -131,7 +146,10 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
       await fetchDocuments()
     } catch {
       setActionError('删除失败')
-    } finally { setDeletingId(null) }
+    } finally {
+      setDeletingId(null)
+      setDeletePopoverId(null)
+    }
   }
 
   async function handleCustomSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -272,7 +290,16 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
         <Tabs.Panel id="manage">
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl font-semibold text-zinc-950 dark:text-white">已入库资料</CardTitle>
+              <div className="flex items-center justify-between gap-4">
+                <CardTitle className="text-xl font-semibold text-zinc-950 dark:text-white">已入库资料</CardTitle>
+                <Button
+                  isDisabled={rebuilding}
+                  onPress={() => void handleRebuildIndex()}
+                  size="sm"
+                  variant="secondary">
+                  {rebuilding ? '重建中...' : '重建索引'}
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {actionError ? (
@@ -333,12 +360,12 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
                            </Tooltip.Trigger>
                            <Tooltip.Content offset={10} placement="top">查看详情</Tooltip.Content>
                          </Tooltip>
-                         <Popover>
+                         <Popover isOpen={deletePopoverId === doc.id} onOpenChange={(open) => setDeletePopoverId(open ? doc.id : null)}>
                            <Button
                              aria-label="删除"
                              className={actionIconClass}
-                             isDisabled={deletingId === doc.id}
                              isIconOnly
+                             onPress={() => setDeletePopoverId(doc.id)}
                              size="sm"
                              variant="ghost">
                              <TrashIcon />
@@ -350,13 +377,11 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
                                <strong className="text-sm text-zinc-950 dark:text-white">确认删除</strong>
                                <p className="text-sm text-zinc-500 dark:text-zinc-400">确定删除「{doc.title || '未命名'}」及其所有关联数据？</p>
                                <div className="flex justify-end gap-2">
-                                 <Button slot="close" size="sm" variant="ghost">取消</Button>
+                                 <Button onPress={() => setDeletePopoverId(null)} size="sm" variant="ghost">取消</Button>
                                  <Button
-                                   isDisabled={deletingId === doc.id}
                                    onPress={() => handleDelete(doc.id)}
                                    size="sm"
-                                   variant="danger"
-                                   slot="close">
+                                   variant="danger">
                                    删除
                                  </Button>
                                </div>

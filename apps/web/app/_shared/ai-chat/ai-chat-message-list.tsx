@@ -280,9 +280,6 @@ function AiChatMessageItem({
             ))}
           </div>
         ) : null}
-        {!isUser && message.answerBlocks.length > 0 ? (
-          <div className="grid w-full gap-2">{renderMessageBlocks(message.answerBlocks)}</div>
-        ) : null}
       </div>
     </div>
   )

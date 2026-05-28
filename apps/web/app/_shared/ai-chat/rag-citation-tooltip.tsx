@@ -31,53 +31,60 @@ export interface RagCitationTooltipProps {
 export function RagCitationTooltip({ citation }: RagCitationTooltipProps) {
   const colorClass = SOURCE_COLORS[citation.sourceType] ?? SOURCE_COLORS.default
   const sourceLabel = SOURCE_LABELS[citation.sourceType] ?? citation.sourceType
-  const triggerRef = useRef<HTMLButtonElement | null>(null)
+  const containerRef = useRef<HTMLSpanElement | null>(null)
   const [isVisible, setIsVisible] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const [position, setPosition] = useState<{ left: number; top: number } | null>(null)
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     setIsMounted(true)
   }, [])
 
   useEffect(() => {
-    if (!isVisible || typeof window === 'undefined') {
-      return
-    }
+    if (!isVisible || typeof window === 'undefined') return
 
     const updatePosition = () => {
-      const trigger = triggerRef.current
-      if (!trigger) {
-        return
-      }
+      const trigger = containerRef.current
+      if (!trigger) return
 
       const rect = trigger.getBoundingClientRect()
-      const nextLeft = Math.min(
-        Math.max(rect.left + rect.width / 2, 16),
-        window.innerWidth - 16,
-      )
-      const nextTop = Math.max(rect.top - 10, 16)
-
-      setPosition({ left: nextLeft, top: nextTop })
+      setPosition({
+        left: Math.min(Math.max(rect.left + rect.width / 2, 16), window.innerWidth - 16),
+        top: Math.max(rect.top - 10, 16),
+      })
     }
 
     updatePosition()
-
     window.addEventListener('scroll', updatePosition, true)
     window.addEventListener('resize', updatePosition)
-
     return () => {
       window.removeEventListener('scroll', updatePosition, true)
       window.removeEventListener('resize', updatePosition)
     }
   }, [isVisible])
 
+  function open() {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current)
+      closeTimerRef.current = null
+    }
+    setIsVisible(true)
+  }
+
+  function close() {
+    // 延迟关闭，给鼠标移动到 tooltip 上的时间
+    closeTimerRef.current = setTimeout(() => setIsVisible(false), 150)
+  }
+
   const tooltip =
     isMounted && isVisible && position
       ? createPortal(
           <div
             aria-label={`${sourceLabel} ${citation.title}`}
-            className="pointer-events-none fixed z-[80] min-w-[340px] max-w-[min(calc(100vw-32px),480px)] -translate-x-1/2 rounded-xl border border-zinc-200/80 bg-white px-3 py-2 text-left shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
+            className="fixed z-[80] min-w-[340px] max-w-[min(calc(100vw-32px),480px)] -translate-x-1/2 select-text rounded-xl border border-zinc-200/80 bg-white px-3 py-2 text-left shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
+            onMouseEnter={open}
+            onMouseLeave={close}
             role="tooltip"
             style={{
               left: `${position.left}px`,
@@ -124,22 +131,22 @@ export function RagCitationTooltip({ citation }: RagCitationTooltipProps) {
       : null
 
   return (
-    <>
+    <span
+      ref={containerRef}
+      onBlur={() => {}} // eslint 友好
+      onMouseEnter={open}
+      onMouseLeave={close}>
       <button
-        ref={triggerRef}
         aria-label={citation.ref}
         className={[
           'inline-flex cursor-help rounded-md px-1 py-px text-[0.7rem] font-medium transition-colors',
           colorClass,
         ].join(' ')}
-        onBlur={() => setIsVisible(false)}
-        onFocus={() => setIsVisible(true)}
-        onMouseEnter={() => setIsVisible(true)}
-        onMouseLeave={() => setIsVisible(false)}
+        onFocus={open}
         type="button">
         {citation.ref}
       </button>
       {tooltip}
-    </>
+    </span>
   )
 }
