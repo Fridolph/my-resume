@@ -264,6 +264,14 @@ describe('RagService', () => {
     )
 
     expect(result.answer).toContain('prompt=')
+    expect(result.citations.length).toBeGreaterThan(0)
+    expect(result.citations[0]).toEqual(
+      expect.objectContaining({
+        ref: expect.stringMatching(/^#\d+$/),
+        sourceType: expect.stringMatching(/^(resume_core|user_docs)$/),
+        score: expect.any(Number),
+      }),
+    )
     expect(result.matches.length).toBeGreaterThan(0)
     expect(
       result.matches.some(
@@ -272,6 +280,96 @@ describe('RagService', () => {
           item.content.includes('成都网思科平科技有限公司'),
       ),
     ).toBe(true)
+  })
+
+  it('should return an insufficient-context answer without calling the provider when no citation is available', async () => {
+    const aiService = new AiService(
+      createAiProvider(
+        {
+          provider: 'mock',
+          mode: 'mock',
+          model: 'mock-resume-advisor',
+        },
+        vi.fn<typeof fetch>(),
+      ),
+    )
+    const service = new RagService(
+      aiService,
+      new RagChunkService(),
+      new RagKnowledgeService(),
+      new RagIndexRepository(),
+      createMockRetrievalRepository(),
+      {
+        backend: 'local',
+        upsertChunks: vi.fn(),
+        deleteChunksByDocument: vi.fn(),
+        search: vi.fn().mockResolvedValue([]),
+      } as unknown as RagVectorStore,
+    )
+    const searchSpy = vi.spyOn(service, 'search').mockResolvedValue([])
+    const generateSpy = vi.spyOn(aiService, 'generateText')
+
+    const result = await service.ask('他是否获得过诺贝尔奖？', 3, 'zh')
+
+    expect(searchSpy).toHaveBeenCalled()
+    expect(generateSpy).not.toHaveBeenCalled()
+    expect(result.answer).toContain('我的简历中暂时没有足够的信息')
+    expect(result.citations).toEqual([])
+    expect(result.matches).toEqual([])
+  })
+
+  it('should order ask citations by source priority before user docs', async () => {
+    const aiService = new AiService(
+      createAiProvider(
+        {
+          provider: 'mock',
+          mode: 'mock',
+          model: 'mock-resume-advisor',
+        },
+        vi.fn<typeof fetch>(),
+      ),
+    )
+    const service = new RagService(
+      aiService,
+      new RagChunkService(),
+      new RagKnowledgeService(),
+      new RagIndexRepository(),
+      createMockRetrievalRepository(),
+      {
+        backend: 'local',
+        upsertChunks: vi.fn(),
+        deleteChunksByDocument: vi.fn(),
+        search: vi.fn().mockResolvedValue([]),
+      } as unknown as RagVectorStore,
+    )
+    vi.spyOn(service, 'search').mockResolvedValue([
+      {
+        id: 'user-doc:1',
+        title: '补充资料',
+        section: 'user_docs',
+        content: '用户资料中的补充说明',
+        sourceType: 'user_docs',
+        sourcePath: 'notes.md',
+        score: 0.99,
+      },
+      {
+        id: 'resume:1',
+        title: '核心简历',
+        section: 'experiences',
+        content: '简历核心经历',
+        sourceType: 'resume_core',
+        score: 0.88,
+      },
+    ])
+
+    const result = await service.ask('请总结经历', 2, 'zh')
+
+    // 重排后按 rerankScore 降序：user_docs (0.99) > resume_core (0.88 + 0.08 = 0.96)
+    expect(result.citations.map((item) => item.sourceType)).toEqual([
+      'user_docs',
+      'resume_core',
+    ])
+    expect(result.matches[0]?.id).toBe('user-doc:1')
   })
 
   it('should pass request-level routing override through ask to search', async () => {
@@ -354,10 +452,12 @@ describe('RagService', () => {
     )
 
     await service.rebuildIndex()
-    const matches = await service.search('RAG 是什么', 2)
+    const matches = await service.search('RAG 是什么', 4)
 
-    expect(matches[0]?.section).toBe('knowledge')
-    expect(matches[0]?.title).toContain('RAG篇①')
+    // knowledge blog articles should appear in results
+    const knowledgeMatch = matches.find((item) => item.section === 'knowledge')
+    expect(knowledgeMatch).toBeDefined()
+    expect(knowledgeMatch?.title).toContain('RAG篇①')
     expect(matches.some((item) => item.content.includes('检索增强生成') || item.content.includes('RAG'))).toBe(true)
   })
 
@@ -522,6 +622,143 @@ describe('RagService', () => {
     const matches = await service.search('没有命中', 3)
 
     expect(matches).toHaveLength(0)
+  })
+
+  it('should fallback to local search when vector store throws and fallback is enabled', async () => {
+    process.env.RAG_SEARCH_USE_VECTOR_STORE = 'true'
+    process.env.RAG_SEARCH_VECTOR_SCOPE = 'published'
+
+    const aiService = new AiService(
+      createAiProvider(
+        {
+          provider: 'mock',
+          mode: 'mock',
+          model: 'mock-resume-advisor',
+        },
+        vi.fn<typeof fetch>(),
+      ),
+    )
+    const service = new RagService(
+      aiService,
+      new RagChunkService(),
+      new RagKnowledgeService(),
+      new RagIndexRepository(),
+      createMockRetrievalRepository(),
+      {
+        backend: 'milvus',
+        upsertChunks: vi.fn(),
+        deleteChunksByDocument: vi.fn(),
+        search: vi.fn().mockRejectedValue(new Error('connect ECONNREFUSED 127.0.0.1:19530')),
+      } as unknown as RagVectorStore,
+    )
+
+    await service.rebuildIndex()
+    const matches = await service.search('他做过 EDR 安全平台吗', 3)
+    const status = service.getStatus()
+
+    expect(
+      matches.some((item) => item.title.includes('EDR') || item.content.includes('EDR')),
+    ).toBe(true)
+    expect(status.vectorStoreAvailable).toBe(false)
+    expect(status.lastVectorStoreError).toContain('ECONNREFUSED')
+    expect(status.effectiveSearchMode).toBe('vector_with_local_fallback')
+  })
+
+  it('should throw a normalized error when vector store throws and fallback is disabled', async () => {
+    process.env.RAG_SEARCH_USE_VECTOR_STORE = 'true'
+    process.env.RAG_SEARCH_VECTOR_FALLBACK_TO_LOCAL = 'false'
+
+    const aiService = new AiService(
+      createAiProvider(
+        {
+          provider: 'mock',
+          mode: 'mock',
+          model: 'mock-resume-advisor',
+        },
+        vi.fn<typeof fetch>(),
+      ),
+    )
+    const service = new RagService(
+      aiService,
+      new RagChunkService(),
+      new RagKnowledgeService(),
+      new RagIndexRepository(),
+      createMockRetrievalRepository(),
+      {
+        backend: 'milvus',
+        upsertChunks: vi.fn(),
+        deleteChunksByDocument: vi.fn(),
+        search: vi.fn().mockRejectedValue(new Error('connect ECONNREFUSED 127.0.0.1:19530')),
+      } as unknown as RagVectorStore,
+    )
+
+    await expect(service.search('Milvus failed', 2)).rejects.toThrow('ECONNREFUSED')
+    expect(service.getStatus().vectorStoreAvailable).toBe(false)
+  })
+
+  it('should merge sqlite chunks with static resume index (#216 fix)', async () => {
+    const aiService = new AiService(
+      createAiProvider(
+        {
+          provider: 'mock',
+          mode: 'mock',
+          model: 'mock-resume-advisor',
+        },
+        vi.fn<typeof fetch>(),
+      ),
+    )
+    const retrievalRepository = {
+      listAllChunksWithDocuments: vi.fn().mockResolvedValue([
+        {
+          chunkId: 'resume-core:published:1',
+          documentId: 'resume-core-doc:published',
+          chunkIndex: 0,
+          section: 'experiences',
+          content: 'published scope sqlite resume core',
+          embeddingJson: [1, 0, 0],
+          metadataJson: null,
+          documentSourceType: 'resume_core',
+          documentSourceScope: 'published',
+          documentTitle: 'Published Resume Core',
+          documentSourceVersion: 'published:1',
+        },
+        {
+          chunkId: 'user-doc:published:1',
+          documentId: 'user-doc-doc:published',
+          chunkIndex: 0,
+          section: 'user_docs',
+          content: 'published scope sqlite user doc',
+          embeddingJson: [0.9, 0.1, 0],
+          metadataJson: {
+            fileName: 'published-note.md',
+          },
+          documentSourceType: 'user_docs',
+          documentSourceScope: 'published',
+          documentTitle: 'Published User Doc',
+          documentSourceVersion: 'upload:1',
+        },
+      ]),
+    } as unknown as RagRetrievalRepository
+    const service = new RagService(
+      aiService,
+      new RagChunkService(),
+      new RagKnowledgeService(),
+      new RagIndexRepository(),
+      retrievalRepository,
+      {
+        backend: 'local',
+        upsertChunks: vi.fn(),
+        deleteChunksByDocument: vi.fn(),
+        search: vi.fn().mockResolvedValue([]),
+      } as unknown as RagVectorStore,
+    )
+
+    const matches = await service.search('resume core', 8)
+
+    // 三源融合：文件索引 resume_core + DB chunks + knowledge
+    expect(matches.length).toBeGreaterThan(0)
+    expect(matches[0]?.id).toBe('resume-core:published:1')
+    expect(matches.some((item) => item.section === 'knowledge')).toBe(true)
   })
 
   it('should allow request-level routing override without changing env', async () => {

@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { randomUUID } from 'node:crypto'
 import type { Express, NextFunction, Request, Response } from 'express'
+import { Logger } from '@nestjs/common'
 import { AppModule } from './app.module'
 import { TRACE_ID_HEADER, type RequestWithTraceId } from './common/http/trace-id'
 import { configureApiGlobalPrefix } from './server-api-prefix'
@@ -56,4 +57,23 @@ async function bootstrap() {
   expressApp.set('etag', 'strong')
   await app.listen(process.env.PORT ?? 5577)
 }
-void bootstrap()
+
+void bootstrap().catch((error: unknown) => {
+  const logger = new Logger('NestApplication')
+  const port = process.env.PORT ?? '5577'
+
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'EADDRINUSE'
+  ) {
+    logger.error(
+      `Port ${port} is already in use. This usually means another local server is still running. ` +
+        `Use "lsof -nP -iTCP:${port} -sTCP:LISTEN" to inspect it, then stop the old process before restarting dev server.`,
+    )
+    process.exit(1)
+  }
+
+  throw error
+})

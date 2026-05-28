@@ -37,3 +37,6 @@ dist-ssr
 apps/server/storage/rag/*.json
 deploy/ecs/stack.env
 deploy/ecs/stack.env.local
+
+.playwright-mcp
+.pnpm-store

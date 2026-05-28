@@ -1,8 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, Logger } from '@nestjs/common'
 import { createHash } from 'crypto'
 import { existsSync, readFileSync, readdirSync } from 'fs'
 import { join } from 'path'
 
+import { RagSourceScope } from '../../../database/schema'
 import { AiService } from '../ai.service'
 import { RagChunkService } from './rag-chunk.service'
 import { RagIndexRepository } from './rag-index.repository'
@@ -20,10 +21,20 @@ import {
 } from './rag-search-quality'
 import {
   buildLocalRagSearchContext,
+  calculateKeywordScore,
   cosineSimilarity,
 } from './rag-search-context-builder'
-import { applyRagSearchRerank, applyRagSearchRerankAndSelect, rerankRagSearchMatches } from './rag-search-rerank'
-import { RagIndexFile, RagSearchMatch } from './rag.types'
+import { applyRagSearchRerank, applyRagSearchRerankAndSelect, detectRagSearchQuestionStrategy, rerankRagSearchMatches } from './rag-search-rerank'
+import { DEFAULT_RAG_SEARCH_RERANK_CONFIG } from './config/rag-search-rerank.config'
+import {
+  mapLegacySourceTypeToRetrievalSourceType,
+  RagAskCitation,
+  RagAskResult,
+  RagIndexFile,
+  RagRetrievalSourceType,
+  RagSearchMatch,
+} from './rag.types'
+import { buildRagAskPrompt, buildRagAskSystemPrompt } from './prompts/rag-ask.prompt'
 import { RAG_VECTOR_STORE } from './vector-store/tokens'
 import type { RagVectorSearchMatch, RagVectorStore } from './vector-store/types'
 
@@ -51,11 +62,130 @@ function computeKnowledgeDirectoryHash(directoryPath: string): string {
   return computeContentHash(fingerprint)
 }
 
+function getRagSourcePriority(sourceType: RagRetrievalSourceType): number {
+  return sourceType === 'resume_core' ? 0 : 1
+}
+
+function normalizeRagCitationSourceType(
+  sourceType: RagSearchMatch['sourceType'],
+): RagRetrievalSourceType {
+  return mapLegacySourceTypeToRetrievalSourceType(sourceType ?? 'resume')
+}
+
+function buildCitationSnippet(content: string): string {
+  const normalized = content.replace(/\s+/g, ' ').trim()
+
+  return normalized.length > 180 ? `${normalized.slice(0, 180)}...` : normalized
+}
+
+export function sortMatchesForAnswer(matches: RagSearchMatch[]): RagSearchMatch[] {
+  return [...matches].sort((left, right) => {
+    const leftPriority = getRagSourcePriority(
+      normalizeRagCitationSourceType(left.sourceType),
+    )
+    const rightPriority = getRagSourcePriority(
+      normalizeRagCitationSourceType(right.sourceType),
+    )
+
+    if (leftPriority !== rightPriority) {
+      return leftPriority - rightPriority
+    }
+
+    return right.score - left.score
+  })
+}
+
+/**
+ * 对问答场景的检索结果做语言对齐过滤。
+ *
+ * chunk 元数据中 locale 与问题语言不一致时丢弃，避免英文 chunk
+ * 混入中文回答。分数交给 search 的 quality gate 统一处理。
+ */
+function filterMatchesForAskByLocale(matches: RagSearchMatch[], questionLocale: string): RagSearchMatch[] {
+  const filtered: RagSearchMatch[] = []
+
+  for (const match of matches) {
+    const metadata = (match as unknown as Record<string, unknown>).metadataJson ?? (match as unknown as Record<string, unknown>).metadata
+    if (metadata && typeof metadata === 'object') {
+      const chunkLocale = (metadata as Record<string, unknown>).locale
+      if (typeof chunkLocale === 'string' && chunkLocale && chunkLocale !== questionLocale) {
+        continue
+      }
+    }
+
+    filtered.push(match)
+  }
+
+  return filtered
+}
+
+function buildRagAskCitations(matches: RagSearchMatch[]): RagAskCitation[] {
+  return matches.map((item, index) => ({
+    ref: `#${index + 1}`,
+    id: item.id,
+    title: item.title,
+    section: item.section,
+    sourceType: normalizeRagCitationSourceType(item.sourceType),
+    sourcePath: item.sourcePath,
+    score: item.score,
+    snippet: buildCitationSnippet(item.content),
+    tags: item.tags,
+    contentType: (item as any)?.contentType as string | undefined,
+  }))
+}
+
+function buildInsufficientContextAnswer(locale: 'zh' | 'en'): string {
+  return locale === 'en'
+    ? "I don't have enough information in my resume to answer this question accurately. Feel free to ask about my projects, work experience, or technical skills!"
+    : '我的简历中暂时没有足够的信息来准确回答这个问题。欢迎问我关于项目经历、工作经历或技术技能的问题！'
+}
+
+/**
+ * 输入安全检测。
+ *
+ * 只拦截辱骂/恶意内容，其余（打招呼/短句/负面情绪等）放行至 LLM 层做自然回复。
+ */
+function detectRedirect(
+  question: string,
+  locale: 'zh' | 'en',
+): string | null {
+  const lower = question.trim().toLowerCase()
+
+  const abusePatterns = [
+    '傻逼', 'sb', '傻狗', '废物', '垃圾', '滚', '去死', 'cnm', '操你', '草你',
+    '你妈', '他妈', '日你', '脑残', '弱智', '白痴',
+    'fuck', 'shit', 'damn', 'bitch', 'asshole', 'stupid', 'idiot', 'moron',
+    '烦死了', '太烂了', '什么垃圾', '真没用', '一点用没有',
+  ]
+
+  if (abusePatterns.some((pattern) => lower.includes(pattern))) {
+    return locale === 'en'
+      ? "I'm here to talk about my professional background, skills, and projects. If you have a question about my resume, feel free to ask in a constructive way — I'd love to share!"
+      : '我是来分享专业经历的。如果你对我的简历、项目或技能有问题，欢迎以建设性的方式提问——我很乐意交流！'
+  }
+
+  return null
+}
+
+function normalizeUnknownErrorMessage(
+  error: unknown,
+  fallback: string,
+): string {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message
+  }
+
+  return fallback
+}
+
 @Injectable()
 export class RagService {
+  private readonly logger = new Logger(RagService.name)
   private readonly defaultSearchQualityGate: RagSearchQualityGate =
     resolveRagSearchQualityGate(process.env)
   private readonly searchRoutingConfig = resolveRagSearchRoutingConfig(process.env)
+  private vectorStoreAvailable: boolean | null = null
+  private lastVectorStoreError: string | null = null
 
   constructor(
     @Inject(AiService)
@@ -88,6 +218,14 @@ export class RagService {
       ? true
       : index.sourceHash !== currentSourceHash ||
         index.knowledgeHash !== currentKnowledgeHash
+    const vectorStoreEnabled =
+      this.ragVectorStore.backend !== 'local' && this.searchRoutingConfig.useVectorStore
+    const effectiveSearchMode =
+      !vectorStoreEnabled
+        ? 'local'
+        : this.searchRoutingConfig.fallbackToLocal
+          ? 'vector_with_local_fallback'
+          : 'vector'
 
     return {
       sourcePath,
@@ -104,6 +242,12 @@ export class RagService {
       generatedAt: index?.generatedAt ?? null,
       currentSourceHash,
       currentKnowledgeHash,
+      configuredVectorBackend: this.ragVectorStore.backend,
+      vectorStoreEnabled,
+      vectorStoreAvailable:
+        this.ragVectorStore.backend === 'local' ? null : this.vectorStoreAvailable,
+      effectiveSearchMode,
+      lastVectorStoreError: this.lastVectorStoreError,
       indexedSourceHash: index?.sourceHash ?? null,
       indexedKnowledgeHash: index?.knowledgeHash ?? null,
       indexedProviderSummary: index?.providerSummary ?? null,
@@ -184,7 +328,12 @@ export class RagService {
       }
     }
 
-    const topMatches = await this.searchFromLocalIndex(query, queryVector ?? [], limit)
+    const topMatches = await this.searchFromLocalIndex(
+      query,
+      queryVector ?? [],
+      limit,
+      routingConfig.vectorScope === 'all' ? undefined : routingConfig.vectorScope,
+    )
 
     return applyRagSearchQualityGate(topMatches, qualityGate)
   }
@@ -193,6 +342,7 @@ export class RagService {
     query: string,
     queryVector: number[],
     limit: number,
+    sourceScope?: RagSourceScope,
   ): Promise<RagSearchMatch[]> {
     const index = await this.ensureIndex()
     const localMatches = buildLocalRagSearchContext({
@@ -201,11 +351,27 @@ export class RagService {
       chunks: index.chunks,
     })
 
-    // 本地模式也纳入 user_docs：从 SQLite 读取预存的 embedding，
-    // 在应用层计算余弦相似度，与 resume_core/knowledge 结果合并。
-    const userDocMatches = await this.searchChunksFromDatabase(queryVector)
-    const merged = [...localMatches, ...userDocMatches]
-      .sort((a, b) => b.score - a.score)
+    const databaseMatches = await this.searchChunksFromDatabase(
+      query,
+      queryVector,
+      sourceScope,
+    )
+    const staticKnowledgeMatches = localMatches.filter(
+      (item) => item.section === 'knowledge' || item.sourceType === 'knowledge',
+    )
+    // 文件索引的 resume section 是基本信息表格，无语义价值，排除
+    const fileResumeChunks = localMatches.filter(
+      (item) => item.sourceType !== 'knowledge' && item.section !== 'resume',
+    )
+    // 统一融合三源。resume_core 优先于 user_docs，保证简历内容不会被
+    // 兴趣爱好等非核心资料挤出回答上下文。
+    const merged = [...fileResumeChunks, ...databaseMatches.matches, ...staticKnowledgeMatches]
+      .sort((a, b) => {
+        const aPriority = a.sourceType === 'resume_core' || a.sourceType === 'resume' ? 0 : 1
+        const bPriority = b.sourceType === 'resume_core' || b.sourceType === 'resume' ? 0 : 1
+        if (aPriority !== bPriority) return aPriority - bPriority
+        return b.score - a.score
+      })
 
     return applyRagSearchRerank(merged, query, limit)
   }
@@ -219,41 +385,83 @@ export class RagService {
    * @param queryVector 查询向量
    */
   private async searchChunksFromDatabase(
+    query: string,
     queryVector: number[],
-  ): Promise<RagSearchMatch[]> {
+    sourceScope?: RagSourceScope,
+  ): Promise<{
+    hasScopedResumeCore: boolean
+    matches: RagSearchMatch[]
+  }> {
     if (queryVector.length === 0) {
-      return []
+      return {
+        hasScopedResumeCore: false,
+        matches: [],
+      }
     }
 
     try {
       const rows = await this.ragRetrievalRepository.listAllChunksWithDocuments()
+      const scopedRows =
+        sourceScope
+          ? rows.filter((row) => row.documentSourceScope === sourceScope)
+          : rows
+      const hasScopedResumeCore = scopedRows.some(
+        (row) => row.documentSourceType === 'resume_core',
+      )
+      const candidateRows = hasScopedResumeCore ? scopedRows : rows
 
-      return rows
+      const matches = candidateRows
+        // 过滤："基本信息"表格 chunk（section=resume）对语义搜索无价值
+        // — 只保留 projects / work_experience / skills / core_strengths 等实质内容
+        .filter((row) => row.section !== 'resume')
         .map((row) => {
           const embedding = row.embeddingJson ?? []
-          const score = embedding.length > 0
-            ? Number(cosineSimilarity(queryVector, embedding).toFixed(6))
-            : 0
+          const semanticScore =
+            embedding.length > 0 ? cosineSimilarity(queryVector, embedding) : 0
+          const keywordScore = calculateKeywordScore(query, row.content)
+          const score = Number(
+            (semanticScore * 0.7 + keywordScore * 0.3).toFixed(6),
+          )
           const metadata =
             row.metadataJson && typeof row.metadataJson === 'object' ? row.metadataJson : null
+          const docMeta =
+            row.documentMetadataJson && typeof row.documentMetadataJson === 'object'
+              ? (row.documentMetadataJson as Record<string, unknown>)
+              : null
           const fileName =
             metadata && typeof metadata.fileName === 'string' ? metadata.fileName : undefined
+          const contentType =
+            (docMeta?.contentType as string) || (metadata && (metadata as Record<string, unknown>).contentType as string) || undefined
 
           return {
             id: row.chunkId,
-            title: fileName ?? row.documentTitle ?? 'user_docs',
+            title: fileName ?? row.documentTitle ?? row.documentSourceType,
             section: row.section,
             content: row.content,
-            sourceType: 'user_docs' as const,
+            sourceType: row.documentSourceType,
             sourcePath: fileName,
             score,
+            tags: Array.isArray(metadata?.tags) ? (metadata.tags as string[]) : undefined,
+            contentType,
           }
         })
-        .filter((match) => match.score > 0)
+        .filter(
+          (match) =>
+            match.score > 0 ||
+            (hasScopedResumeCore && match.sourceType === 'user_docs'),
+        )
         .sort((a, b) => b.score - a.score)
+
+      return {
+        hasScopedResumeCore,
+        matches,
+      }
     } catch {
       // user_docs 检索失败时不影响 resume_core/knowledge 结果
-      return []
+      return {
+        hasScopedResumeCore: false,
+        matches: [],
+      }
     }
   }
 
@@ -283,14 +491,22 @@ export class RagService {
         limit,
         sourceScope,
       })
+      this.markVectorStoreHealthy()
 
       return matches.map((item) => this.mapVectorMatchToSearchMatch(item))
     } catch (error) {
+      this.markVectorStoreUnavailable(error, routingConfig)
+
       if (routingConfig.fallbackToLocal) {
         return null
       }
 
-      throw error
+      throw new Error(
+        normalizeUnknownErrorMessage(
+          error,
+          'Vector store search failed and local fallback is disabled.',
+        ),
+      )
     }
   }
 
@@ -324,41 +540,105 @@ export class RagService {
     limit = 4,
     locale: 'zh' | 'en' = 'zh',
     routingOverride: RagSearchRoutingOverride = {},
-  ) {
+    streamOptions?: { onToken?: (token: string) => void },
+  ): Promise<RagAskResult> {
     // ask = search + context assembly + generateText。
+    const startedAt = Date.now()
+
+    // 辱骂输入直接拦截，其余交 LLM 分级处理
+    const redirect = detectRedirect(question, locale)
+    if (redirect) {
+      return {
+        answer: redirect,
+        citations: [],
+        matches: [],
+        providerSummary: this.aiService.getProviderSummary(),
+      }
+    }
+
     const matches = await this.search(question, limit, this.defaultSearchQualityGate, routingOverride)
-    const context = matches
+    const filteredMatches = filterMatchesForAskByLocale(matches, locale)
+
+    // 问题策略重排 + 最低分过滤 + 取前 5
+    const strategy = detectRagSearchQuestionStrategy(question)
+    const reranked = rerankRagSearchMatches(filteredMatches, question, strategy, DEFAULT_RAG_SEARCH_RERANK_CONFIG)
+    const aboveThreshold = reranked.filter((item) => item.rerankScore >= 0.1)
+    const topMatches = aboveThreshold.length > 0
+      ? aboveThreshold.slice(0, 5).map((item) => item.match)
+      : filteredMatches.slice(0, 5)
+
+    const citations = buildRagAskCitations(topMatches)
+    const providerSummary = this.aiService.getProviderSummary()
+
+    if (citations.length === 0) {
+      this.logger.log({
+        event: 'rag.ask.completed',
+        status: 'insufficient_context',
+        question,
+        matchCount: 0,
+        citationCount: 0,
+        durationMs: Date.now() - startedAt,
+        provider: providerSummary.provider,
+        model: providerSummary.model,
+      })
+
+      return {
+        answer: buildInsufficientContextAnswer(locale),
+        citations,
+        matches: topMatches,
+        providerSummary,
+      }
+    }
+
+    const context = topMatches
       .map(
         (item, index) =>
           `[#${index + 1}] ${item.title}\nsection=${item.section}\nsource=${item.sourceType ?? 'resume'}\n${item.content}`,
       )
       .join('\n\n')
 
-    const answer = await this.aiService.generateText({
-      systemPrompt:
-        locale === 'en'
-          ? 'You are a resume knowledge assistant. Answer only from the retrieved resume context and mention uncertainty when context is insufficient.'
-          : '你是一个简历知识库助手。只能根据检索到的简历上下文回答；如果上下文不足，请明确说明。',
-      prompt:
-        locale === 'en'
-          ? [
-              `Question: ${question}`,
-              'Retrieved context:',
-              context,
-              'Return a concise answer and keep it grounded in the context.',
-            ].join('\n\n')
-          : [
-              `问题：${question}`,
-              '检索到的上下文：',
-              context,
-              '请基于这些上下文给出简洁回答，并保持结论可追溯。',
-            ].join('\n\n'),
+    const systemPrompt = buildRagAskSystemPrompt(locale)
+    const prompt = buildRagAskPrompt({
+      question,
+      context,
+      locale,
+    })
+
+    const onToken = streamOptions?.onToken
+
+    const result = onToken
+      ? await this.aiService.generateTextStream({
+          systemPrompt,
+          prompt,
+          onToken,
+        })
+      : await this.aiService.generateText({
+          systemPrompt,
+          prompt,
+        })
+
+    this.logger.log({
+      event: 'rag.ask.completed',
+      status: 'answered',
+      question,
+      matchCount: topMatches.length,
+      citationCount: citations.length,
+      sources: citations.map((item) => ({
+        ref: item.ref,
+        sourceType: item.sourceType,
+        title: item.title,
+        score: item.score,
+      })),
+      durationMs: Date.now() - startedAt,
+      provider: providerSummary.provider,
+      model: providerSummary.model,
     })
 
     return {
-      answer: answer.text,
-      matches,
-      providerSummary: this.aiService.getProviderSummary(),
+      answer: result.text,
+      citations,
+      matches: topMatches,
+      providerSummary,
     }
   }
 
@@ -382,5 +662,38 @@ export class RagService {
     }
 
     return rebuiltIndex
+  }
+
+  private markVectorStoreHealthy() {
+    if (this.ragVectorStore.backend === 'local') {
+      return
+    }
+
+    this.vectorStoreAvailable = true
+    this.lastVectorStoreError = null
+  }
+
+  private markVectorStoreUnavailable(
+    error: unknown,
+    routingConfig: ReturnType<typeof mergeRagSearchRoutingConfig>,
+  ) {
+    if (this.ragVectorStore.backend === 'local') {
+      return
+    }
+
+    const message = normalizeUnknownErrorMessage(
+      error,
+      'Vector store is unavailable.',
+    )
+
+    this.vectorStoreAvailable = false
+    this.lastVectorStoreError = message
+    this.logger.warn({
+      event: 'rag.vector_store.degraded',
+      backend: this.ragVectorStore.backend,
+      vectorScope: routingConfig.vectorScope,
+      fallbackToLocal: routingConfig.fallbackToLocal,
+      message,
+    })
   }
 }

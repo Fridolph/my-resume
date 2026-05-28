@@ -111,6 +111,80 @@ describe('OpenAiCompatibleAiProvider', () => {
     })
   })
 
+  it('should allow embeddings to use a dedicated base url and api key', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: [
+          {
+            index: 0,
+            embedding: [0.11, 0.22, 0.33],
+          },
+        ],
+      }),
+    } as Response)
+
+    const provider = new OpenAiCompatibleAiProvider(
+      {
+        provider: 'deepseek',
+        mode: 'openai-compatible',
+        apiKey: 'sk-deepseek-demo',
+        baseUrl: 'https://api.deepseek.com',
+        embeddingApiKey: 'sk-qwen-demo',
+        embeddingBaseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+        model: 'deepseek-v4-flash',
+        chatModel: 'deepseek-v4-flash',
+        embeddingModel: 'text-embedding-v3',
+        providerLabel: 'DeepSeek',
+      },
+      fetchMock,
+    )
+
+    const result = await provider.embedTexts({
+      texts: ['resume retrieval'],
+    })
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://dashscope.aliyuncs.com/compatible-mode/v1/embeddings',
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({
+          Authorization: 'Bearer sk-qwen-demo',
+        }),
+        body: expect.stringContaining('"model":"text-embedding-v3"'),
+      }),
+    )
+    expect(result.embeddings).toEqual([[0.11, 0.22, 0.33]])
+  })
+
+  it('should fail fast when a dedicated embeddings backend is configured without api key', async () => {
+    const fetchMock = vi.fn<typeof fetch>()
+
+    const provider = new OpenAiCompatibleAiProvider(
+      {
+        provider: 'deepseek',
+        mode: 'openai-compatible',
+        apiKey: 'sk-deepseek-demo',
+        baseUrl: 'https://api.deepseek.com',
+        embeddingBaseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+        model: 'deepseek-v4-flash',
+        chatModel: 'deepseek-v4-flash',
+        embeddingModel: 'text-embedding-v3',
+        providerLabel: 'DeepSeek',
+      },
+      fetchMock,
+    )
+
+    await expect(
+      provider.embedTexts({
+        texts: ['resume retrieval'],
+      }),
+    ).rejects.toThrow(
+      'Embeddings API key is required for DeepSeek embeddings. Configure EMBEDDINGS_API_KEY when using a dedicated embeddings backend.',
+    )
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
   it('should send deepseek v4 json and reasoning options when configured', async () => {
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue({
       ok: true,

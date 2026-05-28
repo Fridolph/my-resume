@@ -58,6 +58,21 @@
     - 点 3：SSE 实时推送机制与内存订阅
     - 点 4：输入治理的规则层 + AI 层分层设计
     - 点 5：12 轮演进速览表与四条工程原则
+- `08-RAG-检索与问答-管线与重排拆解.md`
+  - 主题：RAG 检索与问答的完整管线拆解
+  - 当前包含：
+    - 点 1：三通道检索架构（Milvus / JSON / SQLite）与路由决策
+    - 点 2：5 层重排管道（策略检测 → section加权 → 噪音诊断 → 去噪 → 证据分层）
+    - 点 3：配置驱动的重排策略（keywordHints / sectionBoost / selection）
+    - 点 4：ask 问答管线（双源合并 → 两段门控 → 流式/非流式 LLM）
+    - 点 5：ECS 本地搜索兼容方案与封装拆分评价
+- `09-M23-AI-Chat-流式对话与治理闭环源码梳理.md`
+  - 主题：M23 公开站 AI Chat 从流式接口到全局 Drawer、会话持久化与 Admin 治理的完整源码拆解
+  - 当前包含：
+    - 点 1：头像入口 -> consent -> public claim -> Drawer 打开的真实时序
+    - 点 2：SSE 事件流（start/token/citation/block/summary/done/error）与前端状态更新
+    - 点 3：`ai_chat_*` 持久化模型、summary 节点、Dock 恢复与治理台视角
+    - 点 4：分层验证清单（API Client / Server / Web / Admin）
 
 ## 后续计划
 

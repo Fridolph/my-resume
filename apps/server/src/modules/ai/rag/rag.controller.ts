@@ -2,9 +2,12 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Inject,
+  Param,
   Post,
+  Put,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -31,6 +34,7 @@ import {
   RagAskResultDto,
   RagResumeSyncBodyDto,
   RagResumeSyncResultDto,
+  RagCustomBodyDto,
   RagSearchBodyDto,
   RagSearchMatchDto,
   RagStatusDto,
@@ -38,7 +42,10 @@ import {
   RagUserDocIngestResultDto,
 } from './dto/rag-swagger.dto'
 import { RagService } from './rag.service'
-import { UserDocsIngestionService } from './user-docs-ingestion.service'
+import {
+  resolveUserDocChunkingConfig,
+  UserDocsIngestionService,
+} from './user-docs-ingestion.service'
 
 @Controller('ai/rag')
 @UseGuards(JwtAuthGuard)
@@ -164,9 +171,24 @@ export class RagController {
           enum: ['balanced', 'contextual'],
           type: 'string',
         },
+        chunkSize: {
+          description: '自定义切片大小，范围 4-6666，优先级高于 profile',
+          maximum: 6666,
+          minimum: 4,
+          type: 'number',
+        },
+        chunkOverlap: {
+          description: '自定义重叠字符数，范围 0-300，且必须小于 chunkSize',
+          maximum: 300,
+          minimum: 0,
+          type: 'number',
+        },
+        contentType: {
+          description: '内容类型：article=文章，hobby=兴趣爱好，media=媒体/视频，general=通用',
+          enum: ['article', 'hobby', 'media', 'general'],
+          type: 'string',
+        },
       },
-      required: ['file'],
-      type: 'object',
     },
   })
   @ApiEnvelopeResponse({
@@ -196,10 +218,25 @@ export class RagController {
     if (
       body.chunkingProfile &&
       body.chunkingProfile !== 'balanced' &&
-      body.chunkingProfile !== 'contextual'
+      body.chunkingProfile !== 'contextual' &&
+      body.chunkingProfile !== 'semantic'
     ) {
       throw new BadRequestException(
         `Unsupported ingest chunkingProfile: ${body.chunkingProfile}`,
+      )
+    }
+
+    let chunkingConfig: { chunkSize: number; chunkOverlap: number }
+
+    try {
+      chunkingConfig = resolveUserDocChunkingConfig({
+        profile: body.chunkingProfile,
+        chunkSize: body.chunkSize,
+        chunkOverlap: body.chunkOverlap,
+      })
+    } catch (error) {
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Invalid user_docs chunking config',
       )
     }
 
@@ -209,8 +246,73 @@ export class RagController {
       mimetype: file.mimetype,
       size: file.size,
       sourceScope,
+      title: body.title ?? file.originalname,
       chunkingProfile: body.chunkingProfile,
+      chunkSize: chunkingConfig.chunkSize,
+      chunkOverlap: chunkingConfig.chunkOverlap,
+      contentType: body.contentType,
     })
+  }
+
+  @Post('custom')
+  @UseGuards(RoleCapabilitiesGuard)
+  @RequireCapability('canTriggerAiAnalysis')
+  @ApiOperation({
+    summary: '添加自定义 RAG 资料（JSON）',
+    description: '通过 JSON body 添加自定义文本内容，自动分块向量化写入检索态',
+  })
+  @ApiBody({ type: RagCustomBodyDto })
+  @ApiEnvelopeResponse({ description: '入库成功', type: RagUserDocIngestResultDto })
+  ingestCustom(@Body() body: RagCustomBodyDto) {
+    if (!body.content?.trim()) {
+      throw new BadRequestException('内容不能为空')
+    }
+    return this.userDocsIngestionService.ingestCustom({
+      title: body.title ?? 'RAG 资料',
+      content: body.content,
+      contentType: body.contentType ?? 'general',
+      sourceScope: body.scope ?? 'published',
+      linkUrl: body.linkUrl,
+    })
+  }
+
+  @Put('custom/:documentId')
+  @UseGuards(RoleCapabilitiesGuard)
+  @RequireCapability('canTriggerAiAnalysis')
+  @ApiOperation({ summary: '更新已入库的自定义资料' })
+  updateCustom(
+    @Param('documentId') documentId: string,
+    @Body() body: RagCustomBodyDto,
+  ) {
+    return this.userDocsIngestionService.updateCustom(documentId, {
+      title: body.title,
+      content: body.content,
+      contentType: body.contentType,
+      sourceScope: body.scope,
+      linkUrl: body.linkUrl,
+    })
+  }
+
+  @Get('documents')
+  @UseGuards(RoleCapabilitiesGuard)
+  @RequireCapability('canTriggerAiAnalysis')
+  @ApiOperation({
+    summary: '列出所有 RAG 文档',
+    description: '返回 rag_documents 列表，用于管理端查看已入库资料',
+  })
+  listDocuments() {
+    return this.userDocsIngestionService.listDocuments()
+  }
+
+  @Delete('documents/:documentId')
+  @UseGuards(RoleCapabilitiesGuard)
+  @RequireCapability('canTriggerAiAnalysis')
+  @ApiOperation({
+    summary: '删除 RAG 文档及其 chunk',
+    description: '删除指定文档及其关联的所有 chunk',
+  })
+  deleteDocument(@Param('documentId') documentId: string) {
+    return this.userDocsIngestionService.deleteDocument(documentId)
   }
 
   /**

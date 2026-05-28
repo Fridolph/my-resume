@@ -740,25 +740,408 @@ export interface ExtractTextFromFileInput {
 export type RagUserDocIngestScope = 'draft' | 'published'
 
 /**
+ * RAG user_docs 切片策略。
+ *
+ * `balanced` 用于默认教学闭环，`contextual` 用于保留更长上下文的检索实验。
+ */
+export type RagUserDocChunkingProfile = 'balanced' | 'contextual' | 'semantic'
+export type RagUserDocContentType = 'article' | 'hobby' | 'media' | 'general'
+
+/**
  * RAG user_docs 入库参数。
  */
 export interface IngestRagUserDocInput {
+  /** API 服务根地址。 */
   apiBaseUrl: string
+  /** 当前管理员访问令牌。 */
   accessToken: string
+  /** 需要提取并写入 user_docs 检索态的文件。 */
   file: File
+  /** 入库作用域，默认由服务端按 draft 处理。 */
   scope?: RagUserDocIngestScope
+  /** 切片策略，未传时服务端使用 semantic。 */
+  chunkingProfile?: RagUserDocChunkingProfile
+  /** 自定义切片大小，范围 4-6666，优先级高于 profile 默认值。 */
+  chunkSize?: number
+  /** 自定义重叠字符数，范围 0-300，且必须小于 chunkSize。 */
+  chunkOverlap?: number
+  /** 内容类型：article=文章，hobby=兴趣爱好，media=媒体/视频，general=通用 */
+  contentType?: RagUserDocContentType
+  /** 资料标题（优先于文件名） */
+  title?: string
 }
 
 /**
  * RAG user_docs 入库结果。
  */
 export interface RagUserDocIngestResult {
+  /** 检索态文档 ID，可用于追溯整份上传资料。 */
   documentId: string
+  /** 来源 ID，同一文件版本的 chunks 会共享该来源键。 */
   sourceId: string
+  /** 写入的资料作用域。 */
   sourceScope: RagUserDocIngestScope
+  /** 上传版本键，用于区分同一资料的不同入库版本。 */
   sourceVersion: string
+  /** 本次入库生成的 chunk 数量。 */
   chunkCount: number
+  /** 上传文件名。 */
   fileName: string
+  /** 解析后的文件类型。 */
   fileType: ExtractedFileType
+  /** 实际使用的切片策略。 */
+  chunkingProfile: RagUserDocChunkingProfile
+  /** 实际切片大小，单位为字符。 */
+  chunkSize: number
+  /** 相邻 chunk 的重叠字符数。 */
+  chunkOverlap: number
+  /** 文件上传并入库完成的时间。 */
   uploadedAt: string
+  /** 当前 user_docs 同步使用的向量存储后端。 */
+  vectorStoreBackend: 'local' | 'milvus'
+  /** 向量存储是否同步成功；false 表示已降级，仅 SQLite 入库成功。 */
+  vectorStoreSynced: boolean
+  /** 向量存储降级提示。 */
+  vectorStoreWarning: string | null
+}
+
+/**
+ * RAG 检索统一来源类型。
+ */
+export type RagRetrievalSourceType = 'resume_core' | 'user_docs'
+
+/**
+ * RAG 检索命中片段。
+ */
+export interface RagSearchMatch {
+  /** 命中 chunk ID。 */
+  id: string
+  /** 命中来源标题。 */
+  title: string
+  /** 命中来源分区。 */
+  section: string
+  /** 命中正文片段。 */
+  content: string
+  /** 检索分数。 */
+  score: number
+  /** 来源类型，兼容历史本地索引返回值。 */
+  sourceType?: 'resume' | 'knowledge' | RagRetrievalSourceType
+  /** 来源路径或文件名。 */
+  sourcePath?: string
+}
+
+/**
+ * RAG 问答引用条目。
+ */
+export interface RagAskCitation {
+  /** 回答引用序号，例如 #1。 */
+  ref: string
+  /** 命中 chunk ID。 */
+  id: string
+  /** 来源标题。 */
+  title: string
+  /** 来源分区。 */
+  section: string
+  /** 统一后的来源类型。 */
+  sourceType: RagRetrievalSourceType
+  /** 来源路径或文件名。 */
+  sourcePath?: string
+  /** 检索分数。 */
+  score: number
+  /** 引用片段短摘录。 */
+  snippet: string
+  /** 来源标签列表（如 ["简历","核心竞争力"]）。 */
+  tags?: string[]
+}
+
+/**
+ * RAG 问答参数。
+ */
+export interface AskRagInput {
+  /** API 服务根地址。 */
+  apiBaseUrl: string
+  /** 当前管理员访问令牌。 */
+  accessToken: string
+  /** 用户问题。 */
+  question: string
+  /** 用于拼接上下文的检索数量。 */
+  limit?: number
+  /** 回答语言。 */
+  locale?: AiWorkbenchLocale
+  /** 是否强制走向量存储检索。 */
+  useVectorStore?: boolean
+  /** 向量检索作用域。 */
+  vectorScope?: 'draft' | 'published' | 'all'
+  /** 向量检索为空或异常时是否回退本地检索。 */
+  vectorFallbackToLocal?: boolean
+}
+
+/**
+ * RAG 问答结果。
+ */
+export interface RagAskResult {
+  /** 模型回答；无引用时应为信息不足说明。 */
+  answer: string
+  /** 强制引用列表；为空表示上下文不足。 */
+  citations: RagAskCitation[]
+  /** 原始检索命中片段。 */
+  matches: RagSearchMatch[]
+  /** 本次问答使用的 provider 摘要。 */
+  providerSummary: Record<string, unknown>
+}
+
+export type AiChatLocale = 'zh' | 'en'
+export type AiChatLeadStatus = 'submitted' | 'issued' | 'closed'
+export type AiChatUseKeyStatus = 'issued' | 'claimed' | 'revoked' | 'expired'
+export type AiChatSessionStatus = 'open' | 'closed'
+export type AiChatMessageRole = 'user' | 'assistant' | 'system'
+export type AiChatSummaryStage = 'turn-10' | 'turn-20'
+export type AiChatMessageBlockType =
+  | 'text'
+  | 'project_card'
+  | 'experience_card'
+  | 'article_card'
+  | 'media_card'
+  | 'hobby_card'
+  | 'system_notice'
+  | 'summary'
+
+export interface AiChatLeadInput {
+  apiBaseUrl: string
+  displayName: string
+  companyName?: string
+  contact?: string
+  message: string
+  locale?: AiChatLocale
+}
+
+export interface AiChatLeadSummary {
+  id: string
+  locale: AiChatLocale
+  displayName: string
+  companyName: string
+  contact: string
+  message: string
+  status: AiChatLeadStatus
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ClaimAiChatUseKeyInput {
+  apiBaseUrl: string
+  useKey: string
+  locale?: AiChatLocale
+}
+
+export interface ClaimPublicAiChatSessionInput {
+  apiBaseUrl: string
+  consentAccepted: boolean
+  locale?: AiChatLocale
+}
+
+export interface FetchAiChatSessionInput {
+  apiBaseUrl: string
+  sessionId: string
+  useKey: string
+}
+
+export interface CloseAiChatSessionInput {
+  apiBaseUrl: string
+  sessionId: string
+  useKey: string
+}
+
+export interface AiChatUseKeySummary {
+  id: string
+  useKey: string
+  leadId: string
+  sessionId: string | null
+  status: AiChatUseKeyStatus
+  maxTurns: number
+  usedTurns: number
+  expiresAt: string | null
+  claimedAt: string | null
+  revokedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AiChatTextBlock {
+  type: 'text'
+  text: string
+}
+
+export interface AiChatProjectCardBlock {
+  type: 'project_card'
+  title: string
+  subtitle: string
+  period: string
+  summary: string
+  technologies: string[]
+  highlights: string[]
+}
+
+export interface AiChatExperienceCardBlock {
+  type: 'experience_card'
+  title: string
+  subtitle: string
+  period: string
+  summary: string
+  technologies: string[]
+  highlights: string[]
+}
+
+export interface AiChatSystemNoticeBlock {
+  type: 'system_notice'
+  tone: 'info' | 'warning' | 'success'
+  text: string
+}
+
+export interface AiChatSummaryBlock {
+  type: 'summary'
+  stage: AiChatSummaryStage
+  title: string
+  summary: string
+  keywords: string[]
+}
+
+export interface AiChatArticleCardBlock {
+  type: 'article_card'
+  title: string
+  summary: string
+  url?: string
+  keywords: string[]
+}
+
+export interface AiChatMediaCardBlock {
+  type: 'media_card'
+  title: string
+  description: string
+  url: string
+  thumbnailUrl?: string
+}
+
+export interface AiChatHobbyCardBlock {
+  type: 'hobby_card'
+  title: string
+  description: string
+  url?: string
+  keywords: string[]
+}
+
+export type AiChatMessageBlock =
+  | AiChatTextBlock
+  | AiChatProjectCardBlock
+  | AiChatExperienceCardBlock
+  | AiChatArticleCardBlock
+  | AiChatMediaCardBlock
+  | AiChatHobbyCardBlock
+  | AiChatSystemNoticeBlock
+  | AiChatSummaryBlock
+
+export interface AiChatMessage {
+  id: string
+  role: AiChatMessageRole
+  content: string
+  turnIndex: number
+  answerBlocks: AiChatMessageBlock[]
+  citations: RagAskCitation[]
+  createdAt: string
+}
+
+export interface AiChatSummarySnapshot {
+  generatedAt: string
+  keywords: string[]
+  stage: AiChatSummaryStage
+  summary: string
+  visitorFocus?: string
+  aiClosing?: string
+}
+
+export interface AiChatSession {
+  sessionId: string
+  lead: AiChatLeadSummary
+  locale: AiChatLocale
+  status: AiChatSessionStatus
+  turnCount: number
+  remainingTurns: number
+  useKeyStatus: AiChatUseKeyStatus
+  messages: AiChatMessage[]
+  interimSummary: AiChatSummarySnapshot | null
+  finalSummary: AiChatSummarySnapshot | null
+  createdAt: string
+  updatedAt: string
+  closedAt: string | null
+}
+
+export interface AiChatPublicSessionClaimResult {
+  consentRecordedAt: string
+  policyVersion: string
+  session: AiChatSession
+  turnsPerDay: number
+  useKey: string
+}
+
+export interface AskAiChatMessageInput {
+  apiBaseUrl: string
+  sessionId: string
+  useKey: string
+  content: string
+  locale?: AiChatLocale
+  signal?: AbortSignal
+}
+
+export type AiChatStreamEventType =
+  | 'start'
+  | 'token'
+  | 'citation'
+  | 'block'
+  | 'summary'
+  | 'done'
+  | 'error'
+
+export interface StreamAiChatMessageHandlers {
+  onStart?: (payload: {
+    assistantMessageId: string
+    remainingTurns: number
+    sessionId: string
+    turnCount: number
+  }) => void
+  onToken?: (payload: { text: string }) => void
+  onCitation?: (payload: RagAskCitation) => void
+  onBlock?: (payload: AiChatMessageBlock) => void
+  onSummary?: (payload: AiChatSummarySnapshot) => void
+  onDone?: (payload: { session: AiChatSession }) => void
+  onError?: (payload: { message: string }) => void
+}
+
+export interface AiChatAdminListInput {
+  apiBaseUrl: string
+  accessToken: string
+}
+
+export interface AiChatIssueUseKeyInput {
+  apiBaseUrl: string
+  accessToken: string
+  leadId: string
+  expiresAt?: string
+  locale?: AiChatLocale
+}
+
+export interface AiChatRevokeUseKeyInput {
+  apiBaseUrl: string
+  accessToken: string
+  useKey: string
+}
+
+export interface AiChatSessionListItem {
+  id: string
+  leadDisplayName: string
+  companyName: string
+  status: AiChatSessionStatus
+  turnCount: number
+  locale: AiChatLocale
+  updatedAt: string
+  createdAt: string
+  hasFinalSummary: boolean
 }

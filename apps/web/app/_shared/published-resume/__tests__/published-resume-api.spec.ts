@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createFetchPublishedResumeMethod } from '../services/published-resume-api'
+import { loadPublishedResumeSafely } from '../services/published-resume-safe-load'
 
 function createJsonResponse(status: number, payload: unknown): Response {
   return new Response(JSON.stringify(payload), {
@@ -103,5 +104,20 @@ describe('published resume api', () => {
     })
 
     expect(result).toBeNull()
+  })
+
+  it('should mark published resume as unavailable when fetch throws', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockRejectedValue(new TypeError('fetch failed')),
+    )
+
+    const result = await loadPublishedResumeSafely({
+      apiBaseUrl: 'http://localhost:5577',
+    })
+
+    expect(result.status).toBe('unavailable')
+    expect(result.publishedResume).toBeNull()
+    expect(result.initialLoadError).toContain('fetch failed')
   })
 })

@@ -21,17 +21,19 @@ export function AdminDrawerShell({
   placement = 'right',
 }: AdminDrawerShellProps) {
   return (
-    <Drawer.Backdrop
-      isDismissable={isDismissable}
-      isOpen={isOpen}
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) {
-          onClose()
-        }
-      }}>
-      <Drawer.Content placement={placement}>
-        <Drawer.Dialog className={dialogClassName}>{children}</Drawer.Dialog>
-      </Drawer.Content>
-    </Drawer.Backdrop>
+    <Drawer>
+      <Drawer.Backdrop
+        isDismissable={isDismissable}
+        isOpen={isOpen}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) {
+            onClose()
+          }
+        }}>
+        <Drawer.Content placement={placement}>
+          <Drawer.Dialog className={dialogClassName}>{children}</Drawer.Dialog>
+        </Drawer.Content>
+      </Drawer.Backdrop>
+    </Drawer>
   )
 }

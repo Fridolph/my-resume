@@ -10,10 +10,15 @@ export type DatabaseInstance = LibSQLDatabase<typeof schema>
 export function createDatabaseClient(config: DatabaseRuntimeConfig): DatabaseClient {
   ensureLocalDatabaseDirectory(config.url)
 
-  return createClient({
+  const client = createClient({
     url: config.url,
     authToken: config.authToken,
   })
+
+  // libsql 默认不开启外键约束，必须显式启用才能让 ON DELETE CASCADE 生效
+  client.execute('PRAGMA foreign_keys = ON').catch(() => undefined)
+
+  return client
 }
 
 export function createDatabase(client: DatabaseClient): DatabaseInstance {

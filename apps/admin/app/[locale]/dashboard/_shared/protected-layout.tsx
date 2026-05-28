@@ -10,6 +10,7 @@ import { useAdminSession } from '@core/admin-session'
 import type { AppLocale } from '@i18n/types'
 import { AdminHeader } from './components/protected-layout-header'
 import { AdminSidebar } from './components/protected-layout-sidebar'
+import { AiTaskProgressProvider } from './components/ai-task-progress'
 
 const AdminHeaderActions = dynamic(
   () =>
@@ -50,7 +51,7 @@ export function AdminProtectedLayoutWithLocale({
 }) {
   const pathname = usePathname()
   const router = useRouter()
-  const { currentUser, logout, status } = useAdminSession()
+  const { accessToken, currentUser, logout, status } = useAdminSession()
   const pageMeta = getAdminPageMeta(pathname, locale)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false)
@@ -109,7 +110,7 @@ export function AdminProtectedLayoutWithLocale({
     )
   }
 
-  if (status === 'unauthorized' || !currentUser) {
+  if (status === 'unauthorized' || !currentUser || !accessToken) {
     return (
       <main className="flex min-h-screen items-center justify-center px-4 py-8">
         <section className="w-full max-w-xl rounded-[32px] border border-zinc-200/70 bg-white/92 px-6 py-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/80">
@@ -146,7 +147,7 @@ export function AdminProtectedLayoutWithLocale({
   }
 
   return (
-    <>
+    <AiTaskProgressProvider accessToken={accessToken}>
       <div className="min-h-screen bg-[#ebebee] text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
         <div
           className="grid min-h-screen w-full grid-cols-1 md:[grid-template-columns:var(--admin-sidebar-width)_minmax(0,1fr)]"
@@ -192,6 +193,6 @@ export function AdminProtectedLayoutWithLocale({
         onNavigate={() => setIsMobileDrawerOpen(false)}
         onOpenChange={setIsMobileDrawerOpen}
       />
-    </>
+    </AiTaskProgressProvider>
   )
 }

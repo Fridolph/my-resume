@@ -10,6 +10,11 @@ export interface GenerateTextInput {
   thinkingEnabled?: boolean
 }
 
+export interface GenerateTextStreamInput extends GenerateTextInput {
+  /** 每次收到 token 时回调，用于 SSE 流式推送。 */
+  onToken: (token: string) => void
+}
+
 export interface GenerateStructuredObjectInput {
   method: 'functionCalling' | 'jsonMode'
   prompt: string
@@ -61,6 +66,7 @@ export interface AiProviderSummary {
 export interface AiProvider {
   getSummary(): AiProviderSummary
   generateText(input: GenerateTextInput): Promise<GenerateTextResult>
+  generateTextStream?(input: GenerateTextStreamInput): Promise<GenerateTextResult>
   generateStructuredObject?(
     input: GenerateStructuredObjectInput,
   ): Promise<GenerateStructuredObjectResult>

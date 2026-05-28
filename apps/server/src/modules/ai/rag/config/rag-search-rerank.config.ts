@@ -1,7 +1,7 @@
 /**
  * RAG 检索重排策略类型。
  */
-export type RagSearchRerankStrategy = 'experience' | 'project' | 'skill' | 'general'
+export type RagSearchRerankStrategy = 'experience' | 'project' | 'skill' | 'hobby' | 'general'
 
 /**
  * section 加权规则。
@@ -78,50 +78,36 @@ export const DEFAULT_RAG_SEARCH_RERANK_CONFIG: RagSearchRerankConfig = {
     experience: ['projects', 'work_experience', 'core_strengths'],
     project: ['projects', 'work_experience'],
     skill: ['skills', 'core_strengths', 'projects'],
+    hobby: ['hobbies', 'interests', 'articles', 'user_docs'],
     general: ['projects', 'work_experience', 'skills', 'core_strengths', 'profile'],
   },
   sectionBoost: {
     experience: {
-      projects: {
-        default: 0.1,
-        summary: 0.12,
-      },
-      work_experience: {
-        default: 0.08,
-        summary: 0.1,
-      },
-      core_strengths: {
-        default: 0.02,
-      },
-      skills: {
-        default: -0.02,
-      },
+      projects: { default: 0.1, summary: 0.12 },
+      work_experience: { default: 0.08, summary: 0.1 },
+      core_strengths: { default: 0.02 },
+      skills: { default: -0.02 },
     },
     project: {
-      projects: {
-        default: 0.1,
-        summary: 0.14,
-      },
-      work_experience: {
-        default: 0.04,
-      },
-      skills: {
-        default: -0.03,
-      },
+      projects: { default: 0.1, summary: 0.14 },
+      work_experience: { default: 0.04 },
+      skills: { default: -0.03 },
     },
     skill: {
-      skills: {
-        default: 0.1,
-      },
-      core_strengths: {
-        default: 0.05,
-      },
-      projects: {
-        default: 0.01,
-      },
-      work_experience: {
-        default: 0.01,
-      },
+      skills: { default: 0.1 },
+      core_strengths: { default: 0.05 },
+      projects: { default: 0.01 },
+      work_experience: { default: 0.01 },
+    },
+    hobby: {
+      __default: { default: 0.01 },
+      hobbies: { default: 0.15 },
+      interests: { default: 0.12 },
+      articles: { default: 0.08 },
+      user_docs: { default: 0.08 },
+      core_strengths: { default: -0.05 },
+      work_experience: { default: -0.03 },
+      skills: { default: -0.02 },
     },
     general: {},
   },
@@ -164,6 +150,15 @@ export const DEFAULT_RAG_SEARCH_RERANK_CONFIG: RagSearchRerankConfig = {
       supportMinRerankScore: 0.61,
       hardDropMinNoiseReasons: 4,
       reserveMinRerankScore: 0.58,
+    },
+    hobby: {
+      minFinalCount: 3,
+      maxPrimaryCount: 2,
+      maxPreferredSupportCount: 2,
+      primaryMinRerankScore: 0.3,
+      supportMinRerankScore: 0.2,
+      hardDropMinNoiseReasons: 4,
+      reserveMinRerankScore: 0.12,
     },
     general: {
       minFinalCount: 5,

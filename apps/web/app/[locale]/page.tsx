@@ -1,6 +1,6 @@
 import { DEFAULT_API_BASE_URL, DEFAULT_SERVER_API_BASE_URL } from '@core/env'
 import { isAppLocale } from '@i18n/types'
-import { createFetchPublishedResumeMethod } from '@shared/published-resume/services/published-resume-api'
+import { loadPublishedResumeSafely } from '@shared/published-resume/services/published-resume-safe-load'
 
 import { PublishedResumeShell } from './_resume/shell'
 
@@ -16,8 +16,7 @@ export default async function WebHomePage({
 }) {
   const { locale } = await params
   const routeLocale = isAppLocale(locale) ? locale : 'zh'
-  // web 首页只读取 published snapshot，不参与草稿态编辑
-  const publishedResume = await createFetchPublishedResumeMethod({
+  const { initialLoadError, publishedResume } = await loadPublishedResumeSafely({
     apiBaseUrl: DEFAULT_SERVER_API_BASE_URL,
   })
 
@@ -25,6 +24,7 @@ export default async function WebHomePage({
     <PublishedResumeShell
       apiBaseUrl={DEFAULT_API_BASE_URL}
       enableClientSync
+      initialLoadError={initialLoadError}
       locale={routeLocale}
       publishedResume={publishedResume}
     />

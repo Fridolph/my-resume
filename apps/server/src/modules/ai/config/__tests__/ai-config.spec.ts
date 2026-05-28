@@ -46,7 +46,8 @@ describe('resolveAiRuntimeConfig', () => {
       baseUrl: 'https://api.deepseek.com',
       model: 'deepseek-v4-flash',
       chatModel: 'deepseek-v4-flash',
-      embeddingModel: 'deepseek-v4-flash',
+      embeddingBaseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+      embeddingModel: 'text-embedding-v3',
       providerLabel: 'DeepSeek',
     })
   })
@@ -73,6 +74,29 @@ describe('resolveAiRuntimeConfig', () => {
     )
   })
 
+  it('should support deepseek model name aliases and shared embedding overrides', () => {
+    const env: EnvironmentVariables = {
+      AI_PROVIDER: 'deepseek',
+      DEEPSEEK_API_KEY: 'sk-deepseek-demo',
+      DEEPSEEK_MODEL_NAME: 'deepseek-v4-flash',
+      EMBEDDINGS_URL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+      EMBEDDINGS_MODEL_NAME: 'text-embedding-v3',
+      EMBEDDINGS_API_KEY: 'sk-qwen-demo',
+    }
+
+    expect(resolveAiRuntimeConfig(env)).toEqual(
+      expect.objectContaining({
+        provider: 'deepseek',
+        baseUrl: 'https://api.deepseek.com',
+        model: 'deepseek-v4-flash',
+        chatModel: 'deepseek-v4-flash',
+        embeddingModel: 'text-embedding-v3',
+        embeddingBaseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+        embeddingApiKey: 'sk-qwen-demo',
+      }),
+    )
+  })
+
   it('should allow chat and embedding models to be configured separately', () => {
     const env: EnvironmentVariables = {
       AI_PROVIDER: 'openai-compatible',
@@ -95,6 +119,31 @@ describe('resolveAiRuntimeConfig', () => {
     })
   })
 
+  it('should support generic openai-compatible aliases from external examples', () => {
+    const env: EnvironmentVariables = {
+      AI_PROVIDER: 'openai-compatible',
+      OPENAI_API_KEY: 'sk-openai-demo',
+      OPENAI_BASE_URL: 'https://api.deepseek.com',
+      MODEL_NAME: 'deepseek-v4-flash',
+      EMBEDDINGS_BASE_URL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+      EMBEDDINGS_MODEL_NAME: 'text-embedding-v3',
+      EMBEDDINGS_API_KEY: 'sk-qwen-demo',
+    }
+
+    expect(resolveAiRuntimeConfig(env)).toEqual({
+      provider: 'openai-compatible',
+      mode: 'openai-compatible',
+      apiKey: 'sk-openai-demo',
+      baseUrl: 'https://api.deepseek.com',
+      embeddingApiKey: 'sk-qwen-demo',
+      embeddingBaseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+      model: 'deepseek-v4-flash',
+      chatModel: 'deepseek-v4-flash',
+      embeddingModel: 'text-embedding-v3',
+      providerLabel: 'OpenAI Compatible',
+    })
+  })
+
   it('should require provider credentials when a real provider is selected', () => {
     expect(() =>
       resolveAiRuntimeConfig({
@@ -108,6 +157,7 @@ describe('resolveAiRuntimeConfig', () => {
       resolveAiRuntimeConfig({
         AI_PROVIDER: 'deepseek',
         DEEPSEEK_API_KEY: 'replace-with-your-own-key',
+        EMBEDDINGS_API_KEY: 'sk-qwen-demo',
       }),
     ).toThrow('DEEPSEEK_API_KEY is still a placeholder')
   })

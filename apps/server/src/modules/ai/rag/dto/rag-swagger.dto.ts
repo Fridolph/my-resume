@@ -137,11 +137,57 @@ export class RagUserDocIngestBodyDto {
   scope?: 'draft' | 'published'
 
   @ApiPropertyOptional({
-    description: '切片策略 profile（默认 balanced=500/50）',
-    enum: ['balanced', 'contextual'],
-    example: 'balanced',
+    description: '切片策略 profile（默认 semantic 按 ## 标题分段）',
+    enum: ['balanced', 'contextual', 'semantic'],
+    example: 'semantic',
   })
-  chunkingProfile?: 'balanced' | 'contextual'
+  chunkingProfile?: 'balanced' | 'contextual' | 'semantic'
+
+  @ApiPropertyOptional({
+    description: '内容类型：article=文章，hobby=兴趣爱好，media=媒体/视频，general=通用',
+    enum: ['article', 'hobby', 'media', 'general'],
+    example: 'article',
+  })
+  contentType?: 'article' | 'hobby' | 'media' | 'general'
+
+  @ApiPropertyOptional({
+    description: '资料标题（优先于文件名），支持 UTF-8 中文',
+    example: '我的易经学习心得',
+  })
+  title?: string
+
+  @ApiPropertyOptional({
+    description: '自定义切片大小，优先级高于 profile',
+    maximum: 6666,
+    minimum: 4,
+    example: 512,
+  })
+  chunkSize?: number
+
+  @ApiPropertyOptional({
+    description: '自定义切片重叠，必须小于 chunkSize',
+    maximum: 300,
+    minimum: 0,
+    example: 100,
+  })
+  chunkOverlap?: number
+}
+
+export class RagCustomBodyDto {
+  @ApiPropertyOptional({ description: '资料标题', example: '我的易经学习心得' })
+  title?: string
+
+  @ApiProperty({ description: '正文内容，支持 Markdown', example: '# 易经\n\n这是我的易经学习笔记...' })
+  content!: string
+
+  @ApiPropertyOptional({ description: '内容类型', enum: ['article', 'hobby', 'media', 'general'], example: 'hobby' })
+  contentType?: 'article' | 'hobby' | 'media' | 'general'
+
+  @ApiPropertyOptional({ description: '入库作用域', enum: ['draft', 'published'], example: 'published' })
+  scope?: 'draft' | 'published'
+
+  @ApiPropertyOptional({ description: '相关链接', example: 'https://example.com' })
+  linkUrl?: string
 }
 
 export class RagUserDocIngestResultDto {
@@ -213,6 +259,26 @@ export class RagUserDocIngestResultDto {
     example: '2026-04-22T03:45:00.000Z',
   })
   uploadedAt!: string
+
+  @ApiProperty({
+    description: '本次 user_docs 同步使用的向量存储后端',
+    enum: ['local', 'milvus'],
+    example: 'local',
+  })
+  vectorStoreBackend!: 'local' | 'milvus'
+
+  @ApiProperty({
+    description: '向量存储是否同步成功；false 表示已降级，仅 SQLite 检索态成功',
+    example: false,
+  })
+  vectorStoreSynced!: boolean
+
+  @ApiPropertyOptional({
+    description: '向量存储降级提示；为 null 表示未发生降级',
+    nullable: true,
+    example: 'Milvus search unavailable at http://127.0.0.1:19530: connect ECONNREFUSED',
+  })
+  vectorStoreWarning!: string | null
 }
 
 export class RagSearchMatchDto {
@@ -247,10 +313,10 @@ export class RagSearchMatchDto {
 
   @ApiPropertyOptional({
     description: '来源类型',
-    enum: ['resume', 'knowledge'],
-    example: 'resume',
+    enum: ['resume', 'knowledge', 'resume_core', 'user_docs'],
+    example: 'resume_core',
   })
-  sourceType?: 'resume' | 'knowledge'
+  sourceType?: 'resume' | 'knowledge' | 'resume_core' | 'user_docs'
 
   @ApiPropertyOptional({
     description: '来源文件路径',
@@ -259,12 +325,70 @@ export class RagSearchMatchDto {
   sourcePath?: string
 }
 
+export class RagAskCitationDto {
+  @ApiProperty({
+    description: '回答引用序号',
+    example: '#1',
+  })
+  ref!: string
+
+  @ApiProperty({
+    description: '命中 chunk ID',
+    example: 'experience-1',
+  })
+  id!: string
+
+  @ApiProperty({
+    description: '引用来源标题',
+    example: 'XX 公司中后台重构项目',
+  })
+  title!: string
+
+  @ApiProperty({
+    description: '引用来源分区',
+    example: 'experiences',
+  })
+  section!: string
+
+  @ApiProperty({
+    description: '统一后的引用来源类型',
+    enum: ['resume_core', 'user_docs'],
+    example: 'resume_core',
+  })
+  sourceType!: 'resume_core' | 'user_docs'
+
+  @ApiPropertyOptional({
+    description: '来源文件路径或文件名',
+    example: 'rag-notes.md',
+  })
+  sourcePath?: string
+
+  @ApiProperty({
+    description: '检索分数',
+    example: 0.876543,
+  })
+  score!: number
+
+  @ApiProperty({
+    description: '引用片段短摘录',
+    example: '负责 ToB 安全平台的前端架构与交付...',
+  })
+  snippet!: string
+}
+
 export class RagAskResultDto {
   @ApiProperty({
     description: '问答结果文本',
     example: '你在 XX 项目中主导了架构重构并提升了交付效率',
   })
   answer!: string
+
+  @ApiProperty({
+    description: '回答引用列表；为空时表示上下文不足，回答不得编造。',
+    isArray: true,
+    type: () => RagAskCitationDto,
+  })
+  citations!: RagAskCitationDto[]
 
   @ApiProperty({
     description: '命中的上下文片段',
@@ -367,6 +491,40 @@ export class RagStatusDto {
     type: Object,
   })
   providerSummary!: Record<string, unknown>
+
+  @ApiProperty({
+    description: '当前配置的向量后端',
+    enum: ['local', 'milvus'],
+    example: 'local',
+  })
+  configuredVectorBackend!: 'local' | 'milvus'
+
+  @ApiProperty({
+    description: '当前是否启用了向量检索链路',
+    example: false,
+  })
+  vectorStoreEnabled!: boolean
+
+  @ApiPropertyOptional({
+    description: '向量存储可用性；local 模式返回 null',
+    nullable: true,
+    example: false,
+  })
+  vectorStoreAvailable!: boolean | null
+
+  @ApiProperty({
+    description: '当前生效的检索模式',
+    enum: ['local', 'vector', 'vector_with_local_fallback'],
+    example: 'vector_with_local_fallback',
+  })
+  effectiveSearchMode!: 'local' | 'vector' | 'vector_with_local_fallback'
+
+  @ApiPropertyOptional({
+    description: '最近一次向量存储错误；无错误时返回 null',
+    nullable: true,
+    example: 'Milvus search unavailable at http://127.0.0.1:19530: connect ECONNREFUSED',
+  })
+  lastVectorStoreError!: string | null
 
   @ApiPropertyOptional({
     description: '索引构建时 provider 摘要',

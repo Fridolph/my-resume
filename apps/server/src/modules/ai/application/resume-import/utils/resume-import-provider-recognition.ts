@@ -1,6 +1,9 @@
 import type { AiService } from '../../services/ai.service'
 import type { AiProviderSummary } from '../../../domain/ports/ai-provider.interface'
-import { buildResumeImportRecognitionPrompt } from '../prompts/resume-import-recognition.prompt'
+import {
+  buildResumeImportRecognitionPrompt,
+  RESUME_IMPORT_RECOGNITION_SYSTEM_PROMPT,
+} from '../prompts/resume-import-recognition.prompt'
 import type {
   ProviderResumeImportPayload,
   ResumeImportJobStage,
@@ -83,8 +86,7 @@ export async function generateProviderResumeImportRecognition(
       schemaDescription:
         '提取中文简历为 StandardResume 候选草稿，同时返回输入治理报告和质量提醒。',
       schemaName: 'ResumeImportRecognitionPayload',
-      systemPrompt:
-        '你是一个简历结构化识别助手。必须通过工具调用返回结构化对象，不要输出自由文本，不要虚构原文没有的信息。',
+      systemPrompt: RESUME_IMPORT_RECOGNITION_SYSTEM_PROMPT,
       temperature: 0,
     })
     const payload = parseResumeImportStructuredOutput(result.value)

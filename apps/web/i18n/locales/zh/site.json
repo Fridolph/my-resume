@@ -3,6 +3,8 @@
   "resumeNav": "简历",
   "profileNav": "概览",
   "aiTalkNav": "AI Talk",
+  "openAiChatAction": "打开 AI 对话",
+  "aiChatDrawerAriaLabel": "打开 AI 对话抽屉",
   "githubAriaLabel": "打开项目 GitHub 仓库",
   "downloadAriaLabel": "打开下载菜单",
   "downloadMenuLabel": "下载",

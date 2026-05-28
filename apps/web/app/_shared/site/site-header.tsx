@@ -37,28 +37,6 @@ const DeferredPublicSiteHeaderMobileMenu = dynamic(
   },
 )
 
-const navItems = [
-  {
-    href: '/',
-    key: 'resume',
-  },
-  {
-    href: '/profile',
-    key: 'profile',
-  },
-  {
-    href: '/ai-talk',
-    key: 'aiTalk',
-  },
-] as const
-
-/**
- * 公开站头部统一处理导航、语言切换与头部动作入口
- *
- * @param apiBaseUrl 当前公开站访问的 API 基地址
- * @param locale 当前展示语言
- * @returns 公开站头部节点
- */
 export function PublicSiteHeader({
   apiBaseUrl = DEFAULT_API_BASE_URL,
   deferActionsUntilIdle = false,
@@ -151,7 +129,7 @@ export function PublicSiteHeader({
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/88 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/82">
-      <div className="mx-auto flex min-h-16 w-full max-w-7xl flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2 sm:px-6 md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-4">
+      <div className="mx-auto flex min-h-16 w-full max-w-7xl flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2 sm:px-6 md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-4">
         <div className="flex min-w-0 items-center gap-3 md:justify-self-start">
           <Link className="inline-flex min-w-0 items-center gap-3" href="/">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-sm font-extrabold tracking-[-0.08em] text-white dark:bg-white dark:text-slate-950">
@@ -165,43 +143,6 @@ export function PublicSiteHeader({
               </span>
             </span>
           </Link>
-        </div>
-
-        <div
-          className="order-3 hidden w-full justify-start overflow-x-auto pb-1 sm:flex sm:justify-center md:order-none md:w-auto md:justify-self-center md:overflow-visible md:pb-0"
-          data-testid="public-site-nav-shell">
-          <div
-            aria-label="Public site navigation"
-            className={primaryNavWrapperClass}
-            data-testid="public-site-nav">
-            {navItems.map((item) => {
-              const isActive =
-                item.href === '/'
-                  ? normalizedPathname === item.href
-                  : normalizedPathname.startsWith(item.href)
-              const label =
-                item.key === 'resume'
-                  ? t('resumeNav')
-                  : item.key === 'profile'
-                    ? t('profileNav')
-                    : t('aiTalkNav')
-
-              return (
-                <Link
-                  aria-current={isActive ? 'page' : undefined}
-                  className={[
-                    styles.primaryNavLink,
-                    isActive ? styles.primaryNavLinkActive : '',
-                  ]
-                    .join(' ')
-                    .trim()}
-                  href={item.href}
-                  key={item.href}>
-                  {label}
-                </Link>
-              )
-            })}
-          </div>
         </div>
 
         <div
@@ -252,11 +193,6 @@ export function PublicSiteHeader({
     </header>
   )
 }
-
-const primaryNavWrapperClass = [
-  'inline-flex flex-nowrap items-center gap-1.5 whitespace-nowrap',
-  styles.primaryNavWrapper,
-].join(' ')
 
 function HeaderActionsFallback() {
   return (
