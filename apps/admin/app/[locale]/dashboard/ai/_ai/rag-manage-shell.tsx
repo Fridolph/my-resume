@@ -139,8 +139,8 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
     event.preventDefault()
     if (!content.trim()) return
     setIsSubmitting(true)
-    setErrorMessage(null)
-    setResultMessage(null)
+    setFormError(null)
+    setFormResult(null)
     try {
       const res = await fetch(`${DEFAULT_API_BASE_URL}/api/ai/rag/custom`, {
         method: 'POST',
@@ -159,11 +159,11 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
       const json = await res.json()
       if (!res.ok) throw new Error(json.message || '入库失败')
       const data = json.data ?? json
-      setResultMessage(`入库成功：${title || '资料'}，切块 ${data.chunkCount} 条`)
+      setFormResult(`入库成功：${title || '资料'}，切块 ${data.chunkCount} 条`)
       setTitle(''); setContent(''); setLinkUrl('')
       fetchDocuments()
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '入库失败')
+      setFormError(error instanceof Error ? error.message : '入库失败')
     } finally { setIsSubmitting(false) }
   }
 
