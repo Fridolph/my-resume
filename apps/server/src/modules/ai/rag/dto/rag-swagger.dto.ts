@@ -157,20 +157,37 @@ export class RagUserDocIngestBodyDto {
   title?: string
 
   @ApiPropertyOptional({
-    description: '自定义切片大小（字符），优先级高于 profile 默认值',
-    example: 1000,
+    description: '自定义切片大小，优先级高于 profile',
     maximum: 6666,
     minimum: 4,
+    example: 512,
   })
   chunkSize?: number
 
   @ApiPropertyOptional({
-    description: '自定义切片重叠（字符），必须小于 chunkSize',
-    example: 100,
+    description: '自定义切片重叠，必须小于 chunkSize',
     maximum: 300,
     minimum: 0,
+    example: 100,
   })
   chunkOverlap?: number
+}
+
+export class RagCustomBodyDto {
+  @ApiPropertyOptional({ description: '资料标题', example: '我的易经学习心得' })
+  title?: string
+
+  @ApiProperty({ description: '正文内容，支持 Markdown', example: '# 易经\n\n这是我的易经学习笔记...' })
+  content!: string
+
+  @ApiPropertyOptional({ description: '内容类型', enum: ['article', 'hobby', 'media', 'general'], example: 'hobby' })
+  contentType?: 'article' | 'hobby' | 'media' | 'general'
+
+  @ApiPropertyOptional({ description: '入库作用域', enum: ['draft', 'published'], example: 'published' })
+  scope?: 'draft' | 'published'
+
+  @ApiPropertyOptional({ description: '相关链接', example: 'https://example.com' })
+  linkUrl?: string
 }
 
 export class RagUserDocIngestResultDto {

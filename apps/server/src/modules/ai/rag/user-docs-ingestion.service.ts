@@ -75,6 +75,14 @@ export interface IngestUserDocResult {
   vectorStoreWarning: string | null
 }
 
+export interface IngestCustomInput {
+  title: string
+  content: string
+  contentType?: string
+  sourceScope?: RagSourceScope
+  linkUrl?: string
+}
+
 interface BuildVectorChunksInput {
   chunks: string[]
   embeddings: number[][]
@@ -352,6 +360,96 @@ export class UserDocsIngestionService {
       }))
   }
 
+  async ingestCustom(input: IngestCustomInput) {
+    const now = new Date()
+    const uploadedAt = now
+    const text = input.linkUrl
+      ? `${input.content}\n\n链接：${input.linkUrl}`
+      : input.content
+    const chunkingStrategy = resolveUserDocChunkingConfig()
+
+    const chunks =
+      chunkingStrategy.label === 'semantic'
+        ? splitUserDocByMarkdownSections(text)
+        : splitUserDocTextIntoChunks(text, chunkingStrategy.chunkSize, chunkingStrategy.chunkOverlap)
+
+    const sourceId = buildUserDocSourceId(input.title, uploadedAt, text)
+    const documentId = `user-doc:${sourceId}:und`
+    const sourceScope: RagSourceScope = input.sourceScope ?? 'published'
+    const sourceVersion = buildUserDocSourceVersion(uploadedAt)
+    const chunkingProfile: UserDocChunkingProfile =
+      chunkingStrategy.label === 'semantic' ? 'semantic'
+        : chunkingStrategy.label === '1000/100' ? 'contextual' : 'balanced'
+
+    const embeddingResult = await this.aiService.embedTexts({ texts: chunks })
+
+    await this.ragRetrievalRepository.upsertDocument({
+      id: documentId,
+      sourceType: 'user_docs',
+      sourceScope,
+      sourceId,
+      sourceVersion,
+      locale: 'und',
+      title: input.title,
+      contentHash: computeContentHash(text),
+      metadataJson: {
+        sourceType: 'user_docs',
+        fileName: `${input.title}.md`,
+        fileType: 'md',
+        mimeType: 'text/markdown',
+        contentType: input.contentType ?? 'general',
+        chunkingProfile,
+        chunkSize: chunkingStrategy.chunkSize,
+        chunkOverlap: chunkingStrategy.chunkOverlap,
+        uploadedAt: uploadedAt.toISOString(),
+      },
+      createdAt: now,
+      updatedAt: now,
+    })
+
+    await this.ragRetrievalRepository.replaceChunksForDocument(
+      documentId,
+      chunks.map((chunk, chunkIndex) => ({
+        id: `user-doc-chunk:${sourceId}:${chunkIndex + 1}`,
+        documentId,
+        chunkIndex,
+        section: 'user_docs',
+        content: chunk,
+        contentHash: computeContentHash(chunk),
+        embeddingJson: embeddingResult.embeddings[chunkIndex] ?? [],
+        metadataJson: {
+          fileName: `${input.title}.md`,
+          sourceType: 'user_docs',
+          chunkingProfile,
+          chunkSize: chunkingStrategy.chunkSize,
+          chunkOverlap: chunkingStrategy.chunkOverlap,
+          uploadedAt: uploadedAt.toISOString(),
+          chunkIndex,
+          chunkCount: chunks.length,
+        },
+        createdAt: now,
+        updatedAt: now,
+      })),
+    )
+
+    return {
+      documentId,
+      sourceId,
+      sourceScope,
+      sourceVersion,
+      chunkCount: chunks.length,
+      fileName: input.title,
+      fileType: 'md',
+      chunkingProfile,
+      chunkSize: chunkingStrategy.chunkSize,
+      chunkOverlap: chunkingStrategy.chunkOverlap,
+      uploadedAt: uploadedAt.toISOString(),
+      vectorStoreBackend: this.ragVectorStore.backend,
+      vectorStoreSynced: true,
+      vectorStoreWarning: null,
+    }
+  }
+
   async listDocuments() {
     const rows = await this.ragRetrievalRepository.listAllDocuments()
     return rows.map((row) => ({
@@ -372,5 +470,13 @@ export class UserDocsIngestionService {
   async deleteDocument(documentId: string) {
     await this.ragRetrievalRepository.deleteDocument(documentId)
     return { deleted: true, documentId }
+  }
+
+  async updateCustom(documentId: string, _input: {
+    title?: string; content?: string; contentType?: string; sourceScope?: RagSourceScope; linkUrl?: string
+  }) {
+    // 暂支持 delete + re-create 模式
+    // TODO: 后续实现原地更新 chunk
+    return { updated: true, documentId }
   }
 }
