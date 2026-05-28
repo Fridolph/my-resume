@@ -5,7 +5,7 @@
 ## 当前目标
 
 - 让 PR 自动执行测试、类型检查、构建
-- 让 `development` 作为开发主线时具备基础质量兜底
+- 让 `dev` 作为开发主线时具备基础质量兜底
 - 保持流程足够简单，便于教程讲解
 
 ## 当前不做什么
@@ -18,10 +18,10 @@
 ## 工作流触发时机
 
 - `push` 到：
-  - `development`
+  - `dev`
   - `main`
 - `pull_request` 指向：
-  - `development`
+  - `dev`
   - `main`
 - 手动触发：`workflow_dispatch`
 

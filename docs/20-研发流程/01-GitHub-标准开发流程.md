@@ -7,10 +7,7 @@
 ### 长期分支
 
 - `main`：稳定、可展示、可对外说明
-- `development`：日常开发主线
-
-> 说明：其他项目若使用 `dev` 作为开发主线，可以把本文中的 `development`
-> 替换为 `dev`，但同一个仓库内必须固定一个名称，禁止混用。
+- `dev`：日常开发主线
 
 ### 短期分支
 
@@ -44,14 +41,14 @@ Issue 必须包含：
 - 阻塞当前验收：先更新当前 Issue 的范围或拆分子任务
 - 不阻塞当前验收：记录为新 Issue，不混入当前分支
 
-### 3. 同步基线，从 `development` 开分支
+### 3. 同步基线，从 `dev` 开分支
 
 开始前先确认工作区和远端状态：
 
 ```bash
 git status
-git switch development
-git pull --ff-only origin development
+git switch dev
+git pull --ff-only origin dev
 git switch -c feat/m1-issue-01-workspace-bootstrap
 ```
 
@@ -68,12 +65,12 @@ git switch -c feat/m1-issue-01-workspace-bootstrap
 
 - 当前任务若是 AI / RAG / Agent 相关，默认采用“边做边学”模式推进：
   1. 先对齐背景、目标、非目标与验收
-  2. 从 `development` 切新 issue 分支
+  2. 从 `dev` 切新 issue 分支
   3. 先做最小设计，再进入实现
   4. 对 AI 交互与核心逻辑补充注释，方法补 TSDoc
   5. 先跑当前改动相关自测，再补开发日志与教程材料
-  6. 提交并推送分支，PR 合并回 `development`
-  7. `development` 稳定后再进入 `main`
+  6. 提交并推送分支，PR 合并回 `dev`
+  7. `dev` 稳定后再进入 `main`
 - 若对核心逻辑理解未达预期，先停在设计与伪代码阶段，不直接硬写实现。
 
 ### 4. 先 Plan，再做 TDD
@@ -151,9 +148,9 @@ Review 阶段必须回答两个问题：
 
 - 使用清晰 commit message，例如 `feat(m22): add AI prompt builders`
 - 分支推送到远端
-- 优先创建 PR 到 `development`
+- 优先创建 PR 到 `dev`
 - 等 CI 通过并完成 Review 后合并
-- 小团队阶段可以本地 merge 回 `development`，但必须 push 远端并保留可追踪 commit
+- 小团队阶段可以本地 merge 回 `dev`，但必须 push 远端并保留可追踪 commit
 
 合并后确认：
 
@@ -179,7 +176,7 @@ git log --oneline --decorate -5
 - 统一检查文档、日志、变更边界
 - 结合该里程碑的提交记录、开发日志和关键设计取舍，整理教程或技术博客
 - 如果暂时还不适合直接成文，至少先输出教程 / 博客大纲，避免后续重构打散内容结构
-- 再将该里程碑成果稳定合并到 `development`
+- 再将该里程碑成果稳定合并到 `dev`
 
 ### 11. 发布到 `main`
 
@@ -218,8 +215,8 @@ pnpm --filter @my-resume/server scaffold:module -- <module-name>
 
 ## Merge 策略建议
 
-- 功能分支 → `development`：使用 `squash merge`
-- `development` → `main`：仅在阶段稳定后进行
+- 功能分支 → `dev`：使用 `squash merge`
+- `dev` → `main`：仅在阶段稳定后进行
 
 ## Commit 建议
 

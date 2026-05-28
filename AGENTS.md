@@ -72,7 +72,7 @@
 
 ### 3. 分支规范（覆盖全局）
 
-- 永远从 `development` 开分支。
+- 永远从 `dev` 开分支。
 - 禁止直接在 `main` 上开发。
 - 分支命名：
   - `[type]/[milestone]_[issue_index]__desc`
@@ -154,8 +154,8 @@ Review 必须检查：
 - 每次里程碑 Squash Merge 前复用 `dao-commit` skill 辅助起草，由人确认定锚。
 - `main` 只接受阶段性稳定内容，合并到 `main` 时同样使用 Dao Commit 格式。
 
-- PR 合并到 `development` 前必须通过 CI。
-- 一个里程碑内的多个任务完成后，再按顺序合并到 `development`。
+- PR 合并到 `dev` 前必须通过 CI。
+- 一个里程碑内的多个任务完成后，再按顺序合并到 `dev`。
 - `main` 只接受阶段性稳定内容。
 
 ### 11. 关闭 Issue
@@ -172,13 +172,13 @@ Review 必须检查：
 
 - 长期分支：
   - `main`：稳定、可展示、可对外说明
-  - `development`：当前开发主线
+  - `dev`：当前开发主线
 - 短期分支：`feat/*` / `fix/*` / `docs/*` / `chore/*`
 - 里程碑结束时：
   - 确保对应 Issue 全部关闭
   - 整理教程或技术博客（至少产出大纲）
-  - 合并到 `development`，稳定后进入 `main`
-- **Squash Merge 到 `development` / `main` 时**，必须使用 `dao-commit` skill 生成 Dao Commit 格式的提交信息，由人确认后执行合并。
+  - 合并到 `dev`，稳定后进入 `main`
+- **Squash Merge 到 `dev` / `main` 时**，必须使用 `dao-commit` skill 生成 Dao Commit 格式的提交信息，由人确认后执行合并。
 
 ---
 
