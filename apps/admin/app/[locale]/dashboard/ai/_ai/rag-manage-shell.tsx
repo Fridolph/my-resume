@@ -64,6 +64,7 @@ interface RagDocument {
   contentType?: string
   sourceScope?: string
   chunkCount?: number
+  preview?: string | null
   fileName?: string
   fileType?: string
   createdAt: string
@@ -395,16 +396,12 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
                     <span className="text-xs text-zinc-400">文档 ID</span>
                     <span className="font-mono text-xs">{viewDetail.id.slice(0, 32)}...</span>
                   </div>
-                  {viewDetail.fileName ? (
-                    <div className="grid grid-cols-[6rem_1fr] gap-2">
-                      <span className="text-xs text-zinc-400">文件名</span>
-                      <span className="text-xs">{viewDetail.fileName}</span>
+                  {viewDetail.preview ? (
+                    <div className="grid gap-1">
+                      <span className="text-xs text-zinc-400">内容预览</span>
+                      <p className="whitespace-pre-wrap text-sm leading-6">{viewDetail.preview}</p>
                     </div>
                   ) : null}
-                  <div className="grid grid-cols-[6rem_1fr] gap-2">
-                    <span className="text-xs text-zinc-400">切块数</span>
-                    <span className="text-xs">{viewDetail.chunkCount ?? '—'}</span>
-                  </div>
                 </div>
               </div>
             </div>

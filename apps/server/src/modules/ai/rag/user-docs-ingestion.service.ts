@@ -462,6 +462,7 @@ export class UserDocsIngestionService {
         ? (row.metadataJson as Record<string, unknown>).contentType as string | undefined
         : undefined,
       chunkCount: 'chunkCount' in row ? (row as any).chunkCount : undefined,
+      preview: (row as any).previewContent as string ?? null,
       createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : String(row.createdAt),
       updatedAt: row.updatedAt instanceof Date ? row.updatedAt.toISOString() : String(row.updatedAt),
     }))

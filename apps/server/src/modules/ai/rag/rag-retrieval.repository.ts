@@ -304,10 +304,25 @@ export class RagRetrievalRepository {
   }
 
   async listAllDocuments() {
-    return this.database
+    const rows = await this.database
       .select()
       .from(ragDocuments)
       .orderBy(desc(ragDocuments.createdAt))
+
+    // 为每个文档加载第一个 chunk 作为预览
+    const result = []
+    for (const row of rows) {
+      const [firstChunk] = await this.database
+        .select({ content: ragChunks.content })
+        .from(ragChunks)
+        .where(eq(ragChunks.documentId, row.id))
+        .orderBy(ragChunks.chunkIndex)
+        .limit(1)
+
+      result.push({ ...row, previewContent: firstChunk?.content ?? null })
+    }
+
+    return result
   }
 
   async deleteDocument(documentId: string) {
