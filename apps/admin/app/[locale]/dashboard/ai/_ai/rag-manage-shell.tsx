@@ -341,8 +341,18 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
                               </Tooltip>
                                {deleteConfirmId === doc.id ? (
                                  <div className="inline-flex items-center gap-1">
-                                   <Button className="h-7 rounded-lg text-[0.65rem]" onPress={() => { handleDelete(doc.id); setDeleteConfirmId(null) }} size="sm" variant="danger">确认删除</Button>
-                                   <Button className="h-7 rounded-lg text-[0.65rem]" onPress={() => setDeleteConfirmId(null)} size="sm" variant="ghost">取消</Button>
+                                   <button
+                                     className="rounded-lg bg-rose-600 px-2 py-1 text-[0.65rem] font-medium text-white hover:bg-rose-700"
+                                     onClick={() => { handleDelete(doc.id); setDeleteConfirmId(null) }}
+                                     type="button">
+                                     确认删除
+                                   </button>
+                                   <button
+                                     className="rounded-lg border border-zinc-300 px-2 py-1 text-[0.65rem] text-zinc-600 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                                     onClick={() => setDeleteConfirmId(null)}
+                                     type="button">
+                                     取消
+                                   </button>
                                  </div>
                                ) : (
                                  <Tooltip delay={180}>
