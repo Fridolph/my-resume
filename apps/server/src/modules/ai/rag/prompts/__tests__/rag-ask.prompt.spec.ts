@@ -10,11 +10,12 @@ describe('RAG ask prompts', () => {
       locale: 'zh',
     })
 
-    expect(buildRagAskSystemPrompt('zh')).toContain('只能根据检索到的简历上下文回答')
+    expect(buildRagAskSystemPrompt('zh')).toContain('只能在检索到的上下文范围内回答')
+    expect(buildRagAskSystemPrompt('zh')).toContain('如果问题与你')
     expect(prompt).toContain('问题：候选人是否做过 RAG？')
     expect(prompt).toContain('检索到的上下文')
     expect(prompt).toContain('做过 RAG 检索问答')
-    expect(prompt).toContain('[#n]')
+    expect(prompt).toContain('[#1]')
   })
 
   it('builds English grounded-answer prompts', () => {
@@ -24,10 +25,10 @@ describe('RAG ask prompts', () => {
       locale: 'en',
     })
 
-    expect(buildRagAskSystemPrompt('en')).toContain('Answer only from the retrieved resume context')
+    expect(buildRagAskSystemPrompt('en')).toContain('Answer all resume-related questions in the first person')
     expect(prompt).toContain('Question: Did the candidate build RAG features?')
     expect(prompt).toContain('Retrieved context')
     expect(prompt).toContain('Built retrieval QA.')
-    expect(prompt).toContain('[#n]')
+    expect(prompt).toContain('[#1]')
   })
 })

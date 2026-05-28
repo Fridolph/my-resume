@@ -5,9 +5,11 @@ import { useTranslations } from 'next-intl'
 import { useEffect, useRef, useState } from 'react'
 
 import { DEFAULT_API_BASE_URL } from '@core/env'
+import { AiChatPresentationSync } from '@shared/ai-chat/ai-chat-presentation-sync'
 import { usePublishedResumeSync } from '@shared/published-resume/hooks/use-published-resume-sync'
 import { PublishedResumeEmptyState } from '@shared/published-resume/published-resume-empty-state'
 import { PublishedResumeLoadingState } from '@shared/published-resume/published-resume-loading-state'
+import { PublishedResumeUnavailableState } from '@shared/published-resume/published-resume-unavailable-state'
 import { createFetchPublishedResumeMethod } from '@shared/published-resume/services/published-resume-api'
 import { PublicSiteHeader } from '@shared/site/site-header'
 import { PublishedResumeEducationSection } from './published-resume-education-section'
@@ -208,12 +210,14 @@ export function PublishedResumeShell({
   apiBaseUrl = DEFAULT_API_BASE_URL,
   createSyncPublishedResumeMethod = createFetchPublishedResumeMethod,
   enableClientSync = false,
+  initialLoadError = null,
   locale = 'zh',
   publishedResume,
 }: {
   apiBaseUrl?: string
   createSyncPublishedResumeMethod?: typeof createFetchPublishedResumeMethod
   enableClientSync?: boolean
+  initialLoadError?: string | null
   locale?: ResumeLocale
   publishedResume: ResumePublishedSnapshot | null
 }) {
@@ -238,6 +242,21 @@ export function PublishedResumeShell({
     rootMargin: '640px 0px',
   })
 
+  if (!currentPublishedResume && initialLoadError) {
+    return (
+      <main className="web-page-shell" data-template="standard">
+        <PublicSiteHeader
+          apiBaseUrl={apiBaseUrl}
+          deferActionsUntilIdle
+          locale={locale}
+        />
+        <section className="mx-auto grid w-full max-w-5xl gap-6 px-4 py-6 sm:px-6">
+          <PublishedResumeUnavailableState message={syncMessage ?? initialLoadError} />
+        </section>
+      </main>
+    )
+  }
+
   if (!currentPublishedResume && syncState === 'syncing') {
     return <PublishedResumeLoadingState />
   }
@@ -251,6 +270,7 @@ export function PublishedResumeShell({
 
   return (
     <main className="web-page-shell" data-template="standard">
+      <AiChatPresentationSync locale={locale} publishedResume={currentPublishedResume} />
       <PublicSiteHeader
         apiBaseUrl={apiBaseUrl}
         deferActionsUntilIdle

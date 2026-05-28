@@ -21,6 +21,7 @@ import { AiTalkPageFrame } from '../../_ai-talk/page-frame'
 interface AiTalkResumeAdvisorShellProps {
   apiBaseUrl?: string
   enableClientSync?: boolean
+  initialLoadError?: string | null
   locale?: ResumeLocale
   publishedResume: ResumePublishedSnapshot | null
 }
@@ -28,6 +29,7 @@ interface AiTalkResumeAdvisorShellProps {
 export function AiTalkResumeAdvisorShell({
   apiBaseUrl,
   enableClientSync = false,
+  initialLoadError = null,
   locale = 'zh',
   publishedResume,
 }: AiTalkResumeAdvisorShellProps) {
@@ -37,6 +39,7 @@ export function AiTalkResumeAdvisorShell({
     <AiTalkPageFrame
       apiBaseUrl={apiBaseUrl}
       enableClientSync={enableClientSync}
+      initialLoadError={initialLoadError}
       locale={locale}
       publishedResume={publishedResume}>
       {() => (

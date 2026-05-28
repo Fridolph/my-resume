@@ -149,6 +149,193 @@ export const aiUsageRecords = sqliteTable(
   }),
 )
 
+export type AiChatVisitorLeadStatus = 'submitted' | 'issued' | 'closed'
+export type AiChatUseKeyStatus = 'issued' | 'claimed' | 'revoked' | 'expired'
+export type AiChatSessionStatus = 'open' | 'closed'
+export type AiChatMessageRole = 'user' | 'assistant' | 'system'
+
+/**
+ * ai_chat_visitor_leads：公开站访客线索表。
+ *
+ * 作用：
+ * - 记录公开站访客的姓名/公司、联系方式与留言。
+ * - 作为 useKey 发放与会话治理的上游入口。
+ */
+export const aiChatVisitorLeads = sqliteTable(
+  'ai_chat_visitor_leads',
+  {
+    id: text('id').primaryKey(),
+    locale: text('locale').notNull(),
+    displayName: text('display_name').notNull(),
+    companyName: text('company_name'),
+    contact: text('contact'),
+    message: text('message').notNull(),
+    sourceTag: text('source_tag'),
+    sourceKey: text('source_key'),
+    metadataJson: text('metadata_json', {
+      mode: 'json',
+    }).$type<Record<string, unknown> | null>(),
+    status: text('status').$type<AiChatVisitorLeadStatus>().notNull(),
+    createdAt: integer('created_at', {
+      mode: 'timestamp_ms',
+    }).notNull(),
+    updatedAt: integer('updated_at', {
+      mode: 'timestamp_ms',
+    }).notNull(),
+  },
+  (table) => ({
+    statusCreatedAtIndex: index('ai_chat_visitor_leads_status_created_at_idx').on(
+      table.status,
+      table.createdAt,
+    ),
+    sourceKeyCreatedAtIndex: index('ai_chat_visitor_leads_source_key_created_at_idx').on(
+      table.sourceKey,
+      table.createdAt,
+    ),
+  }),
+)
+
+/**
+ * ai_chat_usekeys：公开站 AI chat 试用码表。
+ *
+ * 作用：
+ * - 管理 useKey 的发放、认领、作废和过期状态。
+ * - 绑定 lead 与主会话，保证一个 key 对应一条主会话。
+ */
+export const aiChatUseKeys = sqliteTable(
+  'ai_chat_usekeys',
+  {
+    id: text('id').primaryKey(),
+    useKey: text('use_key').notNull(),
+    leadId: text('lead_id')
+      .notNull()
+      .references(() => aiChatVisitorLeads.id, {
+        onDelete: 'cascade',
+        onUpdate: 'cascade',
+      }),
+    sessionId: text('session_id'),
+    issuedByUserId: text('issued_by_user_id'),
+    status: text('status').$type<AiChatUseKeyStatus>().notNull(),
+    maxTurns: integer('max_turns').notNull(),
+    usedTurns: integer('used_turns').notNull(),
+    claimedAt: integer('claimed_at', {
+      mode: 'timestamp_ms',
+    }),
+    revokedAt: integer('revoked_at', {
+      mode: 'timestamp_ms',
+    }),
+    expiresAt: integer('expires_at', {
+      mode: 'timestamp_ms',
+    }),
+    createdAt: integer('created_at', {
+      mode: 'timestamp_ms',
+    }).notNull(),
+    updatedAt: integer('updated_at', {
+      mode: 'timestamp_ms',
+    }).notNull(),
+  },
+  (table) => ({
+    useKeyUnique: uniqueIndex('ai_chat_usekeys_use_key_unique').on(table.useKey),
+    leadStatusCreatedAtIndex: index('ai_chat_usekeys_lead_status_created_at_idx').on(
+      table.leadId,
+      table.status,
+      table.createdAt,
+    ),
+  }),
+)
+
+/**
+ * ai_chat_sessions：公开站 AI chat 会话主表。
+ *
+ * 作用：
+ * - 聚合会话状态、轮次、压缩摘要和最终总结。
+ * - 供 web 恢复会话与 admin 治理回看。
+ */
+export const aiChatSessions = sqliteTable(
+  'ai_chat_sessions',
+  {
+    id: text('id').primaryKey(),
+    leadId: text('lead_id')
+      .notNull()
+      .references(() => aiChatVisitorLeads.id, {
+        onDelete: 'cascade',
+        onUpdate: 'cascade',
+      }),
+    useKeyId: text('use_key_id')
+      .notNull()
+      .references(() => aiChatUseKeys.id, {
+        onDelete: 'cascade',
+        onUpdate: 'cascade',
+      }),
+    locale: text('locale').notNull(),
+    status: text('status').$type<AiChatSessionStatus>().notNull(),
+    turnCount: integer('turn_count').notNull(),
+    interimSummary: text('interim_summary'),
+    finalSummary: text('final_summary'),
+    focusKeywordsJson: text('focus_keywords_json', {
+      mode: 'json',
+    }).$type<string[] | null>(),
+    closedAt: integer('closed_at', {
+      mode: 'timestamp_ms',
+    }),
+    createdAt: integer('created_at', {
+      mode: 'timestamp_ms',
+    }).notNull(),
+    updatedAt: integer('updated_at', {
+      mode: 'timestamp_ms',
+    }).notNull(),
+  },
+  (table) => ({
+    statusUpdatedAtIndex: index('ai_chat_sessions_status_updated_at_idx').on(
+      table.status,
+      table.updatedAt,
+    ),
+    leadCreatedAtIndex: index('ai_chat_sessions_lead_created_at_idx').on(
+      table.leadId,
+      table.createdAt,
+    ),
+  }),
+)
+
+/**
+ * ai_chat_messages：公开站 AI chat 消息明细表。
+ *
+ * 作用：
+ * - 保存用户消息、AI 回答和系统总结消息。
+ * - answerBlocks / citations 以 JSON 落库，便于 web/admin 重建展示。
+ */
+export const aiChatMessages = sqliteTable(
+  'ai_chat_messages',
+  {
+    id: text('id').primaryKey(),
+    sessionId: text('session_id')
+      .notNull()
+      .references(() => aiChatSessions.id, {
+        onDelete: 'cascade',
+        onUpdate: 'cascade',
+      }),
+    role: text('role').$type<AiChatMessageRole>().notNull(),
+    content: text('content').notNull(),
+    turnIndex: integer('turn_index').notNull(),
+    answerBlocksJson: text('answer_blocks_json', {
+      mode: 'json',
+    }).$type<unknown | null>(),
+    citationsJson: text('citations_json', {
+      mode: 'json',
+    }).$type<unknown | null>(),
+    createdAt: integer('created_at', {
+      mode: 'timestamp_ms',
+    }).notNull(),
+  },
+  (table) => ({
+    sessionTurnCreatedAtIndex: index('ai_chat_messages_session_turn_created_at_idx').on(
+      table.sessionId,
+      table.turnIndex,
+      table.createdAt,
+    ),
+  }),
+)
+
 /**
  * RAG 知识源大类：
  * - resume_core: 简历核心事实（优先级最高）

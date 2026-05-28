@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, Logger } from '@nestjs/common'
 import { createHash, randomUUID } from 'node:crypto'
 
 import { RagSourceScope } from '../../../database/schema'
@@ -9,6 +9,7 @@ import { RAG_VECTOR_STORE } from './vector-store/tokens'
 import type { RagVectorChunkPayload, RagVectorStore } from './vector-store/types'
 import {
   resolveUserDocChunkingConfig,
+  splitUserDocByMarkdownSections,
   splitUserDocTextIntoChunks,
   type UserDocChunkingProfile,
 } from './user-doc-chunking'
@@ -46,9 +47,11 @@ export interface IngestUserDocInput {
   mimetype: string
   size: number
   sourceScope?: RagSourceScope
+  title?: string
   chunkingProfile?: UserDocChunkingProfile
   chunkSize?: number
   chunkOverlap?: number
+  contentType?: string
   uploadedAt?: Date
 }
 
@@ -67,6 +70,17 @@ export interface IngestUserDocResult {
   chunkSize: number
   chunkOverlap: number
   uploadedAt: string
+  vectorStoreBackend: RagVectorStore['backend']
+  vectorStoreSynced: boolean
+  vectorStoreWarning: string | null
+}
+
+export interface IngestCustomInput {
+  title: string
+  content: string
+  contentType?: string
+  sourceScope?: RagSourceScope
+  linkUrl?: string
 }
 
 interface BuildVectorChunksInput {
@@ -126,6 +140,8 @@ function buildUserDocSourceId(fileName: string, uploadedAt: Date, text: string):
 
 @Injectable()
 export class UserDocsIngestionService {
+  private readonly logger = new Logger(UserDocsIngestionService.name)
+
   constructor(
     @Inject(FileExtractionService)
     private readonly fileExtractionService: FileExtractionService,
@@ -175,11 +191,14 @@ export class UserDocsIngestionService {
         mimetype: input.mimetype,
         size: input.size,
       })
-      const chunks = splitUserDocTextIntoChunks(
-        extracted.text,
-        chunkingStrategy.chunkSize,
-        chunkingStrategy.chunkOverlap,
-      )
+      const chunks =
+        chunkingStrategy.label === 'semantic'
+          ? splitUserDocByMarkdownSections(extracted.text)
+          : splitUserDocTextIntoChunks(
+              extracted.text,
+              chunkingStrategy.chunkSize,
+              chunkingStrategy.chunkOverlap,
+            )
       const sourceId = buildUserDocSourceId(extracted.fileName, uploadedAt, extracted.text)
       const documentId = `user-doc:${sourceId}:und`
       const now = new Date()
@@ -195,13 +214,14 @@ export class UserDocsIngestionService {
         sourceId,
         sourceVersion,
         locale: 'und',
-        title: extracted.fileName,
+        title: input.title ?? extracted.fileName,
         contentHash: computeContentHash(extracted.text),
         metadataJson: {
           sourceType: 'user_docs',
           fileName: extracted.fileName,
           fileType: extracted.fileType,
           mimeType: extracted.mimeType,
+          contentType: input.contentType ?? 'general',
           chunkingProfile,
           chunkSize: chunkingStrategy.chunkSize,
           chunkOverlap: chunkingStrategy.chunkOverlap,
@@ -235,22 +255,43 @@ export class UserDocsIngestionService {
           updatedAt: now,
         })),
       )
-      await this.ragVectorStore.deleteChunksByDocument(documentId)
-      await this.ragVectorStore.upsertChunks(
-        this.buildVectorChunks({
-          chunks,
-          embeddings: embeddingResult.embeddings,
-          sourceId,
+      let vectorStoreSynced = true
+      let vectorStoreWarning: string | null = null
+
+      try {
+        await this.ragVectorStore.deleteChunksByDocument(documentId)
+        await this.ragVectorStore.upsertChunks(
+          this.buildVectorChunks({
+            chunks,
+            embeddings: embeddingResult.embeddings,
+            sourceId,
+            documentId,
+            fileName: extracted.fileName,
+            sourceScope,
+            sourceVersion,
+            chunkingProfile,
+            chunkSize: chunkingStrategy.chunkSize,
+            chunkOverlap: chunkingStrategy.chunkOverlap,
+            uploadedAt,
+          }),
+        )
+      } catch (error) {
+        vectorStoreSynced = false
+        vectorStoreWarning =
+          error instanceof Error && error.message.trim()
+            ? error.message
+            : 'Vector store sync skipped because the backend is unavailable.'
+
+        this.logger.warn({
+          event: 'rag.user_docs.vector_sync_skipped',
+          backend: this.ragVectorStore.backend,
           documentId,
           fileName: extracted.fileName,
           sourceScope,
           sourceVersion,
-          chunkingProfile,
-          chunkSize: chunkingStrategy.chunkSize,
-          chunkOverlap: chunkingStrategy.chunkOverlap,
-          uploadedAt,
-        }),
-      )
+          warning: vectorStoreWarning,
+        })
+      }
 
       await this.ragRetrievalRepository.updateIndexRunStatus({
         id: runId,
@@ -267,12 +308,15 @@ export class UserDocsIngestionService {
         sourceScope,
         sourceVersion,
         chunkCount: chunks.length,
-        fileName: extracted.fileName,
+        fileName: input.title ?? extracted.fileName,
         fileType: extracted.fileType,
         chunkingProfile,
         chunkSize: chunkingStrategy.chunkSize,
         chunkOverlap: chunkingStrategy.chunkOverlap,
         uploadedAt: uploadedAt.toISOString(),
+        vectorStoreBackend: this.ragVectorStore.backend,
+        vectorStoreSynced,
+        vectorStoreWarning,
       }
     } catch (error) {
       await this.ragRetrievalRepository.updateIndexRunStatus({
@@ -313,6 +357,127 @@ export class UserDocsIngestionService {
         chunkIndex,
         chunkCount: input.chunks.length,
       },
+      }))
+  }
+
+  async ingestCustom(input: IngestCustomInput) {
+    const now = new Date()
+    const uploadedAt = now
+    const text = input.linkUrl
+      ? `${input.content}\n\n链接：${input.linkUrl}`
+      : input.content
+    const chunkingStrategy = resolveUserDocChunkingConfig()
+
+    const chunks =
+      chunkingStrategy.label === 'semantic'
+        ? splitUserDocByMarkdownSections(text)
+        : splitUserDocTextIntoChunks(text, chunkingStrategy.chunkSize, chunkingStrategy.chunkOverlap)
+
+    const sourceId = buildUserDocSourceId(input.title, uploadedAt, text)
+    const documentId = `user-doc:${sourceId}:und`
+    const sourceScope: RagSourceScope = input.sourceScope ?? 'published'
+    const sourceVersion = buildUserDocSourceVersion(uploadedAt)
+    const chunkingProfile: UserDocChunkingProfile =
+      chunkingStrategy.label === 'semantic' ? 'semantic'
+        : chunkingStrategy.label === '1000/100' ? 'contextual' : 'balanced'
+
+    const embeddingResult = await this.aiService.embedTexts({ texts: chunks })
+
+    await this.ragRetrievalRepository.upsertDocument({
+      id: documentId,
+      sourceType: 'user_docs',
+      sourceScope,
+      sourceId,
+      sourceVersion,
+      locale: 'und',
+      title: input.title,
+      contentHash: computeContentHash(text),
+      metadataJson: {
+        sourceType: 'user_docs',
+        fileName: `${input.title}.md`,
+        fileType: 'md',
+        mimeType: 'text/markdown',
+        contentType: input.contentType ?? 'general',
+        chunkingProfile,
+        chunkSize: chunkingStrategy.chunkSize,
+        chunkOverlap: chunkingStrategy.chunkOverlap,
+        uploadedAt: uploadedAt.toISOString(),
+      },
+      createdAt: now,
+      updatedAt: now,
+    })
+
+    await this.ragRetrievalRepository.replaceChunksForDocument(
+      documentId,
+      chunks.map((chunk, chunkIndex) => ({
+        id: `user-doc-chunk:${sourceId}:${chunkIndex + 1}`,
+        documentId,
+        chunkIndex,
+        section: 'user_docs',
+        content: chunk,
+        contentHash: computeContentHash(chunk),
+        embeddingJson: embeddingResult.embeddings[chunkIndex] ?? [],
+        metadataJson: {
+          fileName: `${input.title}.md`,
+          sourceType: 'user_docs',
+          chunkingProfile,
+          chunkSize: chunkingStrategy.chunkSize,
+          chunkOverlap: chunkingStrategy.chunkOverlap,
+          uploadedAt: uploadedAt.toISOString(),
+          chunkIndex,
+          chunkCount: chunks.length,
+        },
+        createdAt: now,
+        updatedAt: now,
+      })),
+    )
+
+    return {
+      documentId,
+      sourceId,
+      sourceScope,
+      sourceVersion,
+      chunkCount: chunks.length,
+      fileName: input.title,
+      fileType: 'md',
+      chunkingProfile,
+      chunkSize: chunkingStrategy.chunkSize,
+      chunkOverlap: chunkingStrategy.chunkOverlap,
+      uploadedAt: uploadedAt.toISOString(),
+      vectorStoreBackend: this.ragVectorStore.backend,
+      vectorStoreSynced: true,
+      vectorStoreWarning: null,
+    }
+  }
+
+  async listDocuments() {
+    const rows = await this.ragRetrievalRepository.listAllDocuments()
+    return rows.map((row) => ({
+      id: row.id,
+      title: row.title,
+      sourceType: row.sourceType,
+      sourceScope: row.sourceScope,
+      locale: row.locale,
+      contentType: row.metadataJson && typeof row.metadataJson === 'object'
+        ? (row.metadataJson as Record<string, unknown>).contentType as string | undefined
+        : undefined,
+      chunkCount: 'chunkCount' in row ? (row as any).chunkCount : undefined,
+      preview: (row as any).previewContent as string ?? null,
+      createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : String(row.createdAt),
+      updatedAt: row.updatedAt instanceof Date ? row.updatedAt.toISOString() : String(row.updatedAt),
     }))
+  }
+
+  async deleteDocument(documentId: string) {
+    await this.ragRetrievalRepository.deleteDocument(documentId)
+    return { deleted: true, documentId }
+  }
+
+  async updateCustom(documentId: string, _input: {
+    title?: string; content?: string; contentType?: string; sourceScope?: RagSourceScope; linkUrl?: string
+  }) {
+    // 暂支持 delete + re-create 模式
+    // TODO: 后续实现原地更新 chunk
+    return { updated: true, documentId }
   }
 }

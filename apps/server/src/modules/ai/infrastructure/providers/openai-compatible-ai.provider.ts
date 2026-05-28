@@ -11,6 +11,7 @@ import {
   GenerateStructuredObjectStreamInput,
   GenerateTextInput,
   GenerateTextResult,
+  GenerateTextStreamInput,
 } from '../../domain/ports/ai-provider.interface'
 
 type FetchLike = typeof fetch
@@ -243,6 +244,88 @@ export class OpenAiCompatibleAiProvider implements AiProvider {
   }
 
   /**
+   * 执行流式文本生成（Chat Completions streaming）。
+   *
+   * 通过 `stream: true` 启用 SSE 流式响应，每收到一个 content delta 即回调 onToken，
+   * 适用于 AI Chat 对话等需要逐字展示的场景。
+   */
+  async generateTextStream(
+    input: GenerateTextStreamInput,
+  ): Promise<GenerateTextResult> {
+    const chatModel = this.getChatModel()
+    const body = JSON.stringify({
+      ...this.buildChatRequestBody(input),
+      stream: true,
+      stream_options: { include_usage: true },
+    })
+
+    const response = await this.fetchFn(joinChatCompletionsUrl(this.config.baseUrl), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.config.apiKey}`,
+      },
+      body,
+    })
+
+    if (!response.ok) {
+      throw new Error(
+        formatProviderError(
+          this.config.providerLabel,
+          'chat completions stream',
+          response,
+          await readErrorBody(response),
+        ),
+      )
+    }
+
+    const reader = response.body?.getReader()
+    if (!reader) {
+      throw new Error('Provider streaming response body is not readable')
+    }
+
+    const decoder = new TextDecoder()
+    let fullContent = ''
+    let buffer = ''
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() ?? ''
+
+      for (const line of lines) {
+        const trimmed = line.trim()
+        if (!trimmed || !trimmed.startsWith('data:')) continue
+
+        const raw = trimmed.slice(5).trim()
+        if (raw === '[DONE]') continue
+
+        try {
+          const parsed = JSON.parse(raw) as {
+            choices?: Array<{ delta?: { content?: string } }>
+          }
+          const token = parsed.choices?.[0]?.delta?.content
+          if (token) {
+            fullContent += token
+            input.onToken(token)
+          }
+        } catch {
+          // 忽略非 JSON 行（如 comment 行）
+        }
+      }
+    }
+
+    return {
+      provider: this.config.provider,
+      model: chatModel,
+      text: fullContent,
+    }
+  }
+
+  /**
    * 执行一次性结构化对象生成。
    *
    * 适合输出体较小、可以等待完整结果后一次性解析的场景。对于简历导入这类
@@ -374,9 +457,7 @@ export class OpenAiCompatibleAiProvider implements AiProvider {
   }
 
   /**
-   * 执行批量文本向量化。
-   *
-   * 主要服务 RAG 检索链路；与 chat 模型分开读取 embeddingModel，避免配置耦合。
+   * 执行批量文本向量化（自动分片为 ≤10 条/批以兼容 DeepSeek 限制）。
    */
   async embedTexts(input: EmbedTextsInput): Promise<EmbedTextsResult> {
     const embeddingModel = this.getEmbeddingModel()
@@ -389,40 +470,43 @@ export class OpenAiCompatibleAiProvider implements AiProvider {
       )
     }
 
-    // 1. 按 OpenAI-compatible 协议请求 embeddings endpoint。
-    const response = await this.fetchFn(joinEmbeddingsUrl(embeddingBaseUrl), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${embeddingApiKey}`,
-      },
-      body: JSON.stringify({
-        model: embeddingModel,
-        input: input.texts,
-      }),
-    })
+    const BATCH_SIZE = 10
+    const allEmbeddings: number[][] = []
 
-    // 2. provider 失败时透出响应体片段，方便定位模型名或权限问题。
-    if (!response.ok) {
-      throw new Error(
-        formatProviderError(
-          this.config.providerLabel,
-          'embeddings',
-          response,
-          await readErrorBody(response),
-        ),
-      )
+    for (let i = 0; i < input.texts.length; i += BATCH_SIZE) {
+      const batch = input.texts.slice(i, i + BATCH_SIZE)
+      const response = await this.fetchFn(joinEmbeddingsUrl(embeddingBaseUrl), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${embeddingApiKey}`,
+        },
+        body: JSON.stringify({
+          model: embeddingModel,
+          input: batch,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(
+          formatProviderError(
+            this.config.providerLabel,
+            'embeddings',
+            response,
+            await readErrorBody(response),
+          ),
+        )
+      }
+
+      const payload = (await response.json()) as OpenAiCompatibleEmbeddingResponse
+      const batchEmbeddings = payload.data?.map((item) => item.embedding ?? []) ?? []
+      allEmbeddings.push(...batchEmbeddings)
     }
-
-    // 3. 保留 raw 响应，同时向业务层返回纯 embeddings 数组。
-    const payload = (await response.json()) as OpenAiCompatibleEmbeddingResponse
-    const embeddings = payload.data?.map((item) => item.embedding ?? []) ?? []
 
     return {
       provider: this.config.provider,
       model: embeddingModel,
-      embeddings,
-      raw: payload,
+      embeddings: allEmbeddings,
     }
   }
 }

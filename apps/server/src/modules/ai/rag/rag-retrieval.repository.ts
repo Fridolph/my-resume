@@ -285,6 +285,7 @@ export class RagRetrievalRepository {
         content: ragChunks.content,
         embeddingJson: ragChunks.embeddingJson,
         metadataJson: ragChunks.metadataJson,
+        documentMetadataJson: ragDocuments.metadataJson,
         documentSourceType: ragDocuments.sourceType,
         documentSourceScope: ragDocuments.sourceScope,
         documentTitle: ragDocuments.title,
@@ -300,5 +301,33 @@ export class RagRetrievalRepository {
    */
   async listUserDocChunksWithDocuments() {
     return this.listAllChunksWithDocuments()
+  }
+
+  async listAllDocuments() {
+    const rows = await this.database
+      .select()
+      .from(ragDocuments)
+      .orderBy(desc(ragDocuments.createdAt))
+
+    // 为每个文档加载第一个 chunk 作为预览
+    const result = []
+    for (const row of rows) {
+      const [firstChunk] = await this.database
+        .select({ content: ragChunks.content })
+        .from(ragChunks)
+        .where(eq(ragChunks.documentId, row.id))
+        .orderBy(ragChunks.chunkIndex)
+        .limit(1)
+
+      result.push({ ...row, previewContent: firstChunk?.content ?? null })
+    }
+
+    return result
+  }
+
+  async deleteDocument(documentId: string) {
+    await this.database.delete(ragChunks).where(eq(ragChunks.documentId, documentId))
+    await this.database.delete(ragDocuments).where(eq(ragDocuments.id, documentId))
+    return { deleted: true, documentId }
   }
 }

@@ -33,17 +33,21 @@ vi.mock('@i18n/navigation', () => ({
 
 vi.mock('next-intl', async () => {
   const zhProfile = (await import('@i18n/locales/zh/profile.json')).default
+  const zhPublishedResume = (await import('@i18n/locales/zh/publishedResume.json')).default
   const zhSite = (await import('@i18n/locales/zh/site.json')).default
   const enProfile = (await import('@i18n/locales/en/profile.json')).default
+  const enPublishedResume = (await import('@i18n/locales/en/publishedResume.json')).default
   const enSite = (await import('@i18n/locales/en/site.json')).default
 
   const bundlesByLocale: Record<'zh' | 'en', Record<string, Record<string, unknown>>> = {
     zh: {
       profile: zhProfile as Record<string, unknown>,
+      publishedResume: zhPublishedResume as Record<string, unknown>,
       site: zhSite as Record<string, unknown>,
     },
     en: {
       profile: enProfile as Record<string, unknown>,
+      publishedResume: enPublishedResume as Record<string, unknown>,
       site: enSite as Record<string, unknown>,
     },
   }
@@ -76,6 +80,10 @@ vi.mock('next-intl', async () => {
         interpolate(getMessage(namespace, key), values),
   }
 })
+
+vi.mock('@shared/ai-chat/ai-chat-presentation-sync', () => ({
+  AiChatPresentationSync: () => null,
+}))
 
 import { ProfileOverviewShell } from '../overview-shell'
 import { publishedResumeFixture } from '@shared/published-resume/__tests__/fixture'
@@ -128,5 +136,23 @@ describe('ProfileOverviewShell', () => {
     fireEvent.click(aiTalkButton)
     expect(pushMock).toHaveBeenCalledWith('/ai-talk')
     expect(screen.getByRole('link', { name: 'Profile' })).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('should keep profile shell visible when published resume is temporarily unavailable', () => {
+    render(
+      <ThemeModeProvider>
+        <ProfileOverviewShell
+          initialLoadError="profile fetch failed"
+          locale="zh"
+          publishedResume={null}
+        />
+      </ThemeModeProvider>,
+    )
+
+    expect(screen.getByRole('link', { name: '概览' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByText('公开简历服务暂时不可用')).toBeInTheDocument()
+    expect(screen.getByTestId('published-resume-unavailable-message')).toHaveTextContent(
+      'profile fetch failed',
+    )
   })
 })

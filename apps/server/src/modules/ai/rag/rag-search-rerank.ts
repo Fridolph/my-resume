@@ -37,6 +37,10 @@ function normalizeText(value: string | undefined): string {
 export function detectRagSearchQuestionStrategy(query: string): RagSearchQuestionStrategy {
   const normalized = normalizeText(query)
 
+  if (/兴趣|爱好|hobby|休闲|娱乐|喜欢|玩|乐趣/.test(normalized)) {
+    return 'hobby'
+  }
+
   if (/经验|经历|做过|负责过|项目|实战|案例|落地|主导|参与|开发相关经验/.test(normalized)) {
     return 'experience'
   }

@@ -32,6 +32,10 @@ const USER_DOC_CHUNKING_PRESETS: Record<
     chunkSize: 1000,
     chunkOverlap: 100,
   },
+  semantic: {
+    chunkSize: 0,
+    chunkOverlap: 0,
+  },
 }
 
 interface AiUserDocIngestionPanelProps {

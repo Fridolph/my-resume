@@ -21,5 +21,6 @@
     "noImplicitAny": true,
     "strictBindCallApply": true,
     "noFallthroughCasesInSwitch": true
-  }
+  },
+  "exclude": ["vitest.config.mts", "vitest.e2e.config.mts"]
 }

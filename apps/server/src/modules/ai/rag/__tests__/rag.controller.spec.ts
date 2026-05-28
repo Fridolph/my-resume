@@ -61,6 +61,7 @@ describe('RagController', () => {
       mimetype: 'text/markdown',
       size: 3,
       sourceScope: 'published',
+      title: 'rag-notes.md',
       chunkingProfile: 'contextual',
       chunkSize: 800,
       chunkOverlap: 120,
@@ -141,18 +142,21 @@ describe('RagController', () => {
 
     expect(() =>
       controller.ingestUserDoc(file, {
+        chunkingProfile: 'balanced',
         chunkSize: 3,
       }),
     ).toThrow('chunkSize must be between 4 and 6666')
 
     expect(() =>
       controller.ingestUserDoc(file, {
+        chunkingProfile: 'balanced',
         chunkSize: 6667,
       }),
     ).toThrow('chunkSize must be between 4 and 6666')
 
     expect(() =>
       controller.ingestUserDoc(file, {
+        chunkingProfile: 'balanced',
         chunkSize: 80,
         chunkOverlap: 80,
       }),
@@ -160,12 +164,14 @@ describe('RagController', () => {
 
     expect(() =>
       controller.ingestUserDoc(file, {
+        chunkingProfile: 'balanced',
         chunkOverlap: 301,
       }),
     ).toThrow('chunkOverlap must be between 0 and 300')
 
     expect(() =>
       controller.ingestUserDoc(file, {
+        chunkingProfile: 'balanced',
         chunkSize: '80.5' as never,
       }),
     ).toThrow('chunkSize must be an integer')

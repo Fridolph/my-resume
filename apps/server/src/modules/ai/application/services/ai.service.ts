@@ -7,6 +7,7 @@ import type {
   GenerateStructuredObjectInput,
   GenerateStructuredObjectStreamInput,
   GenerateTextInput,
+  GenerateTextStreamInput,
 } from '../../domain/ports/ai-provider.interface'
 
 @Injectable()
@@ -32,6 +33,20 @@ export class AiService {
    */
   generateText(input: GenerateTextInput) {
     return this.aiProvider.generateText(input)
+  }
+
+  /**
+   * 执行流式文本生成。
+   *
+   * 每次收到 provider token 即回调 onToken，适用于 AI Chat 等实时展示场景。
+   * 如果当前 provider 不支持流式，会回退到非流式 generateText。
+   */
+  generateTextStream(input: GenerateTextStreamInput) {
+    if (!this.aiProvider.generateTextStream) {
+      throw new Error('Current AI provider does not support text streaming')
+    }
+
+    return this.aiProvider.generateTextStream(input)
   }
 
   /**

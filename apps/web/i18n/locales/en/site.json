@@ -3,6 +3,8 @@
   "resumeNav": "Resume",
   "profileNav": "Profile",
   "aiTalkNav": "AI Talk",
+  "openAiChatAction": "Open AI Chat",
+  "aiChatDrawerAriaLabel": "Open AI chat drawer",
   "githubAriaLabel": "Open project GitHub repository",
   "downloadAriaLabel": "Open download menu",
   "downloadMenuLabel": "Download",

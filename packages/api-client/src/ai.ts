@@ -1,5 +1,17 @@
 import { defaultApiClient as Alova, joinApiUrl } from './client'
 import type {
+  AiChatAdminListInput,
+  AiChatIssueUseKeyInput,
+  AiChatLeadInput,
+  AiChatLeadSummary,
+  AiChatMessageBlock,
+  AiChatPublicSessionClaimResult,
+  AiChatStreamEventType,
+  AiChatRevokeUseKeyInput,
+  AiChatSession,
+  AiChatSessionListItem,
+  AiChatSummarySnapshot,
+  AiChatUseKeySummary,
   AiResumeImportJobHeartbeat,
   AiResumeImportJobProgressHint,
   AiResumeOptimizationResultDetail,
@@ -17,10 +29,15 @@ import type {
   ApplyAiResumeImportResult,
   ApplyAiResumeOptimizationInput,
   ApplyAiResumeOptimizationResult,
+  AskAiChatMessageInput,
   AskRagInput,
+  ClaimAiChatUseKeyInput,
+  ClaimPublicAiChatSessionInput,
+  CloseAiChatSessionInput,
   DeleteAiUsageRecordInput,
   DeleteAiUsageRecordResult,
   ExtractTextFromFileInput,
+  FetchAiChatSessionInput,
   FetchAiResumeImportJobInput,
   FetchAiResumeImportResultInput,
   FetchAiResumeOptimizationResultInput,
@@ -28,17 +45,42 @@ import type {
   FetchAiUsageRecordDetailInput,
   FileExtractionResult,
   IngestRagUserDocInput,
+  RagAskCitation,
   RagAskResult,
   RagUserDocIngestResult,
   ResumeOptimizationInput,
   RecognizeAiResumeImportInput,
   RuntimeInput,
+  StreamAiChatMessageHandlers,
   StreamAiResumeImportJobHandlers,
   StreamAiResumeImportJobInput,
   TriggerAiWorkbenchAnalysisResult,
 } from './types/ai.types'
 
 export type {
+  AiChatExperienceCardBlock,
+  AiChatIssueUseKeyInput,
+  AiChatLeadInput,
+  AiChatLeadStatus,
+  AiChatLeadSummary,
+  AiChatLocale,
+  AiChatMessage,
+  AiChatMessageBlock,
+  AiChatMessageBlockType,
+  AiChatMessageRole,
+  AiChatProjectCardBlock,
+  AiChatPublicSessionClaimResult,
+  AiChatRevokeUseKeyInput,
+  AiChatSession,
+  AiChatSessionListItem,
+  AiChatSessionStatus,
+  AiChatSummaryBlock,
+  AiChatSummarySnapshot,
+  AiChatSummaryStage,
+  AiChatSystemNoticeBlock,
+  AiChatTextBlock,
+  AiChatUseKeyStatus,
+  AiChatUseKeySummary,
   AiAnalysisSuggestionModule,
   AiResumeOptimizationChangedModule,
   AiResumeOptimizationDiffEntry,
@@ -87,11 +129,16 @@ export type {
   ApplyAiResumeImportResult,
   ApplyAiResumeOptimizationInput,
   ApplyAiResumeOptimizationResult,
+  AskAiChatMessageInput,
   AskRagInput,
+  ClaimAiChatUseKeyInput,
+  ClaimPublicAiChatSessionInput,
+  CloseAiChatSessionInput,
   DeleteAiUsageRecordInput,
   DeleteAiUsageRecordResult,
   ExtractedFileType,
   ExtractTextFromFileInput,
+  FetchAiChatSessionInput,
   FetchAiResumeImportJobInput,
   FetchAiResumeImportResultInput,
   FetchAiResumeOptimizationResultInput,
@@ -109,6 +156,7 @@ export type {
   RecognizeAiResumeImportInput,
   ResumeOptimizationInput,
   RuntimeInput,
+  StreamAiChatMessageHandlers,
   StreamAiResumeImportJobHandlers,
   StreamAiResumeImportJobInput,
   TriggerAiWorkbenchAnalysisResult,
@@ -584,6 +632,14 @@ export function createIngestRagUserDocMethod(input: IngestRagUserDocInput) {
     formData.append('chunkOverlap', String(input.chunkOverlap))
   }
 
+  if (input.contentType) {
+    formData.append('contentType', input.contentType)
+  }
+
+  if (input.title) {
+    formData.append('title', input.title)
+  }
+
   return Alova.createMethod<RagUserDocIngestResult>({
     apiBaseUrl: input.apiBaseUrl,
     pathname: '/ai/rag/ingest/user-doc',
@@ -618,5 +674,341 @@ export function createAskRagMethod(input: AskRagInput) {
       vectorFallbackToLocal: input.vectorFallbackToLocal,
     }),
     fallbackErrorMessage: 'RAG 问答失败，请稍后重试',
+  })
+}
+
+export function createCreateAiChatLeadMethod(input: AiChatLeadInput) {
+  return Alova.createMethod<AiChatLeadSummary>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: '/ai/chat/leads',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      displayName: input.displayName,
+      companyName: input.companyName,
+      contact: input.contact,
+      message: input.message,
+      locale: input.locale,
+    }),
+    fallbackErrorMessage: 'AI Chat 线索提交失败，请稍后重试',
+  })
+}
+
+export function createClaimAiChatUseKeyMethod(input: ClaimAiChatUseKeyInput) {
+  return Alova.createMethod<AiChatSession>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: '/ai/chat/usekey/claim',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      useKey: input.useKey,
+      locale: input.locale,
+    }),
+    fallbackErrorMessage: 'AI Chat useKey 认领失败，请稍后重试',
+  })
+}
+
+export function createClaimPublicAiChatSessionMethod(input: ClaimPublicAiChatSessionInput) {
+  return Alova.createMethod<AiChatPublicSessionClaimResult>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: '/ai/chat/public/claim',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      consentAccepted: input.consentAccepted,
+      locale: input.locale,
+    }),
+    fallbackErrorMessage: 'AI Chat 公开站会话创建失败，请稍后重试',
+  })
+}
+
+export function createFetchAiChatSessionMethod(input: FetchAiChatSessionInput) {
+  return Alova.createMethod<AiChatSession>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: `/ai/chat/sessions/${input.sessionId}`,
+    query: {
+      useKey: input.useKey,
+    },
+    fallbackErrorMessage: 'AI Chat 会话加载失败，请稍后重试',
+  })
+}
+
+interface ParsedAiChatSseMessage {
+  data: unknown
+  event: AiChatStreamEventType
+}
+
+function parseAiChatSseMessage(rawMessage: string): ParsedAiChatSseMessage | null {
+  const lines = rawMessage.split(/\r?\n/)
+  let event: AiChatStreamEventType = 'token'
+  const dataLines: string[] = []
+
+  for (const line of lines) {
+    if (line.startsWith('event:')) {
+      event = line.slice('event:'.length).trim() as AiChatStreamEventType
+      continue
+    }
+
+    if (line.startsWith('data:')) {
+      dataLines.push(line.slice('data:'.length).trim())
+    }
+  }
+
+  if (dataLines.length === 0) {
+    return null
+  }
+
+  return {
+    event,
+    data: JSON.parse(dataLines.join('\n')) as unknown,
+  }
+}
+
+function dispatchAiChatStreamMessage(
+  message: ParsedAiChatSseMessage,
+  handlers: StreamAiChatMessageHandlers,
+) {
+  if (message.event === 'start') {
+    handlers.onStart?.(
+      message.data as {
+        assistantMessageId: string
+        remainingTurns: number
+        sessionId: string
+        turnCount: number
+      },
+    )
+    return
+  }
+
+  if (message.event === 'token') {
+    handlers.onToken?.(message.data as { text: string })
+    return
+  }
+
+  if (message.event === 'citation') {
+    handlers.onCitation?.(message.data as RagAskCitation)
+    return
+  }
+
+  if (message.event === 'block') {
+    handlers.onBlock?.(message.data as AiChatMessageBlock)
+    return
+  }
+
+  if (message.event === 'summary') {
+    handlers.onSummary?.(message.data as AiChatSummarySnapshot)
+    return
+  }
+
+  if (message.event === 'done') {
+    handlers.onDone?.(message.data as { session: AiChatSession })
+    return
+  }
+
+  handlers.onError?.(message.data as { message: string })
+}
+
+export function streamAiChatMessage(
+  input: AskAiChatMessageInput,
+  handlers: StreamAiChatMessageHandlers,
+) {
+  return streamAiChatMessageInternal(input, handlers)
+}
+
+async function streamAiChatMessageInternal(
+  input: AskAiChatMessageInput,
+  handlers: StreamAiChatMessageHandlers,
+) {
+  const response = await fetch(
+    joinApiUrl(input.apiBaseUrl, `/ai/chat/sessions/${input.sessionId}/messages`),
+    {
+      method: 'POST',
+      signal: input.signal,
+      headers: {
+        Accept: 'text/event-stream',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        content: input.content,
+        useKey: input.useKey,
+        locale: input.locale,
+      }),
+    },
+  )
+
+  if (!response.ok) {
+    throw new Error(await resolveStreamErrorMessage(response.clone()))
+  }
+
+  if (!response.body) {
+    throw new Error('当前浏览器不支持读取 AI Chat 实时事件')
+  }
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+
+      if (done) {
+        break
+      }
+
+      buffer += decoder.decode(value, { stream: true })
+      const messages = buffer.split(/\n\n/)
+      buffer = messages.pop() ?? ''
+
+      for (const rawMessage of messages) {
+        const parsedMessage = parseAiChatSseMessage(rawMessage.trim())
+
+        if (!parsedMessage) {
+          continue
+        }
+
+        dispatchAiChatStreamMessage(parsedMessage, handlers)
+      }
+    }
+
+    const finalMessage = parseAiChatSseMessage(buffer.trim())
+
+    if (finalMessage) {
+      dispatchAiChatStreamMessage(finalMessage, handlers)
+    }
+  } finally {
+    reader.releaseLock()
+  }
+}
+
+export function createCloseAiChatSessionMethod(input: CloseAiChatSessionInput) {
+  return Alova.createMethod<AiChatSession>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: `/ai/chat/sessions/${input.sessionId}/close`,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      useKey: input.useKey,
+    }),
+    fallbackErrorMessage: 'AI Chat 会话关闭失败，请稍后重试',
+  })
+}
+
+export function createFetchAiChatLeadsMethod(input: AiChatAdminListInput) {
+  return Alova.createMethod<AiChatLeadSummary[]>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: '/ai/chat/admin/leads',
+    accessToken: input.accessToken,
+    fallbackErrorMessage: 'AI Chat 线索加载失败',
+  })
+}
+
+export function createIssueAiChatUseKeyMethod(input: AiChatIssueUseKeyInput) {
+  return Alova.createMethod<AiChatUseKeySummary>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: '/ai/chat/admin/usekeys',
+    method: 'POST',
+    accessToken: input.accessToken,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      leadId: input.leadId,
+      expiresAt: input.expiresAt,
+      locale: input.locale,
+    }),
+    fallbackErrorMessage: 'AI Chat useKey 发放失败，请稍后重试',
+  })
+}
+
+export function createRevokeAiChatUseKeyMethod(input: AiChatRevokeUseKeyInput) {
+  return Alova.createMethod<AiChatUseKeySummary>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: `/ai/chat/admin/usekeys/${input.useKey}/revoke`,
+    method: 'POST',
+    accessToken: input.accessToken,
+    fallbackErrorMessage: 'AI Chat useKey 作废失败，请稍后重试',
+  })
+}
+
+export function createFetchAiChatUseKeysMethod(input: AiChatAdminListInput) {
+  return Alova.createMethod<AiChatUseKeySummary[]>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: '/ai/chat/admin/usekeys',
+    accessToken: input.accessToken,
+    fallbackErrorMessage: 'AI Chat useKey 列表加载失败',
+  })
+}
+
+export function createFetchAiChatSessionsMethod(input: AiChatAdminListInput) {
+  return Alova.createMethod<AiChatSessionListItem[]>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: '/ai/chat/admin/sessions',
+    accessToken: input.accessToken,
+    fallbackErrorMessage: 'AI Chat 会话列表加载失败',
+  })
+}
+
+export function createFetchAiChatSessionDetailMethod(
+  input: AiChatAdminListInput & { sessionId: string },
+) {
+  return Alova.createMethod<AiChatSession>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: `/ai/chat/admin/sessions/${input.sessionId}`,
+    accessToken: input.accessToken,
+    fallbackErrorMessage: 'AI Chat 会话详情加载失败',
+  })
+}
+
+/**
+ * 重置 AI Chat 会话进度：清空所有消息并将轮次归零。
+ */
+export function createResetAiChatSessionMethod(
+  input: AiChatAdminListInput & { sessionId: string },
+) {
+  return Alova.createMethod<AiChatSession>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: `/ai/chat/admin/sessions/${input.sessionId}/reset`,
+    method: 'POST',
+    accessToken: input.accessToken,
+    fallbackErrorMessage: 'AI Chat 会话重置失败',
+  })
+}
+
+/**
+ * 清空 AI Chat 会话聊天记录（保留轮次进度）。
+ */
+export function createClearAiChatSessionMessagesMethod(
+  input: AiChatAdminListInput & { sessionId: string },
+) {
+  return Alova.createMethod<AiChatSession>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: `/ai/chat/admin/sessions/${input.sessionId}/messages/clear`,
+    method: 'POST',
+    accessToken: input.accessToken,
+    fallbackErrorMessage: 'AI Chat 聊天记录清空失败',
+  })
+}
+
+/**
+ * 删除 useKey（级联清除 session + messages）。
+ */
+export function createDeleteAiChatUseKeyMethod(
+  input: AiChatAdminListInput & { useKey: string },
+) {
+  return Alova.createMethod<{ deleted: boolean }>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: `/ai/chat/admin/usekeys/${input.useKey}/delete`,
+    method: 'POST',
+    accessToken: input.accessToken,
+    fallbackErrorMessage: 'AI Chat useKey 删除失败',
   })
 }

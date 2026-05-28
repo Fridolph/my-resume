@@ -7,14 +7,14 @@ export default async function AiTalkSessionPage({
   params: Promise<{ locale: string; sessionId: string }>
 }) {
   const { sessionId, ...rest } = await params
-  const { apiBaseUrl, locale, publishedResume } = await loadAiTalkPageData(
-    Promise.resolve(rest),
-  )
+  const { apiBaseUrl, initialLoadError, locale, publishedResume } =
+    await loadAiTalkPageData(Promise.resolve(rest))
 
   return (
     <AiTalkSessionShell
       apiBaseUrl={apiBaseUrl}
       enableClientSync
+      initialLoadError={initialLoadError}
       locale={locale}
       publishedResume={publishedResume}
       sessionId={sessionId}

@@ -24,7 +24,7 @@ export type UserDocIngestScope = 'draft' | 'published'
  *
  * `balanced` 适合默认入库闭环，`contextual` 适合更长上下文检索实验。
  */
-export type UserDocChunkingProfile = 'balanced' | 'contextual'
+export type UserDocChunkingProfile = 'balanced' | 'contextual' | 'semantic'
 
 /**
  * user_docs 自定义切片大小下限。

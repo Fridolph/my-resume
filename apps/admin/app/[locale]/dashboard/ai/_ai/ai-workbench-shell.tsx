@@ -61,12 +61,12 @@ const moduleCards = [
   },
   {
     eyebrow: '入口三',
-    title: 'RAG 资料入库',
+    title: 'RAG 管理',
     description:
-      '上传 user_docs，选择 draft/published 作用域，写入检索态文档和切块，为知识库做准备。',
-    href: '/dashboard/ai/knowledge',
-    status: '实验中',
-    tone: 'from-amber-50 via-white to-orange-50 dark:from-amber-950/25 dark:via-zinc-950 dark:to-slate-950',
+      '统一管理简历之外的 RAG 知识库：自定义资料补充、文件上传入库、已入库内容增删查改。',
+    href: '/dashboard/ai/rag-manage',
+    status: 'M25',
+    tone: 'from-violet-50 via-white to-indigo-50 dark:from-violet-950/25 dark:via-zinc-950 dark:to-indigo-950/25',
   },
   {
     eyebrow: '工具',
@@ -84,6 +84,15 @@ const moduleCards = [
     href: '/dashboard/ai/optimization-history',
     status: '记录中心',
     tone: 'from-rose-50 via-white to-stone-50 dark:from-rose-950/20 dark:via-zinc-950 dark:to-slate-950',
+  },
+  {
+    eyebrow: '治理',
+    title: 'AI Chat 治理台',
+    description:
+      '查看公开站访客线索、发放 useKey、回看多轮问答会话，以及第 10 / 20 轮总结沉淀。',
+    href: '/dashboard/ai/chat-governance',
+    status: '最小闭环',
+    tone: 'from-violet-50 via-white to-indigo-50 dark:from-violet-950/20 dark:via-zinc-950 dark:to-slate-950',
   },
 ] as const
 

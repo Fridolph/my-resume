@@ -1,6 +1,6 @@
 'use client'
 
-import { Button } from '@heroui/react'
+import { Button, Tooltip } from '@heroui/react'
 import { useCallback } from 'react'
 
 import {
@@ -13,6 +13,40 @@ import {
   ensureHeroSlogans,
 } from '../editor/draft-editor-helpers'
 import type { RenderTranslationActions, UpdateResumeDraft } from '../types/draft-editor.types'
+
+function CopyIcon() {
+  return (
+    <svg aria-hidden="true" fill="none" height="16" viewBox="0 0 24 24" width="16">
+      <rect height="12" rx="1.5" stroke="currentColor" strokeWidth="1.8" width="12" x="9" y="9" />
+      <path d="M5 15V6a1 1 0 0 1 1-1h9" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+    </svg>
+  )
+}
+
+function ClearIcon() {
+  return (
+    <svg aria-hidden="true" fill="none" height="16" viewBox="0 0 24 24" width="16">
+      <path d="M6 7h12M9.5 7V5.5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1V7" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
+      <path d="M5 7l1.5 12a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1L19 7" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.8" />
+    </svg>
+  )
+}
+
+function SparkleIcon() {
+  return (
+    <svg aria-hidden="true" fill="none" height="16" viewBox="0 0 24 24" width="16">
+      <path d="M12 3v2m0 14v2M5.6 5.6l1.4 1.4m10 10 1.4 1.4M3 12h2m14 0h2M5.6 18.4l1.4-1.4M17 8.4l1.4-1.4" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+    </svg>
+  )
+}
+
+const actionIconClass = [
+  'inline-flex h-8 w-8 min-w-8 items-center justify-center rounded-full p-0 text-zinc-500',
+  'transition-colors focus-visible:ring-2 focus-visible:ring-blue-500/20',
+  'data-[hovered=true]:text-zinc-900',
+  'dark:text-zinc-300',
+  'dark:data-[hovered=true]:text-white',
+].join(' ')
 
 interface UseResumeDraftTranslationActionsArgs {
   isTranslationMode: boolean
@@ -244,31 +278,52 @@ export function useResumeDraftTranslationActions({
       }
 
       return (
-        <div className="flex flex-wrap justify-end gap-2">
-          <Button
-            aria-label={`${scopeTitle} 复制中文到英文`}
-            onPress={handlers.onCopy}
-            size="sm"
-            type="button"
-            variant="outline">
-            复制中文到英文
-          </Button>
-          <Button
-            aria-label={`${scopeTitle} 清空英文`}
-            onPress={handlers.onClear}
-            size="sm"
-            type="button"
-            variant="ghost">
-            清空英文
-          </Button>
-          <Button
-            aria-label={`${scopeTitle} AI 翻译入口预留`}
-            onPress={() => showTranslationPlaceholder(scopeTitle)}
-            size="sm"
-            type="button"
-            variant="ghost">
-            AI 翻译入口预留
-          </Button>
+        <div className="flex flex-wrap justify-end gap-1.5">
+          <Tooltip delay={300}>
+            <Tooltip.Trigger>
+              <Button
+                aria-label={`${scopeTitle} 复制中文到英文`}
+                className={actionIconClass}
+                isIconOnly
+                onPress={handlers.onCopy}
+                size="sm"
+                type="button"
+                variant="ghost">
+                <CopyIcon />
+              </Button>
+            </Tooltip.Trigger>
+            <Tooltip.Content offset={10} placement="bottom">复制中文到英文</Tooltip.Content>
+          </Tooltip>
+          <Tooltip delay={300}>
+            <Tooltip.Trigger>
+              <Button
+                aria-label={`${scopeTitle} 清空英文`}
+                className={actionIconClass}
+                isIconOnly
+                onPress={handlers.onClear}
+                size="sm"
+                type="button"
+                variant="ghost">
+                <ClearIcon />
+              </Button>
+            </Tooltip.Trigger>
+            <Tooltip.Content offset={10} placement="bottom">清空英文</Tooltip.Content>
+          </Tooltip>
+          <Tooltip delay={300}>
+            <Tooltip.Trigger>
+              <Button
+                aria-label={`${scopeTitle} AI 翻译入口预留`}
+                className={actionIconClass}
+                isIconOnly
+                onPress={() => showTranslationPlaceholder(scopeTitle)}
+                size="sm"
+                type="button"
+                variant="ghost">
+                <SparkleIcon />
+              </Button>
+            </Tooltip.Trigger>
+            <Tooltip.Content offset={10} placement="bottom">AI 翻译（预留）</Tooltip.Content>
+          </Tooltip>
         </div>
       )
     },
