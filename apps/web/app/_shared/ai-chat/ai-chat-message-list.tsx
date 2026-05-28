@@ -19,29 +19,6 @@ import type { AiChatPresentation } from './ai-chat.types'
  */
 function renderMessageBlocks(blocks: AiChatMessageBlock[]) {
   return blocks.map((block, index) => {
-    if (block.type === 'project_card' || block.type === 'experience_card') {
-      return (
-        <article
-          className="grid gap-2 rounded-2xl border border-blue-200/70 bg-blue-50/70 p-3 dark:border-blue-500/20 dark:bg-blue-500/10"
-          key={`${block.type}-${index}`}>
-          <div className="grid gap-0.5">
-            <strong className="text-sm text-zinc-950 dark:text-white">{block.title}</strong>
-            <span className="text-xs text-zinc-500 dark:text-zinc-400">
-              {block.subtitle} · {block.period}
-            </span>
-          </div>
-          <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-200">{block.summary}</p>
-          {block.highlights.length > 0 ? (
-            <ul className="grid gap-1 text-xs leading-5 text-zinc-600 dark:text-zinc-300">
-              {block.highlights.map((item) => (
-                <li key={item}>• {item}</li>
-              ))}
-            </ul>
-          ) : null}
-        </article>
-      )
-    }
-
     if (block.type === 'summary') {
       return (
         <article
@@ -62,62 +39,6 @@ function renderMessageBlocks(blocks: AiChatMessageBlock[]) {
       )
     }
 
-    if (block.type === 'hobby_card') {
-      return (
-        <article
-          className="grid gap-2 rounded-2xl border border-rose-200/70 bg-rose-50/70 p-3 dark:border-rose-500/20 dark:bg-rose-500/10"
-          key={`${block.type}-${index}`}>
-          <div className="grid gap-1">
-            <strong className="text-sm text-zinc-950 dark:text-white">{block.title}</strong>
-            <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-200">{block.description}</p>
-          </div>
-          {block.keywords?.length > 0 ? (
-            <div className="flex flex-wrap gap-1.5">
-              {block.keywords.map((kw) => (
-                <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-700 dark:bg-rose-500/15 dark:text-rose-300" key={kw}>{kw}</span>
-              ))}
-            </div>
-          ) : null}
-          {block.url ? <a className="text-xs text-rose-600 underline underline-offset-2 dark:text-rose-400" href={block.url} rel="noreferrer" target="_blank">查看详情 →</a> : null}
-        </article>
-      )
-    }
-
-    if (block.type === 'article_card') {
-      return (
-        <article
-          className="grid gap-2 rounded-2xl border border-violet-200/70 bg-violet-50/70 p-3 dark:border-violet-500/20 dark:bg-violet-500/10"
-          key={`${block.type}-${index}`}>
-          <div className="grid gap-1">
-            <strong className="text-sm text-zinc-950 dark:text-white">{block.title}</strong>
-            <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-200">{block.summary}</p>
-          </div>
-          {block.keywords?.length > 0 ? (
-            <div className="flex flex-wrap gap-1.5">
-              {block.keywords.map((kw) => (
-                <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-500/15 dark:text-violet-300" key={kw}>{kw}</span>
-              ))}
-            </div>
-          ) : null}
-          {block.url ? <a className="text-xs text-violet-600 underline underline-offset-2 dark:text-violet-400" href={block.url} rel="noreferrer" target="_blank">阅读全文 →</a> : null}
-        </article>
-      )
-    }
-
-    if (block.type === 'media_card') {
-      return (
-        <article
-          className="grid gap-2 rounded-2xl border border-cyan-200/70 bg-cyan-50/70 p-3 dark:border-cyan-500/20 dark:bg-cyan-500/10"
-          key={`${block.type}-${index}`}>
-          <div className="grid gap-1">
-            <strong className="text-sm text-zinc-950 dark:text-white">{block.title}</strong>
-            <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-200">{block.description}</p>
-          </div>
-          {block.url ? <a className="text-xs text-cyan-600 underline underline-offset-2 dark:text-cyan-400" href={block.url} rel="noreferrer" target="_blank">查看 →</a> : null}
-        </article>
-      )
-    }
-
     if (block.type === 'system_notice') {
       return (
         <div
@@ -128,7 +49,7 @@ function renderMessageBlocks(blocks: AiChatMessageBlock[]) {
       )
     }
 
-    // text 类型 block 不重复渲染——消息正文已在气泡中展示
+    // 其他 block（project/experience/hobby/article/media/text）不在消息下方重复渲染
     return null
   })
 }

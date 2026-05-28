@@ -410,6 +410,213 @@ describe('AiChatDrawer', () => {
     expect(screen.getByText(/SSR、SEO/)).toBeInTheDocument()
   })
 
+  it('should keep tooltip visible when cursor moves onto tooltip content', async () => {
+    const user = userEvent.setup()
+
+    useAiChatMock.mockReturnValue({
+      acceptConsent: vi.fn(),
+      canRetryLastMessage: false,
+      cancelStreaming: vi.fn(),
+      clearPresentation: vi.fn(),
+      closeSession: vi.fn(),
+      draftAssistantMessage: null,
+      drawerState: 'open',
+      dismissConsentModal: vi.fn(),
+      errorMessage: null,
+      hasConsentForToday: true,
+      hideDrawer: vi.fn(),
+      isBootstrappingSession: false,
+      isConsentModalOpen: false,
+      isDrawerOpen: true,
+      isDrawerVisible: true,
+      isStreaming: false,
+      minimizeDrawer: vi.fn(),
+      openDrawer: vi.fn(),
+      presentation: {
+        assistantAvatarSrc: '/img/avatar.jpg',
+        assistantLabel: '付寅生',
+        visitorLabel: '访客',
+      },
+      refreshSession: vi.fn(),
+      registerPresentation: vi.fn(),
+      restoreDrawer: vi.fn(),
+      restoreReady: true,
+      retryLastMessage: vi.fn(),
+      sendMessage: vi.fn(),
+      session: {
+        sessionId: 'session-public-004',
+        locale: 'zh',
+        status: 'open',
+        turnCount: 1,
+        remainingTurns: 19,
+        useKeyStatus: 'claimed',
+        lead: {
+          id: 'lead-public-004',
+          locale: 'zh',
+          displayName: '公开站访客',
+          companyName: '',
+          contact: '',
+          message: '',
+          status: 'issued',
+          createdAt: '2026-05-12T00:00:00.000Z',
+          updatedAt: '2026-05-12T00:00:00.000Z',
+        },
+        messages: [
+          {
+            id: 'assistant-4',
+            role: 'assistant',
+            content: '我最近在做一个叫 my-resume 的个人项目 [#1]。',
+            turnIndex: 1,
+            answerBlocks: [],
+            citations: [
+              {
+                ref: '#1',
+                sourceType: 'resume_core',
+                sourcePath: 'resume-core',
+                section: 'project',
+                title: 'my-resume',
+                score: 0.987,
+                snippet: '这是一个全栈个人项目。',
+              },
+            ],
+            createdAt: '2026-05-12T00:00:00.000Z',
+          },
+        ],
+        interimSummary: null,
+        finalSummary: null,
+        createdAt: '2026-05-12T00:00:00.000Z',
+        updatedAt: '2026-05-12T00:00:01.000Z',
+        closedAt: null,
+      },
+      summaryPreview: null,
+      useKeyStatus: 'claimed',
+      view: 'chat',
+    })
+
+    render(<AiChatDrawer locale="zh" />)
+
+    const trigger = screen.getByText('#1')
+    await user.hover(trigger)
+
+    const tooltipTitle = await screen.findByText('my-resume')
+    expect(tooltipTitle).toBeInTheDocument()
+
+    await user.unhover(trigger)
+    await user.hover(tooltipTitle)
+
+    expect(screen.getByText('这是一个全栈个人项目。')).toBeInTheDocument()
+  })
+
+  it('should hide custom citation cards while keeping citation chips visible', () => {
+    useAiChatMock.mockReturnValue({
+      acceptConsent: vi.fn(),
+      canRetryLastMessage: false,
+      cancelStreaming: vi.fn(),
+      clearPresentation: vi.fn(),
+      closeSession: vi.fn(),
+      draftAssistantMessage: null,
+      drawerState: 'open',
+      dismissConsentModal: vi.fn(),
+      errorMessage: null,
+      hasConsentForToday: true,
+      hideDrawer: vi.fn(),
+      isBootstrappingSession: false,
+      isConsentModalOpen: false,
+      isDrawerOpen: true,
+      isDrawerVisible: true,
+      isStreaming: false,
+      minimizeDrawer: vi.fn(),
+      openDrawer: vi.fn(),
+      presentation: {
+        assistantAvatarSrc: '/img/avatar.jpg',
+        assistantLabel: '付寅生',
+        visitorLabel: '访客',
+      },
+      refreshSession: vi.fn(),
+      registerPresentation: vi.fn(),
+      restoreDrawer: vi.fn(),
+      restoreReady: true,
+      retryLastMessage: vi.fn(),
+      sendMessage: vi.fn(),
+      session: {
+        sessionId: 'session-public-005',
+        locale: 'zh',
+        status: 'open',
+        turnCount: 1,
+        remainingTurns: 19,
+        useKeyStatus: 'claimed',
+        lead: {
+          id: 'lead-public-005',
+          locale: 'zh',
+          displayName: '公开站访客',
+          companyName: '',
+          contact: '',
+          message: '',
+          status: 'issued',
+          createdAt: '2026-05-12T00:00:00.000Z',
+          updatedAt: '2026-05-12T00:00:00.000Z',
+        },
+        messages: [
+          {
+            id: 'assistant-5',
+            role: 'assistant',
+            content: '我平时还喜欢音乐和羽毛球 #1 #2。',
+            turnIndex: 1,
+            answerBlocks: [
+              {
+                type: 'hobby_card',
+                title: '音乐.md',
+                description: '我喜欢音乐',
+                keywords: [],
+              },
+              {
+                type: 'article_card',
+                title: 'JS全栈 AI Agent 学习',
+                summary: 'RAG 怎么做',
+                keywords: [],
+              },
+            ],
+            citations: [
+              {
+                ref: '#1',
+                sourceType: 'user_docs',
+                sourcePath: 'music',
+                section: 'interest',
+                title: '音乐.md',
+                snippet: '我喜欢音乐',
+              },
+              {
+                ref: '#2',
+                sourceType: 'knowledge',
+                sourcePath: 'rag',
+                section: 'article',
+                title: 'JS全栈 AI Agent 学习',
+                snippet: 'RAG 怎么做',
+              },
+            ],
+            createdAt: '2026-05-12T00:00:00.000Z',
+          },
+        ],
+        interimSummary: null,
+        finalSummary: null,
+        createdAt: '2026-05-12T00:00:00.000Z',
+        updatedAt: '2026-05-12T00:00:01.000Z',
+        closedAt: null,
+      },
+      summaryPreview: null,
+      useKeyStatus: 'claimed',
+      view: 'chat',
+    })
+
+    render(<AiChatDrawer locale="zh" />)
+
+    expect(screen.getByText('引用：')).toBeInTheDocument()
+    expect(screen.getByText('#1')).toBeInTheDocument()
+    expect(screen.getByText('#2')).toBeInTheDocument()
+    expect(screen.queryByText('音乐.md')).not.toBeInTheDocument()
+    expect(screen.queryByText('JS全栈 AI Agent 学习')).not.toBeInTheDocument()
+  })
+
   it('should keep textarea editable while streaming but disable send action', async () => {
     const onSend = vi.fn()
 

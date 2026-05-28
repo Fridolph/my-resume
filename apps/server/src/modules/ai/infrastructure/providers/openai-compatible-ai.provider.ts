@@ -457,9 +457,7 @@ export class OpenAiCompatibleAiProvider implements AiProvider {
   }
 
   /**
-   * 执行批量文本向量化。
-   *
-   * 主要服务 RAG 检索链路；与 chat 模型分开读取 embeddingModel，避免配置耦合。
+   * 执行批量文本向量化（自动分片为 ≤10 条/批以兼容 DeepSeek 限制）。
    */
   async embedTexts(input: EmbedTextsInput): Promise<EmbedTextsResult> {
     const embeddingModel = this.getEmbeddingModel()
@@ -472,40 +470,43 @@ export class OpenAiCompatibleAiProvider implements AiProvider {
       )
     }
 
-    // 1. 按 OpenAI-compatible 协议请求 embeddings endpoint。
-    const response = await this.fetchFn(joinEmbeddingsUrl(embeddingBaseUrl), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${embeddingApiKey}`,
-      },
-      body: JSON.stringify({
-        model: embeddingModel,
-        input: input.texts,
-      }),
-    })
+    const BATCH_SIZE = 10
+    const allEmbeddings: number[][] = []
 
-    // 2. provider 失败时透出响应体片段，方便定位模型名或权限问题。
-    if (!response.ok) {
-      throw new Error(
-        formatProviderError(
-          this.config.providerLabel,
-          'embeddings',
-          response,
-          await readErrorBody(response),
-        ),
-      )
+    for (let i = 0; i < input.texts.length; i += BATCH_SIZE) {
+      const batch = input.texts.slice(i, i + BATCH_SIZE)
+      const response = await this.fetchFn(joinEmbeddingsUrl(embeddingBaseUrl), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${embeddingApiKey}`,
+        },
+        body: JSON.stringify({
+          model: embeddingModel,
+          input: batch,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(
+          formatProviderError(
+            this.config.providerLabel,
+            'embeddings',
+            response,
+            await readErrorBody(response),
+          ),
+        )
+      }
+
+      const payload = (await response.json()) as OpenAiCompatibleEmbeddingResponse
+      const batchEmbeddings = payload.data?.map((item) => item.embedding ?? []) ?? []
+      allEmbeddings.push(...batchEmbeddings)
     }
-
-    // 3. 保留 raw 响应，同时向业务层返回纯 embeddings 数组。
-    const payload = (await response.json()) as OpenAiCompatibleEmbeddingResponse
-    const embeddings = payload.data?.map((item) => item.embedding ?? []) ?? []
 
     return {
       provider: this.config.provider,
       model: embeddingModel,
-      embeddings,
-      raw: payload,
+      embeddings: allEmbeddings,
     }
   }
 }

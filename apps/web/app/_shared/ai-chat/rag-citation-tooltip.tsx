@@ -64,6 +64,14 @@ export function RagCitationTooltip({ citation }: RagCitationTooltipProps) {
     }
   }, [isVisible])
 
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current)
+      }
+    }
+  }, [])
+
   function open() {
     if (closeTimerRef.current) {
       clearTimeout(closeTimerRef.current)
@@ -133,7 +141,6 @@ export function RagCitationTooltip({ citation }: RagCitationTooltipProps) {
   return (
     <span
       ref={containerRef}
-      onBlur={() => {}} // eslint 友好
       onMouseEnter={open}
       onMouseLeave={close}>
       <button
