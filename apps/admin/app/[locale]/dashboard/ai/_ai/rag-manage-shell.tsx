@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, Card, CardContent, CardHeader, CardTitle, Chip, Form, Spinner, Table, Tabs, TextArea, Tooltip } from '@heroui/react'
+import { Button, Card, CardContent, CardHeader, CardTitle, Chip, Form, Spinner, Tabs, TextArea } from '@heroui/react'
 import { useEffect, useState } from 'react'
 
 import { useAdminSession } from '@core/admin-session'
@@ -9,7 +9,6 @@ import { DEFAULT_API_BASE_URL } from '@core/env'
 import type { AppLocale } from '@i18n/types'
 
 import { AiUserDocIngestionPanel } from './components/user-doc-ingestion-panel'
-import { createIngestRagUserDocMethod } from './services/ai-file-api'
 import type { UserDocIngestResult } from './types/ai-file.types'
 import type { RagUserDocContentType } from './rag-extension.types'
 
@@ -293,74 +292,66 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
                   </div>
                 </div>
               ) : (
-                <Table>
-                  <Table.Content aria-label="RAG 已入库资料列表">
-                    <Table.Header>
-                      <Table.Column isRowHeader>标题</Table.Column>
-                      <Table.Column>类型</Table.Column>
-                      <Table.Column>内容预览</Table.Column>
-                      <Table.Column>更新时间</Table.Column>
-                      <Table.Column className="w-28 text-right">操作</Table.Column>
-                    </Table.Header>
-                    <Table.Body items={documents}>
-                      {(doc) => (
-                        <Table.Row key={doc.id}>
-                          <Table.Cell>
-                            <div className="grid gap-0.5">
-                              <strong className="text-sm text-zinc-950 dark:text-white">{doc.title || doc.fileName || '未命名'}</strong>
-                              {doc.fileName && doc.title !== doc.fileName ? (
-                                <span className="text-xs text-zinc-400 dark:text-zinc-500">{doc.fileName} · {doc.fileType?.toUpperCase()}</span>
-                              ) : null}
-                            </div>
-                          </Table.Cell>
-                          <Table.Cell>
-                            <Chip size="sm" variant="soft">{contentTypeLabel(doc.contentType)}</Chip>
-                          </Table.Cell>
-                          <Table.Cell>
-                            <span className="line-clamp-2 text-xs text-zinc-500 dark:text-zinc-400">
-                              {doc.preview ?? '—'}
-                            </span>
-                          </Table.Cell>
-                          <Table.Cell>
-                            <span className="text-xs text-zinc-500 dark:text-zinc-400">{formatDateTime(doc.createdAt)}</span>
-                          </Table.Cell>
-                          <Table.Cell>
-                            <div className="flex items-center justify-end gap-1">
-                              <button
-                                aria-label="查看详情"
-                                className={actionIconClass}
-                                onClick={() => setViewDetail(doc)}
-                                type="button">
-                                <ViewIcon />
-                              </button>
-                              {deleteConfirmId === doc.id ? (
-                                <>
-                                  <button
-                                    className="rounded-lg bg-rose-600 px-2 py-1 text-[0.65rem] font-medium text-white hover:bg-rose-700"
-                                    onClick={() => { handleDelete(doc.id); setDeleteConfirmId(null) }}
-                                    type="button">确认</button>
-                                  <button
-                                    className="rounded-lg border border-zinc-300 px-2 py-1 text-[0.65rem] text-zinc-600 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800"
-                                    onClick={() => setDeleteConfirmId(null)}
-                                    type="button">取消</button>
-                                </>
-                              ) : (
-                                <button
-                                  aria-label="删除资料"
-                                  className={actionIconClass}
-                                  disabled={deletingId === doc.id}
-                                  onClick={() => setDeleteConfirmId(doc.id)}
-                                  type="button">
-                                  <TrashIcon />
-                                </button>
-                              )}
-                            </div>
-                          </Table.Cell>
-                        </Table.Row>
-                      )}
-                    </Table.Body>
-                  </Table.Content>
-                </Table>
+                <div className="grid gap-1.5">
+                  {/* table header */}
+                  <div className="grid grid-cols-[minmax(0,2fr)_5rem_minmax(0,3fr)_7rem_7rem] gap-2 px-3 py-1.5 text-xs font-medium text-zinc-400">
+                    <span>标题</span>
+                    <span>类型</span>
+                    <span>内容预览</span>
+                    <span>时间</span>
+                    <span className="text-right">操作</span>
+                  </div>
+                  {documents.map((doc) => (
+                    <div
+                      className="grid grid-cols-[minmax(0,2fr)_5rem_minmax(0,3fr)_7rem_7rem] items-center gap-2 rounded-xl border border-zinc-200/80 bg-white px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-950"
+                      key={doc.id}>
+                      <div className="min-w-0">
+                        <strong className="block truncate text-sm text-zinc-950 dark:text-white">{doc.title || '未命名'}</strong>
+                      </div>
+                      <div>
+                        <Chip size="sm" variant="soft">{contentTypeLabel(doc.contentType)}</Chip>
+                      </div>
+                      <div className="min-w-0">
+                        <span className="line-clamp-2 text-xs text-zinc-400 dark:text-zinc-500">
+                          {doc.preview ?? '暂无内容'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-xs text-zinc-400 dark:text-zinc-500">{formatDateTime(doc.createdAt)}</span>
+                      </div>
+                      <div className="flex items-center justify-end gap-0.5">
+                        <button
+                          className={actionIconClass}
+                          onClick={() => setViewDetail(doc)}
+                          title="查看详情"
+                          type="button">
+                          <ViewIcon />
+                        </button>
+                        {deleteConfirmId === doc.id ? (
+                          <>
+                            <button
+                              className="rounded bg-rose-600 px-1.5 py-0.5 text-[0.6rem] font-medium text-white hover:bg-rose-700"
+                              onClick={() => { handleDelete(doc.id); setDeleteConfirmId(null) }}
+                              type="button">确认</button>
+                            <button
+                              className="rounded border border-zinc-300 px-1.5 py-0.5 text-[0.6rem] text-zinc-500 hover:bg-zinc-100 dark:border-zinc-700"
+                              onClick={() => setDeleteConfirmId(null)}
+                              type="button">取消</button>
+                          </>
+                        ) : (
+                          <button
+                            className={actionIconClass}
+                            disabled={deletingId === doc.id}
+                            onClick={() => setDeleteConfirmId(doc.id)}
+                            title="删除"
+                            type="button">
+                            <TrashIcon />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </CardContent>
           </Card>
