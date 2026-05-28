@@ -364,11 +364,12 @@ describe('RagService', () => {
 
     const result = await service.ask('请总结经历', 2, 'zh')
 
+    // 重排后按 rerankScore 降序：user_docs (0.99) > resume_core (0.88 + 0.08 = 0.96)
     expect(result.citations.map((item) => item.sourceType)).toEqual([
-      'resume_core',
       'user_docs',
+      'resume_core',
     ])
-    expect(result.matches[0]?.id).toBe('resume:1')
+    expect(result.matches[0]?.id).toBe('user-doc:1')
   })
 
   it('should pass request-level routing override through ask to search', async () => {

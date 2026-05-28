@@ -44,7 +44,7 @@ import type {
 
 const MAX_CHAT_TURNS = 20
 const SUMMARY_TRIGGER_TURN = 10
-const DEFAULT_CHAT_LIMIT = 4
+const DEFAULT_CHAT_LIMIT = 15
 const PUBLIC_CHAT_POLICY_VERSION = 'm23-public-ip-v1'
 const PUBLIC_CHAT_SOURCE_TAG = 'public-ip'
 const PUBLIC_CHAT_ISSUER = 'system-public-chat'

@@ -24,7 +24,8 @@ import {
   calculateKeywordScore,
   cosineSimilarity,
 } from './rag-search-context-builder'
-import { applyRagSearchRerank, applyRagSearchRerankAndSelect, rerankRagSearchMatches } from './rag-search-rerank'
+import { applyRagSearchRerank, applyRagSearchRerankAndSelect, detectRagSearchQuestionStrategy, rerankRagSearchMatches } from './rag-search-rerank'
+import { DEFAULT_RAG_SEARCH_RERANK_CONFIG } from './config/rag-search-rerank.config'
 import {
   mapLegacySourceTypeToRetrievalSourceType,
   RagAskCitation,
@@ -557,8 +558,16 @@ export class RagService {
 
     const matches = await this.search(question, limit, this.defaultSearchQualityGate, routingOverride)
     const filteredMatches = filterMatchesForAskByLocale(matches, locale)
-    const prioritizedMatches = sortMatchesForAnswer(filteredMatches)
-    const citations = buildRagAskCitations(prioritizedMatches)
+
+    // 问题策略重排 + 最低分过滤 + 取前 5
+    const strategy = detectRagSearchQuestionStrategy(question)
+    const reranked = rerankRagSearchMatches(filteredMatches, question, strategy, DEFAULT_RAG_SEARCH_RERANK_CONFIG)
+    const aboveThreshold = reranked.filter((item) => item.rerankScore >= 0.1)
+    const topMatches = aboveThreshold.length > 0
+      ? aboveThreshold.slice(0, 5).map((item) => item.match)
+      : filteredMatches.slice(0, 5)
+
+    const citations = buildRagAskCitations(topMatches)
     const providerSummary = this.aiService.getProviderSummary()
 
     if (citations.length === 0) {
@@ -576,12 +585,12 @@ export class RagService {
       return {
         answer: buildInsufficientContextAnswer(locale),
         citations,
-        matches: prioritizedMatches,
+        matches: topMatches,
         providerSummary,
       }
     }
 
-    const context = prioritizedMatches
+    const context = topMatches
       .map(
         (item, index) =>
           `[#${index + 1}] ${item.title}\nsection=${item.section}\nsource=${item.sourceType ?? 'resume'}\n${item.content}`,
@@ -612,7 +621,7 @@ export class RagService {
       event: 'rag.ask.completed',
       status: 'answered',
       question,
-      matchCount: prioritizedMatches.length,
+      matchCount: topMatches.length,
       citationCount: citations.length,
       sources: citations.map((item) => ({
         ref: item.ref,
@@ -628,7 +637,7 @@ export class RagService {
     return {
       answer: result.text,
       citations,
-      matches: prioritizedMatches,
+      matches: topMatches,
       providerSummary,
     }
   }
