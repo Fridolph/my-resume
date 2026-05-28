@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, Card, CardContent, CardHeader, CardTitle, Chip, Form, Spinner, Tabs, TextArea } from '@heroui/react'
+import { Button, Card, CardContent, CardHeader, CardTitle, Chip, Form, Popover, Spinner, Tabs, TextArea } from '@heroui/react'
 import { useEffect, useState } from 'react'
 
 import { useAdminSession } from '@core/admin-session'
@@ -88,7 +88,6 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
   const [documents, setDocuments] = useState<RagDocument[]>([])
   const [documentsLoading, setDocumentsLoading] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const [viewDetail, setViewDetail] = useState<RagDocument | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
 
@@ -319,36 +318,41 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
                       <div>
                         <span className="text-xs text-zinc-400 dark:text-zinc-500">{formatDateTime(doc.createdAt)}</span>
                       </div>
-                      <div className="flex items-center justify-end gap-0.5">
-                        <button
-                          className={actionIconClass}
-                          onClick={() => setViewDetail(doc)}
-                          title="查看详情"
-                          type="button">
-                          <ViewIcon />
-                        </button>
-                        {deleteConfirmId === doc.id ? (
-                          <>
-                            <button
-                              className="rounded bg-rose-600 px-1.5 py-0.5 text-[0.6rem] font-medium text-white hover:bg-rose-700"
-                              onClick={() => { handleDelete(doc.id); setDeleteConfirmId(null) }}
-                              type="button">确认</button>
-                            <button
-                              className="rounded border border-zinc-300 px-1.5 py-0.5 text-[0.6rem] text-zinc-500 hover:bg-zinc-100 dark:border-zinc-700"
-                              onClick={() => setDeleteConfirmId(null)}
-                              type="button">取消</button>
-                          </>
-                        ) : (
-                          <button
-                            className={actionIconClass}
-                            disabled={deletingId === doc.id}
-                            onClick={() => setDeleteConfirmId(doc.id)}
-                            title="删除"
-                            type="button">
-                            <TrashIcon />
-                          </button>
-                        )}
-                      </div>
+                       <div className="flex items-center justify-end gap-0.5">
+                         <button
+                           className={actionIconClass}
+                           onClick={() => setViewDetail(doc)}
+                           title="查看详情"
+                           type="button">
+                           <ViewIcon />
+                         </button>
+                         <Popover>
+                           <button
+                             className={actionIconClass}
+                             disabled={deletingId === doc.id}
+                             title="删除"
+                             type="button">
+                             <TrashIcon />
+                           </button>
+                           <Popover.Content className="max-w-64">
+                             <Popover.Dialog>
+                               <Popover.Heading className="text-sm font-semibold">确认删除</Popover.Heading>
+                               <p className="mt-1 text-sm text-zinc-500">确定删除「{doc.title || '未命名'}」及其所有关联数据？</p>
+                               <div className="mt-3 flex justify-end gap-2">
+                                 <Button slot="close" size="sm" variant="ghost">取消</Button>
+                                 <Button
+                                   isDisabled={deletingId === doc.id}
+                                   onPress={() => handleDelete(doc.id)}
+                                   size="sm"
+                                   variant="danger"
+                                   slot="close">
+                                   删除
+                                 </Button>
+                               </div>
+                             </Popover.Dialog>
+                           </Popover.Content>
+                         </Popover>
+                       </div>
                     </div>
                   ))}
                 </div>

@@ -7,6 +7,7 @@ import {
   Inject,
   Param,
   Post,
+  Put,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -33,6 +34,7 @@ import {
   RagAskResultDto,
   RagResumeSyncBodyDto,
   RagResumeSyncResultDto,
+  RagCustomBodyDto,
   RagSearchBodyDto,
   RagSearchMatchDto,
   RagStatusDto,
@@ -249,6 +251,45 @@ export class RagController {
       chunkSize: chunkingConfig.chunkSize,
       chunkOverlap: chunkingConfig.chunkOverlap,
       contentType: body.contentType,
+    })
+  }
+
+  @Post('custom')
+  @UseGuards(RoleCapabilitiesGuard)
+  @RequireCapability('canTriggerAiAnalysis')
+  @ApiOperation({
+    summary: '添加自定义 RAG 资料（JSON）',
+    description: '通过 JSON body 添加自定义文本内容，自动分块向量化写入检索态',
+  })
+  @ApiBody({ type: RagCustomBodyDto })
+  @ApiEnvelopeResponse({ description: '入库成功', type: RagUserDocIngestResultDto })
+  ingestCustom(@Body() body: RagCustomBodyDto) {
+    if (!body.content?.trim()) {
+      throw new BadRequestException('内容不能为空')
+    }
+    return this.userDocsIngestionService.ingestCustom({
+      title: body.title ?? 'RAG 资料',
+      content: body.content,
+      contentType: body.contentType ?? 'general',
+      sourceScope: body.scope ?? 'published',
+      linkUrl: body.linkUrl,
+    })
+  }
+
+  @Put('custom/:documentId')
+  @UseGuards(RoleCapabilitiesGuard)
+  @RequireCapability('canTriggerAiAnalysis')
+  @ApiOperation({ summary: '更新已入库的自定义资料' })
+  updateCustom(
+    @Param('documentId') documentId: string,
+    @Body() body: RagCustomBodyDto,
+  ) {
+    return this.userDocsIngestionService.updateCustom(documentId, {
+      title: body.title,
+      content: body.content,
+      contentType: body.contentType,
+      sourceScope: body.scope,
+      linkUrl: body.linkUrl,
     })
   }
 
