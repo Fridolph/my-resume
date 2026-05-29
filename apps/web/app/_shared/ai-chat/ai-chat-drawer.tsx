@@ -113,7 +113,10 @@ export function AiChatDrawer({ locale }: { locale: 'zh' | 'en' }) {
   } = useAiChat()
   const [chatMessage, setChatMessage] = useState('')
   const [dismissedSummaryStage, setDismissedSummaryStage] = useState<string | null>(
-    () => localStorage.getItem('my-resume:ai-chat:summary-dismissed') ?? null,
+    () => {
+      if (typeof window === 'undefined') return null
+      return localStorage.getItem('my-resume:ai-chat:summary-dismissed') ?? null
+    },
   )
   const [dismissedClosedBanner, setDismissedClosedBanner] = useState(false)
   const messageListRef = useRef<HTMLDivElement | null>(null)
@@ -220,7 +223,9 @@ export function AiChatDrawer({ locale }: { locale: 'zh' | 'en' }) {
               <CloseButton
                 aria-label={locale === 'en' ? 'Close summary' : '关闭总结'}
                 onPress={() => {
-                  localStorage.setItem('my-resume:ai-chat:summary-dismissed', summaryPreview.stage)
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem('my-resume:ai-chat:summary-dismissed', summaryPreview.stage)
+                  }
                   setDismissedSummaryStage(summaryPreview.stage)
                 }}
               />
