@@ -1,508 +1,228 @@
-import { Inject, Injectable } from '@nestjs/common'
-import PDFDocument from 'pdfkit'
+import { Injectable } from '@nestjs/common'
+import puppeteer from 'puppeteer'
 
 import { ResumeLocale, StandardResume } from '../../domain/standard-resume'
-import { ResumeMarkdownExportService } from './resume-markdown-export.service'
-import { resolvePdfFontPath } from '../../resume-pdf-fonts'
 
-type PdfDocument = InstanceType<typeof PDFDocument>
-
-type PdfTheme = {
-  accent: string
-  accentSoft: string
-  border: string
-  text: string
-  muted: string
+function l(value: { zh: string; en: string }, locale: ResumeLocale): string {
+  return locale === 'en' ? (value.en || value.zh) : value.zh
 }
 
-const SUB_CONTENT_INDENT = 24
-const SECTION_BOTTOM_GAP = 7
-const ITEM_BOTTOM_GAP = 8
+/**
+ * 构造 A4 简历 PDF 的完整 HTML 模板。
+ */
+function buildResumePdfHtml(resume: StandardResume, locale: ResumeLocale): string {
+  const p = resume.profile
+  const t = (v: { zh: string; en: string }) => l(v, locale)
 
-const PDF_THEME: PdfTheme = {
-  accent: '#1d4ed8',
-  accentSoft: '#dbeafe',
-  border: '#dbe1ea',
-  text: '#111827',
-  muted: '#667085',
-}
-
-function normalizeInlineMarkdown(value: string): string {
-  return value
-    .replace(/\*\*(.+?)\*\*/g, '$1')
-    .replace(/\[(.+?)\]\((.+?)\)/g, '$1 ($2)')
-}
-
-function isMarkdownTableDivider(value: string) {
-  return /^\|\s*(---\s*\|)+\s*$/.test(value)
-}
-
-function normalizeTableRow(value: string) {
-  return value
-    .split('|')
-    .map((cell) => cell.trim())
-    .filter(Boolean)
-    .map((cell) => normalizeInlineMarkdown(cell))
-    .join('  ·  ')
-}
-
-function resetCursor(document: PdfDocument) {
-  document.x = document.page.margins.left
-}
-
-function reorderTitleBlock(lines: string[]) {
-  if (lines[0]?.trim().startsWith('## ') && lines[1]?.trim().startsWith('# ')) {
-    return [lines[1], '', lines[0], ...lines.slice(2)]
+  return `<!DOCTYPE html>
+<html lang="${locale}">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    font-size: 13px; line-height: 1.65; color: #333; background: #fff;
+    width: 794px; margin: 0 auto;
   }
-
-  return lines
-}
-
-function ensureSpace(document: PdfDocument, height: number) {
-  const bottom = document.page.height - document.page.margins.bottom
-
-  if (document.y + height > bottom) {
-    document.addPage()
-    resetCursor(document)
+  header { border-bottom: 2px solid #1a1a1a; padding: 40px 56px 20px; }
+  header h1 { font-size: 28px; font-weight: 700; color: #1a1a1a; letter-spacing: -.02em; }
+  header .headline { font-size: 15px; color: #555; margin-top: 6px; }
+  header .meta { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 12px; color: #777; margin-top: 10px; }
+  header .bio { font-size: 13px; color: #555; margin-top: 10px; line-height: 1.7; }
+  main { padding: 24px 56px 40px; }
+  section { margin-bottom: 18px; }
+  section h2 {
+    font-size: 15px; font-weight: 700; color: #1a1a1a;
+    border-bottom: 1px solid #e0e0e0; padding-bottom: 4px; margin-bottom: 8px;
+    letter-spacing: .04em;
   }
-}
-
-function setFont(
-  document: PdfDocument,
-  locale: ResumeLocale,
-  cjkFontPath: string | null,
-  weight: 'regular' | 'bold' = 'regular',
-) {
-  if (cjkFontPath) {
-    document.font(cjkFontPath)
-    return
+  .highlight-item { font-size: 13px; color: #444; margin-bottom: 3px; }
+  .highlight-item strong { color: #1a1a1a; }
+  .edu-item, .exp-item, .proj-item { margin-bottom: 10px; }
+  .edu-item .row, .exp-item .row, .proj-item .row {
+    display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 12px;
   }
-
-  if (locale === 'en' && weight === 'bold') {
-    document.font('Helvetica-Bold')
-    return
-  }
-
-  document.font('Helvetica')
+  .edu-item strong, .exp-item strong, .proj-item strong { font-size: 13px; color: #1a1a1a; }
+  .edu-item .date, .exp-item .date, .proj-item .date { font-size: 11px; color: #999; white-space: nowrap; }
+  .edu-item .sub, .exp-item .sub, .proj-item .sub { font-size: 12px; color: #777; }
+  .exp-item .summary, .proj-item .summary { font-size: 13px; color: #555; margin-top: 3px; }
+  .exp-item ul, .proj-item ul { margin: 3px 0 0 16px; font-size: 13px; color: #555; }
+  .exp-item ul li, .proj-item ul li { margin-bottom: 2px; }
+  .exp-item .tech, .proj-item .tech { font-size: 11px; color: #aaa; margin-top: 3px; }
+  .skills-item { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font-size: 13px; color: #444; }
+  .skills-item strong { color: #1a1a1a; }
+  .interests { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: #555; }
+  .thanks { font-size: 13px; color: #999; font-style: italic; }
+</style>
+</head>
+<body>
+<header>
+  <h1>${escapeHtml(t(p.fullName))}</h1>
+  <div class="headline">${escapeHtml(t(p.headline))}</div>
+  <div class="meta">
+    ${[p.email, p.phone, p.website, t(p.location)].filter(Boolean).map((v) => `<span>${escapeHtml(v!)}</span>`).join('')}
+  </div>
+  <div class="bio">${escapeHtml(t(p.summary))}</div>
+</header>
+<main>
+  ${renderHighlights(resume, t)}
+  ${renderEducation(resume, t)}
+  ${renderSkills(resume, t)}
+  ${renderExperiences(resume, t)}
+  ${renderProjects(resume, t)}
+  ${renderInterests(resume, t)}
+  ${renderThanks(locale)}
+</main>
+</body>
+</html>`
 }
 
-function drawSectionDivider(document: PdfDocument, theme: PdfTheme) {
-  const left = document.page.margins.left
-  const right = document.page.width - document.page.margins.right
-  const y = document.y + 2
-
-  document
-    .save()
-    .strokeColor(theme.border)
-    .lineWidth(1)
-    .moveTo(left, y)
-    .lineTo(right, y)
-    .stroke()
-    .restore()
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
 }
 
-function renderTitle(
-  document: PdfDocument,
-  value: string,
-  locale: ResumeLocale,
-  cjkFontPath: string | null,
-  theme: PdfTheme,
-) {
-  ensureSpace(document, 40)
-  setFont(document, locale, cjkFontPath)
-  document.fillColor(theme.text).fontSize(22).text(normalizeInlineMarkdown(value), {
-    align: 'center',
-  })
-  resetCursor(document)
-  document.moveDown(0.45)
+function renderHighlights(
+  resume: StandardResume,
+  t: (v: { zh: string; en: string }) => string,
+): string {
+  if (!resume.highlights.length) return ''
+  const items = resume.highlights
+    .map(
+      (h) =>
+        `<div class="highlight-item"><strong>${escapeHtml(t(h.title))}</strong> — ${escapeHtml(t(h.description))}</div>`,
+    )
+    .join('\n')
+  return `<section><h2>核心竞争力</h2>${items}</section>`
 }
 
-function renderSectionTitle(
-  document: PdfDocument,
-  value: string,
-  locale: ResumeLocale,
-  cjkFontPath: string | null,
-  theme: PdfTheme,
-) {
-  ensureSpace(document, 32)
-  setFont(document, locale, cjkFontPath)
-  document.fillColor(theme.accent).fontSize(14).text(normalizeInlineMarkdown(value))
-  drawSectionDivider(document, theme)
-  resetCursor(document)
-  document.moveDown(SECTION_BOTTOM_GAP / 12)
+function renderEducation(
+  resume: StandardResume,
+  t: (v: { zh: string; en: string }) => string,
+): string {
+  if (!resume.education.length) return ''
+  const items = resume.education
+    .map(
+      (edu) => `
+    <div class="edu-item">
+      <div class="row">
+        <strong>${escapeHtml(t(edu.schoolName))} · ${escapeHtml(t(edu.degree))} ${escapeHtml(t(edu.fieldOfStudy))}</strong>
+        <span class="date">${edu.startDate} - ${edu.endDate}</span>
+      </div>
+      <div class="sub">${escapeHtml(t(edu.location))}</div>
+    </div>`,
+    )
+    .join('\n')
+  return `<section><h2>教育经历</h2>${items}</section>`
 }
 
-function renderSubheading(
-  document: PdfDocument,
-  value: string,
-  locale: ResumeLocale,
-  cjkFontPath: string | null,
-  theme: PdfTheme,
-  indentLevel = 1,
-) {
-  ensureSpace(document, 24)
-  const resolvedIndentLevel = Math.max(1, indentLevel)
-  const textX = document.page.margins.left + SUB_CONTENT_INDENT * resolvedIndentLevel
-  const textWidth =
-    document.page.width -
-    document.page.margins.left -
-    document.page.margins.right -
-    SUB_CONTENT_INDENT * resolvedIndentLevel
-
-  setFont(document, locale, cjkFontPath, 'bold')
-  document
-    .fillColor(theme.text)
-    .fontSize(11.5)
-    .text(normalizeInlineMarkdown(value), textX, document.y, {
-      width: textWidth,
-    })
-  resetCursor(document)
-  document.moveDown(0.12)
+function renderSkills(
+  resume: StandardResume,
+  t: (v: { zh: string; en: string }) => string,
+): string {
+  if (!resume.skills.length) return ''
+  const items = resume.skills
+    .map(
+      (sk) =>
+        `<div class="skills-item"><strong>${escapeHtml(t(sk.name))}：</strong>${sk.keywords.map((k) => escapeHtml(t(k))).join('、')}</div>`,
+    )
+    .join('\n')
+  return `<section><h2>专业技能</h2>${items}</section>`
 }
 
-function renderTable(
-  document: PdfDocument,
-  rows: string[],
-  locale: ResumeLocale,
-  cjkFontPath: string | null,
-  theme: PdfTheme,
-) {
-  const [headerRow, , valueRow] = rows
-  const headers = headerRow
-    .split('|')
-    .map((cell) => cell.trim())
-    .filter(Boolean)
-  const values = (valueRow ?? '')
-    .split('|')
-    .map((cell) => cell.trim())
-    .filter(Boolean)
-
-  if (headers.length === 0 || values.length === 0) {
-    return
-  }
-
-  const contentWidth = document.page.width - document.page.margins.left - document.page.margins.right
-  const columnWidth = contentWidth / headers.length
-  const headerHeight = 20
-  const valueHeight = 34
-  const totalHeight = headerHeight + valueHeight
-
-  ensureSpace(document, totalHeight + 8)
-
-  const left = document.page.margins.left
-  const top = document.y
-
-  document.save()
-  document.roundedRect(left, top, contentWidth, totalHeight, 8).lineWidth(1).strokeColor(theme.border).stroke()
-  document.rect(left, top, contentWidth, headerHeight).fillAndStroke(theme.accentSoft, theme.border)
-  document.restore()
-
-  headers.forEach((header, index) => {
-    const cellLeft = left + columnWidth * index
-
-    if (index > 0) {
-      document
-        .save()
-        .strokeColor(theme.border)
-        .moveTo(cellLeft, top)
-        .lineTo(cellLeft, top + totalHeight)
-        .stroke()
-        .restore()
-    }
-
-    setFont(document, locale, cjkFontPath, 'bold')
-    document
-      .fillColor(theme.accent)
-      .fontSize(9.2)
-      .text(normalizeInlineMarkdown(header), cellLeft + 8, top + 6, {
-        align: 'center',
-        width: columnWidth - 16,
-      })
-
-    setFont(document, locale, cjkFontPath)
-    document
-      .fillColor(theme.text)
-      .fontSize(9.2)
-      .text(normalizeInlineMarkdown(values[index] ?? '-'), cellLeft + 8, top + headerHeight + 7, {
-        align: 'center',
-        width: columnWidth - 16,
-        lineGap: 1,
-      })
-  })
-
-  document.y = top + totalHeight + 10
-  resetCursor(document)
+function renderExperiences(
+  resume: StandardResume,
+  t: (v: { zh: string; en: string }) => string,
+): string {
+  if (!resume.experiences.length) return ''
+  const items = resume.experiences
+    .map(
+      (exp) => `
+    <div class="exp-item">
+      <div class="row">
+        <strong>${escapeHtml(t(exp.companyName))}</strong>
+        <span class="date">${exp.startDate} - ${exp.endDate || '至今'}</span>
+      </div>
+      <div class="sub">${escapeHtml(t(exp.role))}${exp.location ? ` · ${escapeHtml(t(exp.location))}` : ''}</div>
+      <div class="summary">${escapeHtml(t(exp.summary))}</div>
+      ${exp.highlights.length ? `<ul>${exp.highlights.map((h) => `<li>${escapeHtml(t(h))}</li>`).join('')}</ul>` : ''}
+      ${exp.technologies.length ? `<div class="tech">${exp.technologies.map((item) => escapeHtml(item)).join(' · ')}</div>` : ''}
+    </div>`,
+    )
+    .join('\n')
+  return `<section><h2>工作经历</h2>${items}</section>`
 }
 
-function renderMetaLine(
-  document: PdfDocument,
-  value: string,
-  locale: ResumeLocale,
-  cjkFontPath: string | null,
-  theme: PdfTheme,
-  indentLevel = 1,
-) {
-  ensureSpace(document, 18)
-  const resolvedIndentLevel = Math.max(1, indentLevel)
-  const textX = document.page.margins.left + SUB_CONTENT_INDENT * resolvedIndentLevel
-  const textWidth =
-    document.page.width -
-    document.page.margins.left -
-    document.page.margins.right -
-    SUB_CONTENT_INDENT * resolvedIndentLevel
-
-  setFont(document, locale, cjkFontPath)
-  document
-    .fillColor(theme.muted)
-    .fontSize(10)
-    .text(normalizeInlineMarkdown(value), textX, document.y, {
-      lineGap: 1.5,
-      width: textWidth,
-    })
-  resetCursor(document)
-  document.moveDown(0.05)
+function renderProjects(
+  resume: StandardResume,
+  t: (v: { zh: string; en: string }) => string,
+): string {
+  if (!resume.projects.length) return ''
+  const items = resume.projects
+    .map(
+      (proj) => `
+    <div class="proj-item">
+      <div class="row">
+        <strong>${escapeHtml(t(proj.name))}</strong>
+        <span class="date">${proj.startDate} - ${proj.endDate || '至今'}</span>
+      </div>
+      <div class="sub">${escapeHtml(t(proj.role))}</div>
+      <div class="summary">${escapeHtml(t(proj.summary))}</div>
+      ${proj.highlights.length ? `<ul>${proj.highlights.map((h) => `<li>${escapeHtml(t(h))}</li>`).join('')}</ul>` : ''}
+      ${proj.technologies.length ? `<div class="tech">${proj.technologies.map((item) => escapeHtml(item)).join(' · ')}</div>` : ''}
+    </div>`,
+    )
+    .join('\n')
+  return `<section><h2>项目经历</h2>${items}</section>`
 }
 
-function renderParagraph(
-  document: PdfDocument,
-  value: string,
-  locale: ResumeLocale,
-  cjkFontPath: string | null,
-  theme: PdfTheme,
-  indentLevel = 1,
-) {
-  ensureSpace(document, 20)
-  const resolvedIndentLevel = Math.max(1, indentLevel)
-  const textX = document.page.margins.left + SUB_CONTENT_INDENT * resolvedIndentLevel
-  const textWidth =
-    document.page.width -
-    document.page.margins.left -
-    document.page.margins.right -
-    SUB_CONTENT_INDENT * resolvedIndentLevel
-
-  setFont(document, locale, cjkFontPath)
-  document
-    .fillColor(theme.text)
-    .fontSize(10.5)
-    .text(normalizeInlineMarkdown(value), textX, document.y, {
-      lineGap: 2,
-      width: textWidth,
-    })
-  resetCursor(document)
-  document.moveDown(0.08)
+function renderInterests(
+  resume: StandardResume,
+  t: (v: { zh: string; en: string }) => string,
+): string {
+  if (!resume.profile.interests.length) return ''
+  const tags = resume.profile.interests
+    .map(
+      (item) =>
+        `<span>${item.icon ? `${escapeHtml(item.icon)} ` : ''}${escapeHtml(t(item.label))}</span>`,
+    )
+    .join('')
+  return `<section><h2>兴趣爱好</h2><div class="interests">${tags}</div></section>`
 }
 
-function renderLabelLine(
-  document: PdfDocument,
-  label: string,
-  value: string,
-  locale: ResumeLocale,
-  cjkFontPath: string | null,
-  theme: PdfTheme,
-  indentLevel = 1,
-) {
-  ensureSpace(document, 18)
-  const resolvedIndentLevel = Math.max(1, indentLevel)
-  const textX = document.page.margins.left + SUB_CONTENT_INDENT * resolvedIndentLevel
-  const contentWidth =
-    document.page.width -
-    document.page.margins.left -
-    document.page.margins.right -
-    SUB_CONTENT_INDENT * resolvedIndentLevel
-
-  setFont(document, locale, cjkFontPath, 'bold')
-  document.fillColor(theme.accent).fontSize(10.2).text(label, textX, document.y, {
-    continued: true,
-    width: contentWidth,
-  })
-  setFont(document, locale, cjkFontPath)
-  document.fillColor(theme.text).fontSize(10.2).text(` ${normalizeInlineMarkdown(value)}`, {
-    width: contentWidth,
-    lineGap: 1.5,
-  })
-  resetCursor(document)
-}
-
-function renderBullet(
-  document: PdfDocument,
-  value: string,
-  locale: ResumeLocale,
-  cjkFontPath: string | null,
-  theme: PdfTheme,
-  indentLevel = 1,
-) {
-  ensureSpace(document, 18)
-  const left = document.page.margins.left
-  const resolvedIndentLevel = Math.max(1, indentLevel)
-  const bulletLeft = left + SUB_CONTENT_INDENT * resolvedIndentLevel
-  const bulletY = document.y + 6
-  const textX = bulletLeft + 12
-  const textWidth =
-    document.page.width -
-    document.page.margins.left -
-    document.page.margins.right -
-    SUB_CONTENT_INDENT * resolvedIndentLevel -
-    12
-
-  document
-    .save()
-    .fillColor(theme.accent)
-    .circle(bulletLeft + 3, bulletY, 1.8)
-    .fill()
-    .restore()
-  setFont(document, locale, cjkFontPath)
-  document.fillColor(theme.text).fontSize(10.3).text(normalizeInlineMarkdown(value), textX, document.y, {
-    width: textWidth,
-    lineGap: 1.6,
-  })
-  resetCursor(document)
+function renderThanks(locale: ResumeLocale): string {
+  const text =
+    locale === 'en'
+      ? 'Thank you for taking the time to review my resume. I look forward to the opportunity to discuss how my experience can contribute to your team.'
+      : '感谢您花时间阅读我的简历，期待有机会进一步交流。'
+  return `<section><h2>致谢</h2><p class="thanks">${escapeHtml(text)}</p></section>`
 }
 
 @Injectable()
 export class ResumePdfExportService {
-  constructor(
-    @Inject(ResumeMarkdownExportService)
-    private readonly resumeMarkdownExportService: ResumeMarkdownExportService,
-  ) {}
-
-  async render(
-    resume: StandardResume,
-    locale: ResumeLocale,
-  ): Promise<Buffer<ArrayBufferLike>> {
-    const markdown = this.resumeMarkdownExportService.render(resume, locale)
-    const cjkFontPath = resolvePdfFontPath(locale)
-    const lines = reorderTitleBlock(markdown.split('\n'))
-
-    return new Promise((resolve, reject) => {
-      const document = new PDFDocument({
-        margin: 42,
-        size: 'A4',
-        info: {
-          Title: `${resume.meta.slug}-${locale}`,
-          Author: normalizeInlineMarkdown(resume.profile.fullName[locale]),
-          Subject: 'Resume Export',
-        },
-      })
-      const chunks: Buffer[] = []
-
-      document.on('data', (chunk: Buffer | Uint8Array | string) => {
-        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk as Uint8Array))
-      })
-      document.on('end', () => resolve(Buffer.concat(chunks)))
-      document.on('error', reject)
-
-      for (let index = 0; index < lines.length; index += 1) {
-        const line = lines[index]
-        const leadingWhitespace = line.match(/^\s*/)?.[0].length ?? 0
-        const indentLevel = Math.floor(leadingWhitespace / 2)
-        const contentLine = line.trimStart()
-        const trimmedLine = contentLine.trim()
-
-        if (!trimmedLine) {
-          document.moveDown(0.18)
-          continue
-        }
-
-        if (trimmedLine === '---') {
-          continue
-        }
-
-        if (trimmedLine.startsWith('|')) {
-          const tableLines = [trimmedLine]
-
-          while (lines[index + tableLines.length]?.trim().startsWith('|')) {
-            tableLines.push(lines[index + tableLines.length].trim())
-          }
-
-          if (tableLines.length >= 2 && !isMarkdownTableDivider(trimmedLine)) {
-            renderTable(document, tableLines, locale, cjkFontPath, PDF_THEME)
-          } else if (!isMarkdownTableDivider(trimmedLine)) {
-            renderParagraph(
-              document,
-              normalizeTableRow(trimmedLine),
-              locale,
-              cjkFontPath,
-              PDF_THEME,
-              indentLevel,
-            )
-          }
-
-          index += tableLines.length - 1
-          continue
-        }
-
-        if (trimmedLine.startsWith('# ')) {
-          renderTitle(document, trimmedLine.slice(2), locale, cjkFontPath, PDF_THEME)
-          continue
-        }
-
-        if (trimmedLine.startsWith('## ')) {
-          renderSectionTitle(document, trimmedLine.slice(3), locale, cjkFontPath, PDF_THEME)
-          continue
-        }
-
-        if (trimmedLine.startsWith('### ')) {
-          renderSubheading(
-            document,
-            trimmedLine.slice(4),
-            locale,
-            cjkFontPath,
-            PDF_THEME,
-            indentLevel,
-          )
-          continue
-        }
-
-        if (trimmedLine.startsWith('- ')) {
-          renderBullet(
-            document,
-            trimmedLine.slice(2),
-            locale,
-            cjkFontPath,
-            PDF_THEME,
-            indentLevel,
-          )
-          continue
-        }
-
-        const labelMatch = trimmedLine.match(/^\*\*(.+?)\*\*\s+(.+)$/)
-
-        if (labelMatch) {
-          renderLabelLine(
-            document,
-            normalizeInlineMarkdown(labelMatch[1]),
-            labelMatch[2],
-            locale,
-            cjkFontPath,
-            PDF_THEME,
-            indentLevel,
-          )
-          continue
-        }
-
-        if (trimmedLine.includes(' | ')) {
-          renderMetaLine(
-            document,
-            trimmedLine,
-            locale,
-            cjkFontPath,
-            PDF_THEME,
-            indentLevel,
-          )
-          continue
-        }
-
-        renderParagraph(
-          document,
-          trimmedLine,
-          locale,
-          cjkFontPath,
-          PDF_THEME,
-          indentLevel,
-        )
-      }
-
-      document.end()
+  async render(resume: StandardResume, locale: ResumeLocale): Promise<Buffer> {
+    const html = buildResumePdfHtml(resume, locale)
+    const browser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      headless: true,
     })
+
+    try {
+      const page = await browser.newPage()
+      await page.setContent(html, { waitUntil: 'load' as const })
+      const pdf = await page.pdf({
+        format: 'A4',
+        margin: { top: 0, bottom: 0, left: 0, right: 0 },
+        printBackground: true,
+        preferCSSPageSize: true,
+      })
+      return Buffer.from(pdf)
+    } finally {
+      await browser.close()
+    }
   }
 }
