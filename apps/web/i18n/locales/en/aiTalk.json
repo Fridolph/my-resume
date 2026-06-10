@@ -141,13 +141,32 @@
       "description": "The first version only exposes preset questions, keeping the experience focused and easy to sync with the portrait map.",
       "messages": {
         "1": "Hi, I can guide you through this resume in 10 focused questions.",
-        "2": "Shall we start with the latest project?",
-        "3": "Each completed answer unlocks one themed fragment on the right."
-      },
-      "promptSamples": {
-        "1": "What was your latest project?",
-        "2": "How do you practice AI Agent work?"
+        "2": "Choose one question below to start; each completed answer updates the progress map on the right."
       }
+    },
+    "questions": {
+      "profile": "Who are you, and what direction are you focused on now?",
+      "latestProject": "What was your latest project?",
+      "stack": "What technologies do you mainly use?",
+      "aiPractice": "How do you use AI in real projects?",
+      "ragAgent": "What have you practiced around RAG or Agent work?",
+      "engineering": "How do you keep projects maintainable?",
+      "collaboration": "What collaboration or delivery experience do you have?",
+      "hobbies": "What do you enjoy outside work?",
+      "writing": "What articles, notes, or public output do you have?",
+      "future": "What do you want to explore next?"
+    },
+    "answers": {
+      "profile": "I started from frontend work and have gradually grown into full-stack and AI engineering practice, with a current focus on combining product delivery, RAG, and Agent learning.",
+      "latestProject": "Recently I have been building my-resume around public AI Chat, RAG knowledge, resume import recognition, and admin-side governance loops.",
+      "stack": "My main stack includes Next.js, React, NestJS, TypeScript, Drizzle, HeroUI, and AI engineering pieces around providers, embeddings, and RAG.",
+      "aiPractice": "I treat AI as a real product capability: define boundaries first, then add logs, structured output, citations, and reversible frontend/backend contracts.",
+      "ragAgent": "On RAG, I have built resume knowledge, user document ingestion, explainable Q&A, and citation display. Agent work is now growing through LangGraph and AGUI-style practice.",
+      "engineering": "I care about types, tests, development logs, and branch flow. The goal is not to build everything at once, but to keep every issue verifiable and reversible.",
+      "collaboration": "I tend to split complex work into milestones and issues with clear acceptance criteria, while recording risks and tradeoffs during implementation.",
+      "hobbies": "Outside work I enjoy music and badminton. They help me keep rhythm and energy, and make the profile feel more human than a list of technical tags.",
+      "writing": "I turn AI Agent, RAG, and full-stack practice into learning notes and project docs, so the process can be reviewed and later shaped into tutorials.",
+      "future": "Next I want to go deeper into LangGraph, multi-domain RAG, AGUI-style interaction, and a more expressive AI resume intro page."
     },
     "unlock": {
       "eyebrow": "unlock map",

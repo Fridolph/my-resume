@@ -3,11 +3,8 @@
 import { Button } from '@heroui/react/button'
 import { Chip } from '@heroui/react/chip'
 import { useTranslations } from 'next-intl'
+import { useEffect, useMemo, useState } from 'react'
 
-import type {
-  ResumeLocale,
-  ResumePublishedSnapshot,
-} from '@shared/published-resume/types/published-resume.types'
 import { readLocalizedText } from '@shared/published-resume/published-resume-utils'
 import {
   displayCardSurfaceClass,
@@ -16,6 +13,12 @@ import {
 } from '@shared/site/card-surface'
 import { RouteCtaButton } from '@shared/site/route-cta-button'
 import { AiTalkPageFrame } from '../../_ai-talk/page-frame'
+import type {
+  AiTalkIntroShellProps,
+  IntroThreadMessage,
+  IntroTopicKey,
+  ResumeLocale,
+} from './types/intro-shell.types'
 
 const TOPIC_KEYS = [
   'profile',
@@ -28,14 +31,37 @@ const TOPIC_KEYS = [
   'hobbies',
   'writing',
   'future',
-] as const
+] as const satisfies readonly IntroTopicKey[]
 
-interface AiTalkIntroShellProps {
-  apiBaseUrl?: string
-  enableClientSync?: boolean
-  initialLoadError?: string | null
-  locale?: ResumeLocale
-  publishedResume: ResumePublishedSnapshot | null
+const INTRO_PROGRESS_STORAGE_PREFIX = 'my-resume:ai-intro:v1'
+
+function isIntroTopicKey(value: unknown): value is IntroTopicKey {
+  return typeof value === 'string' && TOPIC_KEYS.includes(value as IntroTopicKey)
+}
+
+function readStoredCompletedTopics(locale: ResumeLocale): IntroTopicKey[] {
+  if (typeof window === 'undefined') return []
+
+  try {
+    const rawValue = window.localStorage.getItem(`${INTRO_PROGRESS_STORAGE_PREFIX}:${locale}`)
+    if (!rawValue) return []
+
+    const parsed = JSON.parse(rawValue) as { completedTopics?: unknown }
+    if (!Array.isArray(parsed.completedTopics)) return []
+
+    return parsed.completedTopics.filter(isIntroTopicKey)
+  } catch {
+    return []
+  }
+}
+
+function writeStoredCompletedTopics(locale: ResumeLocale, completedTopics: IntroTopicKey[]) {
+  if (typeof window === 'undefined') return
+
+  window.localStorage.setItem(
+    `${INTRO_PROGRESS_STORAGE_PREFIX}:${locale}`,
+    JSON.stringify({ completedTopics }),
+  )
 }
 
 export function AiTalkIntroShell({
@@ -46,6 +72,56 @@ export function AiTalkIntroShell({
   publishedResume,
 }: AiTalkIntroShellProps) {
   const t = useTranslations('aiTalk')
+  const [completedTopics, setCompletedTopics] = useState<IntroTopicKey[]>([])
+  const [hasLoadedProgress, setHasLoadedProgress] = useState(false)
+
+  useEffect(() => {
+    setCompletedTopics(readStoredCompletedTopics(locale))
+    setHasLoadedProgress(true)
+  }, [locale])
+
+  useEffect(() => {
+    if (!hasLoadedProgress) return
+    writeStoredCompletedTopics(locale, completedTopics)
+  }, [completedTopics, hasLoadedProgress, locale])
+
+  const completedTopicSet = useMemo(() => new Set(completedTopics), [completedTopics])
+  const threadMessages = useMemo<IntroThreadMessage[]>(() => {
+    const initialMessages: IntroThreadMessage[] = [
+      {
+        content: t('introPage.chat.messages.1'),
+        id: 'assistant-intro-1',
+        role: 'assistant',
+      },
+      {
+        content: t('introPage.chat.messages.2'),
+        id: 'assistant-intro-2',
+        role: 'assistant',
+      },
+    ]
+
+    return completedTopics.reduce<IntroThreadMessage[]>((messages, topic) => {
+      messages.push({
+        content: t(`introPage.questions.${topic}`),
+        id: `user-${topic}`,
+        role: 'user',
+      })
+      messages.push({
+        content: t(`introPage.answers.${topic}`),
+        id: `assistant-${topic}`,
+        role: 'assistant',
+      })
+
+      return messages
+    }, initialMessages)
+  }, [completedTopics, t])
+
+  const completeTopic = (topic: IntroTopicKey) => {
+    setCompletedTopics((currentTopics) => {
+      if (currentTopics.includes(topic)) return currentTopics
+      return [...currentTopics, topic]
+    })
+  }
 
   return (
     <AiTalkPageFrame
@@ -101,35 +177,41 @@ export function AiTalkIntroShell({
                         </p>
                       </div>
                       <Chip size="sm" variant="soft">
-                        0 / 10
+                        {completedTopics.length} / {TOPIC_KEYS.length}
                       </Chip>
                     </div>
 
                     <div className="grid gap-3" data-testid="ai-talk-intro-thread-preview">
-                      {[1, 2, 3].map((item) => (
+                      {threadMessages.map((message) => (
                         <div
                           className={[
                             'max-w-[88%] rounded-[1.25rem] px-4 py-3 text-sm leading-6',
-                            item === 2
+                            message.role === 'user'
                               ? 'ml-auto bg-slate-950 text-white dark:bg-white dark:text-slate-950'
                               : 'border border-slate-200/80 bg-white/80 text-slate-600 dark:border-slate-700/70 dark:bg-slate-950/70 dark:text-slate-300',
                           ].join(' ')}
-                          key={item}>
-                          {t(`introPage.chat.messages.${item}`)}
+                          key={message.id}>
+                          {message.content}
                         </div>
                       ))}
                     </div>
 
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      {[1, 2].map((item) => (
+                    <div className="grid gap-2 sm:grid-cols-2" data-testid="ai-talk-intro-question-list">
+                      {TOPIC_KEYS.map((topic) => {
+                        const isCompleted = completedTopicSet.has(topic)
+
+                        return (
                         <Button
-                          className="justify-start rounded-[1rem]"
-                          key={item}
+                          className="justify-start rounded-[1rem] text-left"
+                          isDisabled={isCompleted}
+                          key={topic}
+                          onPress={() => completeTopic(topic)}
                           size="sm"
-                          variant={item === 1 ? 'primary' : 'outline'}>
-                          {t(`introPage.chat.promptSamples.${item}`)}
+                          variant={isCompleted ? 'ghost' : 'outline'}>
+                          {t(`introPage.questions.${topic}`)}
                         </Button>
-                      ))}
+                        )
+                      })}
                     </div>
                   </div>
                 </div>
@@ -151,7 +233,14 @@ export function AiTalkIntroShell({
                   data-testid="ai-talk-intro-unlock-grid">
                   {TOPIC_KEYS.map((topic, index) => (
                     <div
-                      className={`${interactiveInsetSurfaceClass} aspect-square rounded-[1.25rem] p-3`}
+                      className={[
+                        interactiveInsetSurfaceClass,
+                        'aspect-square rounded-[1.25rem] p-3 transition-colors',
+                        completedTopicSet.has(topic)
+                          ? 'border-emerald-200/80 bg-emerald-50/80 dark:border-emerald-400/25 dark:bg-emerald-500/10'
+                          : '',
+                      ].join(' ')}
+                      data-state={completedTopicSet.has(topic) ? 'completed' : 'locked'}
                       key={topic}>
                       <div className="flex h-full flex-col justify-between">
                         <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">

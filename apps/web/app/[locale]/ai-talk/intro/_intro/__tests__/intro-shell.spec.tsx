@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { ThemeModeProvider } from '@my-resume/ui/theme'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@i18n/navigation', () => ({
   Link: ({ children, href, prefetch: _prefetch, ...props }: any) => (
@@ -66,20 +66,59 @@ import { publishedResumeFixture } from '@shared/published-resume/__tests__/fixtu
 
 import { AiTalkIntroShell } from '../intro-shell'
 
+function renderIntroShell() {
+  return render(
+    <ThemeModeProvider>
+      <AiTalkIntroShell locale="zh" publishedResume={publishedResumeFixture} />
+    </ThemeModeProvider>,
+  )
+}
+
 describe('AiTalkIntroShell', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+
   it('should render the guided intro two-column shell and locked topic grid', () => {
-    render(
-      <ThemeModeProvider>
-        <AiTalkIntroShell locale="zh" publishedResume={publishedResumeFixture} />
-      </ThemeModeProvider>,
-    )
+    renderIntroShell()
 
     expect(screen.getByTestId('ai-talk-intro-shell')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /AI Intro/ })).toBeInTheDocument()
     expect(screen.getByText('引导式问题')).toBeInTheDocument()
     expect(screen.getByTestId('ai-talk-intro-thread-preview')).toBeInTheDocument()
+    expect(screen.getByTestId('ai-talk-intro-question-list').children).toHaveLength(10)
     expect(screen.getByTestId('ai-talk-intro-unlock-grid').children).toHaveLength(10)
     expect(screen.getByText('最近项目')).toBeInTheDocument()
     expect(screen.getByText('兴趣爱好')).toBeInTheDocument()
+  })
+
+  it('should complete a preset question and append the local answer', () => {
+    renderIntroShell()
+
+    const latestProjectQuestion = screen.getByRole('button', {
+      name: '你最近一个项目做了什么？',
+    })
+
+    fireEvent.click(latestProjectQuestion)
+
+    const threadPreview = within(screen.getByTestId('ai-talk-intro-thread-preview'))
+
+    expect(screen.getByText('1 / 10')).toBeInTheDocument()
+    expect(threadPreview.getByText('你最近一个项目做了什么？')).toBeInTheDocument()
+    expect(threadPreview.getByText(/最近围绕 my-resume 做公开站 AI Chat/)).toBeInTheDocument()
+    expect(latestProjectQuestion).toBeDisabled()
+  })
+
+  it('should restore completed questions from localStorage', () => {
+    window.localStorage.setItem(
+      'my-resume:ai-intro:v1:zh',
+      JSON.stringify({ completedTopics: ['latestProject'] }),
+    )
+
+    renderIntroShell()
+
+    expect(screen.getByText('1 / 10')).toBeInTheDocument()
+    expect(screen.getByText(/最近围绕 my-resume 做公开站 AI Chat/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '你最近一个项目做了什么？' })).toBeDisabled()
   })
 })

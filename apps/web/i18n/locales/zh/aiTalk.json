@@ -141,13 +141,32 @@
       "description": "首版只开放预设问题，避免体验发散，也方便和右侧画像同步。",
       "messages": {
         "1": "你好，我会用 10 个问题带你快速了解这份简历。",
-        "2": "先从最近项目开始可以吗？",
-        "3": "每完成一个问题，右侧都会解锁一个主题碎片。"
-      },
-      "promptSamples": {
-        "1": "你最近一个项目做了什么？",
-        "2": "你是怎么实践 AI Agent 的？"
+        "2": "你可以从下方选择一个问题开始；每完成一个问题，右侧都会更新进度。"
       }
+    },
+    "questions": {
+      "profile": "你是谁，当前主要方向是什么？",
+      "latestProject": "你最近一个项目做了什么？",
+      "stack": "你主要使用哪些技术？",
+      "aiPractice": "你是怎么把 AI 用到项目里的？",
+      "ragAgent": "你对 RAG 或 Agent 做过哪些实践？",
+      "engineering": "你如何保证项目质量和可维护性？",
+      "collaboration": "你有哪些协作或推进经验？",
+      "hobbies": "你工作之外有哪些兴趣？",
+      "writing": "你有哪些文章、学习笔记或公开输出？",
+      "future": "你接下来想继续深挖什么？"
+    },
+    "answers": {
+      "profile": "我是一名前端起步、逐步走向全栈和 AI 工程实践的开发者，目前重点在把真实产品链路、RAG 和 Agent 学习结合起来。",
+      "latestProject": "最近围绕 my-resume 做公开站 AI Chat、RAG 知识库、简历导入识别和 Admin 治理闭环，把学习内容落到真实项目里。",
+      "stack": "主要技术栈包括 Next.js、React、NestJS、TypeScript、Drizzle、HeroUI，以及围绕 AI Provider、Embedding、RAG 的工程化链路。",
+      "aiPractice": "我会把 AI 当成真实产品能力来做：先定义边界，再接入日志、结构化输出、引用来源和可回滚的前后端契约。",
+      "ragAgent": "RAG 方面已经做了简历知识库、用户文档入库、可解释问答和引用展示；Agent 方向正在通过 LangGraph 和 AGUI 思路继续实践。",
+      "engineering": "我比较重视类型、测试、开发日志和分支流程，不追求一次性做满，而是保持每个 issue 可验证、可回滚、可讲清楚。",
+      "collaboration": "我习惯把复杂需求拆成里程碑和 issue，用清晰的验收标准降低协作成本，也会在实现过程中持续记录风险和取舍。",
+      "hobbies": "工作之外我喜欢音乐和羽毛球，它们更像是调节节奏和保持状态的方式，也让个人介绍不只停在技术标签上。",
+      "writing": "我会把 AI Agent、RAG、全栈实践过程写成学习记录和项目文档，方便后续复盘，也能把经验沉淀成教程。",
+      "future": "接下来想继续深挖 LangGraph、多域 RAG、AGUI 风格交互和更具表达力的 AI 简历介绍页。"
     },
     "unlock": {
       "eyebrow": "unlock map",
