@@ -16,6 +16,8 @@ describe('AiChatAnswerBlockRenderer', () => {
             summary: '一个结合公开简历、AI 对话和 RAG 的全栈项目。',
             technologies: ['Next.js', 'NestJS', 'RAG'],
             highlights: ['接入流式回答', '支持引用解释'],
+            url: 'https://example.com/project',
+            imageUrl: 'https://example.com/project.png',
           },
           {
             type: 'experience_card',
@@ -35,6 +37,14 @@ describe('AiChatAnswerBlockRenderer', () => {
     expect(screen.getByText('my-resume')).toBeInTheDocument()
     expect(screen.getByText('Next.js')).toBeInTheDocument()
     expect(screen.getByText('接入流式回答')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'my-resume' })).toHaveAttribute(
+      'src',
+      'https://example.com/project.png',
+    )
+    expect(screen.getByRole('link', { name: '查看项目' })).toHaveAttribute(
+      'href',
+      'https://example.com/project',
+    )
     expect(screen.getByText('经历')).toBeInTheDocument()
     expect(screen.getByText('全栈开发工程师')).toBeInTheDocument()
   })
@@ -48,14 +58,32 @@ describe('AiChatAnswerBlockRenderer', () => {
             title: '羽毛球',
             description: '用运动调节节奏，也训练临场反应。',
             url: 'https://example.com/hobby',
+            imageUrl: 'https://example.com/hobby.png',
             keywords: ['运动', '节奏感'],
+            media: [
+              {
+                type: 'video',
+                url: 'https://example.com/hobby-video',
+                title: '训练片段',
+                thumbnailUrl: 'https://example.com/hobby-thumb.png',
+              },
+            ],
           },
           {
             type: 'article_card',
             title: 'JS 全栈 AI Agent 学习',
             summary: '记录 RAG、Agent 与工程化实践。',
             url: 'https://example.com/article',
+            imageUrl: 'https://example.com/article.png',
+            publishedAt: '2026-05-01',
             keywords: ['Agent', 'LangGraph'],
+            media: [
+              {
+                type: 'link',
+                url: 'https://example.com/article-demo',
+                title: '示例仓库',
+              },
+            ],
           },
           {
             type: 'media_card',
@@ -83,11 +111,28 @@ describe('AiChatAnswerBlockRenderer', () => {
 
     expect(screen.getByText('兴趣')).toBeInTheDocument()
     expect(screen.getByText('羽毛球')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: '羽毛球' })).toHaveAttribute(
+      'src',
+      'https://example.com/hobby.png',
+    )
     expect(screen.getByRole('link', { name: '查看链接' })).toHaveAttribute(
       'href',
       'https://example.com/hobby',
     )
+    expect(screen.getByRole('link', { name: '训练片段' })).toHaveAttribute(
+      'href',
+      'https://example.com/hobby-video',
+    )
     expect(screen.getByText('文章')).toBeInTheDocument()
+    expect(screen.getByText('2026-05-01')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'JS 全栈 AI Agent 学习' })).toHaveAttribute(
+      'src',
+      'https://example.com/article.png',
+    )
+    expect(screen.getByRole('link', { name: '示例仓库' })).toHaveAttribute(
+      'href',
+      'https://example.com/article-demo',
+    )
     expect(screen.getByRole('link', { name: '阅读文章' })).toHaveAttribute(
       'href',
       'https://example.com/article',

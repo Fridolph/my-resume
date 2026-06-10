@@ -51,6 +51,20 @@ describe('AiChatGraphService', () => {
           contentType: 'hobby',
           knowledgeDomain: 'hobbies',
           tags: ['兴趣', '羽毛球'],
+          richCard: {
+            title: '音乐与羽毛球',
+            description: '用音乐和羽毛球调节节奏，也保持长期练习的手感。',
+            url: 'https://example.com/hobbies',
+            imageUrl: 'https://example.com/hobby.png',
+            keywords: ['音乐', '羽毛球'],
+            media: [
+              {
+                type: 'link',
+                url: 'https://example.com/playlist',
+                title: '练习歌单',
+              },
+            ],
+          },
         },
       ],
       matches: [],
@@ -77,7 +91,16 @@ describe('AiChatGraphService', () => {
     expect(result.blocks).toEqual([
       expect.objectContaining({
         type: 'hobby_card',
-        title: '兴趣爱好',
+        title: '音乐与羽毛球',
+        description: expect.stringContaining('调节节奏'),
+        url: 'https://example.com/hobbies',
+        imageUrl: 'https://example.com/hobby.png',
+        keywords: ['音乐', '羽毛球'],
+        media: [
+          expect.objectContaining({
+            title: '练习歌单',
+          }),
+        ],
       }),
     ])
   })
@@ -152,6 +175,14 @@ describe('AiChatGraphService', () => {
           knowledgeDomain: 'writing_media',
           renderHint: 'article_card',
           tags: ['AI Agent', 'RAG'],
+          richCard: {
+            title: 'JS 全栈 AI Agent 学习',
+            description: '系统记录 Agent、RAG 与向量检索落地过程。',
+            url: 'https://example.com/articles/agent',
+            imageUrl: 'https://example.com/agent.png',
+            publishedAt: '2026-05-01',
+            keywords: ['Agent', 'RAG'],
+          },
         },
       ],
       matches: [],
@@ -182,8 +213,65 @@ describe('AiChatGraphService', () => {
       expect.objectContaining({
         type: 'article_card',
         title: 'JS 全栈 AI Agent 学习',
+        summary: expect.stringContaining('向量检索'),
+        url: 'https://example.com/articles/agent',
+        imageUrl: 'https://example.com/agent.png',
+        publishedAt: '2026-05-01',
       }),
     ])
+  })
+
+  it('maps user docs project rich metadata into project cards', async () => {
+    const { ragService, resumePublicationService, service } = createGraphService()
+
+    resumePublicationService.getPublished.mockResolvedValue({
+      resume: createExampleStandardResume(),
+    })
+    ragService.ask.mockResolvedValue({
+      answer: '我也补充整理过 AI Intro 互动项目资料 [#1]。',
+      citations: [
+        {
+          id: 'user-doc-project-001',
+          ref: '#1',
+          title: 'AI Intro 互动项目',
+          section: 'user_docs',
+          sourceType: 'user_docs',
+          score: 0.87,
+          snippet: '一个通过问答逐步解锁人物画像和技能拼图的互动项目。',
+          contentType: 'project',
+          knowledgeDomain: 'projects',
+          renderHint: 'project_card',
+          tags: ['Next.js', 'AGUI'],
+          richCard: {
+            title: 'AI Intro 互动项目',
+            description: '用预设问题、RAG 和技能拼图串联个人介绍体验。',
+            url: 'https://example.com/ai-intro',
+            imageUrl: 'https://example.com/ai-intro.png',
+            keywords: ['Next.js', 'RAG', 'AGUI'],
+          },
+        },
+      ],
+      matches: [],
+      providerSummary: undefined,
+    })
+
+    const result = await service.generateAnswer({
+      locale: 'zh',
+      question: '你做过什么 AI intro 项目？',
+    })
+
+    expect(result.blocks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'project_card',
+          title: 'AI Intro 互动项目',
+          summary: expect.stringContaining('技能拼图'),
+          technologies: ['Next.js', 'RAG', 'AGUI'],
+          url: 'https://example.com/ai-intro',
+          imageUrl: 'https://example.com/ai-intro.png',
+        }),
+      ]),
+    )
   })
 
   it('blocks clearly unrelated questions before retrieval', async () => {

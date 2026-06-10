@@ -845,6 +845,8 @@ export interface RagSearchMatch {
   contentType?: string
   /** 前端建议渲染形态。 */
   renderHint?: string
+  /** 面向富展示卡片的补充 metadata。 */
+  richCard?: RagRichCardMetadata
 }
 
 /**
@@ -875,6 +877,26 @@ export interface RagAskCitation {
   knowledgeDomain?: RagKnowledgeDomain
   /** 前端建议渲染形态。 */
   renderHint?: string
+  /** 面向 Chat Card 的富展示补充字段。 */
+  richCard?: RagRichCardMetadata
+}
+
+export interface RagRichCardMedia {
+  type: 'image' | 'video' | 'link'
+  url: string
+  title?: string
+  thumbnailUrl?: string
+}
+
+export interface RagRichCardMetadata {
+  title?: string
+  description?: string
+  url?: string
+  imageUrl?: string
+  thumbnailUrl?: string
+  publishedAt?: string
+  keywords?: string[]
+  media?: RagRichCardMedia[]
 }
 
 /**
@@ -1004,6 +1026,8 @@ export interface AiChatProjectCardBlock {
   summary: string
   technologies: string[]
   highlights: string[]
+  url?: string
+  imageUrl?: string
 }
 
 export interface AiChatExperienceCardBlock {
@@ -1030,12 +1054,22 @@ export interface AiChatSummaryBlock {
   keywords: string[]
 }
 
+export interface AiChatCardMediaPreview {
+  type: 'image' | 'video' | 'link'
+  url: string
+  title?: string
+  thumbnailUrl?: string
+}
+
 export interface AiChatArticleCardBlock {
   type: 'article_card'
   title: string
   summary: string
   url?: string
+  imageUrl?: string
+  publishedAt?: string
   keywords: string[]
+  media?: AiChatCardMediaPreview[]
 }
 
 export interface AiChatMediaCardBlock {
@@ -1043,6 +1077,7 @@ export interface AiChatMediaCardBlock {
   title: string
   description: string
   url: string
+  imageUrl?: string
   thumbnailUrl?: string
 }
 
@@ -1051,7 +1086,9 @@ export interface AiChatHobbyCardBlock {
   title: string
   description: string
   url?: string
+  imageUrl?: string
   keywords: string[]
+  media?: AiChatCardMediaPreview[]
 }
 
 export type AiChatMessageBlock =

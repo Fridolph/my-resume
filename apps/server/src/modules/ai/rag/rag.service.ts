@@ -41,6 +41,8 @@ import {
   RagAskCitation,
   RagAskResult,
   RagIndexFile,
+  RagRichCardMedia,
+  RagRichCardMetadata,
   RagRetrievalSourceType,
   RagSearchMatch,
 } from './rag.types'
@@ -86,6 +88,90 @@ function buildCitationSnippet(content: string): string {
   const normalized = content.replace(/\s+/g, ' ').trim()
 
   return normalized.length > 180 ? `${normalized.slice(0, 180)}...` : normalized
+}
+
+function readOptionalString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined
+}
+
+function readOptionalStringArray(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined
+  }
+
+  const normalized = value
+    .map((item) => readOptionalString(item))
+    .filter((item): item is string => Boolean(item))
+
+  return normalized.length > 0 ? normalized : undefined
+}
+
+function normalizeRichCardMedia(value: unknown): RagRichCardMedia[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined
+  }
+
+  const media = value
+    .map((item) => {
+      if (!item || typeof item !== 'object') {
+        return null
+      }
+
+      const record = item as Record<string, unknown>
+      const type = record.type
+      const url = readOptionalString(record.url)
+
+      if (
+        (type !== 'image' && type !== 'video' && type !== 'link') ||
+        !url
+      ) {
+        return null
+      }
+
+      return {
+        type,
+        url,
+        ...(readOptionalString(record.title)
+          ? { title: readOptionalString(record.title) }
+          : {}),
+        ...(readOptionalString(record.thumbnailUrl)
+          ? { thumbnailUrl: readOptionalString(record.thumbnailUrl) }
+          : {}),
+      } satisfies RagRichCardMedia
+    })
+    .filter((item): item is RagRichCardMedia => Boolean(item))
+
+  return media.length > 0 ? media : undefined
+}
+
+function normalizeRichCardMetadata(value: unknown): RagRichCardMetadata | undefined {
+  if (!value || typeof value !== 'object') {
+    return undefined
+  }
+
+  const record = value as Record<string, unknown>
+  const richCard: RagRichCardMetadata = {
+    title: readOptionalString(record.title),
+    description: readOptionalString(record.description),
+    url: readOptionalString(record.url),
+    imageUrl: readOptionalString(record.imageUrl),
+    thumbnailUrl: readOptionalString(record.thumbnailUrl),
+    publishedAt: readOptionalString(record.publishedAt),
+    keywords: readOptionalStringArray(record.keywords),
+    media: normalizeRichCardMedia(record.media),
+  }
+
+  return Object.values(richCard).some((item) => item !== undefined)
+    ? richCard
+    : undefined
+}
+
+function resolveRichCardMetadata(
+  metadata: Record<string, unknown> | null,
+  documentMetadata: Record<string, unknown> | null = null,
+): RagRichCardMetadata | undefined {
+  return normalizeRichCardMetadata(metadata?.richCard) ??
+    normalizeRichCardMetadata(documentMetadata?.richCard)
 }
 
 export function sortMatchesForAnswer(matches: RagSearchMatch[]): RagSearchMatch[] {
@@ -143,6 +229,7 @@ function buildRagAskCitations(matches: RagSearchMatch[]): RagAskCitation[] {
     contentType: (item as any)?.contentType as string | undefined,
     knowledgeDomain: item.knowledgeDomain,
     renderHint: item.renderHint,
+    richCard: item.richCard,
   }))
 }
 
@@ -489,6 +576,7 @@ export class RagService {
             knowledgeDomain: resolvedMetadata.knowledgeDomain,
             renderHint: resolvedMetadata.renderHint,
             sourceCollection: resolvedMetadata.sourceCollection,
+            richCard: resolveRichCardMetadata(metadata, docMeta),
           }
         })
         .filter(
@@ -599,6 +687,7 @@ export class RagService {
       knowledgeDomain: resolvedMetadata.knowledgeDomain,
       sourceCollection: resolvedMetadata.sourceCollection,
       renderHint: resolvedMetadata.renderHint,
+      richCard: resolveRichCardMetadata(metadata),
     }
   }
 

@@ -59,6 +59,9 @@ import type {
 
 export type {
   AiChatExperienceCardBlock,
+  AiChatArticleCardBlock,
+  AiChatCardMediaPreview,
+  AiChatHobbyCardBlock,
   AiChatIssueUseKeyInput,
   AiChatLeadInput,
   AiChatLeadStatus,
@@ -69,6 +72,7 @@ export type {
   AiChatMessageBlockType,
   AiChatMessageRole,
   AiChatProjectCardBlock,
+  AiChatMediaCardBlock,
   AiChatPublicSessionClaimResult,
   AiChatRevokeUseKeyInput,
   AiChatSession,
@@ -149,6 +153,8 @@ export type {
   RagAskCitation,
   RagAskResult,
   RagKnowledgeDomain,
+  RagRichCardMedia,
+  RagRichCardMetadata,
   RagRetrievalSourceType,
   RagSearchMatch,
   RagUserDocChunkingProfile,
