@@ -21,6 +21,7 @@ import type {
 } from './ai-chat.types'
 
 const DEFAULT_CHAT_LIMIT = 15
+const MAX_LOG_SNIPPET_LENGTH = 120
 
 type QuestionClass = 'greeting' | 'short' | 'negative' | 'normal'
 type GraphRouteIntent = 'direct' | 'rag' | 'blocked'
@@ -47,6 +48,42 @@ interface GraphRetrievalResult {
   ragResult: Awaited<ReturnType<RagService['ask']>>
   resume: StandardResume | null
   resumeSummary: string
+}
+
+function trimForLog(value: string | undefined): string | undefined {
+  if (!value) return undefined
+  const normalized = value.replace(/\s+/g, ' ').trim()
+  return normalized.length > MAX_LOG_SNIPPET_LENGTH
+    ? `${normalized.slice(0, MAX_LOG_SNIPPET_LENGTH)}...`
+    : normalized
+}
+
+function summarizeCitationForLog(citation: RagAskCitation) {
+  return {
+    ref: citation.ref,
+    title: citation.title,
+    sourceType: citation.sourceType,
+    score: citation.score,
+    knowledgeDomain: citation.knowledgeDomain,
+    contentType: citation.contentType,
+    renderHint: citation.renderHint,
+    hasRichCard: Boolean(citation.richCard),
+    snippet: trimForLog(citation.snippet),
+  }
+}
+
+function getBlockTitleForLog(block: AiChatMessageBlock): string | undefined {
+  if (block.type === 'text') return undefined
+  if (block.type === 'system_notice') return trimForLog(block.text)
+  if (block.type === 'summary') return block.title
+  return block.title
+}
+
+function summarizeAnswerBlocksForLog(blocks: AiChatMessageBlock[]) {
+  return blocks.map((block) => ({
+    type: block.type,
+    title: getBlockTitleForLog(block),
+  }))
 }
 
 function readLocalizedText(value: LocalizedText, locale: AiChatLocale): string {
@@ -288,6 +325,7 @@ export class AiChatGraphService {
       this.logNode('answer_compose', normalized, route, startedAt, {
         citationCount: answer.citations.length,
         blockCount: answer.blocks.length,
+        blockTypes: summarizeAnswerBlocksForLog(answer.blocks),
         retrievalKnowledgeDomains: retrieval.knowledgeDomains,
       })
 
@@ -360,6 +398,7 @@ export class AiChatGraphService {
     input: NormalizedGraphInput,
     route: GraphRouteDecision,
   ): Promise<GraphRetrievalResult> {
+    const startedAt = Date.now()
     const snapshot = await this.resumePublicationService.getPublished()
     const resume = snapshot?.resume ?? null
     const resumeSummary = resume ? buildResumeSummary(resume, input.locale) : ''
@@ -374,6 +413,23 @@ export class AiChatGraphService {
       },
       input.onToken ? { onToken: input.onToken } : undefined,
     )
+    const fallbackReason = ragResult.citations.length === 0
+      ? (resumeSummary ? 'no_citation_use_resume_summary' : 'no_citation_no_resume_summary')
+      : null
+
+    this.logger.log({
+      event: 'ai-chat.graph.retrieval_completed',
+      classification: route.classification,
+      intent: route.intent,
+      reason: route.reason,
+      question: input.question,
+      knowledgeDomains,
+      matchCount: ragResult.matches.length,
+      citationCount: ragResult.citations.length,
+      topCitations: ragResult.citations.slice(0, 3).map(summarizeCitationForLog),
+      fallbackReason,
+      durationMs: Date.now() - startedAt,
+    })
 
     return {
       knowledgeDomains,
@@ -449,6 +505,8 @@ export class AiChatGraphService {
       reason: route.reason,
       knowledgeDomains: mergeResumeCoreKnowledgeDomains(route.knowledgeDomains),
       question: input.question,
+      blockCount: blocks.length,
+      blockTypes: summarizeAnswerBlocksForLog(blocks),
     })
 
     return {
