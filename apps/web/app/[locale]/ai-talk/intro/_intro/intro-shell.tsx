@@ -9,10 +9,11 @@ import { readLocalizedText } from '@shared/published-resume/published-resume-uti
 import {
   displayCardSurfaceClass,
   displayInsetSurfaceClass,
-  interactiveInsetSurfaceClass,
 } from '@shared/site/card-surface'
 import { RouteCtaButton } from '@shared/site/route-cta-button'
 import { AiTalkPageFrame } from '../../_ai-talk/page-frame'
+import { INTRO_TOPIC_KEYS } from './intro-topic-config'
+import { IntroUnlockMap } from './intro-unlock-map'
 import type {
   AiTalkIntroShellProps,
   IntroThreadMessage,
@@ -20,23 +21,10 @@ import type {
   ResumeLocale,
 } from './types/intro-shell.types'
 
-const TOPIC_KEYS = [
-  'profile',
-  'latestProject',
-  'stack',
-  'aiPractice',
-  'ragAgent',
-  'engineering',
-  'collaboration',
-  'hobbies',
-  'writing',
-  'future',
-] as const satisfies readonly IntroTopicKey[]
-
 const INTRO_PROGRESS_STORAGE_PREFIX = 'my-resume:ai-intro:v1'
 
 function isIntroTopicKey(value: unknown): value is IntroTopicKey {
-  return typeof value === 'string' && TOPIC_KEYS.includes(value as IntroTopicKey)
+  return typeof value === 'string' && INTRO_TOPIC_KEYS.includes(value as IntroTopicKey)
 }
 
 function readStoredCompletedTopics(locale: ResumeLocale): IntroTopicKey[] {
@@ -177,7 +165,7 @@ export function AiTalkIntroShell({
                         </p>
                       </div>
                       <Chip size="sm" variant="soft">
-                        {completedTopics.length} / {TOPIC_KEYS.length}
+                        {completedTopics.length} / {INTRO_TOPIC_KEYS.length}
                       </Chip>
                     </div>
 
@@ -197,7 +185,7 @@ export function AiTalkIntroShell({
                     </div>
 
                     <div className="grid gap-2 sm:grid-cols-2" data-testid="ai-talk-intro-question-list">
-                      {TOPIC_KEYS.map((topic) => {
+                      {INTRO_TOPIC_KEYS.map((topic) => {
                         const isCompleted = completedTopicSet.has(topic)
 
                         return (
@@ -217,52 +205,10 @@ export function AiTalkIntroShell({
                 </div>
               </div>
 
-              <aside className={`${displayCardSurfaceClass} grid gap-5 rounded-[1.75rem] p-5 sm:p-6 lg:p-8`}>
-                <div className="grid gap-3">
-                  <p className="web-eyebrow">{t('introPage.unlock.eyebrow')}</p>
-                  <h2 className="text-2xl font-semibold text-slate-950 dark:text-white">
-                    {t('introPage.unlock.title')}
-                  </h2>
-                  <p className="text-sm leading-7 text-slate-500 dark:text-slate-400">
-                    {t('introPage.unlock.description')}
-                  </p>
-                </div>
-
-                <div
-                  className="grid grid-cols-2 gap-3 sm:grid-cols-5 lg:grid-cols-2 xl:grid-cols-5"
-                  data-testid="ai-talk-intro-unlock-grid">
-                  {TOPIC_KEYS.map((topic, index) => (
-                    <div
-                      className={[
-                        interactiveInsetSurfaceClass,
-                        'aspect-square rounded-[1.25rem] p-3 transition-colors',
-                        completedTopicSet.has(topic)
-                          ? 'border-emerald-200/80 bg-emerald-50/80 dark:border-emerald-400/25 dark:bg-emerald-500/10'
-                          : '',
-                      ].join(' ')}
-                      data-state={completedTopicSet.has(topic) ? 'completed' : 'locked'}
-                      key={topic}>
-                      <div className="flex h-full flex-col justify-between">
-                        <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">
-                          {String(index + 1).padStart(2, '0')}
-                        </span>
-                        <span className="text-sm font-semibold leading-5 text-slate-700 dark:text-slate-200">
-                          {t(`introPage.unlock.topics.${topic}`)}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className={`${displayInsetSurfaceClass} rounded-[1.5rem] p-4`}>
-                  <p className="text-sm font-semibold text-slate-950 dark:text-white">
-                    {t('introPage.unlock.noteTitle')}
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
-                    {t('introPage.unlock.noteDescription')}
-                  </p>
-                </div>
-              </aside>
+              <IntroUnlockMap
+                completedTopics={completedTopics}
+                heroImageUrl={profile.hero.frontImageUrl}
+              />
             </section>
 
             <div className="flex flex-wrap items-center gap-3">

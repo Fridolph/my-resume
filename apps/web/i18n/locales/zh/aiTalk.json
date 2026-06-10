@@ -172,8 +172,13 @@
       "eyebrow": "unlock map",
       "title": "人物能力拼图",
       "description": "这里先作为静态壳展示：后续会随着回答逐步点亮主题，形成更像游戏收集的了解路径。",
+      "progressTitle": "解锁进度",
+      "progressText": "已解锁 {completed} / {total} 个主题碎片",
+      "progressAria": "已解锁 {completed} 个主题碎片，共 {total} 个",
       "noteTitle": "当前阶段",
       "noteDescription": "本 issue 只建立页面和布局壳；问题状态机、真实回答和点亮逻辑会在后续 issue 中继续接入。",
+      "completeTitle": "完整画像已解锁",
+      "completeDescription": "10 个主题都已经完成，右侧地图进入完整状态。下一步可以把这些解锁结果接入更丰富的卡片和真实回答。",
       "topics": {
         "profile": "个人背景",
         "latestProject": "最近项目",
@@ -185,6 +190,30 @@
         "hobbies": "兴趣爱好",
         "writing": "创作沉淀",
         "future": "未来方向"
+      },
+      "keywords": {
+        "profile": "全栈",
+        "latestProject": "my-resume",
+        "stack": "TypeScript",
+        "aiPractice": "AI 工程",
+        "ragAgent": "RAG",
+        "engineering": "质量",
+        "collaboration": "拆解",
+        "hobbies": "节奏",
+        "writing": "沉淀",
+        "future": "Agent"
+      },
+      "summaries": {
+        "profile": "已解锁个人背景：从前端起步，继续向全栈与 AI 工程实践生长。",
+        "latestProject": "已解锁最近项目：my-resume 正在承接 AI Chat、RAG 与简历工作流实践。",
+        "stack": "已解锁技术栈：Next.js、NestJS、TypeScript 与 AI 工程链路是当前主线。",
+        "aiPractice": "已解锁 AI 实践：强调边界、日志、结构化输出和可追溯引用。",
+        "ragAgent": "已解锁 RAG / Agent：从可解释问答继续推进到 LangGraph 和 AGUI。",
+        "engineering": "已解锁工程能力：用类型、测试、日志和小步 issue 保持可维护。",
+        "collaboration": "已解锁团队协作：复杂工作先拆里程碑、issue 和验收标准。",
+        "hobbies": "已解锁兴趣爱好：音乐和羽毛球补充了技术之外的节奏感。",
+        "writing": "已解锁创作沉淀：把学习和项目实践持续写成可复盘的材料。",
+        "future": "已解锁未来方向：继续深挖 LangGraph、多域 RAG 和 AGUI 交互。"
       }
     },
     "primaryCta": "返回 AI Talk 中枢",

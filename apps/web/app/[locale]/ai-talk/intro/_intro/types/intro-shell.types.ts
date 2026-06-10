@@ -30,3 +30,8 @@ export interface AiTalkIntroShellProps {
   locale?: ResumeLocale
   publishedResume: ResumePublishedSnapshot | null
 }
+
+export interface IntroUnlockMapProps {
+  completedTopics: IntroTopicKey[]
+  heroImageUrl?: string | null
+}

@@ -80,7 +80,7 @@ describe('AiTalkIntroShell', () => {
   })
 
   it('should render the guided intro two-column shell and locked topic grid', () => {
-    renderIntroShell()
+    renderIntroShell();
 
     expect(screen.getByTestId('ai-talk-intro-shell')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /AI Intro/ })).toBeInTheDocument()
@@ -88,6 +88,7 @@ describe('AiTalkIntroShell', () => {
     expect(screen.getByTestId('ai-talk-intro-thread-preview')).toBeInTheDocument()
     expect(screen.getByTestId('ai-talk-intro-question-list').children).toHaveLength(10)
     expect(screen.getByTestId('ai-talk-intro-unlock-grid').children).toHaveLength(10)
+    expect(screen.getByTestId('ai-talk-intro-fragment-latestProject')).toHaveAttribute('data-state', 'locked')
     expect(screen.getByText('最近项目')).toBeInTheDocument()
     expect(screen.getByText('兴趣爱好')).toBeInTheDocument()
   })
@@ -106,6 +107,9 @@ describe('AiTalkIntroShell', () => {
     expect(screen.getByText('1 / 10')).toBeInTheDocument()
     expect(threadPreview.getByText('你最近一个项目做了什么？')).toBeInTheDocument()
     expect(threadPreview.getByText(/最近围绕 my-resume 做公开站 AI Chat/)).toBeInTheDocument()
+    expect(screen.getByTestId('ai-talk-intro-fragment-latestProject')).toHaveAttribute('data-state', 'completed')
+    expect(screen.getByText('my-resume')).toBeInTheDocument()
+    expect(screen.getByText(/已解锁最近项目/)).toBeInTheDocument()
     expect(latestProjectQuestion).toBeDisabled()
   })
 
@@ -120,5 +124,34 @@ describe('AiTalkIntroShell', () => {
     expect(screen.getByText('1 / 10')).toBeInTheDocument()
     expect(screen.getByText(/最近围绕 my-resume 做公开站 AI Chat/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '你最近一个项目做了什么？' })).toBeDisabled()
+  })
+
+  it('should show the complete persona map after all questions are completed', () => {
+    renderIntroShell()
+
+    const questions = [
+      '你是谁，当前主要方向是什么？',
+      '你最近一个项目做了什么？',
+      '你主要使用哪些技术？',
+      '你是怎么把 AI 用到项目里的？',
+      '你对 RAG 或 Agent 做过哪些实践？',
+      '你如何保证项目质量和可维护性？',
+      '你有哪些协作或推进经验？',
+      '你工作之外有哪些兴趣？',
+      '你有哪些文章、学习笔记或公开输出？',
+      '你接下来想继续深挖什么？',
+    ]
+
+    questions.forEach((question) => {
+      fireEvent.click(screen.getByRole('button', { name: question }))
+    })
+
+    expect(screen.getByText('10 / 10')).toBeInTheDocument()
+    expect(screen.getByText('100%')).toBeInTheDocument()
+    expect(screen.getByText('完整画像已解锁')).toBeInTheDocument()
+    expect(screen.getAllByTestId(/ai-talk-intro-fragment-/)).toHaveLength(10)
+    screen.getAllByTestId(/ai-talk-intro-fragment-/).forEach((fragment) => {
+      expect(fragment).toHaveAttribute('data-state', 'completed')
+    })
   })
 })

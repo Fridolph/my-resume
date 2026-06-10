@@ -172,8 +172,13 @@
       "eyebrow": "unlock map",
       "title": "Persona fragment map",
       "description": "This is the static shell first: later answers will light up each theme and turn the page into a collectible discovery path.",
+      "progressTitle": "Unlock progress",
+      "progressText": "{completed} / {total} fragments unlocked",
+      "progressAria": "{completed} of {total} persona fragments unlocked",
       "noteTitle": "Current stage",
       "noteDescription": "This issue only establishes the route and layout shell. The question state machine, real answers, and unlock logic continue in follow-up issues.",
+      "completeTitle": "Full persona map unlocked",
+      "completeDescription": "All 10 themes are complete, and the right-side map has entered its full state. Next, these unlock results can feed richer cards and real answers.",
       "topics": {
         "profile": "Profile",
         "latestProject": "Latest project",
@@ -185,6 +190,30 @@
         "hobbies": "Hobbies",
         "writing": "Writing",
         "future": "Future"
+      },
+      "keywords": {
+        "profile": "Full-stack",
+        "latestProject": "my-resume",
+        "stack": "TypeScript",
+        "aiPractice": "AI engineering",
+        "ragAgent": "RAG",
+        "engineering": "Quality",
+        "collaboration": "Planning",
+        "hobbies": "Rhythm",
+        "writing": "Notes",
+        "future": "Agent"
+      },
+      "summaries": {
+        "profile": "Profile unlocked: starting from frontend and growing into full-stack and AI engineering practice.",
+        "latestProject": "Latest project unlocked: my-resume now carries AI Chat, RAG, and resume workflow practice.",
+        "stack": "Tech stack unlocked: Next.js, NestJS, TypeScript, and AI engineering are the current backbone.",
+        "aiPractice": "AI practice unlocked: boundaries, logs, structured output, and traceable citations matter.",
+        "ragAgent": "RAG / Agent unlocked: explainable Q&A is growing toward LangGraph and AGUI.",
+        "engineering": "Engineering unlocked: types, tests, logs, and small issues keep the system maintainable.",
+        "collaboration": "Collaboration unlocked: complex work starts with milestones, issues, and acceptance criteria.",
+        "hobbies": "Hobbies unlocked: music and badminton add rhythm beyond technical labels.",
+        "writing": "Writing unlocked: learning and project practice are continuously turned into reviewable material.",
+        "future": "Future unlocked: LangGraph, multi-domain RAG, and AGUI interaction are the next focus."
       }
     },
     "primaryCta": "Back to AI Talk hub",
