@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from 'vitest'
+import { Logger } from '@nestjs/common'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { AiChatGraphService } from '../ai-chat-graph.service'
 import { AiService } from '../../application/services/ai.service'
@@ -31,6 +32,10 @@ function createGraphService() {
 }
 
 describe('AiChatGraphService', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('routes hobby questions to the hobbies knowledge domain and returns citation blocks', async () => {
     const { ragService, resumePublicationService, service } = createGraphService()
 
@@ -271,6 +276,124 @@ describe('AiChatGraphService', () => {
           imageUrl: 'https://example.com/ai-intro.png',
         }),
       ]),
+    )
+  })
+
+  it('logs retrieval domains, top citations, and answer block summaries', async () => {
+    const { ragService, resumePublicationService, service } = createGraphService()
+    const logSpy = vi.spyOn(Logger.prototype, 'log').mockImplementation(() => undefined)
+
+    resumePublicationService.getPublished.mockResolvedValue({
+      resume: createExampleStandardResume(),
+    })
+    ragService.ask.mockResolvedValue({
+      answer: '我平时喜欢音乐和羽毛球 [#1]。',
+      citations: [
+        {
+          id: 'hobby-001',
+          ref: '#1',
+          title: '兴趣爱好',
+          section: 'user_docs',
+          sourceType: 'user_docs',
+          score: 0.86,
+          snippet: '音乐、羽毛球和 AI Agent 实践是工作之外的重要兴趣。'.repeat(8),
+          contentType: 'hobby',
+          knowledgeDomain: 'hobbies',
+          renderHint: 'hobby_card',
+          tags: ['兴趣'],
+          richCard: {
+            title: '音乐与羽毛球',
+            description: '用音乐和羽毛球调节节奏。',
+            keywords: ['音乐', '羽毛球'],
+          },
+        },
+      ],
+      matches: [],
+      providerSummary: undefined,
+    })
+
+    await service.generateAnswer({
+      locale: 'zh',
+      question: '你有什么兴趣爱好？',
+    })
+
+    const payloads = logSpy.mock.calls.map(([payload]) => payload)
+    expect(payloads).toContainEqual(
+      expect.objectContaining({
+        event: 'ai-chat.graph.retrieval_completed',
+        knowledgeDomains: ['resume_core', 'hobbies'],
+        matchCount: 0,
+        citationCount: 1,
+        fallbackReason: null,
+        topCitations: [
+          expect.objectContaining({
+            ref: '#1',
+            score: 0.86,
+            knowledgeDomain: 'hobbies',
+            contentType: 'hobby',
+            renderHint: 'hobby_card',
+            hasRichCard: true,
+            snippet: expect.stringMatching(/\.\.\.$/),
+          }),
+        ],
+      }),
+    )
+    expect(payloads).toContainEqual(
+      expect.objectContaining({
+        event: 'ai-chat.graph.node_completed',
+        node: 'answer_compose',
+        blockTypes: [
+          expect.objectContaining({
+            type: 'hobby_card',
+            title: '音乐与羽毛球',
+          }),
+        ],
+      }),
+    )
+  })
+
+  it('logs resume summary fallback reasons and block summaries', async () => {
+    const { aiService, ragService, resumePublicationService, service } = createGraphService()
+    const logSpy = vi.spyOn(Logger.prototype, 'log').mockImplementation(() => undefined)
+
+    resumePublicationService.getPublished.mockResolvedValue({
+      resume: createExampleStandardResume(),
+    })
+    ragService.ask.mockResolvedValue({
+      answer: '',
+      citations: [],
+      matches: [],
+      providerSummary: undefined,
+    })
+    aiService.generateText.mockResolvedValue({
+      text: '我主要是全栈和 AI Agent 方向，也在持续补充 RAG 实践。',
+      providerSummary: {
+        provider: 'mock',
+        model: 'mock-chat',
+        mode: 'mock',
+      },
+    })
+
+    const result = await service.generateAnswer({
+      locale: 'zh',
+      question: '介绍一下你的技术方向',
+    })
+
+    const payloads = logSpy.mock.calls.map(([payload]) => payload)
+    expect(result.answer).toContain('AI Agent')
+    expect(payloads).toContainEqual(
+      expect.objectContaining({
+        event: 'ai-chat.graph.retrieval_completed',
+        citationCount: 0,
+        fallbackReason: 'no_citation_use_resume_summary',
+      }),
+    )
+    expect(payloads).toContainEqual(
+      expect.objectContaining({
+        event: 'ai-chat.graph.resume_fallback',
+        blockCount: 0,
+        blockTypes: [],
+      }),
     )
   })
 
