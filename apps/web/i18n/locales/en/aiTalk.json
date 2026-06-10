@@ -128,6 +128,49 @@
     "primaryCta": "Back to AI Talk hub",
     "secondaryCta": "Open RAG chat"
   },
+  "introPage": {
+    "eyebrow": "ai intro",
+    "title": "AI Intro · Unlock {name}",
+    "description": "A standalone guided AI intro page: start with curated questions, then let the portrait map light up piece by piece as answers land.",
+    "badges": {
+      "guided": "Guided questions",
+      "fragments": "10 fragments"
+    },
+    "chat": {
+      "title": "Guided chat window",
+      "description": "The first version only exposes preset questions, keeping the experience focused and easy to sync with the portrait map.",
+      "messages": {
+        "1": "Hi, I can guide you through this resume in 10 focused questions.",
+        "2": "Shall we start with the latest project?",
+        "3": "Each completed answer unlocks one themed fragment on the right."
+      },
+      "promptSamples": {
+        "1": "What was your latest project?",
+        "2": "How do you practice AI Agent work?"
+      }
+    },
+    "unlock": {
+      "eyebrow": "unlock map",
+      "title": "Persona fragment map",
+      "description": "This is the static shell first: later answers will light up each theme and turn the page into a collectible discovery path.",
+      "noteTitle": "Current stage",
+      "noteDescription": "This issue only establishes the route and layout shell. The question state machine, real answers, and unlock logic continue in follow-up issues.",
+      "topics": {
+        "profile": "Profile",
+        "latestProject": "Latest project",
+        "stack": "Tech stack",
+        "aiPractice": "AI practice",
+        "ragAgent": "RAG / Agent",
+        "engineering": "Engineering",
+        "collaboration": "Collaboration",
+        "hobbies": "Hobbies",
+        "writing": "Writing",
+        "future": "Future"
+      }
+    },
+    "primaryCta": "Back to AI Talk hub",
+    "secondaryCta": "Open current chat entry"
+  },
   "entry": {
     "eyebrow": "ai talk",
     "title": "AI Talk Hub",

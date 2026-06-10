@@ -8,6 +8,7 @@
 - `entry-shell.module.css`：入口页 Hero Row 与 3D 翻转卡片样式
 - `page-frame.tsx`：AI Talk 子路由共享页框架，统一公开站头部与发布快照同步
 - `load-page-data.ts`：AI Talk 路由共享的服务端首取逻辑
+- `intro/_intro/`：AI Intro 引导式介绍页，承接预设问题与右侧解锁地图
 - `chat/_chat/`：RAG 对话入口页的 route-private 实现
 - `avatar/_avatar/`：数字人自我介绍页的 route-private 实现
 - `sessions/[sessionId]/_session/`：未来真实会话页的 route-private 实现

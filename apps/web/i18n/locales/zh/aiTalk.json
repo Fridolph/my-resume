@@ -128,6 +128,49 @@
     "primaryCta": "返回 AI Talk 中枢",
     "secondaryCta": "进入 RAG 对话"
   },
+  "introPage": {
+    "eyebrow": "ai intro",
+    "title": "AI Intro · 逐步解锁 {name}",
+    "description": "这是一个独立的引导式 AI 介绍页：先用预设问题控制节奏，再让右侧人物画像随着回答逐块点亮。",
+    "badges": {
+      "guided": "引导式问题",
+      "fragments": "10 块解锁"
+    },
+    "chat": {
+      "title": "引导式聊天窗口",
+      "description": "首版只开放预设问题，避免体验发散，也方便和右侧画像同步。",
+      "messages": {
+        "1": "你好，我会用 10 个问题带你快速了解这份简历。",
+        "2": "先从最近项目开始可以吗？",
+        "3": "每完成一个问题，右侧都会解锁一个主题碎片。"
+      },
+      "promptSamples": {
+        "1": "你最近一个项目做了什么？",
+        "2": "你是怎么实践 AI Agent 的？"
+      }
+    },
+    "unlock": {
+      "eyebrow": "unlock map",
+      "title": "人物能力拼图",
+      "description": "这里先作为静态壳展示：后续会随着回答逐步点亮主题，形成更像游戏收集的了解路径。",
+      "noteTitle": "当前阶段",
+      "noteDescription": "本 issue 只建立页面和布局壳；问题状态机、真实回答和点亮逻辑会在后续 issue 中继续接入。",
+      "topics": {
+        "profile": "个人背景",
+        "latestProject": "最近项目",
+        "stack": "技术栈",
+        "aiPractice": "AI 实践",
+        "ragAgent": "RAG / Agent",
+        "engineering": "工程能力",
+        "collaboration": "团队协作",
+        "hobbies": "兴趣爱好",
+        "writing": "创作沉淀",
+        "future": "未来方向"
+      }
+    },
+    "primaryCta": "返回 AI Talk 中枢",
+    "secondaryCta": "查看现有对话入口"
+  },
   "entry": {
     "eyebrow": "ai talk",
     "title": "AI Talk 中枢入口",
