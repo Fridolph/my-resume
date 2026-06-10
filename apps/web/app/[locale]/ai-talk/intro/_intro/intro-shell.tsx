@@ -111,6 +111,10 @@ export function AiTalkIntroShell({
     })
   }
 
+  const resetProgress = () => {
+    setCompletedTopics([])
+  }
+
   return (
     <AiTalkPageFrame
       apiBaseUrl={apiBaseUrl}
@@ -155,7 +159,7 @@ export function AiTalkIntroShell({
                   </div>
 
                   <div className={`${displayInsetSurfaceClass} grid gap-4 rounded-[1.5rem] p-4`}>
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                       <div className="grid gap-1">
                         <p className="text-sm font-semibold text-slate-950 dark:text-white">
                           {t('introPage.chat.title')}
@@ -164,9 +168,18 @@ export function AiTalkIntroShell({
                           {t('introPage.chat.description')}
                         </p>
                       </div>
-                      <Chip size="sm" variant="soft">
-                        {completedTopics.length} / {INTRO_TOPIC_KEYS.length}
-                      </Chip>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          isDisabled={completedTopics.length === 0}
+                          onPress={resetProgress}
+                          size="sm"
+                          variant="ghost">
+                          {t('introPage.chat.resetAction')}
+                        </Button>
+                        <Chip size="sm" variant="soft">
+                          {completedTopics.length} / {INTRO_TOPIC_KEYS.length}
+                        </Chip>
+                      </div>
                     </div>
 
                     <div className="grid gap-3" data-testid="ai-talk-intro-thread-preview">
@@ -189,15 +202,15 @@ export function AiTalkIntroShell({
                         const isCompleted = completedTopicSet.has(topic)
 
                         return (
-                        <Button
-                          className="justify-start rounded-[1rem] text-left"
-                          isDisabled={isCompleted}
-                          key={topic}
-                          onPress={() => completeTopic(topic)}
-                          size="sm"
-                          variant={isCompleted ? 'ghost' : 'outline'}>
-                          {t(`introPage.questions.${topic}`)}
-                        </Button>
+                          <Button
+                            className="justify-start rounded-[1rem] text-left"
+                            isDisabled={isCompleted}
+                            key={topic}
+                            onPress={() => completeTopic(topic)}
+                            size="sm"
+                            variant={isCompleted ? 'ghost' : 'outline'}>
+                            {t(`introPage.questions.${topic}`)}
+                          </Button>
                         )
                       })}
                     </div>

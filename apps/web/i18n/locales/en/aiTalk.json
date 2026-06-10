@@ -139,6 +139,7 @@
     "chat": {
       "title": "Guided chat window",
       "description": "The first version only exposes preset questions, keeping the experience focused and easy to sync with the portrait map.",
+      "resetAction": "Reset progress",
       "messages": {
         "1": "Hi, I can guide you through this resume in 10 focused questions.",
         "2": "Choose one question below to start; each completed answer updates the progress map on the right."

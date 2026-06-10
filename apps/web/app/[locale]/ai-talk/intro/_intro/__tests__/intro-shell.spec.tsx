@@ -80,11 +80,12 @@ describe('AiTalkIntroShell', () => {
   })
 
   it('should render the guided intro two-column shell and locked topic grid', () => {
-    renderIntroShell();
+    renderIntroShell()
 
     expect(screen.getByTestId('ai-talk-intro-shell')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /AI Intro/ })).toBeInTheDocument()
     expect(screen.getByText('引导式问题')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '重置进度' })).toBeDisabled()
     expect(screen.getByTestId('ai-talk-intro-thread-preview')).toBeInTheDocument()
     expect(screen.getByTestId('ai-talk-intro-question-list').children).toHaveLength(10)
     expect(screen.getByTestId('ai-talk-intro-unlock-grid').children).toHaveLength(10)
@@ -153,5 +154,20 @@ describe('AiTalkIntroShell', () => {
     screen.getAllByTestId(/ai-talk-intro-fragment-/).forEach((fragment) => {
       expect(fragment).toHaveAttribute('data-state', 'completed')
     })
+  })
+
+  it('should reset completed questions and lock the map again', () => {
+    renderIntroShell()
+
+    fireEvent.click(screen.getByRole('button', { name: '你最近一个项目做了什么？' }))
+
+    expect(screen.getByText('1 / 10')).toBeInTheDocument()
+    expect(screen.getByTestId('ai-talk-intro-fragment-latestProject')).toHaveAttribute('data-state', 'completed')
+
+    fireEvent.click(screen.getByRole('button', { name: '重置进度' }))
+
+    expect(screen.getByText('0 / 10')).toBeInTheDocument()
+    expect(screen.getByTestId('ai-talk-intro-fragment-latestProject')).toHaveAttribute('data-state', 'locked')
+    expect(screen.getByRole('button', { name: '你最近一个项目做了什么？' })).not.toBeDisabled()
   })
 })
