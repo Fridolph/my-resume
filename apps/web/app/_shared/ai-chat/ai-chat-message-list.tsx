@@ -1,13 +1,14 @@
 'use client'
 
-import { Chip, Spinner } from '@heroui/react'
+import { Spinner } from '@heroui/react'
 import { Avatar } from '@heroui/react/avatar'
 import { forwardRef } from 'react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
-import type { AiChatMessage, AiChatMessageBlock } from '@my-resume/api-client'
+import type { AiChatMessage } from '@my-resume/api-client'
 
+import { AiChatAnswerBlockRenderer } from './ai-chat-answer-block-renderer'
 import { RagCitationTooltip } from './rag-citation-tooltip'
 import type { AiChatPresentation } from './ai-chat.types'
 
@@ -17,43 +18,6 @@ import type { AiChatPresentation } from './ai-chat.types'
  * 先用正则把 [#n] 替换为 「#n」避免被 markdown 吃掉，再用 react-markdown
  * 渲染段落/列表/粗体等，最后把 「#n」 替换为可交互的 RagCitationTooltip。
  */
-function renderMessageBlocks(blocks: AiChatMessageBlock[]) {
-  return blocks.map((block, index) => {
-    if (block.type === 'summary') {
-      return (
-        <article
-          className="grid gap-2 rounded-2xl border border-emerald-200/70 bg-emerald-50/70 p-3 dark:border-emerald-500/20 dark:bg-emerald-500/10"
-          key={`${block.type}-${index}`}>
-          <strong className="text-sm text-zinc-950 dark:text-white">{block.title}</strong>
-          <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-200">{block.summary}</p>
-          {block.keywords.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {block.keywords.map((item) => (
-                <Chip key={item} size="sm" variant="soft">
-                  {item}
-                </Chip>
-              ))}
-            </div>
-          ) : null}
-        </article>
-      )
-    }
-
-    if (block.type === 'system_notice') {
-      return (
-        <div
-          className="rounded-2xl border border-amber-200/70 bg-amber-50/70 px-3 py-2 text-sm leading-6 text-amber-900 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-100"
-          key={`${block.type}-${index}`}>
-          {block.text}
-        </div>
-      )
-    }
-
-    // 其他 block（project/experience/hobby/article/media/text）不在消息下方重复渲染
-    return null
-  })
-}
-
 function buildInitials(label: string) {
   const trimmed = label.trim()
 
@@ -111,9 +75,11 @@ function ChatAvatar({
 }
 
 function AiChatMessageItem({
+  locale,
   message,
   presentation,
 }: {
+  locale: 'zh' | 'en'
   message: AiChatMessage
   presentation: AiChatPresentation
 }) {
@@ -201,6 +167,10 @@ function AiChatMessageItem({
             ))}
           </div>
         ) : null}
+
+        {!isUser && message.answerBlocks.length > 0 ? (
+          <AiChatAnswerBlockRenderer blocks={message.answerBlocks} locale={locale} />
+        ) : null}
       </div>
     </div>
   )
@@ -220,7 +190,12 @@ export const AiChatMessageList = forwardRef<HTMLDivElement, {
   return (
     <div className="grid min-h-0 flex-1 content-start gap-3 overflow-y-auto pr-1" ref={ref}>
       {messages.map((message) => (
-        <AiChatMessageItem key={message.id} message={message} presentation={presentation} />
+        <AiChatMessageItem
+          key={message.id}
+          locale={locale}
+          message={message}
+          presentation={presentation}
+        />
       ))}
       {isStreaming ? (
         <div className="inline-flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">

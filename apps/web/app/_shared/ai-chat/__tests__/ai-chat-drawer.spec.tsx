@@ -507,7 +507,7 @@ describe('AiChatDrawer', () => {
     expect(screen.getByText('这是一个全栈个人项目。')).toBeInTheDocument()
   })
 
-  it('should hide custom citation cards while keeping citation chips visible', () => {
+  it('should not render citation source cards when answer blocks are absent', () => {
     useAiChatMock.mockReturnValue({
       acceptConsent: vi.fn(),
       canRetryLastMessage: false,
@@ -562,20 +562,7 @@ describe('AiChatDrawer', () => {
             role: 'assistant',
             content: '我平时还喜欢音乐和羽毛球 #1 #2。',
             turnIndex: 1,
-            answerBlocks: [
-              {
-                type: 'hobby_card',
-                title: '音乐.md',
-                description: '我喜欢音乐',
-                keywords: [],
-              },
-              {
-                type: 'article_card',
-                title: 'JS全栈 AI Agent 学习',
-                summary: 'RAG 怎么做',
-                keywords: [],
-              },
-            ],
+            answerBlocks: [],
             citations: [
               {
                 ref: '#1',
