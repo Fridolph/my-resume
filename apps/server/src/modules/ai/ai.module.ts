@@ -9,6 +9,7 @@ import { FileExtractionService } from './application/services/file-extraction.se
 import { ResumeImportRecognitionService } from './application/services/resume-import-recognition.service'
 import { ResumeOptimizationResultCacheService } from './application/services/resume-optimization-result-cache.service'
 import { AiChatBootstrapService } from './chat/ai-chat-bootstrap.service'
+import { AiChatGraphService } from './chat/ai-chat-graph.service'
 import { AiChatRepository } from './chat/ai-chat.repository'
 import { AiChatService } from './chat/ai-chat.service'
 import { AI_FETCH, AI_PROVIDER_INSTANCE, AI_RUNTIME_CONFIG } from './ai.tokens'
@@ -74,6 +75,7 @@ import { AiResumeImportController } from './transport/controllers/ai-resume-impo
     AiUsageRecordService,
     AiChatRepository,
     AiChatBootstrapService,
+    AiChatGraphService,
     AiChatService,
     AiResumeOptimizationService,
     AnalysisReportCacheService,

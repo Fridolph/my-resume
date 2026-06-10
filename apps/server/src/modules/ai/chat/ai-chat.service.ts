@@ -21,6 +21,7 @@ import { RagService } from '../rag/rag.service'
 import type { RagAskCitation } from '../rag/rag.types'
 import { buildAiChatSummaryPrompt, AI_CHAT_SUMMARY_SYSTEM_PROMPT } from './prompts/ai-chat-summary.prompt'
 import { buildRagAskSystemPrompt } from '../rag/prompts/rag-ask.prompt'
+import { AiChatGraphService } from './ai-chat-graph.service'
 import { AiChatRepository } from './ai-chat.repository'
 import type {
   AiChatAnswerGenerationResult,
@@ -395,6 +396,8 @@ export class AiChatService {
     private readonly ragService: RagService,
     @Inject(ResumePublicationService)
     private readonly resumePublicationService: ResumePublicationService,
+    @Inject(AiChatGraphService)
+    private readonly aiChatGraphService: AiChatGraphService,
   ) {}
 
   async submitLead(input: AiChatLeadInput) {
@@ -667,7 +670,7 @@ export class AiChatService {
   }
 
   async adminClearMessages(sessionId: string) {
-    const bundle = await this.requireSessionBundle(sessionId)
+    await this.requireSessionBundle(sessionId)
     await this.aiChatRepository.deleteMessagesBySessionId(sessionId)
     return this.getAdminSessionSnapshot(sessionId)
   }
@@ -743,7 +746,7 @@ export class AiChatService {
       turnCount: nextTurnCount,
     })
 
-    const answerResult = await this.generateAnswer({
+    const answerResult = await this.generateAnswerWithGraph({
       locale,
       question: input.content.trim(),
       onToken: streamCallbacks?.onToken,
@@ -938,6 +941,26 @@ export class AiChatService {
         ? (record.citationsJson as RagAskCitation[])
         : [],
       createdAt: record.createdAt.toISOString(),
+    }
+  }
+
+  private async generateAnswerWithGraph(
+    input: {
+      locale: AiChatLocale
+      question: string
+      onToken?: (token: string) => void
+    },
+  ): Promise<AiChatAnswerGenerationResult> {
+    try {
+      return await this.aiChatGraphService.generateAnswer(input)
+    } catch (error) {
+      this.logger.warn({
+        event: 'ai-chat.graph.service_fallback',
+        message: error instanceof Error ? error.message : String(error),
+        question: input.question,
+      })
+
+      return this.generateAnswer(input)
     }
   }
 

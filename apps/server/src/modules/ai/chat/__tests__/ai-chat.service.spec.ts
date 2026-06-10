@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AiChatRepository } from '../ai-chat.repository'
+import { AiChatGraphService } from '../ai-chat-graph.service'
 import { AiChatService } from '../ai-chat.service'
 import { AiService } from '../../application/services/ai.service'
 import { RagService } from '../../rag/rag.service'
@@ -165,9 +166,13 @@ function createService(repository = createRepositoryMock()) {
   const resumePublicationService = {
     getPublished: vi.fn(),
   } as unknown as ResumePublicationService
+  const graphService = {
+    generateAnswer: vi.fn(),
+  } as unknown as AiChatGraphService
 
   return {
     aiService,
+    graphService,
     ragService,
     repository,
     resumePublicationService,
@@ -176,6 +181,7 @@ function createService(repository = createRepositoryMock()) {
       aiService as never,
       ragService as never,
       resumePublicationService as never,
+      graphService as never,
     ),
   }
 }
@@ -266,7 +272,7 @@ describe('AiChatService', () => {
 
   it('persists user, assistant, and summary messages when turn 10 triggers interim summarization', async () => {
     const repository = createRepositoryMock()
-    const { service } = createService(repository)
+    const { graphService, service } = createService(repository)
 
     repository.getSessionBundle.mockResolvedValue(
       createSessionBundle({
@@ -286,7 +292,7 @@ describe('AiChatService', () => {
     repository.updateSession.mockResolvedValue(undefined)
     repository.updateUseKey.mockResolvedValue(undefined)
 
-    vi.spyOn(service as never, 'generateAnswer').mockResolvedValue({
+    vi.mocked(graphService.generateAnswer).mockResolvedValue({
       answer: '这里是基于简历的回答',
       blocks: [
         {
@@ -379,7 +385,7 @@ describe('AiChatService', () => {
 
   it('closes the session and stores the final summary when turn 20 is reached', async () => {
     const repository = createRepositoryMock()
-    const { service } = createService(repository)
+    const { graphService, service } = createService(repository)
 
     repository.getSessionBundle.mockResolvedValue(
       createSessionBundle({
@@ -399,7 +405,7 @@ describe('AiChatService', () => {
     repository.updateSession.mockResolvedValue(undefined)
     repository.updateUseKey.mockResolvedValue(undefined)
 
-    vi.spyOn(service as never, 'generateAnswer').mockResolvedValue({
+    vi.mocked(graphService.generateAnswer).mockResolvedValue({
       answer: '这是本次会话的最后一条回答',
       blocks: [],
       citations: [],
@@ -445,5 +451,46 @@ describe('AiChatService', () => {
     )
     expect(result.session.status).toBe('closed')
     expect(result.summary?.stage).toBe('turn-20')
+  })
+
+  it('falls back to the legacy answer generator when the graph service fails', async () => {
+    const repository = createRepositoryMock()
+    const { graphService, service } = createService(repository)
+
+    repository.getSessionBundle.mockResolvedValue(createSessionBundle())
+    repository.createMessage.mockImplementation(async (input) => ({
+      ...input,
+      answerBlocksJson: input.answerBlocksJson ?? null,
+      citationsJson: input.citationsJson ?? null,
+    }))
+    repository.updateSession.mockResolvedValue(undefined)
+    repository.updateUseKey.mockResolvedValue(undefined)
+    vi.mocked(graphService.generateAnswer).mockRejectedValueOnce(new Error('graph unavailable'))
+    vi.spyOn(service, 'getPublicSessionSnapshot').mockResolvedValue(
+      createSessionSnapshot({
+        remainingTurns: 19,
+        turnCount: 1,
+      }),
+    )
+
+    const result = await service.createAssistantReply({
+      sessionId: 'session-001',
+      useKey: 'FY-1A2B3C4D',
+      content: '你好',
+    })
+
+    expect(graphService.generateAnswer).toHaveBeenCalledWith(
+      expect.objectContaining({
+        locale: 'zh',
+        question: '你好',
+      }),
+    )
+    expect(result.assistantMessage.content).toContain('我是 FYS')
+    expect(repository.createMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        role: 'assistant',
+        content: expect.stringContaining('我是 FYS'),
+      }),
+    )
   })
 })
