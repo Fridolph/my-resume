@@ -43,6 +43,7 @@ interface GraphRouteDecision {
 }
 
 interface GraphRetrievalResult {
+  knowledgeDomains: RagKnowledgeDomain[]
   ragResult: Awaited<ReturnType<RagService['ask']>>
   resume: StandardResume | null
   resumeSummary: string
@@ -235,6 +236,12 @@ function resolveKnowledgeDomains(question: string): RagKnowledgeDomain[] | undef
   return domains.size > 0 ? [...domains] : undefined
 }
 
+function mergeResumeCoreKnowledgeDomains(
+  domains: readonly RagKnowledgeDomain[] | undefined,
+): RagKnowledgeDomain[] {
+  return Array.from(new Set<RagKnowledgeDomain>(['resume_core', ...(domains ?? [])]))
+}
+
 function isClearlyOutOfScopeQuestion(question: string): boolean {
   const lower = question.toLowerCase()
   const resumeRelated = /我|你|简历|项目|经历|工作|公司|技能|技术|特长|兴趣|爱好|文章|博客|学习|职业|求职|resume|project|experience|skill|hobby|career|work|blog|article/.test(lower)
@@ -281,6 +288,7 @@ export class AiChatGraphService {
       this.logNode('answer_compose', normalized, route, startedAt, {
         citationCount: answer.citations.length,
         blockCount: answer.blocks.length,
+        retrievalKnowledgeDomains: retrieval.knowledgeDomains,
       })
 
       return answer
@@ -355,18 +363,20 @@ export class AiChatGraphService {
     const snapshot = await this.resumePublicationService.getPublished()
     const resume = snapshot?.resume ?? null
     const resumeSummary = resume ? buildResumeSummary(resume, input.locale) : ''
+    const knowledgeDomains = mergeResumeCoreKnowledgeDomains(route.knowledgeDomains)
     const ragResult = await this.ragService.ask(
       input.question,
       DEFAULT_CHAT_LIMIT,
       input.locale,
       {
         vectorScope: 'published',
-        knowledgeDomains: route.knowledgeDomains,
+        knowledgeDomains,
       },
       input.onToken ? { onToken: input.onToken } : undefined,
     )
 
     return {
+      knowledgeDomains,
       ragResult,
       resume,
       resumeSummary,
@@ -381,6 +391,11 @@ export class AiChatGraphService {
     if (retrieval.ragResult.citations.length === 0 && !retrieval.resumeSummary) {
       const topScore = retrieval.ragResult.matches[0]?.score ?? 0
       return buildLowRelevanceAnswer(input.question, topScore, input.locale)
+    }
+
+    const topCitationScore = retrieval.ragResult.citations[0]?.score
+    if (typeof topCitationScore === 'number' && topCitationScore < 0.1) {
+      return buildLowRelevanceAnswer(input.question, topCitationScore, input.locale)
     }
 
     const resumeBlocks = retrieval.resume
@@ -432,7 +447,7 @@ export class AiChatGraphService {
     this.logger.log({
       event: 'ai-chat.graph.resume_fallback',
       reason: route.reason,
-      knowledgeDomains: route.knowledgeDomains,
+      knowledgeDomains: mergeResumeCoreKnowledgeDomains(route.knowledgeDomains),
       question: input.question,
     })
 
