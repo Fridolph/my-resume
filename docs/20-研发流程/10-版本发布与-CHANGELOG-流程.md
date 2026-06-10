@@ -4,8 +4,8 @@
 
 当前仓库的正式发布节奏是：
 
-1. issue 分支开发并合并回 `development`
-2. 阶段收束后将 `development` 合并到 `main`
+1. issue 分支开发并合并回 `dev`
+2. 阶段收束后将 `dev` 合并到 `main`
 3. 在 `main` 上打 `v*` tag
 4. 构建镜像、部署 ECS、创建 GitHub Release
 
@@ -131,7 +131,7 @@ pnpm release:github -- --tag v2.2.23 --draft --title "v2.2.23"
 
 ### 一键发布（推荐）
 
-确保已完成 `development` 合并后，在 `main` 分支上执行：
+确保已完成 `dev` 合并后，在 `main` 分支上执行：
 
 ```bash
 pnpm release -- --tag v2.2.24 --ecs-host 1.2.3.4
