@@ -319,6 +319,53 @@ describe('UserDocsIngestionService', () => {
     })
   })
 
+  it('should persist custom rich card metadata for user docs cards', async () => {
+    const { service, aiService, ragRetrievalRepository } = createHarness()
+
+    vi.mocked(aiService.embedTexts).mockResolvedValue({
+      provider: 'mock',
+      model: 'mock-resume-advisor-embedding',
+      embeddings: [[0.1, 0.2]],
+      raw: null,
+    })
+
+    const result = await service.ingestCustom({
+      title: '羽毛球与音乐',
+      content: '羽毛球训练反应速度，音乐用于调节工作节奏。',
+      contentType: 'hobby',
+      linkUrl: 'https://example.com/hobbies',
+      sourceScope: 'published',
+    })
+
+    expect(result.sourceScope).toBe('published')
+    expect(vi.mocked(ragRetrievalRepository.upsertDocument)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: '羽毛球与音乐',
+        metadataJson: expect.objectContaining({
+          contentType: 'hobby',
+          knowledgeDomain: 'hobbies',
+          renderHint: 'hobby_card',
+          richCard: {
+            title: '羽毛球与音乐',
+            description: '羽毛球训练反应速度，音乐用于调节工作节奏。',
+            url: 'https://example.com/hobbies',
+            keywords: [],
+          },
+        }),
+      }),
+    )
+    expect(
+      vi.mocked(ragRetrievalRepository.replaceChunksForDocument).mock.calls[0]?.[1][0],
+    ).toMatchObject({
+      metadataJson: {
+        richCard: {
+          title: '羽毛球与音乐',
+          url: 'https://example.com/hobbies',
+        },
+      },
+    })
+  })
+
   it('should mark run failed when embedding throws', async () => {
     const { service, fileExtractionService, aiService, ragRetrievalRepository, ragVectorStore } =
       createHarness()

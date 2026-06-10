@@ -621,6 +621,13 @@ describe('RagService', () => {
           contentType: 'hobby',
           knowledgeDomain: 'hobbies',
           renderHint: 'hobby_card',
+          richCard: {
+            title: '羽毛球与音乐',
+            description: '用运动和音乐调节节奏。',
+            url: 'https://example.com/hobbies',
+            imageUrl: 'https://example.com/hobby.png',
+            keywords: ['羽毛球', '音乐'],
+          },
         },
         score: 0.93,
       },
@@ -676,6 +683,13 @@ describe('RagService', () => {
         contentType: 'hobby',
         knowledgeDomain: 'hobbies',
         renderHint: 'hobby_card',
+        richCard: {
+          title: '羽毛球与音乐',
+          description: '用运动和音乐调节节奏。',
+          url: 'https://example.com/hobbies',
+          imageUrl: 'https://example.com/hobby.png',
+          keywords: ['羽毛球', '音乐'],
+        },
       }),
     )
   })

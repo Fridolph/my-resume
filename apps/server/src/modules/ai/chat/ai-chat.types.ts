@@ -103,6 +103,8 @@ export interface AiChatProjectCardBlock {
   summary: string
   technologies: string[]
   highlights: string[]
+  url?: string
+  imageUrl?: string
 }
 
 export interface AiChatExperienceCardBlock {
@@ -129,12 +131,22 @@ export interface AiChatSummaryBlock {
   keywords: string[]
 }
 
+export interface AiChatCardMediaPreview {
+  type: 'image' | 'video' | 'link'
+  url: string
+  title?: string
+  thumbnailUrl?: string
+}
+
 export interface AiChatArticleCardBlock {
   type: 'article_card'
   title: string
   summary: string
   url?: string
+  imageUrl?: string
+  publishedAt?: string
   keywords: string[]
+  media?: AiChatCardMediaPreview[]
 }
 
 export interface AiChatMediaCardBlock {
@@ -142,6 +154,7 @@ export interface AiChatMediaCardBlock {
   title: string
   description: string
   url: string
+  imageUrl?: string
   thumbnailUrl?: string
 }
 
@@ -150,7 +163,9 @@ export interface AiChatHobbyCardBlock {
   title: string
   description: string
   url?: string
+  imageUrl?: string
   keywords: string[]
+  media?: AiChatCardMediaPreview[]
 }
 
 export interface AiChatTextBlock {

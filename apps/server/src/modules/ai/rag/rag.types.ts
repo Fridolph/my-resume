@@ -1,3 +1,10 @@
+import type {
+  RagContentType,
+  RagKnowledgeDomain,
+  RagRenderHint,
+  RagSourceCollection,
+} from './rag-knowledge-domain'
+
 /**
  * 检索态知识来源大类（用于数据库契约层）
  *
@@ -118,6 +125,24 @@ export interface RagSourceDocument {
   }
 }
 
+export interface RagRichCardMedia {
+  type: 'image' | 'video' | 'link'
+  url: string
+  title?: string
+  thumbnailUrl?: string
+}
+
+export interface RagRichCardMetadata {
+  title?: string
+  description?: string
+  url?: string
+  imageUrl?: string
+  thumbnailUrl?: string
+  publishedAt?: string
+  keywords?: string[]
+  media?: RagRichCardMedia[]
+}
+
 /**
  * RAG 语义块（未向量化）。
  *
@@ -141,6 +166,8 @@ export interface RagChunk {
   sourceCollection?: RagSourceCollection
   /** 前端建议渲染形态。 */
   renderHint?: RagRenderHint
+  /** 面向富展示卡片的补充 metadata，不参与向量检索主体。 */
+  richCard?: RagRichCardMetadata
 }
 
 /**
@@ -208,6 +235,8 @@ export interface RagAskCitation {
   knowledgeDomain?: RagKnowledgeDomain
   /** 前端建议渲染形态。 */
   renderHint?: RagRenderHint
+  /** 面向 Chat Card 的富展示补充字段。 */
+  richCard?: RagRichCardMetadata
 }
 
 /**
@@ -219,9 +248,3 @@ export interface RagAskResult {
   matches: RagSearchMatch[]
   providerSummary: RagIndexFile['providerSummary']
 }
-import type {
-  RagContentType,
-  RagKnowledgeDomain,
-  RagRenderHint,
-  RagSourceCollection,
-} from './rag-knowledge-domain'

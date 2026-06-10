@@ -512,26 +512,54 @@ export class AiChatGraphService {
       seen.add(`${contentType}:${citation.title}`)
 
       if (contentType === 'article') {
+        const richCard = citation.richCard
+
         blocks.push({
           type: 'article_card',
-          title: citation.title,
-          summary: citation.snippet,
-          url: undefined,
-          keywords: citation.tags ?? [],
+          title: richCard?.title ?? citation.title,
+          summary: richCard?.description ?? citation.snippet,
+          url: richCard?.url ?? citation.sourcePath,
+          imageUrl: richCard?.imageUrl,
+          publishedAt: richCard?.publishedAt,
+          keywords: richCard?.keywords ?? citation.tags ?? [],
+          media: richCard?.media,
         })
       } else if (contentType === 'media') {
+        const richCard = citation.richCard
+
         blocks.push({
           type: 'media_card',
-          title: citation.title,
-          description: citation.snippet,
-          url: citation.sourcePath ?? '',
+          title: richCard?.title ?? citation.title,
+          description: richCard?.description ?? citation.snippet,
+          url: richCard?.url ?? citation.sourcePath ?? '',
+          imageUrl: richCard?.imageUrl,
+          thumbnailUrl: richCard?.thumbnailUrl,
         })
       } else if (contentType === 'hobby') {
+        const richCard = citation.richCard
+
         blocks.push({
           type: 'hobby_card',
-          title: citation.title,
-          description: citation.snippet,
-          keywords: citation.tags ?? [],
+          title: richCard?.title ?? citation.title,
+          description: richCard?.description ?? citation.snippet,
+          url: richCard?.url ?? citation.sourcePath,
+          imageUrl: richCard?.imageUrl,
+          keywords: richCard?.keywords ?? citation.tags ?? [],
+          media: richCard?.media,
+        })
+      } else if (contentType === 'project') {
+        const richCard = citation.richCard
+
+        blocks.push({
+          type: 'project_card',
+          title: richCard?.title ?? citation.title,
+          subtitle: '补充项目资料',
+          period: '',
+          summary: richCard?.description ?? citation.snippet,
+          technologies: richCard?.keywords ?? citation.tags ?? [],
+          highlights: [],
+          url: richCard?.url ?? citation.sourcePath,
+          imageUrl: richCard?.imageUrl,
         })
       }
     }

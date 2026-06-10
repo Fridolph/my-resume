@@ -9,6 +9,7 @@ import {
   buildUserDocsKnowledgeMetadata,
   type RagKnowledgeMetadata,
 } from './rag-knowledge-domain'
+import type { RagRichCardMetadata } from './rag.types'
 import { RAG_VECTOR_STORE } from './vector-store/tokens'
 import type { RagVectorChunkPayload, RagVectorStore } from './vector-store/types'
 import {
@@ -122,6 +123,21 @@ export function buildUserDocSourceVersion(uploadedAt: Date | string): string {
  */
 function computeContentHash(content: string): string {
   return createHash('sha256').update(content).digest('hex')
+}
+
+function buildRichCardDescription(content: string): string {
+  const normalized = content.replace(/\s+/g, ' ').trim()
+
+  return normalized.length > 180 ? `${normalized.slice(0, 180)}...` : normalized
+}
+
+function buildCustomRichCardMetadata(input: IngestCustomInput): RagRichCardMetadata {
+  return {
+    title: input.title,
+    description: buildRichCardDescription(input.content),
+    url: input.linkUrl,
+    keywords: [],
+  }
 }
 
 /**
@@ -388,6 +404,7 @@ export class UserDocsIngestionService {
     const sourceScope: RagSourceScope = input.sourceScope ?? 'published'
     const sourceVersion = buildUserDocSourceVersion(uploadedAt)
     const knowledgeMetadata = buildUserDocsKnowledgeMetadata(input.contentType)
+    const richCard = buildCustomRichCardMetadata(input)
     const chunkingProfile: UserDocChunkingProfile =
       chunkingStrategy.label === 'semantic' ? 'semantic'
         : chunkingStrategy.label === '1000/100' ? 'contextual' : 'balanced'
@@ -410,6 +427,7 @@ export class UserDocsIngestionService {
         fileType: 'md',
         mimeType: 'text/markdown',
         contentType: knowledgeMetadata.contentType,
+        richCard,
         chunkingProfile,
         chunkSize: chunkingStrategy.chunkSize,
         chunkOverlap: chunkingStrategy.chunkOverlap,
@@ -433,6 +451,7 @@ export class UserDocsIngestionService {
           fileName: `${input.title}.md`,
           sourceType: 'user_docs',
           ...knowledgeMetadata,
+          richCard,
           chunkingProfile,
           chunkSize: chunkingStrategy.chunkSize,
           chunkOverlap: chunkingStrategy.chunkOverlap,

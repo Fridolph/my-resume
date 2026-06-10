@@ -2,7 +2,7 @@
 
 import { Chip } from '@heroui/react'
 
-import type { AiChatMessageBlock } from '@my-resume/api-client'
+import type { AiChatCardMediaPreview, AiChatMessageBlock } from '@my-resume/api-client'
 import type {
   AiChatAnswerBlockRendererLocale,
   AiChatAnswerBlockRendererProps,
@@ -107,10 +107,67 @@ function InlineCardLink({
   )
 }
 
+function CardImage({ src, alt }: { src?: string; alt: string }) {
+  if (!src) {
+    return null
+  }
+
+  return (
+    <img
+      alt={alt}
+      className="max-h-40 w-full rounded-xl object-cover"
+      src={src}
+    />
+  )
+}
+
+function MediaPreviewList({
+  items,
+  locale,
+}: {
+  items?: AiChatCardMediaPreview[]
+  locale: AiChatAnswerBlockRendererLocale
+}) {
+  if (!items || items.length === 0) {
+    return null
+  }
+
+  return (
+    <div className="grid gap-1.5">
+      {items.map((item) => (
+        <a
+          className="flex items-center gap-2 rounded-xl border border-zinc-200/80 bg-white/60 p-2 text-xs text-zinc-600 transition hover:border-zinc-300 hover:bg-white dark:border-zinc-800 dark:bg-zinc-950/40 dark:text-zinc-300 dark:hover:border-zinc-700"
+          href={item.url}
+          key={`${item.type}:${item.url}`}
+          rel="noreferrer"
+          target="_blank">
+          {item.thumbnailUrl ? (
+            <img
+              alt=""
+              className="size-10 rounded-lg object-cover"
+              src={item.thumbnailUrl}
+            />
+          ) : (
+            <span
+              aria-hidden="true"
+              className="grid size-10 place-items-center rounded-lg bg-zinc-100 text-[0.65rem] font-semibold uppercase text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+              {item.type}
+            </span>
+          )}
+          <span className="min-w-0 flex-1 truncate">
+            {item.title ?? (locale === 'en' ? 'Open media' : '查看媒体')}
+          </span>
+        </a>
+      ))}
+    </div>
+  )
+}
+
 function renderCardBlock(block: AiChatMessageBlock, locale: AiChatAnswerBlockRendererLocale) {
   if (block.type === 'project_card') {
     return (
       <BlockShell tone="sky">
+        <CardImage alt={block.title} src={block.imageUrl} />
         <BlockHeader
           eyebrow={locale === 'en' ? 'Project' : '项目'}
           subtitle={[block.subtitle, block.period].filter(Boolean).join(' · ')}
@@ -119,6 +176,11 @@ function renderCardBlock(block: AiChatMessageBlock, locale: AiChatAnswerBlockRen
         <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-200">{block.summary}</p>
         <KeywordList items={block.technologies} />
         <BulletList items={block.highlights} />
+        {block.url ? (
+          <InlineCardLink href={block.url}>
+            {locale === 'en' ? 'Open project' : '查看项目'}
+          </InlineCardLink>
+        ) : null}
       </BlockShell>
     )
   }
@@ -141,9 +203,11 @@ function renderCardBlock(block: AiChatMessageBlock, locale: AiChatAnswerBlockRen
   if (block.type === 'hobby_card') {
     return (
       <BlockShell tone="amber">
+        <CardImage alt={block.title} src={block.imageUrl} />
         <BlockHeader eyebrow={locale === 'en' ? 'Hobby' : '兴趣'} title={block.title} />
         <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-200">{block.description}</p>
         <KeywordList items={block.keywords} />
+        <MediaPreviewList items={block.media} locale={locale} />
         {block.url ? (
           <InlineCardLink href={block.url}>
             {locale === 'en' ? 'Open link' : '查看链接'}
@@ -156,9 +220,15 @@ function renderCardBlock(block: AiChatMessageBlock, locale: AiChatAnswerBlockRen
   if (block.type === 'article_card') {
     return (
       <BlockShell tone="violet">
-        <BlockHeader eyebrow={locale === 'en' ? 'Writing' : '文章'} title={block.title} />
+        <CardImage alt={block.title} src={block.imageUrl} />
+        <BlockHeader
+          eyebrow={locale === 'en' ? 'Writing' : '文章'}
+          subtitle={block.publishedAt}
+          title={block.title}
+        />
         <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-200">{block.summary}</p>
         <KeywordList items={block.keywords} />
+        <MediaPreviewList items={block.media} locale={locale} />
         {block.url ? (
           <InlineCardLink href={block.url}>
             {locale === 'en' ? 'Read article' : '阅读文章'}
@@ -171,13 +241,7 @@ function renderCardBlock(block: AiChatMessageBlock, locale: AiChatAnswerBlockRen
   if (block.type === 'media_card') {
     return (
       <BlockShell tone="zinc">
-        {block.thumbnailUrl ? (
-          <img
-            alt=""
-            className="max-h-36 w-full rounded-xl object-cover"
-            src={block.thumbnailUrl}
-          />
-        ) : null}
+        <CardImage alt={block.title} src={block.thumbnailUrl ?? block.imageUrl} />
         <BlockHeader eyebrow={locale === 'en' ? 'Media' : '媒体'} title={block.title} />
         <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-200">{block.description}</p>
         <InlineCardLink href={block.url}>
