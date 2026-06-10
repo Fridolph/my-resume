@@ -46,6 +46,19 @@ import {
   resolveUserDocChunkingConfig,
   UserDocsIngestionService,
 } from './user-docs-ingestion.service'
+import { RAG_KNOWLEDGE_DOMAINS, isRagKnowledgeDomain } from './rag-knowledge-domain'
+
+function assertKnowledgeDomains(domains: unknown[] | undefined, endpoint: 'search' | 'ask') {
+  if (!domains) return
+
+  const invalidDomain = domains.find((domain) => !isRagKnowledgeDomain(domain))
+
+  if (invalidDomain) {
+    throw new BadRequestException(
+      `Unsupported ${endpoint} knowledgeDomain: ${String(invalidDomain)}. Supported values: ${RAG_KNOWLEDGE_DOMAINS.join(', ')}`,
+    )
+  }
+}
 
 @Controller('ai/rag')
 @UseGuards(JwtAuthGuard)
@@ -347,6 +360,7 @@ export class RagController {
     ) {
       throw new BadRequestException(`Unsupported search vectorScope: ${body.vectorScope}`)
     }
+    assertKnowledgeDomains(body.knowledgeDomains, 'search')
 
     return this.ragService.search(body.query, body.limit, {
       minScore: body.minScore,
@@ -355,6 +369,7 @@ export class RagController {
       useVectorStore: body.useVectorStore,
       vectorScope: body.vectorScope,
       fallbackToLocal: body.vectorFallbackToLocal,
+      knowledgeDomains: body.knowledgeDomains,
     })
   }
 
@@ -389,12 +404,14 @@ export class RagController {
     ) {
       throw new BadRequestException(`Unsupported ask vectorScope: ${body.vectorScope}`)
     }
+    assertKnowledgeDomains(body.knowledgeDomains, 'ask')
 
     // ask 先 search，再拼接上下文调用生成接口，不是直接裸问模型。
     return this.ragService.ask(body.question, body.limit, body.locale, {
       useVectorStore: body.useVectorStore,
       vectorScope: body.vectorScope,
       fallbackToLocal: body.vectorFallbackToLocal,
+      knowledgeDomains: body.knowledgeDomains,
     })
   }
 }

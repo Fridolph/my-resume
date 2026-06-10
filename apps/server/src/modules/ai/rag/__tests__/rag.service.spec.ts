@@ -461,6 +461,45 @@ describe('RagService', () => {
     expect(matches.some((item) => item.content.includes('检索增强生成') || item.content.includes('RAG'))).toBe(true)
   })
 
+  it('should filter local search results by request knowledge domains', async () => {
+    const aiService = new AiService(
+      createAiProvider(
+        {
+          provider: 'mock',
+          mode: 'mock',
+          model: 'mock-resume-advisor',
+        },
+        vi.fn<typeof fetch>(),
+      ),
+    )
+    const service = new RagService(
+      aiService,
+      new RagChunkService(),
+      new RagKnowledgeService(),
+      new RagIndexRepository(),
+      createMockRetrievalRepository(),
+      {
+        backend: 'local',
+        upsertChunks: vi.fn(),
+        deleteChunksByDocument: vi.fn(),
+        search: vi.fn().mockResolvedValue([]),
+      } as unknown as RagVectorStore,
+    )
+
+    await service.rebuildIndex()
+    const matches = await service.search('他做过 EDR 安全平台吗', 6, undefined, {
+      knowledgeDomains: ['projects'],
+    })
+
+    expect(matches.length).toBeGreaterThan(0)
+    expect(matches.some((item) => item.knowledgeDomain === 'projects')).toBe(true)
+    expect(
+      matches.every((item) =>
+        item.knowledgeDomain === 'projects' || item.knowledgeDomain === 'resume_core'
+      ),
+    ).toBe(true)
+  })
+
   it('should search newly added strengths from the latest resume source split', async () => {
     const aiService = new AiService(
       createAiProvider(
@@ -551,6 +590,94 @@ describe('RagService', () => {
     expect(matches).toHaveLength(1)
     expect(matches[0]?.title).toBe('rag-notes.md')
     expect(matches[0]?.sourceType).toBe('user_docs')
+  })
+
+  it('should pass and enforce knowledge domains for vector store search', async () => {
+    process.env.RAG_SEARCH_USE_VECTOR_STORE = 'true'
+    process.env.RAG_SEARCH_VECTOR_SCOPE = 'published'
+
+    const aiService = new AiService(
+      createAiProvider(
+        {
+          provider: 'mock',
+          mode: 'mock',
+          model: 'mock-resume-advisor',
+        },
+        vi.fn<typeof fetch>(),
+      ),
+    )
+    const vectorSearch = vi.fn().mockResolvedValue([
+      {
+        id: 'user-doc-hobby:1',
+        documentId: 'user-doc:hobby:und',
+        sourceType: 'user_docs',
+        sourceScope: 'published',
+        sourceVersion: 'upload:1770000000002',
+        section: 'user_docs',
+        content: '羽毛球和音乐是兴趣爱好补充资料。',
+        embedding: [],
+        metadataJson: {
+          fileName: 'hobby.md',
+          contentType: 'hobby',
+          knowledgeDomain: 'hobbies',
+          renderHint: 'hobby_card',
+        },
+        score: 0.93,
+      },
+      {
+        id: 'user-doc-project:1',
+        documentId: 'user-doc:project:und',
+        sourceType: 'user_docs',
+        sourceScope: 'published',
+        sourceVersion: 'upload:1770000000003',
+        section: 'user_docs',
+        content: '项目资料不应出现在 hobbies 域查询里。',
+        embedding: [],
+        metadataJson: {
+          fileName: 'project.md',
+          contentType: 'project',
+          knowledgeDomain: 'projects',
+          renderHint: 'project_card',
+        },
+        score: 0.91,
+      },
+    ])
+    const service = new RagService(
+      aiService,
+      new RagChunkService(),
+      new RagKnowledgeService(),
+      new RagIndexRepository(),
+      createMockRetrievalRepository(),
+      {
+        backend: 'milvus',
+        upsertChunks: vi.fn(),
+        deleteChunksByDocument: vi.fn(),
+        search: vectorSearch,
+      } as unknown as RagVectorStore,
+    )
+
+    const matches = await service.search('他有什么兴趣爱好', 4, undefined, {
+      useVectorStore: true,
+      vectorScope: 'published',
+      fallbackToLocal: false,
+      knowledgeDomains: ['hobbies'],
+    })
+
+    expect(vectorSearch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        knowledgeDomains: ['resume_core', 'hobbies'],
+        sourceScope: 'published',
+      }),
+    )
+    expect(matches).toHaveLength(1)
+    expect(matches[0]).toEqual(
+      expect.objectContaining({
+        id: 'user-doc-hobby:1',
+        contentType: 'hobby',
+        knowledgeDomain: 'hobbies',
+        renderHint: 'hobby_card',
+      }),
+    )
   })
 
   it('should fallback to local index when vector store is enabled but has no hits', async () => {

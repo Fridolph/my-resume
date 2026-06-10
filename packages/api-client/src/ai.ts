@@ -148,6 +148,7 @@ export type {
   IngestRagUserDocInput,
   RagAskCitation,
   RagAskResult,
+  RagKnowledgeDomain,
   RagRetrievalSourceType,
   RagSearchMatch,
   RagUserDocChunkingProfile,
@@ -672,6 +673,7 @@ export function createAskRagMethod(input: AskRagInput) {
       useVectorStore: input.useVectorStore,
       vectorScope: input.vectorScope,
       vectorFallbackToLocal: input.vectorFallbackToLocal,
+      knowledgeDomains: input.knowledgeDomains,
     }),
     fallbackErrorMessage: 'RAG 问答失败，请稍后重试',
   })

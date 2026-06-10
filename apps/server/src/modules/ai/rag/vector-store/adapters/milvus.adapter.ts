@@ -88,6 +88,13 @@ export class MilvusRagVectorStoreAdapter implements RagVectorStore {
       .filter((chunk) =>
         input.sourceScope ? chunk.sourceScope === input.sourceScope : true,
       )
+      .filter((chunk) =>
+        input.knowledgeDomains?.length
+          ? input.knowledgeDomains.includes(
+              chunk.metadataJson?.knowledgeDomain as (typeof input.knowledgeDomains)[number],
+            )
+          : true,
+      )
 
     return candidates
       .map((chunk) => ({

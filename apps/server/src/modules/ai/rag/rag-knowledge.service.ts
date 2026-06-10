@@ -4,6 +4,7 @@ import { basename, join } from 'path'
 import { parse } from 'yaml'
 
 import { RagChunk } from './rag.types'
+import { withResolvedRagChunkKnowledgeMetadata } from './rag-knowledge-domain'
 
 interface MarkdownFrontmatter {
   title?: string
@@ -114,21 +115,23 @@ export class RagKnowledgeService {
     const articleTitle = frontmatter.title?.trim() || articleId
 
     // 文章知识库按语义段落切块，而不是整篇入库，避免问答时被大段无关内容稀释。
-    return sections.map((section, index) => ({
-      id: `knowledge-${articleId}-${index + 1}`,
-      title:
-        section.title === '导语' ? articleTitle : `${articleTitle} / ${section.title}`,
-      section: 'knowledge',
-      sourceType: 'knowledge',
-      sourcePath,
-      content: [
-        `知识文章：${articleTitle}`,
-        frontmatter.date ? `发布时间：${frontmatter.date}` : null,
-        section.title === '导语' ? null : `章节：${section.title}`,
-        section.content,
-      ]
-        .filter((item): item is string => Boolean(item))
-        .join('\n'),
-    }))
+    return sections.map((section, index) =>
+      withResolvedRagChunkKnowledgeMetadata({
+        id: `knowledge-${articleId}-${index + 1}`,
+        title:
+          section.title === '导语' ? articleTitle : `${articleTitle} / ${section.title}`,
+        section: 'knowledge',
+        sourceType: 'knowledge',
+        sourcePath,
+        content: [
+          `知识文章：${articleTitle}`,
+          frontmatter.date ? `发布时间：${frontmatter.date}` : null,
+          section.title === '导语' ? null : `章节：${section.title}`,
+          section.content,
+        ]
+          .filter((item): item is string => Boolean(item))
+          .join('\n'),
+      }),
+    )
   }
 }

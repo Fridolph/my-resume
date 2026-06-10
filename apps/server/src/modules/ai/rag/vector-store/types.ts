@@ -1,4 +1,5 @@
 import { RagSourceScope, RagSourceType } from '../../../../database/schema'
+import type { RagKnowledgeDomain } from '../rag-knowledge-domain'
 
 /**
  * 向量存储后端类型。
@@ -28,6 +29,7 @@ export interface RagVectorSearchInput {
   limit: number
   sourceType?: RagSourceType
   sourceScope?: RagSourceScope
+  knowledgeDomains?: RagKnowledgeDomain[]
 }
 
 /**

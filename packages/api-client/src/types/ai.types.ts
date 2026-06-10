@@ -811,6 +811,17 @@ export interface RagUserDocIngestResult {
 export type RagRetrievalSourceType = 'resume_core' | 'user_docs'
 
 /**
+ * RAG 逻辑知识域，用于多域路由和检索过滤。
+ */
+export type RagKnowledgeDomain =
+  | 'resume_core'
+  | 'projects'
+  | 'experience'
+  | 'skills'
+  | 'hobbies'
+  | 'writing_media'
+
+/**
  * RAG 检索命中片段。
  */
 export interface RagSearchMatch {
@@ -828,6 +839,12 @@ export interface RagSearchMatch {
   sourceType?: 'resume' | 'knowledge' | RagRetrievalSourceType
   /** 来源路径或文件名。 */
   sourcePath?: string
+  /** 逻辑知识域。 */
+  knowledgeDomain?: RagKnowledgeDomain
+  /** 内容类型。 */
+  contentType?: string
+  /** 前端建议渲染形态。 */
+  renderHint?: string
 }
 
 /**
@@ -852,6 +869,12 @@ export interface RagAskCitation {
   snippet: string
   /** 来源标签列表（如 ["简历","核心竞争力"]）。 */
   tags?: string[]
+  /** 内容类型（article/hobby/media/general），用于前端渲染不同卡片。 */
+  contentType?: string
+  /** 逻辑知识域。 */
+  knowledgeDomain?: RagKnowledgeDomain
+  /** 前端建议渲染形态。 */
+  renderHint?: string
 }
 
 /**
@@ -874,6 +897,8 @@ export interface AskRagInput {
   vectorScope?: 'draft' | 'published' | 'all'
   /** 向量检索为空或异常时是否回退本地检索。 */
   vectorFallbackToLocal?: boolean
+  /** 目标知识域；服务端会自动补 resume_core 作为基础事实兜底。 */
+  knowledgeDomains?: RagKnowledgeDomain[]
 }
 
 /**

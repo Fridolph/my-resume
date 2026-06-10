@@ -47,6 +47,14 @@ export class RagSearchBodyDto {
     example: true,
   })
   vectorFallbackToLocal?: boolean
+
+  @ApiPropertyOptional({
+    description: '目标知识域；服务端会自动补 resume_core 作为基础事实兜底',
+    enum: ['resume_core', 'projects', 'experience', 'skills', 'hobbies', 'writing_media'],
+    isArray: true,
+    example: ['projects'],
+  })
+  knowledgeDomains?: Array<'resume_core' | 'projects' | 'experience' | 'skills' | 'hobbies' | 'writing_media'>
 }
 
 export class RagAskBodyDto {
@@ -89,6 +97,14 @@ export class RagAskBodyDto {
     example: true,
   })
   vectorFallbackToLocal?: boolean
+
+  @ApiPropertyOptional({
+    description: '目标知识域；服务端会自动补 resume_core 作为基础事实兜底',
+    enum: ['resume_core', 'projects', 'experience', 'skills', 'hobbies', 'writing_media'],
+    isArray: true,
+    example: ['hobbies'],
+  })
+  knowledgeDomains?: Array<'resume_core' | 'projects' | 'experience' | 'skills' | 'hobbies' | 'writing_media'>
 }
 
 export class RagResumeSyncBodyDto {
@@ -323,6 +339,25 @@ export class RagSearchMatchDto {
     example: 'docs/knowledge/opensource.md',
   })
   sourcePath?: string
+
+  @ApiPropertyOptional({
+    description: '逻辑知识域',
+    enum: ['resume_core', 'projects', 'experience', 'skills', 'hobbies', 'writing_media'],
+    example: 'projects',
+  })
+  knowledgeDomain?: 'resume_core' | 'projects' | 'experience' | 'skills' | 'hobbies' | 'writing_media'
+
+  @ApiPropertyOptional({
+    description: '内容类型',
+    example: 'project',
+  })
+  contentType?: string
+
+  @ApiPropertyOptional({
+    description: '前端建议渲染形态',
+    example: 'project_card',
+  })
+  renderHint?: string
 }
 
 export class RagAskCitationDto {
@@ -374,6 +409,25 @@ export class RagAskCitationDto {
     example: '负责 ToB 安全平台的前端架构与交付...',
   })
   snippet!: string
+
+  @ApiPropertyOptional({
+    description: '逻辑知识域',
+    enum: ['resume_core', 'projects', 'experience', 'skills', 'hobbies', 'writing_media'],
+    example: 'projects',
+  })
+  knowledgeDomain?: 'resume_core' | 'projects' | 'experience' | 'skills' | 'hobbies' | 'writing_media'
+
+  @ApiPropertyOptional({
+    description: '内容类型',
+    example: 'project',
+  })
+  contentType?: string
+
+  @ApiPropertyOptional({
+    description: '前端建议渲染形态',
+    example: 'project_card',
+  })
+  renderHint?: string
 }
 
 export class RagAskResultDto {

@@ -133,6 +133,14 @@ export interface RagChunk {
   sourceType?: 'resume' | 'knowledge' | RagRetrievalSourceType
   sourcePath?: string
   tags?: string[]
+  /** 逻辑知识域，用于多域 RAG 路由与过滤。 */
+  knowledgeDomain?: RagKnowledgeDomain
+  /** 内容类型，用于后续结构化展示实体映射。 */
+  contentType?: RagContentType
+  /** 原始来源集合，兼容本地索引、用户资料和知识文章。 */
+  sourceCollection?: RagSourceCollection
+  /** 前端建议渲染形态。 */
+  renderHint?: RagRenderHint
 }
 
 /**
@@ -196,6 +204,10 @@ export interface RagAskCitation {
   tags?: string[]
   /** 内容类型（article/hobby/media/general），用于前端渲染不同卡片。 */
   contentType?: string
+  /** 逻辑知识域，用于解释本次引用来自哪个问答域。 */
+  knowledgeDomain?: RagKnowledgeDomain
+  /** 前端建议渲染形态。 */
+  renderHint?: RagRenderHint
 }
 
 /**
@@ -207,3 +219,9 @@ export interface RagAskResult {
   matches: RagSearchMatch[]
   providerSummary: RagIndexFile['providerSummary']
 }
+import type {
+  RagContentType,
+  RagKnowledgeDomain,
+  RagRenderHint,
+  RagSourceCollection,
+} from './rag-knowledge-domain'

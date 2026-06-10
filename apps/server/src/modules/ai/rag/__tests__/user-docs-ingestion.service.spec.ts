@@ -124,6 +124,10 @@ describe('UserDocsIngestionService', () => {
         fileName: 'rag-notes.md',
         fileType: 'md',
         mimeType: 'text/markdown',
+        knowledgeDomain: 'writing_media',
+        contentType: 'general',
+        sourceCollection: 'user_docs',
+        renderHint: 'article_card',
         chunkingProfile: 'balanced',
         chunkSize: 500,
         chunkOverlap: 50,
@@ -143,6 +147,10 @@ describe('UserDocsIngestionService', () => {
       metadataJson: {
         sourceType: 'user_docs',
         fileName: 'rag-notes.md',
+        knowledgeDomain: 'writing_media',
+        contentType: 'general',
+        sourceCollection: 'user_docs',
+        renderHint: 'article_card',
         chunkingProfile: 'balanced',
         chunkSize: 500,
         chunkOverlap: 50,
@@ -160,6 +168,10 @@ describe('UserDocsIngestionService', () => {
       metadataJson: {
         fileName: 'rag-notes.md',
         sourceType: 'user_docs',
+        knowledgeDomain: 'writing_media',
+        contentType: 'general',
+        sourceCollection: 'user_docs',
+        renderHint: 'article_card',
         chunkingProfile: 'balanced',
         chunkSize: 500,
         chunkOverlap: 50,
@@ -233,6 +245,7 @@ describe('UserDocsIngestionService', () => {
       chunkingProfile: 'balanced',
       chunkSize: 80,
       chunkOverlap: 10,
+      contentType: 'hobby',
     })
 
     expect(result.chunkingProfile).toBe('balanced')
@@ -246,6 +259,10 @@ describe('UserDocsIngestionService', () => {
         chunkingProfile: 'balanced',
         chunkSize: 80,
         chunkOverlap: 10,
+        knowledgeDomain: 'hobbies',
+        contentType: 'hobby',
+        sourceCollection: 'user_docs',
+        renderHint: 'hobby_card',
       },
     })
     expect(vi.mocked(ragVectorStore.upsertChunks).mock.calls[0]?.[0][0]).toMatchObject({
@@ -253,6 +270,10 @@ describe('UserDocsIngestionService', () => {
         chunkingProfile: 'balanced',
         chunkSize: 80,
         chunkOverlap: 10,
+        knowledgeDomain: 'hobbies',
+        contentType: 'hobby',
+        sourceCollection: 'user_docs',
+        renderHint: 'hobby_card',
       },
     })
   })

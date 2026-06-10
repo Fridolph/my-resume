@@ -1,4 +1,5 @@
 import { RagSourceScope } from '../../../database/schema'
+import type { RagKnowledgeDomain } from './rag-knowledge-domain'
 
 export type EnvironmentVariables = Partial<Record<string, string | undefined>>
 
@@ -9,6 +10,7 @@ export interface RagSearchRoutingConfig {
   useVectorStore: boolean
   vectorScope: RagSourceScope | 'all'
   fallbackToLocal: boolean
+  knowledgeDomains?: RagKnowledgeDomain[]
 }
 
 /**
@@ -18,6 +20,7 @@ export interface RagSearchRoutingOverride {
   useVectorStore?: boolean
   vectorScope?: RagSourceScope | 'all'
   fallbackToLocal?: boolean
+  knowledgeDomains?: RagKnowledgeDomain[]
 }
 
 function parseBooleanFlag(value: string | undefined, fallback: boolean): boolean {
@@ -59,6 +62,7 @@ export function resolveRagSearchRoutingConfig(
     useVectorStore: parseBooleanFlag(env.RAG_SEARCH_USE_VECTOR_STORE, false),
     vectorScope,
     fallbackToLocal: parseBooleanFlag(env.RAG_SEARCH_VECTOR_FALLBACK_TO_LOCAL, true),
+    knowledgeDomains: undefined,
   }
 }
 
@@ -73,5 +77,6 @@ export function mergeRagSearchRoutingConfig(
     useVectorStore: override.useVectorStore ?? base.useVectorStore,
     vectorScope: override.vectorScope ?? base.vectorScope,
     fallbackToLocal: override.fallbackToLocal ?? base.fallbackToLocal,
+    knowledgeDomains: override.knowledgeDomains ?? base.knowledgeDomains,
   }
 }

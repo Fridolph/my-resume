@@ -5,6 +5,10 @@ import { RagSourceScope } from '../../../database/schema'
 import { AiService } from '../ai.service'
 import { FileExtractionService } from '../file-extraction.service'
 import { RagRetrievalRepository } from './rag-retrieval.repository'
+import {
+  buildUserDocsKnowledgeMetadata,
+  type RagKnowledgeMetadata,
+} from './rag-knowledge-domain'
 import { RAG_VECTOR_STORE } from './vector-store/tokens'
 import type { RagVectorChunkPayload, RagVectorStore } from './vector-store/types'
 import {
@@ -94,6 +98,7 @@ interface BuildVectorChunksInput {
   chunkingProfile: UserDocChunkingProfile
   chunkSize: number
   chunkOverlap: number
+  knowledgeMetadata: RagKnowledgeMetadata
   uploadedAt: Date
 }
 
@@ -171,6 +176,7 @@ export class UserDocsIngestionService {
     })
     const sourceVersion = buildUserDocSourceVersion(uploadedAt)
     const runId = randomUUID()
+    const knowledgeMetadata = buildUserDocsKnowledgeMetadata(input.contentType)
 
     await this.ragRetrievalRepository.createIndexRun({
       id: runId,
@@ -218,10 +224,11 @@ export class UserDocsIngestionService {
         contentHash: computeContentHash(extracted.text),
         metadataJson: {
           sourceType: 'user_docs',
+          ...knowledgeMetadata,
           fileName: extracted.fileName,
           fileType: extracted.fileType,
           mimeType: extracted.mimeType,
-          contentType: input.contentType ?? 'general',
+          contentType: knowledgeMetadata.contentType,
           chunkingProfile,
           chunkSize: chunkingStrategy.chunkSize,
           chunkOverlap: chunkingStrategy.chunkOverlap,
@@ -244,6 +251,7 @@ export class UserDocsIngestionService {
           metadataJson: {
             fileName: extracted.fileName,
             sourceType: 'user_docs',
+            ...knowledgeMetadata,
             chunkingProfile,
             chunkSize: chunkingStrategy.chunkSize,
             chunkOverlap: chunkingStrategy.chunkOverlap,
@@ -272,6 +280,7 @@ export class UserDocsIngestionService {
             chunkingProfile,
             chunkSize: chunkingStrategy.chunkSize,
             chunkOverlap: chunkingStrategy.chunkOverlap,
+            knowledgeMetadata,
             uploadedAt,
           }),
         )
@@ -349,6 +358,7 @@ export class UserDocsIngestionService {
       embedding: input.embeddings[chunkIndex] ?? [],
       metadataJson: {
         sourceType: 'user_docs',
+        ...input.knowledgeMetadata,
         fileName: input.fileName,
         chunkingProfile: input.chunkingProfile,
         chunkSize: input.chunkSize,
@@ -377,6 +387,7 @@ export class UserDocsIngestionService {
     const documentId = `user-doc:${sourceId}:und`
     const sourceScope: RagSourceScope = input.sourceScope ?? 'published'
     const sourceVersion = buildUserDocSourceVersion(uploadedAt)
+    const knowledgeMetadata = buildUserDocsKnowledgeMetadata(input.contentType)
     const chunkingProfile: UserDocChunkingProfile =
       chunkingStrategy.label === 'semantic' ? 'semantic'
         : chunkingStrategy.label === '1000/100' ? 'contextual' : 'balanced'
@@ -394,10 +405,11 @@ export class UserDocsIngestionService {
       contentHash: computeContentHash(text),
       metadataJson: {
         sourceType: 'user_docs',
+        ...knowledgeMetadata,
         fileName: `${input.title}.md`,
         fileType: 'md',
         mimeType: 'text/markdown',
-        contentType: input.contentType ?? 'general',
+        contentType: knowledgeMetadata.contentType,
         chunkingProfile,
         chunkSize: chunkingStrategy.chunkSize,
         chunkOverlap: chunkingStrategy.chunkOverlap,
@@ -420,6 +432,7 @@ export class UserDocsIngestionService {
         metadataJson: {
           fileName: `${input.title}.md`,
           sourceType: 'user_docs',
+          ...knowledgeMetadata,
           chunkingProfile,
           chunkSize: chunkingStrategy.chunkSize,
           chunkOverlap: chunkingStrategy.chunkOverlap,

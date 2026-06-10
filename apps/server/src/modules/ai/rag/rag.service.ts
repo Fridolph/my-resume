@@ -24,8 +24,18 @@ import {
   calculateKeywordScore,
   cosineSimilarity,
 } from './rag-search-context-builder'
-import { applyRagSearchRerank, applyRagSearchRerankAndSelect, detectRagSearchQuestionStrategy, rerankRagSearchMatches } from './rag-search-rerank'
+import { applyRagSearchRerank, detectRagSearchQuestionStrategy, rerankRagSearchMatches } from './rag-search-rerank'
 import { DEFAULT_RAG_SEARCH_RERANK_CONFIG } from './config/rag-search-rerank.config'
+import {
+  doesRagChunkMatchKnowledgeDomains,
+  isRagKnowledgeDomain,
+  isRagRenderHint,
+  normalizeRagContentType,
+  normalizeRagKnowledgeDomains,
+  resolveRagChunkKnowledgeMetadata,
+  type RagKnowledgeDomain,
+  type RagSourceCollection,
+} from './rag-knowledge-domain'
 import {
   mapLegacySourceTypeToRetrievalSourceType,
   RagAskCitation,
@@ -131,6 +141,8 @@ function buildRagAskCitations(matches: RagSearchMatch[]): RagAskCitation[] {
     snippet: buildCitationSnippet(item.content),
     tags: item.tags,
     contentType: (item as any)?.contentType as string | undefined,
+    knowledgeDomain: item.knowledgeDomain,
+    renderHint: item.renderHint,
   }))
 }
 
@@ -312,6 +324,7 @@ export class RagService {
       this.searchRoutingConfig,
       routingOverride,
     )
+    const knowledgeDomains = normalizeRagKnowledgeDomains(routingConfig.knowledgeDomains)
     const queryEmbedding = await this.aiService.embedTexts({
       texts: [query],
     })
@@ -320,6 +333,7 @@ export class RagService {
       queryVector ?? [],
       limit,
       routingConfig,
+      knowledgeDomains,
     )
 
     if (vectorStoreMatches) {
@@ -333,6 +347,7 @@ export class RagService {
       queryVector ?? [],
       limit,
       routingConfig.vectorScope === 'all' ? undefined : routingConfig.vectorScope,
+      knowledgeDomains,
     )
 
     return applyRagSearchQualityGate(topMatches, qualityGate)
@@ -343,6 +358,7 @@ export class RagService {
     queryVector: number[],
     limit: number,
     sourceScope?: RagSourceScope,
+    knowledgeDomains?: RagKnowledgeDomain[],
   ): Promise<RagSearchMatch[]> {
     const index = await this.ensureIndex()
     const localMatches = buildLocalRagSearchContext({
@@ -357,15 +373,23 @@ export class RagService {
       sourceScope,
     )
     const staticKnowledgeMatches = localMatches.filter(
-      (item) => item.section === 'knowledge' || item.sourceType === 'knowledge',
+      (item) =>
+        (item.section === 'knowledge' || item.sourceType === 'knowledge') &&
+        doesRagChunkMatchKnowledgeDomains(item, knowledgeDomains),
     )
     // 文件索引的 resume section 是基本信息表格，无语义价值，排除
     const fileResumeChunks = localMatches.filter(
-      (item) => item.sourceType !== 'knowledge' && item.section !== 'resume',
+      (item) =>
+        item.sourceType !== 'knowledge' &&
+        item.section !== 'resume' &&
+        doesRagChunkMatchKnowledgeDomains(item, knowledgeDomains),
     )
     // 统一融合三源。resume_core 优先于 user_docs，保证简历内容不会被
     // 兴趣爱好等非核心资料挤出回答上下文。
-    const merged = [...fileResumeChunks, ...databaseMatches.matches, ...staticKnowledgeMatches]
+    const databaseFilteredMatches = databaseMatches.matches.filter((item) =>
+      doesRagChunkMatchKnowledgeDomains(item, knowledgeDomains),
+    )
+    const merged = [...fileResumeChunks, ...databaseFilteredMatches, ...staticKnowledgeMatches]
       .sort((a, b) => {
         const aPriority = a.sourceType === 'resume_core' || a.sourceType === 'resume' ? 0 : 1
         const bPriority = b.sourceType === 'resume_core' || b.sourceType === 'resume' ? 0 : 1
@@ -430,8 +454,27 @@ export class RagService {
               : null
           const fileName =
             metadata && typeof metadata.fileName === 'string' ? metadata.fileName : undefined
-          const contentType =
-            (docMeta?.contentType as string) || (metadata && (metadata as Record<string, unknown>).contentType as string) || undefined
+          const rawContentType =
+            (docMeta?.contentType as string | undefined) ??
+            (metadata?.contentType as string | undefined)
+          const rawKnowledgeDomain = metadata?.knowledgeDomain ?? docMeta?.knowledgeDomain
+          const rawRenderHint = metadata?.renderHint ?? docMeta?.renderHint
+          const sourceCollection =
+            (metadata?.sourceCollection as string | undefined) ??
+            (docMeta?.sourceCollection as string | undefined)
+          const resolvedMetadata = resolveRagChunkKnowledgeMetadata({
+            id: row.chunkId,
+            title: fileName ?? row.documentTitle ?? row.documentSourceType,
+            section: row.section,
+            content: row.content,
+            sourceType: row.documentSourceType,
+            sourcePath: fileName,
+            tags: Array.isArray(metadata?.tags) ? (metadata.tags as string[]) : undefined,
+            contentType: normalizeRagContentType(rawContentType),
+            knowledgeDomain: isRagKnowledgeDomain(rawKnowledgeDomain) ? rawKnowledgeDomain : undefined,
+            renderHint: isRagRenderHint(rawRenderHint) ? rawRenderHint : undefined,
+            sourceCollection: sourceCollection as RagSourceCollection | undefined,
+          })
 
           return {
             id: row.chunkId,
@@ -442,7 +485,10 @@ export class RagService {
             sourcePath: fileName,
             score,
             tags: Array.isArray(metadata?.tags) ? (metadata.tags as string[]) : undefined,
-            contentType,
+            contentType: resolvedMetadata.contentType,
+            knowledgeDomain: resolvedMetadata.knowledgeDomain,
+            renderHint: resolvedMetadata.renderHint,
+            sourceCollection: resolvedMetadata.sourceCollection,
           }
         })
         .filter(
@@ -476,6 +522,7 @@ export class RagService {
     queryVector: number[],
     limit: number,
     routingConfig: ReturnType<typeof mergeRagSearchRoutingConfig>,
+    knowledgeDomains?: RagKnowledgeDomain[],
   ): Promise<RagSearchMatch[] | null> {
     if (!routingConfig.useVectorStore) {
       return null
@@ -490,10 +537,13 @@ export class RagService {
         queryVector,
         limit,
         sourceScope,
+        knowledgeDomains,
       })
       this.markVectorStoreHealthy()
 
-      return matches.map((item) => this.mapVectorMatchToSearchMatch(item))
+      return matches
+        .map((item) => this.mapVectorMatchToSearchMatch(item))
+        .filter((item) => doesRagChunkMatchKnowledgeDomains(item, knowledgeDomains))
     } catch (error) {
       this.markVectorStoreUnavailable(error, routingConfig)
 
@@ -506,6 +556,7 @@ export class RagService {
           error,
           'Vector store search failed and local fallback is disabled.',
         ),
+        { cause: error },
       )
     }
   }
@@ -515,6 +566,26 @@ export class RagService {
       match.metadataJson && typeof match.metadataJson === 'object' ? match.metadataJson : null
     const fileName =
       metadata && typeof metadata.fileName === 'string' ? metadata.fileName : undefined
+    const contentType =
+      metadata && typeof metadata.contentType === 'string' ? metadata.contentType : undefined
+    const knowledgeDomain = metadata?.knowledgeDomain
+    const renderHint = metadata?.renderHint
+    const sourceCollection =
+      metadata && typeof metadata.sourceCollection === 'string'
+        ? metadata.sourceCollection
+        : undefined
+    const resolvedMetadata = resolveRagChunkKnowledgeMetadata({
+      id: match.id,
+      title: fileName ?? `${match.sourceType}:${match.documentId}`,
+      section: match.section,
+      content: match.content,
+      sourceType: match.sourceType,
+      sourcePath: fileName,
+      contentType: normalizeRagContentType(contentType),
+      knowledgeDomain: isRagKnowledgeDomain(knowledgeDomain) ? knowledgeDomain : undefined,
+      renderHint: isRagRenderHint(renderHint) ? renderHint : undefined,
+      sourceCollection: sourceCollection as RagSourceCollection | undefined,
+    })
 
     return {
       id: match.id,
@@ -524,6 +595,10 @@ export class RagService {
       sourceType: match.sourceType,
       sourcePath: fileName,
       score: Number(match.score.toFixed(6)),
+      contentType: resolvedMetadata.contentType,
+      knowledgeDomain: resolvedMetadata.knowledgeDomain,
+      sourceCollection: resolvedMetadata.sourceCollection,
+      renderHint: resolvedMetadata.renderHint,
     }
   }
 

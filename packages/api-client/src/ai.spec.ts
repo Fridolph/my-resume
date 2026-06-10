@@ -591,6 +591,7 @@ describe('ai api client methods', () => {
       useVectorStore: true,
       vectorScope: 'published',
       vectorFallbackToLocal: false,
+      knowledgeDomains: ['projects'],
     })
 
     expect(fetch).toHaveBeenCalledWith(
@@ -608,6 +609,7 @@ describe('ai api client methods', () => {
           useVectorStore: true,
           vectorScope: 'published',
           vectorFallbackToLocal: false,
+          knowledgeDomains: ['projects'],
         }),
       }),
     )

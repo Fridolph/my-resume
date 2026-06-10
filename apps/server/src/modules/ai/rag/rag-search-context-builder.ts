@@ -90,6 +90,11 @@ export function buildLocalRagSearchContext(input: {
       content: chunk.content,
       sourceType: chunk.sourceType,
       sourcePath: chunk.sourcePath,
+      tags: chunk.tags,
+      contentType: chunk.contentType,
+      knowledgeDomain: chunk.knowledgeDomain,
+      sourceCollection: chunk.sourceCollection,
+      renderHint: chunk.renderHint,
       score: Number(
         (
           cosineSimilarity(input.queryVector, chunk.embedding) * 0.7 +
