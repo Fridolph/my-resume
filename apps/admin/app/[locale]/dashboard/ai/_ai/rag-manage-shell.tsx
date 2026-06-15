@@ -421,7 +421,7 @@ function ChevronDownIcon() {
   )
 }
 
-function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
+export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
   const { accessToken, currentUser, status } = useAdminSession()
   const sortableIdCounterRef = useRef(0)
   const sensors = useSensors(
