@@ -12,4 +12,5 @@ export interface AiChatAnswerBlockRendererProps {
 export interface BlockShellProps {
   children: ReactNode
   tone?: 'emerald' | 'sky' | 'amber' | 'violet' | 'zinc'
+  className?: string
 }

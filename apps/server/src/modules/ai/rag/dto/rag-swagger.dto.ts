@@ -160,11 +160,11 @@ export class RagUserDocIngestBodyDto {
   chunkingProfile?: 'balanced' | 'contextual' | 'semantic'
 
   @ApiPropertyOptional({
-    description: '内容类型：article=文章，hobby=兴趣爱好，media=媒体/视频，general=通用',
-    enum: ['article', 'hobby', 'media', 'general'],
-    example: 'article',
+    description: '内容类型：hobby=兴趣爱好，tech_blog=技术博客，knowledge_column=知识专栏，general=其他通用',
+    enum: ['hobby', 'tech_blog', 'knowledge_column', 'general'],
+    example: 'tech_blog',
   })
-  contentType?: 'article' | 'hobby' | 'media' | 'general'
+  contentType?: 'hobby' | 'tech_blog' | 'knowledge_column' | 'general'
 
   @ApiPropertyOptional({
     description: '资料标题（优先于文件名），支持 UTF-8 中文',
@@ -196,14 +196,23 @@ export class RagCustomBodyDto {
   @ApiProperty({ description: '正文内容，支持 Markdown', example: '# 易经\n\n这是我的易经学习笔记...' })
   content!: string
 
-  @ApiPropertyOptional({ description: '内容类型', enum: ['article', 'hobby', 'media', 'general'], example: 'hobby' })
-  contentType?: 'article' | 'hobby' | 'media' | 'general'
+  @ApiPropertyOptional({ description: '内容类型', enum: ['hobby', 'tech_blog', 'knowledge_column', 'general'], example: 'hobby' })
+  contentType?: 'hobby' | 'tech_blog' | 'knowledge_column' | 'general'
 
   @ApiPropertyOptional({ description: '入库作用域', enum: ['draft', 'published'], example: 'published' })
   scope?: 'draft' | 'published'
 
   @ApiPropertyOptional({ description: '相关链接', example: 'https://example.com' })
   linkUrl?: string
+
+  @ApiPropertyOptional({ description: '多个参考链接', type: [String], example: ['https://example.com/a', 'https://example.com/b'] })
+  linkUrls?: string[]
+
+  @ApiPropertyOptional({ description: '多个参考图片 URL', type: [String], example: ['https://example.com/image.png'] })
+  imageUrls?: string[]
+
+  @ApiPropertyOptional({ description: '文章概览/摘要；未传时由服务端自动生成短概览', example: '从 Dao 的视角解释系统、约束与协作的核心关系。' })
+  summary?: string
 }
 
 export class RagUserDocIngestResultDto {
@@ -293,6 +302,190 @@ export class RagUserDocIngestResultDto {
     description: '向量存储降级提示；为 null 表示未发生降级',
     nullable: true,
     example: 'Milvus search unavailable at http://127.0.0.1:19530: connect ECONNREFUSED',
+  })
+  vectorStoreWarning!: string | null
+}
+
+export class RagDocumentDetailDto {
+  @ApiProperty({
+    description: '文档 ID',
+    example: 'user-doc:adf932d7b65f01a9eb87bc2d:und',
+  })
+  id!: string
+
+  @ApiProperty({
+    description: '资料标题',
+    example: '我的易经学习心得',
+  })
+  title!: string
+
+  @ApiProperty({
+    description: '来源类型',
+    example: 'user_docs',
+  })
+  sourceType!: string
+
+  @ApiProperty({
+    description: '入库作用域',
+    enum: ['draft', 'published'],
+    example: 'published',
+  })
+  sourceScope!: 'draft' | 'published'
+
+  @ApiProperty({
+    description: '语言标记',
+    example: 'und',
+  })
+  locale!: string
+
+  @ApiPropertyOptional({
+    description: '内容类型',
+    enum: ['hobby', 'tech_blog', 'knowledge_column', 'general'],
+    example: 'tech_blog',
+  })
+  contentType?: 'hobby' | 'tech_blog' | 'knowledge_column' | 'general'
+
+  @ApiProperty({
+    description: '完整正文内容',
+    example: '# 易经\\n\\n这是我的学习笔记',
+  })
+  content!: string
+
+  @ApiPropertyOptional({
+    description: '显式外链；未配置时不返回',
+    example: 'https://example.com',
+  })
+  linkUrl?: string
+
+  @ApiPropertyOptional({
+    description: '多个参考链接',
+    type: [String],
+    example: ['https://example.com/a'],
+  })
+  linkUrls?: string[]
+
+  @ApiPropertyOptional({
+    description: '多个参考图片 URL',
+    type: [String],
+    example: ['https://example.com/image.png'],
+  })
+  imageUrls?: string[]
+
+  @ApiPropertyOptional({
+    description: '文章概览/摘要；优先用于卡片展示',
+    example: '从 Dao 的视角解释系统、约束与协作的核心关系。',
+  })
+  summary?: string
+
+  @ApiPropertyOptional({
+    description: '列表预览内容',
+    nullable: true,
+    example: '这是资料的首段摘要',
+  })
+  preview?: string | null
+
+  @ApiPropertyOptional({
+    description: 'chunk 数量',
+    example: 3,
+  })
+  chunkCount?: number
+
+  @ApiProperty({
+    description: '当前资料是否可编辑（仅自定义资料）',
+    example: true,
+  })
+  editable!: boolean
+
+  @ApiProperty({
+    description: '创建时间',
+    example: '2026-06-12T08:00:00.000Z',
+  })
+  createdAt!: string
+
+  @ApiProperty({
+    description: '更新时间',
+    example: '2026-06-12T08:30:00.000Z',
+  })
+  updatedAt!: string
+}
+
+export class RagExportUserDocsResultDto {
+  @ApiProperty({ description: '导出时间', example: '2026-06-15T08:00:00.000Z' })
+  exportedAt!: string
+
+  @ApiProperty({ description: '导出的 user_docs 数量', example: 6 })
+  documentCount!: number
+
+  @ApiProperty({
+    description: '导出的 user_docs 内容快照',
+    type: Object,
+    isArray: true,
+  })
+  documents!: Array<{
+    id: string
+    title: string
+    sourceScope: 'draft' | 'published'
+    contentType?: 'hobby' | 'tech_blog' | 'knowledge_column' | 'general'
+    summary?: string
+    linkUrl?: string
+    linkUrls?: string[]
+    imageUrls?: string[]
+    content: string
+    createdAt: string
+    updatedAt: string
+  }>
+}
+
+export class RagResetUserDocsResultDto {
+  @ApiProperty({ description: '清空时间', example: '2026-06-15T08:10:00.000Z' })
+  resetAt!: string
+
+  @ApiProperty({ description: '已删除的 DB 文档 ID', isArray: true, example: ['user-doc:dao:und'] })
+  deletedDocumentIds!: string[]
+
+  @ApiProperty({ description: '已清理的向量文档 ID', isArray: true, example: ['user-doc:dao:und'] })
+  deletedVectorDocumentIds!: string[]
+
+  @ApiProperty({ description: '当前向量后端', enum: ['local', 'milvus', 'snapshot'], example: 'milvus' })
+  backend!: 'local' | 'milvus' | 'snapshot'
+}
+
+export class RagCustomUpdateResultDto {
+  @ApiProperty({
+    description: '是否更新成功',
+    example: true,
+  })
+  updated!: true
+
+  @ApiProperty({
+    description: '文档 ID',
+    example: 'user-doc:adf932d7b65f01a9eb87bc2d:und',
+  })
+  documentId!: string
+
+  @ApiProperty({
+    description: '重建后的 chunk 数量',
+    example: 4,
+  })
+  chunkCount!: number
+
+  @ApiProperty({
+    description: '本次同步使用的向量后端',
+    enum: ['local', 'milvus', 'snapshot'],
+    example: 'milvus',
+  })
+  vectorStoreBackend!: 'local' | 'milvus' | 'snapshot'
+
+  @ApiProperty({
+    description: '向量同步是否成功',
+    example: true,
+  })
+  vectorStoreSynced!: boolean
+
+  @ApiPropertyOptional({
+    description: '向量同步警告',
+    nullable: true,
+    example: null,
   })
   vectorStoreWarning!: string | null
 }

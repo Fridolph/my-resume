@@ -35,6 +35,10 @@ import {
   RagResumeSyncBodyDto,
   RagResumeSyncResultDto,
   RagCustomBodyDto,
+  RagCustomUpdateResultDto,
+  RagDocumentDetailDto,
+  RagExportUserDocsResultDto,
+  RagResetUserDocsResultDto,
   RagSearchBodyDto,
   RagSearchMatchDto,
   RagStatusDto,
@@ -197,8 +201,8 @@ export class RagController {
           type: 'number',
         },
         contentType: {
-          description: '内容类型：article=文章，hobby=兴趣爱好，media=媒体/视频，general=通用',
-          enum: ['article', 'hobby', 'media', 'general'],
+          description: '内容类型：hobby=兴趣爱好，tech_blog=技术博客，knowledge_column=知识专栏，general=其他通用',
+          enum: ['hobby', 'tech_blog', 'knowledge_column', 'general'],
           type: 'string',
         },
       },
@@ -286,6 +290,9 @@ export class RagController {
       contentType: body.contentType ?? 'general',
       sourceScope: body.scope ?? 'published',
       linkUrl: body.linkUrl,
+      linkUrls: body.linkUrls,
+      imageUrls: body.imageUrls,
+      summary: body.summary,
     })
   }
 
@@ -293,16 +300,27 @@ export class RagController {
   @UseGuards(RoleCapabilitiesGuard)
   @RequireCapability('canTriggerAiAnalysis')
   @ApiOperation({ summary: '更新已入库的自定义资料' })
+  @ApiEnvelopeResponse({
+    description: '更新自定义资料成功',
+    type: RagCustomUpdateResultDto,
+  })
   updateCustom(
     @Param('documentId') documentId: string,
     @Body() body: RagCustomBodyDto,
   ) {
+    if (typeof body.content === 'string' && !body.content.trim()) {
+      throw new BadRequestException('内容不能为空')
+    }
+
     return this.userDocsIngestionService.updateCustom(documentId, {
       title: body.title,
       content: body.content,
       contentType: body.contentType,
       sourceScope: body.scope,
       linkUrl: body.linkUrl,
+      linkUrls: body.linkUrls,
+      imageUrls: body.imageUrls,
+      summary: body.summary,
     })
   }
 
@@ -317,6 +335,21 @@ export class RagController {
     return this.userDocsIngestionService.listDocuments()
   }
 
+  @Get('documents/:documentId')
+  @UseGuards(RoleCapabilitiesGuard)
+  @RequireCapability('canTriggerAiAnalysis')
+  @ApiOperation({
+    summary: '读取单个 RAG 文档详情',
+    description: '返回已入库资料的完整详情，供管理端查看或编辑自定义资料。',
+  })
+  @ApiEnvelopeResponse({
+    description: '读取 RAG 文档详情成功',
+    type: RagDocumentDetailDto,
+  })
+  getDocumentDetail(@Param('documentId') documentId: string) {
+    return this.userDocsIngestionService.getDocumentDetail(documentId)
+  }
+
   @Delete('documents/:documentId')
   @UseGuards(RoleCapabilitiesGuard)
   @RequireCapability('canTriggerAiAnalysis')
@@ -326,6 +359,47 @@ export class RagController {
   })
   deleteDocument(@Param('documentId') documentId: string) {
     return this.userDocsIngestionService.deleteDocument(documentId)
+  }
+
+  @Post('user-docs/export')
+  @UseGuards(RoleCapabilitiesGuard)
+  @RequireCapability('canTriggerAiAnalysis')
+  @ApiOperation({
+    summary: '导出当前 user_docs 快照',
+    description: '按当前 SQLite 真源导出 user_docs 内容，用于备份和重建前校验。',
+  })
+  @ApiEnvelopeResponse({
+    description: '导出 user_docs 成功',
+    type: RagExportUserDocsResultDto,
+  })
+  exportUserDocs() {
+    return this.userDocsIngestionService.exportUserDocs()
+  }
+
+  @Post('user-docs/reset')
+  @UseGuards(RoleCapabilitiesGuard)
+  @RequireCapability('canTriggerAiAnalysis')
+  @ApiOperation({
+    summary: '清空当前 user_docs 真源与向量',
+    description: '按当前 DB 真源批量删除 user_docs，并同步删除对应向量记录。',
+  })
+  @ApiEnvelopeResponse({
+    description: '清空 user_docs 成功',
+    type: RagResetUserDocsResultDto,
+  })
+  resetUserDocs() {
+    return this.userDocsIngestionService.resetUserDocs()
+  }
+
+  @Post('user-docs/reconcile')
+  @UseGuards(RoleCapabilitiesGuard)
+  @RequireCapability('canTriggerAiAnalysis')
+  @ApiOperation({
+    summary: '对账并重建 user_docs 向量',
+    description: '按 rag_documents / rag_chunks 为真源，删除向量残留并重建 user_docs 向量数据。',
+  })
+  reconcileUserDocsVectors() {
+    return this.userDocsIngestionService.reconcileUserDocsVectors()
   }
 
   /**

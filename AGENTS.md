@@ -137,9 +137,10 @@ Review 必须检查：
 
 **日常分支提交**（Issue 内小步提交）：
 - 格式：`<type>(m<n>): <description>`
-  - `feat(m1): bootstrap workspace docs`
-  - `docs(m1): add monorepo rationale`
-  - `test(m3): cover publish flow`
+ - 提交信息默认使用**中文**描述，`type` / `scope` 保留英文语义标记，冒号后的 subject 使用中文。
+  - `feat(m1): 搭建 workspace 文档骨架`
+  - `docs(m1): 补充 monorepo 重构缘由`
+  - `test(m3): 覆盖发布流程回归用例`
 
 **里程碑 Squash Merge / main 分支合并**（阶段性交付）：
 - 使用 **Dao Commit** 格式（按 `~/.config/opencode/skills/dao-commit` 约定）：

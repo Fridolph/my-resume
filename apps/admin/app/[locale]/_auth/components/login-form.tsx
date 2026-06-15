@@ -113,11 +113,12 @@ export function LoginForm({ pending, errorMessage, onSubmit }: LoginFormProps) {
 
         <div className={styles.accountGrid}>
           {demoAccounts.map((account) => (
-            <button
+            <Button
               aria-label={`填入${account.role}演示账号`}
               className={styles.accountCard}
+              fullWidth
               key={account.username}
-              onClick={() => {
+              onPress={() => {
                 setUsername(account.username)
                 if (account.fillPasswordOnClick) {
                   setPassword(account.password)
@@ -126,7 +127,8 @@ export function LoginForm({ pending, errorMessage, onSubmit }: LoginFormProps) {
 
                 setPassword('')
               }}
-              type="button">
+              type="button"
+              variant="ghost">
               <span className={styles.accountRole}>
                 {account.role}
                 <span className={styles.accountPill}>{account.username}</span>
@@ -144,7 +146,7 @@ export function LoginForm({ pending, errorMessage, onSubmit }: LoginFormProps) {
                 ) : null}
               </span>
               <span className={styles.accountSecret}>{account.caption}</span>
-            </button>
+            </Button>
           ))}
         </div>
       </div>

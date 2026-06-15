@@ -1,9 +1,8 @@
 'use client'
 
-import { Card, CardContent, CardHeader, Chip } from '@heroui/react'
+import { Card, CardContent, CardHeader, Chip, ListBox, Select } from '@heroui/react'
 import { buildPublishedResumeExportUrl, type ResumeLocale } from '@my-resume/api-client'
 import { DisplaySectionIntro } from '@my-resume/ui/display'
-import type { ChangeEvent } from 'react'
 import { useState } from 'react'
 
 type ExportEntryPanelProps = {
@@ -15,10 +14,6 @@ type ExportEntryPanelProps = {
 export function ExportEntryPanel({ apiBaseUrl, locale, role }: ExportEntryPanelProps) {
   const [selectedLocale, setSelectedLocale] = useState<ResumeLocale>(locale)
 
-  function handleLocaleChange(event: ChangeEvent<HTMLSelectElement>) {
-    setSelectedLocale(event.target.value as ResumeLocale)
-  }
-
   return (
     <Card className="border border-zinc-200/70 dark:border-zinc-800">
       <CardHeader className="flex flex-col items-start gap-2">
@@ -29,14 +24,29 @@ export function ExportEntryPanel({ apiBaseUrl, locale, role }: ExportEntryPanelP
           </div>
           <label className="flex min-w-[11rem] items-center gap-2 text-sm font-semibold text-[var(--admin-text-muted)]">
             <span className="shrink-0">导出语言</span>
-            <select
+            <Select
               aria-label="导出语言"
-              className="min-h-9 rounded-full px-3 py-1.5 text-sm font-semibold"
-              onChange={handleLocaleChange}
-              value={selectedLocale}>
-              <option value="zh">中文版本</option>
-              <option value="en">英文版本</option>
-            </select>
+              className="min-w-[8.5rem]"
+              onSelectionChange={(key) => setSelectedLocale(String(key) as ResumeLocale)}
+              selectedKey={selectedLocale}
+              variant="secondary">
+              <Select.Trigger aria-label="导出语言">
+                <Select.Value />
+                <Select.Indicator />
+              </Select.Trigger>
+              <Select.Popover>
+                <ListBox>
+                  <ListBox.Item id="zh" textValue="中文版本">
+                    中文版本
+                    <ListBox.ItemIndicator />
+                  </ListBox.Item>
+                  <ListBox.Item id="en" textValue="英文版本">
+                    英文版本
+                    <ListBox.ItemIndicator />
+                  </ListBox.Item>
+                </ListBox>
+              </Select.Popover>
+            </Select>
           </label>
         </div>
         <DisplaySectionIntro

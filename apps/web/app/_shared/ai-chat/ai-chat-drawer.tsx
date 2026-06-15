@@ -67,6 +67,21 @@ function DrawerStatusPill({
   )
 }
 
+function BuildQuotaChip({
+  children,
+}: {
+  children: string
+}) {
+  return (
+    <Chip
+      className="border border-zinc-200/80 bg-zinc-50/80 text-[0.68rem] font-medium text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-300"
+      size="sm"
+      variant="soft">
+      {children}
+    </Chip>
+  )
+}
+
 function buildSubtitle({
   locale,
   session,
@@ -76,21 +91,33 @@ function buildSubtitle({
   session: AiChatSession | null
   view: ReturnType<typeof useAiChat>['view']
 }) {
+  const totalUserTurns = session?.totalUserTurns ?? session?.turnCount ?? 0
+  const remainingTurns = session?.remainingTurns ?? session?.maxDailyTurns ?? 20
+
   if (view === 'loading') {
-    return locale === 'en'
-      ? 'Resume Companion · Resume-only chat · Preparing your session'
-      : 'Resume Companion · 仅限简历相关 · 正在准备会话'
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        <span>{locale === 'en' ? 'Resume-only chat' : '仅限简历相关'}</span>
+        <span>{locale === 'en' ? 'Preparing your session' : '正在准备会话'}</span>
+      </div>
+    )
   }
 
-  if (view === 'closed') {
-    return locale === 'en'
-      ? `Resume Companion · Resume-only chat · Turns ${session?.turnCount ?? 0}/20`
-      : `Resume Companion · 仅限简历相关 · 已提问 ${session?.turnCount ?? 0}/20`
-  }
-
-  return locale === 'en'
-    ? `Resume Companion · Resume-only chat · Turns ${session?.turnCount ?? 0}/20`
-    : `Resume Companion · 仅限简历相关 · 已提问 ${session?.turnCount ?? 0}/20`
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span>{locale === 'en' ? 'Resume-only chat' : '仅限简历相关'}</span>
+      <BuildQuotaChip>
+        {locale === 'en'
+          ? `Total questions ${totalUserTurns}`
+          : `累计提问 ${totalUserTurns} 次`}
+      </BuildQuotaChip>
+      <BuildQuotaChip>
+        {locale === 'en'
+          ? `Today left ${remainingTurns}`
+          : `今日剩余 ${remainingTurns} 轮`}
+      </BuildQuotaChip>
+    </div>
+  )
 }
 
 export function AiChatDrawer({ locale }: { locale: 'zh' | 'en' }) {

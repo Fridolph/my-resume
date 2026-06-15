@@ -1,7 +1,7 @@
 'use client'
 
 import { useRequest } from 'alova/client'
-import { Button, Form, Input } from '@heroui/react'
+import { Button, Form, Input, ListBox, Select } from '@heroui/react'
 import { useState } from 'react'
 
 import { formatFileSize } from '@my-resume/utils'
@@ -37,6 +37,20 @@ const USER_DOC_CHUNKING_PRESETS: Record<
     chunkOverlap: 0,
   },
 }
+
+const SCOPE_OPTIONS: Array<{ label: string; value: UserDocIngestScope }> = [
+  { label: 'draft', value: 'draft' },
+  { label: 'published', value: 'published' },
+]
+
+const CHUNKING_PROFILE_OPTIONS: Array<{
+  label: string
+  value: UserDocChunkingProfile
+}> = [
+  { label: 'balanced · 默认 500/50', value: 'balanced' },
+  { label: 'contextual · 长上下文 1000/100', value: 'contextual' },
+  { label: 'semantic · 按标题语义分段', value: 'semantic' },
+]
 
 interface AiUserDocIngestionPanelProps {
   /** Server API 根地址，用于构造上传入库请求。 */
@@ -196,23 +210,36 @@ export function AiUserDocIngestionPanel({
 
         <label className="field">
           <span>入库作用域</span>
-          <select
+          <Select
             aria-label="入库作用域"
-            className="h-10 rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-700 outline-none transition focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200 dark:focus:border-zinc-600"
-            onChange={(event) => setScope(event.target.value as UserDocIngestScope)}
-            value={scope}>
-            <option value="draft">draft</option>
-            <option value="published">published</option>
-          </select>
+            fullWidth
+            onSelectionChange={(key) => setScope(String(key) as UserDocIngestScope)}
+            selectedKey={scope}
+            variant="secondary">
+            <Select.Trigger aria-label="入库作用域">
+              <Select.Value />
+              <Select.Indicator />
+            </Select.Trigger>
+            <Select.Popover>
+              <ListBox>
+                {SCOPE_OPTIONS.map((option) => (
+                  <ListBox.Item id={option.value} key={option.value} textValue={option.label}>
+                    {option.label}
+                    <ListBox.ItemIndicator />
+                  </ListBox.Item>
+                ))}
+              </ListBox>
+            </Select.Popover>
+          </Select>
         </label>
 
         <label className="field">
           <span>切片策略</span>
-          <select
+          <Select
             aria-label="切片策略"
-            className="h-10 rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-700 outline-none transition focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200 dark:focus:border-zinc-600"
-            onChange={(event) => {
-              const nextProfile = event.target.value as UserDocChunkingProfile
+            fullWidth
+            onSelectionChange={(key) => {
+              const nextProfile = String(key) as UserDocChunkingProfile
               const preset = USER_DOC_CHUNKING_PRESETS[nextProfile]
 
               setChunkingProfile(nextProfile)
@@ -220,10 +247,23 @@ export function AiUserDocIngestionPanel({
               setChunkOverlapInput(String(preset.chunkOverlap))
               setErrorMessage(null)
             }}
-            value={chunkingProfile}>
-            <option value="balanced">balanced · 默认 500/50</option>
-            <option value="contextual">contextual · 长上下文 1000/100</option>
-          </select>
+            selectedKey={chunkingProfile}
+            variant="secondary">
+            <Select.Trigger aria-label="切片策略">
+              <Select.Value />
+              <Select.Indicator />
+            </Select.Trigger>
+            <Select.Popover>
+              <ListBox>
+                {CHUNKING_PROFILE_OPTIONS.map((option) => (
+                  <ListBox.Item id={option.value} key={option.value} textValue={option.label}>
+                    {option.label}
+                    <ListBox.ItemIndicator />
+                  </ListBox.Item>
+                ))}
+              </ListBox>
+            </Select.Popover>
+          </Select>
         </label>
 
         <div className="grid gap-3 md:grid-cols-2">

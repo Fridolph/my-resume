@@ -130,7 +130,7 @@ export function AdminAiOptimizationHistoryShell({ locale: _locale }: { locale: A
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
             <div className="grid gap-2">
               <p className="eyebrow">AI Archive</p>
-              <h1 className="text-[clamp(2rem,4vw,3.25rem)] font-semibold leading-none tracking-[-0.055em] text-zinc-950 dark:text-white">
+              <h1 className="text-[clamp(2rem,4vw,2.25rem)] font-semibold leading-none tracking-[-0.055em] text-zinc-950 dark:text-white">
                 优化记录
               </h1>
               <p className="max-w-3xl text-sm leading-6 text-zinc-500 dark:text-zinc-400">

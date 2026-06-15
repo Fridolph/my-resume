@@ -20,12 +20,13 @@ const TONE_CLASS_NAMES: Record<NonNullable<BlockShellProps['tone']>, string> = {
   zinc: 'border-zinc-200/80 bg-zinc-50/80 dark:border-zinc-800 dark:bg-zinc-900/70',
 }
 
-function BlockShell({ children, tone = 'zinc' }: BlockShellProps) {
+function BlockShell({ children, tone = 'zinc', className }: BlockShellProps) {
   return (
     <article
       className={[
         'grid gap-2 rounded-2xl border p-3 shadow-[0_14px_36px_rgba(15,23,42,0.05)]',
         TONE_CLASS_NAMES[tone],
+        className,
       ].join(' ')}>
       {children}
     </article>
@@ -163,6 +164,91 @@ function MediaPreviewList({
   )
 }
 
+function userDocCategoryMeta(
+  category: 'hobby' | 'tech_blog' | 'knowledge_column' | 'general' | undefined,
+  locale: AiChatAnswerBlockRendererLocale,
+) {
+  if (category === 'hobby') {
+    return {
+      label: locale === 'en' ? 'Hobby' : '兴趣爱好',
+      tone: 'amber' as const,
+      chipClassName: 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200',
+    }
+  }
+
+  if (category === 'knowledge_column') {
+    return {
+      label: locale === 'en' ? 'Knowledge Column' : '知识专栏',
+      tone: 'sky' as const,
+      chipClassName: 'bg-sky-100 text-sky-800 dark:bg-sky-500/15 dark:text-sky-200',
+    }
+  }
+
+  if (category === 'general') {
+    return {
+      label: locale === 'en' ? 'General' : '其他通用',
+      tone: 'zinc' as const,
+      chipClassName: 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200',
+    }
+  }
+
+  return {
+    label: locale === 'en' ? 'Tech Blog' : '技术博客',
+    tone: 'violet' as const,
+    chipClassName: 'bg-violet-100 text-violet-800 dark:bg-violet-500/15 dark:text-violet-200',
+  }
+}
+
+function UserDocCard({
+  category,
+  imageUrl,
+  keywords,
+  locale,
+  media,
+  summary,
+  title,
+  url,
+}: {
+  category?: 'hobby' | 'tech_blog' | 'knowledge_column' | 'general'
+  imageUrl?: string
+  keywords: string[]
+  locale: AiChatAnswerBlockRendererLocale
+  media?: AiChatCardMediaPreview[]
+  summary: string
+  title: string
+  url?: string
+}) {
+  const meta = userDocCategoryMeta(category, locale)
+
+  return (
+    <BlockShell tone={meta.tone}>
+      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_9rem] md:items-start">
+        <div className="grid min-w-0 gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Chip className={meta.chipClassName} size="sm" variant="soft">
+              {meta.label}
+            </Chip>
+            {keywords.slice(0, 2).map((item) => (
+              <Chip key={item} size="sm" variant="soft">
+                {item}
+              </Chip>
+            ))}
+          </div>
+          <strong className="text-sm leading-5 text-zinc-950 dark:text-white">{title}</strong>
+          <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-200">{summary}</p>
+          <MediaPreviewList items={media} locale={locale} />
+          {url ? (
+            <InlineCardLink href={url}>
+              {locale === 'en' ? 'Open link' : '查看链接'}
+            </InlineCardLink>
+          ) : null}
+        </div>
+        <CardImage alt={title} src={imageUrl} />
+      </div>
+    </BlockShell>
+  )
+}
+
 function renderCardBlock(block: AiChatMessageBlock, locale: AiChatAnswerBlockRendererLocale) {
   if (block.type === 'project_card') {
     return (
@@ -202,39 +288,31 @@ function renderCardBlock(block: AiChatMessageBlock, locale: AiChatAnswerBlockRen
 
   if (block.type === 'hobby_card') {
     return (
-      <BlockShell tone="amber">
-        <CardImage alt={block.title} src={block.imageUrl} />
-        <BlockHeader eyebrow={locale === 'en' ? 'Hobby' : '兴趣'} title={block.title} />
-        <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-200">{block.description}</p>
-        <KeywordList items={block.keywords} />
-        <MediaPreviewList items={block.media} locale={locale} />
-        {block.url ? (
-          <InlineCardLink href={block.url}>
-            {locale === 'en' ? 'Open link' : '查看链接'}
-          </InlineCardLink>
-        ) : null}
-      </BlockShell>
+      <UserDocCard
+        category="hobby"
+        imageUrl={block.imageUrl}
+        keywords={block.keywords}
+        locale={locale}
+        media={block.media}
+        summary={block.description}
+        title={block.title}
+        url={block.url}
+      />
     )
   }
 
   if (block.type === 'article_card') {
     return (
-      <BlockShell tone="violet">
-        <CardImage alt={block.title} src={block.imageUrl} />
-        <BlockHeader
-          eyebrow={locale === 'en' ? 'Writing' : '文章'}
-          subtitle={block.publishedAt}
-          title={block.title}
-        />
-        <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-200">{block.summary}</p>
-        <KeywordList items={block.keywords} />
-        <MediaPreviewList items={block.media} locale={locale} />
-        {block.url ? (
-          <InlineCardLink href={block.url}>
-            {locale === 'en' ? 'Read article' : '阅读文章'}
-          </InlineCardLink>
-        ) : null}
-      </BlockShell>
+      <UserDocCard
+        category={block.category ?? 'tech_blog'}
+        imageUrl={block.imageUrl}
+        keywords={block.keywords}
+        locale={locale}
+        media={block.media}
+        summary={block.summary}
+        title={block.title}
+        url={block.url}
+      />
     )
   }
 

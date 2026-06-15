@@ -18,9 +18,9 @@ export type RagContentType =
   | 'skills'
   | 'education'
   | 'strength'
-  | 'article'
   | 'hobby'
-  | 'media'
+  | 'tech_blog'
+  | 'knowledge_column'
   | 'general'
 
 export type RagSourceCollection = 'resume' | 'knowledge' | 'user_docs'
@@ -31,7 +31,6 @@ export type RagRenderHint =
   | 'experience_card'
   | 'hobby_card'
   | 'article_card'
-  | 'media_card'
 
 const RAG_RENDER_HINTS: readonly RagRenderHint[] = [
   'text',
@@ -39,7 +38,6 @@ const RAG_RENDER_HINTS: readonly RagRenderHint[] = [
   'experience_card',
   'hobby_card',
   'article_card',
-  'media_card',
 ]
 
 export interface RagKnowledgeMetadata {
@@ -70,13 +68,14 @@ export function normalizeRagKnowledgeDomains(
     return undefined
   }
 
-  return Array.from(new Set<RagKnowledgeDomain>(['resume_core', ...normalized]))
+  return Array.from(new Set<RagKnowledgeDomain>(normalized))
 }
 
 export function resolveKnowledgeDomainFromContentType(
   contentType: string | undefined,
 ): RagKnowledgeDomain {
   if (contentType === 'hobby') return 'hobbies'
+  if (contentType === 'tech_blog' || contentType === 'knowledge_column') return 'writing_media'
   if (contentType === 'project') return 'projects'
   if (contentType === 'experience') return 'experience'
   if (contentType === 'skills') return 'skills'
@@ -89,8 +88,12 @@ export function resolveRenderHintFromMetadata(input: {
   knowledgeDomain: RagKnowledgeDomain
 }): RagRenderHint {
   if (input.contentType === 'hobby' || input.knowledgeDomain === 'hobbies') return 'hobby_card'
-  if (input.contentType === 'media') return 'media_card'
-  if (input.contentType === 'article' || input.knowledgeDomain === 'writing_media') return 'article_card'
+  if (
+    input.contentType === 'tech_blog' ||
+    input.contentType === 'knowledge_column' ||
+    input.contentType === 'general' ||
+    input.knowledgeDomain === 'writing_media'
+  ) return 'article_card'
   if (input.knowledgeDomain === 'projects') return 'project_card'
   if (input.knowledgeDomain === 'experience') return 'experience_card'
 
@@ -109,6 +112,9 @@ export function buildUserDocsKnowledgeMetadata(contentType = 'general'): RagKnow
 }
 
 export function normalizeRagContentType(value: string | undefined): RagContentType {
+  if (value === 'article') return 'tech_blog'
+  if (value === 'media') return 'knowledge_column'
+
   if (
     value === 'profile' ||
     value === 'project' ||
@@ -116,9 +122,10 @@ export function normalizeRagContentType(value: string | undefined): RagContentTy
     value === 'skills' ||
     value === 'education' ||
     value === 'strength' ||
-    value === 'article' ||
     value === 'hobby' ||
-    value === 'media'
+    value === 'tech_blog' ||
+    value === 'knowledge_column' ||
+    value === 'general'
   ) {
     return value
   }
@@ -175,8 +182,8 @@ function inferContentTypeFromSection(section: string, title: string): RagContent
   if (section === 'education') return 'education'
   if (section === 'strengths') return 'strength'
   if (section === 'profile' || section === 'resume') return 'profile'
-  if (section === 'knowledge') return 'article'
-  if (section === 'extra' && title.includes('文章')) return 'article'
+  if (section === 'knowledge') return 'tech_blog'
+  if (section === 'extra' && title.includes('文章')) return 'tech_blog'
 
   return 'general'
 }
@@ -191,7 +198,7 @@ function inferKnowledgeDomainFromChunk(
   if (contentType === 'experience') return 'experience'
   if (contentType === 'skills') return 'skills'
   if (contentType === 'hobby') return 'hobbies'
-  if (contentType === 'article' || contentType === 'media') return 'writing_media'
+  if (contentType === 'tech_blog' || contentType === 'knowledge_column' || contentType === 'general') return 'writing_media'
 
   return 'resume_core'
 }

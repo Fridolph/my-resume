@@ -15,6 +15,7 @@ import type { RagVectorStore } from '../vector-store/types'
 function createMockRetrievalRepository() {
   return {
     listAllChunksWithDocuments: vi.fn().mockResolvedValue([]),
+    listAllDocuments: vi.fn().mockResolvedValue([]),
   } as unknown as RagRetrievalRepository
 }
 
@@ -316,6 +317,63 @@ describe('RagService', () => {
     expect(result.answer).toContain('我的简历中暂时没有足够的信息')
     expect(result.citations).toEqual([])
     expect(result.matches).toEqual([])
+  })
+
+  it('should skip provider streaming when citations are below the accepted score threshold', async () => {
+    const aiService = new AiService(
+      createAiProvider(
+        {
+          provider: 'mock',
+          mode: 'mock',
+          model: 'mock-resume-advisor',
+        },
+        vi.fn<typeof fetch>(),
+      ),
+    )
+    const service = new RagService(
+      aiService,
+      new RagChunkService(),
+      new RagKnowledgeService(),
+      new RagIndexRepository(),
+      createMockRetrievalRepository(),
+      {
+        backend: 'local',
+        upsertChunks: vi.fn(),
+        deleteChunksByDocument: vi.fn(),
+        search: vi.fn().mockResolvedValue([]),
+      } as unknown as RagVectorStore,
+    )
+    const searchSpy = vi.spyOn(service, 'search').mockResolvedValue([
+      {
+        id: 'weak-user-doc:1',
+        title: '弱相关补充资料',
+        section: 'user_docs',
+        content: '一段和问题弱相关的补充内容。',
+        sourceType: 'user_docs',
+        sourcePath: 'weak.md',
+        score: 0.04,
+      },
+    ])
+    const streamSpy = vi.spyOn(aiService, 'generateTextStream')
+    const tokenSpy = vi.fn()
+
+    const result = await service.ask(
+      '随便聊点无关的东西',
+      2,
+      'zh',
+      {},
+      {
+        minAcceptedCitationScore: 0.1,
+        onToken: tokenSpy,
+      },
+    )
+
+    expect(searchSpy).toHaveBeenCalled()
+    expect(streamSpy).not.toHaveBeenCalled()
+    expect(tokenSpy).not.toHaveBeenCalled()
+    expect(result.answer).toBe('')
+    expect(result.citations).toHaveLength(1)
+    expect(result.citations[0]?.score).toBe(0.04)
   })
 
   it('should order ask citations by source priority before user docs', async () => {
@@ -672,7 +730,7 @@ describe('RagService', () => {
 
     expect(vectorSearch).toHaveBeenCalledWith(
       expect.objectContaining({
-        knowledgeDomains: ['resume_core', 'hobbies'],
+        knowledgeDomains: ['hobbies'],
         sourceScope: 'published',
       }),
     )
@@ -692,6 +750,236 @@ describe('RagService', () => {
         },
       }),
     )
+  })
+
+  it('should enforce sourceTypes filters for vector store search', async () => {
+    process.env.RAG_SEARCH_USE_VECTOR_STORE = 'true'
+    process.env.RAG_SEARCH_VECTOR_SCOPE = 'all'
+
+    const aiService = new AiService(
+      createAiProvider(
+        {
+          provider: 'mock',
+          mode: 'mock',
+          model: 'mock-resume-advisor',
+        },
+        vi.fn<typeof fetch>(),
+      ),
+    )
+    const vectorSearch = vi.fn().mockResolvedValue([
+      {
+        id: 'user-doc-only:1',
+        documentId: 'user-doc-only',
+        sourceType: 'user_docs',
+        sourceScope: 'published',
+        sourceVersion: 'upload:1770000000010',
+        section: 'user_docs',
+        content: 'Dao 核心原理笔记',
+        embedding: [],
+        metadataJson: {
+          fileName: 'dao.md',
+          knowledgeDomain: 'writing_media',
+        },
+        score: 0.94,
+      },
+      {
+        id: 'resume-only:1',
+        documentId: 'resume-only',
+        sourceType: 'resume_core',
+        sourceScope: 'published',
+        sourceVersion: 'resume:1',
+        section: 'experiences',
+        content: '简历核心经历',
+        embedding: [],
+        metadataJson: {
+          knowledgeDomain: 'experience',
+        },
+        score: 0.99,
+      },
+    ])
+    const service = new RagService(
+      aiService,
+      new RagChunkService(),
+      new RagKnowledgeService(),
+      new RagIndexRepository(),
+      createMockRetrievalRepository(),
+      {
+        backend: 'milvus',
+        upsertChunks: vi.fn(),
+        deleteChunksByDocument: vi.fn(),
+        search: vectorSearch,
+      } as unknown as RagVectorStore,
+    )
+
+    const matches = await service.search('Dao 核心原理', 4, undefined, {
+      useVectorStore: true,
+      vectorScope: 'all',
+      fallbackToLocal: false,
+      sourceTypes: ['user_docs'],
+      preferSourceTypes: ['user_docs'],
+    })
+
+    expect(vectorSearch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceTypes: ['user_docs'],
+        sourceScope: undefined,
+      }),
+    )
+    expect(matches).toHaveLength(1)
+    expect(matches[0]?.sourceType).toBe('user_docs')
+  })
+
+  it('should enforce documentIds filters for vector store search and ask citations', async () => {
+    process.env.RAG_SEARCH_USE_VECTOR_STORE = 'true'
+    process.env.RAG_SEARCH_VECTOR_SCOPE = 'all'
+
+    const aiService = new AiService(
+      createAiProvider(
+        {
+          provider: 'mock',
+          mode: 'mock',
+          model: 'mock-resume-advisor',
+        },
+        vi.fn<typeof fetch>(),
+      ),
+    )
+    const vectorSearch = vi.fn().mockResolvedValue([
+      {
+        id: 'user-doc-only:1',
+        documentId: 'user-doc:dao',
+        sourceType: 'user_docs',
+        sourceScope: 'published',
+        sourceVersion: 'upload:1770000000010',
+        section: 'user_docs',
+        content: 'Dao 核心原理笔记',
+        embedding: [],
+        metadataJson: {
+          fileName: 'dao.md',
+          knowledgeDomain: 'writing_media',
+        },
+        score: 0.94,
+      },
+      {
+        id: 'user-doc-other:1',
+        documentId: 'user-doc:rag',
+        sourceType: 'user_docs',
+        sourceScope: 'published',
+        sourceVersion: 'upload:1770000000011',
+        section: 'user_docs',
+        content: 'RAG 文章',
+        embedding: [],
+        metadataJson: {
+          fileName: 'rag.md',
+          knowledgeDomain: 'writing_media',
+        },
+        score: 0.91,
+      },
+    ])
+    const service = new RagService(
+      aiService,
+      new RagChunkService(),
+      new RagKnowledgeService(),
+      new RagIndexRepository(),
+      createMockRetrievalRepository(),
+      {
+        backend: 'milvus',
+        upsertChunks: vi.fn(),
+        deleteChunksByDocument: vi.fn(),
+        listDocumentIds: vi.fn().mockResolvedValue([]),
+        search: vectorSearch,
+      } as unknown as RagVectorStore,
+    )
+
+    const matches = await service.search('Dao 核心原理', 4, undefined, {
+      useVectorStore: true,
+      vectorScope: 'all',
+      fallbackToLocal: false,
+      sourceTypes: ['user_docs'],
+      documentIds: ['user-doc:dao'],
+    })
+    const askResult = await service.ask('Dao 核心原理是什么？', 4, 'zh', {
+      useVectorStore: true,
+      vectorScope: 'all',
+      fallbackToLocal: false,
+      sourceTypes: ['user_docs'],
+      documentIds: ['user-doc:dao'],
+    })
+
+    expect(vectorSearch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        documentIds: ['user-doc:dao'],
+      }),
+    )
+    expect(matches).toHaveLength(1)
+    expect(matches[0]?.documentId).toBe('user-doc:dao')
+    expect(askResult.citations).toEqual([
+      expect.objectContaining({
+        documentId: 'user-doc:dao',
+      }),
+    ])
+  })
+
+  it('should probe supplementary catalog by title and preview metadata', async () => {
+    const aiService = new AiService(
+      createAiProvider(
+        {
+          provider: 'mock',
+          mode: 'mock',
+          model: 'mock-resume-advisor',
+        },
+        vi.fn<typeof fetch>(),
+      ),
+    )
+    const retrievalRepository = {
+      listAllChunksWithDocuments: vi.fn().mockResolvedValue([]),
+      listAllDocuments: vi.fn().mockResolvedValue([
+        {
+          id: 'user-doc:dao',
+          title: '《Dao》核心原理',
+          sourceType: 'user_docs',
+          sourceScope: 'published',
+          locale: 'und',
+          metadataJson: {
+            contentType: 'article',
+            knowledgeDomain: 'writing_media',
+            richCard: {
+              keywords: ['Dao', '系统化'],
+            },
+          },
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          previewContent: '围绕 Dao 核心原理展开的系统化笔记。',
+        },
+      ]),
+    } as unknown as RagRetrievalRepository
+    const service = new RagService(
+      aiService,
+      new RagChunkService(),
+      new RagKnowledgeService(),
+      new RagIndexRepository(),
+      retrievalRepository,
+      {
+        backend: 'local',
+        upsertChunks: vi.fn(),
+        deleteChunksByDocument: vi.fn(),
+        search: vi.fn().mockResolvedValue([]),
+      } as unknown as RagVectorStore,
+    )
+
+    const hits = await service.probeSupplementCatalog('说说《Dao核心原理》是什么', 5, {
+      sourceTypes: ['user_docs'],
+      preferSourceTypes: ['user_docs'],
+    })
+
+    expect(hits).toEqual([
+      expect.objectContaining({
+        documentId: 'user-doc:dao',
+        title: '《Dao》核心原理',
+        knowledgeDomain: 'writing_media',
+        contentType: 'article',
+      }),
+    ])
+    expect(hits[0]?.score).toBeGreaterThan(0)
   })
 
   it('should fallback to local index when vector store is enabled but has no hits', async () => {

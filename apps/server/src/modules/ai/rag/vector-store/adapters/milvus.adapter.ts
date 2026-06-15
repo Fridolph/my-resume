@@ -9,6 +9,8 @@ import {
   RagVectorStore,
   RagVectorChunkPayload,
 } from '../types'
+import { mapLegacySourceTypeToRetrievalSourceType } from '../../rag.types'
+import type { RagRetrievalSourceType } from '../../rag.types'
 
 function cosineSimilarity(vectorA: number[], vectorB: number[]): number {
   if (vectorA.length === 0 || vectorB.length === 0) {
@@ -76,6 +78,22 @@ export class MilvusRagVectorStoreAdapter implements RagVectorStore {
     }
   }
 
+  async listDocumentIds(sourceType?: RagRetrievalSourceType): Promise<string[]> {
+    if (this.config.mode === 'sdk') {
+      return this.getSdkClient().listDocumentIds(sourceType)
+    }
+
+    const documentIds = Array.from(this.mockStore.values())
+      .filter((chunk) =>
+        sourceType
+          ? mapLegacySourceTypeToRetrievalSourceType(chunk.sourceType) === sourceType
+          : true,
+      )
+      .map((chunk) => chunk.documentId)
+
+    return Array.from(new Set(documentIds))
+  }
+
   async search(input: RagVectorSearchInput): Promise<RagVectorSearchMatch[]> {
     if (this.config.mode === 'sdk') {
       return this.getSdkClient().search(input)
@@ -86,6 +104,11 @@ export class MilvusRagVectorStoreAdapter implements RagVectorStore {
         input.sourceType ? chunk.sourceType === input.sourceType : true,
       )
       .filter((chunk) =>
+        input.sourceTypes?.length
+          ? input.sourceTypes.includes(mapLegacySourceTypeToRetrievalSourceType(chunk.sourceType))
+          : true,
+      )
+      .filter((chunk) =>
         input.sourceScope ? chunk.sourceScope === input.sourceScope : true,
       )
       .filter((chunk) =>
@@ -93,6 +116,11 @@ export class MilvusRagVectorStoreAdapter implements RagVectorStore {
           ? input.knowledgeDomains.includes(
               chunk.metadataJson?.knowledgeDomain as (typeof input.knowledgeDomains)[number],
             )
+          : true,
+      )
+      .filter((chunk) =>
+        input.documentIds?.length
+          ? input.documentIds.includes(chunk.documentId)
           : true,
       )
 

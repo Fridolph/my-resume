@@ -152,7 +152,7 @@ function AiChatMessageItem({
                 // 清洗正文中的引用标记（已在下方独立行展示）
                 .replace(/\[#\d{1,3}\]/g, '')
                 .replace(/(?<!\w)#\d{1,3}(?!\w)/g, '')
-                .replace(/@\d{1,3}@/g, '')}
+                .replace(/@[^\s@]{1,24}@/g, '')}
             </Markdown>
           </div>
         </div>

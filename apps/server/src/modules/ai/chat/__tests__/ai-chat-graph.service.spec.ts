@@ -14,6 +14,7 @@ function createGraphService() {
   } as unknown as AiService & Record<string, ReturnType<typeof vi.fn>>
   const ragService = {
     ask: vi.fn(),
+    probeSupplementCatalog: vi.fn().mockResolvedValue([]),
   } as unknown as RagService & Record<string, ReturnType<typeof vi.fn>>
   const resumePublicationService = {
     getPublished: vi.fn(),
@@ -86,10 +87,14 @@ describe('AiChatGraphService', () => {
       15,
       'zh',
       expect.objectContaining({
-        knowledgeDomains: ['resume_core', 'hobbies'],
-        vectorScope: 'published',
+        knowledgeDomains: ['hobbies'],
+        sourceTypes: ['user_docs'],
+        preferSourceTypes: ['user_docs'],
       }),
-      undefined,
+      expect.objectContaining({
+        minAcceptedCitationScore: 0.1,
+        onToken: undefined,
+      }),
     )
     expect(result.answer).toContain('音乐和羽毛球')
     expect(result.citations).toHaveLength(1)
@@ -108,6 +113,175 @@ describe('AiChatGraphService', () => {
         ],
       }),
     ])
+  })
+
+  it('filters hobby citations to the same topic, keeps one hobby card, and never exposes sourcePath links', async () => {
+    const { ragService, resumePublicationService, service } = createGraphService()
+
+    resumePublicationService.getPublished.mockResolvedValue({
+      resume: createExampleStandardResume(),
+    })
+    ragService.ask.mockResolvedValue({
+      answer: '我平时会打羽毛球，也把它当成长期坚持的兴趣 [#1] [#2] [#3] [#4]。',
+      citations: [
+        {
+          id: 'hobby-generic-001',
+          ref: '#1',
+          title: '兴趣爱好',
+          section: 'user_docs',
+          sourceType: 'user_docs',
+          score: 0.89,
+          snippet: '羽毛球是我长期保持的运动兴趣，也会在周末持续练习。',
+          contentType: 'hobby',
+          knowledgeDomain: 'hobbies',
+          tags: ['兴趣', '羽毛球'],
+        },
+        {
+          id: 'hobby-badminton-002',
+          ref: '#2',
+          title: '喜欢羽毛球.md',
+          section: 'user_docs',
+          sourceType: 'user_docs',
+          score: 0.92,
+          snippet: '中羽 LV5，偏业余高手水平，也喜欢通过运动调节工作节奏。',
+          contentType: 'hobby',
+          knowledgeDomain: 'hobbies',
+          tags: ['羽毛球', '运动'],
+        },
+        {
+          id: 'hobby-book-003',
+          ref: '#3',
+          title: '易经',
+          section: 'user_docs',
+          sourceType: 'user_docs',
+          score: 0.83,
+          snippet: '我会把周易当作一种理解复杂系统的方式。',
+          contentType: 'hobby',
+          knowledgeDomain: 'hobbies',
+          tags: ['周易', '思考'],
+        },
+        {
+          id: 'hobby-music-004',
+          ref: '#4',
+          title: '音乐',
+          section: 'user_docs',
+          sourceType: 'user_docs',
+          score: 0.8,
+          snippet: '音乐是我工作之外调节节奏的重要方式。',
+          contentType: 'hobby',
+          knowledgeDomain: 'hobbies',
+          tags: ['音乐'],
+          richCard: {
+            title: '音乐',
+            description: '平时会通过音乐切换状态。',
+            url: 'https://example.com/music',
+          },
+        },
+      ],
+      matches: [],
+      providerSummary: undefined,
+    })
+
+    const result = await service.generateAnswer({
+      locale: 'zh',
+      question: '你的羽毛球水平？',
+    })
+
+    expect(result.citations.map((citation) => citation.ref)).toEqual(['#1', '#2'])
+    expect(result.citations.every((citation) => {
+      const searchable = [citation.title, citation.snippet, ...(citation.tags ?? [])].join(' ')
+      return searchable.includes('羽毛球')
+    })).toBe(true)
+    expect(result.blocks).toEqual([
+      expect.objectContaining({
+        type: 'hobby_card',
+        title: '喜欢羽毛球',
+        description: expect.stringContaining('中羽 LV5'),
+        url: undefined,
+      }),
+    ])
+  })
+
+  it('keeps multiple hobby citations when a broad hobby answer mentions multiple interests', async () => {
+    const { ragService, resumePublicationService, service } = createGraphService()
+
+    resumePublicationService.getPublished.mockResolvedValue({
+      resume: createExampleStandardResume(),
+    })
+    ragService.ask.mockResolvedValue({
+      answer: '除了写代码，我还喜欢羽毛球、音乐、易经，也在继续学习奇门遁甲。',
+      citations: [
+        {
+          id: 'hobby-badminton-001',
+          ref: '#1',
+          title: '羽毛球',
+          section: 'user_docs',
+          sourceType: 'user_docs',
+          score: 0.93,
+          snippet: '中羽 LV5，偏业余高手水平，也喜欢通过运动调节工作节奏。',
+          contentType: 'hobby',
+          knowledgeDomain: 'hobbies',
+          tags: ['羽毛球', '运动'],
+        },
+        {
+          id: 'hobby-music-002',
+          ref: '#2',
+          title: '音乐',
+          section: 'user_docs',
+          sourceType: 'user_docs',
+          score: 0.89,
+          snippet: '音乐是我工作之外调节节奏的重要方式。',
+          contentType: 'hobby',
+          knowledgeDomain: 'hobbies',
+          tags: ['音乐'],
+        },
+        {
+          id: 'hobby-book-003',
+          ref: '#3',
+          title: '易经',
+          section: 'user_docs',
+          sourceType: 'user_docs',
+          score: 0.87,
+          snippet: '我会把周易当作一种理解复杂系统的方式。',
+          contentType: 'hobby',
+          knowledgeDomain: 'hobbies',
+          tags: ['周易', '思考'],
+        },
+        {
+          id: 'hobby-qimen-004',
+          ref: '#4',
+          title: '奇门遁甲',
+          section: 'user_docs',
+          sourceType: 'user_docs',
+          score: 0.85,
+          snippet: '目前还在持续学习和摸索奇门遁甲相关内容。',
+          contentType: 'hobby',
+          knowledgeDomain: 'hobbies',
+          tags: ['奇门遁甲', '学习'],
+        },
+      ],
+      matches: [],
+      providerSummary: undefined,
+    })
+
+    const result = await service.generateAnswer({
+      locale: 'zh',
+      question: '你有哪些兴趣爱好呢？',
+    })
+
+    expect(result.answer).toContain('奇门遁甲')
+    expect(result.citations.map((citation) => citation.title)).toEqual([
+      '羽毛球',
+      '音乐',
+      '易经',
+      '奇门遁甲',
+    ])
+    expect(result.blocks).toHaveLength(1)
+    expect(result.blocks[0]).toEqual(
+      expect.objectContaining({
+        type: 'hobby_card',
+      }),
+    )
   })
 
   it('routes project questions to resume_core plus projects and keeps citation domains', async () => {
@@ -146,9 +320,14 @@ describe('AiChatGraphService', () => {
       15,
       'zh',
       expect.objectContaining({
-        knowledgeDomains: ['resume_core', 'projects'],
+        knowledgeDomains: ['projects'],
+        sourceTypes: ['resume_core'],
+        preferSourceTypes: ['resume_core'],
       }),
-      undefined,
+      expect.objectContaining({
+        minAcceptedCitationScore: 0.1,
+        onToken: undefined,
+      }),
     )
     expect(result.citations[0]).toEqual(
       expect.objectContaining({
@@ -204,9 +383,14 @@ describe('AiChatGraphService', () => {
       15,
       'zh',
       expect.objectContaining({
-        knowledgeDomains: ['resume_core', 'writing_media'],
+        knowledgeDomains: ['writing_media'],
+        sourceTypes: ['user_docs'],
+        preferSourceTypes: ['user_docs'],
       }),
-      undefined,
+      expect.objectContaining({
+        minAcceptedCitationScore: 0.1,
+        onToken: undefined,
+      }),
     )
     expect(result.citations[0]).toEqual(
       expect.objectContaining({
@@ -279,6 +463,79 @@ describe('AiChatGraphService', () => {
     )
   })
 
+  it('routes title-like supplementary questions via catalog probe hits', async () => {
+    const { ragService, resumePublicationService, service } = createGraphService()
+
+    resumePublicationService.getPublished.mockResolvedValue({
+      resume: createExampleStandardResume(),
+    })
+    ragService.probeSupplementCatalog.mockResolvedValue([
+      {
+        documentId: 'user-doc:dao',
+        title: '《Dao》核心原理',
+        sourceType: 'user_docs',
+        sourceScope: 'published',
+        knowledgeDomain: 'writing_media',
+        contentType: 'article',
+        preview: '围绕 Dao 核心原理展开的系统化笔记。',
+        score: 1.4,
+      },
+    ])
+    ragService.ask.mockResolvedValue({
+      answer: '《Dao》核心原理主要是在讲系统化的拆解与协同方式 [#1]。',
+      citations: [
+        {
+          id: 'dao-001',
+          ref: '#1',
+          title: '《Dao》核心原理',
+          section: 'user_docs',
+          sourceType: 'user_docs',
+          score: 0.92,
+          snippet: '围绕 Dao 核心原理展开的系统化笔记。',
+          contentType: 'article',
+          knowledgeDomain: 'writing_media',
+        },
+      ],
+      matches: [],
+      providerSummary: undefined,
+    })
+
+    const result = await service.generateAnswer({
+      locale: 'zh',
+      question: '说说《Dao核心原理》是什么',
+    })
+
+    expect(ragService.probeSupplementCatalog).toHaveBeenCalledWith(
+      '说说《Dao核心原理》是什么',
+      5,
+      {
+        sourceTypes: ['user_docs'],
+        preferSourceTypes: ['user_docs'],
+      },
+    )
+    expect(ragService.ask).toHaveBeenCalledWith(
+      '说说《Dao核心原理》是什么',
+      15,
+      'zh',
+      expect.objectContaining({
+        knowledgeDomains: ['writing_media'],
+        sourceTypes: ['user_docs'],
+        preferSourceTypes: ['user_docs'],
+        documentIds: ['user-doc:dao'],
+      }),
+      expect.objectContaining({
+        minAcceptedCitationScore: 0.1,
+      }),
+    )
+    expect(result.answer).toContain('系统化')
+    expect(result.citations[0]).toEqual(
+      expect.objectContaining({
+        sourceType: 'user_docs',
+        knowledgeDomain: 'writing_media',
+      }),
+    )
+  })
+
   it('logs retrieval domains, top citations, and answer block summaries', async () => {
     const { ragService, resumePublicationService, service } = createGraphService()
     const logSpy = vi.spyOn(Logger.prototype, 'log').mockImplementation(() => undefined)
@@ -321,7 +578,9 @@ describe('AiChatGraphService', () => {
     expect(payloads).toContainEqual(
       expect.objectContaining({
         event: 'ai-chat.graph.retrieval_completed',
-        knowledgeDomains: ['resume_core', 'hobbies'],
+        routeKind: 'supplement_only',
+        knowledgeDomains: ['hobbies'],
+        sourceTypes: ['user_docs'],
         matchCount: 0,
         citationCount: 1,
         fallbackReason: null,
@@ -446,6 +705,18 @@ describe('AiChatGraphService', () => {
     resumePublicationService.getPublished.mockResolvedValue({
       resume: createExampleStandardResume(),
     })
+    ragService.probeSupplementCatalog.mockResolvedValue([
+      {
+        documentId: 'user-doc:dao',
+        title: '《Dao》核心原理',
+        sourceType: 'user_docs',
+        sourceScope: 'published',
+        knowledgeDomain: 'writing_media',
+        contentType: 'article',
+        preview: '围绕 Dao 核心原理展开的系统化笔记。',
+        score: 1.2,
+      },
+    ])
     ragService.ask.mockResolvedValue({
       answer: '这个低分答案不应直接返回。',
       citations: [
@@ -466,10 +737,73 @@ describe('AiChatGraphService', () => {
 
     const result = await service.generateAnswer({
       locale: 'zh',
-      question: '随便聊点无关的东西',
+      question: '说说《Dao核心原理》是什么',
     })
 
-    expect(result.answer).toContain('只能回答关于我的背景')
+    expect(result.answer).toContain('补充资料')
+    expect(result.citations).toHaveLength(0)
+  })
+
+  it('passes the citation score threshold into rag retrieval and avoids leaking low-score stream tokens', async () => {
+    const { ragService, resumePublicationService, service } = createGraphService()
+    const tokenSpy = vi.fn()
+
+    resumePublicationService.getPublished.mockResolvedValue({
+      resume: createExampleStandardResume(),
+    })
+    ragService.probeSupplementCatalog.mockResolvedValue([
+      {
+        documentId: 'user-doc:dao',
+        title: '《Dao》核心原理',
+        sourceType: 'user_docs',
+        sourceScope: 'published',
+        knowledgeDomain: 'writing_media',
+        contentType: 'article',
+        preview: '围绕 Dao 核心原理展开的系统化笔记。',
+        score: 1.1,
+      },
+    ])
+    ragService.ask.mockResolvedValue({
+      answer: '',
+      citations: [
+        {
+          id: 'weak-002',
+          ref: '#1',
+          title: '弱相关片段',
+          section: 'user_docs',
+          sourceType: 'user_docs',
+          score: 0.04,
+          snippet: '弱相关内容',
+          knowledgeDomain: 'writing_media',
+        },
+      ],
+      matches: [],
+      providerSummary: undefined,
+    })
+
+    const result = await service.generateAnswer({
+      locale: 'zh',
+      question: '说说《Dao核心原理》是什么',
+      onToken: tokenSpy,
+    })
+
+    expect(ragService.ask).toHaveBeenCalledWith(
+      '说说《Dao核心原理》是什么',
+      15,
+      'zh',
+      expect.objectContaining({
+        knowledgeDomains: ['writing_media'],
+        sourceTypes: ['user_docs'],
+        preferSourceTypes: ['user_docs'],
+        documentIds: ['user-doc:dao'],
+      }),
+      expect.objectContaining({
+        minAcceptedCitationScore: 0.1,
+        onToken: tokenSpy,
+      }),
+    )
+    expect(tokenSpy).not.toHaveBeenCalled()
+    expect(result.answer).toContain('补充资料')
     expect(result.citations).toHaveLength(0)
   })
 })

@@ -49,33 +49,25 @@ describe('AiChatAnswerBlockRenderer', () => {
     expect(screen.getByText('全栈开发工程师')).toBeInTheDocument()
   })
 
-  it('should render hobby, article, media, summary and notice blocks', () => {
+  it('should render user doc cards, legacy media, summary and notice blocks', () => {
     render(
       <AiChatAnswerBlockRenderer
         blocks={[
           {
             type: 'hobby_card',
-            title: '羽毛球',
-            description: '用运动调节节奏，也训练临场反应。',
-            url: 'https://example.com/hobby',
+            title: '喜欢羽毛球',
+            description: '中羽 LV5，偏业余高手水平，也喜欢通过运动调节工作节奏。',
+            category: 'hobby',
             imageUrl: 'https://example.com/hobby.png',
             keywords: ['运动', '节奏感'],
-            media: [
-              {
-                type: 'video',
-                url: 'https://example.com/hobby-video',
-                title: '训练片段',
-                thumbnailUrl: 'https://example.com/hobby-thumb.png',
-              },
-            ],
           },
           {
             type: 'article_card',
             title: 'JS 全栈 AI Agent 学习',
             summary: '记录 RAG、Agent 与工程化实践。',
+            category: 'tech_blog',
             url: 'https://example.com/article',
             imageUrl: 'https://example.com/article.png',
-            publishedAt: '2026-05-01',
             keywords: ['Agent', 'LangGraph'],
             media: [
               {
@@ -84,6 +76,20 @@ describe('AiChatAnswerBlockRenderer', () => {
                 title: '示例仓库',
               },
             ],
+          },
+          {
+            type: 'article_card',
+            title: 'Dao 知识专栏',
+            summary: '围绕 Dao 思维整理的长期专题。',
+            category: 'knowledge_column',
+            keywords: ['Dao'],
+          },
+          {
+            type: 'article_card',
+            title: '临时资料',
+            summary: '尚未细分类型的补充信息。',
+            category: 'general',
+            keywords: [],
           },
           {
             type: 'media_card',
@@ -109,22 +115,15 @@ describe('AiChatAnswerBlockRenderer', () => {
       />,
     )
 
-    expect(screen.getByText('兴趣')).toBeInTheDocument()
-    expect(screen.getByText('羽毛球')).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: '羽毛球' })).toHaveAttribute(
+    expect(screen.getByText('兴趣爱好')).toBeInTheDocument()
+    expect(screen.getByText('喜欢羽毛球')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: '喜欢羽毛球' })).toHaveAttribute(
       'src',
       'https://example.com/hobby.png',
     )
-    expect(screen.getByRole('link', { name: '查看链接' })).toHaveAttribute(
-      'href',
-      'https://example.com/hobby',
-    )
-    expect(screen.getByRole('link', { name: '训练片段' })).toHaveAttribute(
-      'href',
-      'https://example.com/hobby-video',
-    )
-    expect(screen.getByText('文章')).toBeInTheDocument()
-    expect(screen.getByText('2026-05-01')).toBeInTheDocument()
+    expect(screen.getByText('技术博客')).toBeInTheDocument()
+    expect(screen.getByText('知识专栏')).toBeInTheDocument()
+    expect(screen.getByText('其他通用')).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'JS 全栈 AI Agent 学习' })).toHaveAttribute(
       'src',
       'https://example.com/article.png',
@@ -133,7 +132,7 @@ describe('AiChatAnswerBlockRenderer', () => {
       'href',
       'https://example.com/article-demo',
     )
-    expect(screen.getByRole('link', { name: '阅读文章' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: '查看链接' })).toHaveAttribute(
       'href',
       'https://example.com/article',
     )

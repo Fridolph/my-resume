@@ -18,8 +18,8 @@ export function AiChatDock({ locale }: { locale: 'zh' | 'en' }) {
         : '已结束'
       : view === 'chat'
         ? locale === 'en'
-          ? `Turns ${session?.turnCount ?? 0}/20`
-          : `已提问 ${session?.turnCount ?? 0}/20`
+          ? `Left ${session?.remainingTurns ?? 20}`
+          : `剩余 ${session?.remainingTurns ?? 20} 轮`
         : view === 'loading'
           ? locale === 'en'
             ? 'Starting'

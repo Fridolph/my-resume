@@ -1,12 +1,16 @@
 'use client'
 
-import { Button, Chip, Pagination, Table, Tooltip } from '@heroui/react'
+import { Button, Chip, ListBox, Pagination, Select, Table, Tooltip } from '@heroui/react'
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import type { AiUsageRecordSummary } from '../types/ai-workbench.types'
 
-const HISTORY_PAGE_SIZE = 10
+const HISTORY_PAGE_SIZE_OPTIONS = [10, 20, 50] as const
+const HISTORY_PAGE_SIZE_SELECT_OPTIONS = HISTORY_PAGE_SIZE_OPTIONS.map((size) => ({
+  label: `${size}`,
+  value: String(size),
+}))
 
 interface ResumeImportHistoryTableProps {
   /** 简历导入识别历史记录，来源于 ai_usage_records 的 resume-import 筛选。 */
@@ -149,14 +153,21 @@ export function ResumeImportHistoryTable({
   deletingRecordId,
 }: ResumeImportHistoryTableProps) {
   const [page, setPage] = useState(1)
-  const totalPages = Math.max(1, Math.ceil(records.length / HISTORY_PAGE_SIZE))
+  const [pageSize, setPageSize] = useState<(typeof HISTORY_PAGE_SIZE_OPTIONS)[number]>(20)
+  const totalPages = Math.max(1, Math.ceil(records.length / pageSize))
   const safePage = Math.min(page, totalPages)
   const visibleRecords = useMemo(
-    () => records.slice((safePage - 1) * HISTORY_PAGE_SIZE, safePage * HISTORY_PAGE_SIZE),
-    [records, safePage],
+    () => records.slice((safePage - 1) * pageSize, safePage * pageSize),
+    [records, pageSize, safePage],
   )
-  const startItem = records.length === 0 ? 0 : (safePage - 1) * HISTORY_PAGE_SIZE + 1
-  const endItem = Math.min(safePage * HISTORY_PAGE_SIZE, records.length)
+  const startItem = records.length === 0 ? 0 : (safePage - 1) * pageSize + 1
+  const endItem = Math.min(safePage * pageSize, records.length)
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages)
+    }
+  }, [page, totalPages])
 
   if (records.length === 0) {
     return (
@@ -292,7 +303,39 @@ export function ResumeImportHistoryTable({
       {totalPages > 1 ? (
         <Pagination className="w-full">
           <Pagination.Summary>
-            显示 {startItem}-{endItem} / 共 {records.length} 条，每页 {HISTORY_PAGE_SIZE} 条
+            <div className="flex flex-wrap items-center gap-3">
+              <span>
+                显示 {startItem}-{endItem} / 共 {records.length} 条
+              </span>
+              <label className="inline-flex items-center gap-2">
+                <span>每页</span>
+                <Select
+                  aria-label="导入历史每页条数"
+                  className="min-w-[5rem]"
+                  onSelectionChange={(key) => {
+                    setPageSize(Number(String(key)) as (typeof HISTORY_PAGE_SIZE_OPTIONS)[number])
+                    setPage(1)
+                  }}
+                  selectedKey={String(pageSize)}
+                  variant="secondary">
+                  <Select.Trigger aria-label="导入历史每页条数">
+                    <Select.Value />
+                    <Select.Indicator />
+                  </Select.Trigger>
+                  <Select.Popover>
+                    <ListBox>
+                      {HISTORY_PAGE_SIZE_SELECT_OPTIONS.map((option) => (
+                        <ListBox.Item id={option.value} key={option.value} textValue={option.label}>
+                          {option.label}
+                          <ListBox.ItemIndicator />
+                        </ListBox.Item>
+                      ))}
+                    </ListBox>
+                  </Select.Popover>
+                </Select>
+                <span>条</span>
+              </label>
+            </div>
           </Pagination.Summary>
           <Pagination.Content>
             <Pagination.Item>

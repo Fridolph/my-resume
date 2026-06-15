@@ -180,7 +180,7 @@ describe('OpenAiCompatibleAiProvider', () => {
         texts: ['resume retrieval'],
       }),
     ).rejects.toThrow(
-      'Embeddings API key is required for DeepSeek embeddings. Configure EMBEDDINGS_API_KEY when using a dedicated embeddings backend.',
+      'Embeddings API key is required for DeepSeek embeddings (https://dashscope.aliyuncs.com). Configure EMBEDDINGS_API_KEY when using a dedicated embeddings backend.',
     )
     expect(fetchMock).not.toHaveBeenCalled()
   })

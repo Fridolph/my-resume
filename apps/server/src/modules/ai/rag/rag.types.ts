@@ -13,6 +13,25 @@ import type {
  * - user_docs: 用户补充资料，如博客、技术文章、兴趣类内容
  */
 export type RagRetrievalSourceType = 'resume_core' | 'user_docs'
+export const RAG_RETRIEVAL_SOURCE_TYPES = ['resume_core', 'user_docs'] as const
+
+export function isRagRetrievalSourceType(value: unknown): value is RagRetrievalSourceType {
+  return typeof value === 'string' && RAG_RETRIEVAL_SOURCE_TYPES.includes(value as RagRetrievalSourceType)
+}
+
+export function normalizeRagRetrievalSourceTypes(
+  values: readonly unknown[] | undefined,
+): RagRetrievalSourceType[] | undefined {
+  if (!values || values.length === 0) {
+    return undefined
+  }
+
+  const normalized = values.filter(isRagRetrievalSourceType)
+
+  return normalized.length > 0
+    ? Array.from(new Set<RagRetrievalSourceType>(normalized))
+    : undefined
+}
 
 /**
  * 检索态知识作用域（用于版本对齐）
@@ -135,8 +154,11 @@ export interface RagRichCardMedia {
 export interface RagRichCardMetadata {
   title?: string
   description?: string
+  summary?: string
   url?: string
+  urls?: string[]
   imageUrl?: string
+  imageUrls?: string[]
   thumbnailUrl?: string
   publishedAt?: string
   keywords?: string[]
@@ -201,6 +223,8 @@ export interface RagIndexFile {
  * 检索命中结果模型（用于 search/ask 返回）。
  */
 export interface RagSearchMatch extends RagChunk {
+  /** 所属文档 ID，用于单文档过滤与对账。 */
+  documentId?: string
   score: number
 }
 
@@ -215,6 +239,8 @@ export interface RagAskCitation {
   ref: string
   /** 命中 chunk ID，用于追溯具体片段。 */
   id: string
+  /** 所属文档 ID。 */
+  documentId?: string
   /** 来源标题或文件名。 */
   title: string
   /** 来源分区，如 experiences / projects / user_docs。 */

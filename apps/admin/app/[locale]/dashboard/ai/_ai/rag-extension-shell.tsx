@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, Chip, Form, Spinner, TextArea } from '@heroui/react'
+import { Button, Chip, Form, ListBox, Select, Spinner, TextArea } from '@heroui/react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
@@ -13,17 +13,17 @@ import { createIngestRagUserDocMethod } from './services/ai-file-api'
 import type { RagUserDocContentType } from './rag-extension.types'
 
 const CONTENT_TYPE_OPTIONS: Array<{ label: string; value: RagUserDocContentType }> = [
-  { label: '技术博客 / 文章', value: 'article' },
   { label: '兴趣爱好', value: 'hobby' },
-  { label: '媒体 / 视频', value: 'media' },
-  { label: '通用', value: 'general' },
+  { label: '技术博客', value: 'tech_blog' },
+  { label: '知识专栏', value: 'knowledge_column' },
+  { label: '其他通用', value: 'general' },
 ]
 
 export function RagExtensionShell({ locale: _locale }: { locale: AppLocale }) {
   const { accessToken, currentUser, status } = useAdminSession()
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
-  const [contentType, setContentType] = useState<RagUserDocContentType>('article')
+  const [contentType, setContentType] = useState<RagUserDocContentType>('tech_blog')
   const [linkUrl, setLinkUrl] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [resultMessage, setResultMessage] = useState<string | null>(null)
@@ -141,7 +141,7 @@ export function RagExtensionShell({ locale: _locale }: { locale: AppLocale }) {
             RAG 资料扩展
           </h1>
           <p className="max-w-3xl text-sm leading-7 text-zinc-500 dark:text-zinc-400">
-            这里可以扩展个人资料库，支持文章、兴趣爱好、媒体链接等类型。内容会自动分块向量化，在 AI 对话中被检索和引用。
+            这里可以扩展个人资料库，支持兴趣爱好、技术博客、知识专栏和通用资料。内容会自动分块向量化，在 AI 对话中被检索和引用。
           </p>
           <div className="dashboard-entry-actions">
             <Link
@@ -190,17 +190,27 @@ export function RagExtensionShell({ locale: _locale }: { locale: AppLocale }) {
 
           <label className="field">
             <span>内容类型</span>
-            <select
+            <Select
               aria-label="内容类型"
-              className="h-10 rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-700 outline-none transition focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200 dark:focus:border-zinc-600"
-              onChange={(event: any) => setContentType(event.target.value as RagUserDocContentType)}
-              value={contentType}>
-              {CONTENT_TYPE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+              fullWidth
+              onSelectionChange={(key) => setContentType(String(key) as RagUserDocContentType)}
+              selectedKey={contentType}
+              variant="secondary">
+              <Select.Trigger aria-label="内容类型">
+                <Select.Value />
+                <Select.Indicator />
+              </Select.Trigger>
+              <Select.Popover>
+                <ListBox>
+                  {CONTENT_TYPE_OPTIONS.map((option) => (
+                    <ListBox.Item id={option.value} key={option.value} textValue={option.label}>
+                      {option.label}
+                      <ListBox.ItemIndicator />
+                    </ListBox.Item>
+                  ))}
+                </ListBox>
+              </Select.Popover>
+            </Select>
           </label>
 
           <label className="field">
@@ -264,7 +274,7 @@ export function RagExtensionShell({ locale: _locale }: { locale: AppLocale }) {
                   <div className="flex flex-wrap items-center gap-2">
                     {doc.contentType ? (
                       <Chip size="sm" variant="soft">
-                        {doc.contentType === 'article' ? '文章' : doc.contentType === 'hobby' ? '兴趣爱好' : doc.contentType === 'media' ? '媒体' : doc.contentType}
+                        {doc.contentType === 'hobby' ? '兴趣爱好' : doc.contentType === 'tech_blog' ? '技术博客' : doc.contentType === 'knowledge_column' ? '知识专栏' : doc.contentType === 'general' ? '其他通用' : doc.contentType}
                       </Chip>
                     ) : null}
                     <span className="text-xs text-zinc-400 dark:text-zinc-500">

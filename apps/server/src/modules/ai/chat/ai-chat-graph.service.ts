@@ -10,8 +10,8 @@ import type {
 import { AiService } from '../application/services/ai.service'
 import type { RagKnowledgeDomain } from '../rag/rag-knowledge-domain'
 import { buildRagAskSystemPrompt } from '../rag/prompts/rag-ask.prompt'
-import { RagService } from '../rag/rag.service'
-import type { RagAskCitation } from '../rag/rag.types'
+import { RagCatalogProbeHit, RagService } from '../rag/rag.service'
+import type { RagAskCitation, RagRetrievalSourceType } from '../rag/rag.types'
 import type {
   AiChatAnswerGenerationResult,
   AiChatExperienceCardBlock,
@@ -25,6 +25,7 @@ const MAX_LOG_SNIPPET_LENGTH = 120
 
 type QuestionClass = 'greeting' | 'short' | 'negative' | 'normal'
 type GraphRouteIntent = 'direct' | 'rag' | 'blocked'
+type GraphRouteKind = 'direct' | 'resume_only' | 'supplement_only' | 'hybrid' | 'reject'
 
 interface AiChatGraphInput {
   locale: AiChatLocale
@@ -39,12 +40,24 @@ interface NormalizedGraphInput extends AiChatGraphInput {
 interface GraphRouteDecision {
   classification: QuestionClass
   intent: GraphRouteIntent
+  routeKind: GraphRouteKind
   knowledgeDomains?: RagKnowledgeDomain[]
+  sourceTypes?: RagRetrievalSourceType[]
+  preferSourceTypes?: RagRetrievalSourceType[]
+  documentIds?: string[]
   reason: string
+  skipModelOnMiss: boolean
+  catalogProbeHits: RagCatalogProbeHit[]
 }
 
 interface GraphRetrievalResult {
   knowledgeDomains: RagKnowledgeDomain[]
+  sourceTypes: RagRetrievalSourceType[] | undefined
+  preferSourceTypes: RagRetrievalSourceType[] | undefined
+  vectorScope: 'draft' | 'published' | 'all'
+  catalogProbeHits: RagCatalogProbeHit[]
+  skipModelOnMiss: boolean
+  fallbackReason: string | null
   ragResult: Awaited<ReturnType<RagService['ask']>>
   resume: StandardResume | null
   resumeSummary: string
@@ -69,6 +82,19 @@ function summarizeCitationForLog(citation: RagAskCitation) {
     renderHint: citation.renderHint,
     hasRichCard: Boolean(citation.richCard),
     snippet: trimForLog(citation.snippet),
+  }
+}
+
+function summarizeCatalogProbeHitForLog(hit: RagCatalogProbeHit) {
+  return {
+    documentId: hit.documentId,
+    title: hit.title,
+    score: hit.score,
+    sourceType: hit.sourceType,
+    sourceScope: hit.sourceScope,
+    knowledgeDomain: hit.knowledgeDomain,
+    contentType: hit.contentType,
+    preview: trimForLog(hit.preview ?? undefined),
   }
 }
 
@@ -233,6 +259,17 @@ function buildIrrelevantAnswer(locale: AiChatLocale): AiChatAnswerGenerationResu
   }
 }
 
+function buildSupplementMissAnswer(locale: AiChatLocale): AiChatAnswerGenerationResult {
+  return {
+    answer:
+      locale === 'en'
+        ? "I can only answer from my resume and the extra materials already indexed in my knowledge base. I couldn't find enough indexed supplementary content for this topic yet."
+        : '我目前只能回答简历主线和已经补充入库的资料内容。这个问题暂时没有命中足够的补充资料，所以我不想冒然乱答。',
+    blocks: [],
+    citations: [],
+  }
+}
+
 function buildLowRelevanceAnswer(
   question: string,
   topScore: number,
@@ -260,28 +297,333 @@ function buildLowRelevanceAnswer(
   return buildIrrelevantAnswer(locale)
 }
 
+const DISPLAY_TITLE_EXTENSION_REGEX = /\.(md|markdown|txt|pdf|docx?)$/i
+const DISPLAY_TERM_STOP_WORDS = new Set([
+  '介绍',
+  '什么',
+  '怎么',
+  '如何',
+  '还有',
+  '最近',
+  '一下',
+  '说说',
+  '聊聊',
+  '关于',
+  '一下子',
+  '兴趣',
+  '爱好',
+  '特长',
+  '水平',
+  '相关',
+  '资料',
+  '内容',
+  '喜欢',
+  '平时',
+  'hobby',
+  'hobbies',
+  'interest',
+  'interests',
+  'about',
+  'resume',
+])
+
+function sanitizeDisplayTitle(value: string | undefined): string {
+  return (value ?? '').trim().replace(DISPLAY_TITLE_EXTENSION_REGEX, '').trim()
+}
+
+function resolveCardSummary(citation: RagAskCitation): string {
+  return citation.richCard?.summary?.trim() || citation.richCard?.description?.trim() || citation.snippet
+}
+
+function normalizeUserDocCardCategory(contentType: string | undefined): 'hobby' | 'tech_blog' | 'knowledge_column' | 'general' {
+  if (contentType === 'hobby') return 'hobby'
+  if (contentType === 'knowledge_column' || contentType === 'media') return 'knowledge_column'
+  if (contentType === 'general') return 'general'
+
+  return 'tech_blog'
+}
+
+function normalizeArticleCardCategory(contentType: string | undefined): 'tech_blog' | 'knowledge_column' | 'general' {
+  const category = normalizeUserDocCardCategory(contentType)
+
+  return category === 'hobby' ? 'tech_blog' : category
+}
+
+function buildRichCardMedia(citation: RagAskCitation) {
+  const richCard = citation.richCard
+  const existingMedia = richCard?.media ?? []
+  const imageUrls = Array.isArray(richCard?.imageUrls) ? richCard.imageUrls : []
+  const imageMedia = imageUrls
+    .filter((url) => url && url !== richCard?.imageUrl)
+    .map((url, index) => ({
+      type: 'image' as const,
+      url,
+      thumbnailUrl: url,
+      title: `参考图片 ${index + 2}`,
+    }))
+
+  return [...existingMedia, ...imageMedia]
+}
+
+function normalizeComparableText(value: string | undefined): string {
+  return sanitizeDisplayTitle(value)
+    .toLowerCase()
+    .replace(/[《》〈〉「」『』【】（）()[\]{}]/g, ' ')
+    .replace(/[`"'“”‘’]/g, ' ')
+    .replace(/[，。！？、:：;；/\\|_.-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function extractInformativeTerms(value: string | undefined): string[] {
+  if (!value) return []
+
+  const normalized = normalizeComparableText(value)
+  if (!normalized) return []
+
+  const tokens =
+    normalized.match(/[\p{Script=Han}]{2,}|[a-z0-9][a-z0-9+#.-]{1,}/gu) ?? []
+
+  return Array.from(
+    new Set(
+      tokens.filter((token) => {
+        if (!token) return false
+        if (DISPLAY_TERM_STOP_WORDS.has(token)) return false
+        if (/^[0-9]+$/.test(token)) return false
+        return token.length >= 2
+      }),
+    ),
+  )
+}
+
+function countOverlap(source: readonly string[], target: readonly string[]): number {
+  if (source.length === 0 || target.length === 0) return 0
+  const targetSet = new Set(target)
+  return source.reduce((count, term) => count + (targetSet.has(term) ? 1 : 0), 0)
+}
+
+function buildCitationDisplayTerms(
+  citation: RagAskCitation,
+  options: { includeSnippet?: boolean } = {},
+): string[] {
+  const values = [
+    citation.title,
+    citation.richCard?.title,
+    ...(citation.tags ?? []),
+    ...(citation.richCard?.keywords ?? []),
+  ]
+
+  if (options.includeSnippet !== false) {
+    values.push(citation.snippet)
+    values.push(citation.richCard?.description)
+  }
+
+  return Array.from(new Set(values.flatMap((value) => extractInformativeTerms(value))))
+}
+
+function selectPrimaryHobbyCitation(
+  focusText: string,
+  citations: readonly RagAskCitation[],
+): RagAskCitation | null {
+  if (citations.length === 0) return null
+
+  const focusTerms = extractInformativeTerms(focusText)
+  if (focusTerms.length === 0) return citations[0] ?? null
+
+  return citations.reduce<{ citation: RagAskCitation; score: number } | null>((best, citation) => {
+    const titleTerms = buildCitationDisplayTerms(citation, { includeSnippet: false })
+    const displayTerms = buildCitationDisplayTerms(citation)
+    const score =
+      countOverlap(titleTerms, focusTerms) * 5
+      + countOverlap(displayTerms, focusTerms) * 2
+      + (citation.score ?? 0)
+
+    if (!best || score > best.score) {
+      return { citation, score }
+    }
+
+    return best
+  }, null)?.citation ?? null
+}
+
+function buildCitationFocusTerms(
+  question: string,
+  answerText?: string,
+): {
+  questionTerms: string[]
+  answerTerms: string[]
+  focusText: string
+} {
+  const questionTerms = extractInformativeTerms(question)
+  const answerTerms = extractInformativeTerms(answerText)
+  const focusText =
+    questionTerms.length > 0 || answerTerms.length === 0
+      ? question
+      : `${question}\n${answerText ?? ''}`
+
+  return {
+    questionTerms,
+    answerTerms,
+    focusText,
+  }
+}
+
+function isBroadHobbyOverviewQuestion(question: string): boolean {
+  const normalized = normalizeComparableText(question)
+
+  const topicSignals = ['兴趣爱好', '兴趣', '爱好', '特长', '业余']
+  const broadSignals = ['哪些', '什么', '还有', '都有', '聊聊', '说说', '介绍']
+
+  return (
+    topicSignals.some((signal) => normalized.includes(signal))
+    && broadSignals.some((signal) => normalized.includes(signal))
+  )
+}
+
+function filterDisplayRelevantCitations(
+  question: string,
+  citations: readonly RagAskCitation[],
+  answerText?: string,
+): RagAskCitation[] {
+  const hobbyCitations = citations.filter(
+    (citation) => citation.sourceType === 'user_docs' && citation.contentType === 'hobby',
+  )
+
+  if (hobbyCitations.length <= 1) {
+    return [...citations]
+  }
+
+  const { questionTerms, answerTerms, focusText } = buildCitationFocusTerms(question, answerText)
+  const primaryHobbyCitation = selectPrimaryHobbyCitation(focusText, hobbyCitations)
+  if (!primaryHobbyCitation) {
+    return [...citations]
+  }
+
+  if ((isBroadHobbyOverviewQuestion(question) || questionTerms.length === 0) && answerTerms.length > 0) {
+    const normalizedAnswerText = normalizeComparableText(answerText).replace(/\s+/g, '')
+    const answerAnchoredCitations = citations.filter((citation) => {
+      if (citation.sourceType !== 'user_docs' || citation.contentType !== 'hobby') {
+        return true
+      }
+
+      if (citation.id === primaryHobbyCitation.id) {
+        return true
+      }
+
+      const citationTerms = buildCitationDisplayTerms(citation)
+      const comparableTitle = normalizeComparableText(
+        citation.richCard?.title ?? citation.title,
+      ).replace(/\s+/g, '')
+
+      return (
+        countOverlap(citationTerms, answerTerms) > 0
+        || (Boolean(comparableTitle) && normalizedAnswerText.includes(comparableTitle))
+      )
+    })
+
+    const matchedHobbyCount = answerAnchoredCitations.filter(
+      (citation) => citation.sourceType === 'user_docs' && citation.contentType === 'hobby',
+    ).length
+
+    if (matchedHobbyCount > 0) {
+      return answerAnchoredCitations
+    }
+  }
+
+  const anchorTerms = Array.from(
+    new Set([
+      ...questionTerms,
+      ...buildCitationDisplayTerms(
+        primaryHobbyCitation,
+        questionTerms.length > 0 ? { includeSnippet: false } : undefined,
+      ),
+    ]),
+  )
+  const primaryTitle = normalizeComparableText(
+    primaryHobbyCitation.richCard?.title ?? primaryHobbyCitation.title,
+  )
+
+  return citations.filter((citation) => {
+    if (citation.sourceType !== 'user_docs' || citation.contentType !== 'hobby') {
+      return true
+    }
+
+    if (citation.id === primaryHobbyCitation.id) {
+      return true
+    }
+
+    const comparableTitle = normalizeComparableText(citation.richCard?.title ?? citation.title)
+    if (primaryTitle && comparableTitle === primaryTitle) {
+      return true
+    }
+
+    const citationTerms = buildCitationDisplayTerms(citation)
+    return countOverlap(citationTerms, anchorTerms) > 0
+  })
+}
+
 function resolveKnowledgeDomains(question: string): RagKnowledgeDomain[] | undefined {
   const lower = question.toLowerCase()
   const domains = new Set<RagKnowledgeDomain>()
 
   if (/项目|作品|案例|project|case|portfolio|agent|rag|ai/.test(lower)) domains.add('projects')
   if (/工作|经历|公司|团队|管理|经验|experience|company|team|lead/.test(lower)) domains.add('experience')
-  if (/技能|技术栈|会什么|擅长|skill|tech|stack/.test(lower)) domains.add('skills')
+  if (/技能|技术栈|会什么|擅长|优势|亮点|skill|tech|stack|strength/.test(lower)) domains.add('skills')
   if (/兴趣|爱好|特长|音乐|羽毛球|hobby|music|badminton/.test(lower)) domains.add('hobbies')
-  if (/文章|博客|创作|写作|学习|blog|article|writing|media/.test(lower)) domains.add('writing_media')
+  if (/文章|博客|创作|写作|学习|职业规划|规划|媒体|周易|dao|blog|article|writing|media|career/.test(lower)) domains.add('writing_media')
 
   return domains.size > 0 ? [...domains] : undefined
 }
 
-function mergeResumeCoreKnowledgeDomains(
-  domains: readonly RagKnowledgeDomain[] | undefined,
-): RagKnowledgeDomain[] {
-  return Array.from(new Set<RagKnowledgeDomain>(['resume_core', ...(domains ?? [])]))
+function mergeKnowledgeDomains(
+  base: readonly RagKnowledgeDomain[] | undefined,
+  extra: readonly RagKnowledgeDomain[] | undefined,
+): RagKnowledgeDomain[] | undefined {
+  const domains = [...(base ?? []), ...(extra ?? [])]
+  return domains.length > 0 ? Array.from(new Set<RagKnowledgeDomain>(domains)) : undefined
+}
+
+function buildCatalogDomainHints(
+  hits: readonly RagCatalogProbeHit[],
+): RagKnowledgeDomain[] | undefined {
+  const domains = hits
+    .map((item) => item.knowledgeDomain)
+    .filter((item): item is RagKnowledgeDomain => Boolean(item))
+
+  return domains.length > 0 ? Array.from(new Set(domains)) : undefined
+}
+
+function selectPrimaryCatalogProbeHit(
+  hits: readonly RagCatalogProbeHit[],
+): RagCatalogProbeHit | null {
+  if (hits.length === 0) {
+    return null
+  }
+
+  return [...hits].sort((left, right) => right.score - left.score)[0] ?? null
+}
+
+function hasResumeSignals(question: string): boolean {
+  return /简历|背景|自我介绍|介绍一下|工作|经历|公司|团队|管理|经验|教育|学校|学历|技能|技术栈|优势|亮点|求职|角色|职位|负责|做过|resume|background|experience|company|education|skill/.test(
+    question.toLowerCase(),
+  )
+}
+
+function hasSupplementSignals(question: string): boolean {
+  return /博客|文章|写作|创作|兴趣|爱好|职业规划|作品集|媒体|播客|周易|dao|blog|article|writing|hobby|interest|media/.test(
+    question.toLowerCase(),
+  )
+}
+
+function hasHybridSignals(question: string): boolean {
+  return /项目.*(文章|博客|写作|资料)|文章.*项目|博客.*项目|作品.*经历|经历.*作品|project.*article|article.*project/.test(
+    question.toLowerCase(),
+  )
 }
 
 function isClearlyOutOfScopeQuestion(question: string): boolean {
   const lower = question.toLowerCase()
-  const resumeRelated = /我|你|简历|项目|经历|工作|公司|技能|技术|特长|兴趣|爱好|文章|博客|学习|职业|求职|resume|project|experience|skill|hobby|career|work|blog|article/.test(lower)
+  const resumeRelated = /我|你|简历|项目|经历|工作|公司|技能|技术|特长|兴趣|爱好|文章|博客|学习|职业|规划|作品|dao|resume|project|experience|skill|hobby|career|work|blog|article/.test(lower)
 
   if (resumeRelated) return false
 
@@ -304,9 +646,10 @@ export class AiChatGraphService {
   async generateAnswer(input: AiChatGraphInput): Promise<AiChatAnswerGenerationResult> {
     const startedAt = Date.now()
     const normalized = this.normalizeInput(input)
+    let route: GraphRouteDecision | null = null
 
     try {
-      const route = this.routeIntentAndDomain(normalized)
+      route = await this.routeIntentAndDomain(normalized)
       const guarded = this.boundaryGuard(normalized, route)
 
       if (guarded) {
@@ -338,7 +681,7 @@ export class AiChatGraphService {
         durationMs: Date.now() - startedAt,
       })
 
-      return this.generateFallbackAnswer(normalized)
+      return this.generateFallbackAnswer(normalized, route)
     }
   }
 
@@ -349,22 +692,93 @@ export class AiChatGraphService {
     }
   }
 
-  private routeIntentAndDomain(input: NormalizedGraphInput): GraphRouteDecision {
+  private async routeIntentAndDomain(input: NormalizedGraphInput): Promise<GraphRouteDecision> {
     const classification = classifyQuestion(input.question)
 
     if (classification !== 'normal') {
       return {
         classification,
         intent: 'direct',
+        routeKind: 'direct',
         reason: `rule:${classification}`,
+        skipModelOnMiss: false,
+        catalogProbeHits: [],
+      }
+    }
+
+    if (isClearlyOutOfScopeQuestion(input.question)) {
+      return {
+        classification,
+        intent: 'blocked',
+        routeKind: 'reject',
+        reason: 'rule:out_of_scope',
+        skipModelOnMiss: true,
+        catalogProbeHits: [],
+      }
+    }
+
+    const catalogProbeHits = await this.ragService.probeSupplementCatalog(
+      input.question,
+      5,
+      {
+        sourceTypes: ['user_docs'],
+        preferSourceTypes: ['user_docs'],
+      },
+    )
+    const explicitDomains = resolveKnowledgeDomains(input.question)
+    const catalogDomains = buildCatalogDomainHints(catalogProbeHits)
+    const primaryCatalogHit = selectPrimaryCatalogProbeHit(catalogProbeHits)
+    const mergedDomains = mergeKnowledgeDomains(explicitDomains, catalogDomains)
+    const resumeSignals = hasResumeSignals(input.question)
+    const supplementSignals = hasSupplementSignals(input.question) || catalogProbeHits.length > 0
+    const hybridSignals = hasHybridSignals(input.question) || (resumeSignals && supplementSignals)
+
+    if (hybridSignals) {
+      return {
+        classification,
+        intent: 'rag',
+        routeKind: 'hybrid',
+        knowledgeDomains: mergedDomains,
+        sourceTypes: ['resume_core', 'user_docs'],
+        preferSourceTypes: ['user_docs', 'resume_core'],
+        documentIds:
+          primaryCatalogHit && primaryCatalogHit.score >= 1
+            ? [primaryCatalogHit.documentId]
+            : undefined,
+        reason: catalogProbeHits.length > 0 ? 'rag:hybrid_with_catalog_probe' : 'rag:hybrid_rule',
+        skipModelOnMiss: true,
+        catalogProbeHits,
+      }
+    }
+
+    if (supplementSignals) {
+      return {
+        classification,
+        intent: 'rag',
+        routeKind: 'supplement_only',
+        knowledgeDomains: mergedDomains,
+        sourceTypes: ['user_docs'],
+        preferSourceTypes: ['user_docs'],
+        documentIds:
+          primaryCatalogHit && primaryCatalogHit.score >= 1
+            ? [primaryCatalogHit.documentId]
+            : undefined,
+        reason: catalogProbeHits.length > 0 ? 'rag:supplement_catalog_probe' : 'rag:supplement_rule',
+        skipModelOnMiss: true,
+        catalogProbeHits,
       }
     }
 
     return {
       classification,
       intent: 'rag',
-      knowledgeDomains: resolveKnowledgeDomains(input.question),
-      reason: 'rag:domain_route',
+      routeKind: 'resume_only',
+      knowledgeDomains: explicitDomains,
+      sourceTypes: ['resume_core'],
+      preferSourceTypes: ['resume_core'],
+      reason: 'rag:resume_route',
+      skipModelOnMiss: false,
+      catalogProbeHits,
     }
   }
 
@@ -372,7 +786,7 @@ export class AiChatGraphService {
     input: NormalizedGraphInput,
     route: GraphRouteDecision,
   ): AiChatAnswerGenerationResult | null {
-    if (route.intent === 'rag' && isClearlyOutOfScopeQuestion(input.question)) {
+    if (route.intent === 'blocked' || route.routeKind === 'reject') {
       return buildIrrelevantAnswer(input.locale)
     }
 
@@ -402,30 +816,58 @@ export class AiChatGraphService {
     const snapshot = await this.resumePublicationService.getPublished()
     const resume = snapshot?.resume ?? null
     const resumeSummary = resume ? buildResumeSummary(resume, input.locale) : ''
-    const knowledgeDomains = mergeResumeCoreKnowledgeDomains(route.knowledgeDomains)
+    const vectorScope = ((process.env.RAG_SEARCH_VECTOR_SCOPE?.trim().toLowerCase() ?? 'published') as 'draft' | 'published' | 'all')
+    const knowledgeDomains = route.knowledgeDomains ?? []
     const ragResult = await this.ragService.ask(
       input.question,
       DEFAULT_CHAT_LIMIT,
       input.locale,
       {
-        vectorScope: 'published',
         knowledgeDomains,
+        sourceTypes: route.sourceTypes,
+        preferSourceTypes: route.preferSourceTypes,
+        documentIds: route.documentIds,
       },
-      input.onToken ? { onToken: input.onToken } : undefined,
+      {
+        minAcceptedCitationScore: 0.1,
+        onToken: input.onToken,
+      },
     )
-    const fallbackReason = ragResult.citations.length === 0
-      ? (resumeSummary ? 'no_citation_use_resume_summary' : 'no_citation_no_resume_summary')
-      : null
+    const hasSupplementCitation = ragResult.citations.some((item) => item.sourceType === 'user_docs')
+    const topCitationScore = ragResult.citations[0]?.score ?? 0
+    const fallbackReason = route.routeKind === 'resume_only'
+      ? (ragResult.citations.length === 0
+        ? (resumeSummary ? 'no_citation_use_resume_summary' : 'no_citation_no_resume_summary')
+        : null)
+      : (!hasSupplementCitation
+        ? 'supplement_miss_skip_model'
+        : topCitationScore < 0.1
+          ? 'supplement_low_relevance_skip_model'
+          : null)
 
     this.logger.log({
       event: 'ai-chat.graph.retrieval_completed',
       classification: route.classification,
       intent: route.intent,
+      routeKind: route.routeKind,
       reason: route.reason,
       question: input.question,
       knowledgeDomains,
+      sourceTypes: route.sourceTypes,
+      preferSourceTypes: route.preferSourceTypes,
+      documentIds: route.documentIds,
+      vectorScope,
+      catalogProbeHits: route.catalogProbeHits.map(summarizeCatalogProbeHitForLog),
+      skipModelOnMiss: route.skipModelOnMiss,
       matchCount: ragResult.matches.length,
       citationCount: ragResult.citations.length,
+      topMatches: ragResult.matches.slice(0, 3).map((item) => ({
+        id: item.id,
+        title: item.title,
+        sourceType: item.sourceType,
+        score: item.score,
+        knowledgeDomain: item.knowledgeDomain,
+      })),
       topCitations: ragResult.citations.slice(0, 3).map(summarizeCitationForLog),
       fallbackReason,
       durationMs: Date.now() - startedAt,
@@ -433,6 +875,12 @@ export class AiChatGraphService {
 
     return {
       knowledgeDomains,
+      sourceTypes: route.sourceTypes,
+      preferSourceTypes: route.preferSourceTypes,
+      vectorScope,
+      catalogProbeHits: route.catalogProbeHits,
+      skipModelOnMiss: route.skipModelOnMiss,
+      fallbackReason,
       ragResult,
       resume,
       resumeSummary,
@@ -444,34 +892,68 @@ export class AiChatGraphService {
     route: GraphRouteDecision,
     retrieval: GraphRetrievalResult,
   ): Promise<AiChatAnswerGenerationResult> {
+    const displayCitations = filterDisplayRelevantCitations(
+      input.question,
+      retrieval.ragResult.citations,
+      retrieval.ragResult.answer,
+    )
+    const hasSupplementCitation = displayCitations.some(
+      (item) => item.sourceType === 'user_docs',
+    )
+
+    if (route.skipModelOnMiss && !hasSupplementCitation) {
+      return buildSupplementMissAnswer(input.locale)
+    }
+
     if (retrieval.ragResult.citations.length === 0 && !retrieval.resumeSummary) {
       const topScore = retrieval.ragResult.matches[0]?.score ?? 0
+      if (route.skipModelOnMiss) {
+        return buildSupplementMissAnswer(input.locale)
+      }
       return buildLowRelevanceAnswer(input.question, topScore, input.locale)
     }
 
     const topCitationScore = retrieval.ragResult.citations[0]?.score
     if (typeof topCitationScore === 'number' && topCitationScore < 0.1) {
+      if (route.skipModelOnMiss) {
+        return buildSupplementMissAnswer(input.locale)
+      }
       return buildLowRelevanceAnswer(input.question, topCitationScore, input.locale)
     }
 
     const resumeBlocks = retrieval.resume
-      ? this.buildAnswerBlocksFromResume(retrieval.resume, retrieval.ragResult.citations, input.locale)
+      ? this.buildAnswerBlocksFromResume(retrieval.resume, displayCitations, input.locale)
       : []
-    const customBlocks = this.buildCustomBlocksFromCitations(retrieval.ragResult.citations)
+    const customBlocks = this.buildCustomBlocksFromCitations(
+      input.question,
+      displayCitations,
+      retrieval.ragResult.answer,
+    )
     const cardBlocks = [...resumeBlocks, ...customBlocks].slice(0, 4)
 
-    if (retrieval.ragResult.answer && retrieval.ragResult.citations.length > 0) {
+    if (retrieval.ragResult.answer && displayCitations.length > 0) {
       return {
         answer: retrieval.ragResult.answer,
-        citations: retrieval.ragResult.citations,
+        citations: displayCitations,
         blocks: cardBlocks,
       }
+    }
+
+    if (route.routeKind !== 'resume_only') {
+      return buildSupplementMissAnswer(input.locale)
     }
 
     return this.generateResumeFallbackAnswer(input, retrieval.resumeSummary, cardBlocks, route)
   }
 
-  private async generateFallbackAnswer(input: NormalizedGraphInput): Promise<AiChatAnswerGenerationResult> {
+  private async generateFallbackAnswer(
+    input: NormalizedGraphInput,
+    route: GraphRouteDecision | null,
+  ): Promise<AiChatAnswerGenerationResult> {
+    if (route && route.routeKind !== 'resume_only') {
+      return buildSupplementMissAnswer(input.locale)
+    }
+
     const snapshot = await this.resumePublicationService.getPublished()
     const resumeSummary = snapshot?.resume ? buildResumeSummary(snapshot.resume, input.locale) : ''
 
@@ -482,7 +964,12 @@ export class AiChatGraphService {
     return this.generateResumeFallbackAnswer(input, resumeSummary, [], {
       classification: 'normal',
       intent: 'rag',
+      routeKind: 'resume_only',
       reason: 'fallback:graph_error',
+      sourceTypes: ['resume_core'],
+      preferSourceTypes: ['resume_core'],
+      skipModelOnMiss: false,
+      catalogProbeHits: [],
     })
   }
 
@@ -502,8 +989,12 @@ export class AiChatGraphService {
 
     this.logger.log({
       event: 'ai-chat.graph.resume_fallback',
+      routeKind: route.routeKind,
       reason: route.reason,
-      knowledgeDomains: mergeResumeCoreKnowledgeDomains(route.knowledgeDomains),
+      knowledgeDomains: route.knowledgeDomains,
+      sourceTypes: route.sourceTypes,
+      preferSourceTypes: route.preferSourceTypes,
+      skipModelOnMiss: route.skipModelOnMiss,
       question: input.question,
       blockCount: blocks.length,
       blockTypes: summarizeAnswerBlocksForLog(blocks),
@@ -559,9 +1050,18 @@ export class AiChatGraphService {
     return [...projectBlocks.values(), ...experienceBlocks.values()].slice(0, 2)
   }
 
-  private buildCustomBlocksFromCitations(citations: RagAskCitation[]): AiChatMessageBlock[] {
+  private buildCustomBlocksFromCitations(
+    question: string,
+    citations: RagAskCitation[],
+    answerText?: string,
+  ): AiChatMessageBlock[] {
     const blocks: AiChatMessageBlock[] = []
     const seen = new Set<string>()
+    const hobbyCitations = citations.filter(
+      (citation) => citation.sourceType === 'user_docs' && citation.contentType === 'hobby',
+    )
+    const { focusText } = buildCitationFocusTerms(question, answerText)
+    const primaryHobbyCitation = selectPrimaryHobbyCitation(focusText, hobbyCitations)
 
     for (const citation of citations) {
       if (citation.sourceType !== 'user_docs') continue
@@ -569,54 +1069,45 @@ export class AiChatGraphService {
       if (!contentType || seen.has(`${contentType}:${citation.title}`)) continue
       seen.add(`${contentType}:${citation.title}`)
 
-      if (contentType === 'article') {
+      if (contentType === 'article' || contentType === 'tech_blog' || contentType === 'knowledge_column' || contentType === 'general' || contentType === 'media') {
         const richCard = citation.richCard
-
         blocks.push({
           type: 'article_card',
-          title: richCard?.title ?? citation.title,
-          summary: richCard?.description ?? citation.snippet,
-          url: richCard?.url ?? citation.sourcePath,
+          title: richCard?.title ?? sanitizeDisplayTitle(citation.title),
+          summary: resolveCardSummary(citation),
+          category: normalizeArticleCardCategory(contentType),
+          url: richCard?.url,
           imageUrl: richCard?.imageUrl,
           publishedAt: richCard?.publishedAt,
           keywords: richCard?.keywords ?? citation.tags ?? [],
-          media: richCard?.media,
-        })
-      } else if (contentType === 'media') {
-        const richCard = citation.richCard
-
-        blocks.push({
-          type: 'media_card',
-          title: richCard?.title ?? citation.title,
-          description: richCard?.description ?? citation.snippet,
-          url: richCard?.url ?? citation.sourcePath ?? '',
-          imageUrl: richCard?.imageUrl,
-          thumbnailUrl: richCard?.thumbnailUrl,
+          media: buildRichCardMedia(citation),
         })
       } else if (contentType === 'hobby') {
+        if (!primaryHobbyCitation || citation.id !== primaryHobbyCitation.id) continue
         const richCard = citation.richCard
 
         blocks.push({
           type: 'hobby_card',
-          title: richCard?.title ?? citation.title,
-          description: richCard?.description ?? citation.snippet,
-          url: richCard?.url ?? citation.sourcePath,
+          title: richCard?.title ?? sanitizeDisplayTitle(citation.title),
+          description: resolveCardSummary(citation),
+          category: 'hobby',
+          url: richCard?.url,
           imageUrl: richCard?.imageUrl,
           keywords: richCard?.keywords ?? citation.tags ?? [],
-          media: richCard?.media,
+          media: buildRichCardMedia(citation),
         })
       } else if (contentType === 'project') {
         const richCard = citation.richCard
 
         blocks.push({
           type: 'project_card',
-          title: richCard?.title ?? citation.title,
+          title: richCard?.title ?? sanitizeDisplayTitle(citation.title),
           subtitle: '补充项目资料',
           period: '',
-          summary: richCard?.description ?? citation.snippet,
+          summary: resolveCardSummary(citation),
           technologies: richCard?.keywords ?? citation.tags ?? [],
           highlights: [],
-          url: richCard?.url ?? citation.sourcePath,
+          url: richCard?.url,
           imageUrl: richCard?.imageUrl,
         })
       }
@@ -659,8 +1150,14 @@ export class AiChatGraphService {
       node,
       classification: route.classification,
       intent: route.intent,
+      routeKind: route.routeKind,
       knowledgeDomains: route.knowledgeDomains,
+      sourceTypes: route.sourceTypes,
+      preferSourceTypes: route.preferSourceTypes,
+      documentIds: route.documentIds,
       reason: route.reason,
+      skipModelOnMiss: route.skipModelOnMiss,
+      catalogProbeHits: route.catalogProbeHits.map(summarizeCatalogProbeHitForLog),
       question: input.question,
       durationMs: Date.now() - startedAt,
       ...extra,

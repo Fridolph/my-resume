@@ -1,1 +1,1 @@
-export type RagUserDocContentType = 'article' | 'hobby' | 'media' | 'general'
+export type RagUserDocContentType = 'hobby' | 'tech_blog' | 'knowledge_column' | 'general'

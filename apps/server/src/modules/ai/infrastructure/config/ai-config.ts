@@ -79,6 +79,21 @@ function readOptionalValue(env: EnvironmentVariables, key: string): string | und
   return value ? value : undefined
 }
 
+function normalizeBaseUrl(value: string | undefined): string | undefined {
+  return value?.trim().replace(/\/$/, '')
+}
+
+function isSameBaseUrl(
+  left: string | undefined,
+  right: string | undefined,
+): boolean {
+  return Boolean(left && right && normalizeBaseUrl(left) === normalizeBaseUrl(right))
+}
+
+function isDashScopeCompatibleBaseUrl(value: string | undefined): boolean {
+  return normalizeBaseUrl(value)?.includes('dashscope.aliyuncs.com/compatible-mode') ?? false
+}
+
 function readOptionalBoolean(
   env: EnvironmentVariables,
   key: string,
@@ -124,7 +139,11 @@ function resolveSharedEmbeddingOverride(env: EnvironmentVariables): {
   const embeddingBaseUrl =
     readOptionalValue(env, 'EMBEDDINGS_BASE_URL') ??
     readOptionalValue(env, 'EMBEDDINGS_URL')
-  const embeddingApiKey = readOptionalSecret(env, 'EMBEDDINGS_API_KEY')
+  const embeddingApiKey =
+    readOptionalSecret(env, 'EMBEDDINGS_API_KEY') ??
+    readOptionalSecret(env, 'DASHSCOPE_API_KEY') ??
+    readOptionalSecret(env, 'QWEN_API_KEY') ??
+    resolveOpenAiCompatibleEmbeddingAlias(env, embeddingBaseUrl)
   const embeddingModel =
     readOptionalValue(env, 'EMBEDDINGS_MODEL_NAME') ??
     readOptionalValue(env, 'EMBEDDINGS_MODEL')
@@ -134,6 +153,31 @@ function resolveSharedEmbeddingOverride(env: EnvironmentVariables): {
     embeddingBaseUrl,
     embeddingModel,
   }
+}
+
+function resolveOpenAiCompatibleEmbeddingAlias(
+  env: EnvironmentVariables,
+  embeddingBaseUrl: string | undefined,
+): string | undefined {
+  const openAiCompatibleBaseUrl =
+    readOptionalValue(env, 'OPENAI_COMPATIBLE_BASE_URL') ??
+    readOptionalValue(env, 'OPENAI_BASE_URL')
+  const openAiCompatibleApiKey =
+    readOptionalSecret(env, 'OPENAI_COMPATIBLE_API_KEY') ??
+    readOptionalSecret(env, 'OPENAI_API_KEY')
+
+  if (!openAiCompatibleApiKey || !openAiCompatibleBaseUrl) {
+    return undefined
+  }
+
+  if (
+    isSameBaseUrl(openAiCompatibleBaseUrl, embeddingBaseUrl) ||
+    (!embeddingBaseUrl && isDashScopeCompatibleBaseUrl(openAiCompatibleBaseUrl))
+  ) {
+    return openAiCompatibleApiKey
+  }
+
+  return undefined
 }
 
 function resolveDefaultDeepseekEmbeddingOverride(

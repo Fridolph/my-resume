@@ -1,5 +1,6 @@
 import { RagSourceScope } from '../../../database/schema'
 import type { RagKnowledgeDomain } from './rag-knowledge-domain'
+import type { RagRetrievalSourceType } from './rag.types'
 
 export type EnvironmentVariables = Partial<Record<string, string | undefined>>
 
@@ -11,6 +12,9 @@ export interface RagSearchRoutingConfig {
   vectorScope: RagSourceScope | 'all'
   fallbackToLocal: boolean
   knowledgeDomains?: RagKnowledgeDomain[]
+  sourceTypes?: RagRetrievalSourceType[]
+  preferSourceTypes?: RagRetrievalSourceType[]
+  documentIds?: string[]
 }
 
 /**
@@ -21,6 +25,9 @@ export interface RagSearchRoutingOverride {
   vectorScope?: RagSourceScope | 'all'
   fallbackToLocal?: boolean
   knowledgeDomains?: RagKnowledgeDomain[]
+  sourceTypes?: RagRetrievalSourceType[]
+  preferSourceTypes?: RagRetrievalSourceType[]
+  documentIds?: string[]
 }
 
 function parseBooleanFlag(value: string | undefined, fallback: boolean): boolean {
@@ -63,6 +70,9 @@ export function resolveRagSearchRoutingConfig(
     vectorScope,
     fallbackToLocal: parseBooleanFlag(env.RAG_SEARCH_VECTOR_FALLBACK_TO_LOCAL, true),
     knowledgeDomains: undefined,
+    sourceTypes: undefined,
+    preferSourceTypes: undefined,
+    documentIds: undefined,
   }
 }
 
@@ -78,5 +88,8 @@ export function mergeRagSearchRoutingConfig(
     vectorScope: override.vectorScope ?? base.vectorScope,
     fallbackToLocal: override.fallbackToLocal ?? base.fallbackToLocal,
     knowledgeDomains: override.knowledgeDomains ?? base.knowledgeDomains,
+    sourceTypes: override.sourceTypes ?? base.sourceTypes,
+    preferSourceTypes: override.preferSourceTypes ?? base.preferSourceTypes,
+    documentIds: override.documentIds ?? base.documentIds,
   }
 }

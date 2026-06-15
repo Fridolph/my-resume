@@ -1,6 +1,6 @@
 'use client'
 
-import { Chip, Pagination, Table, Tooltip } from '@heroui/react'
+import { Chip, ListBox, Pagination, Select, Table, Tooltip } from '@heroui/react'
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 
@@ -27,7 +27,11 @@ interface ResumeOptimizationHistoryPanelProps {
   >
 }
 
-const HISTORY_ROWS_PER_PAGE = 5
+const HISTORY_ROWS_PER_PAGE_OPTIONS = [10, 20, 50] as const
+const HISTORY_ROWS_PER_PAGE_SELECT_OPTIONS = HISTORY_ROWS_PER_PAGE_OPTIONS.map((size) => ({
+  label: `${size}`,
+  value: String(size),
+}))
 
 function formatHistoryTime(createdAt: string) {
   return new Date(createdAt).toLocaleString('zh-CN', {
@@ -88,19 +92,20 @@ export function ResumeOptimizationHistoryPanel({
   relationStates,
 }: ResumeOptimizationHistoryPanelProps) {
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState<(typeof HISTORY_ROWS_PER_PAGE_OPTIONS)[number]>(20)
 
-  const totalPages = Math.max(1, Math.ceil(entries.length / HISTORY_ROWS_PER_PAGE))
+  const totalPages = Math.max(1, Math.ceil(entries.length / pageSize))
   const pages = useMemo(
     () => Array.from({ length: totalPages }, (_, index) => index + 1),
     [totalPages],
   )
   const paginatedEntries = useMemo(() => {
-    const startIndex = (page - 1) * HISTORY_ROWS_PER_PAGE
+    const startIndex = (page - 1) * pageSize
 
-    return entries.slice(startIndex, startIndex + HISTORY_ROWS_PER_PAGE)
-  }, [entries, page])
-  const rangeStart = entries.length === 0 ? 0 : (page - 1) * HISTORY_ROWS_PER_PAGE + 1
-  const rangeEnd = entries.length === 0 ? 0 : Math.min(page * HISTORY_ROWS_PER_PAGE, entries.length)
+    return entries.slice(startIndex, startIndex + pageSize)
+  }, [entries, page, pageSize])
+  const rangeStart = entries.length === 0 ? 0 : (page - 1) * pageSize + 1
+  const rangeEnd = entries.length === 0 ? 0 : Math.min(page * pageSize, entries.length)
 
   useEffect(() => {
     if (page > totalPages) {
@@ -254,7 +259,39 @@ export function ResumeOptimizationHistoryPanel({
               data-testid="optimization-history-pagination"
               size="sm">
               <Pagination.Summary data-testid="optimization-history-pagination-summary">
-                {`第 ${rangeStart}-${rangeEnd} 条，共 ${entries.length} 条`}
+                <div className="flex flex-wrap items-center gap-3">
+                  <span>{`第 ${rangeStart}-${rangeEnd} 条，共 ${entries.length} 条`}</span>
+                  <label className="inline-flex items-center gap-2">
+                    <span>每页</span>
+                    <Select
+                      aria-label="优化历史每页条数"
+                      className="min-w-[5rem]"
+                      onSelectionChange={(key) => {
+                        setPageSize(
+                          Number(String(key)) as (typeof HISTORY_ROWS_PER_PAGE_OPTIONS)[number],
+                        )
+                        setPage(1)
+                      }}
+                      selectedKey={String(pageSize)}
+                      variant="secondary">
+                      <Select.Trigger aria-label="优化历史每页条数">
+                        <Select.Value />
+                        <Select.Indicator />
+                      </Select.Trigger>
+                      <Select.Popover>
+                        <ListBox>
+                          {HISTORY_ROWS_PER_PAGE_SELECT_OPTIONS.map((option) => (
+                            <ListBox.Item id={option.value} key={option.value} textValue={option.label}>
+                              {option.label}
+                              <ListBox.ItemIndicator />
+                            </ListBox.Item>
+                          ))}
+                        </ListBox>
+                      </Select.Popover>
+                    </Select>
+                    <span>条</span>
+                  </label>
+                </div>
               </Pagination.Summary>
               <Pagination.Content className="flex flex-wrap justify-end gap-1.5">
                 <Pagination.Item>

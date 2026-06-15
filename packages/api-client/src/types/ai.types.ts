@@ -745,7 +745,7 @@ export type RagUserDocIngestScope = 'draft' | 'published'
  * `balanced` 用于默认教学闭环，`contextual` 用于保留更长上下文的检索实验。
  */
 export type RagUserDocChunkingProfile = 'balanced' | 'contextual' | 'semantic'
-export type RagUserDocContentType = 'article' | 'hobby' | 'media' | 'general'
+export type RagUserDocContentType = 'hobby' | 'tech_blog' | 'knowledge_column' | 'general'
 
 /**
  * RAG user_docs 入库参数。
@@ -765,7 +765,7 @@ export interface IngestRagUserDocInput {
   chunkSize?: number
   /** 自定义重叠字符数，范围 0-300，且必须小于 chunkSize。 */
   chunkOverlap?: number
-  /** 内容类型：article=文章，hobby=兴趣爱好，media=媒体/视频，general=通用 */
+  /** 内容类型：hobby=兴趣爱好，tech_blog=技术博客，knowledge_column=知识专栏，general=其他通用 */
   contentType?: RagUserDocContentType
   /** 资料标题（优先于文件名） */
   title?: string
@@ -805,6 +805,84 @@ export interface RagUserDocIngestResult {
   vectorStoreWarning: string | null
 }
 
+export interface RagDocument {
+  id: string
+  title: string
+  sourceType?: RagRetrievalSourceType | string
+  sourceScope?: RagUserDocIngestScope
+  locale?: string
+  contentType?: RagUserDocContentType | string
+  summary?: string
+  chunkCount?: number
+  preview?: string | null
+  editable?: boolean
+  createdAt: string
+  updatedAt?: string
+}
+
+export interface RagDocumentDetail extends RagDocument {
+  sourceType: RagRetrievalSourceType | string
+  sourceScope: RagUserDocIngestScope
+  locale: string
+  content: string
+  linkUrl?: string
+  linkUrls?: string[]
+  imageUrls?: string[]
+  summary?: string
+  editable: boolean
+  updatedAt: string
+}
+
+export interface FetchRagDocumentDetailInput extends RuntimeInput {
+  documentId: string
+}
+
+export interface UpdateRagCustomDocumentInput extends RuntimeInput {
+  documentId: string
+  title?: string
+  content?: string
+  contentType?: RagUserDocContentType
+  scope?: RagUserDocIngestScope
+  linkUrl?: string
+  linkUrls?: string[]
+  imageUrls?: string[]
+  summary?: string
+}
+
+export interface UpdateRagCustomDocumentResult {
+  updated: true
+  documentId: string
+  chunkCount: number
+  vectorStoreBackend: 'local' | 'milvus' | 'snapshot'
+  vectorStoreSynced: boolean
+  vectorStoreWarning: string | null
+}
+
+export interface ExportRagUserDocsResult {
+  exportedAt: string
+  documentCount: number
+  documents: Array<{
+    id: string
+    title: string
+    sourceScope: RagUserDocIngestScope
+    contentType?: RagUserDocContentType
+    summary?: string
+    linkUrl?: string
+    linkUrls?: string[]
+    imageUrls?: string[]
+    content: string
+    createdAt: string
+    updatedAt: string
+  }>
+}
+
+export interface ResetRagUserDocsResult {
+  resetAt: string
+  deletedDocumentIds: string[]
+  deletedVectorDocumentIds: string[]
+  backend: 'local' | 'milvus' | 'snapshot'
+}
+
 /**
  * RAG 检索统一来源类型。
  */
@@ -827,6 +905,8 @@ export type RagKnowledgeDomain =
 export interface RagSearchMatch {
   /** 命中 chunk ID。 */
   id: string
+  /** 所属文档 ID，用于单文档过滤与追踪。 */
+  documentId?: string
   /** 命中来源标题。 */
   title: string
   /** 命中来源分区。 */
@@ -857,6 +937,8 @@ export interface RagAskCitation {
   ref: string
   /** 命中 chunk ID。 */
   id: string
+  /** 所属文档 ID。 */
+  documentId?: string
   /** 来源标题。 */
   title: string
   /** 来源分区。 */
@@ -891,8 +973,11 @@ export interface RagRichCardMedia {
 export interface RagRichCardMetadata {
   title?: string
   description?: string
+  summary?: string
   url?: string
+  urls?: string[]
   imageUrl?: string
+  imageUrls?: string[]
   thumbnailUrl?: string
   publishedAt?: string
   keywords?: string[]
@@ -1065,6 +1150,7 @@ export interface AiChatArticleCardBlock {
   type: 'article_card'
   title: string
   summary: string
+  category?: 'tech_blog' | 'knowledge_column' | 'general'
   url?: string
   imageUrl?: string
   publishedAt?: string
@@ -1085,6 +1171,7 @@ export interface AiChatHobbyCardBlock {
   type: 'hobby_card'
   title: string
   description: string
+  category?: 'hobby'
   url?: string
   imageUrl?: string
   keywords: string[]
@@ -1125,8 +1212,11 @@ export interface AiChatSession {
   lead: AiChatLeadSummary
   locale: AiChatLocale
   status: AiChatSessionStatus
+  quotaDate: string
+  maxDailyTurns: number
   turnCount: number
   remainingTurns: number
+  totalUserTurns: number
   useKeyStatus: AiChatUseKeyStatus
   messages: AiChatMessage[]
   interimSummary: AiChatSummarySnapshot | null
