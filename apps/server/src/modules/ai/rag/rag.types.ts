@@ -11,9 +11,10 @@ import type {
  * 说明：
  * - resume_core: 简历核心事实，回答优先级更高
  * - user_docs: 用户补充资料，如博客、技术文章、兴趣类内容
+ * - knowledge: 静态知识库内容（如教程、架构文档），不混入 user_docs 检索
  */
-export type RagRetrievalSourceType = 'resume_core' | 'user_docs'
-export const RAG_RETRIEVAL_SOURCE_TYPES = ['resume_core', 'user_docs'] as const
+export type RagRetrievalSourceType = 'resume_core' | 'user_docs' | 'knowledge'
+export const RAG_RETRIEVAL_SOURCE_TYPES = ['resume_core', 'user_docs', 'knowledge'] as const
 
 export function isRagRetrievalSourceType(value: unknown): value is RagRetrievalSourceType {
   return typeof value === 'string' && RAG_RETRIEVAL_SOURCE_TYPES.includes(value as RagRetrievalSourceType)
@@ -47,7 +48,8 @@ export type RagRetrievalSourceScope = 'draft' | 'published'
  *
  * 当前历史索引中：
  * - resume -> resume_core
- * - knowledge -> user_docs
+ * - knowledge -> knowledge
+ * - user_docs -> user_docs
  *
  * @param sourceType 旧索引来源类型
  * @returns 检索态来源类型
@@ -55,7 +57,11 @@ export type RagRetrievalSourceScope = 'draft' | 'published'
 export function mapLegacySourceTypeToRetrievalSourceType(
   sourceType: RagChunk['sourceType'],
 ): RagRetrievalSourceType {
-  if (sourceType === 'knowledge' || sourceType === 'user_docs') {
+  if (sourceType === 'knowledge') {
+    return 'knowledge'
+  }
+
+  if (sourceType === 'user_docs') {
     return 'user_docs'
   }
 

@@ -269,7 +269,7 @@ describe('RagService', () => {
     expect(result.citations[0]).toEqual(
       expect.objectContaining({
         ref: expect.stringMatching(/^#\d+$/),
-        sourceType: expect.stringMatching(/^(resume_core|user_docs)$/),
+        sourceType: expect.stringMatching(/^(resume_core|user_docs|knowledge)$/),
         score: expect.any(Number),
       }),
     )

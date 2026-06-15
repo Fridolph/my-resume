@@ -8,7 +8,7 @@ describe('rag.types', () => {
   })
 
   it('should map legacy knowledge source to user_docs retrieval source', () => {
-    expect(mapLegacySourceTypeToRetrievalSourceType('knowledge')).toBe('user_docs')
+    expect(mapLegacySourceTypeToRetrievalSourceType('knowledge')).toBe('knowledge')
   })
 
   it('should keep retrieval source type stable when source is already normalized', () => {

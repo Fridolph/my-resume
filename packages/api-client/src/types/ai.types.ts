@@ -886,7 +886,7 @@ export interface ResetRagUserDocsResult {
 /**
  * RAG 检索统一来源类型。
  */
-export type RagRetrievalSourceType = 'resume_core' | 'user_docs'
+export type RagRetrievalSourceType = 'resume_core' | 'user_docs' | 'knowledge'
 
 /**
  * RAG 逻辑知识域，用于多域路由和检索过滤。
