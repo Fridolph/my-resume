@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest'
 import {
   buildLocalRagSearchContext,
   calculateKeywordScore,
-  cosineSimilarity,
 } from '../rag-search-context-builder'
+import { cosineSimilarity } from '../utils/math'
 import { RagIndexedChunk } from '../rag.types'
 
 describe('rag search context builder', () => {

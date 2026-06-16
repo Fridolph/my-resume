@@ -22,8 +22,8 @@ import {
 import {
   buildLocalRagSearchContext,
   calculateKeywordScore,
-  cosineSimilarity,
 } from './rag-search-context-builder'
+import { cosineSimilarity } from './utils/math'
 import { applyRagSearchRerank, detectRagSearchQuestionStrategy, rerankRagSearchMatches } from './rag-search-rerank'
 import { DEFAULT_RAG_SEARCH_RERANK_CONFIG } from './config/rag-search-rerank.config'
 import {

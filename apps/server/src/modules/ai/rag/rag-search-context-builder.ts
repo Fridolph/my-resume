@@ -1,4 +1,5 @@
 import { RagIndexedChunk, RagSearchMatch } from './rag.types'
+import { cosineSimilarity } from './utils/math'
 
 function buildSearchTokens(text: string): string[] {
   const normalized = text.trim().toLowerCase()
@@ -41,35 +42,6 @@ export function calculateKeywordScore(query: string, content: string): number {
   return hitCount / queryTokens.length
 }
 
-/**
- * 计算两个向量的余弦相似度。
- *
- * @param vectorA 向量 A
- * @param vectorB 向量 B
- * @returns 余弦相似度
- */
-export function cosineSimilarity(vectorA: number[], vectorB: number[]): number {
-  if (vectorA.length === 0 || vectorB.length === 0) {
-    return 0
-  }
-
-  const length = Math.min(vectorA.length, vectorB.length)
-  let dot = 0
-  let magnitudeA = 0
-  let magnitudeB = 0
-
-  for (let index = 0; index < length; index += 1) {
-    dot += vectorA[index] * vectorB[index]
-    magnitudeA += vectorA[index] * vectorA[index]
-    magnitudeB += vectorB[index] * vectorB[index]
-  }
-
-  if (magnitudeA === 0 || magnitudeB === 0) {
-    return 0
-  }
-
-  return dot / (Math.sqrt(magnitudeA) * Math.sqrt(magnitudeB))
-}
 
 /**
  * 基于本地索引构建检索上下文（仅评分 + 排序，不负责重排和截断）。

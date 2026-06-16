@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'fs'
 
 import { mapLegacySourceTypeToRetrievalSourceType } from '../../rag.types'
 import type { RagRetrievalSourceType } from '../../rag.types'
+import { cosineSimilarity } from '../../utils/math'
 import type { RagSnapshotRuntimeConfig } from '../config'
 import type {
   RagVectorChunkPayload,
@@ -11,28 +12,6 @@ import type {
   RagVectorStore,
 } from '../types'
 
-function cosineSimilarity(vectorA: number[], vectorB: number[]): number {
-  if (vectorA.length === 0 || vectorB.length === 0) {
-    return 0
-  }
-
-  const length = Math.min(vectorA.length, vectorB.length)
-  let dot = 0
-  let magnitudeA = 0
-  let magnitudeB = 0
-
-  for (let index = 0; index < length; index += 1) {
-    dot += vectorA[index] * vectorB[index]
-    magnitudeA += vectorA[index] * vectorA[index]
-    magnitudeB += vectorB[index] * vectorB[index]
-  }
-
-  if (magnitudeA === 0 || magnitudeB === 0) {
-    return 0
-  }
-
-  return dot / (Math.sqrt(magnitudeA) * Math.sqrt(magnitudeB))
-}
 
 export class JsonSnapshotRagVectorStoreAdapter implements RagVectorStore {
   readonly backend = 'snapshot' as const
