@@ -282,8 +282,8 @@ export function ChatGovernanceShell() {
       </Card>
 
       <AdminDrawerShell dialogClassName="!p-0 w-full max-w-2xl" isOpen={Boolean(sessionDetailId)} onClose={() => setSessionDetailId(null)}>
-        <Drawer.Header className="p-0!">
-          <Drawer.Heading className="border-b">会话详情</Drawer.Heading>
+        <Drawer.Header className="pt-1! border-b">
+          <Drawer.Heading className="p-3 pb-3">会话详情</Drawer.Heading>
           <Drawer.CloseTrigger className="" aria-label="关闭会话详情" />
         </Drawer.Header>
         <Drawer.Body>
