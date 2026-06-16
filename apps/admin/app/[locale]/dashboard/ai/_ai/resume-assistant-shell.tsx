@@ -8,6 +8,7 @@
  */
 
 import { Card, CardContent } from '@heroui/react'
+import { AssistantChatPanel } from './assistant-chat-panel'
 
 export function ResumeAssistantShell() {
   return (
@@ -25,9 +26,7 @@ export function ResumeAssistantShell() {
         {/* 左侧：对话面板 */}
         <Card className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white/80 shadow-sm dark:border-white/10 dark:bg-white/5">
           <CardContent className="flex flex-1 flex-col overflow-hidden p-0">
-            <div className="flex flex-1 items-center justify-center text-sm text-zinc-400">
-              💬 对话面板（待接入）
-            </div>
+            <AssistantChatPanel />
           </CardContent>
         </Card>
 
