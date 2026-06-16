@@ -30,6 +30,8 @@ import {
   RAG_VECTOR_STORE_CONFIG,
 } from './rag/vector-store/tokens'
 import { UserDocsIngestionService } from './rag/user-docs-ingestion.service'
+import { ResumeAssistantController } from './resume-assistant/resume-assistant.controller'
+import { ResumeAssistantService } from './resume-assistant/resume-assistant.service'
 import { AiFileController } from './transport/controllers/ai-file.controller'
 import { AiReportController } from './transport/controllers/ai-report.controller'
 import { AiResumeImportController } from './transport/controllers/ai-resume-import.controller'
@@ -88,6 +90,7 @@ import { AiResumeImportController } from './transport/controllers/ai-resume-impo
     RagRetrievalRepository,
     UserDocsIngestionService,
     RagService,
+    ResumeAssistantService,
   ],
   exports: [
     AiService,
