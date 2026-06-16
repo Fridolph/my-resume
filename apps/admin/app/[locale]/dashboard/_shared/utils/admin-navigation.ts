@@ -45,6 +45,14 @@ export function getAdminNavigationItems(locale: AppLocale): AdminNavigationItem[
     eyebrow: messages.optimizationHistoryEyebrow,
   },
   {
+    key: 'resumeAssistant',
+    href: '/dashboard/ai/resume-assistant',
+    title: messages.resumeAssistantTitle,
+    description: messages.resumeAssistantDescription,
+    shortLabel: messages.resumeAssistantShortLabel,
+    eyebrow: messages.resumeAssistantEyebrow,
+  },
+  {
     key: 'publish',
     href: '/dashboard/publish',
     title: messages.publishTitle,

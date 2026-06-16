@@ -19,6 +19,10 @@
   "publishDescription": "集中处理角色动作、发布链路和导出下载入口。",
   "publishShortLabel": "发布",
   "publishEyebrow": "交付动作",
+  "resumeAssistantTitle": "简历助手",
+  "resumeAssistantDescription": "通过 AI 对话逐步完善简历各版块，拼图式反馈完整度。",
+  "resumeAssistantShortLabel": "助手",
+  "resumeAssistantEyebrow": "智能分析",
   "menuButton": "菜单",
   "dashboardBreadcrumb": "后台"
 }

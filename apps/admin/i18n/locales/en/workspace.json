@@ -19,6 +19,10 @@
   "publishDescription": "Centralize role actions, publishing flow and export entry points.",
   "publishShortLabel": "Publish",
   "publishEyebrow": "Delivery",
+  "resumeAssistantTitle": "Resume Assistant",
+  "resumeAssistantDescription": "Gradually complete resume sections through AI conversation with puzzle feedback.",
+  "resumeAssistantShortLabel": "Assistant",
+  "resumeAssistantEyebrow": "Intelligence",
   "menuButton": "Menu",
   "dashboardBreadcrumb": "Admin"
 }
