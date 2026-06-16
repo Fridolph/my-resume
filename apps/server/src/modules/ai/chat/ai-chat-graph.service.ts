@@ -610,7 +610,17 @@ function hasResumeSignals(question: string): boolean {
 }
 
 function hasSupplementSignals(question: string): boolean {
-  return /博客|文章|写作|创作|兴趣|爱好|职业规划|作品集|媒体|播客|周易|dao|blog|article|writing|hobby|interest|media/.test(
+  return /博客|文章|写作|创作|兴趣|爱好|特长|擅长|专长|职业规划|作品集|媒体|播客|周易|dao|blog|article|writing|hobby|interest|media/.test(
+    question.toLowerCase(),
+  )
+}
+
+/**
+ * 检测「工作外」语境——用户明确想了解 resume 之外的内容。
+ * 匹配：工作外/工作之外/工作以外/工作之余/业余/闲暇/主业外
+ */
+function hasWorkOutsideNegation(question: string): boolean {
+  return /工作外|工作之外|工作以外|工作之余|业余|闲暇|主业外/.test(
     question.toLowerCase(),
   )
 }
@@ -729,8 +739,11 @@ export class AiChatGraphService {
     const catalogDomains = buildCatalogDomainHints(catalogProbeHits)
     const primaryCatalogHit = selectPrimaryCatalogProbeHit(catalogProbeHits)
     const mergedDomains = mergeKnowledgeDomains(explicitDomains, catalogDomains)
-    const resumeSignals = hasResumeSignals(input.question)
-    const supplementSignals = hasSupplementSignals(input.question) || catalogProbeHits.length > 0
+    const workOutsideNegation = hasWorkOutsideNegation(input.question)
+    // 工作外语境下抑制简历匹配，避免「工作外特长」被误路由到 resume_only
+    const resumeSignals = hasResumeSignals(input.question) && !workOutsideNegation
+    const supplementSignals =
+      hasSupplementSignals(input.question) || catalogProbeHits.length > 0 || workOutsideNegation
     const hybridSignals = hasHybridSignals(input.question) || (resumeSignals && supplementSignals)
 
     if (hybridSignals) {
@@ -757,8 +770,8 @@ export class AiChatGraphService {
         intent: 'rag',
         routeKind: 'supplement_only',
         knowledgeDomains: mergedDomains,
-        sourceTypes: ['user_docs'],
-        preferSourceTypes: ['user_docs'],
+        sourceTypes: ['user_docs', 'knowledge'],
+        preferSourceTypes: ['user_docs', 'knowledge'],
         documentIds:
           primaryCatalogHit && primaryCatalogHit.score >= 1
             ? [primaryCatalogHit.documentId]

@@ -88,8 +88,8 @@ describe('AiChatGraphService', () => {
       'zh',
       expect.objectContaining({
         knowledgeDomains: ['hobbies'],
-        sourceTypes: ['user_docs'],
-        preferSourceTypes: ['user_docs'],
+        sourceTypes: ['user_docs', 'knowledge'],
+        preferSourceTypes: ['user_docs', 'knowledge'],
       }),
       expect.objectContaining({
         minAcceptedCitationScore: 0.1,
@@ -384,8 +384,8 @@ describe('AiChatGraphService', () => {
       'zh',
       expect.objectContaining({
         knowledgeDomains: ['writing_media'],
-        sourceTypes: ['user_docs'],
-        preferSourceTypes: ['user_docs'],
+        sourceTypes: ['user_docs', 'knowledge'],
+        preferSourceTypes: ['user_docs', 'knowledge'],
       }),
       expect.objectContaining({
         minAcceptedCitationScore: 0.1,
@@ -519,8 +519,8 @@ describe('AiChatGraphService', () => {
       'zh',
       expect.objectContaining({
         knowledgeDomains: ['writing_media'],
-        sourceTypes: ['user_docs'],
-        preferSourceTypes: ['user_docs'],
+        sourceTypes: ['user_docs', 'knowledge'],
+        preferSourceTypes: ['user_docs', 'knowledge'],
         documentIds: ['user-doc:dao'],
       }),
       expect.objectContaining({
@@ -580,7 +580,7 @@ describe('AiChatGraphService', () => {
         event: 'ai-chat.graph.retrieval_completed',
         routeKind: 'supplement_only',
         knowledgeDomains: ['hobbies'],
-        sourceTypes: ['user_docs'],
+        sourceTypes: ['user_docs', 'knowledge'],
         matchCount: 0,
         citationCount: 1,
         fallbackReason: null,
@@ -793,8 +793,8 @@ describe('AiChatGraphService', () => {
       'zh',
       expect.objectContaining({
         knowledgeDomains: ['writing_media'],
-        sourceTypes: ['user_docs'],
-        preferSourceTypes: ['user_docs'],
+        sourceTypes: ['user_docs', 'knowledge'],
+        preferSourceTypes: ['user_docs', 'knowledge'],
         documentIds: ['user-doc:dao'],
       }),
       expect.objectContaining({

@@ -57,7 +57,7 @@ export const sessionDropdownItemLabelClass =
   'text-[0.68rem] font-medium tracking-[0.04em] text-zinc-500 dark:text-zinc-400'
 export const sessionDropdownItemValueClass = 'text-[0.98rem] font-semibold text-zinc-950 dark:text-white'
 export const sessionDropdownLogoutButtonClass =
-  'inline-flex h-8 w-full items-center justify-center rounded-full px-3 !text-[12px] leading-none font-semibold text-white dark:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-500/15'
+  'inline-flex h-8 w-full items-center justify-center rounded-full px-3 leading-none text-sm! text-white! dark:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-500/15'
 export const mobileDrawerBackdropClass =
   'fixed inset-0 z-40 bg-zinc-950/35 backdrop-blur-[1px] transition-opacity duration-200'
 export const mobileDrawerContentClass = 'fixed inset-y-0 left-0 z-50 w-[min(88vw,22rem)] md:hidden'
