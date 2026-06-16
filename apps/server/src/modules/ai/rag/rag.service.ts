@@ -229,6 +229,22 @@ function doesMatchRequestedDocumentIds(
   return typeof documentId === 'string' && documentIds.includes(documentId)
 }
 
+/**
+ * 组合过滤器：知识域 + sourceType + documentId 三项同时生效。
+ */
+function doesMatchAllRagFilters(
+  item: RagSearchMatch,
+  knowledgeDomains: RagKnowledgeDomain[] | undefined,
+  sourceTypes: readonly RagRetrievalSourceType[] | undefined,
+  documentIds: readonly string[] | undefined,
+): boolean {
+  return (
+    doesRagChunkMatchKnowledgeDomains(item, knowledgeDomains) &&
+    doesMatchRequestedSourceTypes(item.sourceType, sourceTypes) &&
+    doesMatchRequestedDocumentIds(item.documentId, documentIds)
+  )
+}
+
 function sortMatchesByRequestedSourcePriority(
   matches: RagSearchMatch[],
   preferredSourceTypes: readonly RagRetrievalSourceType[] | undefined,
@@ -643,23 +659,17 @@ export class RagService {
     const staticKnowledgeMatches = localMatches.filter(
       (item) =>
         item.sourceCollection === 'knowledge' &&
-        doesRagChunkMatchKnowledgeDomains(item, knowledgeDomains) &&
-        doesMatchRequestedSourceTypes(item.sourceType, sourceTypes) &&
-        doesMatchRequestedDocumentIds(item.documentId, documentIds),
+        doesMatchAllRagFilters(item, knowledgeDomains, sourceTypes, documentIds),
     )
     // 文件索引的 resume section 是基本信息表格，无语义价值，排除
     const fileResumeChunks = localMatches.filter(
       (item) =>
         item.sourceCollection === 'resume' &&
         item.section !== 'resume' &&
-        doesRagChunkMatchKnowledgeDomains(item, knowledgeDomains) &&
-        doesMatchRequestedSourceTypes(item.sourceType, sourceTypes) &&
-        doesMatchRequestedDocumentIds(item.documentId, documentIds),
+        doesMatchAllRagFilters(item, knowledgeDomains, sourceTypes, documentIds),
     )
     const databaseFilteredMatches = databaseMatches.matches.filter((item) =>
-      doesRagChunkMatchKnowledgeDomains(item, knowledgeDomains) &&
-      doesMatchRequestedSourceTypes(item.sourceType, sourceTypes) &&
-      doesMatchRequestedDocumentIds(item.documentId, documentIds),
+      doesMatchAllRagFilters(item, knowledgeDomains, sourceTypes, documentIds),
     )
     const merged = sortMatchesByRequestedSourcePriority(
       [...fileResumeChunks, ...databaseFilteredMatches, ...staticKnowledgeMatches],
@@ -799,9 +809,9 @@ export class RagService {
 
       return matches
         .map((item) => this.mapVectorMatchToSearchMatch(item))
-        .filter((item) => doesRagChunkMatchKnowledgeDomains(item, knowledgeDomains))
-        .filter((item) => doesMatchRequestedSourceTypes(item.sourceType, sourceTypes))
-        .filter((item) => doesMatchRequestedDocumentIds(item.documentId, documentIds))
+        .filter((item) =>
+          doesMatchAllRagFilters(item, knowledgeDomains, sourceTypes, documentIds),
+        )
     } catch (error) {
       this.markVectorStoreUnavailable(error, routingConfig)
 
