@@ -6,11 +6,11 @@
 
 import { Button } from '@heroui/react'
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
-import { useResumeAssistantChat } from './use-resume-assistant-chat'
+import { useResumeAssistant } from './resume-assistant-context'
 import type { AssistantMessage } from './use-resume-assistant-chat'
 
 export function AssistantChatPanel() {
-  const { messages, isStreaming, error, sendMessage, cancelStreaming } = useResumeAssistantChat()
+  const { messages, isStreaming, error, sendMessage, cancelStreaming } = useResumeAssistant()
   const [input, setInput] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
 
