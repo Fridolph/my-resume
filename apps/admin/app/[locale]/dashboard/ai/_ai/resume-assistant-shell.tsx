@@ -1,3 +1,5 @@
+'use client'
+
 import { Card, CardContent } from '@heroui/react'
 import { useCallback, useState } from 'react'
 import { AssistantChatPanel } from './assistant-chat-panel'
