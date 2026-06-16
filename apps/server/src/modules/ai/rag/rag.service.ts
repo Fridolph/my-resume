@@ -919,7 +919,10 @@ export class RagService {
     // 问题策略重排 + 最低分过滤 + 取前 5
     const strategy = detectRagSearchQuestionStrategy(question)
     const reranked = rerankRagSearchMatches(filteredMatches, question, strategy, DEFAULT_RAG_SEARCH_RERANK_CONFIG)
-    const aboveThreshold = reranked.filter((item) => item.rerankScore >= 0.1)
+    const aboveThreshold = reranked.filter(
+      (item) =>
+        item.rerankScore >= DEFAULT_RAG_SEARCH_RERANK_CONFIG.thresholds.askMinRerankScore,
+    )
     const candidateMatches = aboveThreshold.length > 0
       ? aboveThreshold.slice(0, 5).map((item) => item.match)
       : filteredMatches.slice(0, 5)
