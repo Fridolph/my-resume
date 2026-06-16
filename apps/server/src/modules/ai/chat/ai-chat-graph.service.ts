@@ -846,7 +846,9 @@ export class AiChatGraphService {
         onToken: input.onToken,
       },
     )
-    const hasSupplementCitation = ragResult.citations.some((item) => item.sourceType === 'user_docs')
+    const hasSupplementCitation = ragResult.citations.some(
+      (item) => item.sourceType === 'user_docs' || item.sourceType === 'knowledge',
+    )
     const topCitationScore = ragResult.citations[0]?.score ?? 0
     const fallbackReason = route.routeKind === 'resume_only'
       ? (ragResult.citations.length === 0
@@ -911,7 +913,7 @@ export class AiChatGraphService {
       retrieval.ragResult.answer,
     )
     const hasSupplementCitation = displayCitations.some(
-      (item) => item.sourceType === 'user_docs',
+      (item) => item.sourceType === 'user_docs' || item.sourceType === 'knowledge',
     )
 
     if (route.skipModelOnMiss && !hasSupplementCitation) {
