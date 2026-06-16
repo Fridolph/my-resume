@@ -566,10 +566,10 @@ function resolveKnowledgeDomains(question: string): RagKnowledgeDomain[] | undef
   const lower = question.toLowerCase()
   const domains = new Set<RagKnowledgeDomain>()
 
-  if (/项目|作品|案例|project|case|portfolio|agent|rag|ai/.test(lower)) domains.add('projects')
-  if (/工作|经历|公司|团队|管理|经验|experience|company|team|lead/.test(lower)) domains.add('experience')
-  if (/技能|技术栈|会什么|擅长|优势|亮点|skill|tech|stack|strength/.test(lower)) domains.add('skills')
-  if (/兴趣|爱好|特长|音乐|羽毛球|hobby|music|badminton/.test(lower)) domains.add('hobbies')
+  if (/项目|作品|案例|project|case|portfolio|agent|rag|ai|实战|落地|主导/.test(lower)) domains.add('projects')
+  if (/工作|经历|公司|团队|管理|经验|负责过|参与|experience|company|team|lead/.test(lower)) domains.add('experience')
+  if (/技能|技术栈|会什么|擅长|优势|亮点|掌握|熟悉|skill|tech|stack|strength/.test(lower)) domains.add('skills')
+  if (/兴趣|爱好|特长|音乐|羽毛球|休闲|娱乐|喜欢|玩|hobby|music|badminton/.test(lower)) domains.add('hobbies')
   if (/文章|博客|创作|写作|学习|职业规划|规划|媒体|周易|dao|blog|article|writing|media|career/.test(lower)) domains.add('writing_media')
 
   return domains.size > 0 ? [...domains] : undefined
