@@ -620,7 +620,7 @@ function hasSupplementSignals(question: string): boolean {
  * 匹配：工作外/工作之外/工作以外/工作之余/业余/闲暇/主业外
  */
 function hasWorkOutsideNegation(question: string): boolean {
-  return /工作外|工作之外|工作以外|工作之余|业余|闲暇|主业外/.test(
+  return /工作外|工作之外|工作以外|工作之余|业余|闲暇|主业外|平时|平常/.test(
     question.toLowerCase(),
   )
 }
