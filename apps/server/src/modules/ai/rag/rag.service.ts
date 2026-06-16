@@ -24,7 +24,10 @@ import {
   calculateKeywordScore,
 } from './rag-search-context-builder'
 import { cosineSimilarity } from './utils/math'
-import { applyRagSearchRerank, detectRagSearchQuestionStrategy, rerankRagSearchMatches } from './rag-search-rerank'
+import {
+  applyRagSearchRerank,
+  applyRagSearchRerankAndSelect,
+} from './rag-search-rerank'
 import { DEFAULT_RAG_SEARCH_RERANK_CONFIG } from './config/rag-search-rerank.config'
 import {
   doesRagChunkMatchKnowledgeDomains,
@@ -916,17 +919,20 @@ export class RagService {
     const matches = await this.search(question, limit, this.defaultSearchQualityGate, routingOverride)
     const filteredMatches = filterMatchesForAskByLocale(matches, locale)
 
-    // 问题策略重排 + 最低分过滤 + 取前 5
-    const strategy = detectRagSearchQuestionStrategy(question)
-    const reranked = rerankRagSearchMatches(filteredMatches, question, strategy, DEFAULT_RAG_SEARCH_RERANK_CONFIG)
-    const aboveThreshold = reranked.filter(
-      (item) =>
-        item.rerankScore >= DEFAULT_RAG_SEARCH_RERANK_CONFIG.thresholds.askMinRerankScore,
+    // 完整重排管线：策略检测 → rerank → 去噪 → primary/support/reserve 分层选择 → top 6
+    // 若完整管线无结果则回退到简单阈值过滤（保持低分场景兼容）
+    const selected = applyRagSearchRerankAndSelect(
+      filteredMatches,
+      question,
+      6,
+      undefined,
+      DEFAULT_RAG_SEARCH_RERANK_CONFIG,
     )
-    const candidateMatches = aboveThreshold.length > 0
-      ? aboveThreshold.slice(0, 5).map((item) => item.match)
-      : filteredMatches.slice(0, 5)
-    const topMatches = dedupeMatchesForAsk(candidateMatches)
+    const topMatches = dedupeMatchesForAsk(
+      selected.length > 0
+        ? selected
+        : filteredMatches.slice(0, 6),
+    )
 
     const citations = buildRagAskCitations(topMatches)
     const providerSummary = this.aiService.getProviderSummary()
