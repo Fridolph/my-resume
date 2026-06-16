@@ -12,7 +12,7 @@ import { useResumeAssistant } from './resume-assistant-context'
 import type { AssistantMessage } from './use-resume-assistant-chat'
 
 export function AssistantChatPanel() {
-  const { messages, isStreaming, error, sendMessage, cancelStreaming } = useResumeAssistant()
+  const { messages, isStreaming, error, sendMessage, cancelStreaming, clearMessages } = useResumeAssistant()
   const [input, setInput] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
 
@@ -32,6 +32,24 @@ export function AssistantChatPanel() {
 
   return (
     <div className="flex h-full flex-col bg-zinc-50/80 dark:bg-zinc-950/60">
+      {/* 顶部工具栏 */}
+      {messages.length > 0 && (
+        <div className="flex items-center justify-between border-b border-zinc-200/80 px-4 py-2 dark:border-zinc-800">
+          <span className="text-xs text-zinc-400">
+            {messages.length} 条消息
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onPress={clearMessages}
+            isDisabled={isStreaming}
+          >
+            清空对话
+          </Button>
+        </div>
+      )}
+
       {/* 消息列表 */}
       <div className="flex-1 space-y-3 overflow-auto p-4">
         {messages.length === 0 && (

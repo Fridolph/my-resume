@@ -18,6 +18,7 @@ export interface ResumeAssistantState {
   error: string | null
   sendMessage: (content: string) => Promise<void>
   cancelStreaming: () => void
+  clearMessages: () => void
 }
 
 const Context = createContext<ResumeAssistantState | null>(null)

@@ -130,5 +130,10 @@ export function useResumeAssistantChat() {
     abortRef.current?.abort()
   }, [])
 
-  return { messages, isStreaming, completeness, error, sendMessage, cancelStreaming }
+  const clearMessages = useCallback(() => {
+    setMessages([])
+    setError(null)
+  }, [])
+
+  return { messages, isStreaming, completeness, error, sendMessage, cancelStreaming, clearMessages }
 }

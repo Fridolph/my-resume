@@ -9,7 +9,7 @@ import type { Request, Response } from 'express'
 import { ResumeAssistantService } from './resume-assistant.service'
 
 @ApiTags('AI Resume Assistant')
-@Controller('api/ai/resume-assistant')
+@Controller('ai/resume-assistant')
 export class ResumeAssistantController {
   constructor(private readonly service: ResumeAssistantService) {}
 
