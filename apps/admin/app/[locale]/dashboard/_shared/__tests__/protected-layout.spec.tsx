@@ -208,6 +208,7 @@ describe('AdminProtectedLayout', () => {
     expect(await screen.findByText('退出登录')).toHaveClass(
       'button--danger',
       '!text-[12px]',
+      'text-white',
     )
     expect(screen.getAllByRole('link', { name: '概览' })[0]).toHaveClass(
       'bg-blue-50',

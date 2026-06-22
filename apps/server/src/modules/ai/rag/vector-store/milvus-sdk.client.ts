@@ -3,6 +3,7 @@ import {
   ErrorCode,
   MilvusClient,
 } from '@zilliz/milvus2-sdk-node'
+import { Socket } from 'node:net'
 
 import { RagMilvusRuntimeConfig } from './config'
 import {
@@ -10,6 +11,7 @@ import {
   RagVectorSearchInput,
   RagVectorSearchMatch,
 } from './types'
+import type { RagRetrievalSourceType } from '../rag.types'
 
 const CHUNK_ID_FIELD = 'chunk_id'
 const DOCUMENT_ID_FIELD = 'document_id'
@@ -41,6 +43,7 @@ export class MilvusVectorStoreUnavailableError extends Error {
 export interface MilvusVectorStoreClient {
   upsertChunks(chunks: RagVectorChunkPayload[]): Promise<void>
   deleteChunksByDocument(documentId: string): Promise<void>
+  listDocumentIds(sourceType?: RagRetrievalSourceType): Promise<string[]>
   search(input: RagVectorSearchInput): Promise<RagVectorSearchMatch[]>
 }
 
@@ -57,6 +60,25 @@ function buildFilter(input: RagVectorSearchInput): string | undefined {
 
   if (input.sourceScope) {
     clauses.push(`${SOURCE_SCOPE_FIELD} == "${escapeMilvusStringLiteral(input.sourceScope)}"`)
+  }
+
+  if (input.documentIds?.length) {
+    const normalizedIds = Array.from(new Set(input.documentIds.filter(Boolean)))
+
+    if (normalizedIds.length === 1) {
+      clauses.push(
+        `${DOCUMENT_ID_FIELD} == "${escapeMilvusStringLiteral(normalizedIds[0] ?? '')}"`,
+      )
+    } else if (normalizedIds.length > 1) {
+      clauses.push(
+        `(${normalizedIds
+          .map(
+            (documentId) =>
+              `${DOCUMENT_ID_FIELD} == "${escapeMilvusStringLiteral(documentId)}"`,
+          )
+          .join(' || ')})`,
+      )
+    }
   }
 
   return clauses.length > 0 ? clauses.join(' && ') : undefined
@@ -134,6 +156,60 @@ function normalizeMilvusClientError(
   )
 }
 
+function resolveMilvusSocketTarget(address: string): { host: string; port: number } {
+  try {
+    const normalizedAddress = address.includes('://') ? address : `http://${address}`
+    const url = new URL(normalizedAddress)
+    const port = Number(url.port || 19530)
+
+    return {
+      host: url.hostname || '127.0.0.1',
+      port: Number.isInteger(port) && port > 0 ? port : 19530,
+    }
+  } catch {
+    const [hostPart, portPart] = address.split(':')
+    const port = Number(portPart || 19530)
+
+    return {
+      host: hostPart || '127.0.0.1',
+      port: Number.isInteger(port) && port > 0 ? port : 19530,
+    }
+  }
+}
+
+async function verifyMilvusSocketReachable(address: string): Promise<void> {
+  const target = resolveMilvusSocketTarget(address)
+
+  await new Promise<void>((resolve, reject) => {
+    const socket = new Socket()
+    let settled = false
+
+    function finish(error?: Error) {
+      if (settled) return
+      settled = true
+      socket.removeAllListeners()
+      socket.destroy()
+
+      if (error) {
+        reject(error)
+        return
+      }
+
+      resolve()
+    }
+
+    socket.setTimeout(300)
+    socket.once('connect', () => finish())
+    socket.once('timeout', () => {
+      finish(new Error(`connect ETIMEDOUT ${target.host}:${target.port}`))
+    })
+    socket.once('error', (error) => {
+      finish(error instanceof Error ? error : new Error(String(error)))
+    })
+    socket.connect(target.port, target.host)
+  })
+}
+
 /**
  * 基于官方 Milvus SDK 的最小 client 实现。
  */
@@ -184,6 +260,34 @@ export class MilvusSdkVectorStoreClient implements MilvusVectorStoreClient {
       })
 
       assertMilvusSuccess(response, 'delete')
+    })
+  }
+
+  async listDocumentIds(sourceType?: RagRetrievalSourceType): Promise<string[]> {
+    return this.runSafely('query', async () => {
+      await this.ensureCollectionReady()
+      const response = await this.client.query({
+        collection_name: this.config.collection,
+        filter: sourceType
+          ? `${SOURCE_TYPE_FIELD} == "${escapeMilvusStringLiteral(sourceType)}"`
+          : undefined,
+        output_fields: [DOCUMENT_ID_FIELD],
+        limit: 10000,
+      })
+
+      assertMilvusSuccess(response, 'query')
+
+      const rows = Array.isArray((response as { data?: unknown }).data)
+        ? ((response as { data?: Record<string, unknown>[] }).data ?? [])
+        : []
+
+      return Array.from(
+        new Set(
+          rows
+            .map((row) => row[DOCUMENT_ID_FIELD])
+            .filter((value): value is string => typeof value === 'string' && value.length > 0),
+        ),
+      )
     })
   }
 
@@ -328,6 +432,7 @@ export class MilvusSdkVectorStoreClient implements MilvusVectorStoreClient {
 
   private async runSafely<T>(action: string, runner: () => Promise<T>): Promise<T> {
     try {
+      await verifyMilvusSocketReachable(this.config.address)
       return await runner()
     } catch (error) {
       this.collectionReady = false

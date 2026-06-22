@@ -25,4 +25,15 @@ describe('createRagVectorStore', () => {
 
     expect(store.backend).toBe('milvus')
   })
+
+  it('should create snapshot adapter', () => {
+    const store = createRagVectorStore({
+      backend: 'snapshot',
+      snapshot: {
+        path: '/tmp/rag-vector-snapshot.json',
+      },
+    })
+
+    expect(store.backend).toBe('snapshot')
+  })
 })

@@ -1,3 +1,4 @@
+import { JsonSnapshotRagVectorStoreAdapter } from './adapters/json-snapshot.adapter'
 import { LocalRagVectorStoreAdapter } from './adapters/local.adapter'
 import { MilvusRagVectorStoreAdapter } from './adapters/milvus.adapter'
 import { RagVectorStoreRuntimeConfig } from './config'
@@ -15,6 +16,10 @@ export function createRagVectorStore(
 
   if (config.backend === 'milvus') {
     return new MilvusRagVectorStoreAdapter(config.milvus)
+  }
+
+  if (config.backend === 'snapshot') {
+    return new JsonSnapshotRagVectorStoreAdapter(config.snapshot)
   }
 
   throw new Error(`Unsupported vector store backend: ${(config as { backend: string }).backend}`)

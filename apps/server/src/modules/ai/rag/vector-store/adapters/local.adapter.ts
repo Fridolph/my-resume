@@ -4,6 +4,7 @@ import {
   RagVectorStore,
   RagVectorChunkPayload,
 } from '../types'
+import type { RagRetrievalSourceType } from '../../rag.types'
 
 /**
  * local 向量存储适配器（占位实现）。
@@ -18,6 +19,10 @@ export class LocalRagVectorStoreAdapter implements RagVectorStore {
   async upsertChunks(_chunks: RagVectorChunkPayload[]): Promise<void> {}
 
   async deleteChunksByDocument(_documentId: string): Promise<void> {}
+
+  async listDocumentIds(_sourceType?: RagRetrievalSourceType): Promise<string[]> {
+    return []
+  }
 
   async search(_input: RagVectorSearchInput): Promise<RagVectorSearchMatch[]> {
     return []

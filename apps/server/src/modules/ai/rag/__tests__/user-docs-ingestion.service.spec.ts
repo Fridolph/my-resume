@@ -17,6 +17,7 @@ function createHarness() {
 
   const aiService = {
     embedTexts: vi.fn(),
+    generateText: vi.fn(),
   } as unknown as AiService
 
   const ragRetrievalRepository = {
@@ -24,12 +25,19 @@ function createHarness() {
     upsertDocument: vi.fn(),
     replaceChunksForDocument: vi.fn(),
     updateIndexRunStatus: vi.fn(),
+    listAllDocuments: vi.fn().mockResolvedValue([]),
+    listAllChunksWithDocuments: vi.fn().mockResolvedValue([]),
+    listChunksByDocumentId: vi.fn().mockResolvedValue([]),
+    findDocumentById: vi.fn(),
+    updateDocumentById: vi.fn(),
+    deleteDocument: vi.fn(),
   } as unknown as RagRetrievalRepository
 
   const ragVectorStore = {
     backend: 'local',
     upsertChunks: vi.fn(),
     deleteChunksByDocument: vi.fn(),
+    listDocumentIds: vi.fn().mockResolvedValue([]),
     search: vi.fn(),
   } as unknown as RagVectorStore
 
@@ -124,6 +132,10 @@ describe('UserDocsIngestionService', () => {
         fileName: 'rag-notes.md',
         fileType: 'md',
         mimeType: 'text/markdown',
+        knowledgeDomain: 'writing_media',
+        contentType: 'general',
+        sourceCollection: 'user_docs',
+        renderHint: 'article_card',
         chunkingProfile: 'balanced',
         chunkSize: 500,
         chunkOverlap: 50,
@@ -143,6 +155,10 @@ describe('UserDocsIngestionService', () => {
       metadataJson: {
         sourceType: 'user_docs',
         fileName: 'rag-notes.md',
+        knowledgeDomain: 'writing_media',
+        contentType: 'general',
+        sourceCollection: 'user_docs',
+        renderHint: 'article_card',
         chunkingProfile: 'balanced',
         chunkSize: 500,
         chunkOverlap: 50,
@@ -160,6 +176,10 @@ describe('UserDocsIngestionService', () => {
       metadataJson: {
         fileName: 'rag-notes.md',
         sourceType: 'user_docs',
+        knowledgeDomain: 'writing_media',
+        contentType: 'general',
+        sourceCollection: 'user_docs',
+        renderHint: 'article_card',
         chunkingProfile: 'balanced',
         chunkSize: 500,
         chunkOverlap: 50,
@@ -233,6 +253,7 @@ describe('UserDocsIngestionService', () => {
       chunkingProfile: 'balanced',
       chunkSize: 80,
       chunkOverlap: 10,
+      contentType: 'hobby',
     })
 
     expect(result.chunkingProfile).toBe('balanced')
@@ -246,6 +267,10 @@ describe('UserDocsIngestionService', () => {
         chunkingProfile: 'balanced',
         chunkSize: 80,
         chunkOverlap: 10,
+        knowledgeDomain: 'hobbies',
+        contentType: 'hobby',
+        sourceCollection: 'user_docs',
+        renderHint: 'hobby_card',
       },
     })
     expect(vi.mocked(ragVectorStore.upsertChunks).mock.calls[0]?.[0][0]).toMatchObject({
@@ -253,6 +278,10 @@ describe('UserDocsIngestionService', () => {
         chunkingProfile: 'balanced',
         chunkSize: 80,
         chunkOverlap: 10,
+        knowledgeDomain: 'hobbies',
+        contentType: 'hobby',
+        sourceCollection: 'user_docs',
+        renderHint: 'hobby_card',
       },
     })
   })
@@ -296,6 +325,348 @@ describe('UserDocsIngestionService', () => {
       status: 'succeeded',
       errorMessage: null,
     })
+  })
+
+  it('should persist custom rich card metadata for user docs cards', async () => {
+    const { service, aiService, ragRetrievalRepository, ragVectorStore } = createHarness()
+
+    vi.mocked(aiService.embedTexts).mockResolvedValue({
+      provider: 'mock',
+      model: 'mock-resume-advisor-embedding',
+      embeddings: [[0.1, 0.2]],
+      raw: null,
+    })
+    vi.mocked(aiService.generateText).mockResolvedValue({
+      provider: 'mock',
+      model: 'mock-chat',
+      text: '羽毛球和音乐共同构成工作之外的节奏调节。',
+      raw: null,
+    })
+
+    const result = await service.ingestCustom({
+      title: '羽毛球与音乐',
+      content: '羽毛球训练反应速度，音乐用于调节工作节奏。',
+      contentType: 'hobby',
+      linkUrls: ['https://example.com/hobbies', 'https://example.com/badminton'],
+      imageUrls: ['https://example.com/hobby.png', 'https://example.com/music.png'],
+      sourceScope: 'published',
+    })
+
+    expect(result.sourceScope).toBe('published')
+    expect(vi.mocked(ragRetrievalRepository.upsertDocument)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: '羽毛球与音乐',
+        metadataJson: expect.objectContaining({
+          contentType: 'hobby',
+          knowledgeDomain: 'hobbies',
+          renderHint: 'hobby_card',
+          rawLinkUrls: ['https://example.com/hobbies', 'https://example.com/badminton'],
+          rawImageUrls: ['https://example.com/hobby.png', 'https://example.com/music.png'],
+          articleSummary: '羽毛球和音乐共同构成工作之外的节奏调节。',
+          richCard: expect.objectContaining({
+            title: '羽毛球与音乐',
+            description: '羽毛球和音乐共同构成工作之外的节奏调节。',
+            summary: '羽毛球和音乐共同构成工作之外的节奏调节。',
+            url: 'https://example.com/hobbies',
+            urls: ['https://example.com/hobbies', 'https://example.com/badminton'],
+            imageUrl: 'https://example.com/hobby.png',
+            imageUrls: ['https://example.com/hobby.png', 'https://example.com/music.png'],
+            keywords: [],
+          }),
+        }),
+      }),
+    )
+    expect(
+      vi.mocked(ragRetrievalRepository.replaceChunksForDocument).mock.calls[0]?.[1][0],
+    ).toMatchObject({
+      metadataJson: {
+        articleSummary: '羽毛球和音乐共同构成工作之外的节奏调节。',
+        richCard: expect.objectContaining({
+          title: '羽毛球与音乐',
+          summary: '羽毛球和音乐共同构成工作之外的节奏调节。',
+          url: 'https://example.com/hobbies',
+          imageUrl: 'https://example.com/hobby.png',
+        }),
+      },
+    })
+    expect(vi.mocked(ragVectorStore.deleteChunksByDocument)).toHaveBeenCalledWith(result.documentId)
+    expect(vi.mocked(ragVectorStore.upsertChunks)).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(ragVectorStore.upsertChunks).mock.calls[0]?.[0][0]).toMatchObject({
+      documentId: result.documentId,
+      metadataJson: {
+        richCard: {
+          title: '羽毛球与音乐',
+          summary: '羽毛球和音乐共同构成工作之外的节奏调节。',
+          url: 'https://example.com/hobbies',
+          imageUrl: 'https://example.com/hobby.png',
+        },
+      },
+    })
+    expect(vi.mocked(aiService.generateText)).toHaveBeenCalledTimes(1)
+  })
+
+  it('should return editable document detail for custom user docs', async () => {
+    const { service, ragRetrievalRepository } = createHarness()
+
+    vi.mocked(ragRetrievalRepository.findDocumentById).mockResolvedValue({
+      id: 'user-doc:dao:und',
+      title: 'Dao 核心原理',
+      sourceType: 'user_docs',
+      sourceScope: 'published',
+      sourceId: 'dao',
+      sourceVersion: 'upload:1',
+      locale: 'und',
+      contentHash: 'hash',
+      metadataJson: {
+        ingestMode: 'custom',
+        contentType: 'tech_blog',
+        rawContent: '# Dao\n\n核心原理摘要',
+        rawLinkUrl: 'https://example.com/dao',
+        rawLinkUrls: ['https://example.com/dao', 'https://example.com/dao-source'],
+        rawImageUrls: ['https://example.com/dao.png'],
+        articleSummary: '从 Dao 的视角理解系统、约束与协作关系。',
+        richCard: {
+          title: 'Dao 核心原理',
+          summary: '从 Dao 的视角理解系统、约束与协作关系。',
+          url: 'https://example.com/dao',
+        },
+      },
+      createdAt: new Date('2026-06-12T08:00:00.000Z'),
+      updatedAt: new Date('2026-06-12T08:30:00.000Z'),
+    } as never)
+    vi.mocked(ragRetrievalRepository.listChunksByDocumentId).mockResolvedValue([
+      {
+        chunkId: 'user-doc:dao:und:chunk:1',
+        documentId: 'user-doc:dao:und',
+        chunkIndex: 0,
+        section: 'user_docs',
+        content: '# Dao\n\n核心原理摘要',
+        embeddingJson: [0.1, 0.2],
+        metadataJson: {},
+        documentMetadataJson: {},
+        documentSourceType: 'user_docs',
+        documentSourceScope: 'published',
+        documentTitle: 'Dao 核心原理',
+        documentSourceVersion: 'upload:1',
+      },
+    ] as never)
+
+    const detail = await service.getDocumentDetail('user-doc:dao:und')
+
+    expect(detail).toMatchObject({
+      id: 'user-doc:dao:und',
+      title: 'Dao 核心原理',
+      contentType: 'tech_blog',
+      content: '# Dao\n\n核心原理摘要',
+      linkUrl: 'https://example.com/dao',
+      linkUrls: ['https://example.com/dao', 'https://example.com/dao-source'],
+      imageUrls: ['https://example.com/dao.png'],
+      summary: '从 Dao 的视角理解系统、约束与协作关系。',
+      editable: true,
+      chunkCount: 1,
+    })
+  })
+
+  it('should update custom document in place and resync chunks/vectors', async () => {
+    const { service, aiService, ragRetrievalRepository, ragVectorStore } = createHarness()
+
+    vi.mocked(ragRetrievalRepository.findDocumentById).mockResolvedValue({
+      id: 'user-doc:dao:und',
+      title: 'Dao 核心原理',
+      sourceType: 'user_docs',
+      sourceScope: 'published',
+      sourceId: 'dao',
+      sourceVersion: 'upload:1',
+      locale: 'und',
+      contentHash: 'hash',
+      metadataJson: {
+        ingestMode: 'custom',
+        contentType: 'tech_blog',
+        chunkingProfile: 'balanced',
+        chunkSize: 500,
+        chunkOverlap: 50,
+        uploadedAt: '2026-06-12T08:00:00.000Z',
+        rawContent: '# Dao\n\n旧内容',
+        rawLinkUrl: 'https://example.com/old',
+        articleSummary: '旧版本概览',
+        richCard: {
+          title: 'Dao 核心原理',
+          summary: '旧版本概览',
+          url: 'https://example.com/old',
+        },
+      },
+      createdAt: new Date('2026-06-12T08:00:00.000Z'),
+      updatedAt: new Date('2026-06-12T08:30:00.000Z'),
+    } as never)
+    vi.mocked(ragRetrievalRepository.listChunksByDocumentId).mockResolvedValue([
+      {
+        chunkId: 'user-doc:dao:und:chunk:1',
+        documentId: 'user-doc:dao:und',
+        chunkIndex: 0,
+        section: 'user_docs',
+        content: '# Dao\n\n旧内容',
+        embeddingJson: [0.1, 0.2],
+        metadataJson: {},
+        documentMetadataJson: {},
+        documentSourceType: 'user_docs',
+        documentSourceScope: 'published',
+        documentTitle: 'Dao 核心原理',
+        documentSourceVersion: 'upload:1',
+      },
+    ] as never)
+    vi.mocked(aiService.embedTexts).mockResolvedValue({
+      provider: 'mock',
+      model: 'mock-resume-advisor-embedding',
+      embeddings: [[0.1, 0.2]],
+      raw: null,
+    })
+
+    const result = await service.updateCustom('user-doc:dao:und', {
+      title: 'Dao 核心原理 v2',
+      content: '# Dao\n\n更新后的内容',
+      contentType: 'tech_blog',
+      sourceScope: 'published',
+      linkUrls: ['https://example.com/new', 'https://example.com/new-2'],
+      imageUrls: ['https://example.com/new.png'],
+      summary: '更新后的 Dao 文章概览',
+    })
+
+    expect(vi.mocked(ragRetrievalRepository.updateDocumentById)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'user-doc:dao:und',
+        title: 'Dao 核心原理 v2',
+        sourceScope: 'published',
+        metadataJson: expect.objectContaining({
+          ingestMode: 'custom',
+          rawContent: '# Dao\n\n更新后的内容',
+          rawLinkUrl: 'https://example.com/new',
+          rawLinkUrls: ['https://example.com/new', 'https://example.com/new-2'],
+          rawImageUrls: ['https://example.com/new.png'],
+          articleSummary: '更新后的 Dao 文章概览',
+          richCard: expect.objectContaining({
+            summary: '更新后的 Dao 文章概览',
+          }),
+        }),
+      }),
+    )
+    expect(vi.mocked(ragRetrievalRepository.replaceChunksForDocument)).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(ragVectorStore.deleteChunksByDocument)).toHaveBeenCalledWith('user-doc:dao:und')
+    expect(vi.mocked(ragVectorStore.upsertChunks)).toHaveBeenCalledTimes(1)
+    expect(result).toMatchObject({
+      updated: true,
+      documentId: 'user-doc:dao:und',
+      vectorStoreSynced: true,
+    })
+  })
+
+  it('should reject updating non-custom user docs', async () => {
+    const { service, ragRetrievalRepository, ragVectorStore } = createHarness()
+
+    vi.mocked(ragRetrievalRepository.findDocumentById).mockResolvedValue({
+      id: 'user-doc:file:und',
+      title: '上传文件',
+      sourceType: 'user_docs',
+      sourceScope: 'published',
+      sourceId: 'file',
+      sourceVersion: 'upload:1',
+      locale: 'und',
+      contentHash: 'hash',
+      metadataJson: {
+        fileName: 'upload.md',
+        fileType: 'md',
+      },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as never)
+
+    await expect(
+      service.updateCustom('user-doc:file:und', {
+        content: '新内容',
+      }),
+    ).rejects.toThrow('Only custom user_docs can be edited')
+    expect(vi.mocked(ragRetrievalRepository.updateDocumentById)).not.toHaveBeenCalled()
+    expect(vi.mocked(ragVectorStore.upsertChunks)).not.toHaveBeenCalled()
+  })
+
+  it('should stop document deletion when vector cleanup fails', async () => {
+    const { service, ragRetrievalRepository, ragVectorStore } = createHarness()
+
+    vi.mocked(ragVectorStore.deleteChunksByDocument).mockRejectedValue(
+      new Error('Milvus delete failed'),
+    )
+
+    await expect(service.deleteDocument('user-doc:dao')).rejects.toThrow('Milvus delete failed')
+    expect(vi.mocked(ragRetrievalRepository.deleteDocument)).not.toHaveBeenCalled()
+  })
+
+  it('should reconcile user_docs vectors from database truth source', async () => {
+    const { service, ragRetrievalRepository, ragVectorStore } = createHarness()
+
+    vi.mocked(ragVectorStore.listDocumentIds).mockResolvedValue([
+      'user-doc:dao',
+      'user-doc:orphan',
+    ])
+    vi.mocked(ragRetrievalRepository.listAllDocuments).mockResolvedValue([
+      {
+        id: 'user-doc:dao',
+        title: '《Dao》核心原理',
+        sourceType: 'user_docs',
+        sourceScope: 'published',
+        sourceVersion: 'upload:1',
+        locale: 'und',
+        metadataJson: { contentType: 'tech_blog' },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        previewContent: '只有标题和短描述',
+      },
+    ] as never)
+    vi.mocked(ragRetrievalRepository.listAllChunksWithDocuments).mockResolvedValue([
+      {
+        chunkId: 'user-doc-chunk:dao:1',
+        documentId: 'user-doc:dao',
+        chunkIndex: 0,
+        section: 'user_docs',
+        content: '只有标题和短描述',
+        embeddingJson: [0.1, 0.2],
+        metadataJson: { fileName: 'dao.md', contentType: 'tech_blog' },
+        documentMetadataJson: { contentType: 'tech_blog' },
+        documentSourceType: 'user_docs',
+        documentSourceScope: 'published',
+        documentTitle: '《Dao》核心原理',
+        documentSourceVersion: 'upload:1',
+      },
+    ] as never)
+
+    const result = await service.reconcileUserDocsVectors()
+
+    expect(vi.mocked(ragVectorStore.deleteChunksByDocument)).toHaveBeenCalledWith('user-doc:orphan')
+    expect(vi.mocked(ragVectorStore.deleteChunksByDocument)).toHaveBeenCalledWith('user-doc:dao')
+    expect(vi.mocked(ragVectorStore.upsertChunks)).toHaveBeenCalledWith([
+      expect.objectContaining({
+        documentId: 'user-doc:dao',
+        sourceScope: 'published',
+        sourceVersion: 'upload:1',
+      }),
+    ])
+    expect(result).toEqual({
+      backend: 'local',
+      dbDocumentCount: 1,
+      vectorDocumentCountBefore: 2,
+      deletedOrphans: ['user-doc:orphan'],
+      reindexedDocuments: ['user-doc:dao'],
+      warnings: ['local backend does not persist user_docs vectors; reconcile completed as a no-op.'],
+    })
+  })
+
+  it('should reject reconcile when vector backend is snapshot', async () => {
+    const { service, ragVectorStore } = createHarness()
+
+    ;(ragVectorStore as { backend: string }).backend = 'snapshot'
+
+    await expect(service.reconcileUserDocsVectors()).rejects.toThrow(
+      'user_docs vector reconcile is not supported when backend=snapshot',
+    )
+    expect(vi.mocked(ragVectorStore.listDocumentIds)).not.toHaveBeenCalled()
   })
 
   it('should mark run failed when embedding throws', async () => {

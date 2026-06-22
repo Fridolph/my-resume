@@ -745,7 +745,7 @@ export type RagUserDocIngestScope = 'draft' | 'published'
  * `balanced` 用于默认教学闭环，`contextual` 用于保留更长上下文的检索实验。
  */
 export type RagUserDocChunkingProfile = 'balanced' | 'contextual' | 'semantic'
-export type RagUserDocContentType = 'article' | 'hobby' | 'media' | 'general'
+export type RagUserDocContentType = 'hobby' | 'tech_blog' | 'knowledge_column' | 'general'
 
 /**
  * RAG user_docs 入库参数。
@@ -765,7 +765,7 @@ export interface IngestRagUserDocInput {
   chunkSize?: number
   /** 自定义重叠字符数，范围 0-300，且必须小于 chunkSize。 */
   chunkOverlap?: number
-  /** 内容类型：article=文章，hobby=兴趣爱好，media=媒体/视频，general=通用 */
+  /** 内容类型：hobby=兴趣爱好，tech_blog=技术博客，knowledge_column=知识专栏，general=其他通用 */
   contentType?: RagUserDocContentType
   /** 资料标题（优先于文件名） */
   title?: string
@@ -805,10 +805,99 @@ export interface RagUserDocIngestResult {
   vectorStoreWarning: string | null
 }
 
+export interface RagDocument {
+  id: string
+  title: string
+  sourceType?: RagRetrievalSourceType | string
+  sourceScope?: RagUserDocIngestScope
+  locale?: string
+  contentType?: RagUserDocContentType | string
+  summary?: string
+  chunkCount?: number
+  preview?: string | null
+  editable?: boolean
+  createdAt: string
+  updatedAt?: string
+}
+
+export interface RagDocumentDetail extends RagDocument {
+  sourceType: RagRetrievalSourceType | string
+  sourceScope: RagUserDocIngestScope
+  locale: string
+  content: string
+  linkUrl?: string
+  linkUrls?: string[]
+  imageUrls?: string[]
+  summary?: string
+  editable: boolean
+  updatedAt: string
+}
+
+export interface FetchRagDocumentDetailInput extends RuntimeInput {
+  documentId: string
+}
+
+export interface UpdateRagCustomDocumentInput extends RuntimeInput {
+  documentId: string
+  title?: string
+  content?: string
+  contentType?: RagUserDocContentType
+  scope?: RagUserDocIngestScope
+  linkUrl?: string
+  linkUrls?: string[]
+  imageUrls?: string[]
+  summary?: string
+}
+
+export interface UpdateRagCustomDocumentResult {
+  updated: true
+  documentId: string
+  chunkCount: number
+  vectorStoreBackend: 'local' | 'milvus' | 'snapshot'
+  vectorStoreSynced: boolean
+  vectorStoreWarning: string | null
+}
+
+export interface ExportRagUserDocsResult {
+  exportedAt: string
+  documentCount: number
+  documents: Array<{
+    id: string
+    title: string
+    sourceScope: RagUserDocIngestScope
+    contentType?: RagUserDocContentType
+    summary?: string
+    linkUrl?: string
+    linkUrls?: string[]
+    imageUrls?: string[]
+    content: string
+    createdAt: string
+    updatedAt: string
+  }>
+}
+
+export interface ResetRagUserDocsResult {
+  resetAt: string
+  deletedDocumentIds: string[]
+  deletedVectorDocumentIds: string[]
+  backend: 'local' | 'milvus' | 'snapshot'
+}
+
 /**
  * RAG 检索统一来源类型。
  */
-export type RagRetrievalSourceType = 'resume_core' | 'user_docs'
+export type RagRetrievalSourceType = 'resume_core' | 'user_docs' | 'knowledge'
+
+/**
+ * RAG 逻辑知识域，用于多域路由和检索过滤。
+ */
+export type RagKnowledgeDomain =
+  | 'resume_core'
+  | 'projects'
+  | 'experience'
+  | 'skills'
+  | 'hobbies'
+  | 'writing_media'
 
 /**
  * RAG 检索命中片段。
@@ -816,6 +905,8 @@ export type RagRetrievalSourceType = 'resume_core' | 'user_docs'
 export interface RagSearchMatch {
   /** 命中 chunk ID。 */
   id: string
+  /** 所属文档 ID，用于单文档过滤与追踪。 */
+  documentId?: string
   /** 命中来源标题。 */
   title: string
   /** 命中来源分区。 */
@@ -828,6 +919,14 @@ export interface RagSearchMatch {
   sourceType?: 'resume' | 'knowledge' | RagRetrievalSourceType
   /** 来源路径或文件名。 */
   sourcePath?: string
+  /** 逻辑知识域。 */
+  knowledgeDomain?: RagKnowledgeDomain
+  /** 内容类型。 */
+  contentType?: string
+  /** 前端建议渲染形态。 */
+  renderHint?: string
+  /** 面向富展示卡片的补充 metadata。 */
+  richCard?: RagRichCardMetadata
 }
 
 /**
@@ -838,6 +937,8 @@ export interface RagAskCitation {
   ref: string
   /** 命中 chunk ID。 */
   id: string
+  /** 所属文档 ID。 */
+  documentId?: string
   /** 来源标题。 */
   title: string
   /** 来源分区。 */
@@ -852,6 +953,35 @@ export interface RagAskCitation {
   snippet: string
   /** 来源标签列表（如 ["简历","核心竞争力"]）。 */
   tags?: string[]
+  /** 内容类型（article/hobby/media/general），用于前端渲染不同卡片。 */
+  contentType?: string
+  /** 逻辑知识域。 */
+  knowledgeDomain?: RagKnowledgeDomain
+  /** 前端建议渲染形态。 */
+  renderHint?: string
+  /** 面向 Chat Card 的富展示补充字段。 */
+  richCard?: RagRichCardMetadata
+}
+
+export interface RagRichCardMedia {
+  type: 'image' | 'video' | 'link'
+  url: string
+  title?: string
+  thumbnailUrl?: string
+}
+
+export interface RagRichCardMetadata {
+  title?: string
+  description?: string
+  summary?: string
+  url?: string
+  urls?: string[]
+  imageUrl?: string
+  imageUrls?: string[]
+  thumbnailUrl?: string
+  publishedAt?: string
+  keywords?: string[]
+  media?: RagRichCardMedia[]
 }
 
 /**
@@ -874,6 +1004,8 @@ export interface AskRagInput {
   vectorScope?: 'draft' | 'published' | 'all'
   /** 向量检索为空或异常时是否回退本地检索。 */
   vectorFallbackToLocal?: boolean
+  /** 目标知识域；服务端会自动补 resume_core 作为基础事实兜底。 */
+  knowledgeDomains?: RagKnowledgeDomain[]
 }
 
 /**
@@ -979,6 +1111,8 @@ export interface AiChatProjectCardBlock {
   summary: string
   technologies: string[]
   highlights: string[]
+  url?: string
+  imageUrl?: string
 }
 
 export interface AiChatExperienceCardBlock {
@@ -1005,12 +1139,23 @@ export interface AiChatSummaryBlock {
   keywords: string[]
 }
 
+export interface AiChatCardMediaPreview {
+  type: 'image' | 'video' | 'link'
+  url: string
+  title?: string
+  thumbnailUrl?: string
+}
+
 export interface AiChatArticleCardBlock {
   type: 'article_card'
   title: string
   summary: string
+  category?: 'tech_blog' | 'knowledge_column' | 'general'
   url?: string
+  imageUrl?: string
+  publishedAt?: string
   keywords: string[]
+  media?: AiChatCardMediaPreview[]
 }
 
 export interface AiChatMediaCardBlock {
@@ -1018,6 +1163,7 @@ export interface AiChatMediaCardBlock {
   title: string
   description: string
   url: string
+  imageUrl?: string
   thumbnailUrl?: string
 }
 
@@ -1025,8 +1171,11 @@ export interface AiChatHobbyCardBlock {
   type: 'hobby_card'
   title: string
   description: string
+  category?: 'hobby'
   url?: string
+  imageUrl?: string
   keywords: string[]
+  media?: AiChatCardMediaPreview[]
 }
 
 export type AiChatMessageBlock =
@@ -1063,8 +1212,11 @@ export interface AiChatSession {
   lead: AiChatLeadSummary
   locale: AiChatLocale
   status: AiChatSessionStatus
+  quotaDate: string
+  maxDailyTurns: number
   turnCount: number
   remainingTurns: number
+  totalUserTurns: number
   useKeyStatus: AiChatUseKeyStatus
   messages: AiChatMessage[]
   interimSummary: AiChatSummarySnapshot | null

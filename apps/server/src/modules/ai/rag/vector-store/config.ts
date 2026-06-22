@@ -12,6 +12,10 @@ export interface RagMilvusRuntimeConfig {
   token?: string
 }
 
+export interface RagSnapshotRuntimeConfig {
+  path: string
+}
+
 /**
  * 向量存储运行时配置。
  */
@@ -22,6 +26,10 @@ export type RagVectorStoreRuntimeConfig =
   | {
       backend: 'milvus'
       milvus: RagMilvusRuntimeConfig
+    }
+  | {
+      backend: 'snapshot'
+      snapshot: RagSnapshotRuntimeConfig
     }
 
 function readOptionalValue(env: EnvironmentVariables, key: string): string | undefined {
@@ -86,6 +94,19 @@ export function resolveRagVectorStoreRuntimeConfig(
         vectorDimension: readPositiveInteger(env, 'RAG_MILVUS_VECTOR_DIMENSION', 1536),
         token: readOptionalValue(env, 'RAG_MILVUS_TOKEN'),
       },
+    }
+  }
+
+  if (backend === 'snapshot') {
+    const path = readOptionalValue(env, 'RAG_VECTOR_SNAPSHOT_PATH')
+
+    if (!path) {
+      throw new Error('RAG_VECTOR_SNAPSHOT_PATH is required when RAG_VECTOR_STORE_BACKEND=snapshot')
+    }
+
+    return {
+      backend: 'snapshot',
+      snapshot: { path },
     }
   }
 

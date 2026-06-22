@@ -36,8 +36,10 @@ import type {
   CloseAiChatSessionInput,
   DeleteAiUsageRecordInput,
   DeleteAiUsageRecordResult,
+  ExportRagUserDocsResult,
   ExtractTextFromFileInput,
   FetchAiChatSessionInput,
+  FetchRagDocumentDetailInput,
   FetchAiResumeImportJobInput,
   FetchAiResumeImportResultInput,
   FetchAiResumeOptimizationResultInput,
@@ -45,7 +47,9 @@ import type {
   FetchAiUsageRecordDetailInput,
   FileExtractionResult,
   IngestRagUserDocInput,
+  RagDocumentDetail,
   RagAskCitation,
+  ResetRagUserDocsResult,
   RagAskResult,
   RagUserDocIngestResult,
   ResumeOptimizationInput,
@@ -55,10 +59,15 @@ import type {
   StreamAiResumeImportJobHandlers,
   StreamAiResumeImportJobInput,
   TriggerAiWorkbenchAnalysisResult,
+  UpdateRagCustomDocumentInput,
+  UpdateRagCustomDocumentResult,
 } from './types/ai.types'
 
 export type {
   AiChatExperienceCardBlock,
+  AiChatArticleCardBlock,
+  AiChatCardMediaPreview,
+  AiChatHobbyCardBlock,
   AiChatIssueUseKeyInput,
   AiChatLeadInput,
   AiChatLeadStatus,
@@ -69,6 +78,7 @@ export type {
   AiChatMessageBlockType,
   AiChatMessageRole,
   AiChatProjectCardBlock,
+  AiChatMediaCardBlock,
   AiChatPublicSessionClaimResult,
   AiChatRevokeUseKeyInput,
   AiChatSession,
@@ -146,13 +156,23 @@ export type {
   FetchAiUsageRecordDetailInput,
   FileExtractionResult,
   IngestRagUserDocInput,
+  FetchRagDocumentDetailInput,
   RagAskCitation,
   RagAskResult,
+  ExportRagUserDocsResult,
+  RagDocument,
+  RagDocumentDetail,
+  RagKnowledgeDomain,
+  RagRichCardMedia,
+  RagRichCardMetadata,
   RagRetrievalSourceType,
   RagSearchMatch,
   RagUserDocChunkingProfile,
   RagUserDocIngestResult,
   RagUserDocIngestScope,
+  ResetRagUserDocsResult,
+  UpdateRagCustomDocumentInput,
+  UpdateRagCustomDocumentResult,
   RecognizeAiResumeImportInput,
   ResumeOptimizationInput,
   RuntimeInput,
@@ -650,6 +670,58 @@ export function createIngestRagUserDocMethod(input: IngestRagUserDocInput) {
   })
 }
 
+export function createFetchRagDocumentDetailMethod(input: FetchRagDocumentDetailInput) {
+  return Alova.createMethod<RagDocumentDetail>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: `/ai/rag/documents/${input.documentId}`,
+    accessToken: input.accessToken,
+    fallbackErrorMessage: 'RAG 资料详情加载失败，请稍后重试',
+  })
+}
+
+export function createUpdateRagCustomDocumentMethod(input: UpdateRagCustomDocumentInput) {
+  return Alova.createMethod<UpdateRagCustomDocumentResult>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: `/ai/rag/custom/${input.documentId}`,
+    method: 'PUT',
+    accessToken: input.accessToken,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      title: input.title,
+      content: input.content,
+      contentType: input.contentType,
+      scope: input.scope,
+      linkUrl: input.linkUrl,
+      linkUrls: input.linkUrls,
+      imageUrls: input.imageUrls,
+      summary: input.summary,
+    }),
+    fallbackErrorMessage: 'RAG 自定义资料更新失败，请稍后重试',
+  })
+}
+
+export function createExportRagUserDocsMethod(input: RuntimeInput) {
+  return Alova.createMethod<ExportRagUserDocsResult>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: '/ai/rag/user-docs/export',
+    method: 'POST',
+    accessToken: input.accessToken,
+    fallbackErrorMessage: 'user_docs 备份导出失败，请稍后重试',
+  })
+}
+
+export function createResetRagUserDocsMethod(input: RuntimeInput) {
+  return Alova.createMethod<ResetRagUserDocsResult>({
+    apiBaseUrl: input.apiBaseUrl,
+    pathname: '/ai/rag/user-docs/reset',
+    method: 'POST',
+    accessToken: input.accessToken,
+    fallbackErrorMessage: 'user_docs 清空失败，请稍后重试',
+  })
+}
+
 /**
  * 构造 RAG 可解释问答 Method
  *
@@ -672,6 +744,7 @@ export function createAskRagMethod(input: AskRagInput) {
       useVectorStore: input.useVectorStore,
       vectorScope: input.vectorScope,
       vectorFallbackToLocal: input.vectorFallbackToLocal,
+      knowledgeDomains: input.knowledgeDomains,
     }),
     fallbackErrorMessage: 'RAG 问答失败，请稍后重试',
   })

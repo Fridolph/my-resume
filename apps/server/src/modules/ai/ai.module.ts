@@ -9,6 +9,7 @@ import { FileExtractionService } from './application/services/file-extraction.se
 import { ResumeImportRecognitionService } from './application/services/resume-import-recognition.service'
 import { ResumeOptimizationResultCacheService } from './application/services/resume-optimization-result-cache.service'
 import { AiChatBootstrapService } from './chat/ai-chat-bootstrap.service'
+import { AiChatGraphService } from './chat/ai-chat-graph.service'
 import { AiChatRepository } from './chat/ai-chat.repository'
 import { AiChatService } from './chat/ai-chat.service'
 import { AI_FETCH, AI_PROVIDER_INSTANCE, AI_RUNTIME_CONFIG } from './ai.tokens'
@@ -29,6 +30,8 @@ import {
   RAG_VECTOR_STORE_CONFIG,
 } from './rag/vector-store/tokens'
 import { UserDocsIngestionService } from './rag/user-docs-ingestion.service'
+import { ResumeAssistantController } from './resume-assistant/resume-assistant.controller'
+import { ResumeAssistantService } from './resume-assistant/resume-assistant.service'
 import { AiFileController } from './transport/controllers/ai-file.controller'
 import { AiReportController } from './transport/controllers/ai-report.controller'
 import { AiResumeImportController } from './transport/controllers/ai-resume-import.controller'
@@ -74,6 +77,7 @@ import { AiResumeImportController } from './transport/controllers/ai-resume-impo
     AiUsageRecordService,
     AiChatRepository,
     AiChatBootstrapService,
+    AiChatGraphService,
     AiChatService,
     AiResumeOptimizationService,
     AnalysisReportCacheService,
@@ -86,6 +90,7 @@ import { AiResumeImportController } from './transport/controllers/ai-resume-impo
     RagRetrievalRepository,
     UserDocsIngestionService,
     RagService,
+    ResumeAssistantService,
   ],
   exports: [
     AiService,

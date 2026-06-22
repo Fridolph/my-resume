@@ -21,6 +21,7 @@ import { RagService } from '../rag/rag.service'
 import type { RagAskCitation } from '../rag/rag.types'
 import { buildAiChatSummaryPrompt, AI_CHAT_SUMMARY_SYSTEM_PROMPT } from './prompts/ai-chat-summary.prompt'
 import { buildRagAskSystemPrompt } from '../rag/prompts/rag-ask.prompt'
+import { AiChatGraphService } from './ai-chat-graph.service'
 import { AiChatRepository } from './ai-chat.repository'
 import type {
   AiChatAnswerGenerationResult,
@@ -48,6 +49,8 @@ const DEFAULT_CHAT_LIMIT = 15
 const PUBLIC_CHAT_POLICY_VERSION = 'm23-public-ip-v1'
 const PUBLIC_CHAT_SOURCE_TAG = 'public-ip'
 const PUBLIC_CHAT_ISSUER = 'system-public-chat'
+type AiChatUseKeyRecord = Awaited<ReturnType<AiChatRepository['findLatestUseKeyByLeadId']>> | null
+type AiChatSessionBundle = NonNullable<Awaited<ReturnType<AiChatRepository['getSessionBundle']>>>
 const AI_CHAT_SUMMARY_SCHEMA = z.object({
   visitorFocus: z.string(),
   aiClosing: z.string(),
@@ -56,6 +59,40 @@ const AI_CHAT_SUMMARY_SCHEMA = z.object({
 
 function readLocalizedText(value: LocalizedText, locale: AiChatLocale): string {
   return (locale === 'en' ? value.en : value.zh || value.en || value.zh).trim()
+}
+
+function normalizeUserDocCardCategory(contentType: string | undefined): 'hobby' | 'tech_blog' | 'knowledge_column' | 'general' {
+  if (contentType === 'hobby') return 'hobby'
+  if (contentType === 'knowledge_column' || contentType === 'media') return 'knowledge_column'
+  if (contentType === 'general') return 'general'
+
+  return 'tech_blog'
+}
+
+function normalizeArticleCardCategory(contentType: string | undefined): 'tech_blog' | 'knowledge_column' | 'general' {
+  const category = normalizeUserDocCardCategory(contentType)
+
+  return category === 'hobby' ? 'tech_blog' : category
+}
+
+function resolveCustomCardSummary(citation: RagAskCitation): string {
+  return citation.richCard?.summary?.trim() || citation.richCard?.description?.trim() || citation.snippet
+}
+
+function buildCustomCardMedia(citation: RagAskCitation) {
+  const richCard = citation.richCard
+  const existingMedia = richCard?.media ?? []
+  const imageUrls = Array.isArray(richCard?.imageUrls) ? richCard.imageUrls : []
+  const imageMedia = imageUrls
+    .filter((url) => url && url !== richCard?.imageUrl)
+    .map((url, index) => ({
+      type: 'image' as const,
+      url,
+      thumbnailUrl: url,
+      title: `参考图片 ${index + 2}`,
+    }))
+
+  return [...existingMedia, ...imageMedia]
 }
 
 /**
@@ -168,6 +205,24 @@ function normalizeIpAddress(ipAddress: string) {
 function buildPublicLeadSourceKey(ipAddress: string) {
   const ipHash = createHash('sha256').update(ipAddress).digest('hex').slice(0, 16)
   return `${PUBLIC_CHAT_SOURCE_TAG}:${ipHash}`
+}
+
+function buildLocalDateKey(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function isSameLocalDate(left: Date, right: Date) {
+  return buildLocalDateKey(left) === buildLocalDateKey(right)
+}
+
+function isPublicChatBundle(bundle: AiChatSessionBundle) {
+  return (
+    bundle.lead.sourceTag === PUBLIC_CHAT_SOURCE_TAG ||
+    bundle.useKey.issuedByUserId === PUBLIC_CHAT_ISSUER
+  )
 }
 
 function chooseStructuredMethod(provider: { provider: string; model: string }) {
@@ -395,6 +450,8 @@ export class AiChatService {
     private readonly ragService: RagService,
     @Inject(ResumePublicationService)
     private readonly resumePublicationService: ResumePublicationService,
+    @Inject(AiChatGraphService)
+    private readonly aiChatGraphService: AiChatGraphService,
   ) {}
 
   async submitLead(input: AiChatLeadInput) {
@@ -560,35 +617,21 @@ export class AiChatService {
       throw new Error('Failed to create public AI chat lead')
     }
 
-    // 查找已有 useKey：如果 session 已关闭或轮次已用完，发新 key
-    const existingUseKey = await this.aiChatRepository.findLatestUseKeyByLeadId(lead.id)
+    // Public chat 是“同一 IP / 同一会话 / 每个自然日 20 轮”。
+    // useKey/session 跨天复用，具体每日额度由 snapshot/message 入口幂等 rollover。
+    const latestUseKey = await this.aiChatRepository.findLatestUseKeyByLeadId(lead.id)
+    let reusableUseKey: AiChatUseKeyRecord = null
 
-    if (existingUseKey) {
-      if (existingUseKey.status === 'revoked') {
-        await this.aiChatRepository.deleteUseKey(existingUseKey.useKey)
-      } else if (existingUseKey.sessionId) {
-        const bundle = await this.aiChatRepository.getSessionBundle(existingUseKey.sessionId)
-        if (bundle && (bundle.session.status === 'closed' || bundle.session.turnCount >= bundle.useKey.maxTurns)) {
-          // 会话已结束或轮次用尽：直接返回已有会话供用户回顾，
-          // 不再自动创建新 key（避免丢失历史记录）
-          const session = await this.getPublicSessionSnapshot(existingUseKey.sessionId, existingUseKey.useKey)
-          return {
-            consentRecordedAt: now.toISOString(),
-            policyVersion: PUBLIC_CHAT_POLICY_VERSION,
-            session,
-            turnsPerDay: MAX_CHAT_TURNS,
-            useKey: existingUseKey.useKey,
-          }
-        }
+    if (latestUseKey) {
+      if (latestUseKey.status === 'revoked') {
+        await this.aiChatRepository.deleteUseKey(latestUseKey.useKey)
+      } else if (latestUseKey.status !== 'expired') {
+        reusableUseKey = latestUseKey
       }
     }
 
-    const latestUseKey = await this.aiChatRepository.findLatestUseKeyByLeadId(lead.id)
-    const useKeyIsValid = latestUseKey && latestUseKey.status !== 'revoked' && latestUseKey.status !== 'expired'
-
-    const useKeyRecord = useKeyIsValid
-      ? latestUseKey!
-      : (await this.aiChatRepository.createUseKey({
+    const useKeyRecord = reusableUseKey ??
+      (await this.aiChatRepository.createUseKey({
           id: randomUUID(),
           useKey: buildUseKeyValue(),
           leadId: lead.id,
@@ -625,11 +668,13 @@ export class AiChatService {
   }
 
   async getPublicSessionSnapshot(sessionId: string, useKeyValue: string): Promise<AiChatSessionSnapshot> {
-    const bundle = await this.requireSessionBundle(sessionId)
+    let bundle = await this.requireSessionBundle(sessionId)
 
     if (bundle.useKey.useKey !== useKeyValue) {
       throw new ForbiddenException('当前会话与 useKey 不匹配')
     }
+
+    bundle = await this.ensurePublicDailyQuotaCurrent(bundle)
 
     return this.buildSessionSnapshot(bundle)
   }
@@ -667,7 +712,7 @@ export class AiChatService {
   }
 
   async adminClearMessages(sessionId: string) {
-    const bundle = await this.requireSessionBundle(sessionId)
+    await this.requireSessionBundle(sessionId)
     await this.aiChatRepository.deleteMessagesBySessionId(sessionId)
     return this.getAdminSessionSnapshot(sessionId)
   }
@@ -702,7 +747,7 @@ export class AiChatService {
     userMessage: AiChatMessageSnapshot
     assistantMessage: AiChatMessageSnapshot
   }> {
-    const bundle = await this.requireSessionBundle(input.sessionId)
+    let bundle = await this.requireSessionBundle(input.sessionId)
 
     if (bundle.useKey.useKey !== input.useKey) {
       throw new ForbiddenException('当前会话与 useKey 不匹配')
@@ -711,6 +756,8 @@ export class AiChatService {
     if (bundle.useKey.status === 'revoked' || bundle.useKey.status === 'expired') {
       throw new ForbiddenException('当前 useKey 不可继续使用')
     }
+
+    bundle = await this.ensurePublicDailyQuotaCurrent(bundle)
 
     if (bundle.session.status === 'closed' || bundle.session.turnCount >= bundle.useKey.maxTurns) {
       throw new BadRequestException('当前会话已结束，无法继续提问')
@@ -743,7 +790,7 @@ export class AiChatService {
       turnCount: nextTurnCount,
     })
 
-    const answerResult = await this.generateAnswer({
+    const answerResult = await this.generateAnswerWithGraph({
       locale,
       question: input.content.trim(),
       onToken: streamCallbacks?.onToken,
@@ -881,8 +928,38 @@ export class AiChatService {
     return bundle
   }
 
-  private async buildSessionSnapshot(bundle: Awaited<ReturnType<AiChatRepository['getSessionBundle']>> extends infer T ? NonNullable<T> : never): Promise<AiChatSessionSnapshot> {
+  private async ensurePublicDailyQuotaCurrent(
+    bundle: AiChatSessionBundle,
+  ): Promise<AiChatSessionBundle> {
+    const now = new Date()
+
+    if (
+      !isPublicChatBundle(bundle) ||
+      bundle.useKey.status === 'revoked' ||
+      bundle.useKey.status === 'expired' ||
+      isSameLocalDate(bundle.session.updatedAt, now)
+    ) {
+      return bundle
+    }
+
+    await this.aiChatRepository.resetSessionTurns({
+      sessionId: bundle.session.id,
+      useKeyId: bundle.useKey.id,
+      now,
+    })
+
+    const refreshedBundle = await this.aiChatRepository.getSessionBundle(bundle.session.id)
+
+    if (!refreshedBundle) {
+      throw new NotFoundException('AI chat session not found')
+    }
+
+    return refreshedBundle
+  }
+
+  private async buildSessionSnapshot(bundle: AiChatSessionBundle): Promise<AiChatSessionSnapshot> {
     const messages = await this.aiChatRepository.listMessagesBySessionId(bundle.session.id)
+    const totalUserTurns = messages.filter((item) => item.role === 'user').length
     const interimSummary = bundle.session.interimSummary
       ? {
           generatedAt: bundle.session.updatedAt.toISOString(),
@@ -905,8 +982,11 @@ export class AiChatService {
       lead: mapLead(bundle.lead),
       locale: bundle.session.locale as AiChatLocale,
       status: bundle.session.status as AiChatSessionSnapshot['status'],
+      quotaDate: buildLocalDateKey(new Date()),
+      maxDailyTurns: bundle.useKey.maxTurns,
       turnCount: bundle.session.turnCount,
       remainingTurns: Math.max(0, bundle.useKey.maxTurns - bundle.session.turnCount),
+      totalUserTurns,
       useKeyStatus: bundle.useKey.status as AiChatSessionSnapshot['useKeyStatus'],
       messages: messages.map((item) => this.mapMessage(item)),
       interimSummary,
@@ -938,6 +1018,26 @@ export class AiChatService {
         ? (record.citationsJson as RagAskCitation[])
         : [],
       createdAt: record.createdAt.toISOString(),
+    }
+  }
+
+  private async generateAnswerWithGraph(
+    input: {
+      locale: AiChatLocale
+      question: string
+      onToken?: (token: string) => void
+    },
+  ): Promise<AiChatAnswerGenerationResult> {
+    try {
+      return await this.aiChatGraphService.generateAnswer(input)
+    } catch (error) {
+      this.logger.warn({
+        event: 'ai-chat.graph.service_fallback',
+        message: error instanceof Error ? error.message : String(error),
+        question: input.question,
+      })
+
+      return this.generateAnswer(input)
     }
   }
 
@@ -1110,27 +1210,28 @@ export class AiChatService {
       if (!ct || seen.has(`${ct}:${citation.title}`)) continue
       seen.add(`${ct}:${citation.title}`)
 
-      if (ct === 'article') {
+      if (ct === 'article' || ct === 'tech_blog' || ct === 'knowledge_column' || ct === 'general' || ct === 'media') {
         blocks.push({
           type: 'article_card',
           title: citation.title,
-          summary: citation.snippet,
-          url: undefined,
-          keywords: citation.tags ?? [],
-        })
-      } else if (ct === 'media') {
-        blocks.push({
-          type: 'media_card',
-          title: citation.title,
-          description: citation.snippet,
-          url: citation.sourcePath ?? '',
+          summary: resolveCustomCardSummary(citation),
+          category: normalizeArticleCardCategory(ct),
+          url: citation.richCard?.url,
+          imageUrl: citation.richCard?.imageUrl,
+          publishedAt: citation.richCard?.publishedAt,
+          keywords: citation.richCard?.keywords ?? citation.tags ?? [],
+          media: buildCustomCardMedia(citation),
         })
       } else if (ct === 'hobby') {
         blocks.push({
           type: 'hobby_card',
           title: citation.title,
-          description: citation.snippet,
-          keywords: citation.tags ?? [],
+          description: resolveCustomCardSummary(citation),
+          category: 'hobby',
+          url: citation.richCard?.url,
+          imageUrl: citation.richCard?.imageUrl,
+          keywords: citation.richCard?.keywords ?? citation.tags ?? [],
+          media: buildCustomCardMedia(citation),
         })
       }
     }

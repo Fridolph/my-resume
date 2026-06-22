@@ -103,6 +103,8 @@ export interface AiChatProjectCardBlock {
   summary: string
   technologies: string[]
   highlights: string[]
+  url?: string
+  imageUrl?: string
 }
 
 export interface AiChatExperienceCardBlock {
@@ -129,12 +131,23 @@ export interface AiChatSummaryBlock {
   keywords: string[]
 }
 
+export interface AiChatCardMediaPreview {
+  type: 'image' | 'video' | 'link'
+  url: string
+  title?: string
+  thumbnailUrl?: string
+}
+
 export interface AiChatArticleCardBlock {
   type: 'article_card'
   title: string
   summary: string
+  category?: 'tech_blog' | 'knowledge_column' | 'general'
   url?: string
+  imageUrl?: string
+  publishedAt?: string
   keywords: string[]
+  media?: AiChatCardMediaPreview[]
 }
 
 export interface AiChatMediaCardBlock {
@@ -142,6 +155,7 @@ export interface AiChatMediaCardBlock {
   title: string
   description: string
   url: string
+  imageUrl?: string
   thumbnailUrl?: string
 }
 
@@ -149,8 +163,11 @@ export interface AiChatHobbyCardBlock {
   type: 'hobby_card'
   title: string
   description: string
+  category?: 'hobby'
   url?: string
+  imageUrl?: string
   keywords: string[]
+  media?: AiChatCardMediaPreview[]
 }
 
 export interface AiChatTextBlock {
@@ -183,8 +200,11 @@ export interface AiChatSessionSnapshot {
   lead: AiChatLeadSummary
   locale: AiChatLocale
   status: AiChatSessionStatus
+  quotaDate: string
+  maxDailyTurns: number
   turnCount: number
   remainingTurns: number
+  totalUserTurns: number
   useKeyStatus: AiChatUseKeyStatus
   messages: AiChatMessageSnapshot[]
   interimSummary: AiChatSummarySnapshot | null

@@ -77,12 +77,14 @@ function readStoredSession() {
   }
 }
 
-function writeStoredSession(value: {
-  consentDay: string | null
-  consentPolicyVersion: string | null
-  sessionId: string | null
-  useKey: string | null
-} | null) {
+function writeStoredSession(
+  value: {
+    consentDay: string | null
+    consentPolicyVersion: string | null
+    sessionId: string | null
+    useKey: string | null
+  } | null,
+) {
   if (typeof window === 'undefined') {
     return
   }
@@ -95,8 +97,8 @@ function writeStoredSession(value: {
   window.localStorage.setItem(AI_CHAT_STORAGE_KEY, JSON.stringify(value))
 }
 
-function hasConsentForToday(consentDay: string | null, policyVersion: string | null) {
-  return consentDay === buildTodayKey() && policyVersion === AI_CHAT_CONSENT_POLICY_VERSION
+function hasValidConsent(policyVersion: string | null) {
+  return policyVersion === AI_CHAT_CONSENT_POLICY_VERSION
 }
 
 function normalizeAiChatErrorMessage(
@@ -137,9 +139,12 @@ export function AiChatProvider({
   const [activeUseKey, setActiveUseKey] = useState<string | null>(null)
   const [session, setSession] = useState<AiChatContextValue['session']>(null)
   const [useKeyStatus, setUseKeyStatus] = useState<string | null>(null)
-  const [summaryPreview, setSummaryPreview] = useState<AiChatContextValue['summaryPreview']>(null)
-  const [draftAssistantMessage, setDraftAssistantMessage] = useState<AiChatDraftAssistantMessage | null>(null)
+  const [summaryPreview, setSummaryPreview] =
+    useState<AiChatContextValue['summaryPreview']>(null)
+  const [draftAssistantMessage, setDraftAssistantMessage] =
+    useState<AiChatDraftAssistantMessage | null>(null)
   const [consentDay, setConsentDay] = useState<string | null>(null)
+  const [consentPolicyVersion, setConsentPolicyVersion] = useState<string | null>(null)
   const [lastSubmittedMessage, setLastSubmittedMessage] = useState<string | null>(null)
   const [presentation, setPresentation] = useState<AiChatPresentation>(() =>
     buildDefaultPresentation(locale),
@@ -156,12 +161,12 @@ export function AiChatProvider({
 
   const refreshSession = useCallback(async () => {
     const stored = readStoredSession()
-    const storedHasConsent = hasConsentForToday(
-      stored?.consentDay ?? null,
-      stored?.consentPolicyVersion ?? null,
-    )
+    const storedHasConsent = hasValidConsent(stored?.consentPolicyVersion ?? null)
 
-    setConsentDay(storedHasConsent ? stored?.consentDay ?? null : null)
+    setConsentDay(storedHasConsent ? (stored?.consentDay ?? null) : null)
+    setConsentPolicyVersion(
+      storedHasConsent ? (stored?.consentPolicyVersion ?? null) : null,
+    )
     setDrawerState('closed')
 
     if (!storedHasConsent || !stored?.sessionId || !stored.useKey) {
@@ -238,12 +243,14 @@ export function AiChatProvider({
       setUseKeyStatus(result.session.useKeyStatus)
       setSummaryPreview(result.session.finalSummary ?? result.session.interimSummary)
       setConsentDay(buildTodayKey())
+      setConsentPolicyVersion(AI_CHAT_CONSENT_POLICY_VERSION)
     } catch (error) {
       setErrorMessage(normalizeAiChatErrorMessage(error, locale, 'session'))
       setDrawerState('closed')
       setSession(null)
       setUseKeyStatus(null)
       setActiveUseKey(null)
+      setConsentPolicyVersion(null)
     } finally {
       setIsBootstrappingSession(false)
     }
@@ -256,7 +263,7 @@ export function AiChatProvider({
       return
     }
 
-    if (!hasConsentForToday(consentDay, AI_CHAT_CONSENT_POLICY_VERSION)) {
+    if (!hasValidConsent(consentPolicyVersion)) {
       setIsConsentModalOpen(true)
       return
     }
@@ -290,10 +297,19 @@ export function AiChatProvider({
         setIsBootstrappingSession(false)
         void claimPublicSession()
       })
-  }, [apiBaseUrl, claimPublicSession, consentDay, isBootstrappingSession, session, activeUseKey])
+  }, [
+    apiBaseUrl,
+    claimPublicSession,
+    consentPolicyVersion,
+    isBootstrappingSession,
+    session,
+    activeUseKey,
+  ])
 
   useEffect(() => {
-    void refreshSession().catch(() => undefined).finally(() => setRestoreReady(true))
+    void refreshSession()
+      .catch(() => undefined)
+      .finally(() => setRestoreReady(true))
   }, [refreshSession])
 
   useEffect(() => {
@@ -301,9 +317,8 @@ export function AiChatProvider({
       return
     }
 
-    const nextConsentDay = hasConsentForToday(consentDay, AI_CHAT_CONSENT_POLICY_VERSION)
-      ? consentDay
-      : null
+    const hasConsent = hasValidConsent(consentPolicyVersion)
+    const nextConsentDay = hasConsent ? (consentDay ?? buildTodayKey()) : null
 
     if (!nextConsentDay && !session && drawerState === 'closed') {
       writeStoredSession(null)
@@ -312,11 +327,11 @@ export function AiChatProvider({
 
     writeStoredSession({
       consentDay: nextConsentDay,
-      consentPolicyVersion: nextConsentDay ? AI_CHAT_CONSENT_POLICY_VERSION : null,
+      consentPolicyVersion: hasConsent ? AI_CHAT_CONSENT_POLICY_VERSION : null,
       sessionId: session?.sessionId ?? null,
       useKey: activeUseKey,
     })
-  }, [activeUseKey, consentDay, restoreReady, session])
+  }, [activeUseKey, consentDay, consentPolicyVersion, restoreReady, session])
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -440,7 +455,9 @@ export function AiChatProvider({
               setDraftAssistantMessage(null)
               setSession(payload.session)
               setUseKeyStatus(payload.session.useKeyStatus)
-              setSummaryPreview(payload.session.finalSummary ?? payload.session.interimSummary)
+              setSummaryPreview(
+                payload.session.finalSummary ?? payload.session.interimSummary,
+              )
             },
             onError: (payload) => {
               setDraftAssistantMessage(null)
@@ -530,7 +547,7 @@ export function AiChatProvider({
       draftAssistantMessage,
       drawerState,
       errorMessage,
-      hasConsentForToday: hasConsentForToday(consentDay, AI_CHAT_CONSENT_POLICY_VERSION),
+      hasConsentForToday: hasValidConsent(consentPolicyVersion),
       isBootstrappingSession,
       isConsentModalOpen,
       isDrawerOpen: drawerState === 'open',
@@ -564,6 +581,7 @@ export function AiChatProvider({
       clearPresentation,
       closeSession,
       consentDay,
+      consentPolicyVersion,
       draftAssistantMessage,
       drawerState,
       errorMessage,

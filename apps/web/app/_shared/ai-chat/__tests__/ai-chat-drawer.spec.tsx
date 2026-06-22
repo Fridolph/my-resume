@@ -51,9 +51,8 @@ describe('AiChatDrawer', () => {
     render(<AiChatDrawer locale="zh" />)
 
     expect(screen.getAllByRole('heading', { name: 'AI 对话' }).length).toBeGreaterThan(0)
-    expect(
-      screen.getByText('Resume Companion · 仅限简历相关 · 正在准备会话'),
-    ).toBeInTheDocument()
+    expect(screen.getByText('仅限简历相关')).toBeInTheDocument()
+    expect(screen.getByText('正在准备会话')).toBeInTheDocument()
     expect(screen.getAllByText('启动中').length).toBeGreaterThan(0)
     expect(screen.getByText('正在启动 AI 对话...')).toBeInTheDocument()
     expect(screen.getByLabelText('关闭 AI 对话')).toBeInTheDocument()
@@ -99,8 +98,10 @@ describe('AiChatDrawer', () => {
         sessionId: 'session-public-001',
         locale: 'zh',
         status: 'open',
+        maxDailyTurns: 20,
         turnCount: 1,
         remainingTurns: 19,
+        totalUserTurns: 7,
         useKeyStatus: 'claimed',
         lead: {
           id: 'lead-public-001',
@@ -148,10 +149,14 @@ describe('AiChatDrawer', () => {
 
     expect(screen.getByText('付寅生')).toBeInTheDocument()
     expect(screen.getByText('访客')).toBeInTheDocument()
+    expect(screen.getByText('仅限简历相关')).toBeInTheDocument()
+    expect(screen.getByText('累计提问 7 次')).toBeInTheDocument()
+    expect(screen.getByText('今日剩余 19 轮')).toBeInTheDocument()
     expect(screen.getByPlaceholderText('请提问项目经历、工作经历、技术栈或岗位匹配相关问题。')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '发送' })).toBeInTheDocument()
     expect(screen.getByText('你好，请介绍一下项目经验')).toBeInTheDocument()
     expect(screen.getByText('我最近主要在做公开简历与 AI 对话相关的工程整合。')).toBeInTheDocument()
+    expect(screen.queryByText('Resume Companion')).not.toBeInTheDocument()
   })
 
   it('should expose retry action when the latest stream failed', () => {
@@ -507,7 +512,7 @@ describe('AiChatDrawer', () => {
     expect(screen.getByText('这是一个全栈个人项目。')).toBeInTheDocument()
   })
 
-  it('should hide custom citation cards while keeping citation chips visible', () => {
+  it('should not render citation source cards when answer blocks are absent', () => {
     useAiChatMock.mockReturnValue({
       acceptConsent: vi.fn(),
       canRetryLastMessage: false,
@@ -562,20 +567,7 @@ describe('AiChatDrawer', () => {
             role: 'assistant',
             content: '我平时还喜欢音乐和羽毛球 #1 #2。',
             turnIndex: 1,
-            answerBlocks: [
-              {
-                type: 'hobby_card',
-                title: '音乐.md',
-                description: '我喜欢音乐',
-                keywords: [],
-              },
-              {
-                type: 'article_card',
-                title: 'JS全栈 AI Agent 学习',
-                summary: 'RAG 怎么做',
-                keywords: [],
-              },
-            ],
+            answerBlocks: [],
             citations: [
               {
                 ref: '#1',
@@ -615,6 +607,86 @@ describe('AiChatDrawer', () => {
     expect(screen.getByText('#2')).toBeInTheDocument()
     expect(screen.queryByText('音乐.md')).not.toBeInTheDocument()
     expect(screen.queryByText('JS全栈 AI Agent 学习')).not.toBeInTheDocument()
+  })
+
+  it('should strip non-numeric citation placeholders from assistant content', () => {
+    useAiChatMock.mockReturnValue({
+      acceptConsent: vi.fn(),
+      canRetryLastMessage: false,
+      cancelStreaming: vi.fn(),
+      clearPresentation: vi.fn(),
+      closeSession: vi.fn(),
+      draftAssistantMessage: null,
+      drawerState: 'open',
+      dismissConsentModal: vi.fn(),
+      errorMessage: null,
+      hasConsentForToday: true,
+      hideDrawer: vi.fn(),
+      isBootstrappingSession: false,
+      isConsentModalOpen: false,
+      isDrawerOpen: true,
+      isDrawerVisible: true,
+      isStreaming: false,
+      minimizeDrawer: vi.fn(),
+      openDrawer: vi.fn(),
+      presentation: {
+        assistantAvatarSrc: '/img/avatar.jpg',
+        assistantLabel: '付寅生',
+        visitorLabel: '访客',
+      },
+      refreshSession: vi.fn(),
+      registerPresentation: vi.fn(),
+      restoreDrawer: vi.fn(),
+      restoreReady: true,
+      retryLastMessage: vi.fn(),
+      sendMessage: vi.fn(),
+      session: {
+        sessionId: 'session-public-006',
+        locale: 'zh',
+        status: 'open',
+        maxDailyTurns: 20,
+        turnCount: 1,
+        remainingTurns: 19,
+        totalUserTurns: 3,
+        useKeyStatus: 'claimed',
+        lead: {
+          id: 'lead-public-006',
+          locale: 'zh',
+          displayName: '公开站访客',
+          companyName: '',
+          contact: '',
+          message: '',
+          status: 'issued',
+          createdAt: '2026-05-12T00:00:00.000Z',
+          updatedAt: '2026-05-12T00:00:00.000Z',
+        },
+        messages: [
+          {
+            id: 'assistant-6',
+            role: 'assistant',
+            content: '我很喜欢研究《周易》@亮点@，也持续学习 AI Agent@技能@。',
+            turnIndex: 1,
+            answerBlocks: [],
+            citations: [],
+            createdAt: '2026-05-12T00:00:00.000Z',
+          },
+        ],
+        interimSummary: null,
+        finalSummary: null,
+        createdAt: '2026-05-12T00:00:00.000Z',
+        updatedAt: '2026-05-12T00:00:01.000Z',
+        closedAt: null,
+      },
+      summaryPreview: null,
+      useKeyStatus: 'claimed',
+      view: 'chat',
+    })
+
+    render(<AiChatDrawer locale="zh" />)
+
+    expect(screen.getByText('我很喜欢研究《周易》，也持续学习 AI Agent。')).toBeInTheDocument()
+    expect(screen.queryByText('@亮点@')).not.toBeInTheDocument()
+    expect(screen.queryByText('@技能@')).not.toBeInTheDocument()
   })
 
   it('should keep textarea editable while streaming but disable send action', async () => {

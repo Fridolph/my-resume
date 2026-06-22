@@ -21,6 +21,8 @@ export interface RagSearchRerankThresholdConfig {
   rawScoreNoiseThreshold: number
   rerankScoreNoiseThreshold: number
   sectionBoostAttenuationWithoutTopicHit: number
+  /** ask() 重排后最低采纳分，低于此值的匹配直接截断 */
+  askMinRerankScore: number
 }
 
 /**
@@ -122,6 +124,7 @@ export const DEFAULT_RAG_SEARCH_RERANK_CONFIG: RagSearchRerankConfig = {
     rawScoreNoiseThreshold: 0.48,
     rerankScoreNoiseThreshold: 0.6,
     sectionBoostAttenuationWithoutTopicHit: 0.35,
+    askMinRerankScore: 0.1,
   },
   selection: {
     experience: {

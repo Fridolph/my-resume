@@ -9,6 +9,7 @@ import {
   RagSourceExperienceProjectItem,
   RagSourceStandaloneProjectItem,
 } from './rag.types'
+import { withResolvedRagChunkKnowledgeMetadata } from './rag-knowledge-domain'
 
 function compactLines(lines: Array<string | undefined | null>): string {
   return lines
@@ -31,7 +32,7 @@ export class RagChunkService {
       ...document.experiences.flatMap((item) => this.buildExperienceChunks(item)),
       ...document.projects.map((item) => this.buildStandaloneProjectChunk(item)),
       ...this.buildExtraChunks(document),
-    ]
+    ].map(withResolvedRagChunkKnowledgeMetadata)
   }
 
   private buildStrengthsChunks(document: RagSourceDocument): RagChunk[] {

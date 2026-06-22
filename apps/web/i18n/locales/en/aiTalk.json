@@ -128,6 +128,98 @@
     "primaryCta": "Back to AI Talk hub",
     "secondaryCta": "Open RAG chat"
   },
+  "introPage": {
+    "eyebrow": "ai intro",
+    "title": "AI Intro · Unlock {name}",
+    "description": "A standalone guided AI intro page: start with curated questions, then let the portrait map light up piece by piece as answers land.",
+    "badges": {
+      "guided": "Guided questions",
+      "fragments": "10 fragments"
+    },
+    "chat": {
+      "title": "Guided chat window",
+      "description": "The first version only exposes preset questions, keeping the experience focused and easy to sync with the portrait map.",
+      "resetAction": "Reset progress",
+      "messages": {
+        "1": "Hi, I can guide you through this resume in 10 focused questions.",
+        "2": "Choose one question below to start; each completed answer updates the progress map on the right."
+      }
+    },
+    "questions": {
+      "profile": "Who are you, and what direction are you focused on now?",
+      "latestProject": "What was your latest project?",
+      "stack": "What technologies do you mainly use?",
+      "aiPractice": "How do you use AI in real projects?",
+      "ragAgent": "What have you practiced around RAG or Agent work?",
+      "engineering": "How do you keep projects maintainable?",
+      "collaboration": "What collaboration or delivery experience do you have?",
+      "hobbies": "What do you enjoy outside work?",
+      "writing": "What articles, notes, or public output do you have?",
+      "future": "What do you want to explore next?"
+    },
+    "answers": {
+      "profile": "I started from frontend work and have gradually grown into full-stack and AI engineering practice, with a current focus on combining product delivery, RAG, and Agent learning.",
+      "latestProject": "Recently I have been building my-resume around public AI Chat, RAG knowledge, resume import recognition, and admin-side governance loops.",
+      "stack": "My main stack includes Next.js, React, NestJS, TypeScript, Drizzle, HeroUI, and AI engineering pieces around providers, embeddings, and RAG.",
+      "aiPractice": "I treat AI as a real product capability: define boundaries first, then add logs, structured output, citations, and reversible frontend/backend contracts.",
+      "ragAgent": "On RAG, I have built resume knowledge, user document ingestion, explainable Q&A, and citation display. Agent work is now growing through LangGraph and AGUI-style practice.",
+      "engineering": "I care about types, tests, development logs, and branch flow. The goal is not to build everything at once, but to keep every issue verifiable and reversible.",
+      "collaboration": "I tend to split complex work into milestones and issues with clear acceptance criteria, while recording risks and tradeoffs during implementation.",
+      "hobbies": "Outside work I enjoy music and badminton. They help me keep rhythm and energy, and make the profile feel more human than a list of technical tags.",
+      "writing": "I turn AI Agent, RAG, and full-stack practice into learning notes and project docs, so the process can be reviewed and later shaped into tutorials.",
+      "future": "Next I want to go deeper into LangGraph, multi-domain RAG, AGUI-style interaction, and a more expressive AI resume intro page."
+    },
+    "unlock": {
+      "eyebrow": "unlock map",
+      "title": "Persona fragment map",
+      "description": "This is the static shell first: later answers will light up each theme and turn the page into a collectible discovery path.",
+      "progressTitle": "Unlock progress",
+      "progressText": "{completed} / {total} fragments unlocked",
+      "progressAria": "{completed} of {total} persona fragments unlocked",
+      "noteTitle": "Current stage",
+      "noteDescription": "This issue only establishes the route and layout shell. The question state machine, real answers, and unlock logic continue in follow-up issues.",
+      "completeTitle": "Full persona map unlocked",
+      "completeDescription": "All 10 themes are complete, and the right-side map has entered its full state. Next, these unlock results can feed richer cards and real answers.",
+      "topics": {
+        "profile": "Profile",
+        "latestProject": "Latest project",
+        "stack": "Tech stack",
+        "aiPractice": "AI practice",
+        "ragAgent": "RAG / Agent",
+        "engineering": "Engineering",
+        "collaboration": "Collaboration",
+        "hobbies": "Hobbies",
+        "writing": "Writing",
+        "future": "Future"
+      },
+      "keywords": {
+        "profile": "Full-stack",
+        "latestProject": "my-resume",
+        "stack": "TypeScript",
+        "aiPractice": "AI engineering",
+        "ragAgent": "RAG",
+        "engineering": "Quality",
+        "collaboration": "Planning",
+        "hobbies": "Rhythm",
+        "writing": "Notes",
+        "future": "Agent"
+      },
+      "summaries": {
+        "profile": "Profile unlocked: starting from frontend and growing into full-stack and AI engineering practice.",
+        "latestProject": "Latest project unlocked: my-resume now carries AI Chat, RAG, and resume workflow practice.",
+        "stack": "Tech stack unlocked: Next.js, NestJS, TypeScript, and AI engineering are the current backbone.",
+        "aiPractice": "AI practice unlocked: boundaries, logs, structured output, and traceable citations matter.",
+        "ragAgent": "RAG / Agent unlocked: explainable Q&A is growing toward LangGraph and AGUI.",
+        "engineering": "Engineering unlocked: types, tests, logs, and small issues keep the system maintainable.",
+        "collaboration": "Collaboration unlocked: complex work starts with milestones, issues, and acceptance criteria.",
+        "hobbies": "Hobbies unlocked: music and badminton add rhythm beyond technical labels.",
+        "writing": "Writing unlocked: learning and project practice are continuously turned into reviewable material.",
+        "future": "Future unlocked: LangGraph, multi-domain RAG, and AGUI interaction are the next focus."
+      }
+    },
+    "primaryCta": "Back to AI Talk hub",
+    "secondaryCta": "Open current chat entry"
+  },
   "entry": {
     "eyebrow": "ai talk",
     "title": "AI Talk Hub",

@@ -59,6 +59,14 @@ function joinEmbeddingsUrl(baseUrl: string): string {
   return `${baseUrl.replace(/\/$/, '')}/embeddings`
 }
 
+function summarizeBaseUrlForError(baseUrl: string): string {
+  try {
+    return new URL(baseUrl).origin
+  } catch {
+    return baseUrl
+  }
+}
+
 /**
  * 从 Chat Completions 响应中读取模型文本。
  *
@@ -466,7 +474,7 @@ export class OpenAiCompatibleAiProvider implements AiProvider {
 
     if (!embeddingApiKey) {
       throw new Error(
-        `Embeddings API key is required for ${this.config.providerLabel} embeddings. Configure EMBEDDINGS_API_KEY when using a dedicated embeddings backend.`,
+        `Embeddings API key is required for ${this.config.providerLabel} embeddings (${summarizeBaseUrlForError(embeddingBaseUrl)}). Configure EMBEDDINGS_API_KEY when using a dedicated embeddings backend.`,
       )
     }
 

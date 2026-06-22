@@ -1,18 +1,24 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AiChatRepository } from '../ai-chat.repository'
+import { AiChatGraphService } from '../ai-chat-graph.service'
 import { AiChatService } from '../ai-chat.service'
 import { AiService } from '../../application/services/ai.service'
 import { RagService } from '../../rag/rag.service'
 import { ResumePublicationService } from '../../../resume/application/services/resume-publication.service'
 
-function createSessionSnapshot(overrides: Partial<Awaited<ReturnType<AiChatService['getPublicSessionSnapshot']>>> = {}) {
+function createSessionSnapshot(
+  overrides: Partial<Awaited<ReturnType<AiChatService['getPublicSessionSnapshot']>>> = {},
+) {
   return {
     sessionId: 'session-001',
     locale: 'zh' as const,
     status: 'open' as const,
+    quotaDate: '2026-05-12',
+    maxDailyTurns: 20,
     turnCount: 0,
     remainingTurns: 20,
+    totalUserTurns: 0,
     useKeyStatus: 'claimed' as const,
     lead: {
       id: 'lead-001',
@@ -55,6 +61,7 @@ function createSessionBundle(overrides?: {
     useKey: string
     leadId: string
     sessionId: string | null
+    issuedByUserId: string | null
     status: string
     maxTurns: number
     usedTurns: number
@@ -72,6 +79,9 @@ function createSessionBundle(overrides?: {
     contact: string | null
     message: string
     status: string
+    sourceTag: string | null
+    sourceKey: string | null
+    metadataJson: Record<string, unknown> | null
     createdAt: Date
     updatedAt: Date
   }>
@@ -85,6 +95,9 @@ function createSessionBundle(overrides?: {
       contact: null,
       message: '访客已同意公开站 AI 对话提示，系统自动创建当日会话。',
       status: 'issued',
+      sourceTag: null,
+      sourceKey: null,
+      metadataJson: null,
       createdAt: new Date('2026-05-12T00:00:00.000Z'),
       updatedAt: new Date('2026-05-12T00:00:00.000Z'),
       ...overrides?.lead,
@@ -109,6 +122,7 @@ function createSessionBundle(overrides?: {
       useKey: 'FY-1A2B3C4D',
       leadId: 'lead-001',
       sessionId: 'session-001',
+      issuedByUserId: 'admin-demo-user',
       status: 'claimed',
       maxTurns: 20,
       usedTurns: 0,
@@ -165,9 +179,13 @@ function createService(repository = createRepositoryMock()) {
   const resumePublicationService = {
     getPublished: vi.fn(),
   } as unknown as ResumePublicationService
+  const graphService = {
+    generateAnswer: vi.fn(),
+  } as unknown as AiChatGraphService
 
   return {
     aiService,
+    graphService,
     ragService,
     repository,
     resumePublicationService,
@@ -176,6 +194,7 @@ function createService(repository = createRepositoryMock()) {
       aiService as never,
       ragService as never,
       resumePublicationService as never,
+      graphService as never,
     ),
   }
 }
@@ -183,6 +202,11 @@ function createService(repository = createRepositoryMock()) {
 describe('AiChatService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.restoreAllMocks()
   })
 
   it('creates a session when a claimed useKey has not been bound yet', async () => {
@@ -220,6 +244,225 @@ describe('AiChatService', () => {
       }),
     )
     expect(result).toEqual(snapshot)
+  })
+
+  it('reuses the same public session for the same IP after the local day changes', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-05-13T10:00:00.000Z'))
+
+    const repository = createRepositoryMock()
+    const { service } = createService(repository)
+    const yesterdayBundle = createSessionBundle({
+      session: {
+        status: 'closed',
+        turnCount: 20,
+        closedAt: new Date('2026-05-12T10:00:00.000Z'),
+        createdAt: new Date('2026-05-12T00:00:00.000Z'),
+        updatedAt: new Date('2026-05-12T10:00:00.000Z'),
+      },
+      useKey: {
+        issuedByUserId: 'system-public-chat',
+        usedTurns: 20,
+        createdAt: new Date('2026-05-12T00:00:00.000Z'),
+        updatedAt: new Date('2026-05-12T10:00:00.000Z'),
+      },
+      lead: {
+        sourceTag: 'public-ip',
+      },
+    })
+    const todaySnapshot = createSessionSnapshot({
+      sessionId: 'session-001',
+      status: 'open',
+      quotaDate: '2026-05-13',
+      turnCount: 0,
+      remainingTurns: 20,
+      totalUserTurns: 20,
+      createdAt: '2026-05-12T00:00:00.000Z',
+      updatedAt: '2026-05-13T10:00:00.000Z',
+    })
+
+    repository.findLatestLeadBySourceKey.mockResolvedValue(yesterdayBundle.lead)
+    repository.findLatestUseKeyByLeadId.mockResolvedValue(yesterdayBundle.useKey)
+    vi.spyOn(service, 'getPublicSessionSnapshot').mockResolvedValue(todaySnapshot)
+
+    const result = await service.claimPublicSession({
+      consentAccepted: true,
+      ipAddress: '::1',
+      locale: 'zh',
+    })
+
+    expect(repository.createUseKey).not.toHaveBeenCalled()
+    expect(service.getPublicSessionSnapshot).toHaveBeenCalledWith(
+      'session-001',
+      'FY-1A2B3C4D',
+    )
+    expect(result.useKey).toBe('FY-1A2B3C4D')
+    expect(result.session.sessionId).toBe('session-001')
+    expect(result.session.status).toBe('open')
+    expect(result.session.remainingTurns).toBe(20)
+  })
+
+  it('keeps returning the finished public session on the same local day', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-05-12T12:00:00.000Z'))
+
+    const repository = createRepositoryMock()
+    const { service } = createService(repository)
+    const closedBundle = createSessionBundle({
+      session: {
+        status: 'closed',
+        turnCount: 20,
+        closedAt: new Date('2026-05-12T10:00:00.000Z'),
+        createdAt: new Date('2026-05-12T00:00:00.000Z'),
+        updatedAt: new Date('2026-05-12T10:00:00.000Z'),
+      },
+      useKey: {
+        issuedByUserId: 'system-public-chat',
+        usedTurns: 20,
+        createdAt: new Date('2026-05-12T00:00:00.000Z'),
+        updatedAt: new Date('2026-05-12T10:00:00.000Z'),
+      },
+      lead: {
+        sourceTag: 'public-ip',
+      },
+    })
+    const closedSnapshot = createSessionSnapshot({
+      status: 'closed',
+      turnCount: 20,
+      remainingTurns: 0,
+      closedAt: '2026-05-12T10:00:00.000Z',
+    })
+
+    repository.findLatestLeadBySourceKey.mockResolvedValue(closedBundle.lead)
+    repository.findLatestUseKeyByLeadId.mockResolvedValue(closedBundle.useKey)
+    repository.getSessionBundle.mockResolvedValue(closedBundle)
+    vi.spyOn(service, 'getPublicSessionSnapshot').mockResolvedValue(closedSnapshot)
+
+    const result = await service.claimPublicSession({
+      consentAccepted: true,
+      ipAddress: '127.0.0.1',
+      locale: 'zh',
+    })
+
+    expect(repository.createUseKey).not.toHaveBeenCalled()
+    expect(result.useKey).toBe('FY-1A2B3C4D')
+    expect(result.session.status).toBe('closed')
+    expect(result.session.remainingTurns).toBe(0)
+  })
+
+  it('rolls over a closed public session on snapshot after the local day changes', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-05-13T10:00:00.000Z'))
+
+    const repository = createRepositoryMock()
+    const { service } = createService(repository)
+    const closedBundle = createSessionBundle({
+      lead: {
+        sourceTag: 'public-ip',
+      },
+      session: {
+        status: 'closed',
+        turnCount: 20,
+        interimSummary: '昨日阶段总结',
+        finalSummary: '昨日最终总结',
+        focusKeywordsJson: ['AI'],
+        closedAt: new Date('2026-05-12T10:00:00.000Z'),
+        updatedAt: new Date('2026-05-12T10:00:00.000Z'),
+      },
+      useKey: {
+        issuedByUserId: 'system-public-chat',
+        usedTurns: 20,
+      },
+    })
+    const rolledOverBundle = createSessionBundle({
+      lead: {
+        sourceTag: 'public-ip',
+      },
+      session: {
+        status: 'open',
+        turnCount: 0,
+        interimSummary: null,
+        finalSummary: null,
+        focusKeywordsJson: null,
+        closedAt: null,
+        updatedAt: new Date('2026-05-13T10:00:00.000Z'),
+      },
+      useKey: {
+        issuedByUserId: 'system-public-chat',
+        usedTurns: 0,
+        updatedAt: new Date('2026-05-13T10:00:00.000Z'),
+      },
+    })
+
+    repository.getSessionBundle
+      .mockResolvedValueOnce(closedBundle)
+      .mockResolvedValueOnce(rolledOverBundle)
+    repository.listMessagesBySessionId.mockResolvedValue([
+      {
+        id: 'user-yesterday',
+        role: 'user',
+        content: '昨天的问题',
+        turnIndex: 20,
+        answerBlocksJson: null,
+        citationsJson: null,
+        createdAt: new Date('2026-05-12T10:00:00.000Z'),
+      },
+      {
+        id: 'system-summary',
+        role: 'system',
+        content: '昨日最终总结',
+        turnIndex: 20,
+        answerBlocksJson: [],
+        citationsJson: [],
+        createdAt: new Date('2026-05-12T10:00:01.000Z'),
+      },
+    ])
+
+    const snapshot = await service.getPublicSessionSnapshot('session-001', 'FY-1A2B3C4D')
+
+    expect(repository.resetSessionTurns).toHaveBeenCalledWith({
+      sessionId: 'session-001',
+      useKeyId: 'usekey-001',
+      now: new Date('2026-05-13T10:00:00.000Z'),
+    })
+    expect(snapshot.status).toBe('open')
+    expect(snapshot.quotaDate).toBe('2026-05-13')
+    expect(snapshot.turnCount).toBe(0)
+    expect(snapshot.remainingTurns).toBe(20)
+    expect(snapshot.totalUserTurns).toBe(1)
+    expect(snapshot.messages).toHaveLength(2)
+    expect(snapshot.finalSummary).toBeNull()
+  })
+
+  it('does not roll over a manually issued useKey session', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-05-13T10:00:00.000Z'))
+
+    const repository = createRepositoryMock()
+    const { service } = createService(repository)
+
+    repository.getSessionBundle.mockResolvedValue(
+      createSessionBundle({
+        session: {
+          status: 'closed',
+          turnCount: 20,
+          closedAt: new Date('2026-05-12T10:00:00.000Z'),
+          updatedAt: new Date('2026-05-12T10:00:00.000Z'),
+        },
+        useKey: {
+          issuedByUserId: 'admin-demo-user',
+          usedTurns: 20,
+        },
+      }),
+    )
+    repository.listMessagesBySessionId.mockResolvedValue([])
+
+    const snapshot = await service.getPublicSessionSnapshot('session-001', 'FY-1A2B3C4D')
+
+    expect(repository.resetSessionTurns).not.toHaveBeenCalled()
+    expect(snapshot.status).toBe('closed')
+    expect(snapshot.turnCount).toBe(20)
+    expect(snapshot.remainingTurns).toBe(0)
   })
 
   it('restores persisted messages and summaries for public session snapshots', async () => {
@@ -266,7 +509,7 @@ describe('AiChatService', () => {
 
   it('persists user, assistant, and summary messages when turn 10 triggers interim summarization', async () => {
     const repository = createRepositoryMock()
-    const { service } = createService(repository)
+    const { graphService, service } = createService(repository)
 
     repository.getSessionBundle.mockResolvedValue(
       createSessionBundle({
@@ -286,7 +529,7 @@ describe('AiChatService', () => {
     repository.updateSession.mockResolvedValue(undefined)
     repository.updateUseKey.mockResolvedValue(undefined)
 
-    vi.spyOn(service as never, 'generateAnswer').mockResolvedValue({
+    vi.mocked(graphService.generateAnswer).mockResolvedValue({
       answer: '这里是基于简历的回答',
       blocks: [
         {
@@ -379,7 +622,7 @@ describe('AiChatService', () => {
 
   it('closes the session and stores the final summary when turn 20 is reached', async () => {
     const repository = createRepositoryMock()
-    const { service } = createService(repository)
+    const { graphService, service } = createService(repository)
 
     repository.getSessionBundle.mockResolvedValue(
       createSessionBundle({
@@ -399,7 +642,7 @@ describe('AiChatService', () => {
     repository.updateSession.mockResolvedValue(undefined)
     repository.updateUseKey.mockResolvedValue(undefined)
 
-    vi.spyOn(service as never, 'generateAnswer').mockResolvedValue({
+    vi.mocked(graphService.generateAnswer).mockResolvedValue({
       answer: '这是本次会话的最后一条回答',
       blocks: [],
       citations: [],
@@ -445,5 +688,137 @@ describe('AiChatService', () => {
     )
     expect(result.session.status).toBe('closed')
     expect(result.summary?.stage).toBe('turn-20')
+  })
+
+  it('rolls over a public session before sending a new-day message', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-05-13T10:00:00.000Z'))
+
+    const repository = createRepositoryMock()
+    const { graphService, service } = createService(repository)
+    const closedBundle = createSessionBundle({
+      lead: {
+        sourceTag: 'public-ip',
+      },
+      session: {
+        status: 'closed',
+        turnCount: 20,
+        closedAt: new Date('2026-05-12T10:00:00.000Z'),
+        updatedAt: new Date('2026-05-12T10:00:00.000Z'),
+      },
+      useKey: {
+        issuedByUserId: 'system-public-chat',
+        usedTurns: 20,
+      },
+    })
+    const rolledOverBundle = createSessionBundle({
+      lead: {
+        sourceTag: 'public-ip',
+      },
+      session: {
+        status: 'open',
+        turnCount: 0,
+        closedAt: null,
+        updatedAt: new Date('2026-05-13T10:00:00.000Z'),
+      },
+      useKey: {
+        issuedByUserId: 'system-public-chat',
+        usedTurns: 0,
+        updatedAt: new Date('2026-05-13T10:00:00.000Z'),
+      },
+    })
+
+    repository.getSessionBundle
+      .mockResolvedValueOnce(closedBundle)
+      .mockResolvedValueOnce(rolledOverBundle)
+    repository.createMessage.mockImplementation(async (input) => ({
+      ...input,
+      answerBlocksJson: input.answerBlocksJson ?? null,
+      citationsJson: input.citationsJson ?? null,
+    }))
+    repository.updateSession.mockResolvedValue(undefined)
+    repository.updateUseKey.mockResolvedValue(undefined)
+    vi.mocked(graphService.generateAnswer).mockResolvedValue({
+      answer: '新一天可以继续聊',
+      blocks: [],
+      citations: [],
+    })
+    vi.spyOn(service, 'getPublicSessionSnapshot').mockResolvedValue(
+      createSessionSnapshot({
+        quotaDate: '2026-05-13',
+        remainingTurns: 19,
+        status: 'open',
+        turnCount: 1,
+        totalUserTurns: 21,
+      }),
+    )
+
+    const result = await service.createAssistantReply({
+      sessionId: 'session-001',
+      useKey: 'FY-1A2B3C4D',
+      content: '新的一天继续聊',
+    })
+
+    expect(repository.resetSessionTurns).toHaveBeenCalledWith({
+      sessionId: 'session-001',
+      useKeyId: 'usekey-001',
+      now: new Date('2026-05-13T10:00:00.000Z'),
+    })
+    expect(repository.createMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        role: 'user',
+        turnIndex: 1,
+      }),
+    )
+    expect(repository.updateSession).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'open',
+        turnCount: 1,
+      }),
+    )
+    expect(result.session.remainingTurns).toBe(19)
+  })
+
+  it('falls back to the legacy answer generator when the graph service fails', async () => {
+    const repository = createRepositoryMock()
+    const { graphService, service } = createService(repository)
+
+    repository.getSessionBundle.mockResolvedValue(createSessionBundle())
+    repository.createMessage.mockImplementation(async (input) => ({
+      ...input,
+      answerBlocksJson: input.answerBlocksJson ?? null,
+      citationsJson: input.citationsJson ?? null,
+    }))
+    repository.updateSession.mockResolvedValue(undefined)
+    repository.updateUseKey.mockResolvedValue(undefined)
+    vi.mocked(graphService.generateAnswer).mockRejectedValueOnce(
+      new Error('graph unavailable'),
+    )
+    vi.spyOn(service, 'getPublicSessionSnapshot').mockResolvedValue(
+      createSessionSnapshot({
+        remainingTurns: 19,
+        turnCount: 1,
+      }),
+    )
+
+    const result = await service.createAssistantReply({
+      sessionId: 'session-001',
+      useKey: 'FY-1A2B3C4D',
+      content: '你好',
+    })
+
+    expect(graphService.generateAnswer).toHaveBeenCalledWith(
+      expect.objectContaining({
+        locale: 'zh',
+        question: '你好',
+      }),
+    )
+    expect(result.assistantMessage.content).toContain('我是 FYS')
+    expect(repository.createMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        role: 'assistant',
+        content: expect.stringContaining('我是 FYS'),
+      }),
+    )
   })
 })

@@ -12,6 +12,19 @@ vi.mock('alova/client', () => ({
   }),
 }))
 
+async function selectHeroUiOption(
+  user: ReturnType<typeof userEvent.setup>,
+  label: string,
+  optionText: string,
+) {
+  const trigger = screen.getByLabelText(label)
+  await user.click(trigger)
+  await user.click(screen.getByRole('option', { name: optionText }))
+  await waitFor(() => {
+    expect(trigger).toHaveTextContent(optionText)
+  })
+}
+
 function createIngestResult(
   overrides: Partial<UserDocIngestResult> = {},
 ): UserDocIngestResult {
@@ -74,8 +87,8 @@ describe('AiUserDocIngestionPanel', () => {
     })
 
     await user.upload(screen.getByLabelText('选择入库文件'), file)
-    await user.selectOptions(screen.getByLabelText('入库作用域'), 'published')
-    await user.selectOptions(screen.getByLabelText('切片策略'), 'contextual')
+    await selectHeroUiOption(user, '入库作用域', 'published')
+    await selectHeroUiOption(user, '切片策略', 'contextual · 长上下文 1000/100')
 
     expect((screen.getByLabelText('切片大小') as HTMLInputElement).value).toBe('1000')
     expect((screen.getByLabelText('重叠字符数') as HTMLInputElement).value).toBe('100')

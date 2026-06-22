@@ -3,35 +3,15 @@ import {
   createMilvusSdkClient,
   MilvusVectorStoreClient,
 } from '../milvus-sdk.client'
+import { cosineSimilarity } from '../../utils/math'
 import {
   RagVectorSearchInput,
   RagVectorSearchMatch,
   RagVectorStore,
   RagVectorChunkPayload,
 } from '../types'
-
-function cosineSimilarity(vectorA: number[], vectorB: number[]): number {
-  if (vectorA.length === 0 || vectorB.length === 0) {
-    return 0
-  }
-
-  const length = Math.min(vectorA.length, vectorB.length)
-  let dot = 0
-  let magnitudeA = 0
-  let magnitudeB = 0
-
-  for (let index = 0; index < length; index += 1) {
-    dot += vectorA[index] * vectorB[index]
-    magnitudeA += vectorA[index] * vectorA[index]
-    magnitudeB += vectorB[index] * vectorB[index]
-  }
-
-  if (magnitudeA === 0 || magnitudeB === 0) {
-    return 0
-  }
-
-  return dot / (Math.sqrt(magnitudeA) * Math.sqrt(magnitudeB))
-}
+import { mapLegacySourceTypeToRetrievalSourceType } from '../../rag.types'
+import type { RagRetrievalSourceType } from '../../rag.types'
 
 /**
  * Milvus 向量存储适配器（教学骨架）。
@@ -76,6 +56,22 @@ export class MilvusRagVectorStoreAdapter implements RagVectorStore {
     }
   }
 
+  async listDocumentIds(sourceType?: RagRetrievalSourceType): Promise<string[]> {
+    if (this.config.mode === 'sdk') {
+      return this.getSdkClient().listDocumentIds(sourceType)
+    }
+
+    const documentIds = Array.from(this.mockStore.values())
+      .filter((chunk) =>
+        sourceType
+          ? mapLegacySourceTypeToRetrievalSourceType(chunk.sourceType) === sourceType
+          : true,
+      )
+      .map((chunk) => chunk.documentId)
+
+    return Array.from(new Set(documentIds))
+  }
+
   async search(input: RagVectorSearchInput): Promise<RagVectorSearchMatch[]> {
     if (this.config.mode === 'sdk') {
       return this.getSdkClient().search(input)
@@ -86,7 +82,24 @@ export class MilvusRagVectorStoreAdapter implements RagVectorStore {
         input.sourceType ? chunk.sourceType === input.sourceType : true,
       )
       .filter((chunk) =>
+        input.sourceTypes?.length
+          ? input.sourceTypes.includes(mapLegacySourceTypeToRetrievalSourceType(chunk.sourceType))
+          : true,
+      )
+      .filter((chunk) =>
         input.sourceScope ? chunk.sourceScope === input.sourceScope : true,
+      )
+      .filter((chunk) =>
+        input.knowledgeDomains?.length
+          ? input.knowledgeDomains.includes(
+              chunk.metadataJson?.knowledgeDomain as (typeof input.knowledgeDomains)[number],
+            )
+          : true,
+      )
+      .filter((chunk) =>
+        input.documentIds?.length
+          ? input.documentIds.includes(chunk.documentId)
+          : true,
       )
 
     return candidates

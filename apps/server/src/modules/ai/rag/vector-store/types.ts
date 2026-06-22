@@ -1,9 +1,11 @@
 import { RagSourceScope, RagSourceType } from '../../../../database/schema'
+import type { RagKnowledgeDomain } from '../rag-knowledge-domain'
+import type { RagRetrievalSourceType } from '../rag.types'
 
 /**
  * 向量存储后端类型。
  */
-export type RagVectorStoreBackend = 'local' | 'milvus'
+export type RagVectorStoreBackend = 'local' | 'milvus' | 'snapshot'
 
 /**
  * 向量存储层的统一 chunk 载荷。
@@ -27,7 +29,10 @@ export interface RagVectorSearchInput {
   queryVector: number[]
   limit: number
   sourceType?: RagSourceType
+  sourceTypes?: RagRetrievalSourceType[]
   sourceScope?: RagSourceScope
+  knowledgeDomains?: RagKnowledgeDomain[]
+  documentIds?: string[]
 }
 
 /**
@@ -35,6 +40,12 @@ export interface RagVectorSearchInput {
  */
 export interface RagVectorSearchMatch extends RagVectorChunkPayload {
   score: number
+}
+
+export interface RagVectorSnapshotFile {
+  exportedAt: string
+  chunkCount: number
+  chunks: RagVectorChunkPayload[]
 }
 
 /**
@@ -49,5 +60,6 @@ export interface RagVectorStore {
   backend: RagVectorStoreBackend
   upsertChunks(chunks: RagVectorChunkPayload[]): Promise<void>
   deleteChunksByDocument(documentId: string): Promise<void>
+  listDocumentIds(sourceType?: RagRetrievalSourceType): Promise<string[]>
   search(input: RagVectorSearchInput): Promise<RagVectorSearchMatch[]>
 }

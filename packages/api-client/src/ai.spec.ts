@@ -295,10 +295,10 @@ describe('ai api client methods', () => {
           'data: {"text":"你好"}',
           '',
           'event: citation',
-          'data: {"ref":"#1","title":"EDR - 终端威胁侦测与响应平台","snippet":"终端威胁侦测平台","section":"project"}',
+          'data: {"ref":"#1","title":"EDR - 终端威胁侦测与响应平台","snippet":"终端威胁侦测平台","section":"project","richCard":{"title":"EDR 平台","description":"终端威胁侦测项目","url":"https://example.com/edr","keywords":["RAG"]}}',
           '',
           'event: block',
-          'data: {"type":"project_card","title":"EDR - 终端威胁侦测与响应平台","subtitle":"负责人","period":"2024-01 - 2024-12","summary":"负责公开简历与 AI 对话整合","technologies":["RAG"],"highlights":["接入 SSE 流式回答"]}',
+          'data: {"type":"project_card","title":"EDR - 终端威胁侦测与响应平台","subtitle":"负责人","period":"2024-01 - 2024-12","summary":"负责公开简历与 AI 对话整合","technologies":["RAG"],"highlights":["接入 SSE 流式回答"],"url":"https://example.com/edr","imageUrl":"https://example.com/edr.png"}',
           '',
           'event: summary',
           'data: {"generatedAt":"2026-05-12T00:00:01.000Z","keywords":["RAG","SSE"],"stage":"turn-10","summary":"阶段总结"}',
@@ -340,11 +340,17 @@ describe('ai api client methods', () => {
       expect.objectContaining({
         ref: '#1',
         section: 'project',
+        richCard: expect.objectContaining({
+          title: 'EDR 平台',
+          url: 'https://example.com/edr',
+        }),
       }),
     )
     expect(blockSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         type: 'project_card',
+        url: 'https://example.com/edr',
+        imageUrl: 'https://example.com/edr.png',
       }),
     )
     expect(summarySpy).toHaveBeenCalledWith(
@@ -561,6 +567,12 @@ describe('ai api client methods', () => {
               sourceType: 'resume_core',
               score: 0.92,
               snippet: '实现 RAG 检索问答能力',
+              richCard: {
+                title: 'RAG 项目展示',
+                description: '实现 RAG 检索问答能力',
+                url: 'https://example.com/rag',
+                keywords: ['RAG'],
+              },
             },
           ],
           matches: [
@@ -591,6 +603,7 @@ describe('ai api client methods', () => {
       useVectorStore: true,
       vectorScope: 'published',
       vectorFallbackToLocal: false,
+      knowledgeDomains: ['projects'],
     })
 
     expect(fetch).toHaveBeenCalledWith(
@@ -608,6 +621,7 @@ describe('ai api client methods', () => {
           useVectorStore: true,
           vectorScope: 'published',
           vectorFallbackToLocal: false,
+          knowledgeDomains: ['projects'],
         }),
       }),
     )
@@ -616,6 +630,10 @@ describe('ai api client methods', () => {
         ref: '#1',
         sourceType: 'resume_core',
         snippet: expect.stringContaining('RAG'),
+        richCard: expect.objectContaining({
+          title: 'RAG 项目展示',
+          url: 'https://example.com/rag',
+        }),
       }),
     )
   })

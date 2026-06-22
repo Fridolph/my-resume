@@ -35,6 +35,20 @@ describe('resolveRagVectorStoreRuntimeConfig', () => {
     })
   })
 
+  it('should resolve snapshot runtime config from env', () => {
+    const config = resolveRagVectorStoreRuntimeConfig({
+      RAG_VECTOR_STORE_BACKEND: 'snapshot',
+      RAG_VECTOR_SNAPSHOT_PATH: '/tmp/rag-vector-snapshot.json',
+    })
+
+    expect(config).toEqual({
+      backend: 'snapshot',
+      snapshot: {
+        path: '/tmp/rag-vector-snapshot.json',
+      },
+    })
+  })
+
   it('should throw for unsupported backend', () => {
     expect(() =>
       resolveRagVectorStoreRuntimeConfig({

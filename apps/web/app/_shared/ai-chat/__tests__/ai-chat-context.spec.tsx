@@ -13,8 +13,11 @@ vi.mock('@my-resume/api-client', () => ({
         sessionId: 'session-public-001',
         locale: 'zh',
         status: 'open',
+        quotaDate: '2026-05-12',
+        maxDailyTurns: 20,
         turnCount: 0,
         remainingTurns: 20,
+        totalUserTurns: 0,
         useKeyStatus: 'claimed',
         lead: {
           id: 'lead-public-001',
@@ -42,8 +45,11 @@ vi.mock('@my-resume/api-client', () => ({
       sessionId: 'session-public-001',
       locale: 'zh',
       status: 'open',
+      quotaDate: '2026-05-12',
+      maxDailyTurns: 20,
       turnCount: 0,
       remainingTurns: 20,
+      totalUserTurns: 0,
       useKeyStatus: 'claimed',
       lead: {
         id: 'lead-public-001',
@@ -67,7 +73,11 @@ vi.mock('@my-resume/api-client', () => ({
   streamAiChatMessage: vi.fn(),
 }))
 
-import { createClaimPublicAiChatSessionMethod, streamAiChatMessage } from '@my-resume/api-client'
+import {
+  createClaimPublicAiChatSessionMethod,
+  createFetchAiChatSessionMethod,
+  streamAiChatMessage,
+} from '@my-resume/api-client'
 import type { AiChatPublicSessionClaimResult } from '@my-resume/api-client'
 import { AiChatProvider, useAiChat } from '../ai-chat-context'
 
@@ -91,16 +101,28 @@ function Probe() {
       <button onClick={openDrawer} type="button">
         open-chat
       </button>
-      <button aria-label="probe-accept-consent" onClick={() => void acceptConsent()} type="button">
+      <button
+        aria-label="probe-accept-consent"
+        onClick={() => void acceptConsent()}
+        type="button">
         accept-consent
       </button>
-      <button aria-label="probe-send-message" onClick={() => void sendMessage({ content: '你好' })} type="button">
+      <button
+        aria-label="probe-send-message"
+        onClick={() => void sendMessage({ content: '你好' })}
+        type="button">
         send-message
       </button>
-      <button aria-label="probe-cancel-stream" onClick={() => void cancelStreaming()} type="button">
+      <button
+        aria-label="probe-cancel-stream"
+        onClick={() => void cancelStreaming()}
+        type="button">
         cancel-stream
       </button>
-      <button aria-label="probe-retry-message" onClick={() => void retryLastMessage()} type="button">
+      <button
+        aria-label="probe-retry-message"
+        onClick={() => void retryLastMessage()}
+        type="button">
         retry-message
       </button>
       <span>{drawerState}</span>
@@ -115,10 +137,12 @@ function Probe() {
 
 describe('AiChatProvider', () => {
   beforeEach(() => {
+    vi.clearAllMocks()
     window.localStorage.clear()
   })
 
   afterEach(() => {
+    vi.useRealTimers()
     window.localStorage.clear()
   })
 
@@ -142,7 +166,9 @@ describe('AiChatProvider', () => {
     await user.click(screen.getByRole('button', { name: '同意并继续' }))
 
     expect(screen.getByText('open')).toBeInTheDocument()
-    expect((await screen.findAllByRole('heading', { name: 'AI 对话' })).length).toBeGreaterThan(0)
+    expect(
+      (await screen.findAllByRole('heading', { name: 'AI 对话' })).length,
+    ).toBeGreaterThan(0)
 
     await user.click(screen.getByRole('button', { name: '最小化 AI 对话' }))
 
@@ -154,7 +180,9 @@ describe('AiChatProvider', () => {
     await waitFor(() => {
       expect(screen.getByText('open')).toBeInTheDocument()
     })
-    expect((await screen.findAllByRole('heading', { name: 'AI 对话' })).length).toBeGreaterThan(0)
+    expect(
+      (await screen.findAllByRole('heading', { name: 'AI 对话' })).length,
+    ).toBeGreaterThan(0)
 
     await user.click(screen.getByRole('button', { name: '关闭 AI 对话' }))
 
@@ -197,6 +225,47 @@ describe('AiChatProvider', () => {
     expect(screen.queryByLabelText('恢复 AI 对话抽屉')).not.toBeInTheDocument()
   })
 
+  it('should restore previous-day stored sessions and let the server roll over the daily quota', async () => {
+    const user = userEvent.setup()
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    const yesterdayKey = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`
+
+    window.localStorage.setItem(
+      'my-resume-web-ai-chat',
+      JSON.stringify({
+        consentDay: yesterdayKey,
+        consentPolicyVersion: 'm23-public-ip-v1',
+        sessionId: 'session-yesterday',
+        useKey: 'FY-YESTERDAY',
+      }),
+    )
+
+    render(
+      <AiChatProvider apiBaseUrl="http://localhost:5577" locale="zh">
+        <Probe />
+      </AiChatProvider>,
+    )
+
+    await waitFor(() => {
+      expect(createFetchAiChatSessionMethod).toHaveBeenCalledWith({
+        apiBaseUrl: 'http://localhost:5577',
+        sessionId: 'session-yesterday',
+        useKey: 'FY-YESTERDAY',
+      })
+    })
+    expect(window.localStorage.getItem('my-resume-web-ai-chat')).toContain('FY-YESTERDAY')
+
+    await user.click(screen.getByRole('button', { name: 'open-chat' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('open')).toBeInTheDocument()
+    })
+    expect(
+      (await screen.findAllByRole('heading', { name: 'AI 对话' })).length,
+    ).toBeGreaterThan(0)
+  })
+
   it('should immediately show the loading drawer when today consent already exists but session must be re-claimed', async () => {
     const user = userEvent.setup()
     const today = new Date()
@@ -228,7 +297,9 @@ describe('AiChatProvider', () => {
     await user.click(screen.getByRole('button', { name: 'open-chat' }))
 
     expect(screen.getByText('open')).toBeInTheDocument()
-    expect((await screen.findAllByRole('heading', { name: 'AI 对话' })).length).toBeGreaterThan(0)
+    expect(
+      (await screen.findAllByRole('heading', { name: 'AI 对话' })).length,
+    ).toBeGreaterThan(0)
     expect(screen.getByText('正在启动 AI 对话...')).toBeInTheDocument()
   })
 
@@ -245,7 +316,9 @@ describe('AiChatProvider', () => {
 
     await user.click(screen.getByRole('button', { name: 'open-chat' }))
     await user.click(screen.getByRole('button', { name: '同意并继续' }))
-    expect((await screen.findAllByRole('heading', { name: 'AI 对话' })).length).toBeGreaterThan(0)
+    expect(
+      (await screen.findAllByRole('heading', { name: 'AI 对话' })).length,
+    ).toBeGreaterThan(0)
 
     await user.click(screen.getByLabelText('probe-send-message'))
 
@@ -275,7 +348,9 @@ describe('AiChatProvider', () => {
 
     await user.click(screen.getByRole('button', { name: 'open-chat' }))
     await user.click(screen.getByRole('button', { name: '同意并继续' }))
-    expect((await screen.findAllByRole('heading', { name: 'AI 对话' })).length).toBeGreaterThan(0)
+    expect(
+      (await screen.findAllByRole('heading', { name: 'AI 对话' })).length,
+    ).toBeGreaterThan(0)
 
     await user.click(screen.getByLabelText('probe-send-message'))
     expect(screen.getAllByText('true').length).toBeGreaterThan(0)
@@ -306,8 +381,11 @@ describe('AiChatProvider', () => {
             sessionId: 'session-public-001',
             locale: 'zh',
             status: 'open',
+            quotaDate: '2026-05-12',
+            maxDailyTurns: 20,
             turnCount: 1,
             remainingTurns: 19,
+            totalUserTurns: 1,
             useKeyStatus: 'claimed',
             lead: {
               id: 'lead-public-001',
@@ -357,7 +435,9 @@ describe('AiChatProvider', () => {
 
     await user.click(screen.getByRole('button', { name: 'open-chat' }))
     await user.click(screen.getByRole('button', { name: '同意并继续' }))
-    expect((await screen.findAllByRole('heading', { name: 'AI 对话' })).length).toBeGreaterThan(0)
+    expect(
+      (await screen.findAllByRole('heading', { name: 'AI 对话' })).length,
+    ).toBeGreaterThan(0)
 
     await user.click(screen.getByLabelText('probe-send-message'))
     await waitFor(() => {

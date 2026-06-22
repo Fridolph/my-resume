@@ -28,7 +28,7 @@ import { useResumeDraftSectionActions } from './hooks/use-resume-draft-section-a
 import { useResumeDraftTranslationActions } from './hooks/use-resume-draft-translation-actions'
 
 const editorModeTabBaseClass =
-  'h-9 flex-1 rounded-full px-3 text-sm font-semibold transition-colors md:h-10 md:flex-none'
+  'h-8 flex-1 rounded-full px-3 text-sm font-semibold transition-colors md:h-10 md:flex-none'
 const editorModeTabActiveClass =
   '!border-[color:var(--admin-primary)] !bg-[var(--admin-primary)] !text-white hover:!bg-[var(--admin-button-primary-bg-hover)]'
   const editorModeTabIdleClass =
@@ -283,10 +283,8 @@ export function ResumeDraftEditorPanel({
                     .join(' ')
                     .trim()}
                   onPress={() => setEditorLocaleMode('zh')}
-                  size="sm"
-                  type="button"
                   variant="ghost">
-                  中文主编辑
+                  中文编辑
                 </Button>
                 <Button
                   aria-selected={editorLocaleMode === 'en'}
@@ -299,10 +297,8 @@ export function ResumeDraftEditorPanel({
                     .join(' ')
                     .trim()}
                   onPress={() => setEditorLocaleMode('en')}
-                  size="sm"
-                  type="button"
                   variant="ghost">
-                  英文翻译工作区
+                  En workspace
                 </Button>
               </div>
             </div>

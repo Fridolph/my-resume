@@ -495,13 +495,14 @@ function AiTaskProgressToast({ hidden }: { hidden: boolean }) {
 
   if (isCollapsed) {
     return (
-      <button
+      <Button
         aria-label="展开 AI 简历导入识别进度"
         aria-live="polite"
         className="fixed right-4 top-4 z-50 grid min-w-[8.25rem] gap-1 rounded-[22px] border border-white/70 bg-white/92 px-3.5 py-3 text-left shadow-[0_18px_60px_rgba(15,23,42,0.14)] ring-1 ring-zinc-950/5 backdrop-blur-xl transition hover:-translate-y-0.5 hover:shadow-[0_22px_70px_rgba(15,23,42,0.18)] dark:border-zinc-800/80 dark:bg-zinc-950/92 dark:ring-white/10 sm:right-5 sm:top-5"
         data-testid="ai-task-progress-mini"
-        onClick={() => setIsCollapsed(false)}
-        type="button">
+        onPress={() => setIsCollapsed(false)}
+        type="button"
+        variant="ghost">
         <span className="flex items-center justify-between gap-3">
           <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-400">
             AI Task
@@ -527,7 +528,7 @@ function AiTaskProgressToast({ hidden }: { hidden: boolean }) {
         <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
           简历导入识别
         </span>
-      </button>
+      </Button>
     )
   }
 

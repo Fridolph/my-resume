@@ -62,6 +62,16 @@ export interface UpdateRagIndexRunStatusInput {
   updatedAt: Date
 }
 
+export interface UpdateRagDocumentByIdInput {
+  id: string
+  sourceScope?: RagSourceScope
+  sourceVersion?: string
+  title?: string
+  contentHash?: string
+  metadataJson?: Record<string, unknown> | null
+  updatedAt: Date
+}
+
 @Injectable()
 export class RagRetrievalRepository {
   constructor(
@@ -323,6 +333,93 @@ export class RagRetrievalRepository {
     }
 
     return result
+  }
+
+  async listChunksByDocumentId(documentId: string) {
+    return this.database
+      .select({
+        chunkId: ragChunks.id,
+        documentId: ragChunks.documentId,
+        chunkIndex: ragChunks.chunkIndex,
+        section: ragChunks.section,
+        content: ragChunks.content,
+        embeddingJson: ragChunks.embeddingJson,
+        metadataJson: ragChunks.metadataJson,
+        documentMetadataJson: ragDocuments.metadataJson,
+        documentSourceType: ragDocuments.sourceType,
+        documentSourceScope: ragDocuments.sourceScope,
+        documentTitle: ragDocuments.title,
+        documentSourceVersion: ragDocuments.sourceVersion,
+      })
+      .from(ragChunks)
+      .innerJoin(ragDocuments, eq(ragChunks.documentId, ragDocuments.id))
+      .where(eq(ragChunks.documentId, documentId))
+      .orderBy(ragChunks.chunkIndex)
+  }
+
+  async listDocumentsBySourceType(sourceType: RagSourceType) {
+    return this.database
+      .select()
+      .from(ragDocuments)
+      .where(eq(ragDocuments.sourceType, sourceType))
+      .orderBy(desc(ragDocuments.createdAt))
+  }
+
+  async deleteDocumentsBySourceType(sourceType: RagSourceType) {
+    const rows = await this.database
+      .select({ id: ragDocuments.id })
+      .from(ragDocuments)
+      .where(eq(ragDocuments.sourceType, sourceType))
+
+    await this.database.transaction(async (transaction) => {
+      for (const row of rows) {
+        await transaction.delete(ragChunks).where(eq(ragChunks.documentId, row.id))
+      }
+
+      await transaction.delete(ragDocuments).where(eq(ragDocuments.sourceType, sourceType))
+    })
+
+    return rows.map((row) => row.id)
+  }
+
+  async updateDocumentById(input: UpdateRagDocumentByIdInput) {
+    const updateData: {
+      sourceScope?: RagSourceScope
+      sourceVersion?: string
+      title?: string
+      contentHash?: string
+      metadataJson?: Record<string, unknown> | null
+      updatedAt: Date
+    } = {
+      updatedAt: input.updatedAt,
+    }
+
+    if (typeof input.sourceScope !== 'undefined') {
+      updateData.sourceScope = input.sourceScope
+    }
+
+    if (typeof input.sourceVersion !== 'undefined') {
+      updateData.sourceVersion = input.sourceVersion
+    }
+
+    if (typeof input.title !== 'undefined') {
+      updateData.title = input.title
+    }
+
+    if (typeof input.contentHash !== 'undefined') {
+      updateData.contentHash = input.contentHash
+    }
+
+    if (typeof input.metadataJson !== 'undefined') {
+      updateData.metadataJson = input.metadataJson ?? null
+    }
+
+    await this.database
+      .update(ragDocuments)
+      .set(updateData)
+      .where(eq(ragDocuments.id, input.id))
+
+    return this.findDocumentById(input.id)
   }
 
   async deleteDocument(documentId: string) {

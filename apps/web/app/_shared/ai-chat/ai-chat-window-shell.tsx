@@ -42,7 +42,7 @@ export function AiChatWindowShell({
   status,
   subtitle,
   title,
-}: {
+  }: {
   children: ReactNode
   footer?: ReactNode
   isOpen: boolean
@@ -50,7 +50,7 @@ export function AiChatWindowShell({
   onHide: () => void
   onMinimize: () => void
   status?: ReactNode
-  subtitle: string
+  subtitle: ReactNode
   title: string
 }) {
   if (!isOpen || typeof document === 'undefined') {
@@ -70,9 +70,9 @@ export function AiChatWindowShell({
               <h2 className="truncate text-lg font-semibold tracking-[-0.04em] text-zinc-950 dark:text-white">
                 {title}
               </h2>
-              <p className="mt-1 truncate text-xs leading-5 text-zinc-500 dark:text-zinc-400">
+              <div className="mt-1 text-xs leading-5 text-zinc-500 dark:text-zinc-400">
                 {subtitle}
-              </p>
+              </div>
             </div>
             <div className="flex shrink-0 items-center gap-2">
               {status ? <div className="hidden md:block">{status}</div> : null}
