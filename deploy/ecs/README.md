@@ -20,6 +20,7 @@
 - `rollback.sh [tag]`：回滚到上一版或指定 tag
 - `build-and-push-images.sh`：本地构建并推送三端镜像（image 模式专用）
 - `sync-base-image.sh`：同步基础镜像到私有仓库（降低 DockerHub 依赖风险）
+- `sync-local-db-to-ecs.sh`：把本地 SQLite（可选含 RAG snapshot）同步到 ECS 生产目录
 - `stack-env-checklist.md`：`stack.env.local` 填写清单
 
 模板目录：
@@ -217,6 +218,25 @@ DEPLOY_DOCKER_CACHE_REF=<registry>/my-resume-build-cache:buildcache
 - 显式 `--tag`
 - 显式 `--version`
 - 自动 `--auto-tag`（当前提交必须已打 `v*` tag）
+
+### 4.4 同步本地 SQLite 到 ECS
+
+只同步本地数据库：
+
+```bash
+./deploy/ecs/sync-local-db-to-ecs.sh \
+  --ssh-target fri \
+  --stack-env ./.env.stack.local
+```
+
+如果生产使用 `RAG_VECTOR_STORE_BACKEND=snapshot`，建议连 `rag-vector-snapshot.json` 一起同步：
+
+```bash
+./deploy/ecs/sync-local-db-to-ecs.sh \
+  --ssh-target fri \
+  --stack-env ./.env.stack.local \
+  --sync-rag-snapshot
+```
 
 ```bash
 ./deploy/ecs/release-from-local.sh \
