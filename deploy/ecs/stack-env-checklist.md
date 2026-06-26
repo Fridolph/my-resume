@@ -61,6 +61,25 @@ cp /opt/my-resume/deploy/templates/stack.env.example \
 - `QINIU_AI_BASE_URL`
 - `QINIU_AI_MODEL`
 
+若 `AI_PROVIDER=deepseek`，还需：
+
+- `DEEPSEEK_API_KEY`
+- `DEEPSEEK_BASE_URL`
+- `DEEPSEEK_MODEL`
+- `EMBEDDINGS_API_KEY`
+- `EMBEDDINGS_URL`
+- `EMBEDDINGS_MODEL_NAME`
+
+RAG 检索后端建议按环境区分：
+
+- 本地开发：`RAG_VECTOR_STORE_BACKEND=milvus`
+- 线上生产：`RAG_VECTOR_STORE_BACKEND=snapshot` 或保持 `local`
+
+若线上使用 JSON 快照，还需：
+
+- `RAG_VECTOR_SNAPSHOT_PATH`
+- `RAG_SEARCH_USE_VECTOR_STORE=true`
+
 ---
 
 ## 3) 镜像部署必填项（推荐）
@@ -168,10 +187,19 @@ AUTH_VIEWER_USERNAME=viewer
 AUTH_ADMIN_PASSWORD=replace-with-a-strong-admin-password
 AUTH_VIEWER_PASSWORD=replace-with-a-strong-viewer-password
 
-AI_PROVIDER=qiniu
-QINIU_AI_API_KEY=replace-with-real-key
-QINIU_AI_BASE_URL=https://api.qnaigc.com/v1
-QINIU_AI_MODEL=deepseek-v3
+AI_PROVIDER=deepseek
+DEEPSEEK_API_KEY=replace-with-real-key
+DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
+DEEPSEEK_MODEL=deepseek-v4-flash
+EMBEDDINGS_API_KEY=replace-with-real-dashscope-key
+EMBEDDINGS_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+EMBEDDINGS_MODEL_NAME=text-embedding-v3
+
+RAG_VECTOR_STORE_BACKEND=snapshot
+RAG_VECTOR_SNAPSHOT_PATH=/app/apps/server/storage/rag/rag-vector-snapshot.json
+RAG_SEARCH_USE_VECTOR_STORE=true
+RAG_SEARCH_VECTOR_SCOPE=published
+RAG_SEARCH_VECTOR_FALLBACK_TO_LOCAL=true
 ```
 
 ---
