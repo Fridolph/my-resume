@@ -16,7 +16,10 @@ import type { RagAskCitation, RagRetrievalSourceType } from '../rag/rag.types'
 import { AiChatGraphState } from './ai-chat-graph.state'
 import { isLangGraphChatEnabled } from './ai-chat-graph.constants'
 import { afterRoute } from './edges/after-route.edge'
+import { afterEvaluate } from './edges/after-evaluate.edge'
 import { createDirectAnswerNode } from './nodes/direct-answer.node'
+import { createEvaluateNode } from './nodes/evaluate.node'
+import { createFallbackAnswerNode } from './nodes/fallback-answer.node'
 import { createRagGenerateNode } from './nodes/rag-generate.node'
 import { createRetrieveNode } from './nodes/retrieve.node'
 import { createRouteIntentNode } from './nodes/route-intent.node'
@@ -665,29 +668,44 @@ export class AiChatGraphService {
   /**
    * 编译 LangGraph StateGraph（惰性初始化）。
    *
-   * M30 Issue 2 — 4 节点 + 条件边：
+   * M30 Issue 2+3 — 6 节点 + 条件边：
    * START → route_intent ─┬→ direct_answer → END
-   *                        └→ retrieve → rag_generate → END
+   *                        └→ retrieve → evaluate
+   *                              ┌─────────┴─────────┐
+   *                              ▼                   ▼
+   *                        rag_generate       fallback_answer
+   *                              │                   │
+   *                              ▼                   ▼
+   *                            END                 END
    */
   private compileLangGraph() {
     const routeIntentNode = createRouteIntentNode()
     const directAnswerNode = createDirectAnswerNode(this.aiService)
     const retrieveNode = createRetrieveNode(this.ragService, this.resumePublicationService)
+    const evaluateNode = createEvaluateNode()
     const ragGenerateNode = createRagGenerateNode()
+    const fallbackAnswerNode = createFallbackAnswerNode()
 
     return new StateGraph(AiChatGraphState)
       .addNode('route_intent', routeIntentNode as any)
       .addNode('direct_answer', directAnswerNode as any)
       .addNode('retrieve', retrieveNode as any)
+      .addNode('evaluate', evaluateNode as any)
       .addNode('rag_generate', ragGenerateNode as any)
+      .addNode('fallback_answer', fallbackAnswerNode as any)
       .addEdge(START, 'route_intent')
       .addConditionalEdges('route_intent', afterRoute as any, {
         direct_answer: 'direct_answer',
         retrieve: 'retrieve',
       })
       .addEdge('direct_answer', END)
-      .addEdge('retrieve', 'rag_generate')
+      .addEdge('retrieve', 'evaluate')
+      .addConditionalEdges('evaluate', afterEvaluate as any, {
+        rag_generate: 'rag_generate',
+        fallback_answer: 'fallback_answer',
+      })
       .addEdge('rag_generate', END)
+      .addEdge('fallback_answer', END)
       .compile()
   }
 
