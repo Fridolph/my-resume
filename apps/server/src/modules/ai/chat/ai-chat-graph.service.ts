@@ -16,7 +16,10 @@ import type { RagAskCitation, RagRetrievalSourceType } from '../rag/rag.types'
 import { AiChatGraphState } from './ai-chat-graph.state'
 import { isLangGraphChatEnabled } from './ai-chat-graph.constants'
 import { afterRoute } from './edges/after-route.edge'
+import { afterDecompose } from './edges/after-decompose.edge'
 import { afterEvaluate } from './edges/after-evaluate.edge'
+import { createDecomposeNode } from './nodes/decompose.node'
+import { createDecomposeQuestionNode } from './nodes/decompose-question.node'
 import { createDirectAnswerNode } from './nodes/direct-answer.node'
 import { createEvaluateNode } from './nodes/evaluate.node'
 import { createFallbackAnswerNode } from './nodes/fallback-answer.node'
@@ -668,19 +671,26 @@ export class AiChatGraphService {
   /**
    * 编译 LangGraph StateGraph（惰性初始化）。
    *
-   * M30 Issue 2+3 — 6 节点 + 条件边：
+   * M30+M31 — 7 节点 + 条件边：
    * START → route_intent ─┬→ direct_answer → END
-   *                        └→ retrieve → evaluate
-   *                              ┌─────────┴─────────┐
-   *                              ▼                   ▼
-   *                        rag_generate       fallback_answer
-   *                              │                   │
-   *                              ▼                   ▼
-   *                            END                 END
+   *                        └→ decompose
+   *                              ├─ simple → retrieve
+   *                              └─ complex → decompose_question → retrieve
+   *                                                                    │
+   *                                                                    ▼
+   *                                                              evaluate
+   *                                                    ┌─────────┴─────────┐
+   *                                                    ▼                   ▼
+   *                                              rag_generate       fallback_answer
+   *                                                    │                   │
+   *                                                    ▼                   ▼
+   *                                                  END                 END
    */
   private compileLangGraph() {
     const routeIntentNode = createRouteIntentNode()
     const directAnswerNode = createDirectAnswerNode(this.aiService)
+    const decomposeNode = createDecomposeNode()
+    const decomposeQuestionNode = createDecomposeQuestionNode()
     const retrieveNode = createRetrieveNode(this.ragService, this.resumePublicationService)
     const evaluateNode = createEvaluateNode()
     const ragGenerateNode = createRagGenerateNode()
@@ -689,6 +699,8 @@ export class AiChatGraphService {
     return new StateGraph(AiChatGraphState)
       .addNode('route_intent', routeIntentNode as any)
       .addNode('direct_answer', directAnswerNode as any)
+      .addNode('decompose', decomposeNode as any)
+      .addNode('decompose_question', decomposeQuestionNode as any)
       .addNode('retrieve', retrieveNode as any)
       .addNode('evaluate', evaluateNode as any)
       .addNode('rag_generate', ragGenerateNode as any)
@@ -696,9 +708,14 @@ export class AiChatGraphService {
       .addEdge(START, 'route_intent')
       .addConditionalEdges('route_intent', afterRoute as any, {
         direct_answer: 'direct_answer',
-        retrieve: 'retrieve',
+        retrieve: 'decompose',
       })
       .addEdge('direct_answer', END)
+      .addConditionalEdges('decompose', afterDecompose as any, {
+        retrieve: 'retrieve',
+        decompose_question: 'decompose_question',
+      })
+      .addEdge('decompose_question', 'retrieve')
       .addEdge('retrieve', 'evaluate')
       .addConditionalEdges('evaluate', afterEvaluate as any, {
         rag_generate: 'rag_generate',
