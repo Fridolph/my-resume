@@ -21,6 +21,7 @@ export type RagContentType =
   | 'hobby'
   | 'tech_blog'
   | 'knowledge_column'
+  | 'work_detail'
   | 'general'
 
 export type RagSourceCollection = 'resume' | 'knowledge' | 'user_docs'
@@ -77,7 +78,7 @@ export function resolveKnowledgeDomainFromContentType(
   if (contentType === 'hobby') return 'hobbies'
   if (contentType === 'tech_blog' || contentType === 'knowledge_column') return 'writing_media'
   if (contentType === 'project') return 'projects'
-  if (contentType === 'experience') return 'experience'
+  if (contentType === 'experience' || contentType === 'work_detail') return 'experience'
   if (contentType === 'skills') return 'skills'
 
   return 'writing_media'
@@ -125,6 +126,7 @@ export function normalizeRagContentType(value: string | undefined): RagContentTy
     value === 'hobby' ||
     value === 'tech_blog' ||
     value === 'knowledge_column' ||
+    value === 'work_detail' ||
     value === 'general'
   ) {
     return value

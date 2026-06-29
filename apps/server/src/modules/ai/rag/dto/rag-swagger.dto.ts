@@ -160,11 +160,11 @@ export class RagUserDocIngestBodyDto {
   chunkingProfile?: 'balanced' | 'contextual' | 'semantic'
 
   @ApiPropertyOptional({
-    description: '内容类型：hobby=兴趣爱好，tech_blog=技术博客，knowledge_column=知识专栏，general=其他通用',
-    enum: ['hobby', 'tech_blog', 'knowledge_column', 'general'],
+    description: '内容类型：hobby=兴趣爱好，tech_blog=技术博客，knowledge_column=知识专栏，work_detail=工作经历补充，general=其他通用',
+    enum: ['hobby', 'tech_blog', 'knowledge_column', 'work_detail', 'general'],
     example: 'tech_blog',
   })
-  contentType?: 'hobby' | 'tech_blog' | 'knowledge_column' | 'general'
+  contentType?: 'hobby' | 'tech_blog' | 'knowledge_column' | 'work_detail' | 'general'
 
   @ApiPropertyOptional({
     description: '资料标题（优先于文件名），支持 UTF-8 中文',
@@ -196,8 +196,8 @@ export class RagCustomBodyDto {
   @ApiProperty({ description: '正文内容，支持 Markdown', example: '# 易经\n\n这是我的易经学习笔记...' })
   content!: string
 
-  @ApiPropertyOptional({ description: '内容类型', enum: ['hobby', 'tech_blog', 'knowledge_column', 'general'], example: 'hobby' })
-  contentType?: 'hobby' | 'tech_blog' | 'knowledge_column' | 'general'
+  @ApiPropertyOptional({ description: '内容类型', enum: ['hobby', 'tech_blog', 'knowledge_column', 'work_detail', 'general'], example: 'hobby' })
+  contentType?: 'hobby' | 'tech_blog' | 'knowledge_column' | 'work_detail' | 'general'
 
   @ApiPropertyOptional({ description: '入库作用域', enum: ['draft', 'published'], example: 'published' })
   scope?: 'draft' | 'published'
@@ -340,10 +340,10 @@ export class RagDocumentDetailDto {
 
   @ApiPropertyOptional({
     description: '内容类型',
-    enum: ['hobby', 'tech_blog', 'knowledge_column', 'general'],
+    enum: ['hobby', 'tech_blog', 'knowledge_column', 'work_detail', 'general'],
     example: 'tech_blog',
   })
-  contentType?: 'hobby' | 'tech_blog' | 'knowledge_column' | 'general'
+  contentType?: 'hobby' | 'tech_blog' | 'knowledge_column' | 'work_detail' | 'general'
 
   @ApiProperty({
     description: '完整正文内容',
@@ -425,7 +425,7 @@ export class RagExportUserDocsResultDto {
     id: string
     title: string
     sourceScope: 'draft' | 'published'
-    contentType?: 'hobby' | 'tech_blog' | 'knowledge_column' | 'general'
+    contentType?: 'hobby' | 'tech_blog' | 'knowledge_column' | 'work_detail' | 'general'
     summary?: string
     linkUrl?: string
     linkUrls?: string[]

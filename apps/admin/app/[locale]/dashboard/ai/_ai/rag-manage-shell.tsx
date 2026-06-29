@@ -23,6 +23,7 @@ const CONTENT_TYPE_OPTIONS: Array<{
   { label: '兴趣爱好', description: '生活方式、运动、收藏、兴趣记录', value: 'hobby' },
   { label: '技术博客', description: '技术文章、实践复盘、项目过程', value: 'tech_blog' },
   { label: '知识专栏', description: '系列专栏、长期输出、主题整理', value: 'knowledge_column' },
+  { label: '工作经历补充', description: '工作经历细节、行业背景、项目补充说明', value: 'work_detail' },
   { label: '其他通用', description: '不便细分的综合资料', value: 'general' },
 ]
 
@@ -70,6 +71,7 @@ function contentTypeLabel(type?: string) {
     hobby: '兴趣爱好',
     tech_blog: '技术博客',
     knowledge_column: '知识专栏',
+    work_detail: '工作经历补充',
     general: '其他通用',
     article: '技术博客',
     media: '知识专栏',

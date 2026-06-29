@@ -16,6 +16,10 @@ const CONTENT_TYPE_OPTIONS: Array<{ label: string; value: RagUserDocContentType 
   { label: '兴趣爱好', value: 'hobby' },
   { label: '技术博客', value: 'tech_blog' },
   { label: '知识专栏', value: 'knowledge_column' },
+  { label: '工作经历补充', value: 'work_detail' },
+  { label: '其他通用', value: 'general' },
+  { label: '技术博客', value: 'tech_blog' },
+  { label: '知识专栏', value: 'knowledge_column' },
   { label: '其他通用', value: 'general' },
 ]
 
@@ -274,7 +278,7 @@ export function RagExtensionShell({ locale: _locale }: { locale: AppLocale }) {
                   <div className="flex flex-wrap items-center gap-2">
                     {doc.contentType ? (
                       <Chip size="sm" variant="soft">
-                        {doc.contentType === 'hobby' ? '兴趣爱好' : doc.contentType === 'tech_blog' ? '技术博客' : doc.contentType === 'knowledge_column' ? '知识专栏' : doc.contentType === 'general' ? '其他通用' : doc.contentType}
+                        {doc.contentType === 'hobby' ? '兴趣爱好' : doc.contentType === 'tech_blog' ? '技术博客' : doc.contentType === 'knowledge_column' ? '知识专栏' : doc.contentType === 'work_detail' ? '工作经历补充' : doc.contentType === 'general' ? '其他通用' : doc.contentType}
                       </Chip>
                     ) : null}
                     <span className="text-xs text-zinc-400 dark:text-zinc-500">
