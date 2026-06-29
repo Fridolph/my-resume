@@ -3,11 +3,34 @@ import { Logger } from '@nestjs/common'
 import type { ResumePublicationService } from '../../../resume/application/services/resume-publication.service'
 import type { RagKnowledgeDomain } from '../../rag/rag-knowledge-domain'
 import type { RagService } from '../../rag/rag.service'
-import type { RagRetrievalSourceType } from '../../rag/rag.types'
+import type { RagRetrievalSourceType, RagSearchMatch } from '../../rag/rag.types'
 import type { AiChatLocale } from '../ai-chat.types'
 import { DEFAULT_MIN_ACCEPTED_CITATION_SCORE, DEFAULT_RAG_LIMIT } from '../ai-chat-graph.constants'
 
 const logger = new Logger('RetrieveNode')
+
+/**
+ * 按 id 去重，保留更高 score 的条目。
+ *
+ * 多跳检索不同轮次可能召回同一文档的不同 chunk，
+ * mergeUnique 确保最终 context 无重复。
+ */
+function mergeUnique(existing: RagSearchMatch[], incoming: RagSearchMatch[]): RagSearchMatch[] {
+  const map = new Map<string, RagSearchMatch>()
+
+  for (const doc of existing) {
+    map.set(doc.id, doc)
+  }
+
+  for (const doc of incoming) {
+    const prev = map.get(doc.id)
+    if (!prev || doc.score > prev.score) {
+      map.set(doc.id, doc)
+    }
+  }
+
+  return [...map.values()]
+}
 
 /**
  * retrieve 节点工厂。
@@ -54,8 +77,9 @@ export function createRetrieveNode(
       },
     )
 
-    // 多跳模式：游标 +1
+    // 多跳模式：游标 +1，合并去重
     const nextSubIdx = subQuestions ? idx + 1 : idx
+    const mergedDocuments = mergeUnique(state.documents ?? [], result.matches)
 
     logger.log({
       event: 'graph.retrieve.done',
@@ -64,10 +88,11 @@ export function createRetrieveNode(
       topCitationScore: result.citations[0]?.score ?? 0,
       retrievalCount: (state.retrievalCount ?? 0) + 1,
       nextSubIdx,
+      totalDocuments: mergedDocuments.length,
     })
 
     return {
-      documents: result.matches,
+      documents: mergedDocuments,
       citations: result.citations,
       answer: result.answer,
       retrievalCount: (state.retrievalCount ?? 0) + 1,
