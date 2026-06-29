@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common'
+import { END, START, StateGraph } from '@langchain/langgraph'
 
 import { ResumePublicationService } from '../../resume/application/services/resume-publication.service'
 import type {
@@ -12,6 +13,13 @@ import type { RagKnowledgeDomain } from '../rag/rag-knowledge-domain'
 import { buildRagAskSystemPrompt } from '../rag/prompts/rag-ask.prompt'
 import { RagCatalogProbeHit, RagService } from '../rag/rag.service'
 import type { RagAskCitation, RagRetrievalSourceType } from '../rag/rag.types'
+import { AiChatGraphState } from './ai-chat-graph.state'
+import { isLangGraphChatEnabled } from './ai-chat-graph.constants'
+import { afterRoute } from './edges/after-route.edge'
+import { createDirectAnswerNode } from './nodes/direct-answer.node'
+import { createRagGenerateNode } from './nodes/rag-generate.node'
+import { createRetrieveNode } from './nodes/retrieve.node'
+import { createRouteIntentNode } from './nodes/route-intent.node'
 import type {
   AiChatAnswerGenerationResult,
   AiChatExperienceCardBlock,
@@ -643,6 +651,7 @@ function isClearlyOutOfScopeQuestion(question: string): boolean {
 @Injectable()
 export class AiChatGraphService {
   private readonly logger = new Logger(AiChatGraphService.name)
+  private compiledGraph: ReturnType<typeof this.compileLangGraph> | null = null
 
   constructor(
     @Inject(AiService)
@@ -653,7 +662,100 @@ export class AiChatGraphService {
     private readonly resumePublicationService: ResumePublicationService,
   ) {}
 
+  /**
+   * 编译 LangGraph StateGraph（惰性初始化）。
+   *
+   * M30 Issue 2 — 4 节点 + 条件边：
+   * START → route_intent ─┬→ direct_answer → END
+   *                        └→ retrieve → rag_generate → END
+   */
+  private compileLangGraph() {
+    const routeIntentNode = createRouteIntentNode()
+    const directAnswerNode = createDirectAnswerNode(this.aiService)
+    const retrieveNode = createRetrieveNode(this.ragService, this.resumePublicationService)
+    const ragGenerateNode = createRagGenerateNode()
+
+    return new StateGraph(AiChatGraphState)
+      .addNode('route_intent', routeIntentNode as any)
+      .addNode('direct_answer', directAnswerNode as any)
+      .addNode('retrieve', retrieveNode as any)
+      .addNode('rag_generate', ragGenerateNode as any)
+      .addEdge(START, 'route_intent')
+      .addConditionalEdges('route_intent', afterRoute as any, {
+        direct_answer: 'direct_answer',
+        retrieve: 'retrieve',
+      })
+      .addEdge('direct_answer', END)
+      .addEdge('retrieve', 'rag_generate')
+      .addEdge('rag_generate', END)
+      .compile()
+  }
+
+  private getCompiledGraph() {
+    if (!this.compiledGraph) {
+      this.compiledGraph = this.compileLangGraph()
+    }
+    return this.compiledGraph
+  }
+
   async generateAnswer(input: AiChatGraphInput): Promise<AiChatAnswerGenerationResult> {
+    // 灰度开关：启用 LangGraph 引擎
+    if (isLangGraphChatEnabled()) {
+      return this.generateAnswerWithLangGraph(input)
+    }
+
+    return this.generateAnswerLegacy(input)
+  }
+
+  /**
+   * LangGraph 引擎入口。
+   *
+   * 编译 StateGraph → invoke(state) → 提取 answer + blocks + citations。
+   */
+  private async generateAnswerWithLangGraph(
+    input: AiChatGraphInput,
+  ): Promise<AiChatAnswerGenerationResult> {
+    const startedAt = Date.now()
+    const question = input.question.trim()
+
+    try {
+      const graph = this.getCompiledGraph()
+
+      const result = await graph.invoke({
+        question,
+        locale: input.locale,
+        maxRetrievals: 5,
+      })
+
+      this.logger.log({
+        event: 'ai-chat.langgraph.completed',
+        question,
+        strategy: result.strategy,
+        routeReason: result.routeReason,
+        citationCount: result.citations?.length ?? 0,
+        answerLength: result.answer?.length ?? 0,
+        durationMs: Date.now() - startedAt,
+      })
+
+      return {
+        answer: result.answer ?? '',
+        blocks: result.blocks ?? [],
+        citations: result.citations ?? [],
+      }
+    } catch (error) {
+      this.logger.warn({
+        event: 'ai-chat.langgraph.fallback',
+        question,
+        message: error instanceof Error ? error.message : String(error),
+        durationMs: Date.now() - startedAt,
+      })
+
+      // LangGraph 异常时回退到旧引擎
+      return this.generateAnswerLegacy(input)
+    }
+  }
+
+  private async generateAnswerLegacy(input: AiChatGraphInput): Promise<AiChatAnswerGenerationResult> {
     const startedAt = Date.now()
     const normalized = this.normalizeInput(input)
     let route: GraphRouteDecision | null = null
