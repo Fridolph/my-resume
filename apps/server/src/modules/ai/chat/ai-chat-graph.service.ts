@@ -16,6 +16,7 @@ import type { RagAskCitation, RagRetrievalSourceType } from '../rag/rag.types'
 import { AiChatGraphState } from './ai-chat-graph.state'
 import { isLangGraphChatEnabled } from './ai-chat-graph.constants'
 import { afterRoute } from './edges/after-route.edge'
+import { afterPlan } from './edges/after-plan.edge'
 import { afterDecompose } from './edges/after-decompose.edge'
 import { afterEvaluate } from './edges/after-evaluate.edge'
 import { createDecomposeNode } from './nodes/decompose.node'
@@ -23,6 +24,7 @@ import { createDecomposeQuestionNode } from './nodes/decompose-question.node'
 import { createDirectAnswerNode } from './nodes/direct-answer.node'
 import { createEvaluateNode } from './nodes/evaluate.node'
 import { createFallbackAnswerNode } from './nodes/fallback-answer.node'
+import { createPlanNextNode } from './nodes/plan-next.node'
 import { createRagGenerateNode } from './nodes/rag-generate.node'
 import { createRetrieveNode } from './nodes/retrieve.node'
 import { createRouteIntentNode } from './nodes/route-intent.node'
@@ -671,20 +673,23 @@ export class AiChatGraphService {
   /**
    * 编译 LangGraph StateGraph（惰性初始化）。
    *
-   * M30+M31 — 7 节点 + 条件边：
+   * M30+M31 — 8 节点 + 条件边 + 🔄 回边循环：
    * START → route_intent ─┬→ direct_answer → END
    *                        └→ decompose
    *                              ├─ simple → retrieve
    *                              └─ complex → decompose_question → retrieve
    *                                                                    │
    *                                                                    ▼
-   *                                                              evaluate
+   *                                                              plan_next
    *                                                    ┌─────────┴─────────┐
    *                                                    ▼                   ▼
-   *                                              rag_generate       fallback_answer
-   *                                                    │                   │
-   *                                                    ▼                   ▼
-   *                                                  END                 END
+   *                                              retrieve (🔄)        evaluate
+   *                                                                  ┌───┴───┐
+   *                                                                  ▼       ▼
+   *                                                            rag_generate  fallback_answer
+   *                                                                  │       │
+   *                                                                  ▼       ▼
+   *                                                                END     END
    */
   private compileLangGraph() {
     const routeIntentNode = createRouteIntentNode()
@@ -692,6 +697,7 @@ export class AiChatGraphService {
     const decomposeNode = createDecomposeNode()
     const decomposeQuestionNode = createDecomposeQuestionNode()
     const retrieveNode = createRetrieveNode(this.ragService, this.resumePublicationService)
+    const planNextNode = createPlanNextNode()
     const evaluateNode = createEvaluateNode()
     const ragGenerateNode = createRagGenerateNode()
     const fallbackAnswerNode = createFallbackAnswerNode()
@@ -702,6 +708,7 @@ export class AiChatGraphService {
       .addNode('decompose', decomposeNode as any)
       .addNode('decompose_question', decomposeQuestionNode as any)
       .addNode('retrieve', retrieveNode as any)
+      .addNode('plan_next', planNextNode as any)
       .addNode('evaluate', evaluateNode as any)
       .addNode('rag_generate', ragGenerateNode as any)
       .addNode('fallback_answer', fallbackAnswerNode as any)
@@ -716,7 +723,11 @@ export class AiChatGraphService {
         decompose_question: 'decompose_question',
       })
       .addEdge('decompose_question', 'retrieve')
-      .addEdge('retrieve', 'evaluate')
+      .addEdge('retrieve', 'plan_next')
+      .addConditionalEdges('plan_next', afterPlan as any, {
+        retrieve: 'retrieve',   // 🔄 回边循环
+        evaluate: 'evaluate',   // 终止
+      })
       .addConditionalEdges('evaluate', afterEvaluate as any, {
         rag_generate: 'rag_generate',
         fallback_answer: 'fallback_answer',
