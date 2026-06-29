@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from 'fs'
+import { Logger } from '@nestjs/common'
 
 import { mapLegacySourceTypeToRetrievalSourceType } from '../../rag.types'
 import type { RagRetrievalSourceType } from '../../rag.types'
@@ -17,6 +18,7 @@ export class JsonSnapshotRagVectorStoreAdapter implements RagVectorStore {
   readonly backend = 'snapshot' as const
   private cachedPath: string | null = null
   private cachedSnapshot: RagVectorSnapshotFile | null = null
+  private readonly logger = new Logger(JsonSnapshotRagVectorStoreAdapter.name)
 
   constructor(private readonly config: RagSnapshotRuntimeConfig) {}
 
@@ -83,12 +85,22 @@ export class JsonSnapshotRagVectorStoreAdapter implements RagVectorStore {
       throw new Error(`RAG vector snapshot file not found: ${this.config.path}`)
     }
 
+    const startedAt = Date.now()
     const parsed = JSON.parse(
       readFileSync(this.config.path, 'utf8'),
     ) as RagVectorSnapshotFile
 
     this.cachedPath = this.config.path
     this.cachedSnapshot = parsed
+
+    this.logger.log({
+      event: 'rag.vector_snapshot.loaded',
+      path: this.config.path,
+      chunkCount: parsed.chunkCount,
+      exportedAt: parsed.exportedAt,
+      durationMs: Date.now() - startedAt,
+    })
+
     return parsed
   }
 }
