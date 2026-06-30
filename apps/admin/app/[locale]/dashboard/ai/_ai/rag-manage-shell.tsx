@@ -252,44 +252,41 @@ function SortableRichUrlEditor({
   }
 
   return (
-    <div className="field">
+    <>
       <span>{label}</span>
-      <div className="grid gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
         <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>
           <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
-            <div className="grid gap-3">
-              {values.map((value, index) => (
-                <SortableItemShell
-                  className="min-w-0"
-                  dragHandleLabel={`拖拽排序${label} ${index + 1}`}
-                  id={sortableIds[index] ?? `${label}-${index}`}
-                  key={sortableIds[index] ?? `${label}-${index}`}>
-                  {({ dragHandle, isDragging }) => (
-                    <div className={['card stack gap-3 rounded-[22px] p-4 transition-shadow', isDragging ? 'border-blue-300 shadow-[0_18px_38px_rgba(37,99,235,0.18)] dark:border-blue-400/40' : ''].join(' ')}>
-                      <div className="flex min-w-0 items-start justify-between gap-3">
-                        {dragHandle ? <div className="shrink-0">{dragHandle}</div> : null}
-                        <h5 className="text-sm font-semibold text-zinc-950 dark:text-white">{label} {index + 1}</h5>
-                        <CloseActionButton label={`删除${label} ${index + 1}`} onClick={() => removeValue(index)} />
-                      </div>
-                      <Input className="min-w-0" fullWidth onChange={(e) => updateValue(index, e.target.value)} placeholder={placeholder} value={value} variant="secondary" />
-                      <div className="grid gap-2 md:grid-cols-2">
-                        <Input onChange={(e) => updateTitle(index, e.target.value)} placeholder="展示标题（可选）" value={titles[index] ?? ''} variant="secondary" />
-                        <Input onChange={(e) => updateDescription(index, e.target.value)} placeholder="简短描述（可选）" value={descriptions[index] ?? ''} variant="secondary" />
-                      </div>
+            {values.map((value, index) => (
+              <SortableItemShell
+                dragHandleLabel={`拖拽排序${label} ${index + 1}`}
+                id={sortableIds[index] ?? `${label}-${index}`}
+                key={sortableIds[index] ?? `${label}-${index}`}>
+                {({ dragHandle, isDragging }) => (
+                  <div className={['card stack gap-3 rounded-[22px] p-4 transition-shadow', isDragging ? 'border-blue-300 shadow-[0_18px_38px_rgba(37,99,235,0.18)] dark:border-blue-400/40' : ''].join(' ')}>
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      {dragHandle ? <div className="shrink-0">{dragHandle}</div> : null}
+                      <h5 className="text-sm font-semibold text-zinc-950 dark:text-white">{label} {index + 1}</h5>
+                      <CloseActionButton label={`删除${label} ${index + 1}`} onClick={() => removeValue(index)} />
                     </div>
-                  )}
-                </SortableItemShell>
-              ))}
-            </div>
+                    <Input className="min-w-0" fullWidth onChange={(e) => updateValue(index, e.target.value)} placeholder={placeholder} value={value} variant="secondary" />
+                    <div className="flex flex-col gap-4">
+                      <Input onChange={(e) => updateTitle(index, e.target.value)} placeholder="展示标题（可选）" value={titles[index] ?? ''} variant="secondary" />
+                      <Input onChange={(e) => updateDescription(index, e.target.value)} placeholder="简短描述（可选）" value={descriptions[index] ?? ''} variant="secondary" />
+                    </div>
+                  </div>
+                )}
+              </SortableItemShell>
+            ))}
           </SortableContext>
         </DndContext>
-        <div>
-          <Button onPress={() => { onChange([...values, '']); onTitlesChange([...titles, '']); onDescriptionsChange([...descriptions, '']) }} size="sm" variant="secondary">
-            + 添加{label}
-          </Button>
-        </div>
       </div>
-    </div>
+      <div>
+        <Button onPress={() => { onChange([...values, '']); onTitlesChange([...titles, '']); onDescriptionsChange([...descriptions, '']) }} size="sm" variant="secondary">
+          + 添加{label}
+        </Button>
+      </div>
+    </>
   )
 }
 
@@ -347,9 +344,9 @@ function SortableUrlListEditor({
   }
 
   return (
-    <div className="field">
+    <>
       <span>{label}</span>
-      <div className="grid gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
         <DndContext
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
@@ -357,87 +354,85 @@ function SortableUrlListEditor({
           <SortableContext
             items={sortableIds}
             strategy={verticalListSortingStrategy}>
-            <div className="grid gap-3">
-              {values.map((value, index) => (
-                <SortableItemShell
-                  className="min-w-0"
-                  dragHandleLabel={`拖拽排序${label} ${index + 1}`}
-                  id={sortableIds[index] ?? `${label}-${index}`}
-                  key={sortableIds[index] ?? `${label}-${index}`}>
-                  {({ dragHandle, isDragging }) => (
-                    <div
-                      className={[
-                        'card stack gap-3 rounded-[22px] p-4 transition-shadow',
-                        isDragging
-                          ? 'border-blue-300 shadow-[0_18px_38px_rgba(37,99,235,0.18)] dark:border-blue-400/40'
-                          : '',
-                      ].join(' ')}>
-                      <div className="flex min-w-0 items-start justify-between gap-3">
-                        <div className="flex min-w-0 items-start gap-3">
-                          {dragHandle ? <div className="shrink-0">{dragHandle}</div> : null}
-                          <div className="min-w-0 space-y-1">
-                            <h5 className="text-sm font-semibold text-zinc-950 dark:text-white">
-                              {label} {index + 1}
-                            </h5>
-                            <p className="muted truncate">
-                              {value || placeholder}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex shrink-0 items-center gap-1">
-                          <IconActionButton
-                            buttonProps={{ isDisabled: index === 0 }}
-                            icon={<MoveUpIcon />}
-                            label={`上移${label} ${index + 1}`}
-                            onClick={() => moveValue(index, 'up')}
-                            size="compact"
-                            variant="ghost"
-                          />
-                          <IconActionButton
-                            buttonProps={{ isDisabled: index === values.length - 1 }}
-                            icon={<MoveDownIcon />}
-                            label={`下移${label} ${index + 1}`}
-                            onClick={() => moveValue(index, 'down')}
-                            size="compact"
-                            variant="ghost"
-                          />
-                          <CloseActionButton
-                            className="mt-0.5"
-                            label={`${label} ${index + 1}`}
-                            onClick={() => removeValue(index)}
-                          />
+            {values.map((value, index) => (
+              <SortableItemShell
+                className="min-w-0"
+                dragHandleLabel={`拖拽排序${label} ${index + 1}`}
+                id={sortableIds[index] ?? `${label}-${index}`}
+                key={sortableIds[index] ?? `${label}-${index}`}>
+                {({ dragHandle, isDragging }) => (
+                  <div
+                    className={[
+                      'card stack gap-3 rounded-[22px] p-4 transition-shadow',
+                      isDragging
+                        ? 'border-blue-300 shadow-[0_18px_38px_rgba(37,99,235,0.18)] dark:border-blue-400/40'
+                        : '',
+                    ].join(' ')}>
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-start gap-3">
+                        {dragHandle ? <div className="shrink-0">{dragHandle}</div> : null}
+                        <div className="min-w-0 space-y-1">
+                          <h5 className="text-sm font-semibold text-zinc-950 dark:text-white">
+                            {label} {index + 1}
+                          </h5>
+                          <p className="muted truncate">
+                            {value || placeholder}
+                          </p>
                         </div>
                       </div>
-
-                      <label className="field min-w-0">
-                        <span>{`${label} ${index + 1} 地址`}</span>
-                        <Input
-                          aria-label={`${label} ${index + 1} 地址`}
-                          className="min-w-0"
-                          fullWidth
-                          onChange={(event) => updateValue(index, event.target.value)}
-                          placeholder={placeholder}
-                          value={value}
-                          variant="secondary"
+                      <div className="flex shrink-0 items-center gap-1">
+                        <IconActionButton
+                          buttonProps={{ isDisabled: index === 0 }}
+                          icon={<MoveUpIcon />}
+                          label={`上移${label} ${index + 1}`}
+                          onClick={() => moveValue(index, 'up')}
+                          size="compact"
+                          variant="ghost"
                         />
-                      </label>
+                        <IconActionButton
+                          buttonProps={{ isDisabled: index === values.length - 1 }}
+                          icon={<MoveDownIcon />}
+                          label={`下移${label} ${index + 1}`}
+                          onClick={() => moveValue(index, 'down')}
+                          size="compact"
+                          variant="ghost"
+                        />
+                        <CloseActionButton
+                          className="mt-0.5"
+                          label={`${label} ${index + 1}`}
+                          onClick={() => removeValue(index)}
+                        />
+                      </div>
                     </div>
-                  )}
-                </SortableItemShell>
-              ))}
-            </div>
+
+                    <label className="field min-w-0">
+                      <span>{`${label} ${index + 1} 地址`}</span>
+                      <Input
+                        aria-label={`${label} ${index + 1} 地址`}
+                        className="min-w-0"
+                        fullWidth
+                        onChange={(event) => updateValue(index, event.target.value)}
+                        placeholder={placeholder}
+                        value={value}
+                        variant="secondary"
+                      />
+                    </label>
+                  </div>
+                )}
+              </SortableItemShell>
+            ))}
           </SortableContext>
         </DndContext>
-        <Button
-          className="w-fit"
-          onPress={() => onChange([...values, ''])}
-          size="sm"
-          variant="outline">
-          <PlusIcon />
-          添加一项
-        </Button>
       </div>
-    </div>
+      <Button
+        className="w-fit"
+        onPress={() => onChange([...values, ''])}
+        size="sm"
+        variant="outline">
+        <PlusIcon />
+        添加一项
+      </Button>
+    </>
   )
 }
 
