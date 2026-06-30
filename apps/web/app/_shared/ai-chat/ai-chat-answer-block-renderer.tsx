@@ -203,6 +203,7 @@ function UserDocCard({
   category,
   imageUrl,
   keywords,
+  linkDisplayTitle,
   locale,
   media,
   summary,
@@ -293,7 +294,6 @@ function renderCardBlock(block: AiChatMessageBlock, locale: AiChatAnswerBlockRen
         category="hobby"
         imageUrl={block.imageUrl}
         keywords={block.keywords}
-        linkDisplayTitle={block.linkDisplayTitle}
         locale={locale}
         media={block.media}
         summary={block.description}
@@ -309,7 +309,6 @@ function renderCardBlock(block: AiChatMessageBlock, locale: AiChatAnswerBlockRen
         category={block.category ?? 'tech_blog'}
         imageUrl={block.imageUrl}
         keywords={block.keywords}
-        linkDisplayTitle={block.linkDisplayTitle}
         locale={locale}
         media={block.media}
         summary={block.summary}
