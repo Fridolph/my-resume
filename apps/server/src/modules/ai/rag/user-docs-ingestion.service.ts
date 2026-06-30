@@ -9,7 +9,7 @@ import {
   buildUserDocsKnowledgeMetadata,
   type RagKnowledgeMetadata,
 } from './rag-knowledge-domain'
-import type { RagRichCardMetadata } from './rag.types'
+import type { RagRichCardMedia, RagRichCardMetadata } from './rag.types'
 import { RAG_VECTOR_STORE } from './vector-store/tokens'
 import type { RagVectorChunkPayload, RagVectorStore } from './vector-store/types'
 import {
@@ -87,7 +87,10 @@ export interface IngestCustomInput {
   sourceScope?: RagSourceScope
   linkUrl?: string
   linkUrls?: string[]
+  linkTitles?: string[]
+  linkDescriptions?: string[]
   imageUrls?: string[]
+  imageTitles?: string[]
   summary?: string
   linkDisplayTitle?: string
 }
@@ -285,17 +288,21 @@ async function resolveCustomSummary(
 function buildCustomRichCardMetadata(input: IngestCustomInput & { resolvedSummary: string }): RagRichCardMetadata {
   const linkUrls = normalizeCustomLinkUrls(input)
   const imageUrls = normalizeStringList(input.imageUrls)
-  const media = [
+  const linkTitles = input.linkTitles ?? []
+  const linkDescriptions = input.linkDescriptions ?? []
+  const imageTitles = input.imageTitles ?? []
+  const media: RagRichCardMedia[] = [
     ...linkUrls.slice(1).map((url, index) => ({
       type: 'link' as const,
       url,
-      title: `参考链接 ${index + 2}`,
+      title: linkTitles[index + 1]?.trim() || `参考链接 ${index + 2}`,
+      ...(linkDescriptions[index + 1]?.trim() ? { description: linkDescriptions[index + 1]!.trim() } : {}),
     })),
     ...imageUrls.slice(1).map((url, index) => ({
       type: 'image' as const,
       url,
       thumbnailUrl: url,
-      title: `参考图片 ${index + 2}`,
+      title: imageTitles[index + 1]?.trim() || `参考图片 ${index + 2}`,
     })),
   ]
 
@@ -988,7 +995,10 @@ export class UserDocsIngestionService {
     sourceScope?: RagSourceScope
     linkUrl?: string
     linkUrls?: string[]
+    linkTitles?: string[]
+    linkDescriptions?: string[]
     imageUrls?: string[]
+    imageTitles?: string[]
     summary?: string
     linkDisplayTitle?: string
   }) {
@@ -1056,9 +1066,13 @@ export class UserDocsIngestionService {
       contentType: knowledgeMetadata.contentType,
       sourceScope: input.sourceScope ?? document.sourceScope,
       linkUrls: effectiveLinkUrls,
+      linkTitles: input.linkTitles,
+      linkDescriptions: input.linkDescriptions,
       imageUrls: nextImageUrls,
+      imageTitles: input.imageTitles,
       summary: resolvedSummary,
       resolvedSummary,
+      linkDisplayTitle: input.linkDisplayTitle,
     })
     const embeddingResult = await this.aiService.embedTexts({ texts: chunks })
     const nextSourceVersion = buildUserDocSourceVersion(now)

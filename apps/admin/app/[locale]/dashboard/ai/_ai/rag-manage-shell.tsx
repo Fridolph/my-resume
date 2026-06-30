@@ -196,6 +196,103 @@ function MoveDownIcon() {
   )
 }
 
+function SortableRichUrlEditor({
+  label,
+  placeholder,
+  values,
+  titles,
+  descriptions,
+  sortableIds,
+  sensors,
+  onReorder,
+  onChange,
+  onTitlesChange,
+  onDescriptionsChange,
+}: {
+  label: string
+  placeholder: string
+  values: string[]
+  titles: string[]
+  descriptions: string[]
+  sortableIds: string[]
+  sensors: ReturnType<typeof useSensors>
+  onReorder: (fromIndex: number, toIndex: number) => void
+  onChange: (values: string[]) => void
+  onTitlesChange: (titles: string[]) => void
+  onDescriptionsChange: (descriptions: string[]) => void
+}) {
+  function updateValue(index: number, value: string) {
+    onChange(values.map((item, itemIndex) => (itemIndex === index ? value : item)))
+  }
+
+  function updateTitle(index: number, value: string) {
+    onTitlesChange(titles.map((item, itemIndex) => (itemIndex === index ? value : item)))
+  }
+
+  function updateDescription(index: number, value: string) {
+    onDescriptionsChange(descriptions.map((item, itemIndex) => (itemIndex === index ? value : item)))
+  }
+
+  function removeValue(index: number) {
+    const nextValues = values.filter((_, itemIndex) => itemIndex !== index)
+    const nextTitles = titles.filter((_, itemIndex) => itemIndex !== index)
+    const nextDescriptions = descriptions.filter((_, itemIndex) => itemIndex !== index)
+    onChange(nextValues.length > 0 ? nextValues : [''])
+    onTitlesChange(nextTitles.length > 0 ? nextTitles : [''])
+    onDescriptionsChange(nextDescriptions.length > 0 ? nextDescriptions : [''])
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const fromIndex = sortableIds.indexOf(String(active.id))
+    const toIndex = sortableIds.indexOf(String(over.id))
+    if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) return
+    onReorder(fromIndex, toIndex)
+  }
+
+  return (
+    <div className="field">
+      <span>{label}</span>
+      <div className="grid gap-3">
+        <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>
+          <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
+            <div className="grid gap-3">
+              {values.map((value, index) => (
+                <SortableItemShell
+                  className="min-w-0"
+                  dragHandleLabel={`拖拽排序${label} ${index + 1}`}
+                  id={sortableIds[index] ?? `${label}-${index}`}
+                  key={sortableIds[index] ?? `${label}-${index}`}>
+                  {({ dragHandle, isDragging }) => (
+                    <div className={['card stack gap-3 rounded-[22px] p-4 transition-shadow', isDragging ? 'border-blue-300 shadow-[0_18px_38px_rgba(37,99,235,0.18)] dark:border-blue-400/40' : ''].join(' ')}>
+                      <div className="flex min-w-0 items-start justify-between gap-3">
+                        {dragHandle ? <div className="shrink-0">{dragHandle}</div> : null}
+                        <h5 className="text-sm font-semibold text-zinc-950 dark:text-white">{label} {index + 1}</h5>
+                        <CloseActionButton label={`删除${label} ${index + 1}`} onClick={() => removeValue(index)} />
+                      </div>
+                      <Input className="min-w-0" fullWidth onChange={(e) => updateValue(index, e.target.value)} placeholder={placeholder} value={value} variant="secondary" />
+                      <div className="grid gap-2 md:grid-cols-2">
+                        <Input onChange={(e) => updateTitle(index, e.target.value)} placeholder="展示标题（可选）" value={titles[index] ?? ''} variant="secondary" />
+                        <Input onChange={(e) => updateDescription(index, e.target.value)} placeholder="简短描述（可选）" value={descriptions[index] ?? ''} variant="secondary" />
+                      </div>
+                    </div>
+                  )}
+                </SortableItemShell>
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+        <div>
+          <Button onPress={() => { onChange([...values, '']); onTitlesChange([...titles, '']); onDescriptionsChange([...descriptions, '']) }} size="sm" variant="secondary">
+            + 添加{label}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function SortableUrlListEditor({
   label,
   placeholder,
@@ -453,6 +550,9 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
   const [content, setContent] = useState('')
   const [summary, setSummary] = useState('')
   const [linkDisplayTitle, setLinkDisplayTitle] = useState('')
+  const [linkTitles, setLinkTitles] = useState<string[]>([''])
+  const [linkDescriptions, setLinkDescriptions] = useState<string[]>([''])
+  const [imageTitles, setImageTitles] = useState<string[]>([''])
   const [contentType, setContentType] = useState<RagUserDocContentType>('tech_blog')
   const [linkUrls, setLinkUrls] = useState<string[]>([''])
   const [imageUrls, setImageUrls] = useState<string[]>([''])
@@ -500,6 +600,9 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
   )
   const [editSummary, setEditSummary] = useState('')
   const [editLinkDisplayTitle, setEditLinkDisplayTitle] = useState('')
+  const [editLinkTitles, setEditLinkTitles] = useState<string[]>([''])
+  const [editLinkDescriptions, setEditLinkDescriptions] = useState<string[]>([''])
+  const [editImageTitles, setEditImageTitles] = useState<string[]>([''])
   const [actionError, setActionError] = useState<string | null>(null)
   const [actionResult, setActionResult] = useState<string | null>(null)
 
@@ -578,7 +681,10 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
     setEditContent('')
     setEditContentType('tech_blog')
     setEditLinkUrls([''])
+    setEditLinkTitles([''])
+    setEditLinkDescriptions([''])
     setEditImageUrls([''])
+    setEditImageTitles([''])
     setEditLinkSortableIds(buildSortableIds([''], 'rag-edit-link', nextSortableId))
     setEditImageSortableIds(buildSortableIds([''], 'rag-edit-image', nextSortableId))
     setEditSummary('')
@@ -645,7 +751,10 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
           content: editContent,
           contentType: editContentType,
           linkUrls: normalizeInputRows(editLinkUrls),
+          linkTitles: normalizeInputRows(editLinkTitles),
+          linkDescriptions: normalizeInputRows(editLinkDescriptions),
           imageUrls: normalizeInputRows(editImageUrls),
+          imageTitles: normalizeInputRows(editImageTitles),
           summary: editSummary.trim() || undefined,
           linkDisplayTitle: editLinkDisplayTitle.trim() || undefined,
           scope: viewDetail.sourceScope ?? 'published',
@@ -822,7 +931,10 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
           content,
           contentType,
           linkUrls: normalizeInputRows(linkUrls),
+          linkTitles: normalizeInputRows(linkTitles),
+          linkDescriptions: normalizeInputRows(linkDescriptions),
           imageUrls: normalizeInputRows(imageUrls),
+          imageTitles: normalizeInputRows(imageTitles),
           summary: summary.trim() || undefined,
           linkDisplayTitle: linkDisplayTitle.trim() || undefined,
           scope: 'published',
@@ -836,7 +948,10 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
       setContent('')
       setSummary('')
       setLinkUrls([''])
+      setLinkTitles([''])
+      setLinkDescriptions([''])
       setImageUrls([''])
+      setImageTitles([''])
       setLinkDisplayTitle('')
       setLinkSortableIds(buildSortableIds([''], 'rag-link', nextSortableId))
       setImageSortableIds(buildSortableIds([''], 'rag-image', nextSortableId))
@@ -935,13 +1050,17 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
                   <Input onChange={(e) => setSummary(e.target.value)} placeholder="不填时会由系统自动生成 3 句话内简介" value={summary} variant="secondary" />
                 </label>
                 <ContentTypeRadioGroup label="内容类型" onChange={setContentType} value={contentType} />
-                <SortableUrlListEditor
+                <SortableRichUrlEditor
                   label="参考链接"
                   onChange={handleLinkUrlsChange}
+                  onDescriptionsChange={setLinkDescriptions}
                   onReorder={handleLinkUrlsReorder}
+                  onTitlesChange={setLinkTitles}
+                  descriptions={linkDescriptions}
                   placeholder="https://..."
                   sensors={sensors}
                   sortableIds={linkSortableIds}
+                  titles={linkTitles}
                   values={linkUrls}
                 />
                 <label className="field">
@@ -1311,13 +1430,17 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
                     value={editSummary}
                   />
                 </label>
-                <SortableUrlListEditor
+                <SortableRichUrlEditor
                   label="参考链接"
                   onChange={handleEditLinkUrlsChange}
+                  onDescriptionsChange={setEditLinkDescriptions}
                   onReorder={handleEditLinkUrlsReorder}
+                  onTitlesChange={setEditLinkTitles}
+                  descriptions={editLinkDescriptions}
                   placeholder="https://..."
                   sensors={sensors}
                   sortableIds={editLinkSortableIds}
+                  titles={editLinkTitles}
                   values={editLinkUrls}
                 />
                 <label className="field">

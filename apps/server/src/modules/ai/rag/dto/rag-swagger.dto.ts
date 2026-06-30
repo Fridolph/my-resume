@@ -211,6 +211,15 @@ export class RagCustomBodyDto {
   @ApiPropertyOptional({ description: '多个参考图片 URL', type: [String], example: ['https://example.com/image.png'] })
   imageUrls?: string[]
 
+  @ApiPropertyOptional({ description: '参考链接展示标题（与 linkUrls 一一对应）', type: [String], example: ['在线阅读', '备用镜像'] })
+  linkTitles?: string[]
+
+  @ApiPropertyOptional({ description: '参考链接描述（与 linkUrls 一一对应）', type: [String], example: ['完整版文档，更新至 2025'] })
+  linkDescriptions?: string[]
+
+  @ApiPropertyOptional({ description: '参考图片描述（与 imageUrls 一一对应）', type: [String], example: ['架构图'] })
+  imageTitles?: string[]
+
   @ApiPropertyOptional({ description: '文章概览/摘要；未传时由服务端自动生成短概览', example: '从 Dao 的视角解释系统、约束与协作的核心关系。' })
   summary?: string
 
