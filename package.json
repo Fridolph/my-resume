@@ -28,6 +28,8 @@
     "docker:up": "[ -f .env ] || cp .env.stack.local .env; docker compose up --build",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
+    "docker:build:ecs": "DOCKER_DEFAULT_PLATFORM=linux/amd64 docker compose build",
+    "docker:push:ecs": "bash deploy/ecs/build-and-push-images.sh",
     "deploy:ecs:one-click": "./deploy/ecs/release-from-local.sh",
     "test": "turbo run test",
     "test:unit": "pnpm build:shared && turbo run test --filter=@my-resume/server --filter=@my-resume/web --filter=@my-resume/admin --filter=@my-resume/api-client --filter=@my-resume/ui",

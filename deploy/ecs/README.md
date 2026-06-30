@@ -109,6 +109,26 @@ DEPLOY_ROOT=/opt/my-resume ./deploy/ecs/deploy-latest-tag.sh
 
 ## 4. Image 模式工作流（推荐）
 
+### 4.1 本地快速构建（M 系列 Mac，增量发布最快）
+
+```bash
+# 1) 本地构建 amd64 镜像（首次 ~5min，增量 ~1min）
+DOCKER_DEFAULT_PLATFORM=linux/amd64 docker compose build
+
+# 2) tag + 推送（不重新构建！直接从本地镜像推）
+./deploy/ecs/build-and-push-images.sh \
+  --version 2.5.1 \
+  --image-prefix ghcr.io/<user>/my-resume \
+  --local-tag
+
+# 3) ECS 发布
+ssh root@<ecs-ip> "cd /opt/my-resume && git fetch --tags --force && ./deploy/ecs/release.sh v2.5.1"
+```
+
+优势：利用分层缓存，只改 server 时 web/admin 推 `Layer already exists`，几秒完成。
+
+### 4.2 脚本全量构建（跨平台，首次或全量推荐）
+
 ### 4.0 先同步基础镜像到私有仓库（强烈推荐）
 
 ```bash

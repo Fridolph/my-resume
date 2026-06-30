@@ -115,6 +115,21 @@ cd /path/to/my-resume
 - `ghcr.io/<...>/my-resume/web:v2.2.13`
 - `ghcr.io/<...>/my-resume/admin:v2.2.13`
 
+### 3.1 增量发布（M 系列 Mac，只改部分服务时推荐）
+
+如果本地已有用 `DOCKER_DEFAULT_PLATFORM=linux/amd64 docker compose build` 构建的镜像，可以跳过脚本构建，直接 tag + push：
+
+```bash
+./deploy/ecs/build-and-push-images.sh \
+  --version 2.5.1 \
+  --image-prefix ghcr.io/<user>/my-resume \
+  --services server \              # 只推变更的服务
+  --local-tag                      # 不重新构建，用本地镜像
+```
+
+`--local-tag` 会跳过所有 `docker build`，直接从本地 `my-resume-server:latest` 等镜像 tag 并 push。没变更的层 push 时显示 `Layer already exists`，几秒完成。
+- `ghcr.io/<...>/my-resume/admin:v2.2.13`
+
 若只升级部分服务（例如仅构建 `web + admin`，复用旧 `server`）：
 
 ```bash

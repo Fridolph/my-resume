@@ -30,6 +30,7 @@ WEB_SERVER_API_BASE_URL='http://server:5577'
 SERVICES='all'
 REUSE_FROM_TAG=''
 SKIP_REUSE_UNSELECTED='0'
+LOCAL_TAG='0'
 
 usage() {
   cat <<'EOF'
@@ -91,6 +92,8 @@ Options:
                   当只构建部分服务时，可把未构建服务从该 tag 复制到新 tag
   --skip-reuse-unselected
                   只构建选中服务，不自动复制未构建服务 tag（高级用法）
+  --local-tag      不重新构建，用本地 docker 已有镜像 tag + push
+                  （需先用 DOCKER_DEFAULT_PLATFORM=linux/amd64 docker compose build）
   --load          本地 load，不 push（调试用）
   --dry-run       只打印命令
 EOF
@@ -262,6 +265,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --skip-reuse-unselected)
       SKIP_REUSE_UNSELECTED='1'
+      shift
+      ;;
+    --local-tag)
+      LOCAL_TAG='1'
       shift
       ;;
     --load)
@@ -600,6 +607,51 @@ if [[ -n "$APT_SECURITY_MIRROR_URL" ]]; then
 fi
 
 cd "$REPO_ROOT"
+
+# ── local-tag 模式：跳过构建，直接 tag + push 本地已有镜像 ──
+if [[ "$LOCAL_TAG" == '1' ]]; then
+  echo "Local tag mode: using existing local images (skipping build)"
+  echo "  Server: $SERVER_REF"
+  echo "  Web:    $WEB_REF"
+  echo "  Admin:  $ADMIN_REF"
+  echo ''
+
+  local_image_name() {
+    local service="$1"
+    case "$service" in
+      server) echo 'my-resume-server:latest' ;;
+      web)    echo 'my-resume-web:latest' ;;
+      admin)  echo 'my-resume-admin:latest' ;;
+    esac
+  }
+
+  local_image_ref() {
+    local service="$1"
+    case "$service" in
+      server) echo "$SERVER_REF" ;;
+      web)    echo "$WEB_REF" ;;
+      admin)  echo "$ADMIN_REF" ;;
+    esac
+  }
+
+  for svc in server web admin; do
+    if ! service_selected "$svc"; then continue; fi
+    local local_name
+    local_name=$(local_image_name "$svc")
+    local remote_ref
+    remote_ref=$(local_image_ref "$svc")
+
+    echo "[$svc] Tagging $local_name -> $remote_ref"
+    run_cmd docker tag "$local_name" "$remote_ref"
+    echo "[$svc] Pushing $remote_ref"
+    run_cmd docker push "$remote_ref"
+  done
+
+  echo ''
+  echo 'Local tag push complete.'
+  exit 0
+fi
+
 if [[ -n "$BASE_IMAGE" ]]; then
   log_msg="Prefetch base image: $BASE_IMAGE"
   echo "$log_msg"
