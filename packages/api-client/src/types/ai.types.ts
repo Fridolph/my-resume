@@ -745,7 +745,7 @@ export type RagUserDocIngestScope = 'draft' | 'published'
  * `balanced` 用于默认教学闭环，`contextual` 用于保留更长上下文的检索实验。
  */
 export type RagUserDocChunkingProfile = 'balanced' | 'contextual' | 'semantic'
-export type RagUserDocContentType = 'hobby' | 'tech_blog' | 'knowledge_column' | 'general'
+export type RagUserDocContentType = 'hobby' | 'tech_blog' | 'knowledge_column' | 'general' | 'work_detail'
 
 /**
  * RAG user_docs 入库参数。

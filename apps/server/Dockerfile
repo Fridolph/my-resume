@@ -19,13 +19,13 @@ COPY packages/api-client/package.json packages/api-client/package.json
 COPY packages/config/package.json packages/config/package.json
 COPY packages/ui/package.json packages/ui/package.json
 COPY packages/utils/package.json packages/utils/package.json
-RUN pnpm install --frozen-lockfile --filter @my-resume/server...
+RUN pnpm install --frozen-lockfile --filter @my-resume/server... --filter @my-resume/api-client... --filter @my-resume/utils...
 
 # ═══ 阶段 2：构建应用 ═══
 FROM deps AS builder
 COPY packages/ packages/
 COPY apps/server/ apps/server/
-RUN pnpm --filter "./packages/*" build
+RUN pnpm --filter @my-resume/utils build && pnpm --filter @my-resume/api-client build
 RUN pnpm --filter @my-resume/server build
 RUN pnpm --filter @my-resume/server deploy --legacy --prod /prod/server
 

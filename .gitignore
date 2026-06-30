@@ -40,3 +40,4 @@ deploy/ecs/stack.env.local
 
 .playwright-mcp
 .pnpm-store
+.reasonix
