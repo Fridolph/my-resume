@@ -67,10 +67,31 @@ export function createRouteIntentNode() {
 
     const knowledgeDomains = parseKnowledgeDomains(result.knowledgeDomains)
 
+    // 按 strategy 映射 sourceTypes（对齐 legacy routeIntentAndDomain）
+    let sourceTypes: string[] | undefined
+    let preferSourceTypes: string[] | undefined
+    switch (result.strategy) {
+      case 'supplement':
+        sourceTypes = ['user_docs', 'knowledge']
+        preferSourceTypes = ['user_docs', 'knowledge']
+        break
+      case 'hybrid':
+        sourceTypes = ['resume_core', 'user_docs']
+        preferSourceTypes = ['user_docs', 'resume_core']
+        break
+      case 'resume':
+      default:
+        sourceTypes = ['resume_core']
+        preferSourceTypes = ['resume_core']
+        break
+    }
+
     return {
       strategy: result.strategy,
       routeReason: result.reason,
       knowledgeDomains: knowledgeDomains ?? ([] as any),
+      sourceTypes,
+      preferSourceTypes,
     }
   }
 }

@@ -1,4 +1,5 @@
 import { Logger } from '@nestjs/common'
+import type { RunnableConfig } from '@langchain/core/runnables'
 
 import type { ResumePublicationService } from '../../../resume/application/services/resume-publication.service'
 import type { RagKnowledgeDomain } from '../../rag/rag-knowledge-domain'
@@ -9,53 +10,38 @@ import { DEFAULT_MIN_ACCEPTED_CITATION_SCORE, DEFAULT_RAG_LIMIT } from '../ai-ch
 
 const logger = new Logger('RetrieveNode')
 
-/**
- * 按 id 去重，保留更高 score 的条目。
- *
- * 多跳检索不同轮次可能召回同一文档的不同 chunk，
- * mergeUnique 确保最终 context 无重复。
- */
 function mergeUnique(existing: RagSearchMatch[], incoming: RagSearchMatch[]): RagSearchMatch[] {
   const map = new Map<string, RagSearchMatch>()
-
-  for (const doc of existing) {
-    map.set(doc.id, doc)
-  }
-
+  for (const doc of existing) map.set(doc.id, doc)
   for (const doc of incoming) {
     const prev = map.get(doc.id)
-    if (!prev || doc.score > prev.score) {
-      map.set(doc.id, doc)
-    }
+    if (!prev || doc.score > prev.score) map.set(doc.id, doc)
   }
-
   return [...map.values()]
 }
 
-/**
- * retrieve 节点工厂。
- *
- * 调用 RagService.ask() 执行检索 + RAG 生成。
- * 返回 matches + citations + answer，供后续 evaluate 节点判断。
- *
- * M31 多跳扩展点：当 subQuestions 非空时，按 nextSubIdx 取子问题检索。
- */
 export function createRetrieveNode(
   ragService: RagService,
   resumePublicationService: ResumePublicationService,
 ) {
-  return async (state: {
-    question: string
-    locale: AiChatLocale
-    knowledgeDomains: RagKnowledgeDomain[]
-    sourceTypes?: RagRetrievalSourceType[]
-    preferSourceTypes?: RagRetrievalSourceType[]
-    subQuestions?: string[]
-    nextSubIdx?: number
-    documents?: any[]
-    retrievalCount?: number
-  }) => {
-    // 多跳模式：取当前游标对应的子问题，否则直接用原始问题
+  return async (
+    state: {
+      question: string
+      locale: AiChatLocale
+      knowledgeDomains: RagKnowledgeDomain[]
+      sourceTypes?: RagRetrievalSourceType[]
+      preferSourceTypes?: RagRetrievalSourceType[]
+      subQuestions?: string[]
+      nextSubIdx?: number
+      documents?: any[]
+      retrievalCount?: number
+    },
+    config?: RunnableConfig,
+  ) => {
+    const onToken = (config?.configurable as Record<string, unknown>)?.onToken as
+      | ((token: string) => void)
+      | undefined
+
     const subQuestions = state.subQuestions
     const idx = state.nextSubIdx ?? 0
     const query =
@@ -74,10 +60,10 @@ export function createRetrieveNode(
       },
       {
         minAcceptedCitationScore: DEFAULT_MIN_ACCEPTED_CITATION_SCORE,
+        onToken,
       },
     )
 
-    // 多跳模式：游标 +1，合并去重
     const nextSubIdx = subQuestions ? idx + 1 : idx
     const mergedDocuments = mergeUnique(state.documents ?? [], result.matches)
 

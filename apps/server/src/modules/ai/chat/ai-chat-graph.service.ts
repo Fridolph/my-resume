@@ -509,72 +509,17 @@ function filterDisplayRelevantCitations(
     return [...citations]
   }
 
-  const { questionTerms, answerTerms, focusText } = buildCitationFocusTerms(question, answerText)
-  const primaryHobbyCitation = selectPrimaryHobbyCitation(focusText, hobbyCitations)
-  if (!primaryHobbyCitation) {
-    return [...citations]
-  }
-
-  if ((isBroadHobbyOverviewQuestion(question) || questionTerms.length === 0) && answerTerms.length > 0) {
-    const normalizedAnswerText = normalizeComparableText(answerText).replace(/\s+/g, '')
-    const answerAnchoredCitations = citations.filter((citation) => {
-      if (citation.sourceType !== 'user_docs' || citation.contentType !== 'hobby') {
-        return true
-      }
-
-      if (citation.id === primaryHobbyCitation.id) {
-        return true
-      }
-
-      const citationTerms = buildCitationDisplayTerms(citation)
-      const comparableTitle = normalizeComparableText(
-        citation.richCard?.title ?? citation.title,
-      ).replace(/\s+/g, '')
-
-      return (
-        countOverlap(citationTerms, answerTerms) > 0
-        || (Boolean(comparableTitle) && normalizedAnswerText.includes(comparableTitle))
-      )
-    })
-
-    const matchedHobbyCount = answerAnchoredCitations.filter(
-      (citation) => citation.sourceType === 'user_docs' && citation.contentType === 'hobby',
-    ).length
-
-    if (matchedHobbyCount > 0) {
-      return answerAnchoredCitations
-    }
-  }
-
-  const anchorTerms = Array.from(
-    new Set([
-      ...questionTerms,
-      ...buildCitationDisplayTerms(
-        primaryHobbyCitation,
-        questionTerms.length > 0 ? { includeSnippet: false } : undefined,
-      ),
-    ]),
-  )
-  const primaryTitle = normalizeComparableText(
-    primaryHobbyCitation.richCard?.title ?? primaryHobbyCitation.title,
-  )
+  // 保留最多 3 条 hobby citation（按 score 降序），其余非 hobby citation 全部保留
+  const topHobbyCitations = [...hobbyCitations]
+    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+    .slice(0, 3)
+  const topHobbyIds = new Set(topHobbyCitations.map((c) => c.id))
 
   return citations.filter((citation) => {
     if (citation.sourceType !== 'user_docs' || citation.contentType !== 'hobby') {
       return true
     }
-
-    if (citation.id === primaryHobbyCitation.id) {
-      return true
-    }
-
-    const comparableTitle = normalizeComparableText(citation.richCard?.title ?? citation.title)
-    if (primaryTitle && comparableTitle === primaryTitle) {
-      return true
-    }
-
-    const citationTerms = buildCitationDisplayTerms(citation)
-    return countOverlap(citationTerms, anchorTerms) > 0
+    return topHobbyIds.has(citation.id)
   })
 }
 
@@ -767,26 +712,44 @@ export class AiChatGraphService {
     try {
       const graph = this.getCompiledGraph()
 
-      const result = await graph.invoke({
-        question,
-        locale: input.locale,
-        maxRetrievals: 5,
-      })
+      const result = await graph.invoke(
+        {
+          question,
+          locale: input.locale,
+          maxRetrievals: 5,
+        },
+        { configurable: { onToken: input.onToken } },
+      )
+
+      // 桥接 legacy：获取简历 + 用检索结果构建卡片
+      const citations = result.citations ?? []
+      const answer: string = result.answer ?? ''
+
+      const snapshot = await this.resumePublicationService.getPublished()
+      const resume = snapshot?.resume ?? null
+
+      const resumeBlocks = resume
+        ? this.buildAnswerBlocksFromResume(resume, citations, input.locale)
+        : []
+      const customBlocks = this.buildCustomBlocksFromCitations(question, citations, answer)
+
+      const allBlocks = [...resumeBlocks, ...customBlocks].slice(0, 6)
 
       this.logger.log({
         event: 'ai-chat.langgraph.completed',
         question,
         strategy: result.strategy,
         routeReason: result.routeReason,
-        citationCount: result.citations?.length ?? 0,
-        answerLength: result.answer?.length ?? 0,
+        citationCount: citations.length,
+        blockCount: allBlocks.length,
+        answerLength: answer.length,
         durationMs: Date.now() - startedAt,
       })
 
       return {
-        answer: result.answer ?? '',
-        blocks: result.blocks ?? [],
-        citations: result.citations ?? [],
+        answer,
+        blocks: allBlocks,
+        citations,
       }
     } catch (error) {
       this.logger.warn({
@@ -796,7 +759,6 @@ export class AiChatGraphService {
         durationMs: Date.now() - startedAt,
       })
 
-      // LangGraph 异常时回退到旧引擎
       return this.generateAnswerLegacy(input)
     }
   }
@@ -1272,7 +1234,7 @@ export class AiChatGraphService {
       }
     }
 
-    return blocks.slice(0, 3)
+    return blocks.slice(0, 6)
   }
 
   private findProjectByCitation(
