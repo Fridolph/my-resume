@@ -171,7 +171,7 @@ resolve_ai_runtime_env() {
       require_vars QINIU_AI_API_KEY QINIU_AI_BASE_URL QINIU_AI_MODEL
       ;;
     deepseek)
-      require_vars DEEPSEEK_API_KEY DEEPSEEK_BASE_URL DEEPSEEK_MODEL
+      require_vars DEEPSEEK_API_KEY DEEPSEEK_BASE_URL DEEPSEEK_MODEL EMBEDDINGS_API_KEY
       ;;
     openai-compatible)
       require_vars OPENAI_COMPATIBLE_API_KEY OPENAI_COMPATIBLE_BASE_URL OPENAI_COMPATIBLE_MODEL
@@ -311,6 +311,40 @@ DATABASE_URL=file:/app/.data/my-resume.db
 JWT_SECRET=${JWT_SECRET}
 AI_PROVIDER=${AI_PROVIDER}
 EOF
+
+  if [[ -n "${EMBEDDINGS_API_KEY:-}" ]]; then
+    printf 'EMBEDDINGS_API_KEY=%s\n' "$EMBEDDINGS_API_KEY" >>"$output_path"
+  fi
+  if [[ -n "${EMBEDDINGS_URL:-}" ]]; then
+    printf 'EMBEDDINGS_URL=%s\n' "$EMBEDDINGS_URL" >>"$output_path"
+  fi
+  if [[ -n "${EMBEDDINGS_BASE_URL:-}" ]]; then
+    printf 'EMBEDDINGS_BASE_URL=%s\n' "$EMBEDDINGS_BASE_URL" >>"$output_path"
+  fi
+  if [[ -n "${EMBEDDINGS_MODEL_NAME:-}" ]]; then
+    printf 'EMBEDDINGS_MODEL_NAME=%s\n' "$EMBEDDINGS_MODEL_NAME" >>"$output_path"
+  fi
+  if [[ -n "${EMBEDDINGS_MODEL:-}" ]]; then
+    printf 'EMBEDDINGS_MODEL=%s\n' "$EMBEDDINGS_MODEL" >>"$output_path"
+  fi
+
+  local rag_env_name
+  for rag_env_name in \
+    RAG_VECTOR_STORE_BACKEND \
+    RAG_VECTOR_SNAPSHOT_PATH \
+    RAG_SEARCH_USE_VECTOR_STORE \
+    RAG_SEARCH_VECTOR_SCOPE \
+    RAG_SEARCH_VECTOR_FALLBACK_TO_LOCAL \
+    RAG_MILVUS_MODE \
+    RAG_MILVUS_ADDRESS \
+    RAG_MILVUS_DATABASE \
+    RAG_MILVUS_COLLECTION \
+    RAG_MILVUS_VECTOR_DIMENSION \
+    RAG_MILVUS_TOKEN; do
+    if [[ -n "${!rag_env_name:-}" ]]; then
+      printf '%s=%s\n' "$rag_env_name" "${!rag_env_name}" >>"$output_path"
+    fi
+  done
 
   case "$AI_PROVIDER" in
     qiniu)
