@@ -293,6 +293,7 @@ export class RagController {
       linkUrls: body.linkUrls,
       imageUrls: body.imageUrls,
       summary: body.summary,
+      linkDisplayTitle: body.linkDisplayTitle,
     })
   }
 
@@ -321,6 +322,7 @@ export class RagController {
       linkUrls: body.linkUrls,
       imageUrls: body.imageUrls,
       summary: body.summary,
+      linkDisplayTitle: body.linkDisplayTitle,
     })
   }
 

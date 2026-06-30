@@ -169,6 +169,7 @@ export interface RagRichCardMetadata {
   publishedAt?: string
   keywords?: string[]
   media?: RagRichCardMedia[]
+  linkDisplayTitle?: string
 }
 
 /**

@@ -452,6 +452,7 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [summary, setSummary] = useState('')
+  const [linkDisplayTitle, setLinkDisplayTitle] = useState('')
   const [contentType, setContentType] = useState<RagUserDocContentType>('tech_blog')
   const [linkUrls, setLinkUrls] = useState<string[]>([''])
   const [imageUrls, setImageUrls] = useState<string[]>([''])
@@ -498,6 +499,7 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
     buildSortableIds([''], 'rag-edit-image', nextSortableId),
   )
   const [editSummary, setEditSummary] = useState('')
+  const [editLinkDisplayTitle, setEditLinkDisplayTitle] = useState('')
   const [actionError, setActionError] = useState<string | null>(null)
   const [actionResult, setActionResult] = useState<string | null>(null)
 
@@ -580,6 +582,7 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
     setEditLinkSortableIds(buildSortableIds([''], 'rag-edit-link', nextSortableId))
     setEditImageSortableIds(buildSortableIds([''], 'rag-edit-image', nextSortableId))
     setEditSummary('')
+    setEditLinkDisplayTitle('')
   }
 
   function seedDetailEditor(detail: RagDocumentDetail) {
@@ -593,6 +596,7 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
     setEditLinkSortableIds(buildSortableIds(nextLinkUrls, 'rag-edit-link', nextSortableId))
     setEditImageSortableIds(buildSortableIds(nextImageUrls, 'rag-edit-image', nextSortableId))
     setEditSummary(detail.summary ?? '')
+    setEditLinkDisplayTitle((detail as any).richCard?.linkDisplayTitle ?? '')
   }
 
   async function openDetail(documentId: string, startEditing = false) {
@@ -643,6 +647,7 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
           linkUrls: normalizeInputRows(editLinkUrls),
           imageUrls: normalizeInputRows(editImageUrls),
           summary: editSummary.trim() || undefined,
+          linkDisplayTitle: editLinkDisplayTitle.trim() || undefined,
           scope: viewDetail.sourceScope ?? 'published',
         }),
       })
@@ -819,6 +824,7 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
           linkUrls: normalizeInputRows(linkUrls),
           imageUrls: normalizeInputRows(imageUrls),
           summary: summary.trim() || undefined,
+          linkDisplayTitle: linkDisplayTitle.trim() || undefined,
           scope: 'published',
         }),
       })
@@ -831,6 +837,7 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
       setSummary('')
       setLinkUrls([''])
       setImageUrls([''])
+      setLinkDisplayTitle('')
       setLinkSortableIds(buildSortableIds([''], 'rag-link', nextSortableId))
       setImageSortableIds(buildSortableIds([''], 'rag-image', nextSortableId))
       fetchDocuments()
@@ -937,6 +944,10 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
                   sortableIds={linkSortableIds}
                   values={linkUrls}
                 />
+                <label className="field">
+                  <span>链接展示标题（可选）</span>
+                  <Input onChange={(e) => setLinkDisplayTitle(e.target.value)} placeholder='不填则显示"查看链接"' value={linkDisplayTitle} variant="secondary" />
+                </label>
                 <SortableUrlListEditor
                   label="参考图片"
                   onChange={handleImageUrlsChange}
@@ -1309,6 +1320,10 @@ export function RagManageShell({ locale: _locale }: { locale: AppLocale }) {
                   sortableIds={editLinkSortableIds}
                   values={editLinkUrls}
                 />
+                <label className="field">
+                  <span>链接展示标题（可选）</span>
+                  <Input onChange={(e) => setEditLinkDisplayTitle(e.target.value)} placeholder='不填则显示"查看链接"' value={editLinkDisplayTitle} variant="secondary" />
+                </label>
                 <SortableUrlListEditor
                   label="参考图片"
                   onChange={handleEditImageUrlsChange}

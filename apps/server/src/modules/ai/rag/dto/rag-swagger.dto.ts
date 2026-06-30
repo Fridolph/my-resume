@@ -213,6 +213,9 @@ export class RagCustomBodyDto {
 
   @ApiPropertyOptional({ description: '文章概览/摘要；未传时由服务端自动生成短概览', example: '从 Dao 的视角解释系统、约束与协作的核心关系。' })
   summary?: string
+
+  @ApiPropertyOptional({ description: '链接展示标题，替代默认的"查看链接"文案', example: '在线阅读完整文档' })
+  linkDisplayTitle?: string
 }
 
 export class RagUserDocIngestResultDto {

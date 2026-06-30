@@ -89,6 +89,7 @@ export interface IngestCustomInput {
   linkUrls?: string[]
   imageUrls?: string[]
   summary?: string
+  linkDisplayTitle?: string
 }
 
 export interface ReconcileUserDocsVectorsResult {
@@ -308,6 +309,7 @@ function buildCustomRichCardMetadata(input: IngestCustomInput & { resolvedSummar
     imageUrls,
     keywords: [],
     media,
+    linkDisplayTitle: input.linkDisplayTitle,
   }
 }
 
@@ -988,6 +990,7 @@ export class UserDocsIngestionService {
     linkUrls?: string[]
     imageUrls?: string[]
     summary?: string
+    linkDisplayTitle?: string
   }) {
     const document = await this.ragRetrievalRepository.findDocumentById(documentId)
 

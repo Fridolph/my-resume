@@ -148,6 +148,7 @@ export interface AiChatArticleCardBlock {
   publishedAt?: string
   keywords: string[]
   media?: AiChatCardMediaPreview[]
+  linkDisplayTitle?: string
 }
 
 export interface AiChatMediaCardBlock {
@@ -168,6 +169,7 @@ export interface AiChatHobbyCardBlock {
   imageUrl?: string
   keywords: string[]
   media?: AiChatCardMediaPreview[]
+  linkDisplayTitle?: string
 }
 
 export interface AiChatTextBlock {

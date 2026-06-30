@@ -1220,11 +1220,6 @@ export class AiChatGraphService {
   ): AiChatMessageBlock[] {
     const blocks: AiChatMessageBlock[] = []
     const seen = new Set<string>()
-    const hobbyCitations = citations.filter(
-      (citation) => citation.sourceType === 'user_docs' && citation.contentType === 'hobby',
-    )
-    const { focusText } = buildCitationFocusTerms(question, answerText)
-    const primaryHobbyCitation = selectPrimaryHobbyCitation(focusText, hobbyCitations)
 
     for (const citation of citations) {
       if (citation.sourceType !== 'user_docs') continue
@@ -1244,9 +1239,9 @@ export class AiChatGraphService {
           publishedAt: richCard?.publishedAt,
           keywords: richCard?.keywords ?? citation.tags ?? [],
           media: buildRichCardMedia(citation),
+          linkDisplayTitle: richCard?.linkDisplayTitle,
         })
       } else if (contentType === 'hobby') {
-        if (!primaryHobbyCitation || citation.id !== primaryHobbyCitation.id) continue
         const richCard = citation.richCard
 
         blocks.push({
@@ -1258,6 +1253,7 @@ export class AiChatGraphService {
           imageUrl: richCard?.imageUrl,
           keywords: richCard?.keywords ?? citation.tags ?? [],
           media: buildRichCardMedia(citation),
+          linkDisplayTitle: richCard?.linkDisplayTitle,
         })
       } else if (contentType === 'project') {
         const richCard = citation.richCard

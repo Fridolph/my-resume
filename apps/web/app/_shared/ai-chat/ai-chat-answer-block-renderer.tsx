@@ -212,6 +212,7 @@ function UserDocCard({
   category?: 'hobby' | 'tech_blog' | 'knowledge_column' | 'general'
   imageUrl?: string
   keywords: string[]
+  linkDisplayTitle?: string
   locale: AiChatAnswerBlockRendererLocale
   media?: AiChatCardMediaPreview[]
   summary: string
@@ -222,7 +223,7 @@ function UserDocCard({
 
   return (
     <BlockShell tone={meta.tone}>
-      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_9rem] md:items-start">
+      <div className={`grid gap-3 ${imageUrl ? 'md:grid-cols-[minmax(0,1fr)_9rem]' : ''} md:items-start`}>
         <div className="grid min-w-0 gap-2">
           <div className="flex flex-wrap items-center gap-2">
             <Chip className={meta.chipClassName} size="sm" variant="soft">
@@ -239,11 +240,11 @@ function UserDocCard({
           <MediaPreviewList items={media} locale={locale} />
           {url ? (
             <InlineCardLink href={url}>
-              {locale === 'en' ? 'Open link' : '查看链接'}
+              {linkDisplayTitle || (locale === 'en' ? 'Open link' : '查看链接')}
             </InlineCardLink>
           ) : null}
         </div>
-        <CardImage alt={title} src={imageUrl} />
+        {imageUrl ? <CardImage alt={title} src={imageUrl} /> : null}
       </div>
     </BlockShell>
   )
@@ -292,6 +293,7 @@ function renderCardBlock(block: AiChatMessageBlock, locale: AiChatAnswerBlockRen
         category="hobby"
         imageUrl={block.imageUrl}
         keywords={block.keywords}
+        linkDisplayTitle={block.linkDisplayTitle}
         locale={locale}
         media={block.media}
         summary={block.description}
@@ -307,6 +309,7 @@ function renderCardBlock(block: AiChatMessageBlock, locale: AiChatAnswerBlockRen
         category={block.category ?? 'tech_blog'}
         imageUrl={block.imageUrl}
         keywords={block.keywords}
+        linkDisplayTitle={block.linkDisplayTitle}
         locale={locale}
         media={block.media}
         summary={block.summary}

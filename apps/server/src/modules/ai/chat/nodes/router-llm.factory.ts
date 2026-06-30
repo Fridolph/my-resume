@@ -7,17 +7,35 @@ import { ChatOpenAI } from '@langchain/openai'
  * 所有需要结构化输出的节点（route_intent / evaluate / decompose）
  * 必须使用此实例，普通流式生成用 aiService。
  *
- * 配置读取与 AiProvider 保持一致：
- * OPENAI_API_KEY / OPENAI_BASE_URL / OPENAI_CHAT_MODEL
+ * 凭证优先级与 AiConfig 对齐：
+ *   1. OPENAI_COMPATIBLE_API_KEY / OPENAI_API_KEY
+ *   2. OPENAI_COMPATIBLE_BASE_URL / OPENAI_BASE_URL
+ *   3. OPENAI_CHAT_MODEL / OPENAI_MODEL / deepseek-chat
  */
 export function createRouterLlm(): ChatOpenAI {
+  const apiKey =
+    process.env.DEEPSEEK_API_KEY?.trim() ||
+    process.env.OPENAI_COMPATIBLE_API_KEY?.trim() ||
+    process.env.OPENAI_API_KEY?.trim() ||
+    'mock-key'
+
+  const baseURL =
+    process.env.DEEPSEEK_BASE_URL?.trim() ||
+    process.env.OPENAI_COMPATIBLE_BASE_URL?.trim() ||
+    process.env.OPENAI_BASE_URL?.trim()
+
+  const model =
+    process.env.DEEPSEEK_MODEL?.trim() ||
+    process.env.OPENAI_CHAT_MODEL?.trim() ||
+    process.env.OPENAI_MODEL?.trim() ||
+    'deepseek-chat'
+
   const configuration: Record<string, unknown> = {
-    model: process.env.OPENAI_CHAT_MODEL?.trim() || process.env.OPENAI_MODEL?.trim() || 'deepseek-chat',
-    apiKey: process.env.OPENAI_API_KEY?.trim() || 'mock-key',
+    model,
+    apiKey,
     temperature: 0,
   }
 
-  const baseURL = process.env.OPENAI_BASE_URL?.trim()
   if (baseURL) {
     configuration.configuration = { baseURL }
   }
