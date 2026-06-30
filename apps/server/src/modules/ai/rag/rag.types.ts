@@ -154,6 +154,7 @@ export interface RagRichCardMedia {
   type: 'image' | 'video' | 'link'
   url: string
   title?: string
+  description?: string
   thumbnailUrl?: string
 }
 
@@ -169,6 +170,7 @@ export interface RagRichCardMetadata {
   publishedAt?: string
   keywords?: string[]
   media?: RagRichCardMedia[]
+  linkDisplayTitle?: string
 }
 
 /**

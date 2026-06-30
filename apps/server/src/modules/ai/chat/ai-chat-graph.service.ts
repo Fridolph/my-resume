@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common'
+import { END, START, StateGraph } from '@langchain/langgraph'
 
 import { ResumePublicationService } from '../../resume/application/services/resume-publication.service'
 import type {
@@ -12,6 +13,21 @@ import type { RagKnowledgeDomain } from '../rag/rag-knowledge-domain'
 import { buildRagAskSystemPrompt } from '../rag/prompts/rag-ask.prompt'
 import { RagCatalogProbeHit, RagService } from '../rag/rag.service'
 import type { RagAskCitation, RagRetrievalSourceType } from '../rag/rag.types'
+import { AiChatGraphState } from './ai-chat-graph.state'
+import { isLangGraphChatEnabled } from './ai-chat-graph.constants'
+import { afterRoute } from './edges/after-route.edge'
+import { afterPlan } from './edges/after-plan.edge'
+import { afterDecompose } from './edges/after-decompose.edge'
+import { afterEvaluate } from './edges/after-evaluate.edge'
+import { createDecomposeNode } from './nodes/decompose.node'
+import { createDecomposeQuestionNode } from './nodes/decompose-question.node'
+import { createDirectAnswerNode } from './nodes/direct-answer.node'
+import { createEvaluateNode } from './nodes/evaluate.node'
+import { createFallbackAnswerNode } from './nodes/fallback-answer.node'
+import { createPlanNextNode } from './nodes/plan-next.node'
+import { createRagGenerateNode } from './nodes/rag-generate.node'
+import { createRetrieveNode } from './nodes/retrieve.node'
+import { createRouteIntentNode } from './nodes/route-intent.node'
 import type {
   AiChatAnswerGenerationResult,
   AiChatExperienceCardBlock,
@@ -493,72 +509,17 @@ function filterDisplayRelevantCitations(
     return [...citations]
   }
 
-  const { questionTerms, answerTerms, focusText } = buildCitationFocusTerms(question, answerText)
-  const primaryHobbyCitation = selectPrimaryHobbyCitation(focusText, hobbyCitations)
-  if (!primaryHobbyCitation) {
-    return [...citations]
-  }
-
-  if ((isBroadHobbyOverviewQuestion(question) || questionTerms.length === 0) && answerTerms.length > 0) {
-    const normalizedAnswerText = normalizeComparableText(answerText).replace(/\s+/g, '')
-    const answerAnchoredCitations = citations.filter((citation) => {
-      if (citation.sourceType !== 'user_docs' || citation.contentType !== 'hobby') {
-        return true
-      }
-
-      if (citation.id === primaryHobbyCitation.id) {
-        return true
-      }
-
-      const citationTerms = buildCitationDisplayTerms(citation)
-      const comparableTitle = normalizeComparableText(
-        citation.richCard?.title ?? citation.title,
-      ).replace(/\s+/g, '')
-
-      return (
-        countOverlap(citationTerms, answerTerms) > 0
-        || (Boolean(comparableTitle) && normalizedAnswerText.includes(comparableTitle))
-      )
-    })
-
-    const matchedHobbyCount = answerAnchoredCitations.filter(
-      (citation) => citation.sourceType === 'user_docs' && citation.contentType === 'hobby',
-    ).length
-
-    if (matchedHobbyCount > 0) {
-      return answerAnchoredCitations
-    }
-  }
-
-  const anchorTerms = Array.from(
-    new Set([
-      ...questionTerms,
-      ...buildCitationDisplayTerms(
-        primaryHobbyCitation,
-        questionTerms.length > 0 ? { includeSnippet: false } : undefined,
-      ),
-    ]),
-  )
-  const primaryTitle = normalizeComparableText(
-    primaryHobbyCitation.richCard?.title ?? primaryHobbyCitation.title,
-  )
+  // 保留最多 3 条 hobby citation（按 score 降序），其余非 hobby citation 全部保留
+  const topHobbyCitations = [...hobbyCitations]
+    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+    .slice(0, 3)
+  const topHobbyIds = new Set(topHobbyCitations.map((c) => c.id))
 
   return citations.filter((citation) => {
     if (citation.sourceType !== 'user_docs' || citation.contentType !== 'hobby') {
       return true
     }
-
-    if (citation.id === primaryHobbyCitation.id) {
-      return true
-    }
-
-    const comparableTitle = normalizeComparableText(citation.richCard?.title ?? citation.title)
-    if (primaryTitle && comparableTitle === primaryTitle) {
-      return true
-    }
-
-    const citationTerms = buildCitationDisplayTerms(citation)
-    return countOverlap(citationTerms, anchorTerms) > 0
+    return topHobbyIds.has(citation.id)
   })
 }
 
@@ -643,6 +604,7 @@ function isClearlyOutOfScopeQuestion(question: string): boolean {
 @Injectable()
 export class AiChatGraphService {
   private readonly logger = new Logger(AiChatGraphService.name)
+  private compiledGraph: ReturnType<typeof this.compileLangGraph> | null = null
 
   constructor(
     @Inject(AiService)
@@ -653,7 +615,155 @@ export class AiChatGraphService {
     private readonly resumePublicationService: ResumePublicationService,
   ) {}
 
+  /**
+   * 编译 LangGraph StateGraph（惰性初始化）。
+   *
+   * M30+M31 — 8 节点 + 条件边 + 🔄 回边循环：
+   * START → route_intent ─┬→ direct_answer → END
+   *                        └→ decompose
+   *                              ├─ simple → retrieve
+   *                              └─ complex → decompose_question → retrieve
+   *                                                                    │
+   *                                                                    ▼
+   *                                                              plan_next
+   *                                                    ┌─────────┴─────────┐
+   *                                                    ▼                   ▼
+   *                                              retrieve (🔄)        evaluate
+   *                                                                  ┌───┴───┐
+   *                                                                  ▼       ▼
+   *                                                            rag_generate  fallback_answer
+   *                                                                  │       │
+   *                                                                  ▼       ▼
+   *                                                                END     END
+   */
+  private compileLangGraph() {
+    const routeIntentNode = createRouteIntentNode()
+    const directAnswerNode = createDirectAnswerNode(this.aiService)
+    const decomposeNode = createDecomposeNode()
+    const decomposeQuestionNode = createDecomposeQuestionNode()
+    const retrieveNode = createRetrieveNode(this.ragService, this.resumePublicationService)
+    const planNextNode = createPlanNextNode()
+    const evaluateNode = createEvaluateNode()
+    const ragGenerateNode = createRagGenerateNode()
+    const fallbackAnswerNode = createFallbackAnswerNode()
+
+    return new StateGraph(AiChatGraphState)
+      .addNode('route_intent', routeIntentNode as any)
+      .addNode('direct_answer', directAnswerNode as any)
+      .addNode('decompose', decomposeNode as any)
+      .addNode('decompose_question', decomposeQuestionNode as any)
+      .addNode('retrieve', retrieveNode as any)
+      .addNode('plan_next', planNextNode as any)
+      .addNode('evaluate', evaluateNode as any)
+      .addNode('rag_generate', ragGenerateNode as any)
+      .addNode('fallback_answer', fallbackAnswerNode as any)
+      .addEdge(START, 'route_intent')
+      .addConditionalEdges('route_intent', afterRoute as any, {
+        direct_answer: 'direct_answer',
+        retrieve: 'decompose',
+      })
+      .addEdge('direct_answer', END)
+      .addConditionalEdges('decompose', afterDecompose as any, {
+        retrieve: 'retrieve',
+        decompose_question: 'decompose_question',
+      })
+      .addEdge('decompose_question', 'retrieve')
+      .addEdge('retrieve', 'plan_next')
+      .addConditionalEdges('plan_next', afterPlan as any, {
+        retrieve: 'retrieve',   // 🔄 回边循环
+        evaluate: 'evaluate',   // 终止
+      })
+      .addConditionalEdges('evaluate', afterEvaluate as any, {
+        rag_generate: 'rag_generate',
+        fallback_answer: 'fallback_answer',
+      })
+      .addEdge('rag_generate', END)
+      .addEdge('fallback_answer', END)
+      .compile()
+  }
+
+  private getCompiledGraph() {
+    if (!this.compiledGraph) {
+      this.compiledGraph = this.compileLangGraph()
+    }
+    return this.compiledGraph
+  }
+
   async generateAnswer(input: AiChatGraphInput): Promise<AiChatAnswerGenerationResult> {
+    // 灰度开关：启用 LangGraph 引擎
+    if (isLangGraphChatEnabled()) {
+      return this.generateAnswerWithLangGraph(input)
+    }
+
+    return this.generateAnswerLegacy(input)
+  }
+
+  /**
+   * LangGraph 引擎入口。
+   *
+   * 编译 StateGraph → invoke(state) → 提取 answer + blocks + citations。
+   */
+  private async generateAnswerWithLangGraph(
+    input: AiChatGraphInput,
+  ): Promise<AiChatAnswerGenerationResult> {
+    const startedAt = Date.now()
+    const question = input.question.trim()
+
+    try {
+      const graph = this.getCompiledGraph()
+
+      const result = await graph.invoke(
+        {
+          question,
+          locale: input.locale,
+          maxRetrievals: 5,
+        },
+        { configurable: { onToken: input.onToken } },
+      )
+
+      // 桥接 legacy：获取简历 + 用检索结果构建卡片
+      const citations = result.citations ?? []
+      const answer: string = result.answer ?? ''
+
+      const snapshot = await this.resumePublicationService.getPublished()
+      const resume = snapshot?.resume ?? null
+
+      const resumeBlocks = resume
+        ? this.buildAnswerBlocksFromResume(resume, citations, input.locale)
+        : []
+      const customBlocks = this.buildCustomBlocksFromCitations(question, citations, answer)
+
+      const allBlocks = [...resumeBlocks, ...customBlocks].slice(0, 6)
+
+      this.logger.log({
+        event: 'ai-chat.langgraph.completed',
+        question,
+        strategy: result.strategy,
+        routeReason: result.routeReason,
+        citationCount: citations.length,
+        blockCount: allBlocks.length,
+        answerLength: answer.length,
+        durationMs: Date.now() - startedAt,
+      })
+
+      return {
+        answer,
+        blocks: allBlocks,
+        citations,
+      }
+    } catch (error) {
+      this.logger.warn({
+        event: 'ai-chat.langgraph.fallback',
+        question,
+        message: error instanceof Error ? error.message : String(error),
+        durationMs: Date.now() - startedAt,
+      })
+
+      return this.generateAnswerLegacy(input)
+    }
+  }
+
+  private async generateAnswerLegacy(input: AiChatGraphInput): Promise<AiChatAnswerGenerationResult> {
     const startedAt = Date.now()
     const normalized = this.normalizeInput(input)
     let route: GraphRouteDecision | null = null
@@ -1072,11 +1182,6 @@ export class AiChatGraphService {
   ): AiChatMessageBlock[] {
     const blocks: AiChatMessageBlock[] = []
     const seen = new Set<string>()
-    const hobbyCitations = citations.filter(
-      (citation) => citation.sourceType === 'user_docs' && citation.contentType === 'hobby',
-    )
-    const { focusText } = buildCitationFocusTerms(question, answerText)
-    const primaryHobbyCitation = selectPrimaryHobbyCitation(focusText, hobbyCitations)
 
     for (const citation of citations) {
       if (citation.sourceType !== 'user_docs') continue
@@ -1096,9 +1201,9 @@ export class AiChatGraphService {
           publishedAt: richCard?.publishedAt,
           keywords: richCard?.keywords ?? citation.tags ?? [],
           media: buildRichCardMedia(citation),
+          linkDisplayTitle: richCard?.linkDisplayTitle,
         })
       } else if (contentType === 'hobby') {
-        if (!primaryHobbyCitation || citation.id !== primaryHobbyCitation.id) continue
         const richCard = citation.richCard
 
         blocks.push({
@@ -1110,6 +1215,7 @@ export class AiChatGraphService {
           imageUrl: richCard?.imageUrl,
           keywords: richCard?.keywords ?? citation.tags ?? [],
           media: buildRichCardMedia(citation),
+          linkDisplayTitle: richCard?.linkDisplayTitle,
         })
       } else if (contentType === 'project') {
         const richCard = citation.richCard
@@ -1128,7 +1234,7 @@ export class AiChatGraphService {
       }
     }
 
-    return blocks.slice(0, 3)
+    return blocks.slice(0, 6)
   }
 
   private findProjectByCitation(

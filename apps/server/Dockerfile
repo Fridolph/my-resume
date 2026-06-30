@@ -11,7 +11,28 @@ ENV PNPM_CONFIG_REGISTRY=$NPM_REGISTRY_URL
 RUN npm install -g "pnpm@$PNPM_VERSION" --registry="$NPM_REGISTRY_URL"
 WORKDIR /app
 
-FROM base AS runtime-base
+# ═══ 阶段 1：依赖安装（仅 server + 共享包） ═══
+FROM base AS deps
+COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY apps/server/package.json apps/server/package.json
+COPY packages/api-client/package.json packages/api-client/package.json
+COPY packages/config/package.json packages/config/package.json
+COPY packages/ui/package.json packages/ui/package.json
+COPY packages/utils/package.json packages/utils/package.json
+RUN pnpm install --frozen-lockfile --filter @my-resume/server...
+
+# ═══ 阶段 2：构建应用 ═══
+FROM deps AS builder
+COPY packages/ packages/
+COPY apps/server/ apps/server/
+RUN pnpm --filter "./packages/*" build
+RUN pnpm --filter @my-resume/server build
+RUN pnpm --filter @my-resume/server deploy --legacy --prod /prod/server
+
+# ═══ 阶段 3：CJK 字体运行时基础 ═══
+# 独立阶段：字体包极少变动，此层长期缓存
+# 直接从 node:22-slim 构建，不依赖 pnpm/base，保持缓存独立
+FROM ${BASE_IMAGE} AS runtime-base
 ARG APT_DEBIAN_MIRROR_URL=
 ARG APT_SECURITY_MIRROR_URL=
 RUN set -eux; \
@@ -71,22 +92,7 @@ RUN set -eux; \
   done; \
   rm -rf /var/lib/apt/lists/*
 
-FROM base AS deps
-COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
-COPY apps/web/package.json apps/web/package.json
-COPY apps/admin/package.json apps/admin/package.json
-COPY apps/server/package.json apps/server/package.json
-COPY packages/api-client/package.json packages/api-client/package.json
-COPY packages/config/package.json packages/config/package.json
-COPY packages/ui/package.json packages/ui/package.json
-COPY packages/utils/package.json packages/utils/package.json
-RUN pnpm install --frozen-lockfile --filter @my-resume/server...
-
-FROM deps AS builder
-COPY . .
-RUN pnpm --filter @my-resume/server build
-RUN pnpm --filter @my-resume/server deploy --legacy --prod /prod/server
-
+# ═══ 阶段 4：最小运行时 ═══
 FROM runtime-base AS runner
 ENV NODE_ENV=production
 ENV PORT=5577

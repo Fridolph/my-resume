@@ -160,11 +160,11 @@ export class RagUserDocIngestBodyDto {
   chunkingProfile?: 'balanced' | 'contextual' | 'semantic'
 
   @ApiPropertyOptional({
-    description: '内容类型：hobby=兴趣爱好，tech_blog=技术博客，knowledge_column=知识专栏，general=其他通用',
-    enum: ['hobby', 'tech_blog', 'knowledge_column', 'general'],
+    description: '内容类型：hobby=兴趣爱好，tech_blog=技术博客，knowledge_column=知识专栏，work_detail=工作经历补充，general=其他通用',
+    enum: ['hobby', 'tech_blog', 'knowledge_column', 'work_detail', 'general'],
     example: 'tech_blog',
   })
-  contentType?: 'hobby' | 'tech_blog' | 'knowledge_column' | 'general'
+  contentType?: 'hobby' | 'tech_blog' | 'knowledge_column' | 'work_detail' | 'general'
 
   @ApiPropertyOptional({
     description: '资料标题（优先于文件名），支持 UTF-8 中文',
@@ -196,8 +196,8 @@ export class RagCustomBodyDto {
   @ApiProperty({ description: '正文内容，支持 Markdown', example: '# 易经\n\n这是我的易经学习笔记...' })
   content!: string
 
-  @ApiPropertyOptional({ description: '内容类型', enum: ['hobby', 'tech_blog', 'knowledge_column', 'general'], example: 'hobby' })
-  contentType?: 'hobby' | 'tech_blog' | 'knowledge_column' | 'general'
+  @ApiPropertyOptional({ description: '内容类型', enum: ['hobby', 'tech_blog', 'knowledge_column', 'work_detail', 'general'], example: 'hobby' })
+  contentType?: 'hobby' | 'tech_blog' | 'knowledge_column' | 'work_detail' | 'general'
 
   @ApiPropertyOptional({ description: '入库作用域', enum: ['draft', 'published'], example: 'published' })
   scope?: 'draft' | 'published'
@@ -211,8 +211,20 @@ export class RagCustomBodyDto {
   @ApiPropertyOptional({ description: '多个参考图片 URL', type: [String], example: ['https://example.com/image.png'] })
   imageUrls?: string[]
 
+  @ApiPropertyOptional({ description: '参考链接展示标题（与 linkUrls 一一对应）', type: [String], example: ['在线阅读', '备用镜像'] })
+  linkTitles?: string[]
+
+  @ApiPropertyOptional({ description: '参考链接描述（与 linkUrls 一一对应）', type: [String], example: ['完整版文档，更新至 2025'] })
+  linkDescriptions?: string[]
+
+  @ApiPropertyOptional({ description: '参考图片描述（与 imageUrls 一一对应）', type: [String], example: ['架构图'] })
+  imageTitles?: string[]
+
   @ApiPropertyOptional({ description: '文章概览/摘要；未传时由服务端自动生成短概览', example: '从 Dao 的视角解释系统、约束与协作的核心关系。' })
   summary?: string
+
+  @ApiPropertyOptional({ description: '链接展示标题，替代默认的"查看链接"文案', example: '在线阅读完整文档' })
+  linkDisplayTitle?: string
 }
 
 export class RagUserDocIngestResultDto {
@@ -340,10 +352,10 @@ export class RagDocumentDetailDto {
 
   @ApiPropertyOptional({
     description: '内容类型',
-    enum: ['hobby', 'tech_blog', 'knowledge_column', 'general'],
+    enum: ['hobby', 'tech_blog', 'knowledge_column', 'work_detail', 'general'],
     example: 'tech_blog',
   })
-  contentType?: 'hobby' | 'tech_blog' | 'knowledge_column' | 'general'
+  contentType?: 'hobby' | 'tech_blog' | 'knowledge_column' | 'work_detail' | 'general'
 
   @ApiProperty({
     description: '完整正文内容',
@@ -425,7 +437,7 @@ export class RagExportUserDocsResultDto {
     id: string
     title: string
     sourceScope: 'draft' | 'published'
-    contentType?: 'hobby' | 'tech_blog' | 'knowledge_column' | 'general'
+    contentType?: 'hobby' | 'tech_blog' | 'knowledge_column' | 'work_detail' | 'general'
     summary?: string
     linkUrl?: string
     linkUrls?: string[]

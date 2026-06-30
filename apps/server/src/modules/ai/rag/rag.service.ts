@@ -171,10 +171,12 @@ function normalizeRichCardMetadata(value: unknown): RagRichCardMetadata | undefi
   const richCard: RagRichCardMetadata = {
     title: readOptionalString(record.title),
     description: readOptionalString(record.description),
+    summary: readOptionalString(record.summary),
     url: readOptionalString(record.url),
     imageUrl: readOptionalString(record.imageUrl),
     thumbnailUrl: readOptionalString(record.thumbnailUrl),
     publishedAt: readOptionalString(record.publishedAt),
+    linkDisplayTitle: readOptionalString(record.linkDisplayTitle),
     keywords: readOptionalStringArray(record.keywords),
     media: normalizeRichCardMedia(record.media),
   }

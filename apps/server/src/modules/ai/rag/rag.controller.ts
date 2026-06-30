@@ -291,8 +291,12 @@ export class RagController {
       sourceScope: body.scope ?? 'published',
       linkUrl: body.linkUrl,
       linkUrls: body.linkUrls,
+      linkTitles: body.linkTitles,
+      linkDescriptions: body.linkDescriptions,
       imageUrls: body.imageUrls,
+      imageTitles: body.imageTitles,
       summary: body.summary,
+      linkDisplayTitle: body.linkDisplayTitle,
     })
   }
 
@@ -319,8 +323,12 @@ export class RagController {
       sourceScope: body.scope,
       linkUrl: body.linkUrl,
       linkUrls: body.linkUrls,
+      linkTitles: body.linkTitles,
+      linkDescriptions: body.linkDescriptions,
       imageUrls: body.imageUrls,
+      imageTitles: body.imageTitles,
       summary: body.summary,
+      linkDisplayTitle: body.linkDisplayTitle,
     })
   }
 
