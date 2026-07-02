@@ -1,6 +1,5 @@
+@import "tailwindcss";
 @import '@my-resume/ui/display.css';
-@tailwind base;
-@tailwind utilities;
 
 @layer components {
   .card {

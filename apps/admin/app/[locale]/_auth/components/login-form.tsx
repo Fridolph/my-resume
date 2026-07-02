@@ -1,5 +1,5 @@
-import '../../login-shell.css'
 'use client'
+import '../login-shell.css'
 
 import { Input } from '@heroui/react/input'
 import { Button } from '@heroui/react/button'

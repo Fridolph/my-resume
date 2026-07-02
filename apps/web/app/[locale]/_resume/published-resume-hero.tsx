@@ -1,5 +1,5 @@
-import './hero.css'
 'use client'
+import './hero.css'
 
 import { Card, CardContent, CardHeader } from '@heroui/react/card'
 import { Chip } from '@heroui/react/chip'

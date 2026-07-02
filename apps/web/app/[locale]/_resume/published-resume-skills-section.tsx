@@ -1,5 +1,5 @@
-import './published-resume-skills-section.css'
 'use client'
+import './published-resume-skills-section.css'
 
 import { Button } from '@heroui/react/button'
 import { Tooltip } from '@heroui/react/tooltip'

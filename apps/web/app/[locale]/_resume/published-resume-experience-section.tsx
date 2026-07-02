@@ -1,5 +1,5 @@
-import './published-resume-card-surface.css'
 'use client'
+import './published-resume-card-surface.css'
 
 import { formatDateRange } from '@my-resume/utils'
 import { Tag } from '@heroui/react/tag'

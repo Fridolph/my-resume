@@ -4,7 +4,7 @@ import { Tooltip } from '@heroui/react/tooltip'
 import { useEffect } from 'react'
 
 import { PublishedResumeProfileIcon } from './published-resume-profile-icon'
-import styles from './hero.module.css'
+import './hero.css'
 
 interface PublishedResumeHeroTooltipLinkProps {
   href: string
@@ -31,14 +31,14 @@ export function PublishedResumeHeroTooltipLink({
 
   return (
     <Tooltip delay={220}>
-      <Tooltip.Trigger className={styles.tooltipTriggerInline}>
+      <Tooltip.Trigger className={'r-tooltip-trigger-inline'}>
         <a
           aria-label={label}
-          className={styles.iconLinkChip}
+          className={'r-icon-link-chip'}
           href={href}
           rel="noreferrer"
           target="_blank">
-          <span className={styles.iconLinkInner}>
+          <span className={'r-icon-link-inner'}>
             <PublishedResumeProfileIcon name={iconName} />
           </span>
         </a>

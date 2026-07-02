@@ -1,3 +1,4 @@
+@import "tailwindcss";
 /* entry-shell.css — ai-talk 入口页 BEM 组件（Tailwind @apply） */
 
 @layer components {

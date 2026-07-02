@@ -1,5 +1,5 @@
-import './login-shell.css'
 'use client'
+import './login-shell.css'
 
 import { useRequest } from 'alova/client'
 import { useTranslations } from 'next-intl'
