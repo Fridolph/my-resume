@@ -923,8 +923,15 @@ export class RagService {
     const matches = await this.search(question, limit, this.defaultSearchQualityGate, routingOverride)
     const filteredMatches = filterMatchesForAskByLocale(matches, locale)
 
-    // 完整重排管线：策略检测 → rerank → 去噪 → primary/support/reserve 分层选择 → top 6
-    // 若完整管线无结果则回退到简单阈值过滤（保持低分场景兼容）
+    // ── Rerank 管线 ────────────────────────────────────────────
+    // 策略检测 → rerank → 去噪 → primary/support/reserve 分层选择 → top 6
+    //
+    // 灰度设计：
+    // - RAG_USE_MODEL_RERANK=false → rerankAdapter=undefined → 手写规则
+    // - RAG_USE_MODEL_RERANK=true + RERANK_API_KEY 已配 → Cross-Encoder 模型
+    // - RAG_USE_MODEL_RERANK=true 但 RERANK_API_KEY 为空 → 自动回退手写规则
+    //
+    // 若完整管线无结果，回退到简单阈值过滤（保持低分场景兼容）。
     const rerankConfig = resolveRerankModelConfig(process.env)
     const rerankAdapter =
       rerankConfig.enabled && rerankConfig.apiKey
@@ -933,11 +940,12 @@ export class RagService {
     const selected = await applyRagSearchRerankAndSelect(
       filteredMatches,
       question,
-      6,
-      undefined,
+      6,                              // 精排后取 top 6
+      undefined,                      // strategy 自动识别
       DEFAULT_RAG_SEARCH_RERANK_CONFIG,
-      rerankAdapter,
+      rerankAdapter,                  // 灰度注入：undefined=手写规则
     )
+    // 去重：同一 documentId 只保留最高分的那条
     const topMatches = dedupeMatchesForAsk(
       selected.length > 0
         ? selected

@@ -297,8 +297,23 @@ export function rerankRagSearchMatches(
 /**
  * 使用 Cross-Encoder Rerank 模型对 matches 重排。
  *
- * 与手写规则不同，模型直接返回 relevance_score，无需 sectionBoost/keywordBoost。
- * noiseReasons 设为空（模型打分更可靠）。
+ * 与手写规则（sectionBoost + keywordBoost）不同：
+ * - 模型直接返回每条文档的 relevance_score，无需手调加权参数
+ * - 噪声原因设为空数组（Cross-Encoder 输出本身就是精排结果，无需额外去噪）
+ * - sectionBoost / keywordBoost 均设为 0（模型已隐含这些信息）
+ *
+ * ## 映射逻辑
+ *
+ * 1. 提取所有 match 的 `content` 字段为 documents 数组
+ * 2. 调用 `adapter.rerank(query, documents, topN)`
+ * 3. API 返回的 `index` 反向映射回原始 `matches[index]`
+ * 4. `relevance_score` 直接作为 `rerankScore`
+ *
+ * @param matches - 原始检索结果（顺序敏感，index 映射依赖原始位置）
+ * @param query - 用户问题
+ * @param adapter - Rerank 模型适配器
+ * @param topN - 返回条数
+ * @returns 按模型精排分数降序排列的 RerankDetail 数组
  */
 async function rerankWithModel(
   matches: RagSearchMatch[],

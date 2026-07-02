@@ -93,32 +93,59 @@ export function createRouteIntentNode() {
   }
 }
 
-/** LLM 路由失败时的正则兜底 */
+/**
+ * LLM 路由失败时的正则兜底路由。
+ *
+ * 当 LLM withStructuredOutput 调用失败（网络超时、模型返回格式异常等）时，
+ * 回退到关键词正则匹配，保证系统可用性。
+ *
+ * ## 路由优先级
+ *
+ * 1. 越界检测：天气/股票/彩票/政治/新闻 → `out_of_scope`（直接拒绝）
+ * 2. 打招呼：你好/hi/hello/测试 → `chitchat`（直接回复问候语）
+ * 3. 补充资料：博客/文章/兴趣/爱好/特长/休闲 → `supplement`（查 user_docs + knowledge）
+ * 4. 默认兜底：`resume`（查简历核心内容）
+ *
+ * @param question - 用户原始问题
+ * @returns 路由决策（strategy + routeReason + knowledgeDomains + sourceTypes）
+ */
 function fallbackRoute(question: string) {
   const lower = question.toLowerCase()
 
-  // 越界
+  // 越界问题：与简历完全无关，直接拒绝
   if (/天气|股票|彩票|政治|新闻/.test(lower)) {
     return { strategy: 'out_of_scope' as const, routeReason: 'rule:out_of_scope', knowledgeDomains: [], sourceTypes: undefined, preferSourceTypes: undefined }
   }
-  // 打招呼
+  // 打招呼/测试：无需检索，直接返回问候语
   if (/^(你好|hi|hello|hey|哈喽|嗨|在吗|测试|test)$/i.test(question.trim())) {
     return { strategy: 'chitchat' as const, routeReason: 'rule:greeting', knowledgeDomains: [], sourceTypes: undefined, preferSourceTypes: undefined }
   }
-  // 补充资料
+  // 补充资料：兴趣爱好/博客/文章等非简历核心内容
   if (/博客|文章|写作|创作|兴趣|爱好|特长|休闲|喜欢/.test(lower)) {
     return { strategy: 'supplement' as const, routeReason: 'rule:supplement', knowledgeDomains: ['hobbies', 'writing_media'] as any, sourceTypes: ['user_docs', 'knowledge'] as any, preferSourceTypes: ['user_docs', 'knowledge'] as any }
   }
-  // 默认简历
+  // 默认：查简历核心内容
   return { strategy: 'resume' as const, routeReason: 'rule:resume_default', knowledgeDomains: [], sourceTypes: ['resume_core'] as any, preferSourceTypes: ['resume_core'] as any }
 }
 
-/** 按 strategy 映射 sourceTypes */
+/**
+ * 按 strategy 映射 sourceTypes。
+ *
+ * 对齐 legacy `routeIntentAndDomain` 的 sourceTypes 语义：
+ * - `supplement` → 用户补充资料 + 静态知识库（user_docs + knowledge）
+ * - `hybrid` → 简历核心 + 用户补充资料（resume_core + user_docs）
+ * - `resume` → 仅简历核心（resume_core）
+ * - 其他（chitchat/guide/out_of_scope）→ 不检索，返回 undefined
+ *
+ * @param strategy - LLM 路由输出的策略类型
+ * @returns sourceTypes 数组 或 undefined（不需检索）
+ */
 function resolveSourceTypes(strategy: string) {
   switch (strategy) {
     case 'supplement': return ['user_docs', 'knowledge'] as any
     case 'hybrid': return ['resume_core', 'user_docs'] as any
     case 'resume': return ['resume_core'] as any
+    // chitchat / guide / out_of_scope：不需要检索
     default: return undefined
   }
 }
