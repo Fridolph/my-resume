@@ -45,5 +45,16 @@ services:
     ports:
       - '5566:5566'
 
+  neo4j:
+    image: neo4j:5
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      NEO4J_AUTH: neo4j/password
+    volumes:
+      - neo4j_data:/data
+
 volumes:
   resume_sqlite_data:
+  neo4j_data:
