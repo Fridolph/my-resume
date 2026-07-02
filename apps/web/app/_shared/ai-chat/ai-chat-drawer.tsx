@@ -147,6 +147,7 @@ export function AiChatDrawer({ locale }: { locale: 'zh' | 'en' }) {
   )
   const [dismissedClosedBanner, setDismissedClosedBanner] = useState(false)
   const messageListRef = useRef<HTMLDivElement | null>(null)
+  const bottomSentinelRef = useRef<HTMLDivElement | null>(null)
   const prevMessageCountRef = useRef(0)
   const visibleMessages = useMemo(
     () => buildVisibleMessages(session, draftAssistantMessage),
@@ -154,28 +155,24 @@ export function AiChatDrawer({ locale }: { locale: 'zh' | 'en' }) {
   )
 
   // 消息列表滚动控制：
-  // - 用户发送消息后立即滚动到底部
-  // - SSE 流式输出期间不强制滚动（用户可能正在阅读）
-  // - 流式结束后延迟 600ms 滚动到底部
+  // - 用户发送消息后立即 smooth 滚动到底部
+  // - SSE 流式输出期间不强制滚动
+  // - 流式结束后延迟 300ms smooth 滚动到底部
   useEffect(() => {
     const count = visibleMessages.length
 
-    if (count > prevMessageCountRef.current) {
-      if (messageListRef.current) {
-        messageListRef.current.scrollTop = messageListRef.current.scrollHeight
-      }
+    if (count > prevMessageCountRef.current && visibleMessages[count - 1]?.role === 'user') {
+      bottomSentinelRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
 
     prevMessageCountRef.current = count
   }, [visibleMessages.length])
 
   useEffect(() => {
-    if (!isStreaming && messageListRef.current) {
+    if (!isStreaming) {
       const timer = setTimeout(() => {
-        if (messageListRef.current) {
-          messageListRef.current.scrollTop = messageListRef.current.scrollHeight
-        }
-      }, 600)
+        bottomSentinelRef.current?.scrollIntoView({ behavior: 'smooth' })
+      }, 300)
       return () => clearTimeout(timer)
     }
   }, [isStreaming])
@@ -319,13 +316,16 @@ export function AiChatDrawer({ locale }: { locale: 'zh' | 'en' }) {
       ) : null}
       {/* 非 loading 状态始终展示消息列表 */}
       {view !== 'loading' ? (
-        <AiChatMessageList
-          isStreaming={isStreaming}
-          locale={locale}
-          messages={visibleMessages}
-          presentation={presentation}
-          ref={messageListRef}
-        />
+        <>
+          <AiChatMessageList
+            isStreaming={isStreaming}
+            locale={locale}
+            messages={visibleMessages}
+            presentation={presentation}
+            ref={messageListRef}
+          />
+          <div ref={bottomSentinelRef} className="h-px w-full shrink-0" />
+        </>
       ) : null}
     </AiChatWindowShell>
   )
