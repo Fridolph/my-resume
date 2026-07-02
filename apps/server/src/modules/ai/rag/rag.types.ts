@@ -12,9 +12,10 @@ import type {
  * - resume_core: 简历核心事实，回答优先级更高
  * - user_docs: 用户补充资料，如博客、技术文章、兴趣类内容
  * - knowledge: 静态知识库内容（如教程、架构文档），不混入 user_docs 检索
+ * - graph: Neo4j 知识图谱检索（结构化关系查询）
  */
-export type RagRetrievalSourceType = 'resume_core' | 'user_docs' | 'knowledge'
-export const RAG_RETRIEVAL_SOURCE_TYPES = ['resume_core', 'user_docs', 'knowledge'] as const
+export type RagRetrievalSourceType = 'resume_core' | 'user_docs' | 'knowledge' | 'graph'
+export const RAG_RETRIEVAL_SOURCE_TYPES = ['resume_core', 'user_docs', 'knowledge', 'graph'] as const
 
 export function isRagRetrievalSourceType(value: unknown): value is RagRetrievalSourceType {
   return typeof value === 'string' && RAG_RETRIEVAL_SOURCE_TYPES.includes(value as RagRetrievalSourceType)
