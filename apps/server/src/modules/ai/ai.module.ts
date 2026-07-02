@@ -34,6 +34,7 @@ import { UserDocsIngestionService } from './rag/user-docs-ingestion.service'
 import { ResumeAssistantController } from './resume-assistant/resume-assistant.controller'
 import { ResumeAssistantService } from './resume-assistant/resume-assistant.service'
 import { GraphSyncService } from './graph/graph-sync.service'
+import { GraphSearchService } from './graph/graph-search.service'
 import { AiFileController } from './transport/controllers/ai-file.controller'
 import { AiReportController } from './transport/controllers/ai-report.controller'
 import { AiResumeImportController } from './transport/controllers/ai-resume-import.controller'
@@ -99,6 +100,7 @@ import { AiResumeImportController } from './transport/controllers/ai-resume-impo
     RagService,
     ResumeAssistantService,
     GraphSyncService,
+    GraphSearchService,
   ],
   exports: [
     AiService,
