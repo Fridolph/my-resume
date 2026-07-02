@@ -723,7 +723,13 @@ export class AiChatGraphService {
 
       // 桥接 legacy：获取简历 + 用检索结果构建卡片
       const citations = result.citations ?? []
-      const answer: string = result.answer ?? ''
+      let answer: string = result.answer ?? ''
+
+      // evaluate 判定"不够"时，若有 citation 仍尝试从上下文生成回答
+      const evaluation = result.evaluation as { enough?: boolean } | undefined
+      if (evaluation && !evaluation.enough && citations.length > 0) {
+        answer = await this.generateAnswerFromCitations(question, citations, input.locale)
+      }
 
       const snapshot = await this.resumePublicationService.getPublished()
       const resume = snapshot?.resume ?? null
@@ -1132,6 +1138,37 @@ export class AiChatGraphService {
     }
   }
 
+  /**
+   * 从已有 citation 生成回答（evaluate 判定不够时的回退）。
+   *
+   * 不走 RAG 检索，直接用现有 citations 拼 context → LLM 生成。
+   */
+  private async generateAnswerFromCitations(
+    question: string,
+    citations: RagAskCitation[],
+    locale: AiChatLocale,
+  ): Promise<string> {
+    const context = citations
+      .slice(0, 6)
+      .map((item, index) => `[#${index + 1}] ${item.title}\n${item.snippet}`)
+      .join('\n\n')
+
+    const systemPrompt = locale === 'en'
+      ? 'You are a resume assistant. Answer based on the context provided. If insufficient, say so briefly.'
+      : '你是简历助手。根据提供的上下文回答问题。如果信息不足，简要说明。'
+
+    const prompt = `Context:\n${context}\n\nQuestion: ${question}\n\nAnswer:`
+
+    try {
+      const result = await this.aiService.generateText({ systemPrompt, prompt })
+      return result.text
+    } catch {
+      return locale === 'en'
+        ? "I found some related content but couldn't generate a complete answer. Try asking more specifically?"
+        : '找到了一些相关内容，但暂时无法生成完整回答。可以换个方式问得更具体些？'
+    }
+  }
+
   private buildAnswerBlocksFromResume(
     resume: StandardResume,
     citations: RagAskCitation[],
@@ -1184,7 +1221,8 @@ export class AiChatGraphService {
     const seen = new Set<string>()
 
     for (const citation of citations) {
-      if (citation.sourceType !== 'user_docs') continue
+      // 只处理 user_docs 和 knowledge 源（排除 resume_core）
+      if (citation.sourceType !== 'user_docs' && citation.sourceType !== 'knowledge') continue
       const contentType = citation.contentType
       if (!contentType || seen.has(`${contentType}:${citation.title}`)) continue
       seen.add(`${contentType}:${citation.title}`)
