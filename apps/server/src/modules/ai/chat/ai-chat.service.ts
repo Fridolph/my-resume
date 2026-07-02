@@ -881,6 +881,19 @@ export class AiChatService {
 
     const refreshedSession = await this.getPublicSessionSnapshot(bundle.session.id, input.useKey)
 
+    this.logger.log({
+      event: 'ai-chat.turn.completed',
+      sessionId: bundle.session.id,
+      turnCount: nextTurnCount,
+      question: input.content.slice(0, 120),
+      answerPreview: answerResult.answer.slice(0, 120),
+      answerLength: answerResult.answer.length,
+      citationCount: answerResult.citations.length,
+      blockCount: answerResult.blocks.length,
+      hasSummary: generatedSummary !== null,
+      durationMs: Date.now() - now.getTime(),
+    })
+
     return {
       remainingTurns: Math.max(0, bundle.useKey.maxTurns - nextTurnCount),
       session: refreshedSession,
