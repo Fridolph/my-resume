@@ -61,9 +61,9 @@ export function AiChatWindowShell({
     <section
       aria-label={title}
       aria-modal="false"
-      className="pointer-events-none fixed inset-0 z-[70] grid md:inset-y-0 md:left-auto md:right-0 md:w-[min(28rem,calc(100vw-2rem))] md:max-w-[28rem]"
+      className="pointer-events-none fixed inset-0 z-[70] grid md:inset-y-0 md:left-auto md:right-0 md:w-[min(40rem,calc(100vw-2rem))] md:max-w-[40rem]"
       role="dialog">
-      <div className="pointer-events-auto flex h-full min-h-0 flex-col overflow-hidden rounded-[2rem] border border-zinc-200/80 bg-white/96 shadow-[0_24px_80px_rgba(15,23,42,0.16)] backdrop-blur-xl dark:border-zinc-800 dark:bg-zinc-950/92 md:rounded-none md:rounded-l-[2rem] md:border-r-0">
+      <div className="pointer-events-auto flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-zinc-200/80 bg-white/96 shadow-[0_24px_80px_rgba(15,23,42,0.16)] backdrop-blur-xl dark:border-zinc-800 dark:bg-zinc-950/92 md:rounded-none md:rounded-l-2xl md:border-r-0">
         <header className="border-b border-zinc-200/80 px-4 py-3 dark:border-zinc-800">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
