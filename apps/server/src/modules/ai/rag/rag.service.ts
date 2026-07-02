@@ -51,6 +51,8 @@ import {
   RagSearchMatch,
 } from './rag.types'
 import { buildRagAskPrompt, buildRagAskSystemPrompt } from './prompts/rag-ask.prompt'
+import { createDashScopeRerankAdapter } from './rerank/rerank.adapter'
+import { resolveRerankModelConfig } from './rerank/rerank.config'
 import { RAG_VECTOR_STORE } from './vector-store/tokens'
 import type { RagVectorSearchMatch, RagVectorStore } from './vector-store/types'
 
@@ -923,12 +925,18 @@ export class RagService {
 
     // 完整重排管线：策略检测 → rerank → 去噪 → primary/support/reserve 分层选择 → top 6
     // 若完整管线无结果则回退到简单阈值过滤（保持低分场景兼容）
-    const selected = applyRagSearchRerankAndSelect(
+    const rerankConfig = resolveRerankModelConfig(process.env)
+    const rerankAdapter =
+      rerankConfig.enabled && rerankConfig.apiKey
+        ? createDashScopeRerankAdapter(rerankConfig)
+        : undefined
+    const selected = await applyRagSearchRerankAndSelect(
       filteredMatches,
       question,
       6,
       undefined,
       DEFAULT_RAG_SEARCH_RERANK_CONFIG,
+      rerankAdapter,
     )
     const topMatches = dedupeMatchesForAsk(
       selected.length > 0

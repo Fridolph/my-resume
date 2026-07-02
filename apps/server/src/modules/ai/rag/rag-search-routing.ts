@@ -11,6 +11,8 @@ export interface RagSearchRoutingConfig {
   useVectorStore: boolean
   vectorScope: RagSourceScope | 'all'
   fallbackToLocal: boolean
+  /** 是否使用 Cross-Encoder Rerank 模型替代手写规则 */
+  useModelRerank: boolean
   knowledgeDomains?: RagKnowledgeDomain[]
   sourceTypes?: RagRetrievalSourceType[]
   preferSourceTypes?: RagRetrievalSourceType[]
@@ -24,6 +26,7 @@ export interface RagSearchRoutingOverride {
   useVectorStore?: boolean
   vectorScope?: RagSourceScope | 'all'
   fallbackToLocal?: boolean
+  useModelRerank?: boolean
   knowledgeDomains?: RagKnowledgeDomain[]
   sourceTypes?: RagRetrievalSourceType[]
   preferSourceTypes?: RagRetrievalSourceType[]
@@ -69,6 +72,7 @@ export function resolveRagSearchRoutingConfig(
     useVectorStore: parseBooleanFlag(env.RAG_SEARCH_USE_VECTOR_STORE, false),
     vectorScope,
     fallbackToLocal: parseBooleanFlag(env.RAG_SEARCH_VECTOR_FALLBACK_TO_LOCAL, true),
+    useModelRerank: parseBooleanFlag(env.RAG_USE_MODEL_RERANK, false),
     knowledgeDomains: undefined,
     sourceTypes: undefined,
     preferSourceTypes: undefined,
@@ -87,6 +91,7 @@ export function mergeRagSearchRoutingConfig(
     useVectorStore: override.useVectorStore ?? base.useVectorStore,
     vectorScope: override.vectorScope ?? base.vectorScope,
     fallbackToLocal: override.fallbackToLocal ?? base.fallbackToLocal,
+    useModelRerank: override.useModelRerank ?? base.useModelRerank,
     knowledgeDomains: override.knowledgeDomains ?? base.knowledgeDomains,
     sourceTypes: override.sourceTypes ?? base.sourceTypes,
     preferSourceTypes: override.preferSourceTypes ?? base.preferSourceTypes,
