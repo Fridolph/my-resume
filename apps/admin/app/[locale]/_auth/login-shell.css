@@ -1,5 +1,4 @@
-@tailwind base;
-@tailwind utilities;
+@import "tailwindcss";
 
 @layer components {
 .login-page {
@@ -201,7 +200,7 @@
   font-weight: 650;
 }
 
-.login-form-LPanel (input.input--secondary) {
+.login-form-LPanel input.input--secondary {
   min-height: 2.85rem;
   border-color: rgba(15, 23, 42, 0.12);
   background: rgba(255, 255, 255, 0.78);
@@ -496,7 +495,7 @@
   color: #cbd5e1;
 }
 
-[data-theme='dark'] .login-form-LPanel (input.input--secondary) {
+[data-theme='dark'] .login-form-LPanel input.input--secondary {
   border-color: rgba(96, 165, 250, 0.34);
   background: rgba(2, 6, 23, 0.42);
   color: #f8fafc;
