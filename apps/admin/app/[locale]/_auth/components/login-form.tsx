@@ -1,3 +1,4 @@
+import '../../login-shell.css'
 'use client'
 
 import { Input } from '@heroui/react/input'
@@ -6,7 +7,6 @@ import { Button } from '@heroui/react/button'
 import type { FormEvent } from 'react'
 import { useState } from 'react'
 
-import styles from '../login-shell.module.css'
 
 interface LoginFormProps {
   pending: boolean
@@ -46,20 +46,20 @@ export function LoginForm({ pending, errorMessage, onSubmit }: LoginFormProps) {
   }
 
   return (
-    <section aria-labelledby="admin-login-form-title" className={styles.formPanel}>
-      <div className={styles.formHeader}>
-        <p className={styles.kicker}>Private Entrance</p>
-        <h2 className={styles.formTitle} id="admin-login-form-title">
+    <section aria-labelledby="admin-login-form-title" className="login-form-panel">
+      <div className="login-form-header">
+        <p className="login-kicker">Private Entrance</p>
+        <h2 className="login-form-title" id="admin-login-form-title">
           进入后台工作台
         </h2>
-        <p className={styles.formDescription}>
+        <p className="login-form-description">
           只保留必要的用户名与密码登录；会话仍通过本地 token 与 /api/auth/me
           校验，避免额外入口打扰。
         </p>
       </div>
 
-      <form className={styles.formStack} onSubmit={handleSubmit}>
-        <label className={styles.fieldLabel}>
+      <form className="login-form-stack" onSubmit={handleSubmit}>
+        <label className="login-field-label">
           <span>用户名</span>
           <Input
             autoComplete="username"
@@ -72,7 +72,7 @@ export function LoginForm({ pending, errorMessage, onSubmit }: LoginFormProps) {
           />
         </label>
 
-        <label className={styles.fieldLabel}>
+        <label className="login-field-label">
           <span>密码</span>
           <Input
             autoComplete="current-password"
@@ -93,7 +93,7 @@ export function LoginForm({ pending, errorMessage, onSubmit }: LoginFormProps) {
         ) : null}
 
         <Button
-          className={styles.submitButton}
+          className="login-submit-button"
           fullWidth
           isDisabled={pending}
           size="md"
@@ -103,19 +103,19 @@ export function LoginForm({ pending, errorMessage, onSubmit }: LoginFormProps) {
         </Button>
       </form>
 
-      <div className={styles.accountArea}>
-        <div className={styles.accountHeader}>
+      <div className="login-account-area">
+        <div className="login-account-header">
           <div>
-            <p className={styles.accountTitle}>演示账号</p>
-            <p className={styles.accountHint}>点击卡片填入账号，不会自动登录。</p>
+            <p className="login-account-title">演示账号</p>
+            <p className="login-account-hint">点击卡片填入账号，不会自动登录。</p>
           </div>
         </div>
 
-        <div className={styles.accountGrid}>
+        <div className="login-account-grid">
           {demoAccounts.map((account) => (
             <Button
               aria-label={`填入${account.role}演示账号`}
-              className={styles.accountCard}
+              className="login-account-card"
               fullWidth
               key={account.username}
               onPress={() => {
@@ -129,11 +129,11 @@ export function LoginForm({ pending, errorMessage, onSubmit }: LoginFormProps) {
               }}
               type="button"
               variant="ghost">
-              <span className={styles.accountRole}>
+              <span className="login-account-role">
                 {account.role}
-                <span className={styles.accountPill}>{account.username}</span>
+                <span className="login-account-pill">{account.username}</span>
               </span>
-              <span className={styles.accountSecret}>
+              <span className="login-account-secret">
                 <span>
                   账号：
                   <code>{account.username}</code>
@@ -145,7 +145,7 @@ export function LoginForm({ pending, errorMessage, onSubmit }: LoginFormProps) {
                   </span>
                 ) : null}
               </span>
-              <span className={styles.accountSecret}>{account.caption}</span>
+              <span className="login-account-secret">{account.caption}</span>
             </Button>
           ))}
         </div>

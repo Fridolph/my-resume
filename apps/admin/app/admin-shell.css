@@ -1,171 +1,84 @@
 @import '@my-resume/ui/display.css';
+@tailwind base;
+@tailwind utilities;
 
-.card {
-  border-radius: var(--admin-radius-card);
-  border: 1px solid var(--admin-border);
-  background: var(--admin-surface);
-  box-shadow: var(--admin-shadow);
-  backdrop-filter: blur(20px);
-  padding: 1.5rem;
-}
-
-.stack,
-.preview-stack {
-  display: grid;
-  gap: 1rem;
-}
-
-.field {
-  display: grid;
-  gap: 0.55rem;
-  font-size: 0.95rem;
-}
-
-.muted,
-.muted-list {
-  color: var(--admin-text-muted);
-}
-
-.muted-list {
-  margin: 0;
-  display: grid;
-  gap: 0.5rem;
-  padding-left: 1.25rem;
-}
-
-.error-text {
-  margin: 0;
-  color: var(--admin-danger);
-}
-
-.status-box {
-  display: grid;
-  gap: 0.6rem;
-  border-radius: 20px;
-  border: 1px solid var(--admin-border);
-  background: color-mix(
-    in srgb,
-    var(--admin-primary-soft) 42%,
-    var(--admin-surface-strong)
-  );
-  padding: 1rem 1.1rem;
-}
-
-.readonly-box {
-  border-radius: 18px;
-  border: 1px solid var(--admin-warning-border);
-  background: var(--admin-warning-bg);
-  color: var(--admin-warning-text);
-  padding: 1rem 1.1rem;
-}
-
-.link-button,
-.secondary-link-button {
-  display: inline-flex;
-  min-height: 44px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  padding: 0.8rem 1rem;
-  font-weight: 600;
-}
-
-.link-button {
-  border: 1px solid var(--admin-button-primary-border);
-  background: var(--admin-button-primary-bg);
-  color: var(--admin-button-primary-text);
-}
-
-.link-button:hover {
-  background: var(--admin-button-primary-bg-hover);
-}
-
-.secondary-button,
-.secondary-link-button {
-  border: 1px solid var(--admin-border-strong);
-  background: var(--admin-surface-muted);
-  color: var(--admin-text);
-}
-
-.header-text-button {
-  border: 0;
-  background: transparent;
-  color: var(--admin-text-muted);
-  padding: 0.4rem 0.2rem;
-  font-size: 0.9rem;
-  line-height: 1.2;
-}
-
-.header-text-button:hover {
-  color: var(--admin-text);
-}
-
-.dashboard-inline-note {
-  border-radius: 16px;
-  border: 1px solid var(--admin-border);
-  background: var(--admin-surface-muted);
-  color: var(--admin-text-muted);
-  padding: 0.9rem 1rem;
-}
-
-.dashboard-entry-actions,
-.dashboard-badge-row,
-.toolbar-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-@media (max-width: 767px) {
+@layer components {
   .card {
-    border-radius: 20px;
-    padding: 1rem;
+    @apply rounded-[var(--display-radius-card)] border border-[var(--display-color-border)] backdrop-blur-[20px] p-6 max-md:rounded-[20px] max-md:p-4 md:max-lg:p-[1.2rem];
+    background: var(--display-color-surface);
+    box-shadow: var(--display-shadow-card);
   }
 
-  .stack,
+  .stack {
+    @apply grid gap-4 max-md:gap-3 md:max-lg:gap-[0.9rem];
+  }
   .preview-stack {
-    gap: 0.75rem;
+    @apply grid gap-4 max-md:gap-3;
   }
 
   .field {
-    gap: 0.45rem;
-    font-size: 0.9rem;
+    @apply grid gap-[0.55rem] text-[0.95rem] max-md:gap-[0.45rem] max-md:text-[0.9rem];
   }
 
-  .muted,
-  .dashboard-inline-note,
-  .readonly-box,
+  .muted {
+    @apply text-[var(--display-color-text-muted)] max-md:text-[0.9rem] max-md:leading-[1.5];
+  }
+  .muted-list {
+    @apply grid gap-2 m-0 pl-5 text-[var(--display-color-text-muted)] list-disc;
+  }
+
+  .error-text {
+    @apply m-0 text-[var(--display-color-danger)];
+  }
+
   .status-box {
-    font-size: 0.9rem;
-    line-height: 1.5;
+    @apply grid gap-[0.6rem] rounded-[20px] border border-[var(--display-color-border)] p-[1rem_1.1rem] max-md:gap-2 max-md:rounded-2xl max-md:p-[0.85rem_0.95rem] max-md:text-[0.9rem] max-md:leading-[1.5];
+    background: color-mix(
+      in srgb,
+      var(--display-color-accent-soft) 42%,
+      var(--display-color-strong-surface)
+    );
   }
 
-  .status-box,
   .readonly-box {
-    gap: 0.5rem;
-    border-radius: 16px;
-    padding: 0.85rem 0.95rem;
+    @apply rounded-[18px] border border-[var(--display-color-warning-border)] p-[1rem_1.1rem] text-[var(--display-color-warning-text)] max-md:gap-2 max-md:rounded-2xl max-md:p-[0.85rem_0.95rem] max-md:text-[0.9rem] max-md:leading-[1.5];
+    background: var(--display-color-warning-bg);
+  }
+
+  .link-button {
+    @apply min-h-[44px] rounded-full border border-[--admin-button-primary-border] px-4 py-[0.8rem] font-semibold;
+    background: var(--admin-button-primary-bg);
+    color: var(--admin-button-primary-text);
+  }
+  .link-button:hover {
+    background: var(--admin-button-primary-bg-hover);
+  }
+
+  .secondary-button,
+  .secondary-link-button {
+    @apply border border-[--admin-border-strong] px-4 py-[0.8rem] font-semibold;
+    background: var(--admin-surface-muted);
+    color: var(--admin-text);
+  }
+  .secondary-link-button {
+    @apply inline-flex min-h-[44px] items-center justify-center rounded-full;
+  }
+
+  .header-text-button {
+    @apply border-0 bg-transparent p-[0.4rem_0.2rem] text-[0.9rem] leading-[1.2] text-[var(--display-color-text-muted)];
+  }
+  .header-text-button:hover {
+    color: var(--display-color-text);
   }
 
   .dashboard-inline-note {
-    border-radius: 14px;
-    padding: 0.8rem 0.9rem;
+    @apply rounded-2xl border border-[var(--display-color-border)] p-[0.9rem_1rem] text-[var(--display-color-text-muted)] max-md:rounded-[14px] max-md:p-[0.8rem_0.9rem] max-md:text-[0.9rem] max-md:leading-[1.5];
+    background: var(--display-color-surface-muted);
   }
 
   .dashboard-entry-actions,
   .dashboard-badge-row,
   .toolbar-group {
-    gap: 0.55rem;
-  }
-}
-
-@media (min-width: 768px) and (max-width: 1023px) {
-  .card {
-    padding: 1.2rem;
-  }
-
-  .stack,
-  .preview-stack {
-    gap: 0.9rem;
+    @apply flex flex-wrap gap-3 max-md:gap-[0.55rem];
   }
 }

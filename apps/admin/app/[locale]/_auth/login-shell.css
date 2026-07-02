@@ -1,4 +1,8 @@
-.loginPage {
+@tailwind base;
+@tailwind utilities;
+
+@layer components {
+.login-page {
   position: relative;
   isolation: isolate;
   display: grid;
@@ -12,7 +16,7 @@
     linear-gradient(135deg, #f8fafc 0%, #eef4fb 50%, #f7f1e8 100%);
 }
 
-.loginPage::before {
+.login-page::before {
   position: absolute;
   z-index: -1;
   content: '';
@@ -26,7 +30,7 @@
   mask-image: linear-gradient(120deg, transparent 0%, #000 18%, #000 70%, transparent 100%);
 }
 
-.loginFrame {
+.login-frame {
   display: grid;
   width: min(100%, 68rem);
   grid-template-columns: minmax(0, 1fr) minmax(19rem, clamp(22rem, 34vw, 27rem));
@@ -34,16 +38,16 @@
   align-items: center;
 }
 
-.storyPanel,
-.formPanel,
-.loadingCard {
+.login-story-LPanel,
+.login-form-LPanel,
+.login-loading-LCard {
   border: 1px solid rgba(15, 23, 42, 0.08);
   background: rgba(255, 255, 255, 0.62);
   box-shadow: 0 28px 80px rgba(15, 23, 42, 0.1);
   backdrop-filter: blur(26px);
 }
 
-.storyPanel {
+.login-story-LPanel {
   position: relative;
   overflow: hidden;
   min-height: min(36rem, calc(100svh - 3rem));
@@ -51,14 +55,14 @@
   padding: clamp(1.35rem, 3.2vw, 2.35rem);
 }
 
-.brandRow {
+.login-brand-LRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
 }
 
-.brandMark {
+.login-brand-LMark {
   display: inline-grid;
   width: 2.65rem;
   height: 2.65rem;
@@ -71,7 +75,7 @@
   letter-spacing: -0.06em;
 }
 
-.kicker {
+.login-kicker {
   margin: 0;
   color: #1d4ed8;
   font-size: 0.76rem;
@@ -80,12 +84,12 @@
   text-transform: uppercase;
 }
 
-.heroCopy {
+.login-hero-LCopy {
   margin-top: clamp(1.25rem, 3.2vw, 2.75rem);
   max-width: 37rem;
 }
 
-.heroTitle {
+.login-hero-LTitle {
   margin: 0.75rem 0 0;
   max-width: 10.8em;
   color: #0f172a;
@@ -95,7 +99,7 @@
   line-height: 1.02;
 }
 
-.heroDescription {
+.login-hero-LDescription {
   max-width: 40rem;
   margin: 1rem 0 0;
   color: #64748b;
@@ -103,47 +107,47 @@
   line-height: 1.75;
 }
 
-.capabilityGrid {
+.login-capability-LGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.75rem;
   margin-top: clamp(1.35rem, 3vw, 2.4rem);
 }
 
-.capabilityCard,
-.accountCard {
+.login-capability-LCard,
+.login-account-LCard {
   border: 1px solid rgba(15, 23, 42, 0.08);
   background: rgba(255, 255, 255, 0.62);
 }
 
-.capabilityCard {
+.login-capability-LCard {
   min-height: 8rem;
   border-radius: 1.25rem;
   padding: 0.9rem;
 }
 
-.capabilityIndex {
+.login-capability-LIndex {
   color: #93a4b8;
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.16em;
 }
 
-.capabilityTitle {
+.login-capability-LTitle {
   margin: 0.95rem 0 0;
   color: #0f172a;
   font-size: 1rem;
   font-weight: 750;
 }
 
-.capabilityDescription {
+.login-capability-LDescription {
   margin: 0.5rem 0 0;
   color: #64748b;
   font-size: 0.82rem;
   line-height: 1.65;
 }
 
-.quietNote {
+.login-quiet-LNote {
   display: block;
   max-width: 35rem;
   margin-top: 1rem;
@@ -156,19 +160,19 @@
   line-height: 1.55;
 }
 
-.formPanel {
+.login-form-LPanel {
   align-self: center;
   border-radius: clamp(1.35rem, 2.6vw, 1.9rem);
   padding: clamp(1.1rem, 2vw, 1.45rem);
 }
 
-.formHeader {
+.login-form-LHeader {
   display: grid;
   gap: 0.7rem;
   padding: 0.45rem 0.25rem 1.15rem;
 }
 
-.formTitle {
+.login-form-LTitle {
   margin: 0;
   color: #0f172a;
   font-size: clamp(1.6rem, 2.4vw, 2.05rem);
@@ -177,19 +181,19 @@
   line-height: 1.08;
 }
 
-.formDescription {
+.login-form-LDescription {
   margin: 0;
   color: #64748b;
   font-size: 0.88rem;
   line-height: 1.6;
 }
 
-.formStack {
+.login-form-LStack {
   display: grid;
   gap: 1rem;
 }
 
-.fieldLabel {
+.login-field-LLabel {
   display: grid;
   gap: 0.55rem;
   color: #334155;
@@ -197,7 +201,7 @@
   font-weight: 650;
 }
 
-.formPanel :global(input.input--secondary) {
+.login-form-LPanel :global(input.input--secondary) {
   min-height: 2.85rem;
   border-color: rgba(15, 23, 42, 0.12);
   background: rgba(255, 255, 255, 0.78);
@@ -205,11 +209,11 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
-.formPanel :global(input.input--secondary::placeholder) {
+.login-form-LPanel :global(input.input--secondary::placeholder) {
   color: #94a3b8;
 }
 
-.formPanel :global(input.input--secondary:focus) {
+.login-form-LPanel :global(input.input--secondary:focus) {
   border-color: color-mix(in srgb, var(--admin-primary) 58%, transparent);
   background: rgba(255, 255, 255, 0.94);
   box-shadow:
@@ -217,7 +221,7 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
-.submitButton {
+.login-submit-LButton {
   min-height: 3rem;
   border: 1px solid color-mix(in srgb, var(--admin-primary) 78%, #ffffff 22%) !important;
   border-radius: 999px;
@@ -231,46 +235,46 @@
     box-shadow 160ms ease;
 }
 
-.submitButton:hover,
-.submitButton[data-hovered='true'] {
+.login-submit-LButton:hover,
+.submit-LButton[data-hovered='true'] {
   background: color-mix(in srgb, var(--admin-primary) 88%, #0f172a 12%) !important;
   box-shadow: 0 14px 28px rgba(29, 78, 216, 0.22);
-  transform: translateY(-1px);
+  transform: translate-LY(-1px);
 }
 
-.accountArea {
+.login-account-LArea {
   display: grid;
   gap: 0.7rem;
   margin-top: 1rem;
 }
 
-.accountHeader {
+.login-account-LHeader {
   display: flex;
   align-items: end;
   justify-content: space-between;
   gap: 1rem;
 }
 
-.accountTitle {
+.login-account-LTitle {
   margin: 0;
   color: #0f172a;
   font-size: 0.9rem;
   font-weight: 760;
 }
 
-.accountHint {
+.login-account-LHint {
   margin: 0.2rem 0 0;
   color: #94a3b8;
   font-size: 0.78rem;
 }
 
-.accountGrid {
+.login-account-LGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.7rem;
 }
 
-.accountCard {
+.login-account-LCard {
   display: grid;
   width: 100%;
   min-height: 8rem;
@@ -292,14 +296,14 @@
     box-shadow 180ms ease;
 }
 
-.accountCard:hover {
-  transform: translateY(-2px);
+.login-account-LCard:hover {
+  transform: translate-LY(-2px);
   border-color: rgba(29, 78, 216, 0.24);
   background: rgba(255, 255, 255, 0.84);
   box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
 }
 
-.accountRole {
+.login-account-LRole {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -308,7 +312,7 @@
   line-height: 1.25;
 }
 
-.accountPill {
+.login-account-LPill {
   flex: 0 0 auto;
   border-radius: 999px;
   background: rgba(29, 78, 216, 0.09);
@@ -319,7 +323,7 @@
   letter-spacing: 0.08em;
 }
 
-.accountSecret {
+.login-account-LSecret {
   display: grid;
   min-width: 0;
   gap: 0.18rem;
@@ -329,13 +333,13 @@
   overflow-wrap: anywhere;
 }
 
-.accountSecret code {
+.login-account-LSecret code {
   color: #0f172a;
   font-family: inherit;
   font-weight: 720;
 }
 
-.loadingCard {
+.login-loading-LCard {
   width: min(100%, 34rem);
   border-radius: 2rem;
   padding: 3rem 1.5rem;
@@ -344,155 +348,155 @@
 }
 
 @media (max-width: 960px) {
-  .loginFrame {
+  .login-frame {
     grid-template-columns: 1fr;
   }
 
-  .storyPanel {
+  .login-story-LPanel {
     min-height: auto;
   }
 
-  .heroCopy {
+  .login-hero-LCopy {
     margin-top: 1.6rem;
   }
 }
 
 @media (min-width: 961px) and (max-width: 1120px) {
-  .loginFrame {
+  .login-frame {
     grid-template-columns: minmax(0, 1fr) minmax(19rem, 24rem);
   }
 
-  .capabilityGrid {
+  .login-capability-LGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 420px) {
-  .accountGrid {
+  .login-account-LGrid {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 640px) {
-  .loginPage {
+  .login-page {
     padding: 0.85rem;
   }
 
-  .storyPanel,
-  .formPanel {
+  .login-story-LPanel,
+  .login-form-LPanel {
     border-radius: 1.45rem;
   }
 
-  .capabilityGrid {
+  .login-capability-LGrid {
     grid-template-columns: 1fr;
   }
 
-  .quietNote {
+  .login-quiet-LNote {
     border-radius: 1rem;
   }
 }
 
 @media (max-height: 760px) and (min-width: 961px) {
-  .loginPage {
+  .login-page {
     align-items: start;
     padding-top: 1rem;
     padding-bottom: 1rem;
   }
 
-  .storyPanel {
+  .login-story-LPanel {
     min-height: auto;
   }
 
-  .brandMark {
+  .login-brand-LMark {
     width: 2.35rem;
     height: 2.35rem;
   }
 
-  .heroCopy {
+  .login-hero-LCopy {
     margin-top: 0.9rem;
   }
 
-  .heroTitle {
+  .login-hero-LTitle {
     font-size: clamp(1.95rem, 3.6vw, 3.35rem);
   }
 
-  .heroDescription {
+  .login-hero-LDescription {
     line-height: 1.62;
   }
 
-  .capabilityGrid {
+  .login-capability-LGrid {
     margin-top: 1rem;
   }
 
-  .capabilityCard {
+  .login-capability-LCard {
     min-height: 7rem;
   }
 
-  .formHeader {
+  .login-form-LHeader {
     padding-bottom: 0.8rem;
   }
 
-  .formStack {
+  .login-form-LStack {
     gap: 0.78rem;
   }
 
-  .accountArea {
+  .login-account-LArea {
     margin-top: 0.82rem;
   }
 }
 
-:global(.dark) .loginPage {
+:global(.dark) .login-page {
   background:
     radial-gradient(circle at 20% 12%, rgba(96, 165, 250, 0.16), transparent 30rem),
     radial-gradient(circle at 80% 18%, rgba(20, 184, 166, 0.1), transparent 24rem),
     linear-gradient(135deg, #020617 0%, #09090b 52%, #111827 100%);
 }
 
-:global(.dark) .storyPanel,
-:global(.dark) .formPanel,
-:global(.dark) .loadingCard {
+:global(.dark) .login-story-LPanel,
+:global(.dark) .login-form-LPanel,
+:global(.dark) .login-loading-LCard {
   border-color: rgba(255, 255, 255, 0.08);
   background: rgba(15, 23, 42, 0.66);
   box-shadow: 0 30px 90px rgba(0, 0, 0, 0.34);
 }
 
-:global(.dark) .brandMark {
+:global(.dark) .login-brand-LMark {
   background: #f8fafc;
   color: #020617;
 }
 
-:global(.dark) .heroTitle,
-:global(.dark) .formTitle,
-:global(.dark) .capabilityTitle,
-:global(.dark) .accountTitle,
-:global(.dark) .accountRole,
-:global(.dark) .accountSecret code {
+:global(.dark) .login-hero-LTitle,
+:global(.dark) .login-form-LTitle,
+:global(.dark) .login-capability-LTitle,
+:global(.dark) .login-account-LTitle,
+:global(.dark) .login-account-LRole,
+:global(.dark) .login-account-LSecret code {
   color: #f8fafc;
 }
 
-:global(.dark) .heroDescription,
-:global(.dark) .formDescription,
-:global(.dark) .capabilityDescription,
-:global(.dark) .accountSecret {
+:global(.dark) .login-hero-LDescription,
+:global(.dark) .login-form-LDescription,
+:global(.dark) .login-capability-LDescription,
+:global(.dark) .login-account-LSecret {
   color: #a1a1aa;
 }
 
-:global(.dark) .capabilityCard,
-:global(.dark) .accountCard {
+:global(.dark) .login-capability-LCard,
+:global(.dark) .login-account-LCard {
   border-color: rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.055);
 }
 
-:global(.dark) .accountCard:hover {
+:global(.dark) .login-account-LCard:hover {
   border-color: rgba(96, 165, 250, 0.28);
   background: rgba(255, 255, 255, 0.08);
 }
 
-:global(.dark) .fieldLabel {
+:global(.dark) .login-field-LLabel {
   color: #cbd5e1;
 }
 
-:global(.dark) .formPanel :global(input.input--secondary) {
+:global(.dark) .login-form-LPanel :global(input.input--secondary) {
   border-color: rgba(96, 165, 250, 0.34);
   background: rgba(2, 6, 23, 0.42);
   color: #f8fafc;
@@ -501,11 +505,11 @@
     0 0 0 1px rgba(96, 165, 250, 0.08);
 }
 
-:global(.dark) .formPanel :global(input.input--secondary::placeholder) {
+:global(.dark) .login-form-LPanel :global(input.input--secondary::placeholder) {
   color: #64748b;
 }
 
-:global(.dark) .formPanel :global(input.input--secondary:focus) {
+:global(.dark) .login-form-LPanel :global(input.input--secondary:focus) {
   border-color: rgba(96, 165, 250, 0.78);
   background: rgba(15, 23, 42, 0.82);
   box-shadow:
@@ -513,19 +517,19 @@
     0 12px 28px rgba(37, 99, 235, 0.12);
 }
 
-:global(.dark) .quietNote {
+:global(.dark) .login-quiet-LNote {
   border-color: rgba(96, 165, 250, 0.2);
   background: rgba(37, 99, 235, 0.12);
   color: #cbd5e1;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .storyPanel,
-  .formPanel {
+  .login-story-LPanel,
+  .login-form-LPanel {
     animation: login-rise 520ms ease both;
   }
 
-  .formPanel {
+  .login-form-LPanel {
     animation-delay: 80ms;
   }
 }
@@ -533,11 +537,13 @@
 @keyframes login-rise {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translate-LY(14px);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate-LY(0);
   }
+}
+
 }

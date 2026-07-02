@@ -1,3 +1,4 @@
+import './login-shell.css'
 'use client'
 
 import { useRequest } from 'alova/client'
@@ -13,7 +14,6 @@ import { ThemeModeToggle } from '@shared/ui/components/theme-mode-toggle'
 
 import { createLoginWithPasswordMethod } from './services/auth-api'
 import { LoginForm } from './components/login-form'
-import styles from './login-shell.module.css'
 
 const capabilityCards = [
   {
@@ -89,8 +89,8 @@ export function AdminLoginShell({ locale: _locale }: { locale: AppLocale }) {
 
   if (checkingSession) {
     return (
-      <main className={styles.loginPage}>
-        <section aria-live="polite" className={styles.loadingCard}>
+      <main className="login-login-page">
+        <section aria-live="polite" className="login-loading-card">
           {t('loginChecking')}
         </section>
       </main>
@@ -98,42 +98,42 @@ export function AdminLoginShell({ locale: _locale }: { locale: AppLocale }) {
   }
 
   return (
-    <main className={styles.loginPage}>
-      <div className={styles.loginFrame}>
-        <section className={styles.storyPanel} aria-labelledby="admin-login-story-title">
-          <div className={styles.brandRow}>
-            <span className={styles.brandMark}>MR</span>
+    <main className="login-login-page">
+      <div className="login-login-frame">
+        <section className="login-story-panel" aria-labelledby="admin-login-story-title">
+          <div className="login-brand-row">
+            <span className="login-brand-mark">MR</span>
             <ThemeModeToggle />
           </div>
 
-          <div className={styles.heroCopy}>
-            <p className={styles.kicker}>Personal Ops Console</p>
-            <h1 className={styles.heroTitle} id="admin-login-story-title">
+          <div className="login-hero-copy">
+            <p className="login-kicker">Personal Ops Console</p>
+            <h1 className="login-hero-title" id="admin-login-story-title">
               把简历维护，做成一间安静的工作室
             </h1>
-            <p className={styles.heroDescription}>
+            <p className="login-hero-description">
               这里不是庞杂的后台，而是一套为个人品牌长期维护准备的内容工作台：
               写草稿、做 AI 辅助、确认发布，每一步都尽量少打扰、多确定。
             </p>
           </div>
 
-          <div className={styles.capabilityGrid} aria-label="后台核心能力">
+          <div className="login-capability-grid" aria-label="后台核心能力">
             {capabilityCards.map((item) => (
-              <article className={styles.capabilityCard} key={item.index}>
-                <span className={styles.capabilityIndex}>{item.index}</span>
-                <h2 className={styles.capabilityTitle}>{item.title}</h2>
-                <p className={styles.capabilityDescription}>{item.description}</p>
+              <article className="login-capability-card" key={item.index}>
+                <span className="login-capability-index">{item.index}</span>
+                <h2 className="login-capability-title">{item.title}</h2>
+                <p className="login-capability-description">{item.description}</p>
               </article>
             ))}
           </div>
 
-          <p className={styles.quietNote}>
+          <p className="login-quiet-note">
             viewer 保持只读边界，admin 承担编辑、AI 操作与发布职责；登录成功后统一进入
             /dashboard。
           </p>
 
           {currentUser ? (
-            <p className={styles.quietNote}>
+            <p className="login-quiet-note">
               已检测到登录状态：<strong>{currentUser.username}</strong>（
               {currentUser.role}）
             </p>
