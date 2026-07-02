@@ -282,8 +282,9 @@ export class ResumeController {
   @ApiBearerAuth('bearer')
   @ApiOperation({
     summary: '获取草稿态简历快照',
-    description: '后台编辑页使用的草稿读取入口',
+    description: '后台编辑页使用的草稿读取入口。支持 ?locale=zh|en 压平返回。',
   })
+  @ApiQuery({ name: 'locale', required: false, enum: ['zh', 'en'] })
   @ApiEnvelopeResponse({
     description: '读取草稿态快照成功',
   })
@@ -295,10 +296,12 @@ export class ResumeController {
   })
   async getDraftResume(
     @Res({ passthrough: true }) response: Response,
+    @Query('locale') locale?: string,
   ): Promise<ResumeDraftSnapshotResponse> {
-    // 后台编辑链路从 draft 开始，避免直接改动公开站内容。
     this.applyPrivateNoStoreHeaders(response)
-    return this.resumePublicationService.getDraft()
+    const draft = await this.resumePublicationService.getDraft()
+    const resolvedLocale = locale === 'en' ? 'en' as const : 'zh' as const
+    return flattenForLocale(draft, resolvedLocale) as ResumeDraftSnapshotResponse
   }
 
   /**

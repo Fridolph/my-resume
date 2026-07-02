@@ -32,11 +32,6 @@
 
   .status-box {
     @apply grid gap-[0.6rem] rounded-[20px] border border-[var(--display-color-border)] p-[1rem_1.1rem] max-md:gap-2 max-md:rounded-2xl max-md:p-[0.85rem_0.95rem] max-md:text-[0.9rem] max-md:leading-[1.5];
-    background: color-mix(
-      in srgb,
-      var(--display-color-accent-soft) 42%,
-      var(--display-color-strong-surface)
-    );
   }
 
   .readonly-box {
