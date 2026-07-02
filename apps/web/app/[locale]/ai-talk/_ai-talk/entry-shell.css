@@ -1,0 +1,191 @@
+/* entry-shell.css — ai-talk 入口页 BEM 组件（Tailwind @apply） */
+
+@layer components {
+  /* ── Hub Row ── */
+  .hub-row {
+    @apply overflow-hidden border border-white/70 bg-gradient-to-b from-white/95 to-slate-50/90 shadow-[0_30px_80px_rgba(15,23,42,0.08)] transition-[background,border-color,box-shadow] duration-300 dark:border-white/8 dark:from-slate-900/95 dark:to-slate-900/86 dark:shadow-[0_34px_90px_rgba(2,6,23,0.34)];
+    background-image:
+      radial-gradient(circle at top left, rgba(96, 165, 250, 0.14), transparent 28%),
+      radial-gradient(circle at bottom right, rgba(125, 211, 252, 0.11), transparent 24%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 252, 0.9));
+  }
+  :global([data-theme='dark']) .hub-row {
+    background-image:
+      radial-gradient(circle at top left, rgba(96, 165, 250, 0.14), transparent 30%),
+      radial-gradient(circle at bottom right, rgba(34, 211, 238, 0.1), transparent 24%),
+      linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(15, 23, 42, 0.86));
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .hub-row:hover,
+    .hub-row:focus-within {
+      @apply border-blue-200/90 shadow-[0_36px_90px_rgba(59,130,246,0.14)] dark:border-blue-500/25 dark:shadow-[0_40px_100px_rgba(15,23,42,0.42)];
+      background-image:
+        radial-gradient(circle at top left, rgba(96, 165, 250, 0.18), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(125, 211, 252, 0.14), transparent 26%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 252, 0.9));
+    }
+    :global([data-theme='dark']) .hub-row:hover,
+    :global([data-theme='dark']) .hub-row:focus-within {
+      background-image:
+        radial-gradient(circle at top left, rgba(96, 165, 250, 0.18), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(34, 211, 238, 0.12), transparent 24%),
+        linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(15, 23, 42, 0.86));
+    }
+  }
+
+  /* ── Plan Item ── */
+  .plan-item {
+    @apply flex gap-3 items-start rounded-[1.4rem] border border-slate-200/85 p-[0.95rem_1rem] transition-[background,border-color,box-shadow] duration-[220ms] dark:border-white/8;
+    background-image:
+      radial-gradient(circle at top left, rgba(191, 219, 254, 0.27), transparent 42%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.82));
+  }
+  :global([data-theme='dark']) .plan-item {
+    background-image:
+      radial-gradient(circle at top left, rgba(96, 165, 250, 0.13), transparent 42%),
+      linear-gradient(180deg, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.54));
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .plan-item:hover,
+    .plan-item:focus-within {
+      @apply border-blue-200/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.82),0_16px_30px_rgba(96,165,250,0.1)] dark:border-blue-500/25 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_18px_32px_rgba(15,23,42,0.22)];
+      background-image:
+        radial-gradient(circle at top left, rgba(191, 219, 254, 0.34), transparent 44%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.82));
+    }
+    :global([data-theme='dark']) .plan-item:hover,
+    :global([data-theme='dark']) .plan-item:focus-within {
+      background-image:
+        radial-gradient(circle at top left, rgba(96, 165, 250, 0.16), transparent 42%),
+        linear-gradient(180deg, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.54));
+    }
+  }
+
+  /* ── Profile Panel ── */
+  .profile-panel {
+    @apply grid gap-4 h-full min-h-full rounded-[1.75rem] border border-slate-200/88 p-6 transition-[background,border-color,box-shadow] duration-[220ms] lg:grid-rows-[auto_auto_1fr] lg:content-stretch lg:self-stretch dark:border-white/8;
+    background-image:
+      radial-gradient(circle at top left, rgba(191, 219, 254, 0.27), transparent 40%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.84));
+  }
+  :global([data-theme='dark']) .profile-panel {
+    background-image:
+      radial-gradient(circle at top left, rgba(96, 165, 250, 0.13), transparent 42%),
+      linear-gradient(180deg, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.56));
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .profile-panel:hover,
+    .profile-panel:focus-within {
+      @apply border-blue-200/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.78),0_16px_30px_rgba(96,165,250,0.1)] dark:border-blue-500/25 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_18px_32px_rgba(15,23,42,0.22)];
+      background-image:
+        radial-gradient(circle at top left, rgba(191, 219, 254, 0.34), transparent 42%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.84));
+    }
+    :global([data-theme='dark']) .profile-panel:hover,
+    :global([data-theme='dark']) .profile-panel:focus-within {
+      background-image:
+        radial-gradient(circle at top left, rgba(96, 165, 250, 0.16), transparent 42%),
+        linear-gradient(180deg, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.56));
+    }
+  }
+
+  /* ── Flip Card ── */
+  .flip-scene {
+    @apply min-h-[28.5rem] cursor-pointer md:relative md:h-[28.5rem];
+    perspective: 1500px;
+  }
+
+  .flip-inner {
+    @apply relative min-h-[inherit] h-full rounded-[1.75rem] shadow-[0_24px_56px_rgba(15,23,42,0.08)];
+    transform-style: preserve-3d;
+    transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.08);
+    will-change: transform;
+  }
+
+  .flip-face {
+    @apply relative flex min-h-[inherit] h-full flex-col overflow-hidden rounded-[1.75rem] border border-white/70 text-slate-900 dark:border-white/8 dark:text-white;
+    background-image:
+      radial-gradient(circle at top left, rgba(96, 165, 250, 0.14), transparent 32%),
+      radial-gradient(circle at bottom right, rgba(125, 211, 252, 0.1), transparent 28%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 252, 0.88));
+  }
+  :global([data-theme='dark']) .flip-face {
+    background-image:
+      radial-gradient(circle at top left, rgba(96, 165, 250, 0.14), transparent 32%),
+      radial-gradient(circle at bottom right, rgba(34, 211, 238, 0.1), transparent 28%),
+      linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(15, 23, 42, 0.86));
+  }
+
+  .flip-front {
+    @apply hidden md:flex md:[transform:rotateY(0deg)];
+  }
+
+  .flip-back {
+    @apply relative md:[transform:rotateY(180deg)];
+    background-image:
+      radial-gradient(circle at top left, rgba(147, 197, 253, 0.24), transparent 36%),
+      radial-gradient(circle at bottom right, rgba(186, 230, 253, 0.18), transparent 30%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(239, 246, 255, 0.88));
+  }
+  :global([data-theme='dark']) .flip-back {
+    background-image:
+      radial-gradient(circle at top left, rgba(96, 165, 250, 0.2), transparent 36%),
+      radial-gradient(circle at bottom right, rgba(34, 211, 238, 0.12), transparent 30%),
+      linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(15, 23, 42, 0.88));
+  }
+
+  @media (min-width: 768px) {
+    .flip-face {
+      @apply absolute inset-0 w-full h-full min-h-0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      transform-style: preserve-3d;
+      transition: box-shadow 0.28s ease, border-color 0.28s ease;
+    }
+  }
+
+  /* ── Card Glare ── */
+  .card-glare {
+    @apply absolute inset-0 z-0 overflow-hidden rounded-[inherit] pointer-events-none;
+  }
+  .card-glare::after {
+    @apply absolute top-[-55%] left-[-70%] w-[220%] h-[220%] opacity-0;
+    content: '';
+    background: linear-gradient(45deg, transparent 32%, rgba(255,255,255,0.14) 45%, rgba(255,255,255,0.05) 52%, transparent 66%);
+    transform: rotate(38deg) translate(-42%, -42%);
+  }
+
+  @keyframes ai-talk-card-glare {
+    0% { transform: rotate(38deg) translate(-42%, -42%); }
+    100% { transform: rotate(38deg) translate(42%, 42%); }
+  }
+
+  @media (min-width: 768px) and (hover: hover) and (pointer: fine) {
+    .flip-scene:hover .flip-inner,
+    .flip-scene:focus-within .flip-inner {
+      transform: rotateY(180deg);
+    }
+    .flip-scene:hover .card-glare::after,
+    .flip-scene:focus-within .card-glare::after {
+      @apply opacity-100;
+      animation: ai-talk-card-glare 1.35s ease-in-out;
+    }
+  }
+
+  /* ── Detail Items ── */
+  .detail-list {
+    @apply grid gap-[0.65rem] list-none m-0 p-0 content-start;
+  }
+
+  .detail-item {
+    @apply rounded-[1.2rem] border border-slate-200/85 p-[0.75rem_0.9rem] text-[0.9rem] leading-[1.55] text-slate-600 dark:border-white/8 dark:text-slate-200;
+    background-image:
+      radial-gradient(circle at top left, rgba(191, 219, 254, 0.28), transparent 44%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(239, 246, 255, 0.78));
+  }
+  :global([data-theme='dark']) .detail-item {
+    background-image:
+      radial-gradient(circle at top left, rgba(96, 165, 250, 0.14), transparent 44%),
+      linear-gradient(180deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.44));
+  }
+}
