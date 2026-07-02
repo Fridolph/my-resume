@@ -602,9 +602,13 @@ export function AiChatProvider({
     ],
   )
 
+  const isDrawerOpen = drawerState === 'open'
+
   return (
     <AiChatContext.Provider value={value}>
-      {children}
+      <div className={isDrawerOpen ? 'md:pr-[min(34rem,calc(100vw-2rem))] transition-all duration-300' : ''}>
+        {children}
+      </div>
       <AiChatConsentModal locale={locale} />
       <AiChatDrawer locale={locale} />
       <AiChatDock locale={locale} />
