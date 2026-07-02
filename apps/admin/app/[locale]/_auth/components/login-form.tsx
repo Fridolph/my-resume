@@ -1,6 +1,4 @@
 'use client'
-import '../login-shell.css'
-
 import { Input } from '@heroui/react/input'
 import { Button } from '@heroui/react/button'
 
@@ -46,20 +44,20 @@ export function LoginForm({ pending, errorMessage, onSubmit }: LoginFormProps) {
   }
 
   return (
-    <section aria-labelledby="admin-login-form-title" className="login-form-panel">
-      <div className="login-form-header">
+    <section aria-labelledby="admin-login-form-title" className="self-center rounded-[clamp(1.35rem,2.6vw,1.9rem)] p-[clamp(1.1rem,2vw,1.45rem)] border border-white/10 bg-white/60 shadow-[0_28px_80px_rgba(15,23,42,0.1)] backdrop-blur-[26px] dark:border-white/8 dark:bg-slate-900/65">
+      <div className="grid gap-[0.7rem] p-[0.45rem_0.25rem_1.15rem]">
         <p className="login-kicker">Private Entrance</p>
-        <h2 className="login-form-title" id="admin-login-form-title">
+        <h2 className="m-0 text-slate-950 dark:text-slate-50 text-[clamp(1.6rem,2.4vw,2.05rem)] font-[740] tracking-[-0.04em] leading-[1.08]" id="admin-login-form-title">
           进入后台工作台
         </h2>
-        <p className="login-form-description">
+        <p className="m-0 text-slate-500 dark:text-slate-400 text-[0.88rem] leading-[1.6]">
           只保留必要的用户名与密码登录；会话仍通过本地 token 与 /api/auth/me
           校验，避免额外入口打扰。
         </p>
       </div>
 
-      <form className="login-form-stack" onSubmit={handleSubmit}>
-        <label className="login-field-label">
+      <form className="grid gap-4" onSubmit={handleSubmit}>
+        <label className="grid gap-[0.55rem] text-slate-700 dark:text-slate-300 text-[0.88rem] font-[650]">
           <span>用户名</span>
           <Input
             autoComplete="username"
@@ -72,7 +70,7 @@ export function LoginForm({ pending, errorMessage, onSubmit }: LoginFormProps) {
           />
         </label>
 
-        <label className="login-field-label">
+        <label className="grid gap-[0.55rem] text-slate-700 dark:text-slate-300 text-[0.88rem] font-[650]">
           <span>密码</span>
           <Input
             autoComplete="current-password"
@@ -93,7 +91,7 @@ export function LoginForm({ pending, errorMessage, onSubmit }: LoginFormProps) {
         ) : null}
 
         <Button
-          className="login-submit-button"
+          className="min-h-[3rem] rounded-full font-[720] tracking-[0.04em] transition-[transform,background-color,box-shadow] duration-[160ms] hover:translate-y-[-1px] hover:shadow-[0_14px_28px_rgba(29,78,216,0.22)]"
           fullWidth
           isDisabled={pending}
           size="md"
@@ -103,19 +101,19 @@ export function LoginForm({ pending, errorMessage, onSubmit }: LoginFormProps) {
         </Button>
       </form>
 
-      <div className="login-account-area">
-        <div className="login-account-header">
+      <div className="grid gap-[0.7rem] mt-4">
+        <div className="flex items-end justify-between gap-4">
           <div>
-            <p className="login-account-title">演示账号</p>
-            <p className="login-account-hint">点击卡片填入账号，不会自动登录。</p>
+            <p className="m-0 text-slate-950 dark:text-slate-50 text-[0.9rem] font-[760]">演示账号</p>
+            <p className="mt-[0.2rem] text-slate-400 text-[0.78rem]">点击卡片填入账号，不会自动登录。</p>
           </div>
         </div>
 
-        <div className="login-account-grid">
+        <div className="grid grid-cols-2 max-[420px]:grid-cols-1 gap-[0.7rem]">
           {demoAccounts.map((account) => (
             <Button
               aria-label={`填入${account.role}演示账号`}
-              className="login-account-card"
+              className="grid w-full min-h-[8rem] gap-[0.55rem] content-start items-stretch appearance-none rounded-[1.25rem] p-[0.88rem] text-slate-950 dark:text-white cursor-pointer text-left transition-[transform,border-color,background-color,box-shadow] duration-[180ms] hover:-translate-y-[0.5px] hover:border-blue-600/25 hover:bg-white/85 hover:shadow-[0_14px_34px_rgba(15,23,42,0.08)] dark:hover:bg-white/8 border border-white/10 bg-white/60 dark:bg-white/5"
               fullWidth
               key={account.username}
               onPress={() => {
@@ -129,11 +127,11 @@ export function LoginForm({ pending, errorMessage, onSubmit }: LoginFormProps) {
               }}
               type="button"
               variant="ghost">
-              <span className="login-account-role">
+              <span className="flex items-center justify-between gap-2 font-[760] leading-[1.25]">
                 {account.role}
-                <span className="login-account-pill">{account.username}</span>
+                <span className="flex-shrink-0 rounded-full bg-blue-600/10 px-2 py-[0.22rem] text-blue-700 dark:text-blue-400 text-[0.64rem] font-extrabold tracking-[0.08em]">{account.username}</span>
               </span>
-              <span className="login-account-secret">
+              <span className="grid min-w-0 gap-[0.18rem] text-slate-500 dark:text-slate-400 text-[0.74rem] leading-[1.4] [overflow-wrap:anywhere]">
                 <span>
                   账号：
                   <code>{account.username}</code>
@@ -145,7 +143,7 @@ export function LoginForm({ pending, errorMessage, onSubmit }: LoginFormProps) {
                   </span>
                 ) : null}
               </span>
-              <span className="login-account-secret">{account.caption}</span>
+              <span className="grid min-w-0 gap-[0.18rem] text-slate-500 dark:text-slate-400 text-[0.74rem] leading-[1.4] [overflow-wrap:anywhere]">{account.caption}</span>
             </Button>
           ))}
         </div>

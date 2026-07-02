@@ -272,17 +272,18 @@ function localizeSkillLine(raw: string, locale: ResumeLocale): string {
   return localizeSkillFragment(trimmed)
 }
 
-function pickSkillKeywordText(keyword: LocalizedText, locale: ResumeLocale): string {
-  const preferred = keyword[locale].trim()
+function pickSkillKeywordText(keyword: LocalizedText | string, locale: ResumeLocale): string {
+  if (typeof keyword === 'string') {
+    return keyword.trim()
+  }
+  const preferred = keyword[locale]?.trim()
   if (preferred) {
     return preferred
   }
-
   if (locale === 'en') {
-    return keyword.zh.trim() || keyword.en.trim()
+    return keyword.zh?.trim() || keyword.en?.trim() || ''
   }
-
-  return keyword.en.trim() || keyword.zh.trim()
+  return keyword.en?.trim() || keyword.zh?.trim() || ''
 }
 
 export function parseSkillLine(raw: string): ParsedSkillLine {
