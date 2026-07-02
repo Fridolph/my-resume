@@ -4,13 +4,13 @@
 
 @layer components {
   .card {
-    @apply rounded-[var(--display-radius-card)] border border-[var(--display-color-border)] backdrop-blur-[20px] p-6 max-md:rounded-[20px] max-md:p-4 md:max-lg:p-[1.2rem];
+    @apply rounded-[var(--display-radius-card)] border border-[var(--display-color-border)] backdrop-blur-[20px] p-6 max-md:rounded-[20px] max-md:p-4 max-lg:p-5;
     background: var(--display-color-surface);
     box-shadow: var(--display-shadow-card);
   }
 
   .stack {
-    @apply grid gap-4 max-md:gap-3 md:max-lg:gap-[0.9rem];
+    @apply grid gap-4 max-md:gap-3 max-lg:gap-4;
   }
   .preview-stack {
     @apply grid gap-4 max-md:gap-3;

@@ -9,7 +9,7 @@
       radial-gradient(circle at bottom right, rgba(125, 211, 252, 0.11), transparent 24%),
       linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 252, 0.9));
   }
-  :global([data-theme='dark']) .hub-row {
+  [data-theme='dark'] .hub-row {
     background-image:
       radial-gradient(circle at top left, rgba(96, 165, 250, 0.14), transparent 30%),
       radial-gradient(circle at bottom right, rgba(34, 211, 238, 0.1), transparent 24%),
@@ -24,8 +24,8 @@
         radial-gradient(circle at bottom right, rgba(125, 211, 252, 0.14), transparent 26%),
         linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 252, 0.9));
     }
-    :global([data-theme='dark']) .hub-row:hover,
-    :global([data-theme='dark']) .hub-row:focus-within {
+    [data-theme='dark'] .hub-row:hover,
+    [data-theme='dark'] .hub-row:focus-within {
       background-image:
         radial-gradient(circle at top left, rgba(96, 165, 250, 0.18), transparent 30%),
         radial-gradient(circle at bottom right, rgba(34, 211, 238, 0.12), transparent 24%),
@@ -40,7 +40,7 @@
       radial-gradient(circle at top left, rgba(191, 219, 254, 0.27), transparent 42%),
       linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.82));
   }
-  :global([data-theme='dark']) .plan-item {
+  [data-theme='dark'] .plan-item {
     background-image:
       radial-gradient(circle at top left, rgba(96, 165, 250, 0.13), transparent 42%),
       linear-gradient(180deg, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.54));
@@ -53,8 +53,8 @@
         radial-gradient(circle at top left, rgba(191, 219, 254, 0.34), transparent 44%),
         linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.82));
     }
-    :global([data-theme='dark']) .plan-item:hover,
-    :global([data-theme='dark']) .plan-item:focus-within {
+    [data-theme='dark'] .plan-item:hover,
+    [data-theme='dark'] .plan-item:focus-within {
       background-image:
         radial-gradient(circle at top left, rgba(96, 165, 250, 0.16), transparent 42%),
         linear-gradient(180deg, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.54));
@@ -68,7 +68,7 @@
       radial-gradient(circle at top left, rgba(191, 219, 254, 0.27), transparent 40%),
       linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.84));
   }
-  :global([data-theme='dark']) .profile-panel {
+  [data-theme='dark'] .profile-panel {
     background-image:
       radial-gradient(circle at top left, rgba(96, 165, 250, 0.13), transparent 42%),
       linear-gradient(180deg, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.56));
@@ -81,8 +81,8 @@
         radial-gradient(circle at top left, rgba(191, 219, 254, 0.34), transparent 42%),
         linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.84));
     }
-    :global([data-theme='dark']) .profile-panel:hover,
-    :global([data-theme='dark']) .profile-panel:focus-within {
+    [data-theme='dark'] .profile-panel:hover,
+    [data-theme='dark'] .profile-panel:focus-within {
       background-image:
         radial-gradient(circle at top left, rgba(96, 165, 250, 0.16), transparent 42%),
         linear-gradient(180deg, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.56));
@@ -109,7 +109,7 @@
       radial-gradient(circle at bottom right, rgba(125, 211, 252, 0.1), transparent 28%),
       linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 252, 0.88));
   }
-  :global([data-theme='dark']) .flip-face {
+  [data-theme='dark'] .flip-face {
     background-image:
       radial-gradient(circle at top left, rgba(96, 165, 250, 0.14), transparent 32%),
       radial-gradient(circle at bottom right, rgba(34, 211, 238, 0.1), transparent 28%),
@@ -127,7 +127,7 @@
       radial-gradient(circle at bottom right, rgba(186, 230, 253, 0.18), transparent 30%),
       linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(239, 246, 255, 0.88));
   }
-  :global([data-theme='dark']) .flip-back {
+  [data-theme='dark'] .flip-back {
     background-image:
       radial-gradient(circle at top left, rgba(96, 165, 250, 0.2), transparent 36%),
       radial-gradient(circle at bottom right, rgba(34, 211, 238, 0.12), transparent 30%),
@@ -183,7 +183,7 @@
       radial-gradient(circle at top left, rgba(191, 219, 254, 0.28), transparent 44%),
       linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(239, 246, 255, 0.78));
   }
-  :global([data-theme='dark']) .detail-item {
+  [data-theme='dark'] .detail-item {
     background-image:
       radial-gradient(circle at top left, rgba(96, 165, 250, 0.14), transparent 44%),
       linear-gradient(180deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.44));

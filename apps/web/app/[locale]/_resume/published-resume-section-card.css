@@ -11,7 +11,7 @@
   box-shadow: 0 16px 40px rgba(15, 23, 42, 0.045);
 }
 
-:global([data-theme='dark']) .r-section-card {
+[data-theme='dark'] .r-section-card {
   border-color: rgba(255, 255, 255, 0.06);
   background:
     radial-gradient(circle at top left, rgba(96, 165, 250, 0.12), transparent 34%),
