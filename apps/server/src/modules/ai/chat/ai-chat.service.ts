@@ -826,11 +826,13 @@ export class AiChatService {
     let interimSummaryText: string | null = bundle.session.interimSummary ?? null
     let focusKeywords: string[] | null = (bundle.session.focusKeywordsJson as string[] | null) ?? null
 
-    if (nextTurnCount === SUMMARY_TRIGGER_TURN || nextTurnCount === MAX_CHAT_TURNS) {
+    // 每 20 轮触发一次总结（20, 40, 60...）
+    if (nextTurnCount > 0 && nextTurnCount % 20 === 0) {
+      const stageLabel = `turn-${nextTurnCount}`
       generatedSummary = await this.generateConversationSummary({
         locale,
         sessionId: bundle.session.id,
-        stage: nextTurnCount === MAX_CHAT_TURNS ? 'turn-20' : 'turn-10',
+        stage: stageLabel,
       })
 
       await this.aiChatRepository.createMessage({
@@ -843,7 +845,7 @@ export class AiChatService {
           {
             type: 'summary',
             stage: generatedSummary.stage,
-            title: generatedSummary.stage === 'turn-20' ? '会话总结' : '阶段总结',
+            title: `第 ${nextTurnCount} 轮总结`,
             summary: generatedSummary.summary,
             keywords: generatedSummary.keywords,
           },
@@ -1264,7 +1266,7 @@ export class AiChatService {
   private async generateConversationSummary(input: {
     locale: AiChatLocale
     sessionId: string
-    stage: 'turn-10' | 'turn-20'
+    stage: string
   }): Promise<AiChatSummarySnapshot> {
     const messages = await this.aiChatRepository.listMessagesBySessionId(input.sessionId)
     const prompt = buildAiChatSummaryPrompt({

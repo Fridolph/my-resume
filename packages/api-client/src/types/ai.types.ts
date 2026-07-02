@@ -1027,7 +1027,7 @@ export type AiChatLeadStatus = 'submitted' | 'issued' | 'closed'
 export type AiChatUseKeyStatus = 'issued' | 'claimed' | 'revoked' | 'expired'
 export type AiChatSessionStatus = 'open' | 'closed'
 export type AiChatMessageRole = 'user' | 'assistant' | 'system'
-export type AiChatSummaryStage = 'turn-10' | 'turn-20'
+export type AiChatSummaryStage = string
 export type AiChatMessageBlockType =
   | 'text'
   | 'project_card'
