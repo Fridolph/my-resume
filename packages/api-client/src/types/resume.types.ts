@@ -230,6 +230,8 @@ export type ResumePublishedSummarySnapshot = ResumePublishedSnapshot<ResumeSumma
  */
 export interface ResumeRequestInput {
   apiBaseUrl: string
+  /** 请求语言（用于 API 压平双语字段），默认 zh */
+  locale?: 'zh' | 'en'
 }
 
 /**

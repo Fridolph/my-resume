@@ -28,10 +28,12 @@ function normalizePublishedResumeLoadError(error: unknown): string {
 
 export async function loadPublishedResumeSafely(input: {
   apiBaseUrl: string
+  locale?: 'zh' | 'en'
 }): Promise<SafePublishedResumeLoadResult> {
   try {
     const publishedResume = await createFetchPublishedResumeMethod({
       apiBaseUrl: input.apiBaseUrl,
+      locale: input.locale ?? 'zh',
     })
 
     if (!publishedResume) {

@@ -16,7 +16,7 @@ export default async function WebHomePage({
 }) {
   const { locale } = await params
   const routeLocale = isAppLocale(locale) ? locale : 'zh'
-  const { initialLoadError, publishedResume } = await loadPublishedResumeSafely({
+  const { initialLoadError, publishedResume } = await loadPublishedResumeSafely({ locale: locale as "zh" | "en",
     apiBaseUrl: DEFAULT_SERVER_API_BASE_URL,
   })
 
