@@ -25,6 +25,7 @@ import { RagRetrievalRepository } from './rag/rag-retrieval.repository'
 import { RagService } from './rag/rag.service'
 import { resolveRagVectorStoreRuntimeConfig } from './rag/vector-store/config'
 import { createRagVectorStore } from './rag/vector-store/factory'
+import { createGraphStore } from './graph/graph-store.factory'
 import {
   RAG_VECTOR_STORE,
   RAG_VECTOR_STORE_CONFIG,
@@ -32,6 +33,7 @@ import {
 import { UserDocsIngestionService } from './rag/user-docs-ingestion.service'
 import { ResumeAssistantController } from './resume-assistant/resume-assistant.controller'
 import { ResumeAssistantService } from './resume-assistant/resume-assistant.service'
+import { GraphSyncService } from './graph/graph-sync.service'
 import { AiFileController } from './transport/controllers/ai-file.controller'
 import { AiReportController } from './transport/controllers/ai-report.controller'
 import { AiResumeImportController } from './transport/controllers/ai-resume-import.controller'
@@ -67,6 +69,11 @@ import { AiResumeImportController } from './transport/controllers/ai-resume-impo
       useFactory: createRagVectorStore,
     },
     {
+      // GraphStore 工厂：按 GRAPH_STORE_BACKEND 切换 neo4j / memory
+      provide: 'GRAPH_STORE',
+      useFactory: createGraphStore,
+    },
+    {
       // 对上层只暴露统一 AiProvider 接口，屏蔽厂商差异。
       provide: AI_PROVIDER_INSTANCE,
       inject: [AI_RUNTIME_CONFIG, AI_FETCH],
@@ -91,6 +98,7 @@ import { AiResumeImportController } from './transport/controllers/ai-resume-impo
     UserDocsIngestionService,
     RagService,
     ResumeAssistantService,
+    GraphSyncService,
   ],
   exports: [
     AiService,
