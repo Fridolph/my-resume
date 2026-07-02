@@ -1,6 +1,9 @@
+import { Logger } from '@nestjs/common'
 import type { AiChatLocale } from '../ai-chat.types'
 import { createRouterLlm } from './router-llm.factory'
 import { parseKnowledgeDomains, RouteIntentSchema } from './route-intent.schema'
+
+const logger = new Logger('RouteIntentNode')
 
 /**
  * 路由 Prompt 模板。
@@ -63,35 +66,59 @@ export function createRouteIntentNode() {
 
   return async (state: { question: string; locale: AiChatLocale }) => {
     const prompt = buildRoutePrompt(state.question, state.locale)
-    const result = await router.invoke(prompt)
 
-    const knowledgeDomains = parseKnowledgeDomains(result.knowledgeDomains)
+    try {
+      const result = await router.invoke(prompt)
+      const knowledgeDomains = parseKnowledgeDomains(result.knowledgeDomains)
 
-    // 按 strategy 映射 sourceTypes（对齐 legacy routeIntentAndDomain）
-    let sourceTypes: string[] | undefined
-    let preferSourceTypes: string[] | undefined
-    switch (result.strategy) {
-      case 'supplement':
-        sourceTypes = ['user_docs', 'knowledge']
-        preferSourceTypes = ['user_docs', 'knowledge']
-        break
-      case 'hybrid':
-        sourceTypes = ['resume_core', 'user_docs']
-        preferSourceTypes = ['user_docs', 'resume_core']
-        break
-      case 'resume':
-      default:
-        sourceTypes = ['resume_core']
-        preferSourceTypes = ['resume_core']
-        break
+      const sourceTypes = resolveSourceTypes(result.strategy)
+
+      return {
+        strategy: result.strategy,
+        routeReason: result.reason,
+        knowledgeDomains: knowledgeDomains ?? ([] as any),
+        sourceTypes,
+        preferSourceTypes: sourceTypes,
+      }
+    } catch (error) {
+      // LLM 路由失败 → 回退到正则
+      logger.warn({
+        event: 'graph.route_intent.llm_fallback',
+        question: state.question.slice(0, 80),
+        error: error instanceof Error ? error.message : String(error),
+      })
+
+      return fallbackRoute(state.question)
     }
+  }
+}
 
-    return {
-      strategy: result.strategy,
-      routeReason: result.reason,
-      knowledgeDomains: knowledgeDomains ?? ([] as any),
-      sourceTypes,
-      preferSourceTypes,
-    }
+/** LLM 路由失败时的正则兜底 */
+function fallbackRoute(question: string) {
+  const lower = question.toLowerCase()
+
+  // 越界
+  if (/天气|股票|彩票|政治|新闻/.test(lower)) {
+    return { strategy: 'out_of_scope' as const, routeReason: 'rule:out_of_scope', knowledgeDomains: [], sourceTypes: undefined, preferSourceTypes: undefined }
+  }
+  // 打招呼
+  if (/^(你好|hi|hello|hey|哈喽|嗨|在吗|测试|test)$/i.test(question.trim())) {
+    return { strategy: 'chitchat' as const, routeReason: 'rule:greeting', knowledgeDomains: [], sourceTypes: undefined, preferSourceTypes: undefined }
+  }
+  // 补充资料
+  if (/博客|文章|写作|创作|兴趣|爱好|特长|休闲|喜欢/.test(lower)) {
+    return { strategy: 'supplement' as const, routeReason: 'rule:supplement', knowledgeDomains: ['hobbies', 'writing_media'] as any, sourceTypes: ['user_docs', 'knowledge'] as any, preferSourceTypes: ['user_docs', 'knowledge'] as any }
+  }
+  // 默认简历
+  return { strategy: 'resume' as const, routeReason: 'rule:resume_default', knowledgeDomains: [], sourceTypes: ['resume_core'] as any, preferSourceTypes: ['resume_core'] as any }
+}
+
+/** 按 strategy 映射 sourceTypes */
+function resolveSourceTypes(strategy: string) {
+  switch (strategy) {
+    case 'supplement': return ['user_docs', 'knowledge'] as any
+    case 'hybrid': return ['resume_core', 'user_docs'] as any
+    case 'resume': return ['resume_core'] as any
+    default: return undefined
   }
 }
