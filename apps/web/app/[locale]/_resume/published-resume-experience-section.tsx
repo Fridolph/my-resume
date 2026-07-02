@@ -1,3 +1,4 @@
+import './published-resume-card-surface.css'
 'use client'
 
 import { formatDateRange } from '@my-resume/utils'
@@ -11,11 +12,10 @@ import type {
 } from '@shared/published-resume/types/published-resume.types'
 import { readLocalizedText } from '@shared/published-resume/published-resume-utils'
 import { createIndexedRenderKey } from './published-resume-render-key'
-import surfaceStyles from './published-resume-card-surface.module.css'
 import { PublishedResumeSectionCard } from './published-resume-section-card'
 
 const timelineItemClass =
-  `relative grid gap-2 rounded-3xl p-5 ${surfaceStyles.timelineCardSurface}`
+  `relative grid gap-2 rounded-3xl p-5 ${'r-timeline-card-surface'}`
 const itemHeaderClass =
   'mb-2 flex flex-col items-start gap-3 md:flex-row md:items-start md:justify-between'
 const itemHeaderMainClass = 'grid gap-1.5'
@@ -66,7 +66,7 @@ export function PublishedResumeExperienceSection({
 
           return (
             <article className={timelineItemClass} key={experienceKey}>
-              <span aria-hidden="true" className={surfaceStyles.timelineCardTab} />
+              <span aria-hidden="true" className='r-timeline-card-tab' />
               <div className={itemHeaderClass}>
                 <div className={itemHeaderMainClass}>
                   <h3 className={itemTitleClass}>{companyName}</h3>

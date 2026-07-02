@@ -1,3 +1,4 @@
+import './hero.css'
 'use client'
 
 import { Card, CardContent, CardHeader } from '@heroui/react/card'
@@ -17,8 +18,6 @@ import {
 } from '@shared/published-resume/published-resume-utils'
 import { emitGlobalAiChatOpen, useOptionalAiChat } from '@shared/ai-chat/ai-chat-context'
 import { PublishedResumeProfileIcon } from './published-resume-profile-icon'
-import styles from './hero.module.css'
-
 const contactItemClass =
   'group grid grid-cols-[1.25rem_minmax(0,1fr)] items-start gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300'
 const interestCardClass =
@@ -52,11 +51,11 @@ const highlightAccentClasses = [
   'from-rose-500/20 via-pink-400/12 to-transparent dark:from-rose-400/22 dark:via-pink-300/12',
 ] as const
 const highlightCardThemeClassNames = [
-  'highlightCardThemeSky',
-  'highlightCardThemeEmerald',
-  'highlightCardThemeViolet',
-  'highlightCardThemeAmber',
-  'highlightCardThemeRose',
+  'r-highlight-card-theme-sky',
+  'r-highlight-card-theme-emerald',
+  'r-highlight-card-theme-violet',
+  'r-highlight-card-theme-amber',
+  'r-highlight-card-theme-rose',
 ] as const
 
 function LocationIcon() {
@@ -188,13 +187,13 @@ function PublishedResumeHeroComponent({
   }, [isJsdom, tooltipReady])
 
   return (
-    <Card className={styles.heroCard}>
+    <Card className='r-hero-card'>
       <CardHeader className="grid gap-5 border-b border-slate-200/80 pb-5 dark:border-white/10">
         <div className="grid gap-4">
           <div className="mx-auto flex w-full max-w-[17rem] flex-col items-center gap-4 text-center">
             <Link
               aria-label={siteT('aiChatDrawerAriaLabel')}
-              className={`${styles.avatarChatTrigger} ${styles.avatarFlip} w-full max-w-40`}
+              className={`${'r-avatar-chat-trigger'} ${'r-avatar-flip'} w-full max-w-40`}
               data-testid="published-resume-ai-chat-trigger"
               href="/ai-talk"
               onClick={(event) => {
@@ -206,12 +205,12 @@ function PublishedResumeHeroComponent({
 
                 emitGlobalAiChatOpen()
               }}>
-              <span aria-hidden="true" className={styles.avatarChatBadge}>
+              <span aria-hidden="true" className='r-avatar-chat-badge'>
                 talk with me ...
               </span>
-              <span aria-hidden="true" className={styles.avatarChatHalo} />
-              <div className={styles.avatarFlipInner}>
-                <div className={styles.avatarFace}>
+              <span aria-hidden="true" className='r-avatar-chat-halo' />
+              <div className='r-avatar-flip-inner'>
+                <div className='r-avatar-face'>
                   <img
                     alt={t('hero.avatarFrontAlt', { name })}
                     className="h-full w-full object-cover"
@@ -221,7 +220,7 @@ function PublishedResumeHeroComponent({
                     src={hero.frontImageUrl}
                   />
                 </div>
-                <div className={[styles.avatarFace, styles.avatarFaceBack].join(' ')}>
+                <div className={['r-avatar-face', 'r-avatar-face-back'].join(' ')}>
                   <img
                     alt={t('hero.avatarBackAlt', { name })}
                     className="h-full w-full object-cover"
@@ -237,7 +236,7 @@ function PublishedResumeHeroComponent({
             <div className="grid gap-2">
               {localizedHeroSlogans.map((line) => (
                 <p
-                  className={`${styles.gradientCopy} text-sm font-semibold leading-6 text-slate-600 dark:text-slate-200`}
+                  className={`${'r-gradient-copy'} text-sm font-semibold leading-6 text-slate-600 dark:text-slate-200`}
                   key={line}>
                   {line}
                 </p>
@@ -254,12 +253,12 @@ function PublishedResumeHeroComponent({
             </p>
           </div>
 
-          <article className={styles.githubCard}>
+          <article className='r-github-card'>
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
               INTRO
             </p>
             <p
-              className={`${styles.gradientCopy} mt-2 text-sm font-semibold leading-6 text-slate-700 dark:text-slate-100`}>
+              className={`${'r-gradient-copy'} mt-2 text-sm font-semibold leading-6 text-slate-700 dark:text-slate-100`}>
               {intro}
             </p>
           </article>
@@ -274,7 +273,7 @@ function PublishedResumeHeroComponent({
           </p>
           <div className="grid gap-2">
             {contactItems.map((item) => (
-              <div className={`${styles.contactItem} ${contactItemClass}`} key={item.key}>
+              <div className={`${'r-contact-item'} ${contactItemClass}`} key={item.key}>
                 <span className="contact-item-icon mt-1 text-slate-400 dark:text-slate-500">
                   {item.icon}
                 </span>
@@ -301,7 +300,7 @@ function PublishedResumeHeroComponent({
                 if (!link.icon) {
                   return (
                     <a
-                      className={`${styles.linkFallbackChip} ${linkFallbackClass}`}
+                      className={`${'r-link-fallback-chip'} ${linkFallbackClass}`}
                       href={link.url}
                       key={link.url}
                       rel="noreferrer"
@@ -315,7 +314,7 @@ function PublishedResumeHeroComponent({
                   return (
                     <a
                       aria-label={localizedLabel}
-                      className={styles.iconLinkChip}
+                      className='r-icon-link-chip'
                       href={link.url}
                       key={link.url}
                       onFocus={() => setShouldLoadTooltip(true)}
@@ -323,7 +322,7 @@ function PublishedResumeHeroComponent({
                       rel="noreferrer"
                       target="_blank"
                       title={localizedLabel}>
-                      <span className={styles.iconLinkInner}>
+                      <span className='r-icon-link-inner'>
                         <PublishedResumeProfileIcon name={link.icon} />
                       </span>
                     </a>
@@ -362,21 +361,21 @@ function PublishedResumeHeroComponent({
               {localizedInterests.map((interest) =>
                 interest.icon ? (
                   <article
-                    className={`${styles.interestCard} ${interestCardClass}`}
+                    className={`${'r-interest-card'} ${interestCardClass}`}
                     key={`${interest.localizedLabel}-${interest.icon}`}>
-                    <span className={styles.interestCardIcon}>
+                    <span className='r-interest-card-icon'>
                       <PublishedResumeProfileIcon name={interest.icon} />
                     </span>
-                    <span className={styles.interestCardLabel}>
+                    <span className='r-interest-card-label'>
                       {interest.localizedLabel}
                     </span>
                   </article>
                 ) : (
                   <article
-                    className={`${styles.interestCard} ${interestCardClass} ${interestCardPlainClass}`}
+                    className={`${'r-interest-card'} ${interestCardClass} ${interestCardPlainClass}`}
                     key={`${interest.localizedLabel}-plain`}>
                     <span
-                      className={`${styles.interestCardLabel} ${interestCardLabelPlainClass}`}>
+                      className={`${'r-interest-card-label'} ${interestCardLabelPlainClass}`}>
                       {interest.localizedLabel}
                     </span>
                   </article>
@@ -399,7 +398,7 @@ function PublishedResumeHeroComponent({
             <div className="grid gap-2.5">
               {highlights.map((item, index) => (
                 <article
-                  className={`${styles.highlightCard} group ${styles[highlightCardThemeClassNames[index % highlightCardThemeClassNames.length]]}`}
+                  className={`r-highlight-card group ${highlightCardThemeClassNames[index % highlightCardThemeClassNames.length]}`}
                   key={`${item.title.en}-${index}`}>
                   <div
                     className={`pointer-events-none absolute inset-0 bg-gradient-to-br opacity-0 transition duration-300 group-hover:opacity-100 ${highlightAccentClasses[index % highlightAccentClasses.length]}`}
@@ -423,7 +422,7 @@ function PublishedResumeHeroComponent({
           </div>
         ) : null}
 
-        <div className={styles.publishedMetaCard}>
+        <div className='r-published-meta-card'>
           <p className="text-[0.7rem] font-semibold uppercase tracking-[0.24em] text-slate-400">
             {t('publishedAt')}
           </p>

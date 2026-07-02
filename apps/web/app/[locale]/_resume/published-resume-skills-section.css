@@ -1,17 +1,21 @@
-.toolbar {
+@tailwind base;
+@tailwind utilities;
+
+@layer components {
+.r-toolbar {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-.controlGroup {
+.r-control-group {
   display: inline-flex;
   flex-wrap: wrap;
   gap: 0.75rem;
   justify-content: flex-end;
 }
 
-.controlSurface {
+.r-control-surface {
   display: inline-flex;
   border: 1px solid rgba(226, 232, 240, 0.8);
   border-radius: 999px;
@@ -19,12 +23,12 @@
   padding: 0.25rem;
 }
 
-.controlButton {
+.r-control-button {
   border-radius: 999px;
   padding-inline: 1rem;
 }
 
-.structureCard {
+.r-structure-card {
   border: 1px solid rgba(226, 232, 240, 0.7);
   border-radius: 1.625rem;
   background:
@@ -33,31 +37,31 @@
   padding: 1.25rem;
 }
 
-.structureCountBadge {
+.r-structure-count-badge {
   border: 1px solid rgba(226, 232, 240, 0.8);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.8);
   padding: 0.25rem 0.75rem;
 }
 
-.structureItem {
+.r-structure-item {
   border: 1px solid rgba(226, 232, 240, 0.7);
   border-radius: 1rem;
   background: rgba(255, 255, 255, 0.84);
   padding: 0.875rem 1rem;
 }
 
-.chartLayout {
+.r-chart-layout {
   display: grid;
   gap: 1rem;
 }
 
-.chartStack {
+.r-chart-stack {
   display: grid;
   gap: 1rem;
 }
 
-.chartSurface {
+.r-chart-surface {
   border: 1px solid rgba(226, 232, 240, 0.9);
   border-radius: 1.75rem;
   background:
@@ -66,14 +70,14 @@
   padding: 1.25rem;
 }
 
-.chartFallback {
+.r-chart-fallback {
   min-height: 340px;
   width: 100%;
   border-radius: 1.5rem;
   background: rgba(241, 245, 249, 0.7);
 }
 
-.cloudSurface {
+.r-cloud-surface {
   overflow: hidden;
   border: 1px solid rgba(226, 232, 240, 0.9);
   border-radius: 1.75rem;
@@ -83,7 +87,7 @@
   padding: 1.25rem;
 }
 
-.cloudToken {
+.r-cloud-token {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -102,14 +106,14 @@
     color 0.2s ease;
 }
 
-.tooltipTokenTrigger {
+.r-tooltip-token-trigger {
   display: inline-flex;
   width: fit-content;
   height: fit-content;
   border-radius: 999px;
 }
 
-.legendCard {
+.r-legend-card {
   border: 1px solid rgba(226, 232, 240, 0.7);
   border-radius: 1.5rem;
   background:
@@ -118,7 +122,7 @@
   padding: 1rem;
 }
 
-.legendToken {
+.r-legend-token {
   border: 1px solid rgba(226, 232, 240, 0.7);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.84);
@@ -126,57 +130,59 @@
 }
 
 @media (min-width: 768px) {
-  .toolbar {
+  .r-toolbar {
     min-width: 0;
     align-items: flex-end;
   }
 
-  .chartLayout {
+  .r-chart-layout {
     grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
     align-items: start;
   }
 }
 
-:global([data-theme='dark']) .controlSurface {
+:global([data-theme='dark']) .r-control-surface {
   border-color: rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.04);
 }
 
-:global([data-theme='dark']) .structureCard,
-:global([data-theme='dark']) .legendCard {
+:global([data-theme='dark']) .r-structure-card,
+:global([data-theme='dark']) .r-legend-card {
   border-color: rgba(255, 255, 255, 0.1);
   background:
     radial-gradient(circle at top left, rgba(96, 165, 250, 0.1), transparent 42%),
     linear-gradient(180deg, rgba(30, 41, 59, 0.64), rgba(15, 23, 42, 0.5));
 }
 
-:global([data-theme='dark']) .structureCountBadge,
-:global([data-theme='dark']) .structureItem,
-:global([data-theme='dark']) .legendToken {
+:global([data-theme='dark']) .r-structure-count-badge,
+:global([data-theme='dark']) .r-structure-item,
+:global([data-theme='dark']) .r-legend-token {
   border-color: rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.05);
 }
 
-:global([data-theme='dark']) .chartSurface {
+:global([data-theme='dark']) .r-chart-surface {
   border-color: rgba(255, 255, 255, 0.08);
   background:
     radial-gradient(circle at top left, rgba(96, 165, 250, 0.1), transparent 42%),
     linear-gradient(180deg, rgba(30, 41, 59, 0.64), rgba(15, 23, 42, 0.5));
 }
 
-:global([data-theme='dark']) .chartFallback {
+:global([data-theme='dark']) .r-chart-fallback {
   background: rgba(255, 255, 255, 0.04);
 }
 
-:global([data-theme='dark']) .cloudSurface {
+:global([data-theme='dark']) .r-cloud-surface {
   border-color: rgba(255, 255, 255, 0.08);
   background:
     radial-gradient(circle at top, rgba(96, 165, 250, 0.1), transparent 30%),
     linear-gradient(180deg, rgba(30, 41, 59, 0.64), rgba(15, 23, 42, 0.5));
 }
 
-:global([data-theme='dark']) .cloudToken {
+:global([data-theme='dark']) .r-cloud-token {
   border-color: rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.05);
   color: #e2e8f0;
+}
+
 }

@@ -1,4 +1,8 @@
-.timelineCardSurface {
+@tailwind base;
+@tailwind utilities;
+
+@layer components {
+.r-timeline-card-surface {
   position: relative;
   overflow: visible;
   border: 1px solid rgba(226, 232, 240, 0.82);
@@ -9,7 +13,7 @@
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.04);
 }
 
-:global([data-theme='dark']) .timelineCardSurface {
+:global([data-theme='dark']) .r-timeline-card-surface {
   border-color: rgba(255, 255, 255, 0.08);
   background:
     radial-gradient(circle at top left, rgba(96, 165, 250, 0.12), transparent 42%),
@@ -18,7 +22,7 @@
   box-shadow: 0 16px 34px rgba(2, 6, 23, 0.18);
 }
 
-.timelineCardTab {
+.r-timeline-card-tab {
   position: absolute;
   top: 1.52rem;
   left: 0;
@@ -32,14 +36,16 @@
 }
 
 @media (max-width: 768px) {
-  .timelineCardTab {
+  .r-timeline-card-tab {
     top: 1.34rem;
     height: 4.4rem;
     transform: translateX(-28%);
   }
 }
 
-:global([data-theme='dark']) .timelineCardTab {
+:global([data-theme='dark']) .r-timeline-card-tab {
   background: linear-gradient(180deg, rgba(96, 165, 250, 0.95), rgba(56, 189, 248, 0.56));
   box-shadow: 0 8px 20px rgba(56, 189, 248, 0.24);
+}
+
 }

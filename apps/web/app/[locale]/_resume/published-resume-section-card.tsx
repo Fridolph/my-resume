@@ -1,8 +1,7 @@
+import './published-resume-section-card.css'
 import { Card, CardContent, CardHeader } from '@heroui/react/card'
 import { ReactNode } from 'react'
 import { DisplaySectionIntro } from '@my-resume/ui/display'
-import styles from './published-resume-section-card.module.css'
-
 interface PublishedResumeSectionCardProps {
   eyebrow: string
   title: string
@@ -19,7 +18,7 @@ export function PublishedResumeSectionCard({
   children,
 }: PublishedResumeSectionCardProps) {
   return (
-    <Card className={styles.sectionCard}>
+    <Card className='r-section-card'>
       <CardHeader className="gap-3 pb-2.5">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <DisplaySectionIntro

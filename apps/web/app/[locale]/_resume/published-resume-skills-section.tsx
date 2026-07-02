@@ -1,3 +1,4 @@
+import './published-resume-skills-section.css'
 'use client'
 
 import { Button } from '@heroui/react/button'
@@ -24,8 +25,6 @@ import type {
   SkillViewMode,
 } from './types/published-resume-skills-section.types'
 import { createIndexedRenderKey, createRenderKey } from './published-resume-render-key'
-import styles from './published-resume-skills-section.module.css'
-
 const cloudTokenToneClasses = [
   'hover:border-blue-600/50 hover:text-blue-700 hover:shadow-[0_14px_30px_rgba(37,99,235,0.16)] dark:hover:text-blue-300',
   'hover:border-cyan-700/50 hover:text-teal-700 hover:shadow-[0_14px_30px_rgba(8,145,178,0.16)] dark:hover:text-cyan-300',
@@ -227,9 +226,9 @@ export function PublishedResumeSkillsSection({
   }
 
   const toolbar = (
-    <div className={styles.toolbar}>
-      <div className={styles.controlGroup}>
-        <div className={styles.controlSurface}>
+    <div className='r-toolbar'>
+      <div className='r-control-group'>
+        <div className='r-control-surface'>
           {(
             [
               ['chart', t('skills.viewChart')],
@@ -237,7 +236,7 @@ export function PublishedResumeSkillsSection({
             ] as const
           ).map(([mode, label]) => (
             <Button
-              className={styles.controlButton}
+              className='r-control-button'
               key={mode}
               onPress={() => setViewMode(mode)}
               size="sm"
@@ -250,8 +249,8 @@ export function PublishedResumeSkillsSection({
       </div>
 
       {viewMode === 'chart' ? (
-        <div className={styles.controlGroup}>
-          <div className={styles.controlSurface}>
+        <div className='r-control-group'>
+          <div className='r-control-surface'>
             {(
               [
                 ['radar', t('skills.chartRadar')],
@@ -259,7 +258,7 @@ export function PublishedResumeSkillsSection({
               ] as const
             ).map(([mode, label]) => (
               <Button
-                className={styles.controlButton}
+                className='r-control-button'
                 key={mode}
                 onPress={() => setChartMode(mode)}
                 size="sm"
@@ -290,13 +289,13 @@ export function PublishedResumeSkillsSection({
             ])
 
             return (
-              <article className={styles.structureCard} key={groupKey}>
+              <article className='r-structure-card' key={groupKey}>
                 <div className="flex items-center justify-between gap-3">
                   <h3 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
                     {readLocalizedText(group.name, locale)}
                   </h3>
                   <span
-                    className={`${styles.structureCountBadge} text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-300`}>
+                    className={`${'r-structure-count-badge'} text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-300`}>
                     {group.parsedKeywords.length}
                   </span>
                 </div>
@@ -304,7 +303,7 @@ export function PublishedResumeSkillsSection({
                 <ul className="mt-4 grid gap-3">
                   {group.parsedKeywords.map((item, itemIndex) => (
                     <li
-                      className={`${styles.structureItem} text-sm text-slate-600 dark:text-slate-200`}
+                      className={`${'r-structure-item'} text-sm text-slate-600 dark:text-slate-200`}
                       key={createIndexedRenderKey(itemIndex, [
                         groupKey,
                         item.label,
@@ -335,9 +334,9 @@ export function PublishedResumeSkillsSection({
       ) : null}
 
       {viewMode === 'chart' ? (
-        <div className={styles.chartLayout} ref={chartViewportRef}>
-          <div className={styles.chartStack}>
-            <article className={styles.chartSurface}>
+        <div className='r-chart-layout' ref={chartViewportRef}>
+          <div className='r-chart-stack'>
+            <article className='r-chart-surface'>
               <div className="space-y-1">
                 <h3 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
                   {chartMode === 'radar'
@@ -360,14 +359,14 @@ export function PublishedResumeSkillsSection({
                 ) : (
                   <div
                     aria-label={chartAriaLabel}
-                    className={styles.chartFallback}
+                    className='r-chart-fallback'
                     role="img"
                   />
                 )}
               </div>
             </article>
 
-            <div className={styles.cloudSurface}>
+            <div className='r-cloud-surface'>
               <div className="mb-3 space-y-1">
                 <h3 className="text-base font-semibold tracking-tight text-slate-900 dark:text-white">
                   {t('skills.cloudTitle')}
@@ -379,10 +378,10 @@ export function PublishedResumeSkillsSection({
               <div className="flex flex-wrap items-center justify-start gap-3">
                 {cloudTokens.map((token) => (
                   <Tooltip key={token.id}>
-                    <Tooltip.Trigger className={styles.tooltipTokenTrigger}>
+                    <Tooltip.Trigger className='r-tooltip-token-trigger'>
                       <span
                         className={[
-                          styles.cloudToken,
+                          'r-cloud-token',
                           token.sizeClassName,
                           token.rotateClassName,
                           cloudTokenToneClasses[
@@ -422,7 +421,7 @@ export function PublishedResumeSkillsSection({
               ])
 
               return (
-                <article className={styles.legendCard} key={`${legendGroupKey}__legend-card`}>
+                <article className='r-legend-card' key={`${legendGroupKey}__legend-card`}>
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
@@ -447,7 +446,7 @@ export function PublishedResumeSkillsSection({
                   <div className="mt-3 flex flex-wrap gap-2">
                     {featuredLabels.map((label, labelIndex) => (
                       <span
-                        className={`${styles.legendToken} text-xs font-medium text-slate-500 dark:text-slate-300`}
+                        className={`${'r-legend-token'} text-xs font-medium text-slate-500 dark:text-slate-300`}
                         key={createIndexedRenderKey(labelIndex, [
                           legendGroupKey,
                           label,
