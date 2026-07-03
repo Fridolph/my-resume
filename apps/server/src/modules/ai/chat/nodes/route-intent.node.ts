@@ -47,6 +47,13 @@ function buildRoutePrompt(question: string, locale: AiChatLocale): string {
 5. 不知道是什么问题 → resume（默认检索简历）
 
 ${langHint}
+## 检索偏好（可选）
+根据问题类型输出最适合的检索方式：
+- graph_first：关系型查询（如"在哪些公司工作过""用了哪些技术""技能和项目的关联"）
+- rag_first：段落级上下文查询（如"介绍背景""描述经历"）
+- graph_then_rag：先查图拿实体列表，再用实体名搜文档
+- rag_then_graph：先搜文档找段落，再查图验证关系
+不确定时留空。
 
 用户问题：${question}`
 }
