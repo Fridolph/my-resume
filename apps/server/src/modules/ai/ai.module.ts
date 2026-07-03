@@ -112,6 +112,7 @@ import { AiResumeImportController } from './transport/controllers/ai-resume-impo
     ResumeImportRecognitionService,
     FileExtractionService,
     RagService,
+    GraphSyncService,
   ],
 })
 export class AiModule {}

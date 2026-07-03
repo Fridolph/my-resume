@@ -73,6 +73,12 @@ export class GraphSearchService {
 
       this.logger.log({ event: 'graph.search.generated', question: question.slice(0, 80), cypher: cypher.slice(0, 120) })
 
+      // Neo4j 走 Cypher，memory 走图遍历
+      if (typeof (this.store as any).traverse === 'function') {
+        const depth = cypher.includes('*2') ? 3 : cypher.includes('*') ? 2 : 2
+        return await this.store.traverse('Person', depth)
+      }
+
       return await this.store.search(cypher)
     } catch (error) {
       this.logger.warn({ event: 'graph.search.error', message: (error as Error).message })

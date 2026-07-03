@@ -32,8 +32,11 @@ export interface GraphStore {
   /** 同步简历数据到图 */
   sync(resume: StandardResume): Promise<void>
 
-  /** 执行图查询（由 LLM 生成的 Cypher 语句） */
+  /** 执行图查询（由 LLM 生成的 Cypher 语句），Neo4j 专用 */
   search(cypher: string): Promise<GraphSearchResult[]>
+
+  /** 图遍历查询（MemoryGraphStore 专用），从指定标签节点出发遍历 N 跳邻居 */
+  traverse(startLabel: string, depth: number): Promise<GraphSearchResult[]>
 
   /** 清空图中所有节点和关系 */
   clear(): Promise<void>

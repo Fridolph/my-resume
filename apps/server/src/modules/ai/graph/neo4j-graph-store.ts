@@ -29,6 +29,11 @@ export class Neo4jGraphStore implements GraphStore {
     // 此方法作为占位，实际同步逻辑在 M42-I2 中实现
   }
 
+  async traverse(startLabel: string, depth: number): Promise<GraphSearchResult[]> {
+    // Neo4j 不支持通用图遍历接口，降级为 Cypher 查询
+    return this.search(`MATCH (n:${startLabel})-[*1..${depth}]-(related) RETURN n, related LIMIT 50`)
+  }
+
   async search(cypher: string): Promise<GraphSearchResult[]> {
     const driver = this.getDriver()
     const session = driver.session()

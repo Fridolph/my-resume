@@ -100,6 +100,11 @@ export class MemoryGraphStore implements GraphStore {
   }
 
   async search(_cypher: string): Promise<GraphSearchResult[]> {
+    // Memory 不支持 Cypher，委托给 traverse
+    return this.traverse('Person', 2)
+  }
+
+  async traverse(startLabel: string, depth: number): Promise<GraphSearchResult[]> {
     if (!this.graph) return []
     const results: GraphSearchResult[] = []
 

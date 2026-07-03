@@ -6,6 +6,8 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common'
 
+import { GraphSyncService } from '../../../ai/graph/graph-sync.service'
+
 import {
   isSqliteLockedError,
   SQLITE_LOCKED_ERROR_MESSAGE,
@@ -67,6 +69,12 @@ export class ResumePublicationService {
     @Optional()
     @Inject(ResumeRagSyncService)
     private readonly resumeRagSyncService?: ResumeRagSyncService,
+    @Optional()
+    @Inject('GRAPH_STORE')
+    private readonly graphStore?: any,
+    @Optional()
+    @Inject(GraphSyncService)
+    private readonly graphSyncService?: GraphSyncService,
   ) {}
 
   /**
@@ -182,6 +190,12 @@ export class ResumePublicationService {
           publishedSnapshot.publishedAt,
         ),
       )
+
+      // 异步触发图同步（不阻塞发布响应）
+      if (this.graphStore && this.graphSyncService) {
+        this.graphSyncService.syncToGraph(publishedSnapshot.resumeJson, this.graphStore)
+          .catch((error: unknown) => this.logger.warn({ event: 'graph.sync.publish_failed', message: (error as Error).message }))
+      }
 
       return toPublishedSnapshot(
         cloneStandardResume(publishedSnapshot.resumeJson),
