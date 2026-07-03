@@ -11,9 +11,12 @@ import {
 } from '../../../database/schema'
 import type {
   AiChatLeadStatus,
+  AiChatLeadSummary,
+  AiChatLocale,
   AiChatMessageRole,
   AiChatSessionStatus,
   AiChatUseKeyStatus,
+  AiChatUseKeySummary,
 } from './ai-chat.types'
 
 @Injectable()
@@ -525,5 +528,67 @@ export class AiChatRepository {
         ALTER TABLE ai_chat_visitor_leads ADD COLUMN metadata_json text;
       `)
     }
+  }
+}
+
+// ── DB 行 → DTO 映射函数 ──
+
+/**
+ * DB Lead 行 → 前端 Lead 摘要。
+ */
+export function mapLead(record: {
+  companyName: string | null
+  contact: string | null
+  createdAt: Date
+  displayName: string
+  id: string
+  locale: string
+  message: string
+  status: string
+  updatedAt: Date
+}): AiChatLeadSummary {
+  return {
+    id: record.id,
+    locale: record.locale as AiChatLocale,
+    displayName: record.displayName,
+    companyName: record.companyName ?? '',
+    contact: record.contact ?? '',
+    message: record.message,
+    status: record.status as AiChatLeadSummary['status'],
+    createdAt: record.createdAt.toISOString(),
+    updatedAt: record.updatedAt.toISOString(),
+  }
+}
+
+/**
+ * DB useKey 行 → 前端 useKey 摘要。
+ */
+export function mapUseKey(record: {
+  claimedAt: Date | null
+  createdAt: Date
+  expiresAt: Date | null
+  id: string
+  leadId: string
+  revokedAt: Date | null
+  sessionId: string | null
+  status: string
+  updatedAt: Date
+  useKey: string
+  usedTurns: number
+  maxTurns: number
+}): AiChatUseKeySummary {
+  return {
+    id: record.id,
+    useKey: record.useKey,
+    leadId: record.leadId,
+    sessionId: record.sessionId ?? null,
+    status: record.status as AiChatUseKeySummary['status'],
+    maxTurns: record.maxTurns,
+    usedTurns: record.usedTurns,
+    expiresAt: record.expiresAt?.toISOString() ?? null,
+    claimedAt: record.claimedAt?.toISOString() ?? null,
+    revokedAt: record.revokedAt?.toISOString() ?? null,
+    createdAt: record.createdAt.toISOString(),
+    updatedAt: record.updatedAt.toISOString(),
   }
 }
