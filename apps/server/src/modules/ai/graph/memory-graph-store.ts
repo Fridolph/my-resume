@@ -86,7 +86,7 @@ export class MemoryGraphStore implements GraphStore {
     for (const interest of resume.profile?.interests ?? []) {
       const name = zh(interest.label as unknown as LocalizedText) || (interest.label as unknown as string)
       if (!g.hasNode(name)) g.addNode(name, { label: 'Interest', name })
-      g.addEdge('person', name, { relation: '拥有' })
+      g.addEdge('person', name, { relation: '兴趣爱好' })
     }
 
     // ── 亮点 ──

@@ -11,8 +11,10 @@
  *   2. pnpm --filter @my-resume/server seed:neo4j
  *   3. 打开 http://localhost:7474 查看图谱
  */
-
+import { config } from 'dotenv'
+config({ path: '../../.env' })
 import neo4j from 'neo4j-driver'
+import { data } from './mock-data.mjs'
 
 // ══════════════════════════════════════════════════════════
 // 配置
@@ -29,12 +31,14 @@ const P = 'MR_' // 标签前缀
 // 工具函数
 // ══════════════════════════════════════════════════════════
 
-function escape(value: string): string {
+function escape(value) {
   return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 }
 
 let idCounter = 0
-function uid(prefix: string): string { return `${prefix}${++idCounter}` }
+function uid(prefix) {
+  return `${prefix}${++idCounter}`
+}
 
 // ══════════════════════════════════════════════════════════
 // 主流程
@@ -42,22 +46,23 @@ function uid(prefix: string): string { return `${prefix}${++idCounter}` }
 
 async function main() {
   // 1. 从 API 获取真实简历数据
-  console.log(`📡 从 ${API_BASE}/api/resume/published?locale=zh 获取数据...`)
-  const res = await fetch(`${API_BASE}/api/resume/published?locale=zh`)
-  const json = await res.json()
-  const data = json.data?.resume ?? json.resume
-  if (!data) throw new Error('无法获取简历数据')
-  console.log(`✅ 已获取: ${data.profile.fullName}`)
+  // console.log(`📡 从 ${API_BASE}/api/resume/published?locale=zh 获取数据...`)
+  // const res = await fetch(`${API_BASE}/api/resume/published?locale=zh`)
+  // const json = await res.json()
+  // const data = json.data?.resume ?? json.resume
+  // if (!data) throw new Error('无法获取简历数据')
+  // console.log(`✅ 已获取:\n ${JSON.stringify(data)}`)
 
   // 2. 连接 Neo4j
   const driver = neo4j.driver(NEO4J_URI, neo4j.auth.basic(NEO4J_USER, NEO4J_PASSWORD))
   const session = driver.session()
+  console.log('🚀 neo4j 连接成功')
 
   try {
-    await session.run(`MATCH (n:${P}*) DETACH DELETE n`)
+    await session.run(`MATCH (n) WHERE any(label IN labels(n) WHERE label STARTS WITH '${P}') DETACH DELETE n`)
     console.log('🗑  旧数据已清除')
 
-    const statements: string[] = []
+    const statements = []
 
     // ── 3a. Person ──
     const profile = data.profile
@@ -72,83 +77,81 @@ async function main() {
     })
     console.log('👤 Person 节点已创建')
 
-    // ── 3b. Technology + Skill ──
-    const techSet = new Set<string>()
-    const skillGroups: Array<{ name: string; keywords: string[] }> = []
-
-    for (const skill of data.skills ?? []) {
-      skillGroups.push({ name: skill.name, keywords: skill.keywords ?? [] })
-      // 从技能关键词中提取技术名
-      for (const kw of skill.keywords ?? []) {
-        const words = kw.match(/[\w.+]+(?:\.js)?/gi) ?? []
-        for (const w of words) {
-          if (w.length > 1 && !/^[a-z]$/i.test(w)) techSet.add(w)
-        }
+    // ── 3b. Technology — 从 experiences/projects 的 technologies[] 精准收集 ──
+    // ✅ 只从数组收集，不做正则提取（消除噪音节点）
+    const techSet = new Set()
+    for (const exp of data.experiences ?? []) {
+      for (const t of exp.technologies ?? []) {
+        techSet.add(String(t).replace(/ \d+(\.\d+)?$/, '').trim()) // "Nuxt 4"→"Nuxt"
+      }
+    }
+    for (const proj of data.projects ?? []) {
+      for (const t of proj.technologies ?? []) {
+        techSet.add(String(t).replace(/ \d+(\.\d+)?$/, '').trim())
       }
     }
 
     for (const tech of techSet) {
-      await session.run(
-        `MERGE (t:${P}Technology {name: $name})`,
-        { name: tech },
-      )
+      await session.run(`MERGE (t:${P}Technology {name: $name})`, { name: tech })
       await session.run(
         `MATCH (p:${P}Person {name: $person}), (t:${P}Technology {name: $tech})
          MERGE (p)-[:掌握]->(t)`,
         { person: profile.fullName, tech },
       )
     }
-    console.log(`💻 ${techSet.size} 个 Technology 节点已创建`)
+    console.log(`💻 ${techSet.size} 个 Technology 节点已创建（从精准数组收集）`)
 
-    for (const sg of skillGroups) {
+    // ── 3c. Skill — 用精准技术名匹配（不再正则提取碎片词） ──
+    for (const skill of data.skills ?? []) {
+      await session.run(`MERGE (s:${P}Skill {name: $name}) SET s.proficiency = $prof`, { name: skill.name, prof: skill.proficiency ?? 0 })
       await session.run(
-        `MERGE (s:${P}Skill {name: $name})`,
-        { name: sg.name },
+        `MATCH (p:${P}Person {name: $person}), (s:${P}Skill {name: $skill}) MERGE (p)-[:擅长]->(s)`,
+        { person: profile.fullName, skill: skill.name },
       )
-      for (const kw of sg.keywords) {
-        for (const tech of techSet) {
-          if (kw.includes(tech) && tech.length > 2) {
-            await session.run(
-              `MATCH (s:${P}Skill {name: $skill}), (t:${P}Technology {name: $tech})
-               MERGE (t)-[:属于]->(s)`,
-              { skill: sg.name, tech },
-            )
-          }
+      for (const techName of techSet) {
+        const mentioned = (skill.keywords ?? []).some(kw => String(kw).includes(techName))
+        if (mentioned) {
+          await session.run(
+            `MATCH (s:${P}Skill {name: $skill}), (t:${P}Technology {name: $tech}) MERGE (t)-[:属于]->(s)`,
+            { skill: skill.name, tech: techName },
+          )
         }
       }
     }
-    console.log(`🏷  ${skillGroups.length} 个 Skill 节点已创建`)
+    console.log(`🏷  ${data.skills?.length ?? 0} 个 Skill 节点已创建`)
 
-    // ── 3c. Company + Industry ──
+    // ── 3d. Company + Experience + Industry ──
     for (const exp of data.experiences ?? []) {
       const company = exp.companyName
       const industry = exp.employmentType || '通用'
+      const expId = `exp_${exp.companyName}_${exp.startDate}`
+
+      // Company + Industry
+      await session.run(`MERGE (c:${P}Company {name: $name})`, { name: company })
+      await session.run(`MERGE (i:${P}Industry {name: $name})`, { name: industry })
+      await session.run(`MATCH (c:${P}Company {name: $c}), (i:${P}Industry {name: $ind}) MERGE (c)-[:属于]->(i)`, { c: company, ind: industry })
+
+      // ✅ Experience 独立节点
       await session.run(
-        `MERGE (c:${P}Company {name: $name}) SET c.industry = $industry`,
-        { name: company, industry },
+        `MERGE (e:${P}Experience {id: $id}) SET e.role = $role, e.startDate = $start, e.endDate = $end, e.summary = $summary`,
+        { id: expId, role: exp.role || '', start: exp.startDate || '', end: exp.endDate || '', summary: (exp.summary || '').slice(0, 200) },
       )
       await session.run(
-        `MATCH (c:${P}Company {name: $company})
-         MERGE (i:${P}Industry {name: $industry})
-         MERGE (c)-[:属于]->(i)`,
-        { company, industry },
+        `MATCH (p:${P}Person {name: $person}), (e:${P}Experience {id: $id}) MERGE (p)-[:有经历]->(e)`,
+        { person: profile.fullName, id: expId },
       )
       await session.run(
-        `MATCH (p:${P}Person {name: $person}), (c:${P}Company {name: $company})
-         MERGE (p)-[:任职于 {role: $role, startDate: $start, endDate: $end}]->(c)`,
-        { person: profile.fullName, company, role: exp.role || '', start: exp.startDate || '', end: exp.endDate || '' },
+        `MATCH (e:${P}Experience {id: $id}), (c:${P}Company {name: $company}) MERGE (e)-[:任职于]->(c)`,
+        { id: expId, company },
       )
+
+      // Experience → Technology
       for (const tech of exp.technologies ?? []) {
-        // 正常化：Nuxt 4 → Nuxt
-        const name = tech.replace(/ \d+$/, '').trim()
+        const name = String(tech).replace(/ \d+(\.\d+)?$/, '').trim()
+        await session.run(`MERGE (t:${P}Technology {name: $name})`, { name })
         await session.run(
-          `MERGE (t:${P}Technology {name: $name})`,
-          { name },
-        )
-        await session.run(
-          `MATCH (c:${P}Company {name: $company}), (t:${P}Technology {name: $tech})
-           MERGE (c)-[:使用]->(t)`,
-          { company, tech: name },
+          `MATCH (e:${P}Experience {id: $id}), (t:${P}Technology {name: $tech}) MERGE (e)-[:使用了]->(t)`,
+          { id: expId, tech: name },
         )
       }
     }
@@ -166,7 +169,7 @@ async function main() {
         { person: profile.fullName, proj: proj.name, role: proj.role || '' },
       )
       for (const tech of proj.technologies ?? []) {
-        const name = tech.replace(/ \d+$/, '').trim()
+        const name = String(tech).replace(/ \d+(\.\d+)?$/, '').trim()
         await session.run(
           `MERGE (t:${P}Technology {name: $name})`,
           { name },
@@ -204,7 +207,7 @@ async function main() {
       )
       await session.run(
         `MATCH (p:${P}Person {name: $person}), (int:${P}Interest {name: $interest})
-         MERGE (p)-[:拥有]->(int)`,
+         MERGE (p)-[:兴趣爱好]->(int)`,
         { person: profile.fullName, interest: i.label },
       )
     }
@@ -226,7 +229,7 @@ async function main() {
 
     // 4. 统计
     const result = await session.run(
-      `MATCH (n:${P}*) RETURN DISTINCT labels(n) AS label, count(n) AS count`,
+      `MATCH (n) WHERE any(label IN labels(n) WHERE label STARTS WITH '${P}') RETURN DISTINCT labels(n) AS label, count(n) AS count`,
     )
     console.log('\n📊 图谱统计：')
     result.records.forEach(r => {

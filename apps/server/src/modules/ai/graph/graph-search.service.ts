@@ -35,7 +35,7 @@ const GRAPH_SEARCH_SYSTEM_PROMPT = `你是 Cypher 查询生成器。根据用户
 - (Person)-[:擅长]->(Skill)
 - (Skill)-[:包含]->(Technology)
 - (Person)-[:毕业于]->(School)
-- (Person)-[:拥有]->(Interest)
+- (Person)-[:兴趣爱好]->(Interest)
 - (Person)-[:具备]->(Highlight)
 
 ## 规则
