@@ -343,7 +343,7 @@ export function AdminDashboardShell({ locale }: { locale: AppLocale }) {
         </Card>
       </section>
 
-      <section className="stack">
+      <section className="stack p-6 bg-white rounded-3xl">
         <div className="space-y-2">
           <p className="eyebrow">快捷入口</p>
           <h2 className="m-0 text-2xl font-semibold">内容工作区</h2>
@@ -357,14 +357,14 @@ export function AdminDashboardShell({ locale }: { locale: AppLocale }) {
               className="border border-zinc-200/70 dark:border-zinc-800"
               key={item.href}>
               <CardHeader className="flex flex-col items-start gap-2">
-                <CardTitle className="text-xl">{item.title}</CardTitle>
-                <CardDescription>{item.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Link className="link-button" href={item.href}>
-                  {item.actionLabel}
+                <div>
+                  <CardTitle className="text-xl">{item.title}</CardTitle>
+                  <CardDescription>{item.description}</CardDescription>
+                </div>
+                <Link className="absolute right-4 top-6 p-2" href={item.href}>
+                  { '>' }
                 </Link>
-              </CardContent>
+              </CardHeader>
             </Card>
           ))}
         </div>
