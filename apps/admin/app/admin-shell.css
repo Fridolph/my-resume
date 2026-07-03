@@ -40,9 +40,8 @@
   }
 
   .link-button {
-    @apply min-h-[44px] rounded-full border border-[--admin-button-primary-border] px-4 py-[0.8rem] font-semibold;
+    @apply min-h-11 text-white! rounded-full border border-[--admin-button-primary-border] px-4 py-[0.8rem] font-semibold;
     background: var(--admin-button-primary-bg);
-    color: var(--admin-button-primary-text);
   }
   .link-button:hover {
     background: var(--admin-button-primary-bg-hover);

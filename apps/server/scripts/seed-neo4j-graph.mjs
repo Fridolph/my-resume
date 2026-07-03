@@ -1,227 +1,242 @@
 #!/usr/bin/env node
 
 /**
- * Neo4j 简历图谱 — 练习脚本（独立于生产 GraphSyncService）
+ * Neo4j 简历图谱 — 动态版练习脚本
  *
- * 用途：学习 Cypher 建图语法，手动验证 Neo4j 图谱结构。
- * 生产环境请使用 GraphSyncService 从 StandardResume 动态生成。
+ * 从 GET /api/resume/published?locale=zh 获取真实数据，动态生成 Cypher。
+ * 不硬编码任何具体值——改了简历，重新跑脚本即可同步。
  *
  * 用法：
- *   1. docker compose up neo4j
- *   2. node apps/server/scripts/seed-neo4j-graph.mjs
+ *   1. docker compose up neo4j (确保 server 也在运行)
+ *   2. pnpm --filter @my-resume/server seed:neo4j
  *   3. 打开 http://localhost:7474 查看图谱
  */
 
 import neo4j from 'neo4j-driver'
 
 // ══════════════════════════════════════════════════════════
-// 连接配置（和 docker-compose.yml 保持一致）
+// 配置
 // ══════════════════════════════════════════════════════════
 
-const URI = process.env.NEO4J_URI ?? 'bolt://localhost:7687'
-const USER = process.env.NEO4J_USER ?? 'neo4j'
-const PASSWORD = process.env.NEO4J_PASSWORD ?? 'password'
-const driver = neo4j.driver(URI, neo4j.auth.basic(USER, PASSWORD))
-const session = driver.session()
+const API_BASE = process.env.API_BASE_URL ?? 'http://localhost:5577'
+const NEO4J_URI = process.env.NEO4J_URI ?? 'bolt://localhost:7687'
+const NEO4J_USER = process.env.NEO4J_USER ?? 'neo4j'
+const NEO4J_PASSWORD = process.env.NEO4J_PASSWORD ?? 'password'
+
+const P = 'MR_' // 标签前缀
 
 // ══════════════════════════════════════════════════════════
-// 标签前缀：MR_（防与其他项目数据冲突）
+// 工具函数
 // ══════════════════════════════════════════════════════════
 
-const P = 'MR_'
-
-// ══════════════════════════════════════════════════════════
-// Part 1：Technology 节点（具体技术栈）
-//
-// 对应 StandardResume：
-//   - resume.experiences[].technologies[]
-//   - resume.projects[].technologies[]
-//   - resume.skills[].keywords[] 中提取
-//
-// TODO: 从你的真实简历补全（参考 /api/resume/published 的 skills 返回）
-// ══════════════════════════════════════════════════════════
-
-const techs = [
-  // ── 前端 ──
-  { name: 'Vue',        category: '前端', proficiency: '熟练掌握' },
-  { name: 'React',      category: '前端', proficiency: '熟练掌握' },
-  { name: 'Next.js',    category: '前端', proficiency: '熟练掌握' },
-  { name: 'Nuxt',       category: '前端', proficiency: '熟练掌握' },
-  { name: 'TypeScript', category: '前端', proficiency: '熟练掌握' },
-  { name: 'TailwindCSS',category: '前端', proficiency: '熟练掌握' },
-  { name: 'Sass/Less',  category: '前端', proficiency: '熟练掌握' },
-  { name: 'Pinia',      category: '前端', proficiency: '熟练掌握' },
-  { name: 'ECharts',    category: '前端', proficiency: '熟练掌握' },
-  { name: 'D3.js',      category: '前端', proficiency: '掌握' },
-  { name: 'WebSocket',  category: '前端', proficiency: '掌握' },
-
-  // ── 后端 ──
-  { name: 'Node.js',    category: '后端', proficiency: '熟练掌握' },
-  { name: 'NestJS',     category: '后端', proficiency: '熟练掌握' },
-  { name: 'Express',    category: '后端', proficiency: '掌握' },
-  { name: 'MySQL',      category: '后端', proficiency: '掌握' },
-  { name: 'PostgreSQL', category: '后端', proficiency: '掌握' },
-  { name: 'SQLite',     category: '后端', proficiency: '熟练掌握' },
-  { name: 'Drizzle ORM',category: '后端', proficiency: '掌握' },
-
-  // ── AI ──
-  { name: 'LangGraph',  category: 'AI', proficiency: '掌握' },
-  { name: 'LangChain',  category: 'AI', proficiency: '了解' },
-  { name: 'Milvus',     category: 'AI', proficiency: '掌握' },
-  { name: 'ElasticSearch', category: 'AI', proficiency: '了解' },
-  { name: 'Neo4j',      category: 'AI', proficiency: '学习中' },
-  { name: 'RAG',        category: 'AI', proficiency: '掌握' },
-  { name: 'Prompt Engineering', category: 'AI', proficiency: '掌握' },
-  { name: 'Claude Code',category: 'AI', proficiency: '熟练掌握' },
-
-  // ── 工程化 / DevOps ──
-  { name: 'Docker',     category: '运维', proficiency: '掌握' },
-  { name: 'pnpm',       category: '工程化', proficiency: '熟练掌握' },
-  { name: 'Monorepo',   category: '工程化', proficiency: '熟练掌握' },
-  { name: 'Vite',       category: '工程化', proficiency: '熟练掌握' },
-  { name: 'Webpack',    category: '工程化', proficiency: '掌握' },
-  { name: 'GitHub Actions', category: '运维', proficiency: '掌握' },
-  { name: 'Linux',      category: '运维', proficiency: '掌握' },
-]
-
-// ══════════════════════════════════════════════════════════
-// Part 2：Skill 节点（能力分类标签）
-//
-// TODO: 从简历 skills[].name 动态提取（参考 GraphSyncService 的做法）
-// ══════════════════════════════════════════════════════════
-
-const skillMap = {
-  '前端核心能力':        ['Vue','React','Next.js','Nuxt','TypeScript','TailwindCSS','Sass/Less','Pinia','ECharts','D3.js'],
-  '全栈开发能力':        ['Node.js','NestJS','Express','MySQL','PostgreSQL','SQLite','Drizzle ORM'],
-  'AI Agent 开发':       ['LangGraph','LangChain','Milvus','ElasticSearch','Neo4j','RAG','Prompt Engineering','Claude Code'],
-  '工程化与性能优化':    ['Docker','pnpm','Monorepo','Vite','Webpack','GitHub Actions','Linux'],
+function escape(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 }
 
-// ══════════════════════════════════════════════════════════
-// Part 3：Company 节点（从 experiences 提取）
-//
-// TODO: 补全真实公司英文名（参考 /api/resume/published 的 experiences 返回）
-// ══════════════════════════════════════════════════════════
-
-const companies = [
-  { name: '成都澳昇能源科技',     industry: '能源/SaaS',   startDate: '2024.08', endDate: '至今',     role: '前端开发' },
-  { name: '成都一蟹科技',         industry: '医药合规/SaaS', startDate: '2024.03', endDate: '2024.08', role: '前端主管' },
-  { name: '成都网思科平科技',     industry: '网络安全/ToB', startDate: '2017.07', endDate: '2024.01', role: '前端组长' },
-  { name: '四川爱礼科技',         industry: '内容社区',     startDate: '2016.01', endDate: '2017.07', role: 'Web开发' },
-]
-
-// ══════════════════════════════════════════════════════════
-// Part 4：Project 节点（对应简历中列出的核心项目）
-// ══════════════════════════════════════════════════════════
-
-const projects = [
-  { name: 'my-resume',        company: '个人项目',   role: '全栈开发', techs: ['Next.js','NestJS','TypeScript','RAG','LangGraph'] },
-  { name: 'GreenSketch',      company: '成都澳昇能源科技', role: '核心开发', techs: ['Nuxt','Vue','TypeScript','ECharts'] },
-  { name: '云药客 SaaS',      company: '成都一蟹科技',     role: '项目管理', techs: ['Vue','TypeScript','pnpm','Monorepo'] },
-  { name: 'EDR 安全平台',     company: '成都网思科平科技', role: '项目管理', techs: ['Vue','ECharts','D3.js','WebSocket'] },
-  { name: 'LC 安全大屏',      company: '成都网思科平科技', role: '核心开发', techs: ['Vue','ECharts','D3.js','WebSocket'] },
-]
+let idCounter = 0
+function uid(prefix: string): string { return `${prefix}${++idCounter}` }
 
 // ══════════════════════════════════════════════════════════
 // 主流程
 // ══════════════════════════════════════════════════════════
 
 async function main() {
-  console.log('🔌 连接 Neo4j...')
+  // 1. 从 API 获取真实简历数据
+  console.log(`📡 从 ${API_BASE}/api/resume/published?locale=zh 获取数据...`)
+  const res = await fetch(`${API_BASE}/api/resume/published?locale=zh`)
+  const json = await res.json()
+  const data = json.data?.resume ?? json.resume
+  if (!data) throw new Error('无法获取简历数据')
+  console.log(`✅ 已获取: ${data.profile.fullName}`)
 
-  // 1. 清空旧数据
-  await session.run(`MATCH (n:${P}*) DETACH DELETE n`)
-  console.log('🗑  已清空旧数据')
+  // 2. 连接 Neo4j
+  const driver = neo4j.driver(NEO4J_URI, neo4j.auth.basic(NEO4J_USER, NEO4J_PASSWORD))
+  const session = driver.session()
 
-  // 2. 建 Person 节点
-  await session.run(`
-    CREATE (p:${P}Person {
-      name: '付寅生',
-      title: 'AI 全栈工程师',
-      location: '中国成都',
-      email: '249121486@qq.com',
-      experienceYears: 10
+  try {
+    await session.run(`MATCH (n:${P}*) DETACH DELETE n`)
+    console.log('🗑  旧数据已清除')
+
+    const statements: string[] = []
+
+    // ── 3a. Person ──
+    const profile = data.profile
+    statements.push(
+      `CREATE (p:${P}Person {name: $name, title: $title, location: $location, email: $email})`,
+    )
+    await session.run(statements[statements.length - 1], {
+      name: profile.fullName || '付寅生',
+      title: profile.headline || '',
+      location: profile.location || '',
+      email: profile.email || '',
     })
-  `)
-  console.log('👤 Person 节点已创建')
+    console.log('👤 Person 节点已创建')
 
-  // 3. 建 Technology 节点 + 掌握关系
-  for (const t of techs) {
-    await session.run(`
-      CREATE (tech:${P}Technology {name: $name, category: $category, proficiency: $proficiency})
-      WITH tech
-      MATCH (p:${P}Person {name: '付寅生'})
-      CREATE (p)-[:掌握]->(tech)
-    `, t)
-  }
-  console.log(`💻 ${techs.length} 个 Technology 节点已创建`)
+    // ── 3b. Technology + Skill ──
+    const techSet = new Set<string>()
+    const skillGroups: Array<{ name: string; keywords: string[] }> = []
 
-  // 4. 建 Skill 节点 + 包含关系
-  for (const [skillName, techNames] of Object.entries(skillMap)) {
-    await session.run(`
-      CREATE (s:${P}Skill {name: $name})
-    `, { name: skillName })
-
-    for (const techName of techNames) {
-      await session.run(`
-        MATCH (s:${P}Skill {name: $skill}), (t:${P}Technology {name: $tech})
-        CREATE (t)-[:属于]->(s)
-      `, { skill: skillName, tech: techName })
-    }
-  }
-  console.log(`🏷  ${Object.keys(skillMap).length} 个 Skill 节点已创建`)
-
-  // 5. 建 Company + 任职关系
-  for (const c of companies) {
-    await session.run(`
-      CREATE (co:${P}Company {name: $name, industry: $industry})
-      WITH co
-      MATCH (p:${P}Person {name: '付寅生'})
-      CREATE (p)-[:任职于 {role: $role, startDate: $startDate, endDate: $endDate}]->(co)
-    `, c)
-  }
-  console.log(`🏢 ${companies.length} 个 Company 节点已创建`)
-
-  // 6. 建 Project + 参与关系 + 使用技术关系
-  for (const pr of projects) {
-    await session.run(`
-      CREATE (proj:${P}Project {name: $name, role: $role})
-      WITH proj
-      MATCH (p:${P}Person {name: '付寅生'})
-      CREATE (p)-[:参与 {role: $role}]->(proj)
-    `, pr)
-
-    for (const techName of pr.techs) {
-      await session.run(`
-        MATCH (proj:${P}Project {name: $projName}), (t:${P}Technology {name: $techName})
-        CREATE (proj)-[:使用]->(t)
-      `, { projName: pr.name, techName })
+    for (const skill of data.skills ?? []) {
+      skillGroups.push({ name: skill.name, keywords: skill.keywords ?? [] })
+      // 从技能关键词中提取技术名
+      for (const kw of skill.keywords ?? []) {
+        const words = kw.match(/[\w.+]+(?:\.js)?/gi) ?? []
+        for (const w of words) {
+          if (w.length > 1 && !/^[a-z]$/i.test(w)) techSet.add(w)
+        }
+      }
     }
 
-    if (pr.company !== '个人项目') {
-      await session.run(`
-        MATCH (proj:${P}Project {name: $projName}), (co:${P}Company {name: $company})
-        CREATE (proj)-[:属于]->(co)
-      `, { projName: pr.name, company: pr.company })
+    for (const tech of techSet) {
+      await session.run(
+        `MERGE (t:${P}Technology {name: $name})`,
+        { name: tech },
+      )
+      await session.run(
+        `MATCH (p:${P}Person {name: $person}), (t:${P}Technology {name: $tech})
+         MERGE (p)-[:掌握]->(t)`,
+        { person: profile.fullName, tech },
+      )
     }
-  }
-  console.log(`📦 ${projects.length} 个 Project 节点已创建`)
+    console.log(`💻 ${techSet.size} 个 Technology 节点已创建`)
 
-  // 7. 验证结果
-  const result = await session.run(`
-    MATCH (n:${P}*) RETURN DISTINCT labels(n) AS label, count(n) AS count
-  `)
-  console.log('\n📊 图谱统计：')
-  result.records.forEach(r => {
-    console.log(`   ${r.get('label')}: ${r.get('count').toNumber()} 个`)
-  })
+    for (const sg of skillGroups) {
+      await session.run(
+        `MERGE (s:${P}Skill {name: $name})`,
+        { name: sg.name },
+      )
+      for (const kw of sg.keywords) {
+        for (const tech of techSet) {
+          if (kw.includes(tech) && tech.length > 2) {
+            await session.run(
+              `MATCH (s:${P}Skill {name: $skill}), (t:${P}Technology {name: $tech})
+               MERGE (t)-[:属于]->(s)`,
+              { skill: sg.name, tech },
+            )
+          }
+        }
+      }
+    }
+    console.log(`🏷  ${skillGroups.length} 个 Skill 节点已创建`)
 
-  console.log('\n✅ 练习脚本执行完成！打开 http://localhost:7474 查看图谱')
-}
+    // ── 3c. Company + Industry ──
+    for (const exp of data.experiences ?? []) {
+      const company = exp.companyName
+      const industry = exp.employmentType || '通用'
+      await session.run(
+        `MERGE (c:${P}Company {name: $name}) SET c.industry = $industry`,
+        { name: company, industry },
+      )
+      await session.run(
+        `MATCH (c:${P}Company {name: $company})
+         MERGE (i:${P}Industry {name: $industry})
+         MERGE (c)-[:属于]->(i)`,
+        { company, industry },
+      )
+      await session.run(
+        `MATCH (p:${P}Person {name: $person}), (c:${P}Company {name: $company})
+         MERGE (p)-[:任职于 {role: $role, startDate: $start, endDate: $end}]->(c)`,
+        { person: profile.fullName, company, role: exp.role || '', start: exp.startDate || '', end: exp.endDate || '' },
+      )
+      for (const tech of exp.technologies ?? []) {
+        // 正常化：Nuxt 4 → Nuxt
+        const name = tech.replace(/ \d+$/, '').trim()
+        await session.run(
+          `MERGE (t:${P}Technology {name: $name})`,
+          { name },
+        )
+        await session.run(
+          `MATCH (c:${P}Company {name: $company}), (t:${P}Technology {name: $tech})
+           MERGE (c)-[:使用]->(t)`,
+          { company, tech: name },
+        )
+      }
+    }
+    console.log(`🏢 ${data.experiences?.length ?? 0} 个 Company 节点已创建`)
 
-main()
-  .catch(console.error)
-  .finally(async () => {
+    // ── 3d. Project ──
+    for (const proj of data.projects ?? []) {
+      await session.run(
+        `MERGE (pr:${P}Project {name: $name})`,
+        { name: proj.name },
+      )
+      await session.run(
+        `MATCH (p:${P}Person {name: $person}), (pr:${P}Project {name: $proj})
+         MERGE (p)-[:参与 {role: $role}]->(pr)`,
+        { person: profile.fullName, proj: proj.name, role: proj.role || '' },
+      )
+      for (const tech of proj.technologies ?? []) {
+        const name = tech.replace(/ \d+$/, '').trim()
+        await session.run(
+          `MERGE (t:${P}Technology {name: $name})`,
+          { name },
+        )
+        await session.run(
+          `MATCH (pr:${P}Project {name: $proj}), (t:${P}Technology {name: $tech})
+           MERGE (pr)-[:使用]->(t)`,
+          { proj: proj.name, tech: name },
+        )
+      }
+    }
+    console.log(`📦 ${data.projects?.length ?? 0} 个 Project 节点已创建`)
+
+    // ── 3e. School ──
+    for (const edu of data.education ?? []) {
+      const school = edu.schoolName
+      if (!school) continue
+      await session.run(
+        `MERGE (sc:${P}School {name: $name})`,
+        { name: school },
+      )
+      await session.run(
+        `MATCH (p:${P}Person {name: $person}), (sc:${P}School {name: $school})
+         MERGE (p)-[:毕业于 {degree: $degree}]->(sc)`,
+        { person: profile.fullName, school, degree: edu.degree || '' },
+      )
+    }
+    console.log(`🎓 ${data.education?.length ?? 0} 个 School 节点已创建`)
+
+    // ── 3f. Interest ──
+    for (const i of profile.interests ?? []) {
+      await session.run(
+        `MERGE (int:${P}Interest {name: $name})`,
+        { name: i.label },
+      )
+      await session.run(
+        `MATCH (p:${P}Person {name: $person}), (int:${P}Interest {name: $interest})
+         MERGE (p)-[:拥有]->(int)`,
+        { person: profile.fullName, interest: i.label },
+      )
+    }
+    console.log(`❤️  ${profile.interests?.length ?? 0} 个 Interest 节点已创建`)
+
+    // ── 3g. Highlight ──
+    for (const hl of data.highlights ?? []) {
+      await session.run(
+        `MERGE (hl:${P}Highlight {title: $title}) SET hl.description = $desc`,
+        { title: hl.title, desc: (hl.description || '').slice(0, 500) },
+      )
+      await session.run(
+        `MATCH (p:${P}Person {name: $person}), (hl:${P}Highlight {title: $title})
+         MERGE (p)-[:具备]->(hl)`,
+        { person: profile.fullName, title: hl.title },
+      )
+    }
+    console.log(`✨ ${data.highlights?.length ?? 0} 个 Highlight 节点已创建`)
+
+    // 4. 统计
+    const result = await session.run(
+      `MATCH (n:${P}*) RETURN DISTINCT labels(n) AS label, count(n) AS count`,
+    )
+    console.log('\n📊 图谱统计：')
+    result.records.forEach(r => {
+      console.log(`   ${r.get('label').join(', ')}: ${r.get('count').toNumber()} 个`)
+    })
+    console.log('\n✅ 动态建图完成！打开 http://localhost:7474 查看图谱')
+  } finally {
     await session.close()
     await driver.close()
-  })
+  }
+}
+
+main().catch(console.error)
