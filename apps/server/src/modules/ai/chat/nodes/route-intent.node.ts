@@ -41,10 +41,12 @@ function buildRoutePrompt(question: string, locale: AiChatLocale): string {
 ## 规则
 
 1. 涉及"我/你/你的/FYS/简历/工作/项目/技能" → 优先 resume 或 hybrid
-2. 涉及"文章/博客/兴趣/爱好/创作/写作" → 优先 supplement 或 hybrid
-3. 同时涉及简历和补充 → hybrid
-4. 完全无关 → out_of_scope
-5. 不知道是什么问题 → resume（默认检索简历）
+2. "你会什么""你擅长什么""你有什么技能""你懂什么"→ resume（技能查询），不是 guide
+3. "你的简历/网站是用什么技术做的""这个站怎么搭建的"→ resume（项目经历），不是 guide
+4. 涉及"文章/博客/兴趣/爱好/创作/写作" → 优先 supplement 或 hybrid
+5. 同时涉及简历和补充 → hybrid
+6. 完全无关 → out_of_scope
+7. 不知道是什么问题 → resume（默认检索简历）
 
 ${langHint}
 ## 检索偏好（可选）

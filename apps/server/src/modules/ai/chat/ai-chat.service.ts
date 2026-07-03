@@ -837,6 +837,7 @@ export class AiChatService {
           {
             type: 'summary',
             stage: generatedSummary.stage,
+            sticky: true,
             title: `第 ${nextTurnCount} 轮总结`,
             summary: generatedSummary.summary,
             keywords: generatedSummary.keywords,
@@ -951,8 +952,20 @@ export class AiChatService {
    * 供 getPublicSessionSnapshot 和 getAdminSessionSnapshot 共用。
    */
   private async buildSessionSnapshot(bundle: AiChatSessionBundle): Promise<AiChatSessionSnapshot> {
-    const messages = await this.aiChatRepository.listMessagesBySessionId(bundle.session.id)
-    const totalUserTurns = messages.filter((item) => item.role === 'user').length
+    const allMessages = await this.aiChatRepository.listMessagesBySessionId(bundle.session.id)
+    const totalUserTurns = allMessages.filter((item) => item.role === 'user').length
+
+    // ── 消息裁剪：sticky summary + 最近 2 轮 Q&A（共 5 条）──
+    const MAX_RECENT_ROUNDS = 2
+    const isSticky = (m: (typeof allMessages)[number]) => {
+      const blocks = Array.isArray(m.answerBlocksJson) ? m.answerBlocksJson as any[] : []
+      return m.role === 'system' && blocks.some((b) => b?.type === 'summary' && b?.sticky === true)
+    }
+    const stickyMessages = allMessages.filter(isSticky)
+    const nonStickyMessages = allMessages.filter((m) => !isSticky(m))
+    const recentMessages = nonStickyMessages.slice(-MAX_RECENT_ROUNDS * 2)
+    const messages = [...stickyMessages, ...recentMessages]
+
     const interimSummary = bundle.session.interimSummary
       ? {
           generatedAt: bundle.session.updatedAt.toISOString(),
