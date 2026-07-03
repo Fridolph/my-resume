@@ -39,7 +39,7 @@
  * 新引擎异常时自动回退旧引擎（兜底安全）。
  */
 
-import { Inject, Injectable, Logger } from '@nestjs/common'
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common'
 import { END, START, StateGraph } from '@langchain/langgraph'
 
 import { ResumePublicationService } from '../../resume/application/services/resume-publication.service'
@@ -69,6 +69,7 @@ import { createPlanNextNode } from './nodes/plan-next.node'
 import { createRagGenerateNode } from './nodes/rag-generate.node'
 import { createRetrieveNode } from './nodes/retrieve.node'
 import { createRouteIntentNode } from './nodes/route-intent.node'
+import { GraphSearchService } from '../graph/graph-search.service'
 import type {
   AiChatAnswerGenerationResult,
   AiChatExperienceCardBlock,
@@ -710,29 +711,11 @@ export class AiChatGraphService {
     private readonly ragService: RagService,
     @Inject(ResumePublicationService)
     private readonly resumePublicationService: ResumePublicationService,
+    @Optional()
+    @Inject(GraphSearchService)
+    private readonly graphSearchService?: GraphSearchService,
   ) {}
 
-  /**
-   * 编译 LangGraph StateGraph（惰性初始化）。
-   *
-   * M30+M31 — 8 节点 + 条件边 + 🔄 回边循环：
-   * START → route_intent ─┬→ direct_answer → END
-   *                        └→ decompose
-   *                              ├─ simple → retrieve
-   *                              └─ complex → decompose_question → retrieve
-   *                                                                    │
-   *                                                                    ▼
-   *                                                              plan_next
-   *                                                    ┌─────────┴─────────┐
-   *                                                    ▼                   ▼
-   *                                              retrieve (🔄)        evaluate
-   *                                                                  ┌───┴───┐
-   *                                                                  ▼       ▼
-   *                                                            rag_generate  fallback_answer
-   *                                                                  │       │
-   *                                                                  ▼       ▼
-   *                                                                END     END
-   */
   /**
    * 编译 LangGraph StateGraph（惰性初始化，首次调用 generateAnswer 时触发）。
    *
@@ -767,39 +750,39 @@ export class AiChatGraphService {
     const directAnswerNode = createDirectAnswerNode(this.aiService)
     const decomposeNode = createDecomposeNode()
     const decomposeQuestionNode = createDecomposeQuestionNode()
-    const retrieveNode = createRetrieveNode(this.ragService, this.resumePublicationService)
+    const retrieveNode = createRetrieveNode(this.ragService, this.resumePublicationService, this.graphSearchService)
     const planNextNode = createPlanNextNode()
     const evaluateNode = createEvaluateNode()
     const ragGenerateNode = createRagGenerateNode()
     const fallbackAnswerNode = createFallbackAnswerNode()
 
     return new StateGraph(AiChatGraphState)
-      .addNode('route_intent', routeIntentNode as any)
-      .addNode('direct_answer', directAnswerNode as any)
-      .addNode('decompose', decomposeNode as any)
-      .addNode('decompose_question', decomposeQuestionNode as any)
-      .addNode('retrieve', retrieveNode as any)
-      .addNode('plan_next', planNextNode as any)
-      .addNode('evaluate', evaluateNode as any)
-      .addNode('rag_generate', ragGenerateNode as any)
-      .addNode('fallback_answer', fallbackAnswerNode as any)
+      .addNode('route_intent', routeIntentNode)
+      .addNode('direct_answer', directAnswerNode)
+      .addNode('decompose', decomposeNode)
+      .addNode('decompose_question', decomposeQuestionNode)
+      .addNode('retrieve', retrieveNode)
+      .addNode('plan_next', planNextNode)
+      .addNode('evaluate', evaluateNode)
+      .addNode('rag_generate', ragGenerateNode)
+      .addNode('fallback_answer', fallbackAnswerNode)
       .addEdge(START, 'route_intent')
-      .addConditionalEdges('route_intent', afterRoute as any, {
+      .addConditionalEdges('route_intent', afterRoute, {
         direct_answer: 'direct_answer',
         retrieve: 'decompose',
       })
       .addEdge('direct_answer', END)
-      .addConditionalEdges('decompose', afterDecompose as any, {
+      .addConditionalEdges('decompose', afterDecompose, {
         retrieve: 'retrieve',
         decompose_question: 'decompose_question',
       })
       .addEdge('decompose_question', 'retrieve')
       .addEdge('retrieve', 'plan_next')
-      .addConditionalEdges('plan_next', afterPlan as any, {
+      .addConditionalEdges('plan_next', afterPlan, {
         retrieve: 'retrieve',   // 🔄 回边循环
         evaluate: 'evaluate',   // 终止
       })
-      .addConditionalEdges('evaluate', afterEvaluate as any, {
+      .addConditionalEdges('evaluate', afterEvaluate, {
         rag_generate: 'rag_generate',
         fallback_answer: 'fallback_answer',
       })
