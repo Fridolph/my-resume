@@ -1,3 +1,44 @@
+/**
+ * AI Chat 图编排服务 — LangGraph + 旧引擎双模。
+ *
+ * ## 架构概览
+ *
+ * 本服务是 AI Chat 的"对话大脑"，负责将用户问题转化为回答。
+ * 两套引擎并行，通过环境变量 AI_CHAT_USE_LANGGRAPH 切换：
+ *
+ * ```
+ * generateAnswer(input)
+ *   ├─ AI_CHAT_USE_LANGGRAPH=true  → generateAnswerWithLangGraph()
+ *   │    └─ StateGraph.invoke()    → 8 节点 + 5 条件边 + 1 回边
+ *   │                                （LLM 语义路由 + 多跳 + 评估）
+ *   └─ AI_CHAT_USE_LANGGRAPH=false → generateAnswerLegacy()
+ *        └─ routeIntentAndDomain() → 正则路由 + 单次检索 + 卡片组装
+ *                                     （旧引擎，保持稳定回退）
+ * ```
+ *
+ * ## LangGraph 图结构（新引擎）
+ *
+ * ```
+ * START → route_intent ─┬→ direct_answer → END
+ *                        └→ decompose ─┬→ retrieve ─┬→ plan_next
+ *                                      │              ├→ retrieve (🔄)
+ *                                      │              └→ evaluate
+ *                                      │                   ├→ rag_generate → END
+ *                                      │                   └→ fallback_answer → END
+ *                                      └→ decompose_question → retrieve
+ * ```
+ *
+ * ## 旧引擎流程
+ *
+ * ```
+ * classifyQuestion → boundaryGuard → resolveDirectAnswer
+ *   → routeIntentAndDomain → retrieve → composeAnswer → END
+ * ```
+ *
+ * 两者输出统一为 `AiChatAnswerGenerationResult { answer, blocks, citations }`。
+ * 新引擎异常时自动回退旧引擎（兜底安全）。
+ */
+
 import { Inject, Injectable, Logger } from '@nestjs/common'
 import { END, START, StateGraph } from '@langchain/langgraph'
 
@@ -39,8 +80,18 @@ import type {
 const DEFAULT_CHAT_LIMIT = 15
 const MAX_LOG_SNIPPET_LENGTH = 120
 
+/**
+ * 问题分类结果。
+ *
+ * greeting：打招呼/测试 → 直接预置回复
+ * short：   过短且非疑问 → 引导提示
+ * negative：情绪低落 → 安抚式回复
+ * normal：  正常问题 → 进入检索管线
+ */
 type QuestionClass = 'greeting' | 'short' | 'negative' | 'normal'
+/** LangGraph 节点返回的路由意图 */
 type GraphRouteIntent = 'direct' | 'rag' | 'blocked'
+/** 路由分支类型：直接回复 / 仅简历 / 仅补充资料 / 混合 / 拒绝 */
 type GraphRouteKind = 'direct' | 'resume_only' | 'supplement_only' | 'hybrid' | 'reject'
 
 interface AiChatGraphInput {
@@ -136,6 +187,15 @@ function formatPeriod(startDate: string, endDate: string): string {
   return [startDate, endDate].filter(Boolean).join(' - ')
 }
 
+/**
+ * 旧引擎用 — 正则分类用户问题。
+ *
+ * 仅在旧引擎中作为 route_intent 的前置分类器使用。
+ * 新引擎（LangGraph）由 route_intent 节点用 LLM withStructuredOutput 替代。
+ *
+ * 分类优先级：greeting > negative > short > normal。
+ * greeting/negative 限制 ≤15 字防止误判，short 限制 ≤4 字且非疑问句。
+ */
 function classifyQuestion(question: string): QuestionClass {
   const trimmed = question.trim()
   const lower = trimmed.toLowerCase()
@@ -496,6 +556,14 @@ function isBroadHobbyOverviewQuestion(question: string): boolean {
   )
 }
 
+/**
+ * 展示级 citation 过滤 — 控制前端渲染哪些卡片。
+ *
+ * 当前规则：hobby citation 超过 1 条时，只保留 score 最高的 3 条。
+ * 非 hobby 的 citation 不受影响。
+ *
+ * 设计意图：避免"你有什么特长"这类宽泛问题时，页面上刷出一排兴趣卡片。
+ */
 function filterDisplayRelevantCitations(
   question: string,
   citations: readonly RagAskCitation[],
@@ -523,6 +591,15 @@ function filterDisplayRelevantCitations(
   })
 }
 
+/**
+ * 旧引擎用 — 从问题文本匹配知识域。
+ *
+ * 正则关键词映射到 6 个 RagKnowledgeDomain：
+ * projects | experience | skills | hobbies | writing_media | resume_core(隐式)
+ *
+ * 未命中任何域时返回 undefined（不限域，全量检索）。
+ * 新引擎中此逻辑由 route_intent 节点的 LLM 替代。
+ */
 function resolveKnowledgeDomains(question: string): RagKnowledgeDomain[] | undefined {
   const lower = question.toLowerCase()
   const domains = new Set<RagKnowledgeDomain>()
@@ -564,6 +641,12 @@ function selectPrimaryCatalogProbeHit(
   return [...hits].sort((left, right) => right.score - left.score)[0] ?? null
 }
 
+// ──── 路由信号函数（旧引擎 routeIntentAndDomain 使用） ────
+
+/**
+ * 检测问题是否涉及简历核心内容。
+ * 匹配：工作/项目/技能/教育/角色/公司等关键词。
+ */
 function hasResumeSignals(question: string): boolean {
   return /简历|背景|自我介绍|介绍一下|工作|经历|公司|团队|管理|经验|教育|学校|学历|技能|技术栈|优势|亮点|求职|角色|职位|负责|做过|resume|background|experience|company|education|skill/.test(
     question.toLowerCase(),
@@ -601,6 +684,20 @@ function isClearlyOutOfScopeQuestion(question: string): boolean {
   return /天气|股价|股票|彩票|算命|星座|新闻|政治|法律咨询|医疗诊断|菜谱|写作业|代写|weather|stock|lottery|politic|medical|legal|recipe|homework/.test(lower)
 }
 
+/**
+ * AiChatGraphService — AI Chat 双引擎对话编排。
+ *
+ * ## 依赖注入
+ *
+ * - AiService：LLM 文本生成 + 流式输出
+ * - RagService：RAG 检索 + 问答（search/ask/probeSupplementCatalog）
+ * - ResumePublicationService：读取已发布简历（buildAnswerBlocksFromResume 用）
+ *
+ * ## 生命周期
+ *
+ * compiledGraph 惰性初始化：首次调用 generateAnswer() 时才编译 LangGraph 图，
+ * 之后复用同一实例（单例模式，NestJS 默认 scope）。
+ */
 @Injectable()
 export class AiChatGraphService {
   private readonly logger = new Logger(AiChatGraphService.name)
@@ -635,6 +732,35 @@ export class AiChatGraphService {
    *                                                                  │       │
    *                                                                  ▼       ▼
    *                                                                END     END
+   */
+  /**
+   * 编译 LangGraph StateGraph（惰性初始化，首次调用 generateAnswer 时触发）。
+   *
+   * ## 节点职责
+   *
+   * | 节点 | 文件 | 类型 | 说明 |
+   * |------|------|------|------|
+   * | route_intent | route-intent.node.ts | LLM 结构化输出 | 6 策略语义路由 |
+   * | direct_answer | direct-answer.node.ts | 纯预置话术 | 问候/引导/越界 |
+   * | decompose | decompose.node.ts | 纯规则 | 判断是否需要拆子问题 |
+   * | decompose_question | decompose-question.node.ts | LLM 结构化输出 | 拆为有序子问题列表 |
+   * | retrieve | retrieve.node.ts | 业务逻辑 | 调用 RagService.ask()，支持游标 |
+   * | plan_next | plan-next.node.ts | LLM + 硬兜底 | 循环控制中枢 |
+   * | evaluate | evaluate.node.ts | LLM 结构化输出 | 检索充分性评估 |
+   * | rag_generate | rag-generate.node.ts | 透传 | 当前为空操作（answer 已在 retrieve 中生成） |
+   * | fallback_answer | fallback-answer.node.ts | 纯预置话术 | 信息不足兜底 |
+   *
+   * ## 边设计
+   *
+   * - afterRoute：strategy → direct_answer | decompose
+   * - afterDecompose：decompositionNeeded → retrieve | decompose_question
+   * - afterPlan：plannedNext → retrieve(🔄) | evaluate
+   * - afterEvaluate：evaluation.enough → rag_generate | fallback_answer
+   *
+   * ## 🔄 回边机制
+   *
+   * retrieve → plan_next → retrieve 形成循环。
+   * 每次 retrieve 推进游标 nextSubIdx，plan_next 用 remaining 和 retrievalCount 双重保险终止。
    */
   private compileLangGraph() {
     const routeIntentNode = createRouteIntentNode()
@@ -689,6 +815,12 @@ export class AiChatGraphService {
     return this.compiledGraph
   }
 
+  /**
+   * 对话入口 — 灰度开关分流。
+   *
+   * - AI_CHAT_USE_LANGGRAPH=true  → 新 LangGraph 引擎
+   * - AI_CHAT_USE_LANGGRAPH=false → 旧正则路由引擎
+   */
   async generateAnswer(input: AiChatGraphInput): Promise<AiChatAnswerGenerationResult> {
     // 灰度开关：启用 LangGraph 引擎
     if (isLangGraphChatEnabled()) {
@@ -702,6 +834,19 @@ export class AiChatGraphService {
    * LangGraph 引擎入口。
    *
    * 编译 StateGraph → invoke(state) → 提取 answer + blocks + citations。
+   */
+  /**
+   * LangGraph 引擎主流程。
+   *
+   * ## 三步走
+   *
+   * 1. graph.invoke(state) → 8 节点链执行，返回 { strategy, citations, answer, evaluation, ... }
+   * 2. 后处理桥接 legacy：evaluate 判定"不够"时用 generateAnswerFromCitations 回退
+   * 3. 构建卡片：resume 卡片（project_card/experience_card）+ 自定义卡片（article/hobby）
+   *
+   * ## 异常处理
+   *
+   * LangGraph 调用失败 → generateAnswerLegacy() 回退旧引擎
    */
   private async generateAnswerWithLangGraph(
     input: AiChatGraphInput,
@@ -818,6 +963,30 @@ export class AiChatGraphService {
     }
   }
 
+  /**
+   * 旧引擎路由入口 — 正则驱动的意图识别 + 知识域匹配。
+   *
+   * ## 决策链
+   *
+   * 1. classifyQuestion() → greeting/short/negative → direct 路由
+   * 2. isClearlyOutOfScopeQuestion() → blocked 路由
+   * 3. probeSupplementCatalog() → 查询 user_docs 标题库（非语义，纯文本关键词匹配）
+   * 4. hasResumeSignals / hasSupplementSignals / hasWorkOutsideNegation → 四路分支
+   *
+   * ## 四路分支
+   *
+   * | routeKind | 触发条件 | sourceTypes | 说明 |
+   * |-----------|---------|-------------|------|
+   * | hybrid | 简历+补充信号同时命中 | resume_core + user_docs | 联合检索 |
+   * | supplement_only | 仅补充信号 或 probe 命中 | user_docs + knowledge | 只查补充资料 |
+   * | resume_only | 默认兜底 | resume_core | 只查简历 |
+   * | direct | greeting/short/negative | — | 跳过检索 |
+   *
+   * ## 与 LangGraph route_intent 的对比
+   *
+   * - 正则路由：确定性高，无 LLM 延迟，但规则僵化、需手动维护关键词
+   * - LLM 路由：语义理解灵活，能处理变体问法，但有额外网络延迟
+   */
   private async routeIntentAndDomain(input: NormalizedGraphInput): Promise<GraphRouteDecision> {
     const classification = classifyQuestion(input.question)
 
@@ -937,6 +1106,12 @@ export class AiChatGraphService {
     return null
   }
 
+  /**
+   * 旧引擎检索节点 — 同 retrieve 节点，但走正则路由的 sourceTypes。
+   *
+   * 调用 RagService.ask() 执行检索+生成。
+   * 额外输出 fallbackReason 用于 composeAnswer 判断是否需要回退。
+   */
   private async retrieve(
     input: NormalizedGraphInput,
     route: GraphRouteDecision,
@@ -1018,6 +1193,22 @@ export class AiChatGraphService {
     }
   }
 
+  /**
+   * 旧引擎回答组装 — 将检索结果转为 { answer, blocks, citations }。
+   *
+   * ## 处理链
+   *
+   * 1. filterDisplayRelevantCitations() → 过滤展示级 citation（hobby 去噪）
+   * 2. 三道边界检查：
+   *    a. supplement 路由无命中 → buildSupplementMissAnswer
+   *    b. citation 为空且无简历摘要 → buildLowRelevanceAnswer
+   *    c. topCitationScore < 0.1 → buildLowRelevanceAnswer
+   * 3. 通过后构建卡片：
+   *    - buildAnswerBlocksFromResume() → project_card / experience_card
+   *    - buildCustomBlocksFromCitations() → article_card / hobby_card / project_card
+   * 4. 渲染结果：answer 有值 + citations 有数据 → 直接返回
+   *    否则按 routeKind 决定回退方案
+   */
   private async composeAnswer(
     input: NormalizedGraphInput,
     route: GraphRouteDecision,
@@ -1104,6 +1295,16 @@ export class AiChatGraphService {
     })
   }
 
+  /**
+   * 兜底回答生成 — 用简历摘要拼 prompt → LLM 生成。
+   *
+   * 在以下场景触发：
+   * 1. resume_only 路由 + 检索无结果 → 用简历摘要兜底
+   * 2. LangGraph 异常回退时的 resume_only 兜底
+   *
+   * 设计意图：即使 RAG 检索失败，也能用简历摘要（StandardResume → 文本摘要）
+   * 给用户一个基本的、基于真实简历信息的回答。
+   */
   private async generateResumeFallbackAnswer(
     input: NormalizedGraphInput,
     resumeSummary: string,
@@ -1143,6 +1344,19 @@ export class AiChatGraphService {
    *
    * 不走 RAG 检索，直接用现有 citations 拼 context → LLM 生成。
    */
+  /**
+   * 从已有 citation 拼 context → LLM 生成回答。
+   *
+   * ## 使用场景
+   *
+   * LangGraph evaluate 节点判定"不够"但 citations 有数据时调用。
+   * 不走 RagService.ask()（不再检索），直接用现有 citations 的 title+snippet 拼 prompt。
+   *
+   * ## 设计意图
+   *
+   * evaluate 判定 retrieval 信息不足，但仍有部分相关内容——与其完全放弃，
+   * 不如用已有片段尝试生成回答。这样比"我不知道"的用户体验更好。
+   */
   private async generateAnswerFromCitations(
     question: string,
     citations: RagAskCitation[],
@@ -1169,6 +1383,17 @@ export class AiChatGraphService {
     }
   }
 
+  /**
+   * 从简历 citation 构建富卡片。
+   *
+   * 根据 citation.section 分两类：
+   * - project → 匹配 StandardResume.projects → project_card（名称/角色/周期/摘要/技术栈/亮点 top3）
+   * - experience → 匹配 StandardResume.experiences → experience_card
+   *
+   * 匹配靠 findProjectByCitation / findExperienceByCitation：
+   * 双向包含匹配（citation.title 和 resume.title 互相包含对方）。
+   * 每种最多 1 张，总量 slice(0, 2)。
+   */
   private buildAnswerBlocksFromResume(
     resume: StandardResume,
     citations: RagAskCitation[],
@@ -1212,6 +1437,28 @@ export class AiChatGraphService {
     return [...projectBlocks.values(), ...experienceBlocks.values()].slice(0, 2)
   }
 
+  /**
+   * 从 user_docs / knowledge citation 构建富卡片。
+   *
+   * ## 三种卡片类型
+   *
+   * | contentType 匹配 | 卡片类型 | 包含字段 |
+   * |-----------------|---------|---------|
+   * | article/tech_blog/knowledge_column/general/media | article_card | title/summary/url/imageUrl/keywords/media/linkDisplayTitle |
+   * | hobby | hobby_card | title/description/url/imageUrl/keywords/media/linkDisplayTitle |
+   * | project | project_card | title/summary/technologies/url/imageUrl |
+   *
+   * ## 数据来源
+   *
+   * 所有数据从 citation.richCard 中提取（admin 上传 user_docs 时填充的元数据）。
+   * 卡片去重：同一 contentType + title 只取第一个。
+   * 总量 slice(0, 6)。
+   *
+   * ## 注意
+   *
+   * - resume_core 源的 citation 不会进入此函数（由 buildAnswerBlocksFromResume 处理）
+   * - knowledge 源（博客文章）作为 article_card 展示
+   */
   private buildCustomBlocksFromCitations(
     question: string,
     citations: RagAskCitation[],
