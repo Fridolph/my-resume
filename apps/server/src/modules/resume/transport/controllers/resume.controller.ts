@@ -27,6 +27,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger'
 import type { Response } from 'express'
+import { flattenForLocale } from '../../../../common/utils/flatten-locale'
 
 import { SkipResponseEnvelope } from '../../../../common/decorators/skip-response-envelope.decorator'
 import { ApiEnvelopeResponse } from '../../../../common/swagger/api-envelope-response.decorator'
@@ -72,8 +73,9 @@ export class ResumeController {
   @Get('published')
   @ApiOperation({
     summary: '获取发布态简历快照',
-    description: '公开站首屏使用的发布态快照读取入口',
+    description: '公开站首屏使用的发布态快照读取入口。支持 ?locale=zh|en 返回平字符串。',
   })
+  @ApiQuery({ name: 'locale', required: false, enum: ['zh', 'en'] })
   @ApiEnvelopeResponse({
     description: '读取发布态快照成功',
   })
@@ -81,18 +83,16 @@ export class ResumeController {
     description: '当前还没有可公开访问的发布快照',
   })
   async getPublishedResume(
-    @Res({ passthrough: true }) response: Response,
+    @Query('locale') locale?: string,
+    @Res({ passthrough: true }) response?: Response,
   ): Promise<ResumePublishedSnapshotResponse> {
-    // 公开站只读取发布态快照，不直接读取草稿。
     const published = await this.resumePublicationService.getPublished()
+    if (!published) throw new NotFoundException('Published resume is not available')
+    this.applyPublicCacheHeaders(response!)
 
-    if (!published) {
-      throw new NotFoundException('Published resume is not available')
-    }
-
-    this.applyPublicCacheHeaders(response)
-
-    return published
+    // 根据 locale 压平 {zh,en} → string
+    const resolvedLocale = locale === 'en' ? 'en' : 'zh'
+    return flattenForLocale(published, resolvedLocale) as ResumePublishedSnapshotResponse
   }
 
   /**

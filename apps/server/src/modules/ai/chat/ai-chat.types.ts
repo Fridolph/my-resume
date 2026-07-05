@@ -5,7 +5,13 @@ export type AiChatLeadStatus = 'submitted' | 'issued' | 'closed'
 export type AiChatUseKeyStatus = 'issued' | 'claimed' | 'revoked' | 'expired'
 export type AiChatSessionStatus = 'open' | 'closed'
 export type AiChatMessageRole = 'user' | 'assistant' | 'system'
-export type AiChatSummaryStage = 'turn-10' | 'turn-20'
+
+/** 用户文档/媒体内容分类 */
+export type ContentCategory = 'hobby' | 'tech_blog' | 'knowledge_column' | 'general'
+
+/** 文章卡片分类（排除 hobby） */
+export type ArticleCardCategory = Exclude<ContentCategory, 'hobby'>
+export type AiChatSummaryStage = string
 export type AiChatMessageBlockType =
   | 'text'
   | 'project_card'

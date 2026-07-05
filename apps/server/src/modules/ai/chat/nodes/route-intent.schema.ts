@@ -26,6 +26,9 @@ export const RouteIntentSchema = z.object({
   ),
   /** 路由决策理由（用于日志与调试） */
   reason: z.string(),
+  /** 检索偏好提示（可选） */
+  retrievalHint: z.enum(['graph_first', 'rag_first', 'graph_then_rag', 'rag_then_graph']).optional()
+    .describe('graph_first=优先图检索(关系型问题如公司/技能关联), rag_first=优先文档检索(段落描述), graph_then_rag=先查图拿实体列表再RAG, rag_then_graph=先RAG找段落再查图验证'),
 })
 
 export type RouteIntentResult = z.infer<typeof RouteIntentSchema>

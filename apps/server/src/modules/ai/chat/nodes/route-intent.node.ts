@@ -1,6 +1,9 @@
+import { Logger } from '@nestjs/common'
 import type { AiChatLocale } from '../ai-chat.types'
 import { createRouterLlm } from './router-llm.factory'
 import { parseKnowledgeDomains, RouteIntentSchema } from './route-intent.schema'
+
+const logger = new Logger('RouteIntentNode')
 
 /**
  * 路由 Prompt 模板。
@@ -38,12 +41,21 @@ function buildRoutePrompt(question: string, locale: AiChatLocale): string {
 ## 规则
 
 1. 涉及"我/你/你的/FYS/简历/工作/项目/技能" → 优先 resume 或 hybrid
-2. 涉及"文章/博客/兴趣/爱好/创作/写作" → 优先 supplement 或 hybrid
-3. 同时涉及简历和补充 → hybrid
-4. 完全无关 → out_of_scope
-5. 不知道是什么问题 → resume（默认检索简历）
+2. "你会什么""你擅长什么""你有什么技能""你懂什么"→ resume（技能查询），不是 guide
+3. "你的简历/网站是用什么技术做的""这个站怎么搭建的"→ resume（项目经历），不是 guide
+4. 涉及"文章/博客/兴趣/爱好/创作/写作" → 优先 supplement 或 hybrid
+5. 同时涉及简历和补充 → hybrid
+6. 完全无关 → out_of_scope
+7. 不知道是什么问题 → resume（默认检索简历）
 
 ${langHint}
+## 检索偏好（可选）
+根据问题类型输出最适合的检索方式：
+- graph_first：关系型查询（如"在哪些公司工作过""用了哪些技术""技能和项目的关联"）
+- rag_first：段落级上下文查询（如"介绍背景""描述经历"）
+- graph_then_rag：先查图拿实体列表，再用实体名搜文档
+- rag_then_graph：先搜文档找段落，再查图验证关系
+不确定时留空。
 
 用户问题：${question}`
 }
@@ -63,35 +75,86 @@ export function createRouteIntentNode() {
 
   return async (state: { question: string; locale: AiChatLocale }) => {
     const prompt = buildRoutePrompt(state.question, state.locale)
-    const result = await router.invoke(prompt)
 
-    const knowledgeDomains = parseKnowledgeDomains(result.knowledgeDomains)
+    try {
+      const result = await router.invoke(prompt)
+      const knowledgeDomains = parseKnowledgeDomains(result.knowledgeDomains)
 
-    // 按 strategy 映射 sourceTypes（对齐 legacy routeIntentAndDomain）
-    let sourceTypes: string[] | undefined
-    let preferSourceTypes: string[] | undefined
-    switch (result.strategy) {
-      case 'supplement':
-        sourceTypes = ['user_docs', 'knowledge']
-        preferSourceTypes = ['user_docs', 'knowledge']
-        break
-      case 'hybrid':
-        sourceTypes = ['resume_core', 'user_docs']
-        preferSourceTypes = ['user_docs', 'resume_core']
-        break
-      case 'resume':
-      default:
-        sourceTypes = ['resume_core']
-        preferSourceTypes = ['resume_core']
-        break
+      const sourceTypes = resolveSourceTypes(result.strategy)
+
+      return {
+        strategy: result.strategy,
+        routeReason: result.reason,
+        knowledgeDomains: knowledgeDomains ?? ([] as any),
+        sourceTypes,
+        preferSourceTypes: sourceTypes,
+      }
+    } catch (error) {
+      // LLM 路由失败 → 回退到正则
+      logger.warn({
+        event: 'graph.route_intent.llm_fallback',
+        question: state.question.slice(0, 80),
+        error: error instanceof Error ? error.message : String(error),
+      })
+
+      return fallbackRoute(state.question)
     }
+  }
+}
 
-    return {
-      strategy: result.strategy,
-      routeReason: result.reason,
-      knowledgeDomains: knowledgeDomains ?? ([] as any),
-      sourceTypes,
-      preferSourceTypes,
-    }
+/**
+ * LLM 路由失败时的正则兜底路由。
+ *
+ * 当 LLM withStructuredOutput 调用失败（网络超时、模型返回格式异常等）时，
+ * 回退到关键词正则匹配，保证系统可用性。
+ *
+ * ## 路由优先级
+ *
+ * 1. 越界检测：天气/股票/彩票/政治/新闻 → `out_of_scope`（直接拒绝）
+ * 2. 打招呼：你好/hi/hello/测试 → `chitchat`（直接回复问候语）
+ * 3. 补充资料：博客/文章/兴趣/爱好/特长/休闲 → `supplement`（查 user_docs + knowledge）
+ * 4. 默认兜底：`resume`（查简历核心内容）
+ *
+ * @param question - 用户原始问题
+ * @returns 路由决策（strategy + routeReason + knowledgeDomains + sourceTypes）
+ */
+function fallbackRoute(question: string) {
+  const lower = question.toLowerCase()
+
+  // 越界问题：与简历完全无关，直接拒绝
+  if (/天气|股票|彩票|政治|新闻/.test(lower)) {
+    return { strategy: 'out_of_scope' as const, routeReason: 'rule:out_of_scope', knowledgeDomains: [], sourceTypes: undefined, preferSourceTypes: undefined }
+  }
+  // 打招呼/测试：无需检索，直接返回问候语
+  if (/^(你好|hi|hello|hey|哈喽|嗨|在吗|测试|test)$/i.test(question.trim())) {
+    return { strategy: 'chitchat' as const, routeReason: 'rule:greeting', knowledgeDomains: [], sourceTypes: undefined, preferSourceTypes: undefined }
+  }
+  // 补充资料：兴趣爱好/博客/文章等非简历核心内容
+  if (/博客|文章|写作|创作|兴趣|爱好|特长|休闲|喜欢/.test(lower)) {
+    return { strategy: 'supplement' as const, routeReason: 'rule:supplement', knowledgeDomains: ['hobbies', 'writing_media'] as any, sourceTypes: ['user_docs', 'knowledge'] as any, preferSourceTypes: ['user_docs', 'knowledge'] as any }
+  }
+  // 默认：查简历核心内容
+  return { strategy: 'resume' as const, routeReason: 'rule:resume_default', knowledgeDomains: [], sourceTypes: ['resume_core'] as any, preferSourceTypes: ['resume_core'] as any }
+}
+
+/**
+ * 按 strategy 映射 sourceTypes。
+ *
+ * 对齐 legacy `routeIntentAndDomain` 的 sourceTypes 语义：
+ * - `supplement` → 用户补充资料 + 静态知识库（user_docs + knowledge）
+ * - `hybrid` → 简历核心 + 用户补充资料（resume_core + user_docs）
+ * - `resume` → 仅简历核心（resume_core）
+ * - 其他（chitchat/guide/out_of_scope）→ 不检索，返回 undefined
+ *
+ * @param strategy - LLM 路由输出的策略类型
+ * @returns sourceTypes 数组 或 undefined（不需检索）
+ */
+function resolveSourceTypes(strategy: string) {
+  switch (strategy) {
+    case 'supplement': return ['user_docs', 'knowledge'] as any
+    case 'hybrid': return ['resume_core', 'user_docs'] as any
+    case 'resume': return ['resume_core'] as any
+    // chitchat / guide / out_of_scope：不需要检索
+    default: return undefined
   }
 }

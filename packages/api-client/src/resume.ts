@@ -66,9 +66,10 @@ export function buildPublishedResumeExportUrl(input: {
  * @returns 已发布快照请求 Method
  */
 export function createFetchPublishedResumeMethod(input: ResumeRequestInput) {
+  const locale = input.locale ?? 'zh'
   return Alova.createMethod<ResumePublishedSnapshot | null>({
     apiBaseUrl: input.apiBaseUrl,
-    pathname: '/resume/published',
+    pathname: `/resume/published?locale=${locale}`,
     requestInit: {
       cache: 'no-store',
     },

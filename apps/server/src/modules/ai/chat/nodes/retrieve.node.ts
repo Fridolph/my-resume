@@ -5,6 +5,7 @@ import type { ResumePublicationService } from '../../../resume/application/servi
 import type { RagKnowledgeDomain } from '../../rag/rag-knowledge-domain'
 import type { RagService } from '../../rag/rag.service'
 import type { RagRetrievalSourceType, RagSearchMatch } from '../../rag/rag.types'
+import type { GraphSearchService } from '../../graph/graph-search.service'
 import type { AiChatLocale } from '../ai-chat.types'
 import { DEFAULT_MIN_ACCEPTED_CITATION_SCORE, DEFAULT_RAG_LIMIT } from '../ai-chat-graph.constants'
 
@@ -23,6 +24,7 @@ function mergeUnique(existing: RagSearchMatch[], incoming: RagSearchMatch[]): Ra
 export function createRetrieveNode(
   ragService: RagService,
   resumePublicationService: ResumePublicationService,
+  graphSearchService?: GraphSearchService,
 ) {
   return async (
     state: {
@@ -49,6 +51,7 @@ export function createRetrieveNode(
         ? subQuestions[idx]
         : state.question
 
+    // ── RAG 检索（主路径） ──
     const result = await ragService.ask(
       query,
       DEFAULT_RAG_LIMIT,
@@ -64,17 +67,54 @@ export function createRetrieveNode(
       },
     )
 
+    // ── Graph 检索（辅助路径，并行，容错降级） ──
+    let graphMatches: RagSearchMatch[] = []
+    if (graphSearchService) {
+      try {
+        const graphResults = await graphSearchService.search(query)
+        if (graphResults.length > 0) {
+          // 将 GraphSearchResult 转为 RagSearchMatch 格式
+          graphMatches = graphResults.map((r) => ({
+            id: `graph:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`,
+            documentId: undefined,
+            title: '知识图谱',
+            section: 'graph',
+            content: r.text,
+            sourceType: 'graph' as any,
+            sourcePath: undefined,
+            score: r.score,
+          }))
+          logger.log({
+            event: 'graph.retrieve.done',
+            query: query.slice(0, 80),
+            graphMatchCount: graphMatches.length,
+          })
+        }
+      } catch (error) {
+        // 图检索失败不中断主流程
+        logger.warn({
+          event: 'graph.retrieve.failed',
+          query: query.slice(0, 80),
+          message: (error as Error).message,
+        })
+      }
+    }
+
+    // ── 合并 RAG + Graph 结果 ──
     const nextSubIdx = subQuestions ? idx + 1 : idx
-    const mergedDocuments = mergeUnique(state.documents ?? [], result.matches)
+    const mergedDocuments = mergeUnique(
+      mergeUnique(state.documents ?? [], result.matches),
+      graphMatches,
+    )
 
     logger.log({
       event: 'graph.retrieve.done',
       query,
-      citationCount: result.citations.length,
-      topCitationScore: result.citations[0]?.score ?? 0,
+      ragCitationCount: result.citations.length,
+      graphMatchCount: graphMatches.length,
+      totalDocuments: mergedDocuments.length,
       retrievalCount: (state.retrievalCount ?? 0) + 1,
       nextSubIdx,
-      totalDocuments: mergedDocuments.length,
     })
 
     return {

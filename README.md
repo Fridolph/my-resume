@@ -142,6 +142,41 @@ pnpm docker:up
 pnpm docker:down
 ```
 
+### 🚀 构建并部署到云服务器
+
+> 想把简历部署到自己的云服务器？按这三步来。
+
+**第 1 步：本地构建 amd64 镜像**
+
+```bash
+# M 系列 Mac 请用这个（ECS 是 Intel CPU）
+pnpm docker:build:ecs
+```
+
+**第 2 步：推送镜像到 GHCR**
+
+```bash
+echo $GITHUB_TOKEN | docker login ghcr.io -u 你的用户名 --password-stdin
+
+./deploy/ecs/build-and-push-images.sh \
+  --version 2.5.1 \
+  --image-prefix ghcr.io/你的用户名/my-resume \
+  --local-tag
+```
+
+**第 3 步：一键部署到 ECS**
+
+```bash
+./deploy/ecs/release-from-local.sh \
+  --version 2.5.1 \
+  --stack-env ./.env.stack.local \
+  --ecs-host 你的服务器IP \
+  --ecs-user root
+```
+
+> 📖 [完整部署教程](./docs/40-部署上线/05-ECS-Image-模式部署教程-从本地构建到上线.md)
+> ⚠️ M 系列 Mac 默认构建 arm64，ECS 是 amd64，务必用 `pnpm docker:build:ecs`。
+
 ## 🧪 测试与质量
 
 常用命令：

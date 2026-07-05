@@ -22,7 +22,21 @@ import type { RagAskCitation } from '../rag/rag.types'
 import { buildAiChatSummaryPrompt, AI_CHAT_SUMMARY_SYSTEM_PROMPT } from './prompts/ai-chat-summary.prompt'
 import { buildRagAskSystemPrompt } from '../rag/prompts/rag-ask.prompt'
 import { AiChatGraphService } from './ai-chat-graph.service'
-import { AiChatRepository } from './ai-chat.repository'
+import { AiChatRepository, mapLead, mapUseKey } from './ai-chat.repository'
+import { AiChatQuotaService, type AiChatSessionBundle } from './ai-chat-quota.service'
+import {
+  buildCustomCardMedia,
+  buildLocalDateKey,
+  buildUseKeyValue,
+  chooseStructuredMethod,
+  chunkAnswerText,
+  formatPeriod,
+  normalizeArticleCardCategory,
+  normalizeOptionalText,
+  normalizeUserDocCardCategory,
+  readLocalizedText,
+  resolveCustomCardSummary,
+} from './ai-chat.utils'
 import type {
   AiChatAnswerGenerationResult,
   AiChatAskMessageInput,
@@ -50,50 +64,15 @@ const PUBLIC_CHAT_POLICY_VERSION = 'm23-public-ip-v1'
 const PUBLIC_CHAT_SOURCE_TAG = 'public-ip'
 const PUBLIC_CHAT_ISSUER = 'system-public-chat'
 type AiChatUseKeyRecord = Awaited<ReturnType<AiChatRepository['findLatestUseKeyByLeadId']>> | null
-type AiChatSessionBundle = NonNullable<Awaited<ReturnType<AiChatRepository['getSessionBundle']>>>
 const AI_CHAT_SUMMARY_SCHEMA = z.object({
   visitorFocus: z.string(),
   aiClosing: z.string(),
   keywords: z.array(z.string()).max(15),
 })
 
-function readLocalizedText(value: LocalizedText, locale: AiChatLocale): string {
-  return (locale === 'en' ? value.en : value.zh || value.en || value.zh).trim()
-}
 
-function normalizeUserDocCardCategory(contentType: string | undefined): 'hobby' | 'tech_blog' | 'knowledge_column' | 'general' {
-  if (contentType === 'hobby') return 'hobby'
-  if (contentType === 'knowledge_column' || contentType === 'media') return 'knowledge_column'
-  if (contentType === 'general') return 'general'
 
-  return 'tech_blog'
-}
 
-function normalizeArticleCardCategory(contentType: string | undefined): 'tech_blog' | 'knowledge_column' | 'general' {
-  const category = normalizeUserDocCardCategory(contentType)
-
-  return category === 'hobby' ? 'tech_blog' : category
-}
-
-function resolveCustomCardSummary(citation: RagAskCitation): string {
-  return citation.richCard?.summary?.trim() || citation.richCard?.description?.trim() || citation.snippet
-}
-
-function buildCustomCardMedia(citation: RagAskCitation) {
-  const richCard = citation.richCard
-  const existingMedia = richCard?.media ?? []
-  const imageUrls = Array.isArray(richCard?.imageUrls) ? richCard.imageUrls : []
-  const imageMedia = imageUrls
-    .filter((url) => url && url !== richCard?.imageUrl)
-    .map((url, index) => ({
-      type: 'image' as const,
-      url,
-      thumbnailUrl: url,
-      title: `参考图片 ${index + 2}`,
-    }))
-
-  return [...existingMedia, ...imageMedia]
-}
 
 /**
  * 将已发布简历转化为 LLM 可直接使用的简洁结构化摘要。
@@ -170,18 +149,12 @@ function buildResumeSummary(
   return lines.join('\n')
 }
 
-function formatPeriod(startDate: string, endDate: string): string {
-  return [startDate, endDate].filter(Boolean).join(' - ')
-}
 
-function normalizeOptionalText(value?: string | null): string {
-  return value?.trim() ?? ''
-}
 
-function buildUseKeyValue() {
-  return `FY-${randomUUID().slice(0, 8).toUpperCase()}`
-}
 
+/**
+ * IP 地址归一化：所有 localhost 变体统一为 127.0.0.1，IPv4-mapped IPv6 去前缀。
+ */
 function normalizeIpAddress(ipAddress: string) {
   const trimmed = ipAddress.trim()
 
@@ -202,49 +175,20 @@ function normalizeIpAddress(ipAddress: string) {
   return trimmed
 }
 
+/**
+ * 以 IP 的 SHA256 哈希构建公开聊天的 sourceKey。
+ */
 function buildPublicLeadSourceKey(ipAddress: string) {
   const ipHash = createHash('sha256').update(ipAddress).digest('hex').slice(0, 16)
   return `${PUBLIC_CHAT_SOURCE_TAG}:${ipHash}`
 }
 
-function buildLocalDateKey(date: Date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
 
-function isSameLocalDate(left: Date, right: Date) {
-  return buildLocalDateKey(left) === buildLocalDateKey(right)
-}
 
-function isPublicChatBundle(bundle: AiChatSessionBundle) {
-  return (
-    bundle.lead.sourceTag === PUBLIC_CHAT_SOURCE_TAG ||
-    bundle.useKey.issuedByUserId === PUBLIC_CHAT_ISSUER
-  )
-}
 
-function chooseStructuredMethod(provider: { provider: string; model: string }) {
-  const providerName = provider.provider.toLowerCase()
-  const modelName = provider.model.toLowerCase()
-
-  return providerName.includes('deepseek') || modelName.includes('reasoner')
-    ? 'jsonMode'
-    : 'functionCalling'
-}
-
-function chunkAnswerText(answer: string): string[] {
-  const compact = answer.trim()
-
-  if (!compact) {
-    return []
-  }
-
-  const segments = compact.match(/.{1,28}/g)
-  return segments?.length ? segments : [compact]
-}
-
+/**
+ * 不相关问题模板：明确告知用户只能回答简历相关问题。
+ */
 function buildIrrelevantAnswer(locale: AiChatLocale): AiChatAnswerGenerationResult {
   return {
     answer:
@@ -256,6 +200,13 @@ function buildIrrelevantAnswer(locale: AiChatLocale): AiChatAnswerGenerationResu
   }
 }
 
+/**
+ * 低相关度问题模板：根据 topScore 分级返回引导语。
+ *
+ * - < 0.05：完全无关 → irrelevant / short 模板
+ * - 0.05~0.1：模糊匹配 → 鼓励更具体提问
+ * - 其他：接近阈值 → 礼貌告知检索不足
+ */
 function buildLowRelevanceAnswer(
   question: string,
   topScore: number,
@@ -325,7 +276,7 @@ function classifyQuestion(question: string): QuestionClass {
     '好烦', '不开心', '难过', '伤心', '郁闷', '无聊', '累了',
     'sad', 'upset', 'tired', 'boring', 'frustrated',
   ]
-  if (trimmed.length <= 15 && negativePatterns.some((p) => lower.includes(p))) {
+  if (trimmed.length <= 9 && negativePatterns.some((p) => lower.includes(p))) {
     return 'negative'
   }
 
@@ -337,17 +288,23 @@ function classifyQuestion(question: string): QuestionClass {
   return 'normal'
 }
 
+/**
+ * 打招呼/测试类问题模板：返回自我介绍引导词。
+ */
 function buildGreetingAnswer(locale: AiChatLocale): AiChatAnswerGenerationResult {
   return {
     answer:
       locale === 'en'
         ? "Hi there! I'm FYS (Fridolph), a full-stack engineer. This is my personal resume site — feel free to ask me about my projects, work experience, technical skills, or career journey. I'd love to share!"
-        : '你好！我是 FYS（Fridolph），一位全栈工程师。这里是我的个人简历站，你可以问我关于项目经历、工作经历、技术技能或职业发展的问题，我很乐意分享！',
+        : '你好！我是霪霖笙箫（Fridolph），一位全栈工程师。这里是我的个人简历站，你可以问我关于项目经历、工作经历、技术技能或职业发展的问题，我很乐意分享！',
     blocks: [],
     citations: [],
   }
 }
 
+/**
+ * 极短输入模板：含疑问词时 fallthrough 到 RAG，否则通用引导。
+ */
 function buildShortAnswer(
   question: string,
   locale: AiChatLocale,
@@ -372,6 +329,9 @@ function buildShortAnswer(
   }
 }
 
+/**
+ * 消极情绪模板：共情引导，转移话题。
+ */
 function buildNegativeAnswer(locale: AiChatLocale): AiChatAnswerGenerationResult {
   return {
     answer:
@@ -380,60 +340,6 @@ function buildNegativeAnswer(locale: AiChatLocale): AiChatAnswerGenerationResult
         : '我理解，每个人都会有情绪低落的时候。要不要聊聊一些有意思的事情，比如我做过的项目或者学到的技能？',
     blocks: [],
     citations: [],
-  }
-}
-
-function mapLead(record: {
-  companyName: string | null
-  contact: string | null
-  createdAt: Date
-  displayName: string
-  id: string
-  locale: string
-  message: string
-  status: string
-  updatedAt: Date
-}): AiChatLeadSummary {
-  return {
-    id: record.id,
-    locale: record.locale as AiChatLocale,
-    displayName: record.displayName,
-    companyName: record.companyName ?? '',
-    contact: record.contact ?? '',
-    message: record.message,
-    status: record.status as AiChatLeadSummary['status'],
-    createdAt: record.createdAt.toISOString(),
-    updatedAt: record.updatedAt.toISOString(),
-  }
-}
-
-function mapUseKey(record: {
-  claimedAt: Date | null
-  createdAt: Date
-  expiresAt: Date | null
-  id: string
-  leadId: string
-  revokedAt: Date | null
-  sessionId: string | null
-  status: string
-  updatedAt: Date
-  useKey: string
-  usedTurns: number
-  maxTurns: number
-}): AiChatUseKeySummary {
-  return {
-    id: record.id,
-    useKey: record.useKey,
-    leadId: record.leadId,
-    sessionId: record.sessionId ?? null,
-    status: record.status as AiChatUseKeySummary['status'],
-    maxTurns: record.maxTurns,
-    usedTurns: record.usedTurns,
-    expiresAt: record.expiresAt?.toISOString() ?? null,
-    claimedAt: record.claimedAt?.toISOString() ?? null,
-    revokedAt: record.revokedAt?.toISOString() ?? null,
-    createdAt: record.createdAt.toISOString(),
-    updatedAt: record.updatedAt.toISOString(),
   }
 }
 
@@ -452,8 +358,15 @@ export class AiChatService {
     private readonly resumePublicationService: ResumePublicationService,
     @Inject(AiChatGraphService)
     private readonly aiChatGraphService: AiChatGraphService,
+    @Inject(AiChatQuotaService)
+    private readonly quotaService: AiChatQuotaService,
   ) {}
 
+  /**
+   * 提交访客信息（Lead），创建 AI Chat 入口记录。
+   *
+   * @returns 创建成功的 Lead 摘要
+   */
   async submitLead(input: AiChatLeadInput) {
     const now = new Date()
     const lead = await this.aiChatRepository.createLead({
@@ -478,6 +391,13 @@ export class AiChatService {
     return mapLead(lead)
   }
 
+  /**
+   * 为指定 Lead 签发 useKey，允许其发起 AI 对话。
+   *
+   * useKey 会关联 maxTurns 配额和可选过期时间，签发后 Lead 状态更新为 `issued`。
+   *
+   * @returns 签发成功的 useKey 摘要
+   */
   async issueUseKey(input: AiChatIssueUseKeyInput) {
     const lead = await this.aiChatRepository.findLeadById(input.leadId)
 
@@ -508,6 +428,11 @@ export class AiChatService {
     return mapUseKey(useKeyRecord)
   }
 
+  /**
+   * 吊销指定 useKey，使其立即不可用。
+   *
+   * @returns 更新后的 useKey 摘要
+   */
   async revokeUseKey(useKeyValue: string) {
     const useKey = await this.aiChatRepository.findUseKeyByValue(useKeyValue)
 
@@ -530,6 +455,14 @@ export class AiChatService {
     return mapUseKey(updated)
   }
 
+  /**
+   * 访客使用 useKey 认领 AI 对话会话。
+   *
+   * 如果 useKey 已关联 session，直接返回已有会话快照；否则创建新 session。
+   * 调用前会自动清理过期 useKey。
+   *
+   * @returns 会话快照，包含剩余轮次、消息列表等完整状态
+   */
   async claimUseKey(input: { locale?: AiChatLocale; useKey: string }): Promise<AiChatSessionSnapshot> {
     await this.aiChatRepository.expireOverdueUseKeys(new Date())
     const relation = await this.aiChatRepository.findLeadByUseKey(input.useKey)
@@ -573,6 +506,14 @@ export class AiChatService {
     return this.getPublicSessionSnapshot(session.id, input.useKey)
   }
 
+  /**
+   * 公开站匿名访客认领 AI 对话会话。
+   *
+   * 以 IP 哈希为 sourceKey 创建/复用 Lead，每天同一 IP 共享一个会话，
+   * 日配额 20 轮。需先通过 consentAccepted 确认隐私提示。
+   *
+   * @returns 认领结果，包含会话快照和是否需要创建新 Lead 的标记
+   */
   async claimPublicSession(
     input: AiChatClaimPublicSessionInput,
   ): Promise<AiChatPublicSessionClaimResult> {
@@ -667,24 +608,30 @@ export class AiChatService {
     }
   }
 
+  /**
+   * 获取公开会话的完整快照供前端渲染。
+   *
+   * 包含会话状态、轮次配额、消息列表、摘要等信息。
+   *
+   * @returns 会话快照
+   */
   async getPublicSessionSnapshot(sessionId: string, useKeyValue: string): Promise<AiChatSessionSnapshot> {
-    let bundle = await this.requireSessionBundle(sessionId)
+    const bundle = await this.quotaService.getBundleOrThrow(sessionId)
 
-    if (bundle.useKey.useKey !== useKeyValue) {
-      throw new ForbiddenException('当前会话与 useKey 不匹配')
-    }
+    this.quotaService.assertUseKeyMatch(bundle, useKeyValue)
 
-    bundle = await this.ensurePublicDailyQuotaCurrent(bundle)
+    const refreshed = await this.quotaService.refreshDailyQuota(bundle)
 
-    return this.buildSessionSnapshot(bundle)
+    return this.buildSessionSnapshot(refreshed)
   }
 
+  /**
+   * 关闭指定会话（管理员或访客主动结束对话）。
+   */
   async closeSession(input: AiChatCloseSessionInput) {
-    const bundle = await this.requireSessionBundle(input.sessionId)
+    const bundle = await this.quotaService.getBundleOrThrow(input.sessionId)
 
-    if (bundle.useKey.useKey !== input.useKey) {
-      throw new ForbiddenException('当前会话与 useKey 不匹配')
-    }
+    this.quotaService.assertUseKeyMatch(bundle, input.useKey)
 
     const now = new Date()
     await this.aiChatRepository.updateSession({
@@ -697,8 +644,11 @@ export class AiChatService {
     return this.getPublicSessionSnapshot(bundle.session.id, input.useKey)
   }
 
+  /**
+   * 管理员重置会话轮次计数器，不删除消息。
+   */
   async adminResetSession(sessionId: string) {
-    const bundle = await this.requireSessionBundle(sessionId)
+    const bundle = await this.quotaService.getBundleOrThrow(sessionId)
     const now = new Date()
 
     await this.aiChatRepository.deleteMessagesBySessionId(sessionId)
@@ -711,12 +661,20 @@ export class AiChatService {
     return this.getAdminSessionSnapshot(sessionId)
   }
 
+  /**
+   * 管理员清空指定会话的全部消息。
+   */
   async adminClearMessages(sessionId: string) {
-    await this.requireSessionBundle(sessionId)
+    await this.quotaService.getBundleOrThrow(sessionId)
     await this.aiChatRepository.deleteMessagesBySessionId(sessionId)
     return this.getAdminSessionSnapshot(sessionId)
   }
 
+  /**
+   * 管理员级联删除 useKey 及其关联的 session 和所有消息。
+   *
+   * @returns 删除确认
+   */
   async adminDeleteUseKey(useKeyValue: string) {
     const useKey = await this.aiChatRepository.findUseKeyByValue(useKeyValue)
     if (!useKey) {
@@ -727,6 +685,44 @@ export class AiChatService {
     return { deleted: true, useKey: useKeyValue }
   }
 
+  /**
+   * 处理用户提问并生成 AI 助手回复 —— AI Chat 的核心请求链路。
+   *
+   * ## 职责全景
+   *
+   * 本方法覆盖一次完整对话轮次的全部生命周期：
+   *
+   * 1. **准入校验** —— useKey 匹配性、状态有效性、会话是否关闭、轮次配额是否耗尽
+   * 2. **日配额刷新** —— 公开聊天按自然日重置 usedTurns
+   * 3. **保存用户消息** —— 写入 DB，作为本轮对话的起点
+   * 4. **通知前端就绪** —— onStart 回调携带 assistantMessageId / remainingTurns 等上下文
+   * 5. **调用 LangGraph 引擎** —— generateAnswerWithGraph()，失败时自动回退到旧版 generateAnswer()
+   * 6. **推送检索结果** —— citations 和 blocks 通过回调逐条推给前端
+   * 7. **保存 AI 回复** —— 答案文本、引用、结构化 block 一并写入 DB
+   * 8. **自动总结** —— 每 20 轮触发一次对话总结，第 20 轮同时关闭会话并生成 finalSummary
+   * 9. **更新会话状态** —— turnCount 递增、summary 文本 & keywords 写入
+   * 10. **更新 useKey 计数** —— usedTurns 同步递增
+   * 11. **刷新会话快照** —— 返回最新 session 给前端更新 UI
+   * 12. **结构化日志** —— 记录本轮耗时、答案长度、引用数等关键指标
+   *
+   * ## 流式回调
+   *
+   * 通过 `streamCallbacks` 参数支持三种回调：
+   * - `onStart`：AI 回复消息 ID 就绪时触发，携带轮次信息
+   * - `onToken`：LLM 逐 token 流式输出，由 LangGraph 引擎驱动
+   * - `onCitation` / `onBlock`：检索引用和结构化卡片在答案生成后批量推送
+   *
+   * ## 返回值
+   *
+   * @returns 包含 remainingTurns、完整 session 快照、summary（如有）、user/assistant message 快照的结果对象
+   *
+   * ## 异常场景
+   *
+   * - ForbiddenException：useKey 不匹配或已失效
+   * - BadRequestException：会话已关闭或轮次配额耗尽
+   * - NotFoundException：会话不存在
+   * - Error：DB 写入失败（用户消息 / AI 回复）
+   */
   async createAssistantReply(
     input: AiChatAskMessageInput,
     streamCallbacks?: {
@@ -747,22 +743,13 @@ export class AiChatService {
     userMessage: AiChatMessageSnapshot
     assistantMessage: AiChatMessageSnapshot
   }> {
-    let bundle = await this.requireSessionBundle(input.sessionId)
+    // ── 1-3. 准入校验 + 日配额刷新 + 轮次检查 → 一站式 validateAndRefresh ──
+    const bundle = await this.quotaService.validateAndRefresh({
+      sessionId: input.sessionId,
+      useKey: input.useKey,
+    })
 
-    if (bundle.useKey.useKey !== input.useKey) {
-      throw new ForbiddenException('当前会话与 useKey 不匹配')
-    }
-
-    if (bundle.useKey.status === 'revoked' || bundle.useKey.status === 'expired') {
-      throw new ForbiddenException('当前 useKey 不可继续使用')
-    }
-
-    bundle = await this.ensurePublicDailyQuotaCurrent(bundle)
-
-    if (bundle.session.status === 'closed' || bundle.session.turnCount >= bundle.useKey.maxTurns) {
-      throw new BadRequestException('当前会话已结束，无法继续提问')
-    }
-
+    // ── 4. 保存用户消息到 DB ──
     const now = new Date()
     const nextTurnCount = bundle.session.turnCount + 1
     const locale = input.locale ?? (bundle.session.locale as AiChatLocale)
@@ -783,6 +770,7 @@ export class AiChatService {
     const assistantMessageId = randomUUID()
     const remainingTurns = bundle.useKey.maxTurns - nextTurnCount
 
+    // ── 5. 通知前端：AI 回复 ID 就绪，开始生成答案 ──
     streamCallbacks?.onStart?.({
       assistantMessageId,
       remainingTurns,
@@ -790,13 +778,14 @@ export class AiChatService {
       turnCount: nextTurnCount,
     })
 
+    // ── 6. 调用 LangGraph 引擎生成回答（失败时自动回退到旧版 generateAnswer）──
     const answerResult = await this.generateAnswerWithGraph({
       locale,
       question: input.content.trim(),
       onToken: streamCallbacks?.onToken,
     })
 
-    // 流式回调：答案生成完成后推送 citations 和 blocks
+    // ── 7. 推送检索结果：citations 和 blocks 逐条回调前端 ──
     for (const citation of answerResult.citations) {
       streamCallbacks?.onCitation?.(citation)
     }
@@ -805,6 +794,7 @@ export class AiChatService {
       streamCallbacks?.onBlock?.(block)
     }
 
+    // ── 8. 保存 AI 回复到 DB ──
     const assistantMessageRecord = await this.aiChatRepository.createMessage({
       id: assistantMessageId,
       sessionId: bundle.session.id,
@@ -824,13 +814,17 @@ export class AiChatService {
     let finalSessionStatus: 'open' | 'closed' = 'open'
     let finalSummaryText: string | null = bundle.session.finalSummary ?? null
     let interimSummaryText: string | null = bundle.session.interimSummary ?? null
-    let focusKeywords: string[] | null = (bundle.session.focusKeywordsJson as string[] | null) ?? null
+    let focusKeywords: string[] | null = bundle.session.focusKeywordsJson ?? null
 
-    if (nextTurnCount === SUMMARY_TRIGGER_TURN || nextTurnCount === MAX_CHAT_TURNS) {
+    // ── 9. 自动总结：每 20 轮触发一次对话总结 ──
+    // 第 20 轮：生成 finalSummary + 关闭会话
+    // 第 40/60/...轮：生成 interimSummary，会话保持 open
+    if (nextTurnCount > 0 && nextTurnCount % 20 === 0) {
+      const stageLabel = `turn-${nextTurnCount}`
       generatedSummary = await this.generateConversationSummary({
         locale,
         sessionId: bundle.session.id,
-        stage: nextTurnCount === MAX_CHAT_TURNS ? 'turn-20' : 'turn-10',
+        stage: stageLabel,
       })
 
       await this.aiChatRepository.createMessage({
@@ -843,7 +837,8 @@ export class AiChatService {
           {
             type: 'summary',
             stage: generatedSummary.stage,
-            title: generatedSummary.stage === 'turn-20' ? '会话总结' : '阶段总结',
+            sticky: true,
+            title: `第 ${nextTurnCount} 轮总结`,
             summary: generatedSummary.summary,
             keywords: generatedSummary.keywords,
           },
@@ -860,6 +855,7 @@ export class AiChatService {
       }
     }
 
+    // ── 10. 更新会话状态：turnCount / summary / keywords / 关闭标记 ──
     await this.aiChatRepository.updateSession({
       id: bundle.session.id,
       status: finalSessionStatus,
@@ -871,13 +867,29 @@ export class AiChatService {
       updatedAt: new Date(),
     })
 
+    // ── 11. 更新 useKey 计数：usedTurns 同步递增 ──
     await this.aiChatRepository.updateUseKey({
       id: bundle.useKey.id,
       usedTurns: nextTurnCount,
       updatedAt: new Date(),
     })
 
+    // ── 12. 刷新会话快照，返回最新状态给前端 ──
     const refreshedSession = await this.getPublicSessionSnapshot(bundle.session.id, input.useKey)
+
+    // ── 13. 结构化日志：记录本轮耗时、答案长度、引用数等关键指标 ──
+    this.logger.log({
+      event: 'ai-chat.turn.completed',
+      sessionId: bundle.session.id,
+      turnCount: nextTurnCount,
+      question: input.content.slice(0, 120),
+      answerPreview: answerResult.answer.slice(0, 120),
+      answerLength: answerResult.answer.length,
+      citationCount: answerResult.citations.length,
+      blockCount: answerResult.blocks.length,
+      hasSummary: generatedSummary !== null,
+      durationMs: Date.now() - now.getTime(),
+    })
 
     return {
       remainingTurns: Math.max(0, bundle.useKey.maxTurns - nextTurnCount),
@@ -888,16 +900,25 @@ export class AiChatService {
     }
   }
 
+  /**
+   * 管理员列表：所有已提交的 Lead 摘要。
+   */
   async listLeads() {
     const records = await this.aiChatRepository.listLeads()
     return records.map((item) => mapLead(item))
   }
 
+  /**
+   * 管理员列表：所有已签发的 useKey 摘要。
+   */
   async listUseKeys() {
     const records = await this.aiChatRepository.listUseKeys()
     return records.map((item) => mapUseKey(item))
   }
 
+  /**
+   * 管理员列表：所有会话摘要（含 Lead 和 useKey 关联信息）。
+   */
   async listSessions(): Promise<AiChatSessionListItem[]> {
     const bundles = await this.aiChatRepository.listSessionBundles()
     return bundles.map((item) => ({
@@ -913,53 +934,38 @@ export class AiChatService {
     }))
   }
 
+  /**
+   * 管理员获取指定会话的完整快照（含消息列表）。
+   *
+   * 与 getPublicSessionSnapshot 不同，此方法不校验 useKey。
+   *
+   * @returns 会话快照
+   */
   async getAdminSessionSnapshot(sessionId: string) {
-    const bundle = await this.requireSessionBundle(sessionId)
+    const bundle = await this.quotaService.getBundleOrThrow(sessionId)
     return this.buildSessionSnapshot(bundle)
   }
 
-  private async requireSessionBundle(sessionId: string) {
-    const bundle = await this.aiChatRepository.getSessionBundle(sessionId)
-
-    if (!bundle) {
-      throw new NotFoundException('AI chat session not found')
-    }
-
-    return bundle
-  }
-
-  private async ensurePublicDailyQuotaCurrent(
-    bundle: AiChatSessionBundle,
-  ): Promise<AiChatSessionBundle> {
-    const now = new Date()
-
-    if (
-      !isPublicChatBundle(bundle) ||
-      bundle.useKey.status === 'revoked' ||
-      bundle.useKey.status === 'expired' ||
-      isSameLocalDate(bundle.session.updatedAt, now)
-    ) {
-      return bundle
-    }
-
-    await this.aiChatRepository.resetSessionTurns({
-      sessionId: bundle.session.id,
-      useKeyId: bundle.useKey.id,
-      now,
-    })
-
-    const refreshedBundle = await this.aiChatRepository.getSessionBundle(bundle.session.id)
-
-    if (!refreshedBundle) {
-      throw new NotFoundException('AI chat session not found')
-    }
-
-    return refreshedBundle
-  }
-
+  /**
+   * 构建会话的完整快照（含消息列表、摘要、配额信息）。
+   *
+   * 供 getPublicSessionSnapshot 和 getAdminSessionSnapshot 共用。
+   */
   private async buildSessionSnapshot(bundle: AiChatSessionBundle): Promise<AiChatSessionSnapshot> {
-    const messages = await this.aiChatRepository.listMessagesBySessionId(bundle.session.id)
-    const totalUserTurns = messages.filter((item) => item.role === 'user').length
+    const allMessages = await this.aiChatRepository.listMessagesBySessionId(bundle.session.id)
+    const totalUserTurns = allMessages.filter((item) => item.role === 'user').length
+
+    // ── 消息裁剪：sticky summary + 最近 2 轮 Q&A（共 5 条）──
+    const MAX_RECENT_ROUNDS = 2
+    const isSticky = (m: (typeof allMessages)[number]) => {
+      const blocks = Array.isArray(m.answerBlocksJson) ? m.answerBlocksJson as any[] : []
+      return m.role === 'system' && blocks.some((b) => b?.type === 'summary' && b?.sticky === true)
+    }
+    const stickyMessages = allMessages.filter(isSticky)
+    const nonStickyMessages = allMessages.filter((m) => !isSticky(m))
+    const recentMessages = nonStickyMessages.slice(-MAX_RECENT_ROUNDS * 2)
+    const messages = [...stickyMessages, ...recentMessages]
+
     const interimSummary = bundle.session.interimSummary
       ? {
           generatedAt: bundle.session.updatedAt.toISOString(),
@@ -971,7 +977,7 @@ export class AiChatService {
     const finalSummary = bundle.session.finalSummary
       ? {
           generatedAt: bundle.session.closedAt?.toISOString() ?? bundle.session.updatedAt.toISOString(),
-          keywords: (bundle.session.focusKeywordsJson as string[] | null) ?? [],
+          keywords: bundle.session.focusKeywordsJson ?? [],
           stage: 'turn-20' as const,
           summary: bundle.session.finalSummary,
         }
@@ -997,9 +1003,12 @@ export class AiChatService {
     }
   }
 
+  /**
+   * 将 DB 消息记录映射为前端可用的消息快照。
+   */
   private mapMessage(record: {
-    answerBlocksJson: unknown | null
-    citationsJson: unknown | null
+    answerBlocksJson: unknown
+    citationsJson: unknown
     content: string
     createdAt: Date
     id: string
@@ -1021,6 +1030,11 @@ export class AiChatService {
     }
   }
 
+  /**
+   * 尝试通过 LangGraph 引擎生成回答，失败时自动降级到旧版 generateAnswer()。
+   *
+   * 这是 createAssistantReply 的实际答案生成入口。
+   */
   private async generateAnswerWithGraph(
     input: {
       locale: AiChatLocale
@@ -1041,6 +1055,20 @@ export class AiChatService {
     }
   }
 
+  /**
+   * 旧版答案生成管线（基于规则路由 + RAG 直接检索，不走 LangGraph）。
+   *
+   * ## 流程
+   *
+   * 1. 规则分类 (classifyQuestion): greeting / short / negative / normal
+   * 2. 非 normal → 模板回复直接返回
+   * 3. 获取已发布简历的结构化摘要
+   * 4. RAG 检索 (ragService.ask)
+   * 5. 无有效匹配 + 无简历摘要 → 低相关度模板
+   * 6. 构建 card blocks (简历卡片 + 自定义内容卡片)
+   * 7. 有 RAG 结果 → 返回 LLM 生成的回答 + citations + blocks
+   * 8. 无 RAG 但简历存在 → 用简历摘要作为 context 调 LLM
+   */
   private async generateAnswer(
     input: {
       locale: AiChatLocale
@@ -1147,6 +1175,11 @@ export class AiChatService {
     }
   }
 
+  /**
+   * 根据 RAG 引用从简历数据中构建 project_card / experience_card blocks。
+   *
+   * 最多返回 2 个卡片。
+   */
   private buildAnswerBlocksFromResume(
     resume: StandardResume,
     citations: RagAskCitation[],
@@ -1239,6 +1272,9 @@ export class AiChatService {
     return blocks.slice(0, 3)
   }
 
+  /**
+   * 在简历项目中按 citation 标题匹配。
+   */
   private findProjectByCitation(
     projects: ResumeProjectItem[],
     citation: RagAskCitation,
@@ -1250,6 +1286,9 @@ export class AiChatService {
     })
   }
 
+  /**
+   * 在工作经历中按 citation 标题匹配。
+   */
   private findExperienceByCitation(
     experiences: ResumeExperienceItem[],
     citation: RagAskCitation,
@@ -1261,11 +1300,25 @@ export class AiChatService {
     })
   }
 
+  /**
+   * 生成对话总结（每 20 轮触发）。
+   *
+   * ## 流程
+   *
+   * 1. 加载会话全部消息，构建总结 prompt
+   * 2. 调 LLM 生成结构化输出 (visitorFocus + aiClosing + keywords)
+   * 3. Zod 校验成功 → 返回完整 summary
+   * 4. Zod 失败 → 宽松修复（截断 keywords、补全缺失字段）
+   * 5. 完全解析失败 → 降级：取最近 3 条用户消息拼接 + 简单分词 keywords
+   *
+   * @returns 总结快照，包含 visitorFocus、aiClosing、keywords
+   */
   private async generateConversationSummary(input: {
     locale: AiChatLocale
     sessionId: string
-    stage: 'turn-10' | 'turn-20'
+    stage: string
   }): Promise<AiChatSummarySnapshot> {
+    // ── 1. 加载消息，构建总结 prompt ──
     const messages = await this.aiChatRepository.listMessagesBySessionId(input.sessionId)
     const prompt = buildAiChatSummaryPrompt({
       locale: input.locale,
@@ -1279,6 +1332,7 @@ export class AiChatService {
     const providerSummary = this.aiService.getProviderSummary()
 
     try {
+      // ── 2. 调 LLM 生成结构化输出 ──
       const result = await this.aiService.generateStructuredObject({
         method: chooseStructuredMethod(providerSummary),
         prompt,
@@ -1290,6 +1344,7 @@ export class AiChatService {
       })
       const parsed = AI_CHAT_SUMMARY_SCHEMA.safeParse(result.value)
 
+      // ── 3. Zod 校验成功 → 返回完整 summary ──
       if (parsed.success) {
         return {
           generatedAt: new Date().toISOString(),
@@ -1301,7 +1356,7 @@ export class AiChatService {
         }
       }
 
-      // Zod 校验失败时尝试宽松修复：截断 keywords、补全缺失字段
+      // ── 4. Zod 失败 → 宽松修复 ──
       const raw = result.value as Record<string, unknown>
       const keywords = Array.isArray(raw.keywords) ? (raw.keywords as string[]).slice(0, 15) : []
       const visitorFocus = typeof raw.visitorFocus === 'string' && raw.visitorFocus ? raw.visitorFocus : ''
@@ -1324,6 +1379,7 @@ export class AiChatService {
       const message = error instanceof Error ? error.message : String(error)
       this.logger.warn(`ai chat summary fallback: ${message}`)
 
+      // ── 5. 解析完全失败 → 降级拼接 ──
       const userMessages = messages
         .filter((item) => item.role === 'user')
         .map((item) => item.content.trim())
@@ -1343,6 +1399,9 @@ export class AiChatService {
     }
   }
 
+  /**
+   * 将答案文本按 28 字符分段，供前端流式渲染使用。
+   */
   buildStreamTextChunks(answer: string) {
     return chunkAnswerText(answer)
   }

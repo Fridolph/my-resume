@@ -4,6 +4,7 @@ import {
   RagSearchRerankConfig,
   RagSearchRerankStrategy,
 } from './config/rag-search-rerank.config'
+import type { RerankAdapter } from './rerank/rerank.adapter'
 
 /**
  * 检索问题策略类型。
@@ -293,6 +294,56 @@ export function rerankRagSearchMatches(
  * @param strategy 可选策略；未传时自动识别
  * @returns 按 rerank 后得分截断的命中列表
  */
+/**
+ * 使用 Cross-Encoder Rerank 模型对 matches 重排。
+ *
+ * 与手写规则（sectionBoost + keywordBoost）不同：
+ * - 模型直接返回每条文档的 relevance_score，无需手调加权参数
+ * - 噪声原因设为空数组（Cross-Encoder 输出本身就是精排结果，无需额外去噪）
+ * - sectionBoost / keywordBoost 均设为 0（模型已隐含这些信息）
+ *
+ * ## 映射逻辑
+ *
+ * 1. 提取所有 match 的 `content` 字段为 documents 数组
+ * 2. 调用 `adapter.rerank(query, documents, topN)`
+ * 3. API 返回的 `index` 反向映射回原始 `matches[index]`
+ * 4. `relevance_score` 直接作为 `rerankScore`
+ *
+ * @param matches - 原始检索结果（顺序敏感，index 映射依赖原始位置）
+ * @param query - 用户问题
+ * @param adapter - Rerank 模型适配器
+ * @param topN - 返回条数
+ * @returns 按模型精排分数降序排列的 RerankDetail 数组
+ */
+async function rerankWithModel(
+  matches: RagSearchMatch[],
+  query: string,
+  adapter: RerankAdapter,
+  topN: number,
+): Promise<RagSearchRerankDetail[]> {
+  if (matches.length === 0) return []
+
+  const documents = matches.map((m) => m.content)
+  const result = await adapter.rerank({ query, documents, topN })
+
+  // 模型返回的 indices 已是按 relevance_score 降序
+  return result.indices.map((originalIndex, rank) => {
+    const match = matches[originalIndex]
+    const score = result.scores[rank] ?? 0
+
+    return {
+      match,
+      baseScore: Number(match.score || 0),
+      rerankScore: score,
+      sectionBoost: 0,
+      keywordBoost: 0,
+      matchedHints: [],
+      topicHit: true,
+      noiseReasons: [],
+    }
+  })
+}
+
 export function applyRagSearchRerank(
   matches: RagSearchMatch[],
   query: string,
@@ -423,17 +474,27 @@ export function selectFinalMatches(
  *
  * 这是本地搜索路径的统一出口，替代原来的 applyRagSearchRerank 单一步骤。
  */
-export function applyRagSearchRerankAndSelect(
+export async function applyRagSearchRerankAndSelect(
   matches: RagSearchMatch[],
   query: string,
   limit: number,
   strategy?: RagSearchQuestionStrategy,
   config: RagSearchRerankConfig = DEFAULT_RAG_SEARCH_RERANK_CONFIG,
-): RagSearchMatch[] {
+  rerankAdapter?: RerankAdapter,
+): Promise<RagSearchMatch[]> {
   const resolvedStrategy = strategy ?? detectRagSearchQuestionStrategy(query)
-  const reranked = rerankRagSearchMatches(matches, query, resolvedStrategy, config)
-  const denoised = denoiseRerankDetails(reranked, resolvedStrategy, config, Math.min(limit, 4))
-  const { primary, support, reserve } = selectFinalMatches(denoised, resolvedStrategy, config)
+
+  let details: RagSearchRerankDetail[]
+  if (rerankAdapter) {
+    // 使用 Cross-Encoder 模型精排
+    details = await rerankWithModel(matches, query, rerankAdapter, limit)
+  } else {
+    // 手写规则重排
+    const reranked = rerankRagSearchMatches(matches, query, resolvedStrategy, config)
+    details = denoiseRerankDetails(reranked, resolvedStrategy, config, Math.min(limit, 4))
+  }
+
+  const { primary, support, reserve } = selectFinalMatches(details, resolvedStrategy, config)
 
   // 按 primary → support → reserve 优先级拼接，截断到 limit
   return [...primary, ...support, ...reserve]

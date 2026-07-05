@@ -191,18 +191,31 @@ git fetch --tags --force
 
 不会再在 ECS 上做 `next build` / `pnpm install`。
 
-如果你希望本地一键“构建推送 + ECS 发布”，推荐直接执行（三端全量重建）：
+### 5.1 本地一键发布（推荐）
+
+如果你已经在本地构建并推送了镜像（见第 3 节），可以直接用 `release-from-local.sh` 一键完成 ECS 部署：
 
 ```bash
-# 可选：先确认私有基础镜像可拉取
-docker pull crpi-xxxx.cn-<region>.personal.cr.aliyuncs.com/<namespace>/my-resume-base-node:22-slim
-
+# 镜像已推送到 GHCR，直接部署
 ./deploy/ecs/release-from-local.sh \
-  --version 2.2.13 \
+  --version 2.5.1 \
+  --stack-env ./.env.stack.local \
+  --ecs-host <你的ECS_IP> \
+  --ecs-user root
+```
+
+这行命令会自动 SSH 到 ECS → `git fetch --tags --force` → `./deploy/ecs/release.sh v2.5.1`。
+
+### 5.2 全量构建 + 部署（首次或跨平台）
+
+如果你还没有推送过镜像，可以一条命令完成构建+推送+部署：
+
+```bash
+./deploy/ecs/release-from-local.sh \
+  --version 2.5.1 \
   --stack-env ./.env.stack.local \
   --ecs-host <ecs-ip-or-domain> \
   --ecs-user root \
-  --ecs-port 22 \
   --engine-build \
   --base-image crpi-xxxx.cn-<region>.personal.cr.aliyuncs.com/<namespace>/my-resume-base-node:22-slim \
   --apt-debian-mirror-url http://mirrors.aliyun.com/debian \

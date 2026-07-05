@@ -5,7 +5,7 @@ import { loadPublishedResumeSafely } from '@shared/published-resume/services/pub
 export async function loadAiTalkPageData(params: Promise<{ locale: string }>) {
   const { locale } = await params
   const routeLocale = isAppLocale(locale) ? locale : 'zh'
-  const { initialLoadError, publishedResume } = await loadPublishedResumeSafely({
+  const { initialLoadError, publishedResume } = await loadPublishedResumeSafely({ locale: locale as "zh" | "en",
     apiBaseUrl: DEFAULT_SERVER_API_BASE_URL,
   })
 

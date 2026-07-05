@@ -142,6 +142,41 @@ Stop:
 pnpm docker:down
 ```
 
+### 🚀 Build & Deploy to Your Server
+
+> Want to deploy your resume to a cloud server (ECS)? Just 3 steps.
+
+**Step 1: Build amd64 images locally**
+
+```bash
+# Apple Silicon Mac users: ECS uses Intel CPUs, so build amd64
+pnpm docker:build:ecs
+```
+
+**Step 2: Tag & push to GHCR**
+
+```bash
+echo $GITHUB_TOKEN | docker login ghcr.io -u YOUR_USERNAME --password-stdin
+
+./deploy/ecs/build-and-push-images.sh \
+  --version 2.5.1 \
+  --image-prefix ghcr.io/YOUR_USERNAME/my-resume \
+  --local-tag
+```
+
+**Step 3: Deploy to ECS**
+
+```bash
+./deploy/ecs/release-from-local.sh \
+  --version 2.5.1 \
+  --stack-env ./.env.stack.local \
+  --ecs-host your-server-ip \
+  --ecs-user root
+```
+
+> 📖 [Full deployment guide](./docs/40-部署上线/05-ECS-Image-模式部署教程-从本地构建到上线.md) (Chinese)
+> ⚠️ Apple Silicon Macs build arm64 by default — ECS needs amd64. Use `pnpm docker:build:ecs`.
+
 ## 🧪 Testing & Quality
 
 Common commands:
