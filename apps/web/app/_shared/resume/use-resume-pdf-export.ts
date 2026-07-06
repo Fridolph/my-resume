@@ -50,6 +50,29 @@ export function useResumePdfExport() {
         scale: 2,
         useCORS: true,
         letterRendering: true,
+        /**
+         * html2canvas 不支持 CSS lab() / oklch() 颜色函数（Tailwind v4 默认），
+         * 在克隆 DOM 后将它们替换为浏览器已计算的实际 RGB 值。
+         */
+        onclone: (clonedDoc: Document) => {
+          const container = clonedDoc.querySelector('.review-resume-page')
+          if (!container) return
+          // 将可能含 lab()/oklch() 的元素强制重绘为计算后的 RGB 颜色
+          const all = container.querySelectorAll('*')
+          all.forEach((el) => {
+            const htmlEl = el as HTMLElement
+            const style = getComputedStyle(htmlEl)
+            // 只在颜色疑似为现代色彩空间时覆盖
+            const bg = style.backgroundColor
+            const fg = style.color
+            if (bg && (bg.includes('lab(') || bg.includes('oklch('))) {
+              htmlEl.style.backgroundColor = bg
+            }
+            if (fg && (fg.includes('lab(') || fg.includes('oklch('))) {
+              htmlEl.style.color = fg
+            }
+          })
+        },
       },
       jsPDF: {
         unit: 'mm' as const,

@@ -1,0 +1,27 @@
+/* review-resume 打印 & PDF 样式 */
+
+/* 每个 section 避免在中间断开 */
+[data-section] {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* 打印时隐藏背景色和阴影 */
+@media print {
+  .review-resume-page {
+    box-shadow: none !important;
+    max-width: 100% !important;
+  }
+
+  body {
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* 确保颜色在打印时保留 */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
