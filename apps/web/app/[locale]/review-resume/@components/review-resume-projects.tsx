@@ -17,17 +17,34 @@ export function ReviewResumeProjects({ items, locale }: Props) {
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <strong className="text-sm text-zinc-900">
               {t(proj.name, locale)}
+              {proj.links.length > 0 ? (
+                <a
+                  className="ml-2 align-middle text-xs font-normal text-blue-500 hover:underline"
+                  href={proj.links[0].url}
+                  rel="noreferrer"
+                  target="_blank">
+                  ↗
+                </a>
+              ) : null}
             </strong>
             <span className="text-xs text-zinc-400">
-              {proj.startDate} - {proj.endDate || '至今'}
+              {proj.startDate}
+              {proj.endDate ? ` - ${proj.endDate}` : ''}
             </span>
           </div>
           <span className="text-xs text-zinc-500">
             {t(proj.role, locale)}
           </span>
-          <p className="text-sm leading-6 text-zinc-600">
-            {t(proj.summary, locale)}
-          </p>
+          {proj.summary && t(proj.summary, locale) ? (
+            <p className="text-sm leading-6 text-zinc-600">
+              {t(proj.summary, locale)}
+            </p>
+          ) : null}
+          {proj.coreFunctions ? (
+            <p className="text-sm leading-6 text-zinc-600">
+              {proj.coreFunctions}
+            </p>
+          ) : null}
           {proj.highlights.length > 0 ? (
             <ul className="ml-4 grid gap-0.5 text-sm leading-6 text-zinc-600">
               {proj.highlights.map((h, j) => (

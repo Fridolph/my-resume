@@ -15,8 +15,6 @@ import { ResumeSection } from './@components/resume-section'
 import type {
   PublishedResumeApiResponse,
   ResumeData,
-  ResumeHighlight,
-  ResumeInterest,
   ReviewLocale,
 } from './review-resume.types'
 import { t } from './review-resume.types'
@@ -26,7 +24,7 @@ const API_BASE =
     ? window.location.origin.replace(':5555', ':5577') + '/api'
     : ''
 
-const A4_WIDTH = 794 // px at 96dpi
+const A4_WIDTH = 794
 
 export default function ReviewResumePage() {
   const [resume, setResume] = useState<ResumeData | null>(null)
@@ -45,7 +43,6 @@ export default function ReviewResumePage() {
     fetch(`${API_BASE}/resume/published`)
       .then((r) => r.json())
       .then((json) => {
-        // API 返回 { code, data: { resume: {...} } }
         const api = json as PublishedResumeApiResponse
         setResume(api.data?.resume ?? null)
       })
@@ -55,7 +52,10 @@ export default function ReviewResumePage() {
   function handleExport() {
     if (!pageRef.current || exporting) return
     setExporting(true)
-    const fileName = `简历_FYS_${locale === 'en' ? 'EN' : 'ZH'}.pdf`
+    const name = resume
+      ? t(resume.profile.fullName, locale).replace(/\s/g, '_')
+      : 'FYS'
+    const fileName = `简历_${name}_${locale === 'en' ? 'EN' : 'ZH'}.pdf`
     exportPdf(pageRef.current, fileName).finally(() => setExporting(false))
   }
 
@@ -71,7 +71,7 @@ export default function ReviewResumePage() {
 
   return (
     <>
-      {/* ── 工具栏：打印/PDF 时隐藏 ── */}
+      {/* 工具栏 */}
       <div className="sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-zinc-200 bg-white/90 px-6 py-3 backdrop-blur print:hidden">
         <div className="flex items-center gap-3">
           <span className="text-sm font-semibold text-zinc-700">
@@ -113,22 +113,20 @@ export default function ReviewResumePage() {
         </button>
       </div>
 
-      {/* ── A4 简历内容 ── */}
+      {/* A4 简历内容 */}
       <div className="min-h-screen bg-zinc-200 py-8 print:bg-white print:py-0">
         <div
           ref={pageRef}
           className="review-resume-page mx-auto w-full bg-white shadow-lg print:shadow-none"
           style={{ maxWidth: `${A4_WIDTH}px` }}>
-          {/* 基本信息 */}
           <ReviewResumeProfile profile={p} locale={locale} />
 
           <main className="px-14 py-6">
-            {/* 核心竞争力 */}
             {resume.highlights.length > 0 ? (
               <ResumeSection
                 title={locale === 'en' ? 'Key Strengths' : '核心竞争力'}>
                 <ul className="grid gap-1.5">
-                  {resume.highlights.map((h: ResumeHighlight, i: number) => (
+                  {resume.highlights.map((h, i) => (
                     <li className="text-sm leading-6 text-zinc-700" key={i}>
                       <strong className="text-zinc-900">
                         {t(h.title, locale)}
@@ -141,33 +139,28 @@ export default function ReviewResumePage() {
               </ResumeSection>
             ) : null}
 
-            {/* 教育 */}
             <ReviewResumeEducation
               items={resume.education}
               locale={locale}
             />
 
-            {/* 技能 */}
             <ReviewResumeSkills items={resume.skills} locale={locale} />
 
-            {/* 工作经历 */}
             <ReviewResumeExperience
               items={resume.experiences}
               locale={locale}
             />
 
-            {/* 项目 */}
             <ReviewResumeProjects
               items={resume.projects}
               locale={locale}
             />
 
-            {/* 兴趣爱好 */}
             {p.interests.length > 0 ? (
               <ResumeSection
                 title={locale === 'en' ? 'Interests' : '兴趣爱好'}>
-                <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-zinc-600">
-                  {p.interests.map((item: ResumeInterest, i: number) => (
+                <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-zinc-500">
+                  {p.interests.map((item, i) => (
                     <span key={i}>
                       {item.icon ? `${item.icon} ` : ''}
                       {t(item.label, locale)}
@@ -177,12 +170,11 @@ export default function ReviewResumePage() {
               </ResumeSection>
             ) : null}
 
-            {/* 致谢 */}
             <ResumeSection
               title={locale === 'en' ? 'Acknowledgement' : '致谢'}>
-              <p className="text-sm leading-6 text-zinc-500">
+              <p className="text-sm leading-6 text-zinc-400">
                 {locale === 'en'
-                  ? 'Thank you for taking the time to review my resume. I look forward to the opportunity to discuss how my experience can contribute to your team.'
+                  ? 'Thank you for taking the time to review my resume. I look forward to discussing how my experience can contribute to your team.'
                   : '感谢您花时间阅读我的简历，期待有机会进一步交流。'}
               </p>
             </ResumeSection>

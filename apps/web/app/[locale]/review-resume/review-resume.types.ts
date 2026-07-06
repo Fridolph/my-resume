@@ -1,8 +1,39 @@
-/** review-resume 页面类型 — 对齐 API 实际响应结构 */
+/** review-resume 页面类型 — 对齐 API /api/resume/published 实际响应 */
 
 export interface LocalizedText {
   zh: string
   en: string
+}
+
+export interface ResumeLink {
+  label: LocalizedText
+  url: string
+  icon?: string
+}
+
+export interface ResumeHero {
+  frontImageUrl: string
+  backImageUrl: string
+  linkUrl: string
+  slogans: string[]
+}
+
+export interface ResumeProfile {
+  fullName: LocalizedText
+  headline: LocalizedText
+  summary: LocalizedText
+  location: LocalizedText
+  email: string
+  phone: string
+  website: string
+  links: ResumeLink[]
+  interests: ResumeInterest[]
+  hero: ResumeHero
+}
+
+export interface ResumeInterest {
+  label: LocalizedText
+  icon?: string
 }
 
 export interface ResumeHighlight {
@@ -17,6 +48,7 @@ export interface ResumeEducation {
   startDate: string
   endDate: string
   location: LocalizedText
+  highlights: LocalizedText[]
 }
 
 export interface ResumeSkill {
@@ -28,12 +60,18 @@ export interface ResumeSkill {
 export interface ResumeExperience {
   companyName: LocalizedText
   role: LocalizedText
+  employmentType: string
   startDate: string
   endDate: string
   location: LocalizedText
   summary: LocalizedText
   highlights: LocalizedText[]
   technologies: string[]
+}
+
+export interface ResumeProjectLink {
+  label: LocalizedText
+  url: string
 }
 
 export interface ResumeProject {
@@ -42,27 +80,19 @@ export interface ResumeProject {
   startDate: string
   endDate: string
   summary: LocalizedText
+  coreFunctions?: string
   highlights: LocalizedText[]
   technologies: string[]
-}
-
-export interface ResumeInterest {
-  label: LocalizedText
-  icon?: string
-}
-
-export interface ResumeProfile {
-  fullName: LocalizedText
-  headline: LocalizedText
-  summary: LocalizedText
-  location: LocalizedText
-  email: string
-  phone: string
-  website: string
-  interests: ResumeInterest[]
+  links: ResumeProjectLink[]
 }
 
 export interface ResumeData {
+  meta: {
+    slug: string
+    version: number
+    defaultLocale: 'zh' | 'en'
+    locales: string[]
+  }
   profile: ResumeProfile
   highlights: ResumeHighlight[]
   education: ResumeEducation[]
@@ -72,8 +102,7 @@ export interface ResumeData {
 }
 
 /**
- * API /api/resume/published 实际返回结构：
- * `{ code, data: { status, resume: ResumeData, publishedAt }, message, timestamp, traceId }`
+ * API /api/resume/published 实际返回结构
  */
 export interface PublishedResumeApiResponse {
   code: number
@@ -89,6 +118,10 @@ export interface PublishedResumeApiResponse {
 
 export type ReviewLocale = 'zh' | 'en'
 
-export function t(v: LocalizedText, locale: ReviewLocale) {
-  return locale === 'en' ? v.en || v.zh : v.zh
+export function t(v: LocalizedText, locale: ReviewLocale): string {
+  if (locale === 'en') {
+    const en = v.en?.trim()
+    return en || v.zh?.trim() || ''
+  }
+  return v.zh?.trim() || v.en?.trim() || ''
 }

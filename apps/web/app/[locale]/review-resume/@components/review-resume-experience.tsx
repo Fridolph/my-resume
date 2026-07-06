@@ -24,7 +24,10 @@ export function ReviewResumeExperience({ items, locale }: Props) {
           </div>
           <span className="text-xs text-zinc-500">
             {t(exp.role, locale)}
-            {exp.location ? ` · ${t(exp.location, locale)}` : ''}
+            {exp.employmentType ? ` · ${exp.employmentType}` : ''}
+            {exp.location && t(exp.location, locale)
+              ? ` · ${t(exp.location, locale)}`
+              : ''}
           </span>
           <p className="text-sm leading-6 text-zinc-600">
             {t(exp.summary, locale)}
