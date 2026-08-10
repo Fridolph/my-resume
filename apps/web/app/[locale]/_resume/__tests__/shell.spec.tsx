@@ -241,7 +241,7 @@ describe('PublishedResumeShell', () => {
     )
     expect(screen.getByRole('menuitem', { name: '导出 PDF' })).toHaveAttribute(
       'href',
-      'http://localhost:5577/api/resume/published/export/pdf?locale=zh',
+      '/zh/review-resume?locale=zh',
     )
     expect(screen.getByRole('menuitem', { name: 'GitHub' })).toHaveAttribute(
       'href',
@@ -400,7 +400,7 @@ describe('PublishedResumeShell', () => {
     )
     expect(await screen.findByRole('menuitem', { name: '导出 PDF' })).toHaveAttribute(
       'href',
-      'http://localhost:5577/api/resume/published/export/pdf?locale=zh',
+      '/zh/review-resume?locale=zh',
     )
 
     await user.keyboard('{Escape}')
@@ -421,7 +421,7 @@ describe('PublishedResumeShell', () => {
     )
     expect(await screen.findByRole('menuitem', { name: '导出 PDF' })).toHaveAttribute(
       'href',
-      'http://localhost:5577/api/resume/published/export/pdf?locale=en',
+      '/en/review-resume?locale=en',
     )
   })
 

@@ -28,11 +28,7 @@ export function PublicSiteHeaderActions({
     format: 'markdown',
     locale,
   })
-  const pdfExportUrl = buildPublishedResumeExportUrl({
-    apiBaseUrl,
-    format: 'pdf',
-    locale,
-  })
+  const pdfPreviewUrl = `/${locale}/review-resume?locale=${locale}`
 
   return (
     <>
@@ -47,7 +43,7 @@ export function PublicSiteHeaderActions({
             <Dropdown.Item href={markdownExportUrl} id="download-markdown">
               {t('exportMarkdownMenu')}
             </Dropdown.Item>
-            <Dropdown.Item href={pdfExportUrl} id="download-pdf">
+            <Dropdown.Item href={pdfPreviewUrl} id="download-pdf">
               {t('exportPdfMenu')}
             </Dropdown.Item>
           </Dropdown.Menu>

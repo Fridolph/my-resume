@@ -10,6 +10,7 @@
   --admin-surface: rgba(255, 255, 255, 0.88);
   --admin-surface-strong: #ffffff;
   --admin-surface-muted: #f5f7fb;
+  --admin-surface-hover: #eef2f7;
   --admin-border: rgba(15, 23, 42, 0.08);
   --admin-border-strong: rgba(15, 23, 42, 0.14);
   --admin-text: #111827;
@@ -20,6 +21,10 @@
   --admin-button-primary-bg-hover: #1f2937;
   --admin-button-primary-text: #ffffff;
   --admin-button-primary-border: transparent;
+  --admin-switch-bg: #f1f5f9;
+  --admin-switch-bg-active: #dbeafe;
+  --admin-switch-border-active: rgba(29, 78, 216, 0.26);
+  --admin-switch-thumb-active: #ffffff;
   --admin-warning-bg: #fff7ed;
   --admin-warning-border: #fdba74;
   --admin-warning-text: #9a3412;
@@ -40,8 +45,8 @@
   --display-color-accent-soft: var(--admin-primary-soft);
   --display-color-accent-contrast: var(--admin-button-primary-text);
   --display-color-control-bg: var(--admin-surface-strong);
-  --display-color-strong-surface: var(--admin-button-primary-bg);
-  --display-color-strong-contrast: var(--admin-button-primary-text);
+  --display-color-strong-surface: var(--admin-surface-strong);
+  --display-color-strong-contrast: var(--admin-text);
   --display-color-warning-bg: var(--admin-warning-bg);
   --display-color-warning-border: var(--admin-warning-border);
   --display-color-warning-text: var(--admin-warning-text);
@@ -59,6 +64,7 @@
   --admin-surface: rgba(17, 24, 39, 0.84);
   --admin-surface-strong: rgba(24, 24, 27, 0.92);
   --admin-surface-muted: rgba(39, 39, 42, 0.7);
+  --admin-surface-hover: rgba(63, 63, 70, 0.72);
   --admin-border: rgba(255, 255, 255, 0.08);
   --admin-border-strong: rgba(255, 255, 255, 0.14);
   --admin-text: #f5f7fb;
@@ -69,6 +75,10 @@
   --admin-button-primary-bg-hover: rgba(63, 63, 70, 0.98);
   --admin-button-primary-text: #f5f7fb;
   --admin-button-primary-border: rgba(255, 255, 255, 0.1);
+  --admin-switch-bg: rgba(39, 39, 42, 0.7);
+  --admin-switch-bg-active: rgba(29, 78, 216, 0.3);
+  --admin-switch-border-active: rgba(96, 165, 250, 0.36);
+  --admin-switch-thumb-active: #f8fafc;
   --admin-warning-bg: rgba(154, 52, 18, 0.2);
   --admin-warning-border: rgba(251, 146, 60, 0.44);
   --admin-warning-text: #fdba74;

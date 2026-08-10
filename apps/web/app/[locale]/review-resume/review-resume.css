@@ -1,15 +1,43 @@
 /* review-resume 打印 & PDF 样式 */
 
-/* 每个 section 避免在 PDF 页内断开 */
+@page {
+  size: A4 portrait;
+  margin: 10mm 0;
+}
+
+.review-resume-page {
+  min-height: 1123px;
+  color: #18181b;
+}
+
+/* 长 section 可自然续页，仅避免单个经历/项目条目被截断。 */
 [data-section] {
+  page-break-inside: auto;
+  break-inside: auto;
+}
+
+[data-entry],
+[data-avoid-break],
+.pdf-keep {
   page-break-inside: avoid;
-  break-inside: avoid;
+  break-inside: avoid-page;
+}
+
+[data-section] > h2 {
+  break-after: avoid;
+  page-break-after: avoid;
 }
 
 /* profile header 可跨页 */
 [data-section="profile"] {
   page-break-inside: auto;
   break-inside: auto;
+}
+
+@media screen and (max-width: 860px) {
+  .review-resume-page {
+    min-width: 794px;
+  }
 }
 
 /* 打印时隐藏背景和阴影 */
@@ -28,5 +56,15 @@
   * {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
+
+  article,
+  section {
+    orphans: 2;
+    widows: 2;
   }
 }

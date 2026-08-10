@@ -343,7 +343,7 @@ export function AdminDashboardShell({ locale }: { locale: AppLocale }) {
         </Card>
       </section>
 
-      <section className="stack p-6 bg-white rounded-3xl">
+      <section className="stack rounded-3xl border border-[var(--display-color-border)] bg-[var(--display-color-surface)] p-6 shadow-[var(--display-shadow-card)]">
         <div className="space-y-2">
           <p className="eyebrow">快捷入口</p>
           <h2 className="m-0 text-2xl font-semibold">内容工作区</h2>

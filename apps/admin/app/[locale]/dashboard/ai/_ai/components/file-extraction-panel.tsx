@@ -95,12 +95,12 @@ export function AiFileExtractionPanel({
           />
         </label>
 
-        <div className="dashboard-inline-note rounded-[20px] border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-300">
+        <div className="dashboard-inline-note rounded-[20px]">
           当前支持：TXT、Markdown、PDF、DOCX。结果仅做预览，不会自动保存成附件历史。
         </div>
 
         {selectedFile ? (
-          <div className="status-box bg-white dark:bg-zinc-900">
+          <div className="status-box">
             <strong>待提取文件</strong>
             <span>
               {selectedFile.name} · {formatFileSize(selectedFile.size)}
@@ -125,11 +125,11 @@ export function AiFileExtractionPanel({
       {result ? (
         <div className="preview-stack">
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="status-box bg-white dark:bg-zinc-900">
+            <div className="status-box">
               <strong>文件类型</strong>
               <span>{result.fileType}</span>
             </div>
-            <div className="status-box bg-white dark:bg-zinc-900">
+            <div className="status-box">
               <strong>字符数</strong>
               <span>{result.charCount}</span>
             </div>

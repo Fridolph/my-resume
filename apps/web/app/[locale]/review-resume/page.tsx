@@ -2,9 +2,11 @@
 
 import './review-resume.css'
 
-import { useEffect, useRef, useState } from 'react'
+import { joinApiUrl } from '@my-resume/api-client'
+import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
 
-import { useResumePdfExport } from '@shared/resume/use-resume-pdf-export'
+import { DEFAULT_API_BASE_URL } from '@core/env'
 
 import { ReviewResumeEducation } from './@components/review-resume-education'
 import { ReviewResumeExperience } from './@components/review-resume-experience'
@@ -19,50 +21,140 @@ import type {
 } from './review-resume.types'
 import { t } from './review-resume.types'
 
-const API_BASE =
-  typeof window !== 'undefined'
-    ? window.location.origin.replace(':5555', ':5577') + '/api'
-    : ''
-
 const A4_WIDTH = 794
+
+function readInitialLocale(): ReviewLocale {
+  if (typeof window === 'undefined') return 'zh'
+  const queryLocale = new URLSearchParams(window.location.search).get('locale')
+  if (queryLocale === 'en' || queryLocale === 'zh') return queryLocale
+  const pathLocale = window.location.pathname.split('/').filter(Boolean)[0]
+  return pathLocale === 'en' ? 'en' : 'zh'
+}
 
 export default function ReviewResumePage() {
   const [resume, setResume] = useState<ResumeData | null>(null)
-  const [locale, setLocale] = useState<ReviewLocale>('zh')
+  const [locale, setLocale] = useState<ReviewLocale>(() => readInitialLocale())
+  const [loading, setLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [exporting, setExporting] = useState(false)
-  const pageRef = useRef<HTMLDivElement>(null)
-  const { exportPdf } = useResumePdfExport()
+  const params = useParams<{ locale?: string }>()
+  const routeLocale = params?.locale
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const lang = params.get('locale')
-    if (lang === 'en' || lang === 'zh') setLocale(lang)
-  }, [])
+    const queryLocale = new URLSearchParams(window.location.search).get('locale')
+    if (queryLocale === 'en' || queryLocale === 'zh') {
+      setLocale(queryLocale)
+      return
+    }
+    if (routeLocale === 'en' || routeLocale === 'zh') {
+      setLocale(routeLocale)
+    }
+  }, [routeLocale])
 
   useEffect(() => {
-    fetch(`${API_BASE}/resume/published`)
-      .then((r) => r.json())
+    const controller = new AbortController()
+    setLoading(true)
+    setErrorMessage(null)
+
+    const publishedResumeUrl = `${joinApiUrl(
+      DEFAULT_API_BASE_URL,
+      '/resume/published',
+    )}?locale=${locale}`
+
+    fetch(publishedResumeUrl, {
+      cache: 'no-store',
+      signal: controller.signal,
+    })
+      .then((r) => {
+        if (!r.ok) {
+          throw new Error(`Resume request failed: ${r.status}`)
+        }
+        return r.json()
+      })
       .then((json) => {
         const api = json as PublishedResumeApiResponse
         setResume(api.data?.resume ?? null)
       })
-      .catch(() => {})
-  }, [])
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return
+        setResume(null)
+        setErrorMessage(
+          error instanceof Error ? error.message : '公开简历读取失败',
+        )
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setLoading(false)
+        }
+      })
 
-  function handleExport() {
-    if (!pageRef.current || exporting) return
+    return () => controller.abort()
+  }, [locale])
+
+  async function handleExport() {
+    if (exporting) return
     setExporting(true)
     const name = resume
       ? t(resume.profile.fullName, locale).replace(/\s/g, '_')
       : 'FYS'
     const fileName = `简历_${name}_${locale === 'en' ? 'EN' : 'ZH'}.pdf`
-    exportPdf(pageRef.current, fileName).finally(() => setExporting(false))
+
+    try {
+      const pdfUrl = `${joinApiUrl(
+        DEFAULT_API_BASE_URL,
+        '/resume/published/export/pdf',
+      )}?locale=${locale}`
+      const response = await fetch(pdfUrl, { cache: 'no-store' })
+
+      if (!response.ok) {
+        throw new Error(`PDF request failed: ${response.status}`)
+      }
+
+      const pdfBlob = await response.blob()
+      if (pdfBlob.size === 0) {
+        throw new Error('PDF 文件为空，请稍后重试')
+      }
+
+      const objectUrl = URL.createObjectURL(pdfBlob)
+      const downloadLink = document.createElement('a')
+      downloadLink.href = objectUrl
+      downloadLink.download = fileName
+      downloadLink.style.display = 'none'
+      document.body.append(downloadLink)
+      downloadLink.click()
+      downloadLink.remove()
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0)
+    } catch (error: unknown) {
+      setErrorMessage(
+        error instanceof Error ? error.message : 'PDF 生成失败，请稍后重试',
+      )
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-sm text-zinc-400">
+        {locale === 'en' ? 'Loading resume preview...' : '正在加载简历预览...'}
+      </div>
+    )
   }
 
   if (!resume) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-sm text-zinc-400">
-        加载中...
+      <div className="flex min-h-screen items-center justify-center bg-zinc-100 px-6 text-center">
+        <div className="grid max-w-md gap-3 rounded-2xl bg-white p-8 shadow-sm">
+          <h1 className="text-lg font-semibold text-zinc-900">
+            {locale === 'en' ? 'Resume preview unavailable' : '简历预览暂不可用'}
+          </h1>
+          <p className="text-sm leading-6 text-zinc-500">
+            {errorMessage ??
+              (locale === 'en'
+                ? 'No published resume is available yet.'
+                : '当前还没有可预览的发布态简历。')}
+          </p>
+        </div>
       </div>
     )
   }
@@ -113,10 +205,15 @@ export default function ReviewResumePage() {
         </button>
       </div>
 
+      {errorMessage ? (
+        <div className="border-b border-amber-200 bg-amber-50 px-6 py-2 text-center text-xs text-amber-800 print:hidden">
+          {errorMessage}
+        </div>
+      ) : null}
+
       {/* A4 简历内容 */}
-      <div className="min-h-screen bg-zinc-200 py-8 print:bg-white print:py-0">
+      <div className="min-h-screen overflow-x-auto bg-zinc-200 py-8 print:bg-white print:py-0">
         <div
-          ref={pageRef}
           className="review-resume-page mx-auto w-full bg-white shadow-lg print:shadow-none"
           style={{ maxWidth: `${A4_WIDTH}px` }}>
           <ReviewResumeProfile profile={p} locale={locale} />

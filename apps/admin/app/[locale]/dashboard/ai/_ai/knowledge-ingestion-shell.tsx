@@ -52,7 +52,7 @@ export function KnowledgeIngestionShell({ locale: _locale }: { locale: AppLocale
           </div>
 
           {latestResult ? (
-            <div className="status-box bg-white dark:bg-zinc-900">
+            <div className="status-box">
               <strong>最近入库</strong>
               <span>
                 {latestResult.fileName} · {latestResult.sourceScope} · 切块{' '}

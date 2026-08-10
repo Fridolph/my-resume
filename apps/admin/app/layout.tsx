@@ -31,7 +31,7 @@ async function RootLayoutInner({ children }: { children: ReactNode }) {
 
   return (
     <html lang={htmlLang} suppressHydrationWarning>
-      <body>
+      <body suppressHydrationWarning>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers>{children}</Providers>
         </NextIntlClientProvider>

@@ -1,12 +1,7 @@
-/** review-resume 页面类型 — 对齐 API /api/resume/published 实际响应 */
-
-export interface LocalizedText {
-  zh: string
-  en: string
-}
+/** review-resume 页面类型 — 对齐 API /api/resume/published?locale=zh|en 压平响应 */
 
 export interface ResumeLink {
-  label: LocalizedText
+  label: string
   url: string
   icon?: string
 }
@@ -19,10 +14,10 @@ export interface ResumeHero {
 }
 
 export interface ResumeProfile {
-  fullName: LocalizedText
-  headline: LocalizedText
-  summary: LocalizedText
-  location: LocalizedText
+  fullName: string
+  headline: string
+  summary: string
+  location: string
   email: string
   phone: string
   website: string
@@ -32,56 +27,56 @@ export interface ResumeProfile {
 }
 
 export interface ResumeInterest {
-  label: LocalizedText
+  label: string
   icon?: string
 }
 
 export interface ResumeHighlight {
-  title: LocalizedText
-  description: LocalizedText
+  title: string
+  description: string
 }
 
 export interface ResumeEducation {
-  schoolName: LocalizedText
-  degree: LocalizedText
-  fieldOfStudy: LocalizedText
+  schoolName: string
+  degree: string
+  fieldOfStudy: string
   startDate: string
   endDate: string
-  location: LocalizedText
-  highlights: LocalizedText[]
+  location: string
+  highlights: string[]
 }
 
 export interface ResumeSkill {
-  name: LocalizedText
-  keywords: LocalizedText[]
+  name: string
+  keywords: string[]
   proficiency?: number
 }
 
 export interface ResumeExperience {
-  companyName: LocalizedText
-  role: LocalizedText
+  companyName: string
+  role: string
   employmentType: string
   startDate: string
   endDate: string
-  location: LocalizedText
-  summary: LocalizedText
-  highlights: LocalizedText[]
+  location: string
+  summary: string
+  highlights: string[]
   technologies: string[]
 }
 
 export interface ResumeProjectLink {
-  label: LocalizedText
+  label: string
   url: string
 }
 
 export interface ResumeProject {
-  name: LocalizedText
-  role: LocalizedText
+  name: string
+  role: string
   startDate: string
   endDate: string
-  summary: LocalizedText
+  summary: string
   coreFunctions?: string
-  highlights: LocalizedText[]
+  highlights: string[]
   technologies: string[]
   links: ResumeProjectLink[]
 }
@@ -118,10 +113,6 @@ export interface PublishedResumeApiResponse {
 
 export type ReviewLocale = 'zh' | 'en'
 
-export function t(v: LocalizedText, locale: ReviewLocale): string {
-  if (locale === 'en') {
-    const en = v.en?.trim()
-    return en || v.zh?.trim() || ''
-  }
-  return v.zh?.trim() || v.en?.trim() || ''
+export function t(value: string | null | undefined, _locale: ReviewLocale): string {
+  return value?.trim() ?? ''
 }

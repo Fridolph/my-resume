@@ -1,6 +1,6 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 import { ExportEntryPanel } from '../components/export-entry-panel'
 
@@ -17,12 +17,17 @@ async function selectHeroUiOption(
   })
 }
 
+afterEach(() => {
+  cleanup()
+})
+
 describe('ExportEntryPanel', () => {
   it('should render markdown and pdf download links for selected locale', async () => {
     const user = userEvent.setup()
     const adminProps = {
       apiBaseUrl: 'http://localhost:5577',
       locale: 'zh' as const,
+      publicSiteBaseUrl: 'http://localhost:5555',
       role: 'admin' as const,
     }
 
@@ -34,7 +39,7 @@ describe('ExportEntryPanel', () => {
     )
     expect(screen.getByRole('link', { name: '下载 PDF' })).toHaveAttribute(
       'href',
-      'http://localhost:5577/api/resume/published/export/pdf?locale=zh',
+      'http://localhost:5555/zh/review-resume?locale=zh',
     )
     expect(screen.getByLabelText('导出语言')).toHaveTextContent('中文版本')
     expect(screen.getByTestId('export-actions')).toHaveClass('gap-3')
@@ -47,7 +52,7 @@ describe('ExportEntryPanel', () => {
       'px-4',
     )
     expect(
-      screen.getByText('当前后台下载入口仅导出已发布版本，草稿仍以后台编辑流为准。'),
+      screen.getByText('Markdown 直接下载已发布版本；PDF 会打开公开站预览页，由浏览器生成并下载。'),
     ).toBeInTheDocument()
 
     await selectHeroUiOption(user, '导出语言', '英文版本')
@@ -60,7 +65,41 @@ describe('ExportEntryPanel', () => {
     )
     expect(screen.getByRole('link', { name: '下载 PDF' })).toHaveAttribute(
       'href',
-      'http://localhost:5577/api/resume/published/export/pdf?locale=en',
+      'http://localhost:5555/en/review-resume?locale=en',
+    )
+  })
+
+  it('should use local web preview url when using the local default base url', () => {
+    window.history.pushState({}, '', '/zh/dashboard/publish')
+
+    render(
+      <ExportEntryPanel
+        apiBaseUrl="http://localhost:5577"
+        locale="zh"
+        publicSiteBaseUrl="http://localhost:5555"
+        role="admin"
+      />,
+    )
+
+    expect(screen.getByRole('link', { name: '下载 PDF' })).toHaveAttribute(
+      'href',
+      'http://localhost:5555/zh/review-resume?locale=zh',
+    )
+  })
+
+  it('should prefer configured public site base url for pdf preview', () => {
+    render(
+      <ExportEntryPanel
+        apiBaseUrl="http://localhost:5577"
+        locale="en"
+        publicSiteBaseUrl="https://resume.example.com/"
+        role="admin"
+      />,
+    )
+
+    expect(screen.getByRole('link', { name: '下载 PDF' })).toHaveAttribute(
+      'href',
+      'https://resume.example.com/en/review-resume?locale=en',
     )
   })
 
@@ -68,6 +107,7 @@ describe('ExportEntryPanel', () => {
     const viewerProps = {
       apiBaseUrl: 'http://localhost:5577',
       locale: 'zh' as const,
+      publicSiteBaseUrl: 'http://localhost:5555',
       role: 'viewer' as const,
     }
 

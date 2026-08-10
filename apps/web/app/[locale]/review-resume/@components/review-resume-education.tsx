@@ -13,7 +13,7 @@ export function ReviewResumeEducation({ items, locale }: Props) {
   return (
     <ResumeSection title={locale === 'en' ? 'Education' : '教育经历'}>
       {items.map((edu, i) => (
-        <div className="grid gap-1" key={i}>
+        <div className="mb-4 grid gap-1 last:mb-0" data-entry key={i}>
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <strong className="text-sm text-zinc-900">
               {t(edu.schoolName, locale)}

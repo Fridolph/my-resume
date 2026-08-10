@@ -13,7 +13,7 @@ export function ReviewResumeProjects({ items, locale }: Props) {
   return (
     <ResumeSection title={locale === 'en' ? 'Projects' : '项目经历'}>
       {items.map((proj, i) => (
-        <div className="grid gap-1" key={i}>
+        <div className="mb-5 grid gap-1 last:mb-0" data-entry key={i}>
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <strong className="text-sm text-zinc-900">
               {t(proj.name, locale)}

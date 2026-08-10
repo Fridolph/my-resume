@@ -52,7 +52,7 @@ export function FileExtractionShell({ locale: _locale }: { locale: AppLocale }) 
           </div>
 
           {latestResult ? (
-            <div className="status-box bg-white dark:bg-zinc-900">
+            <div className="status-box">
               <strong>最近提取</strong>
               <span>
                 {latestResult.fileName} · {latestResult.fileType} ·{' '}

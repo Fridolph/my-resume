@@ -29,8 +29,8 @@ RUN pnpm --filter @my-resume/utils build && pnpm --filter @my-resume/api-client 
 RUN pnpm --filter @my-resume/server build
 RUN pnpm --filter @my-resume/server deploy --legacy --prod /prod/server
 
-# ═══ 阶段 3：CJK 字体运行时基础 ═══
-# 独立阶段：字体包极少变动，此层长期缓存
+# ═══ 阶段 3：PDF 浏览器与 CJK 字体运行时基础 ═══
+# 独立阶段：浏览器与字体包极少变动，此层长期缓存
 # 直接从 node:22-slim 构建，不依赖 pnpm/base，保持缓存独立
 FROM ${BASE_IMAGE} AS runtime-base
 ARG APT_DEBIAN_MIRROR_URL=
@@ -68,19 +68,26 @@ RUN set -eux; \
     apt-get update $APT_OPTIONS; \
   fi; \
   FONT_PACKAGE=''; \
+  BROWSER_PACKAGE=''; \
   for candidate in fonts-wqy-zenhei fonts-arphic-uming fonts-arphic-ukai fonts-noto-cjk; do \
     if apt-cache show "$candidate" >/dev/null 2>&1; then \
       FONT_PACKAGE="$candidate"; \
       break; \
     fi; \
   done; \
-  if [ -z "$FONT_PACKAGE" ]; then \
-    echo "No available CJK font package found in current apt sources"; \
+  for candidate in chromium chromium-browser; do \
+    if apt-cache show "$candidate" >/dev/null 2>&1; then \
+      BROWSER_PACKAGE="$candidate"; \
+      break; \
+    fi; \
+  done; \
+  if [ -z "$FONT_PACKAGE" ] || [ -z "$BROWSER_PACKAGE" ]; then \
+    echo "Missing required CJK font or Chromium package in current apt sources"; \
     exit 1; \
   fi; \
-  echo "Selected CJK font package: $FONT_PACKAGE"; \
+  echo "Selected CJK font package: $FONT_PACKAGE, browser package: $BROWSER_PACKAGE"; \
   for attempt in 1 2 3; do \
-    if apt-get install -y --no-install-recommends --fix-missing "$FONT_PACKAGE"; then \
+    if apt-get install -y --no-install-recommends --fix-missing "$FONT_PACKAGE" "$BROWSER_PACKAGE"; then \
       break; \
     fi; \
     if [ "$attempt" -eq 3 ]; then \
@@ -96,6 +103,7 @@ RUN set -eux; \
 FROM runtime-base AS runner
 ENV NODE_ENV=production
 ENV PORT=5577
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 COPY pnpm-workspace.yaml ./
 COPY --from=builder /prod/server/node_modules ./node_modules

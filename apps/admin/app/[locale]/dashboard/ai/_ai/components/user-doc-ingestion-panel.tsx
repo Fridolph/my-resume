@@ -304,14 +304,14 @@ export function AiUserDocIngestionPanel({
           </label>
         </div>
 
-        <div className="dashboard-inline-note rounded-[20px] border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-300">
+        <div className="dashboard-inline-note rounded-[20px]">
           建议 chunkSize {USER_DOC_MIN_CHUNK_SIZE}-{USER_DOC_MAX_CHUNK_SIZE}，
           chunkOverlap {USER_DOC_MIN_CHUNK_OVERLAP}-{USER_DOC_MAX_CHUNK_OVERLAP}，
           且 overlap 小于 chunkSize；常用配置 500/50 或 1000/100。
         </div>
 
         {selectedFile ? (
-          <div className="status-box bg-white dark:bg-zinc-900">
+          <div className="status-box">
             <strong>待入库文件</strong>
             <span>
               {selectedFile.name} · {formatFileSize(selectedFile.size)}
@@ -339,27 +339,27 @@ export function AiUserDocIngestionPanel({
 
       {result ? (
         <div className="grid gap-3 md:grid-cols-3">
-          <div className="status-box bg-white dark:bg-zinc-900">
+          <div className="status-box">
             <strong>作用域</strong>
             <span>{result.sourceScope}</span>
           </div>
-          <div className="status-box bg-white dark:bg-zinc-900">
+          <div className="status-box">
             <strong>切块数量</strong>
             <span>{result.chunkCount}</span>
           </div>
-          <div className="status-box bg-white dark:bg-zinc-900">
+          <div className="status-box">
             <strong>文件类型</strong>
             <span>{result.fileType}</span>
           </div>
-          <div className="status-box bg-white dark:bg-zinc-900">
+          <div className="status-box">
             <strong>来源版本</strong>
             <span>{result.sourceVersion}</span>
           </div>
-          <div className="status-box bg-white dark:bg-zinc-900">
+          <div className="status-box">
             <strong>切片策略</strong>
             <span>{result.chunkingProfile}</span>
           </div>
-          <div className="status-box bg-white dark:bg-zinc-900">
+          <div className="status-box">
             <strong>切片配置</strong>
             <span>
               {result.chunkSize}/{result.chunkOverlap}

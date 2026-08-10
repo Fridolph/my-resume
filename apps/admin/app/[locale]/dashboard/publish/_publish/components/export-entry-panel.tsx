@@ -8,11 +8,21 @@ import { useState } from 'react'
 type ExportEntryPanelProps = {
   apiBaseUrl: string
   locale: ResumeLocale
+  publicSiteBaseUrl: string
   role: 'admin' | 'viewer'
 }
 
-export function ExportEntryPanel({ apiBaseUrl, locale, role }: ExportEntryPanelProps) {
+export function ExportEntryPanel({
+  apiBaseUrl,
+  locale,
+  publicSiteBaseUrl,
+  role,
+}: ExportEntryPanelProps) {
   const [selectedLocale, setSelectedLocale] = useState<ResumeLocale>(locale)
+  const pdfPreviewUrl = buildPdfPreviewUrl({
+    locale: selectedLocale,
+    publicSiteBaseUrl,
+  })
 
   return (
     <Card className="border border-zinc-200/70 dark:border-zinc-800">
@@ -51,7 +61,7 @@ export function ExportEntryPanel({ apiBaseUrl, locale, role }: ExportEntryPanelP
         </div>
         <DisplaySectionIntro
           className="gap-2"
-          description="当前后台下载入口仅导出已发布版本，草稿仍以后台编辑流为准。"
+          description="Markdown 直接下载已发布版本；PDF 会打开公开站预览页，由浏览器生成并下载。"
           descriptionClassName="text-[var(--admin-text-muted)]"
           title="后台下载入口"
         />
@@ -70,11 +80,7 @@ export function ExportEntryPanel({ apiBaseUrl, locale, role }: ExportEntryPanelP
           </a>
           <a
             className="secondary-link-button min-h-10 px-4 py-2 text-[0.95rem]"
-            href={buildPublishedResumeExportUrl({
-              apiBaseUrl,
-              format: 'pdf',
-              locale: selectedLocale,
-            })}
+            href={pdfPreviewUrl}
             target="_blank">
             下载 PDF
           </a>
@@ -88,4 +94,43 @@ export function ExportEntryPanel({ apiBaseUrl, locale, role }: ExportEntryPanelP
       </CardContent>
     </Card>
   )
+}
+
+function buildPdfPreviewUrl(input: {
+  locale: ResumeLocale
+  publicSiteBaseUrl: string
+}) {
+  const baseUrl = resolvePublicSiteBaseUrl(input.publicSiteBaseUrl)
+  return `${baseUrl}/${input.locale}/review-resume?locale=${input.locale}`
+}
+
+function resolvePublicSiteBaseUrl(publicSiteBaseUrl: string) {
+  const normalizedBaseUrl = publicSiteBaseUrl.replace(/\/+$/, '')
+
+  if (normalizedBaseUrl !== 'http://localhost:5555') {
+    return normalizedBaseUrl
+  }
+
+  if (typeof window === 'undefined') {
+    return normalizedBaseUrl
+  }
+
+  const currentUrl = new URL(window.location.href)
+
+  if (currentUrl.port === '5566') {
+    currentUrl.port = '5555'
+    return currentUrl.origin
+  }
+
+  if (currentUrl.hostname.startsWith('admin-resume.')) {
+    currentUrl.hostname = currentUrl.hostname.replace(/^admin-resume\./, 'resume.')
+    return currentUrl.origin
+  }
+
+  if (currentUrl.hostname.startsWith('admin.')) {
+    currentUrl.hostname = currentUrl.hostname.replace(/^admin\./, '')
+    return currentUrl.origin
+  }
+
+  return normalizedBaseUrl
 }

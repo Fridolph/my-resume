@@ -36,7 +36,15 @@ export function ReviewResumeProfile({ profile: p, locale }: Props) {
       <div className="flex flex-wrap gap-x-5 gap-y-1 border-t border-zinc-100 px-14 py-3 text-sm text-zinc-500">
         {p.email ? <span>{p.email}</span> : null}
         {p.phone ? <span>{p.phone}</span> : null}
-        {p.website ? <span>{p.website}</span> : null}
+        {p.website ? (
+          <a
+            className="text-zinc-500 underline-offset-2 hover:text-blue-600 hover:underline"
+            href={p.website}
+            rel="noreferrer"
+            target="_blank">
+            {p.website}
+          </a>
+        ) : null}
         {p.location ? <span>{t(p.location, locale)}</span> : null}
       </div>
 

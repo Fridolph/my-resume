@@ -276,12 +276,12 @@ export function ResumeImportPanel({
           />
         </label>
 
-        <div className="dashboard-inline-note rounded-[20px] border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-300">
+        <div className="dashboard-inline-note rounded-[20px]">
           边界规则：仅 md/txt，最大 1MB，提取文本需在 500 到 50000 字符之间。规则层会先快速治理输入，长耗时只发生在候选草稿生成阶段。
         </div>
 
         {selectedFile ? (
-          <div className="status-box bg-white dark:bg-zinc-900">
+          <div className="status-box">
             <strong>待识别文件</strong>
             <span>
               {selectedFile.name} · {formatFileSize(selectedFile.size)}
@@ -292,7 +292,7 @@ export function ResumeImportPanel({
         {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
 
         {!job && restoringJobId ? (
-          <div className="dashboard-inline-note rounded-[20px] border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-300">
+          <div className="dashboard-inline-note rounded-[20px]">
             正在恢复上一次简历识别任务：{restoringJobId}
           </div>
         ) : null}
@@ -432,7 +432,7 @@ export function ResumeImportPanel({
           </Accordion>
 
           {jobSteps.length === 0 ? (
-            <div className="dashboard-inline-note rounded-[20px] border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-300">
+            <div className="dashboard-inline-note rounded-[20px]">
               任务已创建，正在等待服务端返回阶段时间线。你可以保持页面打开，或稍后手动刷新状态。
             </div>
           ) : null}

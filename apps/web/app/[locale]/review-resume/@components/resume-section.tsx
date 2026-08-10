@@ -13,7 +13,7 @@ export function ResumeSection({
 }) {
   return (
     <article className="mb-6" data-section>
-      <h2 className="mb-3 border-b border-zinc-200 pb-1.5 text-sm font-bold uppercase tracking-wider text-zinc-400">
+      <h2 className="mb-3 border-b border-zinc-200 pb-1.5 text-lg font-bold text-[#333]">
         {title}
       </h2>
       <div>{children}</div>
