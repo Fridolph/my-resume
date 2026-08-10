@@ -13,7 +13,7 @@ import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 
 import { useAdminSession } from '@core/admin-session'
-import { DEFAULT_API_BASE_URL } from '@core/env'
+import { DEFAULT_API_BASE_URL, DEFAULT_PUBLIC_SITE_BASE_URL } from '@core/env'
 import type { AppLocale } from '@i18n/types'
 import { RoleActionPanel } from '@shared/ui/components/role-action-panel'
 
@@ -171,6 +171,7 @@ export function AdminPublishShell({ locale }: { locale: AppLocale }) {
           <ExportEntryPanel
             apiBaseUrl={DEFAULT_API_BASE_URL}
             locale={locale}
+            publicSiteBaseUrl={DEFAULT_PUBLIC_SITE_BASE_URL}
             role={currentUser.role}
           />
         </div>

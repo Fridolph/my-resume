@@ -36,11 +36,7 @@ export function PublicSiteHeaderMobileMenu({
     format: 'markdown',
     locale,
   })
-  const pdfExportUrl = buildPublishedResumeExportUrl({
-    apiBaseUrl,
-    format: 'pdf',
-    locale,
-  })
+  const pdfPreviewUrl = `/${locale}/review-resume?locale=${locale}`
   const nextLocale: ResumeLocale = locale === 'zh' ? 'en' : 'zh'
   const languageToggleLabel =
     nextLocale === 'zh' ? t('mobileMenuLangToggleToZh') : t('mobileMenuLangToggleToEn')
@@ -113,7 +109,7 @@ export function PublicSiteHeaderMobileMenu({
             <Dropdown.Item href={markdownExportUrl} id="download-markdown">
               {t('exportMarkdownMenu')}
             </Dropdown.Item>
-            <Dropdown.Item href={pdfExportUrl} id="download-pdf">
+            <Dropdown.Item href={pdfPreviewUrl} id="download-pdf">
               {t('exportPdfMenu')}
             </Dropdown.Item>
           </Dropdown.Section>

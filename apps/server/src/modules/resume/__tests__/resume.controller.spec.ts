@@ -59,6 +59,20 @@ describe('ResumeController cache headers', () => {
     expect(response.setHeader).toHaveBeenCalledWith('Vary', 'Cookie, Accept-Encoding')
   })
 
+  it('should return a real PDF response for the published export endpoint', async () => {
+    const response = createResponseMock()
+
+    await controller.exportPublishedResumePdf('zh', response)
+
+    expect(pdfExportService.render).toHaveBeenCalledWith(resume, 'zh')
+    expect(response.setHeader).toHaveBeenCalledWith('Content-Type', 'application/pdf')
+    expect(response.setHeader).toHaveBeenCalledWith(
+      'Content-Disposition',
+      'attachment; filename="standard-resume-zh.pdf"',
+    )
+    expect(response.send).toHaveBeenCalledWith(Buffer.from('pdf'))
+  })
+
   it('should mark draft payloads as private and non-cacheable', async () => {
     const response = createResponseMock()
 
