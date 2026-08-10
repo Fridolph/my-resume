@@ -1,5 +1,5 @@
-@import "tailwindcss";
 @import '@my-resume/ui/display.css';
+@reference './globals.css';
 
 @layer components {
   .card {
