@@ -28,7 +28,8 @@
   --display-radius-pill: 999px;
 }
 
-html[data-theme='dark'] {
+html[data-theme='dark'],
+html.dark {
   --display-color-page-bg: #020617;
   --display-page-glow: radial-gradient(
     circle at top,
