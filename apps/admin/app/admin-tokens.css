@@ -1,0 +1,147 @@
+/*
+ * Admin design token contract
+ *
+ * Use semantic tokens in new UI. The legacy --admin-* and --display-* aliases
+ * remain below so M51 can migrate shells and feature modules incrementally.
+ */
+
+:root {
+  /* Primitive tokens: raw values only. */
+  --admin-color-white: #ffffff;
+  --admin-color-slate-950: #0f172a;
+  --admin-color-slate-900: #111827;
+  --admin-color-slate-800: #1f2937;
+  --admin-color-slate-500: #667085;
+  --admin-color-slate-100: #eef2f7;
+  --admin-color-slate-50: #f8fafc;
+  --admin-color-blue-700: #1d4ed8;
+  --admin-color-blue-400: #60a5fa;
+  --admin-color-blue-100: #dbeafe;
+  --admin-color-orange-100: #fff7ed;
+  --admin-color-orange-300: #fdba74;
+  --admin-color-orange-800: #9a3412;
+  --admin-color-red-600: #dc2626;
+  --admin-color-red-400: #f87171;
+  --admin-radius-2xl: 24px;
+  --admin-radius-xl: 16px;
+  --admin-shadow-light: 0 20px 45px rgba(15, 23, 42, 0.08);
+  --admin-shadow-dark: 0 22px 55px rgba(0, 0, 0, 0.34);
+
+  /* Semantic tokens: use these for page, surface, text, border, and status UI. */
+  --admin-color-page-bg:
+    radial-gradient(circle at top left, rgba(15, 23, 42, 0.05), transparent 26%),
+    linear-gradient(
+      180deg,
+      var(--admin-color-slate-50) 0%,
+      var(--admin-color-slate-100) 100%
+    );
+  --admin-color-surface: rgba(255, 255, 255, 0.88);
+  --admin-color-surface-strong: var(--admin-color-white);
+  --admin-color-surface-muted: #f5f7fb;
+  --admin-color-surface-hover: var(--admin-color-slate-100);
+  --admin-color-border: rgba(15, 23, 42, 0.08);
+  --admin-color-border-strong: rgba(15, 23, 42, 0.14);
+  --admin-color-text: var(--admin-color-slate-900);
+  --admin-color-text-muted: var(--admin-color-slate-500);
+  --admin-color-accent: var(--admin-color-blue-700);
+  --admin-color-accent-soft: rgba(29, 78, 216, 0.1);
+  --admin-color-warning-bg: var(--admin-color-orange-100);
+  --admin-color-warning-border: var(--admin-color-orange-300);
+  --admin-color-warning-text: var(--admin-color-orange-800);
+  --admin-color-danger: var(--admin-color-red-600);
+  --admin-shadow-card: var(--admin-shadow-light);
+
+  /* Component tokens: only component recipes should consume these directly. */
+  --admin-component-button-primary-bg: var(--admin-color-slate-900);
+  --admin-component-button-primary-bg-hover: var(--admin-color-slate-800);
+  --admin-component-button-primary-text: var(--admin-color-white);
+  --admin-component-button-primary-border: transparent;
+  --admin-component-switch-bg: #f1f5f9;
+  --admin-component-switch-bg-active: var(--admin-color-blue-100);
+  --admin-component-switch-border-active: rgba(29, 78, 216, 0.26);
+  --admin-component-switch-thumb-active: var(--admin-color-white);
+
+  /* Compatibility aliases: remove only after the relevant M51 migrations complete. */
+  --admin-page-bg: var(--admin-color-page-bg);
+  --admin-surface: var(--admin-color-surface);
+  --admin-surface-strong: var(--admin-color-surface-strong);
+  --admin-surface-muted: var(--admin-color-surface-muted);
+  --admin-surface-hover: var(--admin-color-surface-hover);
+  --admin-border: var(--admin-color-border);
+  --admin-border-strong: var(--admin-color-border-strong);
+  --admin-text: var(--admin-color-text);
+  --admin-text-muted: var(--admin-color-text-muted);
+  --admin-primary: var(--admin-color-accent);
+  --admin-primary-soft: var(--admin-color-accent-soft);
+  --admin-warning-bg: var(--admin-color-warning-bg);
+  --admin-warning-border: var(--admin-color-warning-border);
+  --admin-warning-text: var(--admin-color-warning-text);
+  --admin-danger: var(--admin-color-danger);
+  --admin-radius-card: var(--admin-radius-2xl);
+  --admin-radius-control: var(--admin-radius-xl);
+  --admin-shadow: var(--admin-shadow-card);
+  --admin-button-primary-bg: var(--admin-component-button-primary-bg);
+  --admin-button-primary-bg-hover: var(--admin-component-button-primary-bg-hover);
+  --admin-button-primary-text: var(--admin-component-button-primary-text);
+  --admin-button-primary-border: var(--admin-component-button-primary-border);
+  --admin-switch-bg: var(--admin-component-switch-bg);
+  --admin-switch-bg-active: var(--admin-component-switch-bg-active);
+  --admin-switch-border-active: var(--admin-component-switch-border-active);
+  --admin-switch-thumb-active: var(--admin-component-switch-thumb-active);
+
+  /* Shared display aliases keep the existing admin shell utilities theme-aware. */
+  --display-font-family:
+    'IBM Plex Sans', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --display-color-page-bg: var(--admin-color-page-bg);
+  --display-page-glow: transparent;
+  --display-color-surface: var(--admin-color-surface);
+  --display-color-surface-muted: var(--admin-color-surface-muted);
+  --display-color-text: var(--admin-color-text);
+  --display-color-text-muted: var(--admin-color-text-muted);
+  --display-color-border: var(--admin-color-border);
+  --display-color-accent: var(--admin-color-accent);
+  --display-color-accent-soft: var(--admin-color-accent-soft);
+  --display-color-accent-contrast: var(--admin-component-button-primary-text);
+  --display-color-control-bg: var(--admin-color-surface-strong);
+  --display-color-strong-surface: var(--admin-color-surface-strong);
+  --display-color-strong-contrast: var(--admin-color-text);
+  --display-color-warning-bg: var(--admin-color-warning-bg);
+  --display-color-warning-border: var(--admin-color-warning-border);
+  --display-color-warning-text: var(--admin-color-warning-text);
+  --display-color-danger: var(--admin-color-danger);
+  --display-shadow-card: var(--admin-shadow-card);
+  --display-radius-card: var(--admin-radius-2xl);
+  --display-radius-control: var(--admin-radius-xl);
+  --display-radius-pill: 999px;
+}
+
+html[data-theme='dark'],
+html.dark,
+.dark {
+  --admin-color-page-bg:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.12), transparent 28%),
+    linear-gradient(180deg, #09090b 0%, #111827 100%);
+  --admin-color-surface: rgba(17, 24, 39, 0.84);
+  --admin-color-surface-strong: rgba(24, 24, 27, 0.92);
+  --admin-color-surface-muted: rgba(39, 39, 42, 0.7);
+  --admin-color-surface-hover: rgba(63, 63, 70, 0.72);
+  --admin-color-border: rgba(255, 255, 255, 0.08);
+  --admin-color-border-strong: rgba(255, 255, 255, 0.14);
+  --admin-color-text: #f5f7fb;
+  --admin-color-text-muted: #a1a1aa;
+  --admin-color-accent: var(--admin-color-blue-400);
+  --admin-color-accent-soft: rgba(96, 165, 250, 0.14);
+  --admin-color-warning-bg: rgba(154, 52, 18, 0.2);
+  --admin-color-warning-border: rgba(251, 146, 60, 0.44);
+  --admin-color-warning-text: var(--admin-color-orange-300);
+  --admin-color-danger: var(--admin-color-red-400);
+  --admin-shadow-card: var(--admin-shadow-dark);
+  --admin-component-button-primary-bg: rgba(39, 39, 42, 0.96);
+  --admin-component-button-primary-bg-hover: rgba(63, 63, 70, 0.98);
+  --admin-component-button-primary-text: #f5f7fb;
+  --admin-component-button-primary-border: rgba(255, 255, 255, 0.1);
+  --admin-component-switch-bg: rgba(39, 39, 42, 0.7);
+  --admin-component-switch-bg-active: rgba(29, 78, 216, 0.3);
+  --admin-component-switch-border-active: rgba(96, 165, 250, 0.36);
+  --admin-component-switch-thumb-active: #f8fafc;
+}

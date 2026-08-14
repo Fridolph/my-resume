@@ -1,10 +1,11 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 @import '@my-resume/ui/display.css';
+@import './admin-tokens.css';
 @reference './globals.css';
 
 @layer components {
   .card {
-    @apply rounded-[var(--display-radius-card)] border border-[var(--display-color-border)] bg-[var(--display-color-surface)] shadow-[var(--display-shadow-card)] backdrop-blur-[20px] p-6 max-md:rounded-[20px] max-md:p-4 max-lg:p-5;
+    @apply rounded-[var(--display-radius-card)] border border-[var(--display-color-border)] bg-[var(--display-color-surface)] p-6 shadow-[var(--display-shadow-card)] backdrop-blur-[20px] max-lg:p-5 max-md:rounded-[20px] max-md:p-4;
   }
 
   .stack {
@@ -22,7 +23,7 @@
     @apply text-[var(--display-color-text-muted)] max-md:text-[0.9rem] max-md:leading-[1.5];
   }
   .muted-list {
-    @apply grid gap-2 m-0 pl-5 text-[var(--display-color-text-muted)] list-disc;
+    @apply m-0 grid list-disc gap-2 pl-5 text-[var(--display-color-text-muted)];
   }
 
   .error-text {
@@ -38,7 +39,7 @@
   }
 
   .link-button {
-    @apply min-h-11 text-white! rounded-full border border-[--admin-button-primary-border] bg-[var(--admin-button-primary-bg)] px-4 py-[0.8rem] font-semibold;
+    @apply min-h-11 rounded-full border border-[color:var(--admin-button-primary-border)] bg-[var(--admin-button-primary-bg)] px-4 py-[0.8rem] font-semibold text-white!;
   }
   .link-button:hover {
     @apply bg-[var(--admin-button-primary-bg-hover)];
@@ -46,7 +47,7 @@
 
   .secondary-button,
   .secondary-link-button {
-    @apply border border-[--admin-border-strong] bg-[var(--admin-surface-muted)] px-4 py-[0.8rem] font-semibold text-[var(--admin-text)];
+    @apply border border-[color:var(--admin-border-strong)] bg-[var(--admin-surface-muted)] px-4 py-[0.8rem] font-semibold text-[var(--admin-text)];
   }
   .secondary-link-button {
     @apply inline-flex min-h-[44px] items-center justify-center rounded-full;
