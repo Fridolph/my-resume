@@ -1,7 +1,9 @@
 import {
   CloudUploadOutlined,
   DashboardOutlined,
+  HistoryOutlined,
   ProfileOutlined,
+  QuestionCircleOutlined,
   RobotOutlined,
   SettingOutlined,
 } from '@ant-design/icons'
@@ -13,8 +15,10 @@ import type { ReactNode } from 'react'
  */
 export const navigationIconMap: Record<string, ReactNode> = {
   dashboard: <DashboardOutlined />,
-  profile: <ProfileOutlined />,
-  robot: <RobotOutlined />,
-  cloud: <CloudUploadOutlined />,
-  setting: <SettingOutlined />,
+  resume: <ProfileOutlined />,
+  ai: <RobotOutlined />,
+  publish: <CloudUploadOutlined />,
+  settings: <SettingOutlined />,
+  help: <QuestionCircleOutlined />,
+  changelog: <HistoryOutlined />,
 }
