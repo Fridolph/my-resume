@@ -12,6 +12,7 @@ import { App as AntdApp, ConfigProvider } from 'antd'
 import zhCN from 'antd/locale/zh_CN'
 import type { ReactNode } from 'react'
 
+import { AuthProvider } from '@shared/lib/auth/auth-context'
 import { getAntdTheme } from '@shared/lib/theme/theme-config'
 import { ThemeProvider, useTheme } from '@shared/lib/theme/theme-context'
 
@@ -28,7 +29,9 @@ function AntdProviders({ children }: { children: ReactNode }) {
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>
-      <AntdProviders>{children}</AntdProviders>
+      <AntdProviders>
+        <AuthProvider>{children}</AuthProvider>
+      </AntdProviders>
     </ThemeProvider>
   )
 }
