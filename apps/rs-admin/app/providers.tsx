@@ -17,6 +17,12 @@ const themeConfig = {
     colorPrimary: '#7c3aed',
     borderRadius: 8,
   },
+  components: {
+    Layout: {
+      headerBg: '#ffffff',
+      headerHeight: 56,
+    },
+  },
   algorithm: theme.defaultAlgorithm,
 }
 
