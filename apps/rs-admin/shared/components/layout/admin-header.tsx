@@ -3,6 +3,8 @@
 import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons'
 import { Avatar, Button, Layout, Space } from 'antd'
 
+import { ThemeToggle } from './theme-toggle'
+
 const { Header } = Layout
 
 export function AdminHeader({
@@ -21,6 +23,7 @@ export function AdminHeader({
         onClick={onToggle}
       />
       <Space size="middle">
+        <ThemeToggle />
         <Avatar size="small" style={{ backgroundColor: '#7c3aed' }}>
           R
         </Avatar>

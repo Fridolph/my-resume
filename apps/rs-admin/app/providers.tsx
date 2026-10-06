@@ -1,35 +1,34 @@
 'use client'
 
 /**
- * 全局 Providers：antd ConfigProvider + App 容器。
+ * 全局 Providers：主题状态 → antd ConfigProvider → App 容器。
  *
  * - React 19 兼容补丁（antd v5 官方）
- * - 主题 token 集中在此，作为单一主题来源（暗色切换后续在 #282 接入）
+ * - 主题单一来源：ThemeProvider 提供 light/dark，ConfigProvider 切 algorithm
  */
 import '@ant-design/v5-patch-for-react-19'
 
-import { App as AntdApp, ConfigProvider, theme } from 'antd'
+import { App as AntdApp, ConfigProvider } from 'antd'
 import zhCN from 'antd/locale/zh_CN'
 import type { ReactNode } from 'react'
 
-const themeConfig = {
-  token: {
-    colorPrimary: '#7c3aed',
-    borderRadius: 8,
-  },
-  components: {
-    Layout: {
-      headerBg: '#ffffff',
-      headerHeight: 56,
-    },
-  },
-  algorithm: theme.defaultAlgorithm,
+import { getAntdTheme } from '@shared/lib/theme/theme-config'
+import { ThemeProvider, useTheme } from '@shared/lib/theme/theme-context'
+
+function AntdProviders({ children }: { children: ReactNode }) {
+  const { mode } = useTheme()
+
+  return (
+    <ConfigProvider locale={zhCN} theme={getAntdTheme(mode)}>
+      <AntdApp>{children}</AntdApp>
+    </ConfigProvider>
+  )
 }
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
-    <ConfigProvider locale={zhCN} theme={themeConfig}>
-      <AntdApp>{children}</AntdApp>
-    </ConfigProvider>
+    <ThemeProvider>
+      <AntdProviders>{children}</AntdProviders>
+    </ThemeProvider>
   )
 }
