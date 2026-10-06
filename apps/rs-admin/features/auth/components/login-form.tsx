@@ -1,10 +1,11 @@
 'use client'
 
 import { LockOutlined, UserOutlined } from '@ant-design/icons'
-import { App, Button, Form, Input } from 'antd'
+import { App, Alert, Button, Form, Input } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
+import { env } from '@config/env'
 import { useAuth } from '@shared/lib/auth/auth-context'
 
 interface LoginFormValues {
@@ -38,7 +39,25 @@ export function LoginForm() {
       <p className="mb-8 text-sm text-[var(--ant-color-text-secondary)]">
         登录以进入 RS Admin 后台管理
       </p>
-      <Form layout="vertical" onFinish={onFinish} requiredMark={false} size="large">
+
+      {env.useMock ? (
+        <Alert
+          className="mb-6"
+          type="info"
+          showIcon
+          message="演示模式"
+          description="当前未接入后端，点击「登录」即可直接进入后台。"
+        />
+      ) : null}
+
+      <Form
+        layout="vertical"
+        onFinish={onFinish}
+        requiredMark={false}
+        size="large"
+        // mock 模式预填账号，做到「点击即登录」
+        initialValues={env.useMock ? { username: 'admin', password: 'mock-password' } : undefined}
+      >
         <Form.Item
           name="username"
           label="账号"

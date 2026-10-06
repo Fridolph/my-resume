@@ -3,27 +3,16 @@
 import { Card, Col, List, Row, Statistic } from 'antd'
 
 import { PageHeader } from '@shared/components/common/page-header'
-
-const summary = [
-  { label: '简历版本', value: 12, suffix: '个' },
-  { label: 'RAG 知识条目', value: 86, suffix: '条' },
-  { label: 'AI 对话轮次', value: 59, suffix: '轮' },
-]
-
-const activities = [
-  { title: '发布简历 v2.6.0', time: '12 分钟前' },
-  { title: '重建 RAG 索引', time: '1 小时前' },
-  { title: '更新 user_docs', time: '3 小时前' },
-]
+import { mockOverviewStats, mockRecentActivities } from '@shared/lib/mock/mock-data'
 
 export default function DashboardPage() {
   return (
     <div className="space-y-4">
-      <PageHeader title="概览" description="my-resume 后台总览" />
+      <PageHeader title="概览" description="my-resume 后台总览（演示数据）" />
 
       <Row gutter={[16, 16]}>
-        {summary.map(item => (
-          <Col key={item.label} xs={24} sm={12} lg={8}>
+        {mockOverviewStats.map(item => (
+          <Col key={item.key} xs={24} sm={12} lg={8}>
             <Card>
               <Statistic title={item.label} value={item.value} suffix={item.suffix} />
             </Card>
@@ -42,7 +31,7 @@ export default function DashboardPage() {
         <Col xs={24} lg={8}>
           <Card title="最近活动">
             <List
-              dataSource={activities}
+              dataSource={mockRecentActivities}
               renderItem={item => (
                 <List.Item>
                   <div>

@@ -1,14 +1,46 @@
 'use client'
 
-import { Card } from 'antd'
+import { Card, Table, Tag } from 'antd'
+import type { TableColumnsType } from 'antd'
 
 import { PageHeader } from '@shared/components/common/page-header'
+import { mockPublishRecords, type PublishRecordItem } from '@shared/lib/mock/mock-data'
+
+const statusTag: Record<
+  PublishRecordItem['status'],
+  { color: string; text: string }
+> = {
+  published: { color: 'green', text: '已发布' },
+  pending: { color: 'gold', text: '待发布' },
+  rolled_back: { color: 'red', text: '已回滚' },
+}
+
+const columns: TableColumnsType<PublishRecordItem> = [
+  { title: '版本', dataIndex: 'version', key: 'version' },
+  {
+    title: '状态',
+    dataIndex: 'status',
+    key: 'status',
+    render: (status: PublishRecordItem['status']) => {
+      const tag = statusTag[status]
+      return <Tag color={tag.color}>{tag.text}</Tag>
+    },
+  },
+  { title: '发布时间', dataIndex: 'publishedAt', key: 'publishedAt' },
+]
 
 export default function PublishPage() {
   return (
-    <div>
-      <PageHeader title="发布" description="发布与导出简历" />
-      <Card>占位：发布与导出功能迁移中（见 #288）</Card>
+    <div className="space-y-4">
+      <PageHeader title="发布" description="发布与导出简历（演示数据）" />
+      <Card title="发布记录">
+        <Table
+          rowKey="id"
+          columns={columns}
+          dataSource={mockPublishRecords}
+          pagination={false}
+        />
+      </Card>
     </div>
   )
 }
