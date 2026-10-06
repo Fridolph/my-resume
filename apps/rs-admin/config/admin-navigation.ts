@@ -52,7 +52,13 @@ export const adminNavigation: AdminNavigationItem[] = [
     key: 'settings',
     label: '设置',
     icon: 'settings',
-    to: '/dashboard/settings',
+    defaultOpen: true,
+    children: [
+      { key: 'settings-profile', label: '用户信息', to: '/dashboard/settings/profile' },
+      { key: 'settings-ai', label: 'AI 设置', to: '/dashboard/settings/ai' },
+      { key: 'settings-display', label: '展示配置', to: '/dashboard/settings/display' },
+      { key: 'settings-security', label: '安全配置', to: '/dashboard/settings/security' },
+    ],
   },
 ]
 
