@@ -18,11 +18,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       <Layout>
         <AdminHeader collapsed={collapsed} onToggle={() => setCollapsed(v => !v)} />
         <Content className="p-4">
-          <PageContainer>
-            <div className="rounded-lg bg-[var(--ant-color-bg-container)] p-6 shadow-sm">
-              {children}
-            </div>
-          </PageContainer>
+          <PageContainer>{children}</PageContainer>
         </Content>
       </Layout>
     </Layout>
