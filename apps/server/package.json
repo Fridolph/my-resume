@@ -12,6 +12,7 @@
     "db:push": "drizzle-kit push --force",
     "db:studio": "drizzle-kit studio",
     "dev": "nest start --watch",
+    "reset:password": "node scripts/reset-password.mjs",
     "seed:neo4j": "node scripts/seed-neo4j-graph.mjs",
     "format": "oxfmt --config ../../.oxfmtrc.json --ignore-path ../../.prettierignore .",
     "format:check": "oxfmt --config ../../.oxfmtrc.json --ignore-path ../../.prettierignore --check .",
