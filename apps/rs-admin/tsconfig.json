@@ -18,7 +18,8 @@
       "@/*": ["./*"],
       "@app/*": ["./app/*"],
       "@config/*": ["./config/*"],
-      "@shared/*": ["./shared/*"]
+      "@shared/*": ["./shared/*"],
+      "@features/*": ["./features/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
