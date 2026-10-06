@@ -1,0 +1,24 @@
+@import 'tailwindcss';
+
+/*
+ * rs-admin 样式策略（吸取旧 admin「多套样式来源互相覆盖 + 63 处 !important」教训）
+ *
+ * 1) 单一主题来源：antd ConfigProvider token 管组件内建样式（见 app/providers.tsx）
+ * 2) Tailwind 只负责布局与微调（spacing / flex / grid / 响应式），不覆盖组件内建样式
+ * 3) 禁止用 !important 硬压；需要覆盖 antd 时优先改 token 或用官方 ui 配置
+ * 4) 类名 > 12 个时抽为 BEM + @layer components（后续按需）
+ */
+
+@layer base {
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+      'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+      sans-serif;
+  }
+}
