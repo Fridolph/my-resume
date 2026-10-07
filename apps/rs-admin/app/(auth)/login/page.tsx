@@ -9,7 +9,7 @@ export default function LoginPage() {
       imageAlt={authLayoutConfig.imageAlt}
       imageSide={authLayoutConfig.imageSide}
       brand={
-        <span className="inline-flex items-center gap-2 text-lg font-semibold text-[var(--ant-color-text)]">
+        <span className="inline-flex items-center gap-2 text-lg font-semibold text-(--ant-color-text)">
           <span className="grid size-8 place-items-center rounded-xl bg-violet-600 text-sm font-bold text-white">
             R
           </span>
