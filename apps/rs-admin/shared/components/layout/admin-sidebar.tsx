@@ -89,7 +89,7 @@ export function AdminSidebar({ collapsed, onToggleCollapsed }: AdminSidebarProps
         ) : (
           <div className="flex h-14 shrink-0 items-center justify-between gap-2 px-3">
             <Link
-              href={adminBrand.href ?? '/dashboard'}
+              href={adminBrand.href ?? '/'}
               className="flex min-w-0 items-center gap-2 text-[var(--ant-color-text)]"
               aria-label={adminBrand.name}
             >
