@@ -23,7 +23,7 @@ export function LoginForm() {
     setLoading(true)
     try {
       await login(values.username, values.password)
-      router.replace('/dashboard')
+      router.replace('/')
     } catch {
       void message.error('登录失败，请检查账号或密码')
     } finally {

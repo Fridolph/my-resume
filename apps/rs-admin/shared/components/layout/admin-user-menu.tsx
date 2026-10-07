@@ -46,7 +46,7 @@ export function AdminUserMenu({ collapsed = false }: AdminUserMenuProps) {
       router.replace('/login')
     }
     if (key === 'settings') {
-      router.push('/dashboard/settings')
+      router.push('/settings/profile')
     }
   }
 
